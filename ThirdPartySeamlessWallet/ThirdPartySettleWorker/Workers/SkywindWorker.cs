@@ -5,6 +5,7 @@ using Serilog.Context;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.BLL;
@@ -81,6 +82,9 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
+                        string[] sArray = Regex.Split(tpUnsettle.TransId, "-", RegexOptions.IgnoreCase);
+                        var roundId = sArray[0];
+                        tpUnsettle.TransId = roundId;
                         //Get wager data
                         var wager = _settledBLL.GetSettle_TpWager_Skywind(tpUnsettle.TransId);
                         if (wager == null)
@@ -92,6 +96,7 @@ namespace ThirdPartySettleWorker.Workers
                         var settleData = UnsettleData.Where(i => i.TicketType == (int)BettransType.EndRound);
                         var betData = UnsettleData.Where(i => i.TicketType == (int)BettransType.Bet);
                         var tpUserName = settleData.FirstOrDefault().custid;
+                        var gameId = settleData.FirstOrDefault().gameid;
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
 
@@ -127,7 +132,7 @@ namespace ThirdPartySettleWorker.Workers
                             {
                                 Task.Run(() =>
                                 {
-                                    _tpUnSettledBLL.SetSettleFlag("Service_Bettrans_Skywind_Settle_Set", Tp, gametype, tpUnsettle.TransId, true, DataBase.Wager);
+                                    _tpUnSettledBLL.SetSettleFlag("Service_Bettrans_Skywind_Settle_Set", Tp, gametype, $"{tpUnsettle.TransId}-{gameId}", tpUnsettle.TransId, true, DataBase.Wager);
                                 });
                             }
                         }                      
@@ -190,6 +195,9 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
+                        string[] sArray = Regex.Split(tpUnsettle.TransId, "-", RegexOptions.IgnoreCase);
+                        var roundId = sArray[0];
+                        tpUnsettle.TransId = roundId;
                         //Get wager data
                         var wager = _settledBLL.GetSettle_TpWager_Skywind(tpUnsettle.TransId);
                         if (wager == null)
@@ -201,6 +209,7 @@ namespace ThirdPartySettleWorker.Workers
                         var settleData = UnsettleData.Where(i => i.TicketType == (int)BettransType.EndRound);
                         var betData = UnsettleData.Where(i => i.TicketType == (int)BettransType.Bet);
                         var tpUserName = settleData.FirstOrDefault().custid;
+                        var gameId = settleData.FirstOrDefault().gameid;
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
 
@@ -236,7 +245,7 @@ namespace ThirdPartySettleWorker.Workers
                             {
                                 Task.Run(() =>
                                 {
-                                    _tpUnSettledBLL.SetSettleFlag("Service_Bettrans_Skywind_Settle_Set", Tp, gametype, tpUnsettle.TransId, true, DataBase.Wager);
+                                    _tpUnSettledBLL.SetSettleFlag("Service_Bettrans_Skywind_Settle_Set", Tp, gametype, $"{tpUnsettle.TransId}-{gameId}", tpUnsettle.TransId, true, DataBase.Wager);
                                 });
                             }
                         }
@@ -299,6 +308,9 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
+                        string[] sArray = Regex.Split(tpUnsettle.TransId, "-", RegexOptions.IgnoreCase);
+                        var roundId = sArray[0];
+                        tpUnsettle.TransId = roundId;
                         //Get wager data
                         var wager = _settledBLL.GetSettle_TpWager_Skywind(tpUnsettle.TransId);
                         if (wager == null)
@@ -310,6 +322,7 @@ namespace ThirdPartySettleWorker.Workers
                         var settleData = UnsettleData.Where(i => i.TicketType == (int)BettransType.EndRound);
                         var betData = UnsettleData.Where(i => i.TicketType == (int)BettransType.Bet);
                         var tpUserName = settleData.FirstOrDefault().custid;
+                        var gameId = settleData.FirstOrDefault().gameid;
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
 
@@ -345,7 +358,7 @@ namespace ThirdPartySettleWorker.Workers
                             {
                                 Task.Run(() =>
                                 {
-                                    _tpUnSettledBLL.SetSettleFlag("Service_Bettrans_Skywind_Settle_Set", Tp, gametype, tpUnsettle.TransId, true, DataBase.Wager);
+                                    _tpUnSettledBLL.SetSettleFlag("Service_Bettrans_Skywind_Settle_Set", Tp, gametype, $"{tpUnsettle.TransId}-{gameId}", tpUnsettle.TransId, true, DataBase.Wager);
                                 });
                             }
                         }
