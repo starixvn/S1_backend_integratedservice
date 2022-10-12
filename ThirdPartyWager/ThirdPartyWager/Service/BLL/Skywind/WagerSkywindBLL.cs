@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -114,7 +115,9 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     try
                     {
-                        var bet = await _apiSkywindBLL.GetBetByTransId(setting["ApiUrl"], setting["SecretKey"], setting["Username"], setting["Password"], chcek.TransId);
+                        string[] sArray = Regex.Split(chcek.TransId, "-", RegexOptions.IgnoreCase);
+                        //Get wager data
+                        var bet = await _apiSkywindBLL.GetBetByTransId(setting["ApiUrl"], setting["SecretKey"], setting["Username"], setting["Password"], sArray[0]);
 						if(bet != null)
 						{
                             var betSkywind = new BetSkywind()
