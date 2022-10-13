@@ -62,6 +62,10 @@ namespace ThirdPartyWager.Workers
                 else
                 {
                     var dueTimeSpan = TimeSpan.FromHours(4);
+                    if (Enumerable.Range(2, 6).Contains(DateTime.UtcNow.Hour))
+                    {
+                        dueTimeSpan = TimeSpan.FromHours(1);
+                    }
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
