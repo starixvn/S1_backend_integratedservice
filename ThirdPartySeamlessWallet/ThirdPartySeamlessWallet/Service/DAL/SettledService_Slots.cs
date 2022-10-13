@@ -4254,17 +4254,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             return true;
         }
-        
-        public bool BetAndPayout_AMB(DateTime partitionTime, BettingDataRNG_AMB data, MySqlTransaction trans)
-        {
-            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_AMB_InsV2", data, trans);
-
-            if (result == 0)
-            {
-                return false;
-            }
-            return true;
-        }
 
         public bool Cancel_AMB(DateTime partitionTime, int sq, MySqlTransaction trans)
         {
@@ -4276,6 +4265,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 return false;
             }
             return true;
+        }
+
+        public bool BetAndPayout_AMB(DateTime partitionTime, BettingDataRNG_AMB data, MySqlTransaction trans)
+        {
+            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_AMB_Ins_V2", data, trans);
+            return result != 0;
         }
 
         public bool InsertUnsettle_AMB(DateTime partitionTime, string transactionId, MySqlTransaction trans)
@@ -4292,24 +4287,26 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public bool SetBalance_AMB(TpCustInfo tpCustInfo, BettingDataRNG_AMB data, TransType transType, string memo, 
             out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
-            var result = PayoutV2(
-                tpCustInfo,
-                data.amount,
-                (int)Tp.AMB,
-                data.roundId,
-                (int)GameType.AMB_RNG,
-                TpCategory.Slots,
-                data.transactionId,
-                transType,
-                null,
-                out afterAmount,
-                memo,
-                out bonusId,
-                conn,
-                trans
-            );
+            var result = 0;
+            if (bonusId > 0)
+            {
+                result = PayoutWithBonusId(tpCustInfo, data.amount, (int)Tp.AMB, data.roundId, (int)GameType.AMB_RNG,
+                    TpCategory.Slots, data.transactionId, transType, out afterAmount, memo, bonusId, conn, trans);
+            }
+            else
+            { 
+                result = PayoutV2(tpCustInfo, data.amount, (int)Tp.AMB, data.roundId, (int)GameType.AMB_RNG,
+                    TpCategory.Slots, data.transactionId, transType, null, 
+                    out afterAmount, memo, out bonusId, conn, trans);
+            }
             return result != 0;
         }
+
+        public void UpdateTpBonusFlag(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId)
+        {
+            GetTpBonus(tpId, tpTransId, gameType, tpCategory, out CustId, out BonusId);
+        }
+        
         #endregion
 
         #region YGG
