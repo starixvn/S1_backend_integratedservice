@@ -510,6 +510,130 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
         }
 
+        public async Task<AMBSlotSettleResponse> SlotSettle(AMBSlotSettleRequest request)
+        {
+            var bonusId = 0;
+            var afterAmount = 0m;
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, request.username);
+
+            if (tpCheck == null || tpCheck.Locked)
+            {
+                return new AMBSlotSettleResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = "Service not available" }
+                };
+            }
+
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AMB, request.username);
+            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp.AMB, tpCustInfo.CurrencyId);
+            
+            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, request.username, (int)GameType);
+            var agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
+            if (!CheckAgentId(agent, request.currency))
+            {
+                return new AMBSlotSettleResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.InvalidAgent, message = "Invalid agent id" }
+                };
+            }
+            
+            var partitionTime = DateTimeOffset.Parse(request.timestamp).DateTime;
+            var data = new BettingDataRNG_AMB()
+            {
+                username = request.username,
+                agentId = agent,
+                game = request.game,
+                gameId = request.gameId,
+                roundId = request.roundId,
+                bet = Math.Abs(request.bet) * -1,
+                amount = request.amount,
+                winlose = request.winlose,
+                turnover = request.turnover,
+                roundAmount = request.roundAmount ?? 0,
+                currency = request.currency,
+                transactionId = request.transactionId,
+                timestamp = partitionTime,
+                featureBuy = request.featureBuy,
+                isEndRound = request.isEndRound,
+                type = request.type,
+                tranId = request.tranId,
+                FromAPIType = BettransRng_AMBTypeEnum.FromPayout,
+                TicketType = request.isEndRound ? BettransType.EndRound : BettransType.Payout,
+                TicketStatus = TicketStatus.UnSettled
+            };
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                data.amount *= tpCurrency.ExchangeRate;
+                data.bet *= tpCurrency.ExchangeRate;
+                data.winlose *= tpCurrency.ExchangeRate;
+                data.turnover *= tpCurrency.ExchangeRate;
+            }
+            await using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            await using var trans = await conn.BeginTransactionAsync();
+            var result = _settledService.BetAndPayout_AMB(partitionTime, data, trans);
+            if (!result)
+            {
+                _logger.LogError("Service_BettransRng_AMB_InsV2 failed");
+                return new AMBSlotSettleResponse()
+                {
+                    status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = "Service not available" }
+                };
+            }
+
+            if (data.bet != 0)
+            {
+                result = _bettingService.SetBalance_AMB(tpCustInfo, data, out afterAmount, ref bonusId, conn, trans);
+                if (!result)
+                {
+                    _logger.LogError("PlaceBetV2 failed");
+                    return new AMBSlotSettleResponse()
+                    {
+                        status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = "Service not available" }
+                    };
+                }
+            }
+
+            if (data.amount != 0)
+            {
+                result = _settledService.SetBalance_AMB(tpCustInfo, data, TransType.Payout, "Payout", out afterAmount, ref bonusId, conn, trans);
+                if (!result)
+                {
+                    _logger.LogError("PayoutV2 failed");
+                    return new AMBSlotSettleResponse()
+                    {
+                        status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = "Service not available" }
+                    };
+                }
+            }
+            if (data.isEndRound)
+            {
+                result = _settledService.InsertUnsettle_AMB(partitionTime, data.roundId, trans);
+                if (!result)
+                {
+                    _logger.LogError("InsertUnsettle_AMB failed");
+                    return new AMBSlotSettleResponse()
+                    {
+                        status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = "Service not available" }
+                    };
+                }
+            }
+
+            trans.Commit();
+
+            return new AMBSlotSettleResponse()
+            {
+                status = new AMBSlotStatusModel() { code = AMBErrorCode.Success, message = "Success" },
+                data = new AMBSlotData()
+                {
+                    username = request.username,
+                    wallet = new AMBSlotWalletModel() { balance = afterAmount, lastUpdate = GetCurrentGameTime() },
+                    balance = new AMBSlotBalanceModel() { before = tpCustBalance.Balance, after = afterAmount },
+                    refId = request.transactionId
+                }
+            };
+            
+        }
         #endregion
 
         #region Private Methods
