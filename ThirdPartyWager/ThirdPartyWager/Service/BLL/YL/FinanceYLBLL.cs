@@ -48,7 +48,7 @@ namespace ThirdPartyWager.Service.BLL
                     CurrencyId = _isoCodeList[item.currency].CurrencyId,
                     Stake = item.totalBetAmount,
                     ValidBet = item.totalValidBet,
-                    Payout = item.totalWinAmount,
+                    Payout = 0,
                     WinlostAmount = item.totalWinLoss,
                     ProgressiveBet = 0,
                     ProgressiveWin = 0
