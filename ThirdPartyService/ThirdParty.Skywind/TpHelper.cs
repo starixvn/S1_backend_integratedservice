@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
@@ -131,22 +132,9 @@ namespace ThirdParty.Skywind
             string SecretKey = inputs.ContainsKey("SecretKey") && !string.IsNullOrEmpty(inputs["SecretKey"]) ? inputs["SecretKey"] : throw new Exception();
             string Username = inputs.ContainsKey("Username") && !string.IsNullOrEmpty(inputs["Username"]) ? inputs["Username"] : throw new Exception();
             string Password = inputs.ContainsKey("Password") && !string.IsNullOrEmpty(inputs["Password"]) ? inputs["Password"] : throw new Exception();
-            string gameId = getBetDetail.TransId;
-            string roundId = string.Empty;
-            var BettransData = TpBetRecordProvider.DbQueryFirst("Service_Bettrans_Skywind_Get", new { YYYYMM = getBetDetail.SettledTime.ToString("yyyyMM"), GameId = gameId }, DataBase.Report);
-
-            if(BettransData == null)
-            {
-                var LastMonthBettransData = TpBetRecordProvider.DbQueryFirst("Service_Bettrans_Skywind_Get", new { YYYYMM = getBetDetail.SettledTime.AddMonths(-1).ToString("yyyyMM"), GameId = gameId }, DataBase.Report);
-                if(LastMonthBettransData != null)
-                {
-                    roundId = LastMonthBettransData.GetStringValue("roundid");
-                }
-            }
-            else
-            {
-                roundId = BettransData.GetStringValue("roundid");
-            }
+            
+            string[] sArray = Regex.Split(getBetDetail.TransId, "-", RegexOptions.IgnoreCase);
+            var roundId = sArray[0];
 
             var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
             var detailUrl = $"{ApiUrl}/history/game/{roundId}/image";
