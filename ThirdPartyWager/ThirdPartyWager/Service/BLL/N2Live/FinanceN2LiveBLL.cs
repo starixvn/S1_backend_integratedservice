@@ -28,9 +28,6 @@ namespace ThirdPartyWager.Service.BLL
                 return dailyData;
             }
 
-            var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
-            var _currencyId = tpCurrencyList.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
-
             var getReportData = JsonConvert.DeserializeObject<List<FincanceDailySummary>>(JsonConvert.SerializeObject(reportData));
             var data = getReportData.GroupBy(i => i.CurrencyId).Select(g => new
             {
