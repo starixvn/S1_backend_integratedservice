@@ -1506,20 +1506,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #endregion
 
-        #region Kiss918
-
-        public IEnumerable<SettleData_Kiss918> GetUnsettledList_Kiss918()
-        {
-            return settledService.GetUnsettledList_Kiss918();
-        }
-
-        public int SetSettleFlag_TpWagerKiss918(string uuid)
-        {
-            return settledService.SetSettleFlag_TpWagerKiss918(uuid);
-        }
-
-        #endregion
-
         #region Mega
 
         public SettleData GetSettle_TpReportMega(string TransId)
@@ -2216,6 +2202,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #endregion
 
+        #region Kiss918
+
+        public IEnumerable<SettleData_Kiss918> GetSettle_TpWager_Kiss918(string playSessionID, string referenceID)
+        {
+            return settledService.GetSettle_TpWager_Kiss918(playSessionID, referenceID);
+        }
+        #endregion
+
         #region SimplePlay
 
         public int PayoutRNG_SimplePlay(PayoutData_SimplePlay payoutData_SimplePlay, int gameType, out decimal afterAmount)
@@ -2304,6 +2298,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.GetSettle_TpWager_Skywind(transId);
         }
+
         #endregion
     }
 }
