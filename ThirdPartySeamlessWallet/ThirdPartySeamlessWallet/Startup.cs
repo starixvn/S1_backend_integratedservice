@@ -1,4 +1,7 @@
 using System;
+using System.Configuration;
+using System.Net;
+using System.Net.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -12,6 +15,7 @@ using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.DAL.Interface;
+using ThirdPartySeamlessWallet.Service.DAL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model.Options;
 using ThirdPartySeamlessWallet.Service.Workers;
@@ -43,18 +47,21 @@ namespace ThirdPartySeamlessWallet
             });
 
             services.AddMemoryCache();
-            ////if (!string.IsNullOrEmpty(Configuration.GetValue<string>("ProxyHost")))
-            ////{
-            ////    var proxy = new HttpClientHandler
-            ////    {
-            ////        Proxy = new WebProxy(Configuration.GetValue<string>("ProxyHost"), Configuration.GetValue<int>("ProxyPort")),
-            ////        UseProxy = true
-            ////    };
+            if (!string.IsNullOrEmpty(Configuration.GetValue<string>("ProxyHost")))
+            {
+                var proxy = new HttpClientHandler
+                {
+                    Proxy = new WebProxy(Configuration.GetValue<string>("ProxyHost"), Configuration.GetValue<int>("ProxyPort")),
+                    UseProxy = true
+                };
 
-            ////    services.AddHttpClient("with_proxy")
-            ////    .ConfigurePrimaryHttpMessageHandler(() => proxy);
-            ////    //services.AddHttpClient();
-            ////}
+                services.AddHttpClient("with_proxy")
+                .ConfigurePrimaryHttpMessageHandler(() => proxy);
+            }
+            else
+            {
+                services.AddHttpClient();
+            }
             services.AddHttpClient();
             services.AddMvc().AddXmlSerializerFormatters();
             services.AddDatabaseConnection(Configuration);
@@ -68,12 +75,14 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<WalletService>();
             services.AddTransient<RiskInspection>();
             services.AddTransient<ICustBetLimitService, CustBetLimitService>();
+            services.AddTransient<ISBOService, SBOService>();
             services.AddSingleton<BettingService>();
             services.AddSingleton<TpCustInfoService>();
             services.AddSingleton<SettledService>();
             services.AddSingleton<AuthService>();
             services.AddSingleton<TpUnsettleService>();
             services.AddSingleton<TpRequestFailService>();
+            services.AddSingleton<TpUnRewardService>();
             services.AddSingleton<PartitionService>();
             services.AddSingleton<ConfigService>();
 
@@ -87,9 +96,12 @@ namespace ThirdPartySeamlessWallet
             services.AddTransient<IMGBLL, MGBLL>();
             services.AddSingleton<IHBBLL, HBBLL>();
             services.AddTransient<IAMBBLL, AMBBLL>();
+            services.AddTransient<ISBOBLL, SBOBLL>();
             services.AddTransient<IJokerBLL, JokerBLL>();
             services.AddSingleton<TpUnSettledBLL>();
+            services.AddSingleton<TpBetRecordExtendBLL>();
             services.AddSingleton<TpRequestFailBLL>();
+            services.AddSingleton<TpUnRewardBLL>();
             services.AddSingleton<KMHeaderFilter>();
             services.AddSingleton<MGHeaderFilter>();
             services.AddSingleton<MGExceptionFilter>();

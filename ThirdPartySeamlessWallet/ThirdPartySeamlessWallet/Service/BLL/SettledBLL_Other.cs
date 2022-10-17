@@ -258,7 +258,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetUnsettledList_One789(gameType);
         }
 
-        public SettleData GetSettle_TpWagerOne789(int gameType, string TransId)
+        public SettleData_One789 GetSettle_TpWagerOne789(int gameType, string TransId)
         {
             return settledService.GetSettle_TpWagerOne789(gameType, TransId);
         }
@@ -296,9 +296,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetUnsettledList_KM(spName);
         }
 
-        public int SetSettleFlag_KM(string spName, string transId , bool isSuccess = true)
+        public int SetSettleFlag_KM(string spName, string transId)
         {
-            return settledService.SetSettleFlag_KM(spName, transId , isSuccess);
+            return settledService.SetSettleFlag_KM(spName, transId);
         }
 
         #endregion

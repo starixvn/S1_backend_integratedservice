@@ -117,5 +117,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 return tpCountryCode;
             }
         }
+
+        public TpCountryCode GetTpCurrencyCode(int tpId, int currencyId)
+        {
+            var key = $"GetTpCurrencyCode{tpId}{currencyId}";
+            if (tpCountryCodeCache.ContainsKey(key))
+            {
+                return tpCountryCodeCache[key];
+            }
+            else
+            {
+                var tpCountryCode = tpCustInfoService.GetTpCurrencyCode(tpId, currencyId);
+                tpCountryCodeCache.TryAdd(key, tpCountryCode);
+                return tpCountryCode;
+            }
+        }
     }
 }

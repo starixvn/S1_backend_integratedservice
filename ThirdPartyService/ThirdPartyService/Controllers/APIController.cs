@@ -11,6 +11,7 @@ using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpMerchantBalance.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
@@ -216,11 +217,11 @@ namespace ThirdPartyService.Controllers
         }
 
         [HttpPost]
-        public ActionResult<ApiResult<TransferResult>> AdjustWallet([FromBody] AdminTpTransfer adminTpTransfer)
+        public ActionResult<ApiResult<AdjustWalletResult>> AdjustWallet([FromBody] AdminTpTransfer adminTpTransfer)
         {
-            var apiResult = new ApiResult<TransferResult>();
+            var apiResult = new ApiResult<AdjustWalletResult>();
             apiResult.ErrorCode = ErrorCode.SystemError;
-            apiResult.Data = new TransferResult();
+            apiResult.Data = new AdjustWalletResult();
 
             try
             {
@@ -283,7 +284,7 @@ namespace ThirdPartyService.Controllers
                     RawMessage = ex.Message,
                 };
             }
-            catch (GetBetDetailNotImplementedException ex)
+            catch (NotImplementedException ex)
             {
                 return new ApiResult<object>()
                 {
@@ -326,6 +327,24 @@ namespace ThirdPartyService.Controllers
             {
                 logger.LogError(ex, ex.Message);
                 return new ApiResult<MerchantBalanceResponse>()
+                {
+                    ErrorCode = ErrorCode.SystemError,
+                    RawMessage = ex.Message,
+                };
+            }
+        }
+        
+        [HttpPost]
+        public ActionResult<ApiResult<TpBetRecordExtend>> GetTpBetRecordExtend([FromBody] GetTpBetRecordExtendRequest request)
+        {
+            try
+            {
+                return thirdPartyBLL.GetTpBetRecordExtend(request);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                return new ApiResult<TpBetRecordExtend>()
                 {
                     ErrorCode = ErrorCode.SystemError,
                     RawMessage = ex.Message,

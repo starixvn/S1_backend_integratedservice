@@ -35,5 +35,11 @@ namespace ThirdPartyCore.Model.TpBetRecordDetail.Response
         /// 输赢金额
         /// </summary>
         public decimal WinlostAmount { get; set; }
+
+        /// <summary>
+        /// 注单赔率
+        /// </summary>
+        public string Odds { get; set; }
+
     }
 }

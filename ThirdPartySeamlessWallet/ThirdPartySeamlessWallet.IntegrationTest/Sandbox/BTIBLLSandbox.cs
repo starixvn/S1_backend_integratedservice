@@ -1,15 +1,11 @@
 ﻿using FluentAssertions;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.IO;
-using System.Linq;
+using ThirdPartySeamlessWallet.Core.Extensions;
 using ThirdPartySeamlessWallet.IntegrationTest.Models;
 using ThirdPartySeamlessWallet.IntegrationTest.Stubs;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
@@ -42,8 +38,14 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         {
             _reserveId = reserveId;
             _serviceCollection = new ServiceCollection();
-            _serviceCollection = SetEnvironment(_serviceCollection);
-            _serviceCollection = LoadConfig(_serviceCollection);
+            var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
+            {
+                EnvironmentName = "Local",
+            });
+            builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
+            var app = builder.Build();
+            _serviceCollection.AddSingleton(_configuration);
+            _configuration = app.Configuration;
 
             _serviceCollection.AddTransient(p => Substitute.For<ILogger<SettledService>>());
             _serviceCollection.AddTransient(p => Substitute.For<ILogger<BettingService>>());
@@ -98,28 +100,6 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             TicketStatus = 0,
             SettleFlag = 0,
         });
-
-        private ServiceCollection SetEnvironment(ServiceCollection services)
-        {
-            var env = new HostingEnvironment()
-            {
-                EnvironmentName = Environments.Development,
-            };
-            services.AddSingleton<IHostEnvironment>(env);
-            return services;
-        }
-
-        private ServiceCollection LoadConfig(ServiceCollection services)
-        {
-            var configBuilder = new ConfigurationBuilder();
-            configBuilder.SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", false, false)
-                .AddJsonFile("appsettings.Local.json", false, false)
-                .AddJsonStream(Program.GetRemoteConfig(new List<string> { "http://52.221.19.140:7243/" }));
-            _configuration = configBuilder.Build();
-            services.AddSingleton(_configuration);
-            return services;
-        }
 
     }
 }

@@ -5,6 +5,8 @@ using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using System.Linq;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordExtend;
+using ThirdPartyCore.Extensions;
 
 namespace ThirdParty.YL
 {
@@ -207,10 +209,40 @@ namespace ThirdParty.YL
             }
         }
 
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransFish_YL_Detail_Get", new { betRecordInfo.TransId }, DataBase.Main);
+            var gameCode = detail.GetStringValue("gameId");
+
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = gameCode,
+                Game = GetFishGameName(gameCode),
+                RefNo = detail.GetStringValue("gameNumier"),
+                Title = tpGameType.TypeName,
+                MatchID = detail.GetStringValue("roomId"),
+                BetType = string.Empty,
+                BetChoice = string.Empty,
+                Result = string.Empty,
+                DeviceType = DeviceType.None,
+                IP = string.Empty,
+            };
+        }
+
         public class DetailResult
         {
             public string status { get; set; }
             public string link { get; set; }
+        }
+
+        private string GetFishGameName(string gameCode)
+        {
+            return gameCode switch
+            {
+                "10" => "Fishing 2",
+                "11" => "Shark Hunter",
+                _ => gameCode,
+            };
         }
     }
 }

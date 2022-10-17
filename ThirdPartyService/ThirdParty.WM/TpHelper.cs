@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.WM
 {
@@ -126,7 +128,7 @@ namespace ThirdParty.WM
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
             string vendorId = inputs.ContainsKey($"vendorId_{currency}") && !string.IsNullOrEmpty(inputs[$"vendorId_{currency}"]) ? inputs[$"vendorId_{currency}"] : throw new Exception($"vendorId_{currency}");
             string signature = inputs.ContainsKey($"signature_{currency}") && !string.IsNullOrEmpty(inputs[$"signature_{currency}"]) ? inputs[$"signature_{currency}"] : throw new Exception("signature");
-            string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "LobbyUrl";
+            string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
 
             var Login = new
             {
@@ -137,7 +139,7 @@ namespace ThirdParty.WM
                 password = HttpUtility.UrlEncode(tpCustInfo.TpPwd),
                 lang = TpLangId,
                 timestamp = DateTimeOffset.Now.ToUnixTimeSeconds(),
-                returnurl = lobbyUrl
+                returnurl = homeUrl
             };
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(Login));
@@ -186,7 +188,7 @@ namespace ThirdParty.WM
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_WM_Detail_Get", new { getBetDetail.TransId });
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_WM_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
             var detail = ToJson(wagerDetail);
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
@@ -210,6 +212,28 @@ namespace ThirdParty.WM
                     Detail = detail,
                     TpCurrency = tpCurrency,
                 }
+            };
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_WM_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
+            return tpGameType.CategoryId switch
+            {
+                TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = detail.GetStringValue("gid"),
+                    Game = detail.GetStringValue("gname"),
+                    RefNo = detail.GetStringValue("betId"),
+                    Title = tpGameType.TypeName,
+                    MatchID = detail.GetStringValue("round"),
+                    BetType = detail.GetStringValue("betCode"),
+                    BetChoice = detail.GetStringValue("betResult"),
+                    Result = detail.GetStringValue("gameResult"),
+                    DeviceType = DeviceType.None,
+                    IP = detail.GetStringValue("ip"),
+                },
+                _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             };
         }
     }

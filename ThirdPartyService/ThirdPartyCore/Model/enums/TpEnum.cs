@@ -42,7 +42,9 @@ namespace ThirdPartyCore.Model.enums
         EVO = 36,
         Netent = 37,
         RedTiger = 38,
-        HB = 40
+        HB = 40,
+        SimplePlay = 44
+
     }
 
     public enum TpGameType
@@ -101,7 +103,14 @@ namespace ThirdPartyCore.Model.enums
         Netent_RNG = 64,
         RedTiger_RNG = 65,
         HB_RNG = 68,
-        AMB_RNG = 76
+        AMB_RNG = 76,
+        SBO_Sports = 77,
+        SBO_Games = 78,
+        SBO_Casino = 79,
+        SBO_VirtualSports = 81,
+        Skywind_RNG = 82,
+        Skywind_LiveCasino = 84,
+        Skywind_Fish = 85,
+        SimplePlay_RNG = 86,
     }
-
 }

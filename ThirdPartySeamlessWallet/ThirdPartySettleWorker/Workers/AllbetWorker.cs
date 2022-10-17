@@ -92,6 +92,7 @@ namespace ThirdPartySettleWorker.Workers
                             unsettled.Stake *= tpCurrency.ExchangeRate;
                             unsettled.ValidBet *= tpCurrency.ExchangeRate;
                             unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
+                            unsettled.DepositAmount *= tpCurrency.ExchangeRate;
                         }
 
                         var check = _mainDbClient.QueryFirst<CheckData>(checkSP, new { BetNum = transId, Client = unsettled.Account });
@@ -104,7 +105,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             TpId = (int)Tp,
                             Stake = unsettled.Stake,
-                            ValidBet = unsettled.Stake,
+                            ValidBet = unsettled.ValidBet,
                             WinlostAmount = unsettled.WinLostAmount,
                             TransId = unsettled.TransId,
                             GameType = gameType,

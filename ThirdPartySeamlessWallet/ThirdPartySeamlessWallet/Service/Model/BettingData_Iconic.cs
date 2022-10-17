@@ -39,4 +39,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public string transactionId { get; set; }
     }
+
+    public class SettleData_AT : SettleData
+    {
+        public string Status { get; set; }
+    }
 }

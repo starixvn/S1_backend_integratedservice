@@ -45,10 +45,64 @@ namespace ThirdPartyWager.Service.Model
                 return new DateTimeOffset(endTime).ToUnixTimeSeconds();
             }
         }
-        public int SettleFlag {
+        public int SettleFlag
+        {
             get
             {
-                
+
+                return (status == "finish") ? 0 : 1;
+            }
+        }
+    }
+
+    public class BetList_AT
+    {
+        public IList<BetData_AT> data { get; set; }
+        public int page { get; set; }
+        public int pageSize { get; set; }
+        public int totalSize { get; set; }
+        public ErrorIconic error { get; set; }
+    }
+
+    public class BetData_AT
+    {
+        public string id { get; set; }
+        public string player { get; set; }
+        public int playerId { get; set; }
+        public string game { get; set; }
+        public int gameId { get; set; }
+        public string gameType { get; set; }
+        public string setId { get; set; }
+        public string productId { get; set; }
+        public string currency { get; set; }
+        public string status { get; set; }
+        public decimal bet { get; set; }
+        public decimal validBet { get; set; }
+        public decimal win { get; set; }
+        public decimal result { get; set; }
+        public string parent { get; set; }
+        public int parentId { get; set; }
+        public DateTime createdAt { get; set; }
+        public DateTime updatedAt { get; set; }
+        public long createdUnix
+        {
+            get
+            {
+                return new DateTimeOffset(createdAt).ToUnixTimeSeconds();
+            }
+        }
+        public long updatedUnix
+        {
+            get
+            {
+                return new DateTimeOffset(updatedAt).ToUnixTimeSeconds();
+            }
+        }
+        public int SettleFlag
+        {
+            get
+            {
+
                 return (status == "finish") ? 0 : 1;
             }
         }
@@ -67,5 +121,29 @@ namespace ThirdPartyWager.Service.Model
         public int status { get; set; }
         public string token { get; set; }
         public ErrorIconic error { get; set; }
+    }
+
+    public class TpWagerSummary_AT
+    {
+        public int wagerCount { get; set; }
+        public decimal bet { get; set; }
+        public decimal validBet { get; set; }
+        public decimal win { get; set; }
+    }
+
+    public class CurrencyStats_AT
+    {
+        public IList<CurrencyStatsData_AT> data { get; set; }
+        public ErrorIconic error { get; set; }
+    }
+
+    public class CurrencyStatsData_AT
+    {
+        public int currency { get; set; }
+        public decimal bet { get; set; }
+        public decimal validBet { get; set; }
+        public decimal win { get; set; }
+        public decimal profit { get; set; }
+        public int totalSize { get; set; }
     }
 }

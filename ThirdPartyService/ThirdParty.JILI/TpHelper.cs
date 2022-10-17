@@ -1,17 +1,27 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Web;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.JILI
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly IReadOnlyDictionary<string, string> _gameNameList;
+
+        public TpHelper()
+        {
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList(32).ToDictionary(d => d.AppId, d => d.Name);
+        }
+
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -127,6 +137,51 @@ namespace ThirdParty.JILI
             };
         }
 
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
+            var detailList = TpBetRecordProvider.DbQuery("Service_Bettrans_JILI_Detail_Get_V2", new { YYYYMM, GameType = tpGameType.Type, TransId = betRecordInfo.TransId }, DataBase.Main);
+            if (!detailList.Any())
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+
+            var gameCode = detailList.GetFirstStringValue("game");
+            var round = detailList.GetFirstStringValue("round");
+            var sessionId = detailList.GetFirstStringValue("sessionId");
+
+            return tpGameType.CategoryId switch
+            {
+                TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = gameCode,
+                    Game = GetGameName(gameCode),
+                    RefNo = round,
+                    Title = tpGameType.TypeName,
+                    MatchID = (sessionId != "0") ? sessionId : round,
+                    BetType = string.Empty,
+                    BetChoice = string.Empty,
+                    Result = string.Empty,
+                    DeviceType = DeviceType.None,
+                    IP = string.Empty,
+                },
+                TpCategory.Fishing => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = gameCode,
+                    Game = GetFishGameName(gameCode),
+                    RefNo = round,
+                    Title = tpGameType.TypeName,
+                    MatchID = round,
+                    BetType = string.Empty,
+                    BetChoice = string.Empty,
+                    Result = string.Empty,
+                    DeviceType = DeviceType.None,
+                    IP = string.Empty,
+                },
+                _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            };
+        }
+
         public class DetailResult
         {
             public int ErrorCode { get; set; }
@@ -139,6 +194,33 @@ namespace ThirdParty.JILI
         public class Data
         {
             public string Url { get; set; }
+        }
+
+        private string GetGameName(string gameCode)
+        {
+            if (!_gameNameList.TryGetValue(gameCode, out var name))
+            {
+                return string.Empty;
+            }
+            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
+            return dic.TryGetValue("en", out var result) ? result : string.Empty;
+        }
+
+        private string GetFishGameName(string gameCode)
+        {
+            return gameCode switch
+            {
+                "1" => "Royal Fishing",
+                "2" => "Bombing Fishing",
+                "3" => "Dinosaur Tycoon",
+                "4" => "Jackpot Fishing",
+                "5" => "Dragon Fortune",
+                "6" => "Mega Fishing",
+                "7" => "Boom Legend",
+                "8" => "Happy Fishing",
+                "9" => "All-star Fishing",
+                _ => gameCode,
+            };
         }
 
     }

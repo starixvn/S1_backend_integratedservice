@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
@@ -46,6 +47,28 @@ namespace ThirdPartySeamlessWallet.Controllers
                     status = TCGReturnCode.UnknownSystemError.ToString(),
                     error_desc= "Unknown system error",
                 };         
+            }
+        }
+
+        [HttpPost]
+        [Route("{merchant_code}")]
+        public async Task<dynamic> Internal([FromRoute] string merchant_code)
+        {
+            try
+            {
+                using var reader = new StreamReader(Request.Body);
+                var bodyText = await reader.ReadToEndAsync();
+                var request = JsonConvert.DeserializeObject<TCGRequest>(bodyText);
+                return await _tcgBLL.SeamlessWallet(merchant_code, request);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return new TCGReturnObj()
+                {
+                    status = TCGReturnCode.UnknownSystemError.ToString(),
+                    error_desc = "Unknown system error",
+                };
             }
         }
 

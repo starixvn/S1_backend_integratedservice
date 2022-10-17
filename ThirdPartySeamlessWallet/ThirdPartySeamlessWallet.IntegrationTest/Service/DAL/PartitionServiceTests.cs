@@ -1,11 +1,10 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
-using System;
-using System.IO;
-using System.Linq;
+using ThirdPartySeamlessWallet.Core.Extensions;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -20,12 +19,15 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
         {
             var services = new ServiceCollection();
 
-            var configBuilder = new ConfigurationBuilder();
-            configBuilder.SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", false, false)
-                .AddJsonFile("appsettings.Local.json", false, false)
-                .AddJsonStream(Program.GetRemoteConfig(new System.Collections.Generic.List<string> { "http://52.221.19.140:7243/" }));;
-            var configuration = configBuilder.Build();
+            var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
+            {
+                EnvironmentName = "Local",
+            });
+            builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
+            var app = builder.Build();
+            var configuration = app.Configuration;
+
+
             services.AddSingleton(configuration);
             var mySqlLog = Substitute.For<ILogger<MySqlClient>>();
             services.AddTransient(p => mySqlLog);

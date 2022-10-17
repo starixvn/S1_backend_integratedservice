@@ -18,7 +18,7 @@ namespace ThirdPartyWager.Manual
         private readonly WagerIconicService _wagerIconicService;
         private readonly ILogger<WagerIconicBLL> _logger;
         private readonly Tp _tpId;
-        
+
         public WagerIconic(ThirdPartyBLL thirdPartyBll, ApiIconicBLL apiIconicBll, WagerIconicService wagerIconicService, ILogger<WagerIconicBLL> logger)
         {
             _thirdPartyBLL = thirdPartyBll;
@@ -34,14 +34,14 @@ namespace ThirdPartyWager.Manual
                 var fileName = "AT.yaml";
                 var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
                 var iconic = deserializer.Deserialize<IconicSetting>(await File.ReadAllTextAsync(fileName));
-                
+
                 var setting = _thirdPartyBLL.GetThirdPartySetting((int)_tpId);
-                
+
                 foreach (var id in iconic.Ids)
                 {
                     _logger.LogInformation($"id:{id}");
                     var dataWager = await _apiIconicBLL.GetBetListById(setting["ApiUrl"], setting[$"token_{iconic.Currency}"], id);
-                    
+
                     if (dataWager.error != null)
                     {
                         var errorCode = dataWager.error.status;
@@ -50,12 +50,12 @@ namespace ThirdPartyWager.Manual
                             _logger.LogError($"THIRD_PARTY_ERROR: {JsonConvert.SerializeObject(dataWager)}");
                         }
                     }
-                
+
                     if (dataWager.totalSize == 0)
                     {
                         _logger.LogInformation($"NO_DATA");
                     }
-                    
+
                     foreach (var bet in dataWager.data)
                     {
                         try
@@ -68,7 +68,7 @@ namespace ThirdPartyWager.Manual
                             {
                                 continue;
                             }
-                            
+
                             // 第三方拉到的game會是中文,call sp會有問題,因此設為空反正也不會去修改
                             bet.game = "";
                             _wagerIconicService.InsertWager(bet);

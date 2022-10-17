@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Dapper;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Memory;
@@ -12,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
+using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.Library;
 using ThirdPartyBetHistory.Service.Model;
 using ThirdPartyBetHistory.Service.Model.enums;
@@ -26,6 +28,7 @@ namespace ThirdPartyBetHistory.Service.DAL
         private readonly ILogger<ThirdPartyService> _logger;
         private readonly MySqlClient _mainDbClient;
         private readonly string _connectionString;
+        private readonly TpBetRecordExtendBLL _tpBetRecordExtendBLL;
 
         public ThirdPartyService(IServiceProvider serviceProvider)
         {
@@ -36,6 +39,7 @@ namespace ThirdPartyBetHistory.Service.DAL
             TpCurrencyList = new ConcurrentDictionary<string, TpCurrency>();
             _connectionString = configuration.GetConnectionString("ConnectionString");
             _mainDbClient = serviceProvider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+            _tpBetRecordExtendBLL = serviceProvider.GetRequiredService<TpBetRecordExtendBLL>();
         }
 
         public IEnumerable<ThirdPartyModel> GetTpList()
@@ -48,10 +52,11 @@ namespace ThirdPartyBetHistory.Service.DAL
             return _mainDbClient.Query<ThirdPartyModel>("Common_SiteTpList_Get");
         }
 
-        public void ToDoAddBetRecord(IEnumerable<BetRecordInfo> betRecordInfos)
+        public void DoSettleTicket(IEnumerable<SabaSettleData> settleDataList, WorkerType workerType)
         {
-            foreach (var betRecord in betRecordInfos.OrderBy(x => x.TicketKey))
+            foreach (var settleData in settleDataList.OrderBy(x => x.BetRecordInfo.TicketKey))
             {
+                var betRecord = settleData.BetRecordInfo;
                 var tpCustInfo = GetTpCustInfoWithCache(betRecord.TpId, betRecord.TpUserName);
 
                 if (tpCustInfo == null/* || betRecord.TicketStatus == TicketStatus.UnSettled*/)
@@ -251,13 +256,18 @@ namespace ThirdPartyBetHistory.Service.DAL
                         trans.Commit();
                     }
 
-                    if (tpCustInfo.SiteId == (int)SiteId.Nova88)
+                    SetSiteTicketKey(tpCustInfo.SiteId, betRecord.TpId, workerType, betRecord.TicketKey);
+
+                    try
                     {
-                        SetTicketKey((int)Tp.Saba, betRecord.TicketKey);
+                        _ = Task.Run(() =>
+                          {
+                            _ = _tpBetRecordExtendBLL.AddTpBetRecordExtend(betRecord, tpCustInfo, settleData.TpBetRecordExtend);
+                          }).ConfigureAwait(false);
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        SiteTpTicketKey((int)Tp.Saba, tpCustInfo.SiteId, betRecord.TicketKey);
+                        _logger.LogError(ex, $"{ex.Message} || { JsonConvert.SerializeObject(betRecord)}");
                     }
 
                     _logger.LogDebug(JsonConvert.SerializeObject(betRecord));
@@ -270,7 +280,7 @@ namespace ThirdPartyBetHistory.Service.DAL
             }
         }
 
-        private TpCustInfo GetTpCustInfoWithCache(int tpId, string tpUserName)
+        public TpCustInfo GetTpCustInfoWithCache(int tpId, string tpUserName)
         {
             var key = $"TpCustInfo_{tpId}_{tpUserName}";
             var tpCustInfo = _cache.Get<TpCustInfo>(key);
@@ -352,16 +362,6 @@ namespace ThirdPartyBetHistory.Service.DAL
             return _mainDbClient.Execute("Service_EffectiveBetSum_Set", parameters, conn, trans);
         }
 
-        public int SetTicketKey(int TpId, long TicketKey)
-        {
-            var parameters = new DynamicParameters(new { TpId, TicketKey });
-            return _mainDbClient.Execute("Service_TpTicketKey_Set", parameters);
-        }
-        public int SiteTpTicketKey(int TpId, int SiteId, long TicketKey)
-        {
-            var parameters = new DynamicParameters(new { TpId, SiteId, TicketKey });
-            return _mainDbClient.Execute("Service_SiteTpTicketKey_Set", parameters);
-        }
         public TpCurrency GetTpCurrency(int tpId, int currencyId)
         {
             var parameters = new DynamicParameters(new { TpId = tpId, CurrencyId = currencyId });
@@ -417,26 +417,37 @@ namespace ThirdPartyBetHistory.Service.DAL
             p.Add("Is1stDepoist", dbType: DbType.Boolean, direction: ParameterDirection.Output);
             p.Add("AfterAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
-            _ = _mainDbClient.Execute("Wallet_Set", p, conn, trans);
+            _ = _mainDbClient.Execute("Wallet_Set_V2", p, conn, trans);
             _ = p.Get<byte?>("Is1stDepoist") ?? 0;
             afterAmount = p.Get<decimal>("AfterAmount");
             return afterAmount >= 0 ? 1 : 0;
         }
 
-        public IEnumerable<UnSettle> GetSabaUnSettleTicket(SiteId siteId, DateTime startTime, DateTime endTime)
+        public IEnumerable<UnSettle> GetTpBetRecordReSettleTicket(Tp tp, SiteId siteId, string settlementTypeList,
+            DateTime startTime, DateTime endTime)
         {
-            return _mainDbClient.Query<UnSettle>("Service_SabaUnSettle_Get",
-                new { _SiteId = (int)siteId, StartTime = startTime, EndTime = endTime });
+            return _mainDbClient.Query<UnSettle>("Service_TpBetRecord_ReSettle_Get",
+                new
+                {
+                    _TpId = (int)tp, _SiteId = (int)siteId, SettlementTypeList = settlementTypeList,
+                    StartTime = startTime, EndTime = endTime
+                });
         }
+
         public long GetSiteTicketKey(SiteId SiteId, int TpId, WorkerType workerType)
         {
             var parameters = new { SiteId = (int)SiteId, TpId, WorkerType = (int)workerType };
             return _mainDbClient.QueryFirst<long>("Service_SiteTicketKey_Get", parameters);
         }
-        public int SetSiteTicketKey(SiteId SiteId, int TpId, WorkerType workerType, long TicketKey)
+        public int SetSiteTicketKey(int SiteId, int TpId, WorkerType workerType, long TicketKey)
         {
-            var parameters = new { SiteId = (int)SiteId, TpId, WorkerType = (int)workerType, TicketKey };
+            var parameters = new { SiteId, TpId, WorkerType = (int)workerType, TicketKey };
             return _mainDbClient.Execute("Service_SiteTicketKey_Set", parameters);
+        }
+
+        public int AddTpBetRecordDetail(TpBetRecordDetail detail)
+        {
+            return _mainDbClient.QueryFirst<int>("Service_TpBetRecordDetail_Ins_V2", detail); 
         }
     }
 }

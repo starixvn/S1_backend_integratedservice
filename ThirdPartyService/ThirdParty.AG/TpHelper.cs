@@ -4,12 +4,12 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using System.Xml;
-using System.Security.Cryptography;
-using System.Text;
-using System.IO;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using System.Linq;
 using Newtonsoft.Json;
+using ThirdPartyCore.Model.TpBetRecordExtend;
+using ThirdPartyCore.Extensions;
+
 
 namespace ThirdParty.AG
 {
@@ -216,11 +216,11 @@ namespace ThirdParty.AG
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var billNoList = TpBetRecordProvider.ReportDbQuery("Service_BettransLC_AGV2_Payout_Get", new { transactionID = getBetDetail.TransId })
+            var billNoList = TpBetRecordProvider.DbQuery("Service_BettransLC_AGV2_Payout_Get", new { transactionID = getBetDetail.TransId }, DataBase.Report)
                 .Select(item => item.GetValueOrDefault("billNo")?.ToString());
 
-            var wagerDetailList = TpBetRecordProvider.WagerDbQuery("Service_TpWager_AG_Detail_Get", 
-                new { billNoList = JsonConvert.SerializeObject(billNoList) });
+            var wagerDetailList = TpBetRecordProvider.DbQuery("Service_TpWager_AG_Detail_Get", 
+                new { billNoList = JsonConvert.SerializeObject(billNoList) }, DataBase.Wager);
 
             var detail = ToJson(wagerDetailList);
             var gameCode = wagerDetailList.FirstOrDefault()?.GetValueOrDefault("gameType")?.ToString();
@@ -248,26 +248,64 @@ namespace ThirdParty.AG
                 }
             };
         }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var billNoList = TpBetRecordProvider.DbQuery("Service_BettransLC_AGV2_Payout_Get", new { transactionID = betRecordInfo.TransId }, DataBase.Main)
+            .Select(item => item.GetValueOrDefault("billNo")?.ToString());
+            var detail = TpBetRecordProvider.DbQuery("Service_TpWager_AG_Detail_Get",new { billNoList = JsonConvert.SerializeObject(billNoList) }, DataBase.Wager);
+            var gameCode = detail.FirstOrDefault()?.GetValueOrDefault("gameType")?.ToString();
+
+            return tpGameType.CategoryId switch
+            {
+                TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = gameCode,
+                    Game = GetGameName(gameCode),
+                    RefNo = detail.FirstOrDefault()?.GetStringValue("gameCode"),
+                    Title = tpGameType.TypeName,
+                    MatchID = detail.FirstOrDefault()?.GetStringValue("tableCode"),
+                    BetType = detail.FirstOrDefault()?.GetStringValue("playType"),
+                    BetChoice = string.Empty,
+                    Result = detail.FirstOrDefault()?.GetStringValue("result"),
+                    DeviceType = GetDeviceType(detail.FirstOrDefault()?.GetStringValue("deviceType")),
+                    IP = detail.FirstOrDefault()?.GetStringValue("betIP"),
+                },
+                _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            };
+        }
+        private DeviceType GetDeviceType(string device)
+        {
+            switch (device)
+            {
+                case "0":
+                case "7":
+                    return DeviceType.Desktop;
+                case "1":
+                case "3":
+                case "6":
+                    return DeviceType.Mobile;
+                default:
+                    return DeviceType.None;
+            }
+        }
+
         private string GetGameName(string gameCode)
         {
             return gameCode switch
             {
-                "BAC" => "百家乐",
-                "CBAC" => "包桌百家乐",
-                "LINK" => "连环百家乐",
-                "DT" => "龙虎",
-                "SHB" => "骰宝",
-                "ROU" => "轮盘",
-                "FT" => "番摊",
-                "LBAC" => "竞咪百家乐",
-                "ULPK" => "终极德州扑克",
-                "SBAC" => "保险百家乐",
-                "NN"=> "牛牛",
+                "BAC" => "Baccarat",
+                "CBAC" => "VIP Baccarat",
+                "DT" => "Dragon Tiger",
+                "SHB" => "Sicbo",
+                "ROU" => "Roulette",
+                "LBAC" => "Bid Baccarat",
+                "NN"=> "Bull Bull",
                 "BJ" => "Blackjack",
-                "ZJH" => "炸金花",
-                "BF" => "斗牛",
-                "SG" => "三公",
-                _ => string.Empty,
+                "ZJH" => "Win Three Cards",
+                "BF" => "Bull Fight",
+                "SG" => "Three Face",
+                _ => gameCode,
             };
         }
 

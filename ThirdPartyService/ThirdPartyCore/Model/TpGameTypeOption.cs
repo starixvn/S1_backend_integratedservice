@@ -10,6 +10,7 @@ namespace ThirdPartyCore.Model
         public int Type { get; set; }
         public string TypeName { get; set; }
         public int TpId { get; set; }
+        public string TpName { get; set; }
         public TpCategory CategoryId { get; set; }
     }
 }

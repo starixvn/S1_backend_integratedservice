@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace ThirdPartySeamlessWallet.Service.Model
+﻿namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class BettingData_JILI
     {
@@ -18,7 +13,12 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string userId { get; set; }
         public bool isFreeRound { get; set; }
         public long TransactionID { get; set; }
-        
+        public decimal turnover { get; set; }
+        public decimal preserve { get; set; }
+        public decimal jpContribute { get; set; }
+        public decimal jpWin { get; set; }
+        public long sessionId { get; set; }
+        public int type { get; set; }
     }
 
     public class CancelBetData_JILI
@@ -30,17 +30,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal betAmount { get; set; }
         public decimal winloseAmount { get; set; }
         public string userId { get; set; }
+        public long sessionId { get; set; }
+        public int type { get; set; }
+        public decimal preserve { get; set; }
     }
-
-    //public class RecordData_JILI
-    //{
-    //    public string currency { get; set; }
-    //    public int game { get; set; }
-    //    public long round { get; set; }
-    //    public decimal betAmount { get; set; }
-    //    public decimal winloseAmount { get; set; }
-    //    public string TpUserName { get; set; }
-    //}
 
     public class BettransData_JILI : BettingData_JILI
     {
@@ -51,5 +44,11 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class SettleData_JILI : SettleData
     {
         public new long TransId { get; set; }
+        public long SessionId { get; set; }
+    }
+
+    public class CheckBettransData_JILI : BettransData_JILI
+    {
+        public int WagerCount { get; set; }
     }
 }

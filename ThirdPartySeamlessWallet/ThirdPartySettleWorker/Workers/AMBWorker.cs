@@ -1,12 +1,5 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Serilog.Context;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using ThirdPartySeamlessWallet.Controllers;
+using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -21,6 +14,8 @@ namespace ThirdPartySettleWorker.Workers
         public Tp Tp => Tp.AMB;
 
         private Timer _timerRng;
+        private Timer _timerPoker;
+
         private readonly SettledBLL _settledBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
@@ -28,7 +23,6 @@ namespace ThirdPartySettleWorker.Workers
         private readonly ILogger<AMBWorker> _logger;
         private readonly string _tpName;
         private readonly PartitionService _partitionService;
-
 
         public AMBWorker(IServiceProvider provider)
         {
@@ -44,12 +38,14 @@ namespace ThirdPartySettleWorker.Workers
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _timerRng = new Timer(DoSettleRng, null, TimeSpan.Zero, TimeSpan.Zero);
+            _timerPoker = new Timer(DoSettlePoker, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
             _timerRng?.Change(Timeout.Infinite, 0);
+            _timerPoker?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
 
@@ -153,6 +149,87 @@ namespace ThirdPartySettleWorker.Workers
             if (winLostAmount > 0) return TicketStatus.Win;
             
             return TicketStatus.Lost;
+        }
+
+        private void DoSettlePoker(object state)
+        {
+            var forContinue = false;
+            var isError = false;
+            var thisTp = (int)Tp.AMB;
+            var gameType = GameType.AMB_Poker;
+            var logName = "Settle_AMB";
+            var tpName = Enum.GetName(typeof(Tp), thisTp);
+
+            try
+            {
+                var unsettledList = _settledBLL.GetUnsettledListPK_AMB();
+
+                if (unsettledList != null)
+                {
+                    forContinue = unsettledList.Count() == 200;
+                    foreach (var unsettled in unsettledList)
+                    {
+                        try
+                        {
+                            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
+                            decimal stake = unsettled.Stake;
+                            decimal validBet = unsettled.ValidBet;
+                            decimal winLostAmount = unsettled.WinLostAmount;
+                            decimal revenue = (decimal)unsettled.Revenue;
+
+                            var betRecordInfo = new BetRecordInfo
+                            {
+                                TpId = thisTp,
+                                Stake = stake,
+                                ValidBet = validBet,
+                                Revenue = revenue,
+                                WinlostAmount = winLostAmount,
+                                TransId = unsettled.TransId,
+                                GameType = gameType,
+                                TpUserName = unsettled.Account,
+                                SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.TransTime,
+                                SettlementType = SettlementType.SettledForValid
+                            };
+
+                            if (unsettled.IsRefund == 1)
+                            {
+                                betRecordInfo.TicketStatus = TicketStatus.Refund;
+                            }
+
+                            var result = _settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
+                            _settledBLL.SetSettleFlag_BettransPK_AMB(unsettled.TransId);
+                        }
+                        catch (Exception ex1)
+                        {
+                            LogContext.PushProperty("TP", tpName);
+                            isError = true;
+                            _logger.LogError($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogContext.PushProperty("TP", tpName);
+                _logger.LogError(ex.ToString(), logName);
+                isError = true;
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(1);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                }
+
+                _timerPoker?.Change(dueTimeSpan, TimeSpan.Zero);
+            }
         }
     }
 }

@@ -12,6 +12,7 @@ using System.Net.Http.Headers;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using System.Text;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL.MG
 {
@@ -19,14 +20,17 @@ namespace ThirdPartyWager.Service.BLL.MG
     {
         public Dictionary<string, string> MgConfig { get; set; }
         private readonly ILogger<ApiMGBLL> _logger;
+        private readonly Log2File _log2File;
         private readonly IConfiguration _configuration;
         private readonly HttpClient _client;
+        private readonly string _tpName = Tp.MG.ToString();
 
         public ApiMGBLL(IServiceProvider provider, IConfiguration configuration)
         {
             _configuration = configuration;
             _logger = provider.GetRequiredService<ILogger<ApiMGBLL>>();
             var httpHelper = provider.GetRequiredService<HttpHelper>();
+            _log2File = provider.GetRequiredService<Log2File>();
             _client = httpHelper.GetClientWithHandler(CreateHandler());
         }
 
@@ -110,16 +114,18 @@ namespace ThirdPartyWager.Service.BLL.MG
                 var strAgents = GetInputValue(MgConfig, "Agent");
                 var mgAgents = JsonConvert.DeserializeObject<List<MGAgents>>(strAgents);
                 var agent = mgAgents.SingleOrDefault(a => a.Currency == currencyId);
+                var url = $"{apiUrl}/agents/{agent.AgentCode}/reports/playerGameAnalysis";
                 var parameters = new
                 {
-                    fromDate = date.ToString("yyyy-MM-dd HH:mm:ss.fff"),             
+                    fromDate = date.ToString("yyyy-MM-dd HH:mm:ss.fff"),
                     toDate = date.AddDays(1).AddMilliseconds(-1).ToString("yyyy-MM-dd HH:mm:ss.fff"),
                     timeAggregation = "Daily",
                     utcOffset = "0"
                 };
+                _log2File.InsertRequestLog(_tpName, url, JsonConvert.SerializeObject(parameters), "1");
                 var httpContent = new StringContent(JsonConvert.SerializeObject(parameters), Encoding.UTF8, "application/json");
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                var response = await _client.PostAsync($"{apiUrl}/agents/{agent.AgentCode}/reports/playerGameAnalysis", httpContent);
+                var response = await _client.PostAsync(url, httpContent);
                 response.EnsureSuccessStatusCode();
 
                 var content = await response.Content.ReadAsStringAsync();
@@ -141,15 +147,17 @@ namespace ThirdPartyWager.Service.BLL.MG
                 var strAgents = GetInputValue(MgConfig, "Agent");
                 var mgAgents = JsonConvert.DeserializeObject<List<MGAgents>>(strAgents);
                 var agent = mgAgents.SingleOrDefault(a => a.Currency == currencyId);
+                var url = $"{apiUrl}/agents/{agent.AgentCode}/reports/fortuneRewards";
                 var parameters = new
                 {
                     fromDate = date.ToString("yyyy-MM-dd HH:mm:ss.fff"),
                     toDate = date.AddDays(1).AddMilliseconds(-1).ToString("yyyy-MM-dd HH:mm:ss.fff"),
                     utcOffset = "0"
                 };
+                _log2File.InsertRequestLog(_tpName, url, JsonConvert.SerializeObject(parameters), "1");
                 var httpContent = new StringContent(JsonConvert.SerializeObject(parameters), Encoding.UTF8, "application/json");
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                var response = await _client.PostAsync($"{apiUrl}/agents/{agent.AgentCode}/reports/fortuneRewards", httpContent);
+                var response = await _client.PostAsync(url, httpContent);
                 response.EnsureSuccessStatusCode();
 
                 var content = await response.Content.ReadAsStringAsync();
@@ -162,7 +170,7 @@ namespace ThirdPartyWager.Service.BLL.MG
                 return null;
             }
         }
-     
+
         private string GetInputValue(Dictionary<string, string> inputs, string key)
         {
             if (inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))

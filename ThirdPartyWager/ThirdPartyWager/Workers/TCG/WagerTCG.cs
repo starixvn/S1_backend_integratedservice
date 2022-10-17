@@ -89,7 +89,7 @@ namespace ThirdPartyWager.Workers
         private async Task<int> Main(string currency)
         {
             var quick = 0;
-            var timerType = 1;
+            var timerType = (int)WagerTimerType.Wager;
             var dataRangeMins = 5;
 
             var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, timerType, currency);

@@ -16,7 +16,7 @@ namespace ThirdPartyWager.Workers
         private readonly RewardAllBetBLL _rewardAllBetBLL;
 
         private Timer timer;
-        private readonly int tpType = 3;
+        private readonly int tpType = (int)WagerTimerType.CheckReward;
         private readonly int timeRange = 20; //in minutes
         private readonly int quickTime = 45; // in seconds
         private readonly int runTime = 180; // in seconds

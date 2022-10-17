@@ -171,6 +171,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (tpCurrency.ExchangeRate > 0)
             {
                 transferData_MP.requestAmount *= tpCurrency.ExchangeRate;
+                transferData_MP.totalBet = transferData_MP.totalBet / 100 * tpCurrency.ExchangeRate;
+                transferData_MP.validBet = transferData_MP.validBet / 100 * tpCurrency.ExchangeRate;
+                transferData_MP.totalWithdraw = transferData_MP.totalWithdraw / 100 * tpCurrency.ExchangeRate;
+                transferData_MP.revenue = transferData_MP.revenue / 100 * tpCurrency.ExchangeRate;
+
             }
 
             var result = settledService.MoneyInPK_MP(tpCustInfo, transferData_MP, out afterAmount);

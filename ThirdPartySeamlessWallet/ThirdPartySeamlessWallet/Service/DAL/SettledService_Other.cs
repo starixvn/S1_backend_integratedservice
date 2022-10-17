@@ -951,13 +951,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             switch (gameType)
             {
                 case (int)GameType.One789_Lottery:
-                    sp = "Service_BettransLT_One789_Unsettle_Get";
+                    sp = "Service_BettransLT_One789_Unsettle_Get_V3";
                     break;
                 case (int)GameType.One789_Lottery_789:
-                    sp = "Service_BettransLT_One789_789_Unsettle_Get";
+                    sp = "Service_BettransLT_One789_789_Unsettle_Get_V3";
                     break;
                 case (int)GameType.One789_LiveCasino:
-                    sp = "Service_BettransLC_One789_Unsettle_Get";
+                    sp = "Service_BettransLC_One789_Unsettle_Get_V3";
                     break;
                 default:
                     break;
@@ -966,25 +966,25 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return conn.Query<SettleData>($"{sp}", commandType: CommandType.StoredProcedure);
         }
 
-        public SettleData GetSettle_TpWagerOne789(int gameType, string TransId)
+        public SettleData_One789 GetSettle_TpWagerOne789(int gameType, string TransId)
         {
             string sp = "";
             switch (gameType)
             {
                 case (int)GameType.One789_Lottery:
-                    sp = "Service_TpWagerOne789_LT_Settle_Get";
+                    sp = "Service_TpWagerOne789_LT_Settle_Get_V3";
                     break;
                 case (int)GameType.One789_Lottery_789:
-                    sp = "Service_TpWagerOne789_LT_789_Settle_Get";
+                    sp = "Service_TpWagerOne789_LT_789_Settle_Get_V3";
                     break;
                 case (int)GameType.One789_LiveCasino:
-                    sp = "Service_TpWagerOne789_LC_Settle_Get";
+                    sp = "Service_TpWagerOne789_LC_Settle_Get_V3";
                     break;
                 default:
                     break;
             }
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.QueryFirstOrDefault<SettleData>($"{sp}", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+            return conn.QueryFirstOrDefault<SettleData_One789>($"{sp}", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_TpWagerOne789(int gameType, string TransId)
@@ -1257,5 +1257,60 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
         #endregion
+
+        public async Task<SBOResult> CancelBetLiveCoin_SBO(TpCustInfo tpCustInfo, CancelSportDto_SBO dto)
+        {
+            try
+            {
+                await using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                await using var trans = await conn.BeginTransactionAsync();
+
+                var p = new DynamicParameters(new
+                {
+                    dto.TransferCode
+                });
+
+                var result = await conn.ExecuteAsync("Service_BettransLiveCoin_SBO_Cancel_Set", p, transaction: trans,
+                    commandType: CommandType.StoredProcedure);
+
+                var sboResult = new SBOResult();
+                if (result < 1)
+                {
+                    sboResult.Result = -1;
+                    return sboResult;
+                }
+
+                result = walletService.SetBalance(
+                    tpCustInfo.CustId,
+                    tpCustInfo.SiteId,
+                    tpCustInfo.UserName,
+                    Math.Abs(dto.Amount),
+                    (int)Tp.SBO,
+                    TransType.Refunds,
+                    $"Cancel {dto.Amount:#,##0.##}",
+                    dto.TransferCode,
+                    out var afterAmount,
+                    conn,
+                    trans);
+
+                if (result == 1)
+                {
+                    sboResult.AfterAmount = afterAmount;
+                    sboResult.Result = 1;
+                    trans.Commit();
+                }
+
+                return sboResult;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                return new SBOResult()
+                {
+                    Result = -5
+                };
+            }
+        }
     }
 }

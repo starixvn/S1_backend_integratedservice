@@ -9,6 +9,7 @@ using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.SBSW
 {
@@ -317,7 +318,7 @@ namespace ThirdParty.SBSW
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
             var gameType = getBetDetail.TpGameTypeOption.Type;
-            var tpBetRecordDetail = TpBetRecordProvider.GetTpBetRecordDetail(getBetDetail);
+            var tpBetRecordDetail = TpBetRecordProvider.GetTpBetRecordDetail(getBetDetail.TpGameTypeOption.TpId, gameType, getBetDetail.TransId, getBetDetail.SettledTime);
 
             if (tpBetRecordDetail == null)
             {
@@ -417,5 +418,9 @@ namespace ThirdParty.SBSW
             return new DateTimeOffset(target ?? defaultTime, new TimeSpan(-4, 0, 0)).DateTime;
         }
 
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

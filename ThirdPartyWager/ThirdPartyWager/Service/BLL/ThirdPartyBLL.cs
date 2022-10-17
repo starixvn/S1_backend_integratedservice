@@ -2,19 +2,23 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class ThirdPartyBLL
     {
         private readonly ThirdPartyHelper thirdPartyHelper;
+        private readonly TpCustInfoService tpCustInfoService;
         private readonly IMemoryCache cache;
 
-        public ThirdPartyBLL(ThirdPartyHelper thirdPartyHelper, IMemoryCache cache)
+        public ThirdPartyBLL(ThirdPartyHelper thirdPartyHelper,TpCustInfoService tpCustInfoService, IMemoryCache cache)
         {
             this.thirdPartyHelper = thirdPartyHelper;
+            this.tpCustInfoService = tpCustInfoService;
             this.cache = cache;
         }
         public Dictionary<string, string> GetThirdPartySetting(int tpId)
@@ -93,6 +97,53 @@ namespace ThirdPartyWager.Service.BLL
         public int SetThirdPartyTimerByGameType(int tpId, int type, long start, int gameType)
         {
             return thirdPartyHelper.SetThirdPartyTimerByGameType(tpId, type, start, gameType);
+        }
+        
+        public TpCustInfo GetTpCustInfoWithCache(int tpId, string tpUserName)
+        {
+            var key = $"TpCustInfo_{tpId}_{tpUserName}";
+            var tpCustInfo = cache.Get<TpCustInfo>(key);
+            if (tpCustInfo == null)
+            {
+                tpCustInfo = GetTpCustInfo(tpId, tpUserName);
+                if (tpCustInfo != null)
+                {
+                    cache.Set(key, tpCustInfo, new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(1)));
+                }
+            }
+
+            return tpCustInfo;
+        }
+
+        private TpCustInfo GetTpCustInfo(int tpId, string tpUserName)
+        {
+            var tpCustInfo = tpCustInfoService.GetTpCustInfo(tpId, tpUserName);
+            return tpCustInfo;
+        }
+        
+        public SettlementType GetGameCasinoSettlementType(int tpId, string gameId)
+        {
+            var settlementType = SettlementType.SettledForValid;
+            var casino = GetGameCasinoWithCache(tpId);
+            var check = casino.FirstOrDefault(x => x.GameId == gameId && x.TypeId == 3);
+            if (check != null)
+            {
+                settlementType = SettlementType.SettledForValidNotRollover;
+            }
+            return settlementType;
+        }
+
+        private IEnumerable<TpGameCasino> GetGameCasinoWithCache(int tpId)
+        {
+            string key = $"TpGameCasino_{tpId}";
+            var tpGameCasino = cache.Get<IEnumerable<TpGameCasino>>(key);
+            if (tpGameCasino == null)
+            {
+                tpGameCasino = thirdPartyHelper.GetGameCasino(tpId);
+                cache.Set(key, tpGameCasino, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(30)));
+            }
+
+            return tpGameCasino;
         }
     }
 }

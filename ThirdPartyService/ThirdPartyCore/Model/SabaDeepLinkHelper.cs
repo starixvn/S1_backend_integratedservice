@@ -42,14 +42,12 @@ namespace ThirdPartyCore.Model
             {"6","volleyball" },
             {"8","baseball" } ,
             {"9","badminton" } ,
-            {"43","esports" },
             {"50", "indiancricket" },
             {"161","numbergame" },
             {"164","164" },
             {"171","vgaming" },
             {"180","180" },
             {"190","190" },
-            {"192","192" },
             {"193","193" },
             {"194","194" },
             {"197","197" },
@@ -60,7 +58,6 @@ namespace ThirdPartyCore.Model
             {"220","KenoLottery" },
             {"222","tablegame" },
             {"223","indo4d" },
-            {"245","virtualgame" },
             {"997","90088,89692,89697,93062,95730,96666,95731" }
         };
 
@@ -72,6 +69,7 @@ namespace ThirdPartyCore.Model
             {
                 { "43", ESports},
                 { "192", VirtualSoccerWorldCup},
+                { "237", MaxGame},
                 { "245", VirtualGames},
             };
 
@@ -93,12 +91,6 @@ namespace ThirdPartyCore.Model
             var loginUrl = inputs.GetValueOrDefault("LoginUrl");
             resultUrl.Append($"&homeUrl={homeUrl}&signupUrl={signupUrl}&LoginUrl={loginUrl}");
 
-            if (_sportType == "2001" || _sportType == "2002" || _sportType == "2003")
-            {
-                _sportType = "1";
-                _menuType = menuTypeDic[_sportType];
-            }
-
             // 檢查sportType判斷走新的獨立Func或原本共用的Method
             var deeplink = _sportTypeHandler.ContainsKey(_sportType) ? _sportTypeHandler[_sportType].Invoke() :
                 _appType switch
@@ -116,14 +108,12 @@ namespace ThirdPartyCore.Model
         {
             return _sportType switch
             {
-                "43" => true,   // 电子竞技
                 "171" => true,  // Vgaming
                 "200" => true,  // 沙巴俱乐部
                 "202" => true,  // 快乐彩
                 "220" => true,  // 彩票(Keno Lottery)
                 "222" => true,  // 桌面游戏
                 "223" => true,  // Togel 4D
-                "245" => true,  // 虚拟娱乐城
                 _ => false,
             };
         }
@@ -131,6 +121,13 @@ namespace ThirdPartyCore.Model
         private string GetDesktopDeeplink()
         {
             var act = _sportType != null ? sportTypeDic.GetValueOrDefault(_sportType) : null;
+
+            if (_sportType == "2001" || _sportType == "2002" || _sportType == "2003")
+            {
+                _menuType = menuTypeDic[_sportType];
+                act = "1";
+            }
+
             if (CheckSportType())
             {
                 if (!string.IsNullOrEmpty(_betType))
@@ -164,6 +161,11 @@ namespace ThirdPartyCore.Model
 
         private string GetMobileDeeplink()
         {
+            if (_sportType == "2001" || _sportType == "2002" || _sportType == "2003")
+            {
+                _menuType = menuTypeDic[_sportType];
+                _sportType = "1";
+            }
             var types = CheckSportType() ? sportTypeDic.GetValueOrDefault(_sportType) : $"{_sportType},{_menuType},l";
             if (_sportType == "202")
             {
@@ -205,6 +207,25 @@ namespace ThirdPartyCore.Model
 
 
         #region SportTypeHandler
+
+        /// <summary>
+        /// MaxGame
+        /// </summary>
+        /// <returns></returns>
+        private string MaxGame()
+        {
+            if (_isFun)
+            {
+                return string.Empty;
+            }
+
+            return _appType switch
+            {
+                AppType.Desktop => "&game=MaxGame",
+                AppType.Mobile => "&types=maxgame",
+                _ => string.Empty
+            };
+        }
 
         /// <summary>
         /// 虛擬娛樂城

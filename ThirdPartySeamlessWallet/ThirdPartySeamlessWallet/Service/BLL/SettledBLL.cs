@@ -42,6 +42,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetSettlementType(gameType, gameId);
         }
 
+        public int DoTpRewardTicket(TpCustInfo tpCustInfo, TpRewardRecordInfo tpRewardRecordInfo, TpCategory tpCategory)
+        {
+            var result = settledService.DoTpRewardTicket(tpCustInfo, tpRewardRecordInfo, tpCategory);
+            return result;
+        }
+
         #region SA
 
         public int CancelBetLC_SA(BettingDataLC_SA bettingDataLC_SA, out decimal afterAmount)
@@ -957,6 +963,27 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public int ResettleLC_AWC_Sexy(ResettleLC_Sexy resettleLC_Sexy)
+        {
+            foreach (var txn in resettleLC_Sexy.txns)
+            {
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Sexy, txn.userId);
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Sexy, tpCustInfo.CurrencyId);
+                txn.tpCustInfo = tpCustInfo;
+
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    txn.turnover *= tpCurrency.ExchangeRate;
+                    txn.betAmount *= tpCurrency.ExchangeRate;
+                    txn.winAmount *= tpCurrency.ExchangeRate;
+                    txn.gameInfo.winLoss *= tpCurrency.ExchangeRate;
+                }
+            }
+
+            var result = settledService.ResettleLC_AWC_Sexy(resettleLC_Sexy);
+            return result;
+        }
+
         public IEnumerable<SettleData> GetUnsettledListLC_AWC_Sexy()
         {
             return settledService.GetUnsettledListLC_AWC_Sexy();
@@ -1406,6 +1433,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (tpCurrency.ExchangeRate > 0)
             {
                 bettingDataLC_WM.money *= tpCurrency.ExchangeRate;
+                bettingDataLC_WM.RealBetAmount = bettingDataLC_WM.DetailSumAmount * tpCurrency.ExchangeRate;
             }
 
             var result = settledService.PayoutLC_WM(tpCustInfo, bettingDataLC_WM, out afterAmount);
@@ -1426,6 +1454,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (tpCurrency.ExchangeRate > 0)
             {
                 bettingDataLC_WM.money *= tpCurrency.ExchangeRate;
+                bettingDataLC_WM.RealBetAmount = bettingDataLC_WM.DetailSumAmount * tpCurrency.ExchangeRate;
             }
 
             var result = settledService.CancelBetLC_WM(tpCustInfo, bettingDataLC_WM, out afterAmount);
@@ -1444,6 +1473,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (tpCurrency.ExchangeRate > 0)
             {
                 bettingDataLC_WM.money *= tpCurrency.ExchangeRate;
+                bettingDataLC_WM.RealBetAmount = bettingDataLC_WM.DetailSumAmount * tpCurrency.ExchangeRate;
             }
 
             var result = settledService.ResettleLC_WM(tpCustInfo, bettingDataLC_WM, out afterAmount);
@@ -1454,7 +1484,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public IEnumerable<SettleData> GetUnsettledList_WM()
+        public IEnumerable<SettleData_WM> GetUnsettledList_WM()
         {
             return settledService.GetUnsettledList_WM();
         }
@@ -1542,16 +1572,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public IEnumerable<SettleDataRng_Iconic> GetUnsettledListRng_Iconic()
-        {
-            return settledService.GetUnsettledListRng_Iconic();
-        }
-
-        public int SetSettleFlag_BettransRng_Iconic(long transactionId)
-        {
-            return settledService.SetSettleFlag_BettransRng_Iconic(transactionId);
-        }
-
         public int CancelBetFish_Iconic(BettingDataFish_Iconic bettingDataFish_Iconic, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Iconic, bettingDataFish_Iconic.username);
@@ -1586,16 +1606,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 afterAmount /= tpCurrency.ExchangeRate;
             }
             return result;
-        }
-
-        public IEnumerable<SettleDataFish_Iconic> GetUnsettledListFish_Iconic()
-        {
-            return settledService.GetUnsettledListFish_Iconic();
-        }
-
-        public int SetSettleFlag_TpWagerFish_Iconic(string transactionId)
-        {
-            return settledService.SetSettleFlag_TpWagerFish_Iconic(transactionId);
         }
 
         #endregion
@@ -1795,6 +1805,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #region JILI
 
+        public int PayoutRNG_JILI(TpCustInfo tpCustInfo, BettingData_JILI bettingData_JILI, out decimal afterAmount)
+        {
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.JILI, tpCustInfo.CurrencyId);
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                bettingData_JILI.betAmount *= tpCurrency.ExchangeRate;
+                bettingData_JILI.winloseAmount *= tpCurrency.ExchangeRate;
+                bettingData_JILI.turnover *= tpCurrency.ExchangeRate;
+                bettingData_JILI.preserve *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.PayoutRNG_JILI(tpCustInfo, bettingData_JILI, thirdPartyBLL, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
         public int BetAndPayoutRNG_JILI(BettingData_JILI bettingData_JILI, int gameType, out decimal afterAmount)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.JILI, bettingData_JILI.userId);
@@ -1826,6 +1855,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             {
                 cancelBetData_JILI.betAmount *= tpCurrency.ExchangeRate;
                 cancelBetData_JILI.winloseAmount *= tpCurrency.ExchangeRate;
+                cancelBetData_JILI.preserve *= tpCurrency.ExchangeRate;
             }
 
             var result = (gameType == (int)GameType.JILI_RNG) ? settledService.CancelBetRNG_JILI(tpCustInfo, cancelBetData_JILI, out afterAmount) : settledService.CancelBetFish_JILI(tpCustInfo, cancelBetData_JILI, out afterAmount);
@@ -1849,6 +1879,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlag_JILI(category, TransId, TicketStatus);
         }
 
+        public int SetSettleFlag_BettransRng_JILI(string spName, string transId, int ticketStatus, long settleTime)
+        {
+            return settledService.SetSettleFlag_BettransRng_JILI(spName, transId, ticketStatus, settleTime);
+        }
         #endregion
 
         #region EVO
@@ -2155,6 +2189,120 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
 
             return result;
+        }
+
+        public int RewardRNG_AP(CPSettleDataRNG_AP rewardDataRNG_AP, string TpUserName)
+        {
+
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, TpUserName);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                rewardDataRNG_AP.cpwin *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.RewardRNG_AP(tpCustInfo, rewardDataRNG_AP);
+            return result;
+        }
+        #endregion
+
+        #region YGG
+
+        public SettleData_YGG GetSettle_TpWager_YGG(string transId)
+        {
+            return settledService.GetSettle_TpWager_YGG(transId);
+        }
+
+        #endregion
+
+        #region SimplePlay
+
+        public int PayoutRNG_SimplePlay(PayoutData_SimplePlay payoutData_SimplePlay, int gameType, out decimal afterAmount)
+        {
+            var tpId = (int)Tp.SimplePlay;
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(tpId, payoutData_SimplePlay.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                payoutData_SimplePlay.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.PayoutRNG_SimplePlay(tpCustInfo, payoutData_SimplePlay, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public int CancelBetRNG_SimplePlay(CancelBetData_SimplePlay cancelBetData_SimplePlay, int gameType, out decimal afterAmount)
+        {
+            var tpId = (int)Tp.SimplePlay;
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(tpId, cancelBetData_SimplePlay.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                cancelBetData_SimplePlay.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.CancelBetRNG_SimplePlay(tpCustInfo, cancelBetData_SimplePlay, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        #endregion
+
+        #region Skywind
+        public int Settled_Skywind(TpCustInfo tpCustInfo, BettingData_Skywind bettingData_Skywind, string TpUserName, int gameType, out decimal afterAmount)
+        {
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingData_Skywind.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.Settled_Skywind(tpCustInfo, bettingData_Skywind, gameType, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            if (afterAmount == 0)
+            {
+                afterAmount = tpCustInfoBLL.GetBalance((int)Tp.Skywind, TpUserName).Balance;
+            }
+
+            return result;
+        }
+
+        public int CancelBet_Skywind(TpCustInfo tpCustInfo, CancelBetData_Skywind cancelBetData_Skywind, int gameType, out decimal afterAmount)
+        {
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
+
+
+            var result = settledService.CancelBet_Skywind(tpCustInfo, cancelBetData_Skywind, gameType, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public SettleData_Skywind GetSettle_TpWager_Skywind(string transId)
+        {
+            return settledService.GetSettle_TpWager_Skywind(transId);
         }
         #endregion
     }

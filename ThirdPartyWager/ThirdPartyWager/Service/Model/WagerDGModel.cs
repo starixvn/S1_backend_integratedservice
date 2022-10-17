@@ -92,5 +92,8 @@ namespace ThirdPartyWager.Service.Model
     public class WagerDGTotal
     {
         public int wagerCount { get; set; }
+        public decimal Stake { get; set; }
+        public decimal ValidBet { get; set; }
+        public decimal WinLostAmount { get; set; }
     }
 }

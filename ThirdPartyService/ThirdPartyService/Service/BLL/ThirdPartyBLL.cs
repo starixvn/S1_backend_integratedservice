@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Google.Protobuf.WellKnownTypes;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
@@ -12,7 +11,7 @@ using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 using ThirdPartyCore.Model.TpMerchantBalance.Response;
 using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.DAL;
@@ -39,8 +38,10 @@ namespace ThirdPartyService.Service.BLL
         private readonly TpCustBalanceService _tpCustBalanceService;
         private readonly TpTransferInfo _tpTransferInfo;
         private readonly CacheHelper _cacheHelper;
+        private readonly IReadOnlyDictionary<int, TpListOption> _TpList;
+        private readonly Dictionary<int, TpGameTypeOption> _tpGameTypeConfig;
+        private readonly IReadOnlyDictionary<int, CurrencyOption> _currencyList;
 
-        private readonly Dictionary<int, TpGameTypeOption> tpGameTypeConfig;
 #if DEBUG
         /// <summary>
         /// PT異常客戶清單(測試機)，共13筆
@@ -84,7 +85,9 @@ namespace ThirdPartyService.Service.BLL
             ThirdPartyHelperBase.BetLimitProvider = provider.GetRequiredService<BetLimitService>();
 
             var tpGameTypeOptions = provider.GetRequiredService<IEnumerable<TpGameTypeOption>>();
-            tpGameTypeConfig = tpGameTypeOptions.ToDictionary(i => i.Type, i => i);
+            _tpGameTypeConfig = tpGameTypeOptions.ToDictionary(i => i.Type, i => i);
+            _TpList = provider.GetRequiredService<IEnumerable<TpListOption>>().ToDictionary(d => d.Id, d => d);
+            _currencyList = provider.GetRequiredService<IEnumerable<CurrencyOption>>().ToDictionary(d => d.CurrencyId, d => d);
         }
 
         #endregion
@@ -710,9 +713,9 @@ namespace ThirdPartyService.Service.BLL
             return apiResult;
         }
 
-        public ApiResult<TransferResult> AdjustWallet(AdminTpTransfer adminTpTransfer)
+        public ApiResult<AdjustWalletResult> AdjustWallet(AdminTpTransfer adminTpTransfer)
         {
-            var apiResult = new ApiResult<TransferResult>();
+            var apiResult = new ApiResult<AdjustWalletResult>();
 
             if (adminTpTransfer.direction != Direction.ToMain && adminTpTransfer.direction != Direction.ToTp)
             {
@@ -766,12 +769,41 @@ namespace ThirdPartyService.Service.BLL
             {
                 amount = adminTpTransfer.Amount / tpCustInfoResult.Data.ExchangeRate;
             }
-
+            
             tpTransferInfo.InsAdjustWalletLog(tpCustInfoResult.Data, adminTpTransfer, out transId);
-            apiResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, amount, adminTpTransfer.direction, transId,
-                thirdId);
-            tpTransferInfo.SetAdjustWalletLog(apiResult, transId);
 
+            if (string.IsNullOrEmpty(transId))
+            {
+                _logger.LogError($"InsAdjustWalletLog failed.");
+                apiResult.ErrorCode = ErrorCode.ServerIsBusy;
+                apiResult.Message = "AdjustWallet Failed.";
+                
+                return apiResult;
+            }
+            
+            var transferResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, amount, adminTpTransfer.direction, transId,
+                thirdId);
+            
+            tpTransferInfo.SetAdjustWalletLog(transferResult, transId);
+            if (transferResult.ErrorCode == ErrorCode.Success
+                && adminTpTransfer.Category == 9 && adminTpTransfer.DepositId > 0) // Category 9: Deposit
+            {
+                var adjustAmount = adminTpTransfer.Amount * (adminTpTransfer.direction == Direction.ToTp ? 1 : -1);
+                var reslutCode = tpTransferInfo.SetAdjustmentActualDeposit(transId, adminTpTransfer.DepositId, adjustAmount);
+
+                if (reslutCode != 0)
+                {
+                    _logger.LogError(
+                        $"SetAdjustmentActualDeposit Failed. TransId: {transId}, DepositId:{adminTpTransfer.DepositId}, reslutCode:{reslutCode}");
+                }
+            }
+
+            apiResult.ErrorCode = transferResult.ErrorCode;
+            apiResult.Message = transferResult.Message;
+            apiResult.RawErrorCode = transferResult.RawErrorCode;
+            apiResult.RawMessage = transferResult.RawMessage;
+            apiResult.Data = new AdjustWalletResult(transferResult.Data, transId);
+            
             return apiResult;
         }
 
@@ -1111,7 +1143,7 @@ namespace ThirdPartyService.Service.BLL
 
         public ApiResult<object> GetBetDetail(GetBetDetailRequest request)
         {
-            if (!tpGameTypeConfig.TryGetValue(request.GameType, out var gameTypeOption))
+            if (!_tpGameTypeConfig.TryGetValue(request.GameType, out var gameTypeOption))
             {
                 return new ApiResult<object>()
                 {
@@ -1119,6 +1151,7 @@ namespace ThirdPartyService.Service.BLL
                     RawMessage = "GameType not found."
                 };
             }
+            gameTypeOption.TpName = GetTpName(gameTypeOption.TpId);
 
             var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(request.CustId, gameTypeOption.TpId);
             if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
@@ -1151,6 +1184,56 @@ namespace ThirdPartyService.Service.BLL
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
             var merchantBalanceResponse = tpHelper.GetMerchantBalance(tpMerchantInfo, inputs);
             return merchantBalanceResponse;
+        }
+		
+		public ApiResult<TpBetRecordExtend> GetTpBetRecordExtend(GetTpBetRecordExtendRequest request)
+        {
+            var tpId = request.BetRecordInfo.TpId;
+
+            if (!_tpGameTypeConfig.TryGetValue(request.BetRecordInfo.GameType, out var gameTypeOption))
+            {
+                return new ApiResult<TpBetRecordExtend>()
+                {
+                    ErrorCode = ErrorCode.InvalidParameter,
+                    RawMessage = "GameType not found."
+                };
+            }
+            gameTypeOption.TpName = GetTpName(tpId);
+
+            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(request.CustId, tpId);
+            if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
+            {
+                return new ApiResult<TpBetRecordExtend>()
+                {
+                    ErrorCode = tpCustInfoResult.ErrorCode,
+                    RawMessage = tpCustInfoResult.RawMessage
+                };
+            }
+            tpCustInfoResult.Data.IsoCode = GetCurrencyIsoCode(request.CurrencyId);
+
+
+            var tpHelper = (IThirdPartyTpBetRecordDetail)thirdPartyHelper.GetThirdPartyHelper(tpId, tpCustInfoResult.Data.SiteId);
+            var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper.GetThirdPartyBySite(tpId, tpCustInfoResult.Data.SiteId).Setting);
+            
+            try
+            {
+                var result = tpHelper.GetTpBetRecordExtend(request.BetRecordInfo, gameTypeOption, tpCustInfoResult.Data, inputs);
+                return new ApiResult<TpBetRecordExtend>(result);
+            }
+            catch (NotImplementedException)
+            {
+                return new ApiResult<TpBetRecordExtend>(new TpBetRecordExtend(request.BetRecordInfo, gameTypeOption, tpCustInfoResult.Data));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{ex.Message} ||  {JsonConvert.SerializeObject(request.BetRecordInfo)}");
+                return new ApiResult<TpBetRecordExtend>(new TpBetRecordExtend(request.BetRecordInfo, gameTypeOption, tpCustInfoResult.Data));
+            }      
+        }
+
+        public string GetTpName(int tpId)
+        {
+            return _TpList.TryGetValue(tpId, out var result) ? result.TpName : string.Empty;
         }
 
         #region Private Methods
@@ -1429,6 +1512,11 @@ namespace ThirdPartyService.Service.BLL
             }
 
             return amount;
+        }
+
+        private string GetCurrencyIsoCode(int currencyId)
+        {
+            return _currencyList.GetValueOrDefault(currencyId).IsoCode;
         }
 
         #endregion

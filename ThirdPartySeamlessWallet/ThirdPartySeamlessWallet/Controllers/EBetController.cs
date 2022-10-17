@@ -314,17 +314,19 @@ namespace ThirdPartySeamlessWallet.Controllers
                             log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                             return getBetResp;
                         }
-                        
+                        /*
+                         * type 11測試: 該情境 type 27成功 並且 type 1是失敗的
+                        if (getBetReq.type == 1)
+                        {
+                            getBetResp.status = 500;
+                            getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            log2File.Error($"refund test\r\n{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                            return getBetResp;
+                        }
+                        */
                         result = bettingBLL.PlaceBetLC_EBet(getBetReq, out decimal tpAffterAmount);
                         if (result > 0)
                         {
-                            //if (environment.IsDevelopment() && getBetReq.type == 1 && getBetReq.money == -40m)
-                            //{
-                            //    getBetResp.status = 500;
-                            //    getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                            //    log2File.Error($"refund test\r\n{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
-                            //    return getBetResp;
-                            //}
                             getBetResp.status = 200;
                             getBetResp.money = tpAffterAmount;
                             getBetResp.moneyBefore = tpAffterAmount - getBetReq.money;

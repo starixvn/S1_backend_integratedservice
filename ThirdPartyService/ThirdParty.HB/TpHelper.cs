@@ -1,23 +1,26 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-using System.Threading.Tasks;
-using ThirdPartyCore.Extensions;
-using ThirdPartyCore.Model.Exceptions;
-using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.HB
 {
     public class TpHelper: ThirdPartyHelperBase
     {
+        private readonly IReadOnlyDictionary<string, string> _gameNameList;
+        public TpHelper()
+        {
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList(40).ToDictionary(d => d.AppId, d => d.Name);
+        }
+
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             return new ApiResult()
@@ -125,6 +128,42 @@ namespace ThirdParty.HB
             var source = Encoding.UTF8.GetBytes(message);
             var crypto = sha256.ComputeHash(source);
             return BitConverter.ToString(crypto).Replace("-", "");
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_HB_Detail_Get",
+                new { YYYYMM, betRecordInfo.TransId }, DataBase.Main);
+            if (!detail.Any())
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+
+            var gameCode = detail.GetStringValue("keyname");
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = gameCode,
+                Game = GetGameName(gameCode),
+                RefNo = detail.GetStringValue("gameinstanceid"),
+                Title = tpGameType.TypeName,
+                MatchID = detail.GetStringValue("initialdebittransferid"),
+                BetType = string.Empty,
+                BetChoice = string.Empty,
+                Result = string.Empty,
+                DeviceType = DeviceType.None,
+                IP = string.Empty,
+            };
+        }
+
+        private string GetGameName(string gameCode)
+        {
+            if (!_gameNameList.TryGetValue(gameCode, out var name))
+            {
+                return string.Empty;
+            }
+            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
+            return dic.TryGetValue("en", out var result) ? result : string.Empty;
         }
     }
 }

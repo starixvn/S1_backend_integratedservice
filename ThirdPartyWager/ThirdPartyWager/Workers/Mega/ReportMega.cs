@@ -18,7 +18,7 @@ namespace ThirdPartyWager.Workers
         private readonly CommonBLL _commonBLL;
         private readonly IHostEnvironment _environment;
         private Timer timer;
-        private readonly int tpType = 1;
+        private readonly int tpType = (int)WagerTimerType.Wager;
         private readonly int timeRange = 1440; //in minutes (24 * 60)
         private readonly int quickTime = 300; // in seconds
         private readonly int runTime = 600; // in seconds

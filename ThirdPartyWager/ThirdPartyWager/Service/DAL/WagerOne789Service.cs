@@ -1,8 +1,4 @@
 ﻿using Dapper;
-using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -37,7 +33,7 @@ namespace ThirdPartyWager.Service.DAL
                 default:
                     break;
             }
-            var sp = $"Service_TpWagerOne789_{game}_Ins";
+            var sp = $"Service_TpWagerOne789_{game}_Ins_V2";
             return _wagerDbClient.Execute(sp, new DynamicParameters(bet));
         }
 

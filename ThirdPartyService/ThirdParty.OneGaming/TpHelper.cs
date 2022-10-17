@@ -7,9 +7,11 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Web;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.OneGaming
 {
@@ -190,7 +192,7 @@ namespace ThirdParty.OneGaming
             var apiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception();
             var agentCode = inputs.GetValueOrDefault($"agent_code_{tpCustInfo.TpCurrencyId}") ?? throw new Exception();
             var secret_key = inputs.GetValueOrDefault($"secret_key_{tpCustInfo.TpCurrencyId}") ?? throw new Exception();
-            var period = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_OneGaming_Detail_Get", new { getBetDetail.TransId }).GetValueOrDefault("period").ToString();
+            var period = TpBetRecordProvider.DbQueryFirst("Service_TpWager_OneGaming_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager).GetValueOrDefault("period").ToString();
 
             var url = $"{apiUrl}/singleGameHistory";
             var sParam = $"agent_code={agentCode}&player_id={tpCustInfo.TpUserName}&period={period}&bcode={HMACSHA256($"{agentCode}{tpCustInfo.TpUserName}{period}", secret_key)}";
@@ -224,6 +226,26 @@ namespace ThirdParty.OneGaming
                 byte[] hashMessage = hmacSHA256.ComputeHash(messageBytes);
                 return BitConverter.ToString(hashMessage).Replace("-", "").ToLower();
             }
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_OneGaming_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
+            var game = detail.GetStringValue("game");
+
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = game,
+                Game = game,
+                RefNo = detail.GetStringValue("ticket"),
+                Title = detail.GetStringValue("table"),            
+                MatchID = detail.GetStringValue("period"),
+                BetType = string.Empty,
+                BetChoice = string.Empty,
+                Result = detail.GetStringValue("card"),
+                DeviceType = DeviceType.None,
+                IP = string.Empty,
+            };
         }
 
         public class DetailResult

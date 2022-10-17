@@ -56,6 +56,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Models
         public string productType { get; set; } = "";
         public string single { get; set; } = "";
         public int detailStatusId { get; set; }
+        public long SettleTimeUnix { get; set; } = 0;
     }
 
 
@@ -94,5 +95,6 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Models
         public string clientIp { get; set; } = "";
         public string single { get; set; } = "";
         public decimal playBonus { get; set; }
+        public long SettleTimeUnix { get; set; } = 0;
     }
 }

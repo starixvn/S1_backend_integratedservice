@@ -141,5 +141,28 @@ namespace ThirdPartyWager.Service.Library
 
             return Convert.ToBase64String(RstRes);
         }
+
+        public string RSA(string data, string privateKey)
+        {
+            RSACryptoServiceProvider RSAProvider = new RSACryptoServiceProvider();
+            byte[] plaintext = Encoding.UTF8.GetBytes(data);
+            RSAProvider.FromXmlString(privateKey);
+            RSAParameters priKey = RSAProvider.ExportParameters(true);
+            RSAProvider.ImportParameters(priKey);
+            byte[] sign = RSAProvider.SignData(plaintext, CryptoConfig.MapNameToOID("MD5"));
+            return Convert.ToBase64String(sign);
+        }
+
+        public string HMACSHA512(string input, string key)
+        {
+            var salt = Encoding.UTF8.GetBytes(key);
+            var HASH_SIZE = 64;
+            var ITERATIONS = 1000;
+
+            // Generate the hash
+            var pbkdf2 = new Rfc2898DeriveBytes(input, salt, ITERATIONS, HashAlgorithmName.SHA512);
+            var data = pbkdf2.GetBytes(HASH_SIZE);
+            return Convert.ToBase64String(data);
+        }
     }
 }

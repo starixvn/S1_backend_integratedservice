@@ -6,6 +6,7 @@ using ThirdPartySeamlessWallet.IntegrationTest.Models;
 using ThirdPartySeamlessWallet.IntegrationTest.SandBox;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySettleWorker.Workers;
 
 namespace ThirdPartySeamlessWallet.IntegrationTest
 {
@@ -223,6 +224,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
                     netPNL = creditAmount - reserveAmount,//輸贏金額
                     winAmount = creditAmount,//派彩金額
                     settlementTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sss"),
+                    betTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sss"),
                     productType = "TCG_SEA",
                     orderNum = _inputs["OrderNo"],
                     details = "testing",
@@ -233,9 +235,9 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
             Task.Delay(1000).ConfigureAwait(false).GetAwaiter().GetResult();
 
             //Check SettleFlag and TpBetRecord
-            settle.SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM TpWagerTCG_SEA WHERE betOrderNo='{_inputs["WagerID"]}'")
-            .SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM BettransLottery_TCG WHERE ref_no='{_inputs["ReserveID"]}'")
-            .SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM BettransLottery_TCG WHERE ref_no='{_inputs["CreditID"]}'")
+            settle.SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM BetDetail.TpWagerTCG_SEA WHERE betOrderNo='{_inputs["WagerID"]}'")
+            .SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM Siebog.BettransLottery_TCG WHERE ref_no='{_inputs["ReserveID"]}'")
+            .SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM Siebog.BettransLottery_TCG WHERE ref_no='{_inputs["CreditID"]}'")
             .ShouldBeHaveTpBetRecord(Tp.TCG, _inputs["WagerID"], _inputs["TpUserName"], reserveAmount, creditAmount - reserveAmount);
 
             return settle.ActualWinlostAmount;
@@ -269,11 +271,12 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
                 {
                     orderMasterId = _inputs["WagerID"],
                     betAmount = null,
-                    playName = null,
+                    playName = "test",
                     actualBetAmount = reserveAmount,
                     username = _inputs["TpUserName"],
                     winAmount = creditAmount,//派彩金額
                     drawTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sss"),
+                    bettingTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:sss"),
                     orderNum = _inputs["OrderNo"],
                     remark = "testing",
                 })
@@ -283,9 +286,9 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
             Task.Delay(1000).ConfigureAwait(false).GetAwaiter().GetResult();
 
             //Check SettleFlag and TpBetRecord
-            settle.SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM TpWagerTCG_VN WHERE orderMasterId='{_inputs["WagerID"]}'")
-            .SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM BettransLottery_TCG WHERE ref_no='{_inputs["ReserveID"]}'")
-            .SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM BettransLottery_TCG WHERE ref_no='{_inputs["CreditID"]}'")
+            settle.SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM BetDetail.TpWagerTCG_VN WHERE orderMasterId='{_inputs["WagerID"]}'")
+            .SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM Siebog.BettransLottery_TCG WHERE ref_no='{_inputs["ReserveID"]}'")
+            .SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM Siebog.BettransLottery_TCG WHERE ref_no='{_inputs["CreditID"]}'")
             .ShouldBeHaveTpBetRecord(Tp.TCG, _inputs["WagerID"], _inputs["TpUserName"], reserveAmount * exchangeRate, (creditAmount - reserveAmount) * exchangeRate);
 
             return settle.ActualWinlostAmount / exchangeRate;

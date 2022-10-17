@@ -1,13 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -18,39 +11,33 @@ namespace ThirdPartySeamlessWallet.Controllers
     [ApiController]
     public class JILIController : ControllerBase
     {
-        private readonly AuthBLL authBLL;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly TpCustInfoBLL tpCustInfoBLL;
-        private readonly BettingBLL bettingBLL;
-        private readonly SettledBLL settledBLL;
-        private readonly ILogger<JILIController> logger;
-        private readonly Log2File log2File;
-        private readonly Tools tools;
-        private readonly Tp thisTp;
-        private readonly IHostEnvironment environment;
+        private readonly AuthBLL _authBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly BettingBLL _bettingBLL;
+        private readonly SettledBLL _settledBLL;
+        private readonly ILogger<JILIController> _logger;
+        private readonly Log2File _log2File;
+        private readonly Tools _tools;
+        private readonly Tp _thisTp;
+        private readonly IHostEnvironment _environment;
 
         public JILIController(
-            AuthBLL authBLL,
-            ThirdPartyBLL thirdPartyBLL,
-            TpCustInfoBLL tpCustInfoBLL,
-            BettingBLL bettingBLL,
-            SettledBLL settledBLL,
+            IServiceProvider provider,
             ILogger<JILIController> logger,
-            Log2File log2File,
-            Tools tools,
             IHostEnvironment environment
         )
         {
-            this.authBLL = authBLL;
-            this.logger = logger;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.tpCustInfoBLL = tpCustInfoBLL;
-            this.bettingBLL = bettingBLL;
-            this.settledBLL = settledBLL;
-            this.log2File = log2File;
-            this.tools = tools;
-            this.thisTp = Tp.JILI;
-            this.environment = environment;
+            _logger = logger;
+            _log2File = provider.GetRequiredService<Log2File>();
+            _environment = environment;
+            _authBLL = provider.GetRequiredService<AuthBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _bettingBLL = provider.GetRequiredService<BettingBLL>();
+            _settledBLL = provider.GetRequiredService<SettledBLL>();
+            _tools = provider.GetRequiredService<Tools>();
+            _thisTp = Tp.JILI;
         }
 
         public class TokenInfo
@@ -104,11 +91,10 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/bwing/auth")]
         public async Task<dynamic> authAsync()
         {
-            string logName = $"{thisTp}_auth";
+            string logName = $"{_thisTp}_auth";
 
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
-            log2File.Info(Content, logName);
 
             AuthReq getReq = JsonConvert.DeserializeObject<AuthReq>(Content);
             ErrorResp getErrorResponse = new ErrorResp();
@@ -122,41 +108,41 @@ namespace ThirdPartySeamlessWallet.Controllers
             var check = checkAuthorization(sAuthorization);
             if (check.errorCode != 0)
             {
-                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(check)}", logName);
+                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(check)}", logName);
                 return check;
             }
 
             try
             {
                 var tokenInfo = getTokenInfo(getReq.token);
-                var verify = authBLL.Authenticate(tokenInfo.shortTimeToken, out TpCustInfoAuth tpCustInfoAuth);
+                var verify = _authBLL.Authenticate(tokenInfo.shortTimeToken, out TpCustInfoAuth tpCustInfoAuth);
                 if (!verify)
                 {
                     getErrorResponse.errorCode = 4;
                     getErrorResponse.message = "Token expired";
-                    log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
+                    _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
                     return getErrorResponse;
                 }
 
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tokenInfo.tpUserName);
+                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, tokenInfo.tpUserName);
                 if (tpCheck == null)
                 {
                     getErrorResponse.errorCode = 4;
                     getErrorResponse.message = "Token expired.";
-                    log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
+                    _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
                     return getErrorResponse;
                 }
                 else if (tpCheck.Locked)
                 {
                     getErrorResponse.errorCode = 5;
                     getErrorResponse.message = "Account is Locked";
-                    log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
+                    _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
                     return getErrorResponse;
                 }
 
-                var gameType = thirdPartyBLL.GetGameType((int)thisTp, tokenInfo.gameId);
+                var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, tokenInfo.gameId);
 
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, (int)gameType);
+                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, tpCustInfoAuth.TpUserName, (int)gameType);
                 if (tpCustBalance != null)
                 {
                     AuthResp getApiResponse = new AuthResp();
@@ -166,18 +152,18 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.currency = tpCustBalance.TpCurrencyId;
                     getApiResponse.balance = tpCustBalance.Balance;
                     getApiResponse.token = getReq.token;
-                    log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
 
             }
             catch (Exception ex)
             {
-                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\n{ex}", logName, ex);
+                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\n{ex}", logName, ex);
                 return getErrorResponse;
             }
 
-            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
+            _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
             return getErrorResponse;
 
 
@@ -189,14 +175,10 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/bwing/bet")]
         public async Task<dynamic> betAsync([FromQuery] Dictionary<string, string> getQuery)
         {
-            var w1 = System.Diagnostics.Stopwatch.StartNew();
-            var w2 = System.Diagnostics.Stopwatch.StartNew();
-
-            string logName = $"{thisTp}_bet";
+            string logName = $"{_thisTp}_bet";
 
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
-            log2File.Info(Content, logName);
 
             BettingData_JILI getReq = JsonConvert.DeserializeObject<BettingData_JILI>(Content);
             ErrorResp getErrorResponse = new ErrorResp();
@@ -210,8 +192,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             var check = checkAuthorization(sAuthorization);
             if (check.errorCode != 0)
             {
-                w1.Stop();
-                log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(check)}\r\nw1={w1.ElapsedMilliseconds}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(check)}", logName);
                 return check;
             }
             try
@@ -222,63 +203,56 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var logToken = "";
                 if (!getReq.isFreeRound)
                 {
-                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getReq.userId);
+                    var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, getReq.userId);
                     if (tpCheck == null)
                     {
                         getErrorResponse.errorCode = 4;
                         getErrorResponse.message = "Token expired.";
-                        w1.Stop();
-                        log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\nw1={w1.ElapsedMilliseconds}", logName);
+                        _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
                         return getErrorResponse;
                     }
                     else if (tpCheck.Token != tokenInfo.longTimeToken)
                     {
                         getErrorResponse.errorCode = 4;
                         getErrorResponse.message = "Wrong token";
-                        w1.Stop();
-                        log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\n{JsonConvert.SerializeObject(tokenInfo)}\r\n{JsonConvert.SerializeObject(tpCheck)}\r\nw1={w1.ElapsedMilliseconds}", logName);
+                        _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\n{JsonConvert.SerializeObject(tokenInfo)}\r\n{JsonConvert.SerializeObject(tpCheck)}", logName);
                         return getErrorResponse;
                     }
                     else if (tpCheck.Locked)
                     {
                         getErrorResponse.errorCode = 5;
                         getErrorResponse.message = "Account is Locked";
-                        w1.Stop();
-                        log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\nw1={w1.ElapsedMilliseconds}", logName);
+                        _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
                         return getErrorResponse;
                     }
 
                     logToken = $"\r\n{JsonConvert.SerializeObject(tokenInfo)}\r\n{JsonConvert.SerializeObject(tpCheck)}";
                 }
 
-                if (environment.IsDevelopment() && getReq.betAmount == 90)
+                if (_environment.IsDevelopment() && getReq.betAmount == 90)
                 {
-                    System.Threading.Thread.Sleep(3000);
-                    w1.Stop();
-                    log2File.Error($"TEST CANCEL\r\n{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\nw1={w1.ElapsedMilliseconds}", logName);
+                    Thread.Sleep(3000);
+                    _log2File.Error($"TEST CANCEL\r\n{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
                     return getErrorResponse;
                 }
 
-                var gameType = thirdPartyBLL.GetGameType((int)thisTp, getReq.game.ToString());
+                var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, getReq.game.ToString());
 
-                w2.Restart();
-                var result = settledBLL.BetAndPayoutRNG_JILI(getReq, (int)gameType, out decimal tpAffterAmount);
-                w2.Stop();
+                var result = _settledBLL.BetAndPayoutRNG_JILI(getReq, (int)gameType, out decimal tpAffterAmount);
 
-                if (environment.IsDevelopment() && getReq.betAmount == 210)
+                if (_environment.IsDevelopment() && getReq.betAmount == 210)
                 {
-                    System.Threading.Thread.Sleep(3000);
-                    w1.Stop();
-                    log2File.Error($"TEST CANCEL\r\n{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\nw1={w1.ElapsedMilliseconds},w2={w2.ElapsedMilliseconds}", logName);
+                    Thread.Sleep(3000);
+                    _log2File.Error($"TEST CANCEL\r\n{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
                     return getErrorResponse;
                 }
 
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.userId, (int)gameType);
+                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getReq.userId, (int)gameType);
                 if (result > 0)
                 {
                     if (tpAffterAmount == 0)
                     {
-                        tpAffterAmount = tpCustInfoBLL.GetBalance((int)thisTp, getReq.userId, (int)gameType).Balance;
+                        tpAffterAmount = _tpCustInfoBLL.GetBalance((int)_thisTp, getReq.userId, (int)gameType).Balance;
                     }
                     BetResp getApiResponse = new BetResp();
                     getApiResponse.errorCode = 0;
@@ -287,8 +261,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.currency = tpCustBalance.TpCurrencyId;
                     getApiResponse.balance = tpAffterAmount;
                     getApiResponse.token = getReq.token;
-                    w1.Stop();
-                    log2File.Info($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}{logToken}\r\nw1={w1.ElapsedMilliseconds},w2={w2.ElapsedMilliseconds}", logName);
+                    _log2File.Info($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}{logToken}", logName);
                     return getApiResponse;
                 }
                 else if (result == -1)
@@ -300,8 +273,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.currency = tpCustBalance.TpCurrencyId;
                     getApiResponse.balance = tpCustBalance.Balance;
                     getApiResponse.token = getReq.token;
-                    w1.Stop();
-                    log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}{logToken}\r\nw1={w1.ElapsedMilliseconds},w2={w2.ElapsedMilliseconds}", logName);
+                    _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}{logToken}", logName);
                     return getApiResponse;
                 }
                 else if (tpAffterAmount < 0)
@@ -313,38 +285,35 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.currency = tpCustBalance.TpCurrencyId;
                     getApiResponse.balance = tpCustBalance.Balance;
                     getApiResponse.token = getReq.token;
-                    w1.Stop();
-                    log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}{logToken}\r\nw1={w1.ElapsedMilliseconds},w2={w2.ElapsedMilliseconds}", logName);
+                    _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}{logToken}", logName);
                     return getApiResponse;
                 }
             }
             catch (Exception ex)
             {
-                w1.Stop();
-                w2.Stop();
-                log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\nw1={w1.ElapsedMilliseconds},w2={w2.ElapsedMilliseconds}", logName, ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName, ex);
                 return getErrorResponse;
             }
 
-            w1.Stop();
-            w2.Stop();
-            log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\nw1={w1.ElapsedMilliseconds},w2={w2.ElapsedMilliseconds}", logName);
+            _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
             return getErrorResponse;
         }
 
         [HttpPost]
         [Route("[controller]/cancelBet")]
+        [Route("[controller]/cancelSessionBet")]
         [Route("[controller]/goal123/cancelBet")]
+        [Route("[controller]/goal123/cancelSessionBet")]
+        [Route("[controller]/bwing/cancelSessionBet")]
         [Route("[controller]/bwing/cancelBet")]
         public async Task<dynamic> cancelBetAsync([FromQuery] Dictionary<string, string> getQuery)
         {
-            string logName = $"{thisTp}_cancelBet";
-
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
-            log2File.Info(Content, logName);
 
             CancelBetData_JILI getReq = JsonConvert.DeserializeObject<CancelBetData_JILI>(Content);
+            string logName = (getReq.sessionId > 0) ? $"{_thisTp}_cancelSessionBet" : $"{_thisTp}_cancelBet";
+
             ErrorResp getErrorResponse = new ErrorResp();
             getErrorResponse.errorCode = 5;
             getErrorResponse.message = "Error";
@@ -356,17 +325,17 @@ namespace ThirdPartySeamlessWallet.Controllers
             var check = checkAuthorization(sAuthorization);
             if (check.errorCode != 0)
             {
-                log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(check)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(check)}", logName);
                 return check;
             }
 
-            var gameType = thirdPartyBLL.GetGameType((int)thisTp, getReq.game.ToString());
+            var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, getReq.game.ToString());
 
             try
             {
-                var result = settledBLL.CancelBetRNG_JILI(getReq, (int)gameType, out decimal tpAffterAmount);
+                var result = _settledBLL.CancelBetRNG_JILI(getReq, (int)gameType, out decimal tpAffterAmount);
 
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.userId, (int)gameType);
+                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getReq.userId, (int)gameType);
                 if (result > 0)
                 {
                     BetResp getApiResponse = new BetResp();
@@ -375,7 +344,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.username = getReq.userId;
                     getApiResponse.currency = tpCustBalance.TpCurrencyId;
                     getApiResponse.balance = tpAffterAmount;
-                    log2File.Info($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    _log2File.Info($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
                 else if (result == -1)
@@ -386,24 +355,146 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.username = getReq.userId;
                     getApiResponse.currency = tpCustBalance.TpCurrencyId;
                     getApiResponse.balance = tpCustBalance.Balance;
-                    log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
                 else if (result == -2)
                 {
                     getErrorResponse.errorCode = 2;
                     getErrorResponse.message = "Round not found";
-                    log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
+                    _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
                     return getErrorResponse;
                 }
             }
             catch (Exception ex)
             {
-                log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\n{ex}", logName, ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\n{ex}", logName, ex);
                 return getErrorResponse;
             }
 
-            log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
+            _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
+            return getErrorResponse;
+        }
+
+        [HttpPost]
+        [Route("[controller]/sessionBet")]
+        [Route("[controller]/goal123/sessionBet")]
+        [Route("[controller]/bwing/sessionBet")]
+        public async Task<dynamic> sessionBetAsync([FromQuery] Dictionary<string, string> getQuery)
+        {
+            string logName = $"{_thisTp}_sessionBet";
+
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var Content = await reader.ReadToEndAsync();
+
+            BettingData_JILI getReq = JsonConvert.DeserializeObject<BettingData_JILI>(Content);
+            ErrorResp getErrorResponse = new ErrorResp();
+            getErrorResponse.errorCode = 5;
+            getErrorResponse.message = "Error";
+
+            // check authorization
+            Request.Headers.TryGetValue("Authorization", out var authorization);
+            string sAuthorization = authorization.ToString();
+
+            var check = checkAuthorization(sAuthorization);
+            if (check.errorCode != 0)
+            {
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(check)}", logName);
+                return check;
+            }
+            if (getReq.type != 1 && getReq.type != 2)
+            {
+                getErrorResponse.errorCode = 3;
+                getErrorResponse.message = "Invalid parameter (type)";
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
+                return getErrorResponse;
+            }
+
+            try
+            {
+                var logToken = "";
+                var tokenInfo = getTokenInfo(getReq.token);
+                var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, getReq.game.ToString());
+                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getReq.userId, (int)gameType);
+                var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, getReq.userId);
+
+                if (getReq.type == 1)
+                {
+                    var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, getReq.userId);
+                    if (tpCheck == null)
+                    {
+                        getErrorResponse.errorCode = 4;
+                        getErrorResponse.message = "Token expired.";
+                        _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
+                        return getErrorResponse;
+                    }
+                    else if (tpCheck.Token != tokenInfo.longTimeToken)
+                    {
+                        getErrorResponse.errorCode = 4;
+                        getErrorResponse.message = "Wrong token";
+                        _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\n{JsonConvert.SerializeObject(tokenInfo)}\r\n{JsonConvert.SerializeObject(tpCheck)}", logName);
+                        return getErrorResponse;
+                    }
+                    else if (tpCheck.Locked)
+                    {
+                        getErrorResponse.errorCode = 5;
+                        getErrorResponse.message = "Account is Locked";
+                        _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
+                        return getErrorResponse;
+                    }
+                    logToken = $"\r\n{JsonConvert.SerializeObject(tokenInfo)}\r\n{JsonConvert.SerializeObject(tpCheck)}";
+                }
+
+                decimal tpAffterAmount = 0;
+                var result = (getReq.type == 1) ? _bettingBLL.PlaceBetRNG_JILI(tpCustInfo, getReq, out tpAffterAmount) : _settledBLL.PayoutRNG_JILI(tpCustInfo, getReq, out tpAffterAmount);
+                if (result > 0)
+                {
+                    if (tpAffterAmount == 0)
+                    {
+                        tpAffterAmount = _tpCustInfoBLL.GetBalance((int)_thisTp, getReq.userId, (int)gameType).Balance;
+                    }
+                    BetResp getApiResponse = new BetResp();
+                    getApiResponse.errorCode = 0;
+                    getApiResponse.message = "success";
+                    getApiResponse.username = getReq.userId;
+                    getApiResponse.currency = tpCustBalance.TpCurrencyId;
+                    getApiResponse.balance = tpAffterAmount;
+                    getApiResponse.token = getReq.token;
+                    _log2File.Info($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}{logToken}", logName);
+                    return getApiResponse;
+                }
+                else if (result == -1)
+                {
+                    BetResp getApiResponse = new BetResp();
+                    getApiResponse.errorCode = 1;
+                    getApiResponse.message = "Already accepted";
+                    getApiResponse.username = getReq.userId;
+                    getApiResponse.currency = tpCustBalance.TpCurrencyId;
+                    getApiResponse.balance = tpCustBalance.Balance;
+                    getApiResponse.token = getReq.token;
+                    _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}{logToken}", logName);
+                    return getApiResponse;
+                }
+                else if (tpAffterAmount < 0)
+                {
+                    BetResp getApiResponse = new BetResp();
+                    getApiResponse.errorCode = 2;
+                    getApiResponse.message = "Not enough balance";
+                    getApiResponse.username = getReq.userId;
+                    getApiResponse.currency = tpCustBalance.TpCurrencyId;
+                    getApiResponse.balance = tpAffterAmount;
+                    getApiResponse.token = getReq.token;
+                    _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}{logToken}", logName);
+                    return getApiResponse;
+                }
+            }
+            catch (Exception ex)
+            {
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName, ex);
+                return getErrorResponse;
+            }
+
+            _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
             return getErrorResponse;
         }
 
@@ -418,7 +509,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getErrorResponse;
             }
             // all site use same username and password
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+            var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)_thisTp);
             byte[] authTmp = Encoding.ASCII.GetBytes($"{thirdPartySetting.TpSetting["Username"]}:{thirdPartySetting.TpSetting["Password"]}");
             string authToken = Convert.ToBase64String(authTmp);
             string[] aAuthorization = authorization.Split(' ');

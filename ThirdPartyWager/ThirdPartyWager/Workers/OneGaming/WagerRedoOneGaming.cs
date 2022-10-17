@@ -25,7 +25,7 @@ namespace ThirdPartyWager.Workers
         private readonly int iRangMins = 1440;
         private readonly int tpId = (int)Tp.OneGaming;
         private readonly string _tpName = Tp.OneGaming.ToString();
-        private readonly int tpType = 2;
+        private readonly int tpType = (int)WagerTimerType.RedoWager;
         private readonly int iDays = 2;
         private readonly int timeZone = 8;
 

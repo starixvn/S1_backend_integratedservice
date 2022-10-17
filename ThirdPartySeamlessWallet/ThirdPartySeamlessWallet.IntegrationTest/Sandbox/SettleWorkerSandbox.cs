@@ -1,25 +1,21 @@
 ﻿using Dapper;
 using FluentAssertions;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Core.Extensions;
 using ThirdPartySeamlessWallet.IntegrationTest.Models;
 using ThirdPartySeamlessWallet.IntegrationTest.Stubs;
-using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-using ThirdPartySeamlessWallet.Service.Workers;
+using ThirdPartySettleWorker.Workers;
 
 namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
 {
@@ -33,15 +29,21 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
 
         private readonly MySqlClient _mySqlClient;
    
-        private readonly SettleWorker _target;
+        private readonly TCGWorker _target;
 
         public decimal ActualWinlostAmount;
 
         public SettleWorkerSandbox()
         {
             _serviceCollection = new ServiceCollection();
-            _serviceCollection = SetEnvironment(_serviceCollection);
-            _serviceCollection = LoadConfig(_serviceCollection);
+            var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
+            {
+                EnvironmentName = "Local",
+            });
+            builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
+            var app = builder.Build();
+            _serviceCollection.AddSingleton(_configuration);
+            _configuration = app.Configuration;
 
             _serviceCollection.AddTransient(p => Substitute.For<ILogger<SettledService>>());
             _serviceCollection.AddTransient(p => Substitute.For<ILogger<BettingService>>());
@@ -54,7 +56,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             startUp.ConfigureServices(_serviceCollection);
             _serviceProvider = _serviceCollection.BuildServiceProvider();
             _mySqlClient = _serviceProvider.GetRequiredService<MySqlClient>();
-            _target = new SettleWorker(_serviceProvider);
+            _target = new TCGWorker(_serviceProvider);
         }
 
         public SettleWorkerSandbox DoSettleTCGWork(GameType gameType)
@@ -73,8 +75,9 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         public SettleWorkerSandbox ShouldBeHaveUnsettleRecord(SettleFlag settleFlag, string transId)
         {
             var expected = CreateUnsettleRecord(settleFlag, transId);
-            var sqlScript = @$"SELECT * FROM TpUnsettle WHERE TransId=""{transId}""";
+            var sqlScript = @$"SELECT * FROM Siebog.TpUnsettle WHERE TransId=""{transId}""";
             var actual = _mySqlClient.Query<TpUnsettle>(sqlScript, CommandType.Text).First();
+            actual.PartitionTime = default;
             actual.Should().BeEquivalentTo(expected);
             return this;
         }
@@ -88,29 +91,6 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             };
         }
 
-        private ServiceCollection SetEnvironment(ServiceCollection services)
-        {
-            var env = new HostingEnvironment()
-            {
-                EnvironmentName = Environments.Development,
-            };
-            services.AddSingleton<IHostEnvironment>(env);
-            return services;
-        }
-
-        private ServiceCollection LoadConfig(ServiceCollection services)
-        {
-            var configBuilder = new ConfigurationBuilder();
-            configBuilder.SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", false, false)
-                .AddJsonFile("appsettings.Local.json", false, false)
-                .AddJsonStream(Program.GetRemoteConfig(new List<string> { "http://52.221.19.140:7243/" }));
-            _configuration = configBuilder.Build();
-            services.AddSingleton(_configuration);
-            return services;
-        }
-
-
         public SettleWorkerSandbox SettleFlagShouldBeSettled(string sqlScript)
         {
             var actual = _mySqlClient.Query<TpUnsettle>(sqlScript, CommandType.Text).First();
@@ -122,7 +102,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         public SettleWorkerSandbox ShouldBeHaveTpBetRecord(Tp tp, string transId, string TpUserName, decimal Stake, decimal WinlostAmount)
         {
             var expected = CreateTpBetRecord(tp, transId, TpUserName, Stake, WinlostAmount);
-            var sqlScript = @$"SELECT * FROM TpBetRecord WHERE tpid='{(int)tp}' and TransId='{transId}'";
+            var sqlScript = @$"SELECT * FROM Siebog.TpBetRecord WHERE tpid='{(int)tp}' and TransId='{transId}'";
             var actual = _mySqlClient.Query<TpBetRecord>(sqlScript, CommandType.Text).First();
             actual.Should().BeEquivalentTo(expected);
             ActualWinlostAmount = actual.WinlostAmount;

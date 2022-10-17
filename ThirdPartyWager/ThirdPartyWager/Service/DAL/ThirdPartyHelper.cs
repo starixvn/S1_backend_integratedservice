@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MySql.Data.MySqlClient;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using ThirdPartyWager.Service.Library;
@@ -68,6 +69,11 @@ namespace ThirdPartyWager.Service.DAL
         public int SetThirdPartyTimerByGameType(int tpId, int type, long start, int gameType)
         { 
             return _wagerDbClient.Execute("Service_TpWagerTimerReference_GameType_Set", new { TpId = tpId, Type = type, StartUnix = start, GameType = gameType });
+        }
+        
+        public IEnumerable<TpGameCasino> GetGameCasino(int tpId)
+        {
+            return _reportDbClient.Query<TpGameCasino>("Service_GameCasino_Get", new { TpId = tpId });
         }
     }
 }

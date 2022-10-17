@@ -29,6 +29,7 @@ namespace ThirdPartyCore.Model
         public string Operator { set; get; }
         public string Remarks { set; get; }
         public int Category { set; get; }
+        public int DepositId { set; get; }
     }
 
     public class TransferResult
@@ -41,6 +42,19 @@ namespace ThirdPartyCore.Model
         public string ThirdId { get; set; }
         public decimal Difference { get; set; }
     }
+    public class AdjustWalletResult: TransferResult
+    {
+        public AdjustWalletResult(){}
+        public AdjustWalletResult(TransferResult result, string transId)
+        {
+            base.Status = result.Status;
+            base.ThirdId = result.ThirdId;
+            base.Difference = result.Difference;
+            TransId = transId;
+        }
+        public string TransId { get; set; }
+    }
+    
     public class AutoTransferResult
     {
         public string Guid { get; set; }
@@ -74,6 +88,7 @@ namespace ThirdPartyCore.Model
         public int ActStatus { get; set; }
         public int Status { get; set; }
         public int CStatus { get; set; }
+        public string IsoCode { get; set; }
     }
 
     public class TpMerchantInfo
@@ -115,20 +130,8 @@ namespace ThirdPartyCore.Model
     
     public class TpPendingBonusTransferModel
     {
-        public string BonusCode { get; set; }
-        public int PromotionType { get; set; }
-        public string SiteId { get; set; }
-        public string SiteName { get; set; }
-        public string UserName { get; set; }
         public int BonusId { get; set; }
-        public decimal LockedAmount { get; set; }
-        public decimal BonusAmount { get; set; }
-        public decimal Bonus { get; set; }
-        public decimal Rollover { get; set; }
-        public DateTime ExpiryTime { get; set; }
-        public DateTime CreateTime { get; set; }
         public int CustId { get; set; }
-        public int TpId { get; set; }
     }
     
     public class TpRemainingTransferBonusModel

@@ -6,9 +6,11 @@ using System.Web;
 using System.Xml;
 using System.Xml.Serialization;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.N2Live
 {
@@ -120,8 +122,9 @@ namespace ThirdParty.N2Live
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_N2Live_Detail_Get", new { getBetDetail.TransId });
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_N2Live_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
             var detail = ToJson(wagerDetail);
+            var gameCode = wagerDetail.GetStringValue("gamecode");
 
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
@@ -136,8 +139,8 @@ namespace ThirdParty.N2Live
                     UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("enddate", DateTime.MinValue),
                     Stake = (decimal)wagerDetail.GetValueOrDefault("bet_amount") * tpCurrency.ExchangeRate,
                     WinlostAmount = ((decimal)wagerDetail.GetValueOrDefault("payout_amount") - (decimal)wagerDetail.GetValueOrDefault("bet_amount")) * tpCurrency.ExchangeRate,
-                    GameCode = wagerDetail.GetValueOrDefault("gamecode")?.ToString(),
-                    GameName = string.Empty,
+                    GameCode = gameCode,
+                    GameName = GetGameName(gameCode),
                 },
                 _ => new BaseDetail(getBetDetail.TpGameTypeOption)
                 {
@@ -145,6 +148,85 @@ namespace ThirdParty.N2Live
                     Detail = detail,
                     TpCurrency = tpCurrency,
                 }
+            };
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_N2Live_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
+            var gameCode = detail.GetStringValue("gamecode");
+
+            return tpGameType.CategoryId switch
+            {
+                TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = gameCode,
+                    Game = GetGameName(gameCode),
+                    RefNo = detail.GetStringValue("betid"),
+                    Title = tpGameType.TypeName,
+                    MatchID = string.Empty,
+                    BetType = string.Empty,
+                    BetChoice = string.Empty,
+                    Result = detail.GetStringValue("result"),
+                    DeviceType = GetDeviceType(detail.GetStringValue("channel")),
+                    IP = string.Empty,
+                },
+                _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            };
+        }
+
+        private DeviceType GetDeviceType(string device)
+        {
+            switch (device)
+            {
+                case "iosphone":
+                case "iostablet":
+                    return DeviceType.iOS;
+                case "androidphone":
+                case "androidtablet":
+                    return DeviceType.Android;
+                case "iosmobileweb":
+                case "androidmobileweb":
+                    return DeviceType.Mobile;
+                case "desktopweb":
+                    return DeviceType.Desktop;
+                default:
+                    return DeviceType.None;
+            }
+        }
+
+        private string GetGameName(string gameCode)
+        {
+            return gameCode switch
+            {
+                "20001" => "Dragon Tiger Commission",
+                "20002" => "Dragon Tiger Non - Commission",
+                "21001" => "RNG Dragon Tiger Commission",
+                "21002" => "RNG Dragon Tiger Non - Commission",
+                "50002" => "Roulette",
+                "50003" => "Lucky Boost Roulette",
+                "51002" => "RNG Roulette",
+                "51003" => "RNG Lucky Boost Roulette",
+                "52002" => "RNG Roulette PT *",
+                "60001" => "Lucky Boost Sicbo",
+                "61001" => "RNG Lucky Boost Sicbo",
+                "62001" => "RNG Sicbo PT *",
+                "90091" => "Baccarat Commission",
+                "90092" => "Baccarat Non-Commission",
+                "91091" => "RNG Baccarat Commission",
+                "91092" => "RNG Baccarat Non-Commission",
+                "100004" => "Ultimate Blackjack",
+                "110001" => "RNG Traditional Blackjack PT*",
+                "110002" => "RNG Free Bet Blackjack PT*",
+                "110003" => "RNG Blackjack Switch PT*",
+                "210001" => "RNG Casino Hold’em",
+                "300001" => "Bull Bull",
+                "310001" => "RNG Bull Bull",
+                "400002" => "Free Pick San Gong Non-Commission",
+                "400004" => "Fortune Koi Non-Commission",
+                "500002" => "Andar Bahar Non-Commission",
+                "990000" => "Slot Game",
+                _ => gameCode,
             };
         }
 

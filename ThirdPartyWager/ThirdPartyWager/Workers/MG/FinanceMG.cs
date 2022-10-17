@@ -29,7 +29,7 @@ namespace ThirdPartyWager.Workers
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _timer = new Timer(GetReport,null,  TimeSpan.Zero, TimeSpan.Zero);
+            _timer = new Timer(GetReport, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -37,26 +37,28 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            var timerType = 1;
+            var timerType = (int)WagerTimerType.Finance;
             var intervalDays = 1;
-            var nextTimeSpan = TimeSpan.FromDays(intervalDays);
+            var nextTimeSpan = TimeSpan.FromHours(4);
 
             try
             {
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimer(tpId, timerType);
                 var date = lastTime?.StartTime ?? DateTime.UtcNow.BeginningOfTheDay();
-
-                if (date < DateTime.UtcNow)
+                var endTime = date.AddDays(1).AddMilliseconds(-1);
+                if (endTime > DateTime.UtcNow)
                 {
-                    var isSuccess = await _mgBll.GetReport(date);
-                    if (isSuccess)
-                    {
-                        _logger.LogInformation($"MG Get {date:yyyy-MM-dd} report");
-                        _thirdPartyBLL.SetThirdPartyTimer(tpId, timerType, new DateTimeOffset(date.AddDays(intervalDays)).ToUnixTimeSeconds());
-                    }
+                    date = date.AddDays(-1);
+                }
+                
+                var isSuccess = await _mgBll.GetReport(date);
+                if (isSuccess)
+                {
+                    _logger.LogInformation($"MG Get {date:yyyy-MM-dd} report");
+                    _thirdPartyBLL.SetThirdPartyTimer(tpId, timerType, new DateTimeOffset(date.AddDays(intervalDays)).ToUnixTimeSeconds());
                 }
 
-                if ((int)DateTime.UtcNow.Subtract(date).TotalDays > intervalDays)
+                if ((int)DateTime.UtcNow.AddDays(-1).Subtract(date).TotalDays > intervalDays)
                 {
                     nextTimeSpan = TimeSpan.FromSeconds(30);
                 }

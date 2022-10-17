@@ -233,5 +233,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class TCGSettleData : SettleData
     {
         public string OrderNum { get; set; }
+
+        public int betStatus { get; set; }
     }
 }

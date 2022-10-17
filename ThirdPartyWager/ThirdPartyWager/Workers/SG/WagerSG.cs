@@ -17,10 +17,10 @@ namespace ThirdPartyWager.Workers
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly DateTimeHelper dateTimeHelper;
         private Timer timer;
-        private int iRangMins = 20;
-        private int tpId = (int)Tp.SG;
+        private readonly int iRangMins = 20;
+        private readonly int tpId = (int)Tp.SG;
         private readonly string _tpName = Tp.SG.ToString();
-        private int tpType = 1;
+        private readonly int tpType = (int)WagerTimerType.Wager;
         private int quick = 0;
         private readonly int timeZone = 8;
 

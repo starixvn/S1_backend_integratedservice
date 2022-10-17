@@ -7,6 +7,8 @@ using System.Linq;
 using System.Web;
 using Newtonsoft.Json;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordExtend;
+using ThirdPartyCore.Extensions;
 
 namespace ThirdParty.Sexy
 {
@@ -186,6 +188,8 @@ namespace ThirdParty.Sexy
             string agentId = inputs.ContainsKey("AgentId") && !string.IsNullOrEmpty(inputs["AgentId"]) ? inputs["AgentId"] : throw new Exception("AgentId");
             string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "LobbyUrl";
             string betLimitId = inputs.ContainsKey($"BetLimitId2{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"BetLimitId2{tpCustInfo.TpCurrencyId}"]) ? inputs[$"BetLimitId2{tpCustInfo.TpCurrencyId}"] : throw new Exception($"BetLimitId2{tpCustInfo.TpCurrencyId}");
+            var platform = inputs.GetValueOrDefault("Platform") ?? throw new Exception("Platform");
+            var gameType = inputs.GetValueOrDefault("GameType") ?? throw new Exception("GameType");
             ApiUrl = $"{ApiUrl}/wallet/doLoginAndLaunchGame";
 
             if (!IsDevelopment && tpCustInfo.CustId == 61920)
@@ -203,8 +207,9 @@ namespace ThirdParty.Sexy
                 userId = tpCustInfo.TpUserName,
                 isMobileLogin = (appType == AppType.Desktop) ? "false" : "true",
                 externalURL = lobbyUrl,
-                gameType = "LIVE",
-                platform = "SEXYBCRT",
+                gameType = gameType,
+                gameCode = "MX-LIVE-001",
+                platform = platform,
                 language = TpLangId,
                 hall = "SEXY",
                 betLimit = JsonConvert.SerializeObject(new
@@ -268,9 +273,10 @@ namespace ThirdParty.Sexy
                 var apiUrl = inputs.GetValueOrDefault("ApiUrl2") ?? throw new Exception();
                 var cert = inputs.GetValueOrDefault("cert2") ?? throw new Exception();
                 var agentId = inputs.GetValueOrDefault("AgentId") ?? throw new Exception();
+                var platform = inputs.GetValueOrDefault("Platform") ?? throw new Exception();
 
                 var url = $"{apiUrl}/wallet/getTransactionHistoryResult";
-                var sParam = $"cert={cert}&agentId={agentId}&userId={tpCustInfo.TpUserName}&platformTxId={getBetDetail.TransId}&platform=SEXYBCRT";
+                var sParam = $"cert={cert}&agentId={agentId}&userId={tpCustInfo.TpUserName}&platformTxId={getBetDetail.TransId}&platform={platform}";
 
                 var json = HttpPost(url, sParam, "application/x-www-form-urlencoded");
                 var result = FromJson<DetailResult>(json);
@@ -296,13 +302,47 @@ namespace ThirdParty.Sexy
                 throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {e.Message}");
             }
         }
-
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransLC_AWC_Sexy_Detail_Get", new { betRecordInfo.TransId }, DataBase.Main);
+            var bet = JsonConvert.DeserializeObject<DetailSexy>(detail.GetStringValue("gameInfo"));
+            return tpGameType.CategoryId switch
+            {
+                TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = detail.GetStringValue("gameCode"),
+                    Game = detail.GetStringValue("gameName"),
+                    RefNo = detail.GetStringValue("refPlatformTxId"),
+                    Title = detail.GetStringValue("gameType"),
+                    MatchID = detail.GetStringValue("roundId"),
+                    BetType = detail.GetStringValue("betType"),
+                    BetChoice = string.Empty,
+                    Result = JsonConvert.SerializeObject(bet.result),
+                    Odds = decimal.TryParse(bet.odds, out var odds) ? odds : 0,
+                    DeviceType = DeviceType.None,
+                    IP = bet.ip ?? string.Empty,
+                },
+                _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            };
+        }
         public class DetailResult
         {
             public string url { get; set; }
             public string txnUrl { get; set; }
             public string roundUrl { get; set; }
             public string status { get; set; }
+        }
+
+        public class DetailSexy
+        {
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public dynamic? result { get; set; }
+
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public string? ip { get; set; }
+
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public string? odds { get; set; }
         }
 
     }

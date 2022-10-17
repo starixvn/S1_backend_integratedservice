@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Text;
 using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.KM
 {
@@ -22,7 +24,7 @@ namespace ThirdParty.KM
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             var apiUrl = GetInputValue(inputs, "ApiUrl");
-            var gameUrl = GetInputValue(inputs, "GameUrl");
+            var gameUrl = (tpCustInfo.TpCurrencyId == "RMB") ? GetInputValue(inputs, $"GameUrl_{tpCustInfo.TpCurrencyId}") : GetInputValue(inputs, "GameUrl");
             var clientId = GetInputValue(inputs, "X-QM-ClientId");
             var clientSecret = GetInputValue(inputs, "X-QM-ClientSecret");
 
@@ -58,7 +60,7 @@ namespace ThirdParty.KM
             else
             {
                 var platform = appType == AppType.Desktop ? "Nova88_Desktop" : "Nova88_Mobile";
-                
+
                 return new ApiResult()
                 {
                     ErrorCode = ErrorCode.Success,
@@ -98,7 +100,7 @@ namespace ThirdParty.KM
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var wagerDetail = TpBetRecordProvider.WagerDbQueryFirst("Service_TpWager_KM_Detail_Get", new { getBetDetail.TransId });
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_KM_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
             var detail = ToJson(wagerDetail);
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
@@ -115,7 +117,6 @@ namespace ThirdParty.KM
                     WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("winloss") * tpCurrency.ExchangeRate,
                     GameCode = wagerDetail.GetValueOrDefault("gameid")?.ToString(),
                     GameName = wagerDetail.GetValueOrDefault("gamename")?.ToString(),
-                    
                 },
                 _ => new BaseDetail(getBetDetail.TpGameTypeOption)
                 {
@@ -128,11 +129,40 @@ namespace ThirdParty.KM
 
         private string GetInputValue(Dictionary<string, string> inputs, string key)
         {
-            if(inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))
+            if (inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))
             {
                 return inputs[key];
             }
             throw new Exception();
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_KM_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
+
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = detail.GetStringValue("gameid"),
+                Game = detail.GetStringValue("gamename"),
+                RefNo = detail.GetStringValue("txid"),
+                Title = detail.GetStringValue("gameprovider"),
+                MatchID = detail.GetStringValue("roundid"),
+                BetType = string.Empty,
+                BetChoice = string.Empty,
+                Result = string.Empty,
+                DeviceType = GetDeviceType(detail.GetStringValue("platformtype")),
+                IP = detail.GetStringValue("ipaddress")
+            };
+        }
+
+        private DeviceType GetDeviceType(string device)
+        {
+            return device switch
+            {
+                "Desktop" => DeviceType.Desktop,
+                "Mobile" => DeviceType.Mobile,
+                _ => DeviceType.None,
+            };
         }
     }
 }

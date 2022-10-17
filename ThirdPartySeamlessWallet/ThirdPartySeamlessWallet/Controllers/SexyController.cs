@@ -804,7 +804,28 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return resp;
                 }
             }
+            else if (string.Equals(reqAction.action, "resettle", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    ResettleLC_Sexy resettle = JsonConvert.DeserializeObject<ResettleLC_Sexy>(req.message);
 
+                    int result = settledBLL.ResettleLC_AWC_Sexy(resettle);
+                    if (result > 0 || result == -1)
+                    {
+                        resp.status = "0000";
+                        log2File.Info($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                        return resp;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    resp.status = "9999";
+                    resp.desc = "fail";
+                    log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex.Message}", logName, ex);
+                    return resp;
+                }
+            }
             resp.status = "9999";
             resp.desc = "fail";
             log2File.Error($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(resp)}", logName);

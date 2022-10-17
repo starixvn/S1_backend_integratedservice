@@ -25,12 +25,12 @@ namespace ThirdPartyWager.Workers
         private Timer timerUSD;
         private Timer timerINR;
         private Timer timerCNY;
-        private int intervalMins = 2;
-        private int iRangMins = 20;
-        private int tpId = (int)Tp.PT;
+        private readonly int intervalMins = 2;
+        private readonly int iRangMins = 20;
+        private readonly int tpId = (int)Tp.PT;
         private readonly string _tpName = Tp.PT.ToString();
-        private int tpType = 1;
-        private int beyond = 6;
+        private readonly int tpType = (int)WagerTimerType.Wager;
+        private readonly int beyond = 6;
 
         public WagerPT(
             ILogger<WagerPT> logger,
@@ -612,7 +612,7 @@ namespace ThirdPartyWager.Workers
                         time.endTime = DateTime.Parse(time.endTime).AddMinutes(-3).ToString("yyyy-MM-dd HH:mm:ss");
                         time.endUnix -= 180;
                     }
-                    var result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt, gmtMinute);
+                    var result = await wagerPTBLL.GetWagersAsync(tpId, time.startTime, time.endTime, currency, siteId, gmt,gmtMinute);
                     if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);

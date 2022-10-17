@@ -17,12 +17,11 @@ namespace ThirdPartyWager.Workers
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly DateTimeHelper dateTimeHelper;
         private readonly IHostEnvironment environment;
-        private readonly Log2File log2File;
         private Timer timer;
-        private int intervalMins = 60;
-        private int tpId = (int)Tp.AG;
+        private readonly int intervalMins = 60;
+        private readonly int tpId = (int)Tp.AG;
         private readonly string _tpName = Tp.AG.ToString();
-        private int tpType = 2;
+        private readonly int tpType = (int)WagerTimerType.RedoWager;
         private int quick = 0;
         private readonly int timeZone = -4;
 
@@ -31,8 +30,7 @@ namespace ThirdPartyWager.Workers
             WagerRedoAGBLL wagerRedoAGBLL,
             ThirdPartyBLL thirdPartyBLL,
             DateTimeHelper dateTimeHelper,
-            IHostEnvironment environment,
-            Log2File log2File
+            IHostEnvironment environment
         )
         {
             this.logger = logger;
@@ -40,7 +38,6 @@ namespace ThirdPartyWager.Workers
             this.thirdPartyBLL = thirdPartyBLL;
             this.dateTimeHelper = dateTimeHelper;
             this.environment = environment;
-            this.log2File = log2File;
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {

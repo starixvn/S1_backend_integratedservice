@@ -1,14 +1,15 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.Saba
 {
@@ -690,13 +691,13 @@ namespace ThirdParty.Saba
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
             var gameType = getBetDetail.TpGameTypeOption.Type;
-            var tpBetRecordDetail = TpBetRecordProvider.GetTpBetRecordDetail(getBetDetail);
+            var tpBetRecordDetail = TpBetRecordProvider.GetTpBetRecordDetail(getBetDetail.TpGameTypeOption.TpId, gameType, getBetDetail.TransId, getBetDetail.SettledTime);
 
             if (tpBetRecordDetail == null)
             {
                 throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found.");
             }
-
+            var detail = ChangeTransIdToString(tpBetRecordDetail.Detail);
             var model = JsonConvert.DeserializeObject<DetailModel>(tpBetRecordDetail.Detail);
             var betDetail = model?.BetDetails?.First();
             var betNumberDetail = model?.BetNumberDetails?.First();
@@ -707,7 +708,7 @@ namespace ThirdParty.Saba
                 return new BaseDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
-                    Detail = tpBetRecordDetail.Detail,
+                    Detail = detail,
                     TpCurrency = tpCurrency,
                 };
             }
@@ -717,7 +718,7 @@ namespace ThirdParty.Saba
                 TpCategory.Sports => new SportsDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
-                    Detail = tpBetRecordDetail.Detail,
+                    Detail = detail,
                     TpCurrency = tpCurrency,
                     TpUserName = betDetail?.vendor_member_id,
                     UTCBetTime = GetUTCTime(betDetail?.transaction_time, DateTime.MinValue),
@@ -739,7 +740,7 @@ namespace ThirdParty.Saba
                 TpCategory.Casino => new CasinoDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
-                    Detail = tpBetRecordDetail.Detail,
+                    Detail = detail,
                     TpCurrency = tpCurrency,
                     RefTransId = betDetail?.trans_id,
                     TpUserName = betDetail?.vendor_member_id,
@@ -753,7 +754,7 @@ namespace ThirdParty.Saba
                 TpCategory.Lottery => new LotteryDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
-                    Detail = tpBetRecordDetail.Detail,
+                    Detail = detail,
                     TpCurrency = tpCurrency,
                     RefTransId = gameType == 2 ? betNumberDetail?.trans_id : betDetail?.trans_id,
                     TpUserName = gameType == 2 ? betNumberDetail?.vendor_member_id : betDetail?.vendor_member_id,
@@ -767,7 +768,7 @@ namespace ThirdParty.Saba
                 TpCategory.VirtualSports => new VirtualSportsDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
-                    Detail = tpBetRecordDetail.Detail,
+                    Detail = detail,
                     TpCurrency = tpCurrency,
                     RefTransId = betVirtualSportDetail?.trans_id,
                     TpUserName = betVirtualSportDetail?.vendor_member_id,
@@ -775,19 +776,45 @@ namespace ThirdParty.Saba
                     UTCSettledTime = GetUTCTime(betVirtualSportDetail?.match_datetime, (DateTime)betVirtualSportDetail?.transaction_time),
                     Stake = betVirtualSportDetail.stake * tpCurrency.ExchangeRate,
                     WinlostAmount = betVirtualSportDetail.winlost_amount * tpCurrency.ExchangeRate,
+                    Odds = betVirtualSportDetail.odds,
                 },
                 _ => new BaseDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
-                    Detail = tpBetRecordDetail.Detail,
+                    Detail = detail,
                     TpCurrency = tpCurrency,
                 }
             };
         }
-
+    
         private DateTime GetUTCTime(DateTime? target, DateTime defaultTime)
         {
             return new DateTimeOffset(target ?? defaultTime, new TimeSpan(-4, 0, 0)).DateTime;
         }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        private string ChangeTransIdToString(string json)
+        {
+            var jObject = JObject.Parse(json);
+            if (jObject["BetDetails"] != null)
+            {
+                jObject["BetDetails"][0]["trans_id"] = jObject["BetDetails"][0]["trans_id"].ToString();
+            }
+
+            if (jObject["BetNumberDetails"] != null)
+            {
+                jObject["BetNumberDetails"][0]["trans_id"] = jObject["BetNumberDetails"][0]["trans_id"].ToString();
+            }
+
+            if (jObject["BetVirtualSportDetails"] != null)
+            {
+                jObject["BetVirtualSportDetails"][0]["trans_id"] = jObject["BetVirtualSportDetails"][0]["trans_id"].ToString();
+            }
+            return jObject.ToString();
+         }
     }
 }

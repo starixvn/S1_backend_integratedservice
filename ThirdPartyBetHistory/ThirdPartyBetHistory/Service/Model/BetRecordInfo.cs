@@ -31,4 +31,17 @@ namespace ThirdPartyBetHistory.Service.Model
         public int SiteId { get; set; }
         public string UserName { get; set; }
     }
+
+    public class SabaSettleData
+    {
+        public BetRecordInfo BetRecordInfo { get; set; }
+
+        public TpBetRecordExtend TpBetRecordExtend { get; set; }
+
+        public SabaSettleData(BetRecordInfo betRecordInfo, TpBetRecordExtend tpBetRecordExtend)
+        {
+            BetRecordInfo = betRecordInfo;
+            TpBetRecordExtend = tpBetRecordExtend;
+        }
+    }
 }

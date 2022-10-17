@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -27,7 +29,7 @@ namespace ThirdPartyWager.Service.BLL
             _environment = provider.GetRequiredService<IHostEnvironment>();
         }
 
-        public async Task<bool> GetWagersAsync(int tpId, string startUnix, string endUnix, string currency, int siteId, int gmt, int gmtMinute = 0)
+        public async Task<bool> GetWagersAsync(int tpId, string startUnix, string endUnix, string currency, int siteId, int gmt ,int gmtMinute = 0 ,WagerType wager = WagerType.Wager )
         {
             var msg = "FATAL_ERROR";
             var guid = Guid.NewGuid().ToString();
@@ -81,7 +83,74 @@ namespace ThirdPartyWager.Service.BLL
                             }
 
                             bet.gameUnix = new DateTimeOffset(bet.GAMEDATE, new TimeSpan(gmt, gmtMinute, 0)).ToUnixTimeSeconds();
-                            _wagerPTService.InsertWager(bet);
+                            
+                            switch (wager)
+                            {
+                                case WagerType.Wager:
+                                    _wagerPTService.InsertWager(bet);
+                                    break;
+                                
+                                case WagerType.WagerReSettle:
+                                    
+                                    var tpCustInfo = _thirdPartyBLL.GetTpCustInfoWithCache(tpId, bet.PLAYERNAME);
+                                    if (tpCustInfo == null)
+                                    {
+                                        break;
+                                    }
+                                    
+                                    var settledTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+                                    settledTime = settledTime.AddSeconds( bet.gameUnix );
+                                    
+                                    var settleData = new BetRecordInfo
+                                    {
+                                        TpId = (int) Tp.PT,
+                                        TransId = bet.GAMECODE,
+                                        GameType = string.Equals(bet.GAMETYPE, "Live Games", StringComparison.OrdinalIgnoreCase) ? GameType.PT_LiveCasino : GameType.PT_RNG,
+                                        TpUserName = bet.PLAYERNAME,
+                                        SettledTime = settledTime,
+                                        TransTime = settledTime,
+                                        Stake = bet.BET,
+                                        ValidBet = bet.BET,
+                                        Revenue = null,
+                                        ProgressiveBet = bet.PROGRESSIVEBET,
+                                        ProgressiveWin = bet.PROGRESSIVEWIN,
+                                        WinlostAmount = (bet.WIN + bet.PROGRESSIVEWIN) - bet.BET,
+                                        SettlementType = SettlementType.SettledForValid,
+                                        OriginalState = null,
+                                        TicketKey = 0,
+                                        BonusId = 0
+                                    };
+
+                                    if (settleData.GameType == GameType.PT_RNG)
+                                    {
+                                        settleData.SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType(tpId, bet.SHORTNAME);
+                                    }
+                                    
+                                    #region TicketStatus
+
+                                    if (settleData.WinlostAmount > 0)
+                                    {
+                                        settleData.TicketStatus = settleData.Stake != 0 ? TicketStatus.Win : TicketStatus.FreeBetWin;
+                                    }
+                                    else if (settleData.WinlostAmount == 0)
+                                    {
+                                        settleData.TicketStatus = TicketStatus.Draw;
+                                    }
+                                    else
+                                    {
+                                        settleData.TicketStatus = TicketStatus.Lost;
+                                    }
+
+                                    #endregion
+                                    
+                                    _wagerPTService.InsertTpBetRecord14(settleData , tpCustInfo);
+                                    break;
+                                
+                                default:
+                                    _wagerPTService.InsertWager(bet);
+                                    break;
+                            }
+                            
                         }
                         catch (Exception ex)
                         {

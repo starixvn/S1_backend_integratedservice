@@ -20,7 +20,7 @@ namespace ThirdPartyWager.Workers
 
         private Timer timer;
 
-        private readonly int tpType = 2;
+        private readonly int tpType = (int)WagerTimerType.RedoWager;
         private readonly int timeRange = 1440; //in minutes
         private readonly int quickTime = 1200; // in seconds
         private readonly int runTime = 1; // in day

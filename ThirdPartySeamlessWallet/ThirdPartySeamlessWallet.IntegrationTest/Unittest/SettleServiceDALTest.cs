@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -8,6 +9,7 @@ using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NUnit.Framework;
+using ThirdPartySeamlessWallet.Core.Extensions;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -24,8 +26,15 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Unittest
         public void SetUp()
         {
             var serviceCollection = new ServiceCollection();
-            serviceCollection = SetEnvironment(serviceCollection);
-            serviceCollection = LoadConfig(serviceCollection);
+            var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
+            {
+                EnvironmentName = "Local",
+            });
+            builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
+            var app = builder.Build();
+            serviceCollection.AddSingleton(_configuration);
+            _configuration = app.Configuration;
+
             serviceCollection.AddTransient(p => Substitute.For<ILogger<SettledService>>());
             serviceCollection.AddTransient(p => Substitute.For<ILogger<MySqlClient>>());
             serviceCollection.AddTransient(p => Substitute.For<ILogger<Log2File>>());
@@ -120,28 +129,6 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Unittest
             
             Assert.IsTrue(actual);
             Assert.AreEqual(55361, bonusId);
-        }
-
-        private ServiceCollection SetEnvironment(ServiceCollection services)
-        {
-            var env = new HostingEnvironment()
-            {
-                EnvironmentName = Environments.Development,
-            };
-            services.AddSingleton<IHostEnvironment>(env);
-            return services;
-        }
-
-        private ServiceCollection LoadConfig(ServiceCollection services)
-        {
-            var configBuilder = new ConfigurationBuilder();
-            configBuilder.SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", false, false)
-                .AddJsonFile("appsettings.Local.json", false, false)
-                .AddJsonStream(Program.GetRemoteConfig(new System.Collections.Generic.List<string> { "http://52.221.19.140:7243/" }));
-            _configuration = configBuilder.Build();
-            services.AddSingleton(_configuration);
-            return services;
         }
     }
 }

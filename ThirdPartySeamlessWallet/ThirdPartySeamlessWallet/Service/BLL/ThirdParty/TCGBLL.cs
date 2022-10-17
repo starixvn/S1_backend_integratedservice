@@ -89,6 +89,32 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
+        public async Task<TCGReturnObj> SeamlessWallet(string merchantCode, TCGRequest request)
+        {
+            try
+            {
+                var tcgConfig = new TCGConfig(thirdPartySetting.TpSetting, merchantCode);
+                return await _requestHandler[request.method].Invoke(request, tcgConfig);
+            }
+            catch (TCGException ex)
+            {
+                return new TCGReturnObj()
+                {
+                    status = ex.ErrorCode.ToString(),
+                    error_desc = ex.Message,
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return new TCGReturnObj()
+                {
+                    status = TCGReturnCode.UnknownSystemError.ToString(),
+                    error_desc = ex.Message,
+                };
+            }
+        }
+
         private async Task<TCGReturnObj> GetBalance(TCGRequest request, TCGConfig tcgConfig)
         {
             var tpUserName = request.username;

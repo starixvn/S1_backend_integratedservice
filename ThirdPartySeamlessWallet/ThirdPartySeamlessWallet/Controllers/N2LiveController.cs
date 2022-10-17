@@ -1152,27 +1152,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         private string getTestHierarchy(string account, string tpCurrencyId, string password = null)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, account);
-            List<long> testHierarchyCustId = new List<long>();
-            if (environment.IsDevelopment())
-            {
-                testHierarchyCustId.Add(1288);
-                testHierarchyCustId.Add(1481);
-            }
-            else
-            {
-                testHierarchyCustId.Add(90);
-                testHierarchyCustId.Add(31909);
-                //aliceidr for n2 test account
-                testHierarchyCustId.Add(240129);
-                //alicethb for n2 test account
-                testHierarchyCustId.Add(236358);
-                // goal
-                testHierarchyCustId.Add(2071);
-                // bwing
-                testHierarchyCustId.Add(2072);
-            }
+            List<long> testHierarchyCustId = environment.IsDevelopment() ? new List<long> { 1288,1481 } : new List<long> { 90, 31909, 240129, 236358, 2071, 2072 };
             bool isTestHierarchy = testHierarchyCustId.Contains(tpCustInfo.CustId);
-            if (isTestHierarchy == true)
+            if (isTestHierarchy)
             {
                 tpCurrencyId = "1111";
             }

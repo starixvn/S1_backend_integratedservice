@@ -17,11 +17,13 @@ namespace ThirdPartyWager.Service.DAL
         private readonly IEnumerable<ServerInfo> _serverInfos;
 
         private readonly MySqlClient _reportDbClient;
+        private readonly MySqlClient _wagerDbClient;
 
         public CommonService(IServiceProvider provider)
         {
             _serverInfos = provider.GetRequiredService<IEnumerable<ServerInfo>>();
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
+            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
         }
 
         public IEnumerable<ServerInfo> GetSiteList()
@@ -32,6 +34,11 @@ namespace ThirdPartyWager.Service.DAL
         public IEnumerable<TpCurrency> GetTpCurrencyList(int tpId)
         {
             return _reportDbClient.Query<TpCurrency>("Service_TpCurrency_Get", new { TpId = tpId });
+        }
+
+        public Task<IEnumerable<FincanceDailySummary>> GetWagerSummary(string spName, long beginTime, long endTime)
+        {
+            return _wagerDbClient.QueryAsync<FincanceDailySummary>(spName, new DynamicParameters(new { _BeginTime = beginTime, _EndTime = endTime }));
         }
     }
 }

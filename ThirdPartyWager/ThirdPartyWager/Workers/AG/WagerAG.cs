@@ -18,11 +18,11 @@ namespace ThirdPartyWager.Workers
         private readonly DateTimeHelper dateTimeHelper;
         private readonly IHostEnvironment environment;
         private Timer timer;
-        private int intervalMins = 3;
-        private int iRangMins = 10;
-        private int tpId = (int)Tp.AG;
+        private readonly int intervalMins = 3;
+        private readonly int iRangMins = 10;
+        private readonly int tpId = (int)Tp.AG;
         private readonly string _tpName = Tp.AG.ToString();
-        private int tpType = 1;
+        private readonly int tpType = (int)WagerTimerType.Wager;
         private int quick = 0;
         private readonly int timeZone = -4;
 
