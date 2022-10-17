@@ -89,7 +89,7 @@ namespace ThirdPartyWager.Manual
             services.AddSingleton<TpUnsettleService>();
             services.AddSingleton<ConfigService>();
             services.AddSingleton<FincanceService>();
-            
+
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
             // Iconic

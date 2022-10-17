@@ -420,7 +420,7 @@ namespace ThirdParty.MP
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerPK_MP_Detail_Get", new { getBetDetail.TransId },DataBase.Wager);
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerPK_MP_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
             Dictionary<string, string> keyValuePairs = new Dictionary<string, string>();
             foreach (var item in wagerDetail.Select((val, i) => new { i, val }))
             {
@@ -433,7 +433,6 @@ namespace ThirdParty.MP
                 account = wagerDetail.GetValueOrDefault("Accounts")?.ToString(),
                 gameUserNO = wagerDetail.GetValueOrDefault("GameID")?.ToString(),
                 kindID = wagerDetail.GetValueOrDefault("KindID")?.ToString(),
-                currency = tpCustInfo.TpCurrencyId,
             };
             var dicP = FromJson<Dictionary<string, string>>(ToJson(Param));
 
@@ -462,7 +461,10 @@ namespace ThirdParty.MP
                 var json = JsonConvert.DeserializeObject<ApiResponse>(result);
                 if (json.d.code == 0)
                 {
-                    keyValuePairs.Add("Info", json.d.data.Split("\r\n\r\n")[1]);
+                    var data = json.d.data.Split("\r\n\r\n");
+                    var element = (string.IsNullOrEmpty(data.ElementAtOrDefault(1))) ? data.ElementAtOrDefault(0) : data.ElementAtOrDefault(1);
+                    var info = (!string.IsNullOrEmpty(element)) ? element : json.d.data;
+                    keyValuePairs.Add("Info", info);
                 }
             }
 

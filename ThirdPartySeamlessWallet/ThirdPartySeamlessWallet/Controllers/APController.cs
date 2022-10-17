@@ -549,7 +549,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     totalstake = getReq.TotalStake,
                     totalwin = getReq.TotalWin,
                     settletime = getReq.SettleTime,
-                    hitjackpot = getReq.HitJackpot
+                    hitjackpot = getReq.HitJackpot,
+                    TicketType = (int)BettransType.EndRound
                 };
 
                 int SettleResult = settledBLL.SettledRNG_AP(bettingData, getReq.PlayerId, out decimal tpAffterAmount);
@@ -635,7 +636,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     gameroundid = getReq.GameRoundId,
                     playerid = getReq.PlayerId,
                     jpsettletime = getReq.JPSettleTime,
-                    jpwin = getReq.JPWin
+                    jpwin = getReq.JPWin,
+                    TicketType = (int)BettransType.Jackpot
                 };
 
                 int SettleResult = settledBLL.SettledRNG_AP(bettingData, getReq.PlayerId, out decimal tpAffterAmount);

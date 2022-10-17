@@ -551,9 +551,9 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             return sport_type switch
             {
                 56 => GameType.Saba_ChinaLottery,
-                69 => GameType.Saba_Bitcoin,
                 165 => GameType.Saba_CardClub,
                 171 => GameType.Saba_Vgaming,
+                175 => GameType.Saba_Bitcoin,
                 200 => GameType.Saba_SabaClub,
                 202 => GameType.Saba_Keno,
                 212 => GameType.Saba_MacauGame,

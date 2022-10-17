@@ -83,5 +83,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return _tpUnsettleService.InsertTpUnsettle(tp, gameType, transId);
         }
+
+        /// <summary>
+        /// 更新第三方Table結算結果
+        /// </summary>
+        public int SetSettleFlag(string spName, Tp tp, GameType gameType, string transId, string roundId, bool isSuccess = true, DataBase dataBase = DataBase.Main)
+        {
+            return _tpUnsettleService.SetSettleFlag(spName, new
+            {
+                TpId = (int)tp,
+                GameType = (int)gameType,
+                TransId = transId,
+                IsSuccess = isSuccess,
+                RoundId = roundId
+            }, dataBase);
+        }
     }
 }
