@@ -62,7 +62,9 @@ builder.Services
     .AddHostedService<BTIWorker>()
     .AddHostedService<NineWWorker>()
     .AddHostedService<Kiss918Worker>()
-    .AddHostedService<One789Worker>();
+    .AddHostedService<One789Worker>()
+    .AddHostedService<Kiss918Worker>()
+    .AddHostedService<SkywindWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
