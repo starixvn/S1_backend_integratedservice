@@ -1995,22 +1995,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #endregion
 
-        #region Kiss918
-
-        public IEnumerable<SettleData_Kiss918> GetUnsettledList_Kiss918()
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Query<SettleData_Kiss918>("Service_TpWagerKiss918_Unsettle_Get", commandType: CommandType.StoredProcedure);
-        }
-
-        public int SetSettleFlag_TpWagerKiss918(string uuid)
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpWagerKiss918_Settle_Set", new { uuid = uuid }, commandType: CommandType.StoredProcedure);
-        }
-
-        #endregion
-
         #region Mega
 
         public SettleData GetSettle_TpReportMega(string TransId)
@@ -3963,7 +3947,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 long unixsettletime = string.IsNullOrWhiteSpace(bettingDataRNG_AP.settletime) ? 0 : ((DateTimeOffset)DateTime.Parse(bettingDataRNG_AP.settletime, culture, DateTimeStyles.None)).ToUnixTimeSeconds();
                 long unixjpsettletime = string.IsNullOrWhiteSpace(bettingDataRNG_AP.jpsettletime) ? 0 : ((DateTimeOffset)DateTime.Parse(bettingDataRNG_AP.jpsettletime, culture, DateTimeStyles.None)).ToUnixTimeSeconds();
                 long unixtimestamp = ((DateTimeOffset)DateTime.Parse(bettingDataRNG_AP.timestamp, culture, DateTimeStyles.None)).ToUnixTimeSeconds();
-                var check = _partitionService.Query<BettransRNG_AP>(partitionTime, "Service_BettransRng_AP_Get", new { bettingDataRNG_AP.seq, bettingDataRNG_AP.sitecode, bettingDataRNG_AP.gamecode, bettingDataRNG_AP.gameroundid });
+                var check = _partitionService.Query<BettransRNG_AP>(partitionTime, "Service_BettransRng_AP_Get_V2", new { bettingDataRNG_AP.gameroundid, bettingDataRNG_AP.TicketType });
                 if (check.Any())
                 {
                     return -1;//Duplicated
@@ -3974,7 +3958,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var trans = conn.BeginTransaction();
                 var win = bettingDataRNG_AP.jpwin > 0 ? bettingDataRNG_AP.jpwin : bettingDataRNG_AP.totalwin;
                 bettingDataRNG_AP.TicketStatus = win > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
-                bettingDataRNG_AP.TicketType = (int)BettransType.EndRound;
 
                 var p = new DynamicParameters(new
                 {
@@ -4319,6 +4302,85 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #endregion
 
+        #region Kiss918
+
+        public IEnumerable<BettingDataRNG_Kiss918> IsExistBet_Kiss918(DateTime partitionTime, BettingDataRNG_Kiss918 data)
+        {
+            var query = new { playSessionID = data.playSessionID };
+            return _partitionService.Query<BettingDataRNG_Kiss918>(partitionTime, "Service_BettransRng_Kiss918_Cancel_Check", query);
+        }
+
+        public bool Payout_Kiss918(DateTime partitionTime, BettingDataRNG_Kiss918 data, MySqlTransaction trans)
+        {
+            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_Kiss918_Ins", data, trans);
+
+            if (result == 0)
+                return false;
+
+            return true;
+        }
+
+        public bool Refund_Kiss918(DateTime partitionTime, BettingDataRNG_Kiss918 data, MySqlTransaction trans)
+        {
+            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_Kiss918_Ins", data, trans);
+
+            if (result == 0)
+                return false;
+
+            return true;
+        }
+
+        public bool SetBalance_Kiss918(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data, TransType transType, string memo,
+                                       out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+
+            var result = PayoutV2(
+                tpCustInfo,
+                data.amount,
+                (int)Tp.Kiss918,
+                data.NewRoundId,
+                (int)GameType.Kiss918_RNG,
+                TpCategory.Slots,
+                data.NewRoundId,
+                transType,
+                null,
+                out afterAmount,
+                $"{memo} - {data.referenceID} ",
+                out bonusId,
+                conn,
+                trans
+            );
+
+            if (result == 0)
+                return false;
+
+            return true;
+        }
+
+        public int GetTpBonus_Kiss918(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data)
+        {
+            var result = GetTpBonus((int)Tp.Kiss918, data.NewRoundId, (int)GameType.Kiss918_RNG, TpCategory.Slots, out int custId, out int bonusId);
+            return bonusId;
+        }
+
+        public bool InsertUnsettle_Kiss918(DateTime partitionTime, string playSessionID, MySqlTransaction trans)
+        {
+            var result = _tpUnsettleService.InsertTpUnsettle(Tp.Kiss918, GameType.Kiss918_RNG, playSessionID, trans, partitionTime);
+
+            if (result == 0)
+                return false;
+
+            return true;
+        }
+
+        public IEnumerable<SettleData_Kiss918> GetSettle_TpWager_Kiss918(string playSessionID, string referenceID)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Query<SettleData_Kiss918>("Service_TpWagerKiss918_Get", new { _playSessionID = playSessionID, _referenceID = referenceID }, commandType: CommandType.StoredProcedure);
+        }
+
+        #endregion
+
         #region SimplePlay
 
         public int PayoutRNG_SimplePlay(TpCustInfo tpCustInfo, PayoutData_SimplePlay payoutData_SimplePlay, out decimal afterAmount)
@@ -4530,7 +4592,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 switch (bettingData_Skywind.game_status)
                 {
                     case "freegame":
-                        bettingData_Skywind.TicketType = (int)BettransType.Jackpot;
+                        bettingData_Skywind.TicketType = (int)BettransType.Bonus;
                         break;
                     case "bonusgame":
                         bettingData_Skywind.TicketType = (int)BettransType.Bonus;
@@ -4563,7 +4625,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0 && bettingData_Skywind.TicketType == (int)BettransType.EndRound && bettingData_Skywind.event_type != "transfer-out")
                 {
-                    result = _tpUnsettleService.InsertTpUnsettle(Tp.Skywind, (GameType)gameType, bettingData_Skywind.round_id, trans, partitionTime);
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.Skywind, (GameType)gameType, $"{bettingData_Skywind.round_id}-{bettingData_Skywind.game_id}", trans, partitionTime);
                 }
 
                 if (result > 0)
@@ -4592,14 +4654,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 trx_id = cancelBetData_Skywind.trxid
             };
-            var bettransSkywind = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_Bettrans_Skywind_Check", query)?.FirstOrDefault();
+            var bettransSkywind = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_Bettrans_Skywind_Check", query)?.FirstOrDefault(x=>x.TicketStatus == (int)TicketStatus.UnSettled);
             if (bettransSkywind == null)
             {
                 return -2;
-            }
-            else if (bettransSkywind.TicketStatus != (int)TicketStatus.UnSettled)
-            {
-                return -1;
             }
             var para = new DynamicParameters(new
             {
@@ -4648,6 +4706,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             return _wagerDbClient.QueryFirst<SettleData_Skywind>("Service_TpWager_Skywind_Settle_Get", new { TransId = transId });
         }
+
         #endregion
     }
 }

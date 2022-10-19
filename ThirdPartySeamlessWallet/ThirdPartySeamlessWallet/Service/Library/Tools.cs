@@ -67,8 +67,8 @@ namespace ThirdPartySeamlessWallet.Service.Library
 
             var serializer = new XmlSerializer(typeof(T));
             using var memoryStream = new MemoryStream();
-            using var xmlWriter = XmlWriter.Create(memoryStream, new XmlWriterSettings() {Indent = true, Encoding = Encoding.UTF8});
-            xmlWriter.WriteStartDocument();  
+            using var xmlWriter = XmlWriter.Create(memoryStream, new XmlWriterSettings() { Indent = true, Encoding = Encoding.UTF8 });
+            xmlWriter.WriteStartDocument();
             var xmlSerializerNamespaces = new XmlSerializerNamespaces();
             xmlSerializerNamespaces.Add("", "");
             serializer.Serialize(xmlWriter, obj, xmlSerializerNamespaces);

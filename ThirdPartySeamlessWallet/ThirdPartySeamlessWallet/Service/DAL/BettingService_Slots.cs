@@ -1029,7 +1029,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             var trans = conn.BeginTransaction();
 
-            var bettransAP = _partitionService.Query<BettransRNG_AP>(partitionTime, "Service_BettransRng_AP_Get", new { bettingDataRNG_AP.seq, bettingDataRNG_AP.sitecode, bettingDataRNG_AP.gamecode, bettingDataRNG_AP.gameroundid });
+            var bettransAP = _partitionService.Query<BettransRNG_AP>(partitionTime, "Service_BettransRng_AP_Get_V2", new { bettingDataRNG_AP.gameroundid, bettingDataRNG_AP.TicketType });
             if (bettransAP.Any())
             {
                 return 0;
@@ -1155,6 +1155,61 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 return false;
             }
+
+            return true;
+        }
+
+        #endregion
+
+        #region Kiss918
+
+        public IEnumerable<BettingDataRNG_Kiss918> IsExist_Kiss918(DateTime partitionTime, BettingDataRNG_Kiss918 data)
+        {
+            var query = new { referenceID = data.referenceID };
+            return _partitionService.Query<BettingDataRNG_Kiss918>(partitionTime, "Service_BettransRng_Kiss918_Check", query);
+        }
+
+        public bool PlaceBet_Kiss918(DateTime partitionTime, BettingDataRNG_Kiss918 data, MySqlTransaction trans)
+        {
+            var result = _partitionService.Execute(partitionTime, "Service_BettransRng_Kiss918_Ins", data, trans);
+
+            if (result == 0)
+                return false;
+
+            return true;
+        }
+
+        public bool SetBalance_Kiss918(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data,
+            out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var result = PlaceBetV2(tpCustInfo,
+                                data.amount,
+                                (int)Tp.Kiss918,
+                                data.NewRoundId,  //TpTransId
+                                (int)GameType.Kiss918_RNG,
+                                data.NewRoundId,  //RefId
+                                null,
+                                TpCategory.Slots,
+                                out afterAmount,
+                                ref bonusId,
+                                conn,
+                                trans,
+                                memo: $" - {data.referenceID} ");
+
+            if (result <= 0)
+                return false;
+
+            return true;
+        }
+
+        public bool AddTpBonus_Kiss918(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data, int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var result = AddTpBonus((int)Tp.Kiss918, data.referenceID, (int)GameType.Kiss918_RNG,
+                             tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, data.amount,
+                             bonusId, TpCategory.Slots, conn, trans);
+
+            if (result == 0)
+                return false;
 
             return true;
         }

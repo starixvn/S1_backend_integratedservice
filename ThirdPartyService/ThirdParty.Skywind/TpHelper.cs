@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
@@ -131,8 +132,9 @@ namespace ThirdParty.Skywind
             string SecretKey = inputs.ContainsKey("SecretKey") && !string.IsNullOrEmpty(inputs["SecretKey"]) ? inputs["SecretKey"] : throw new Exception();
             string Username = inputs.ContainsKey("Username") && !string.IsNullOrEmpty(inputs["Username"]) ? inputs["Username"] : throw new Exception();
             string Password = inputs.ContainsKey("Password") && !string.IsNullOrEmpty(inputs["Password"]) ? inputs["Password"] : throw new Exception();
-            string roundId = getBetDetail.TransId;
-
+            
+            string[] sArray = Regex.Split(getBetDetail.TransId, "-", RegexOptions.IgnoreCase);
+            var roundId = sArray[0];
 
             var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
             var detailUrl = $"{ApiUrl}/history/game/{roundId}/image";

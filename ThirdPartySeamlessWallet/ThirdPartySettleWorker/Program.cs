@@ -58,6 +58,7 @@ builder.Services
     .AddHostedService<NetentWorker>()
     .AddHostedService<RedTigerWorker>()
     .AddHostedService<YLWorker>()
+    .AddHostedService<Kiss918Worker>()
     .AddHostedService<SkywindWorker>();
 
 var app = builder.Build();
