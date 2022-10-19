@@ -98,7 +98,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.SBO", "ThirdPart
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.Skywind", "ThirdParty.Skywind\ThirdParty.Skywind.csproj", "{5631C337-2051-4A0D-ADFE-FB3DEF90F1A9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.CryptoSports", "ThirdParty.CryptoSports\ThirdParty.CryptoSports.csproj", "{10F42EAD-A2F0-4AF8-B12A-5CCA5197E5E1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.CryptoSports", "ThirdParty.CryptoSports\ThirdParty.CryptoSports.csproj", "{10F42EAD-A2F0-4AF8-B12A-5CCA5197E5E1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.SimplePlay", "ThirdParty.SimplePlay\ThirdParty.SimplePlay.csproj", "{36AE4DD7-C7B8-4EDD-BFDB-3F0E26BF4302}"
 EndProject
@@ -288,6 +288,10 @@ Global
 		{5631C337-2051-4A0D-ADFE-FB3DEF90F1A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5631C337-2051-4A0D-ADFE-FB3DEF90F1A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5631C337-2051-4A0D-ADFE-FB3DEF90F1A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{10F42EAD-A2F0-4AF8-B12A-5CCA5197E5E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10F42EAD-A2F0-4AF8-B12A-5CCA5197E5E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10F42EAD-A2F0-4AF8-B12A-5CCA5197E5E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10F42EAD-A2F0-4AF8-B12A-5CCA5197E5E1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{36AE4DD7-C7B8-4EDD-BFDB-3F0E26BF4302}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{36AE4DD7-C7B8-4EDD-BFDB-3F0E26BF4302}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{36AE4DD7-C7B8-4EDD-BFDB-3F0E26BF4302}.Release|Any CPU.ActiveCfg = Release|Any CPU

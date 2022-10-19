@@ -89,6 +89,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return result;
         }
+
         public int PlaceBetRNG_GPI(BettingDataRNG_GPI bettingDataRNG_GPI, out decimal afterAmount, out string TransId)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.GPI, bettingDataRNG_GPI.cust_id);
