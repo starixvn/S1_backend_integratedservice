@@ -69,6 +69,13 @@ namespace ThirdPartySettleWorker.Workers
                         var stake = unsettledList.Sum(i => i.DebitAmount);
                         var payout = unsettledList.Sum(i => i.CreditAmount);
                         var isClosed = unsettledList.Any(i => i.CurrentStatus.Equals("Closed", StringComparison.OrdinalIgnoreCase));
+                        var settlementType = isClosed ? SettlementType.SettledForValid : SettlementType.UnSettled;
+                        var ticketStatus = isClosed ? (payout - stake > 0 ? TicketStatus.Win:TicketStatus.Lost): TicketStatus.UnSettled;
+                        if (unsettledList.First().TicketStatus == (int)TicketStatus.Refund)
+                        {
+                            settlementType = SettlementType.SettledForInvalid;
+                            ticketStatus = TicketStatus.Refund;
+                        }
 
                         var betRecordInfo = new BetRecordInfo
                         {
@@ -81,8 +88,10 @@ namespace ThirdPartySettleWorker.Workers
                             TpUserName = tpUserName,
                             SettledTime = unsettledList.Max(i => i.SettleTime),
                             TransTime = unsettledList.Min(i => i.TransTime),
-                            SettlementType = isClosed ? SettlementType.SettledForValid : SettlementType.UnSettled,
+                            SettlementType = settlementType,
+                            TicketStatus = ticketStatus,                       
                         };
+
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Sports);
                         if (result == 1)
                         {
