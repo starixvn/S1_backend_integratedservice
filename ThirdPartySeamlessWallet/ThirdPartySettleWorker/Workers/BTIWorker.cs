@@ -65,15 +65,10 @@ namespace ThirdPartySettleWorker.Workers
                         var unsettledList = _tpUnSettledBLL.GetTpUnsettleData<BTISettleData>("Service_BettransSports_BTI_Settle_Get", new { reserve_id = transId }, DataBase.Main);
                         var tpUserName = unsettledList.First().Account;
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
-                        var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
+                        
                         var stake = unsettledList.Sum(i => i.DebitAmount);
                         var payout = unsettledList.Sum(i => i.CreditAmount);
                         var isClosed = unsettledList.Any(i => i.CurrentStatus.Equals("Closed", StringComparison.OrdinalIgnoreCase));
-                        if (tpCurrency.ExchangeRate > 0)
-                        {
-                            stake *= tpCurrency.ExchangeRate;
-                            payout *= tpCurrency.ExchangeRate;
-                        }
 
                         var betRecordInfo = new BetRecordInfo
                         {
