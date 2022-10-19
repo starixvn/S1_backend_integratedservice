@@ -75,8 +75,8 @@ namespace ThirdPartyWager.Service.BLL
                 var currency = item.TpCurrencyId;
                 foreach (var gameType in _gameTypeList)
                 {
-                    // USD尚未開放 暫時排除
-                    if (/*gameType == (int)GameType.AMB_Poker &&*/ currency == "USD")
+                    // CNY、USD Poker未開放 暫時排除
+                    if (currency == "USD" || currency == "CNY")
                     {
                         continue;
                     }

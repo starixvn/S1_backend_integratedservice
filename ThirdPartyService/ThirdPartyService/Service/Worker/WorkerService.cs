@@ -1,10 +1,4 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Extensions;
@@ -21,12 +15,14 @@ namespace ThirdPartyService.Service.Worker
         private readonly ILogger<WorkerService> _logger;
         private readonly TpTransferInfo _tpTransferInfo;
         private readonly ThirdPartyBLL _thirdPartyBll;
+        private readonly Random _random;
 
         public WorkerService(ILogger<WorkerService> logger,TpTransferInfo tpTransferInfo, ThirdPartyBLL thirdPartyBll)
         {
             _logger = logger;
             _tpTransferInfo = tpTransferInfo;
             _thirdPartyBll = thirdPartyBll;
+            _random = new Random();
         }
         
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -45,7 +41,7 @@ namespace ThirdPartyService.Service.Worker
         {
             try
             {
-                var tpTransferList = _tpTransferInfo.TpTransferPendingGet();
+                var tpTransferList = _tpTransferInfo.TpTransferPendingGet(_random.Next(950, 1000));// 避免 ORM 或 db execution plan cache
         
                 if (tpTransferList != null)
                 {
@@ -81,7 +77,7 @@ namespace ThirdPartyService.Service.Worker
         {
             try
             {
-                var tpTransferList = _tpTransferInfo.TpBonusTransferPendingGet();
+                var tpTransferList = _tpTransferInfo.TpBonusTransferPendingGet(_random.Next(950, 1000));
                 var statusList = new List<int> { (int)TransferStatus.Pending, (int)TransferStatus.PendingD };
                 
                 if (tpTransferList != null)
@@ -124,7 +120,7 @@ namespace ThirdPartyService.Service.Worker
         {
             try
             {
-                var tpTransferList = _tpTransferInfo.TpRemainingTransferBonusGet();
+                var tpTransferList = _tpTransferInfo.TpRemainingTransferBonusGet(_random.Next(950, 1000));
                 foreach (var tpTransfer in tpTransferList)
                 {
                     Task.Run(() =>

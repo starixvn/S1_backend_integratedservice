@@ -34,7 +34,7 @@ namespace ThirdPartyWager.Service.DAL
         
         public int InsertTpBetRecord14(BetRecordInfo betRecordInfo ,TpCustInfo tpCustInfo)
         {
-            return _mainDbClient.Execute("Archive_TpBetRecord14_Ins_V2", new
+            return _mainDbClient.Execute("Archive_TpBetRecord_Ins", new
             {
                 TpId = betRecordInfo.TpId,
                 TransId = betRecordInfo.TransId,

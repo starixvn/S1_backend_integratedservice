@@ -12,7 +12,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly HttpHelper _httpHelper;
         private readonly Common _common;
         private readonly Log2File _log2File;
-        private readonly ILogger<ApiPTBLL> _logger;
+        private readonly ILogger<ApiSexyBLL> _logger;
         private readonly string _tpName = Tp.Sexy.ToString();
 
         public ApiSexyBLL(
@@ -22,7 +22,7 @@ namespace ThirdPartyWager.Service.BLL
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
-            _logger = provider.GetRequiredService<ILogger<ApiPTBLL>>();
+            _logger = provider.GetRequiredService<ILogger<ApiSexyBLL>>();
         }
 
         public async Task<CurrencyStats_Sexy> GetBetSummaryByTime(dynamic setting, string startTime, string endTime)

@@ -215,97 +215,54 @@ namespace ThirdPartySeamlessWallet.Controllers
             string sGameType = sessionKeyArr[3];/*Game Type*/
             int.TryParse(sGameType, out int gameType);
 
-            if (authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
+            var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpUserName);
+            if (tpCheck == null)
             {
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
-                if (tpCheck == null)
-                {
-                    getApiResponse.data.statusCode = 3;
-                    getApiResponse.error.title = "INVALID_USER";
-                    getApiResponse.error.description = "Invalid user Id";
-                    log2File.Error($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                    return getApiResponse;
-                }
-                else if (tpCheck.Locked)
-                {
-                    getApiResponse.data.statusCode = 3;
-                    getApiResponse.error.title = "USER_IS_LOCKED";
-                    getApiResponse.error.description = "Account is Locked";
-                    log2File.Error($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                    return getApiResponse;
-                }
-
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, gameType);
-                if (tpCustBalance != null)
-                {
-                    var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                    if (string.IsNullOrEmpty(thirdPartySetting.TpSetting["secure_code"]))
-                    {
-                        log2File.Error($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                        return getApiResponse;
-                    }
-
-                    Response.StatusCode = (int)Error.OK;
-                    GetApiResp getBalanceResp = new GetApiResp();
-                    getBalanceResp.data.statusCode = 0;
-                    getBalanceResp.data.username = tpCustInfoAuth.TpUserName;
-                    getBalanceResp.data.balance = Math.Truncate(tpCustBalance.Balance);
-                    getBalanceResp.data.hash = tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{tpCustInfoAuth.TpUserName}{Math.Truncate(tpCustBalance.Balance)}").ToLower();
-                    log2File.Info($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
-                    return getBalanceResp;
-                }
+                getApiResponse.data.statusCode = 3;
+                getApiResponse.error.title = "INVALID_USER";
+                getApiResponse.error.description = "Invalid user Id";
+                log2File.Error($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                return getApiResponse;
             }
-            else if (gameType == (int)GameType.Iconic_Fish)
+            else if (tpCheck.Token != sessionToken)
             {
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpUserName);
-                if (tpCheck == null)
-                {
-                    getApiResponse.data.statusCode = 3;
-                    getApiResponse.error.title = "INVALID_USER";
-                    getApiResponse.error.description = "Invalid user Id";
-                    log2File.Error($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                    return getApiResponse;
-                }
-                else if (tpCheck.Token != sessionToken)
-                {
-                    /*User has Log out*/
-                    getApiResponse.data.statusCode = 1;
-                    getApiResponse.error.title = "Wrong_Token";
-                    getApiResponse.error.description = "Wrong Token";
-                    log2File.Error($"{JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                    return getApiResponse;
-                }
-                else if (tpCheck.Locked)
-                {
-                    getApiResponse.data.statusCode = 3;
-                    getApiResponse.error.title = "USER_IS_LOCKED";
-                    getApiResponse.error.description = "Account is Locked";
-                    log2File.Error($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                    return getApiResponse;
-                }
-
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpUserName, gameType);
-                if (tpCustBalance != null)
-                {
-                    var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                    if (string.IsNullOrEmpty(thirdPartySetting.TpSetting["secure_code"]))
-                    {
-                        log2File.Error($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                        return getApiResponse;
-                    }
-
-                    Response.StatusCode = (int)Error.OK;
-                    GetApiResp getBalanceResp = new GetApiResp();
-                    getBalanceResp.data.statusCode = 0;
-                    getBalanceResp.data.username = tpUserName;
-                    getBalanceResp.data.balance = Math.Truncate(tpCustBalance.Balance);
-                    getBalanceResp.data.hash = tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{tpUserName}{Math.Truncate(tpCustBalance.Balance)}").ToLower();
-                    log2File.Info($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
-                    return getBalanceResp;
-                }
+                /*User has Log out*/
+                getApiResponse.data.statusCode = 1;
+                getApiResponse.error.title = "Wrong_Token";
+                getApiResponse.error.description = "Wrong Token";
+                log2File.Error($"{JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                return getApiResponse;
+            }
+            else if (tpCheck.Locked)
+            {
+                getApiResponse.data.statusCode = 3;
+                getApiResponse.error.title = "USER_IS_LOCKED";
+                getApiResponse.error.description = "Account is Locked";
+                log2File.Error($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                return getApiResponse;
             }
 
-            log2File.Info($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpUserName, gameType);
+            if (tpCustBalance != null)
+            {
+                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                if (string.IsNullOrEmpty(thirdPartySetting.TpSetting["secure_code"]))
+                {
+                    log2File.Error($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+
+                Response.StatusCode = (int)Error.OK;
+                GetApiResp getBalanceResp = new GetApiResp();
+                getBalanceResp.data.statusCode = 0;
+                getBalanceResp.data.username = tpUserName;
+                getBalanceResp.data.balance = Math.Truncate(tpCustBalance.Balance);
+                getBalanceResp.data.hash = tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{tpUserName}{Math.Truncate(tpCustBalance.Balance)}").ToLower();
+                log2File.Info($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
+                return getBalanceResp;
+            }
+
+            log2File.Error($"token={JsonConvert.SerializeObject(sessionKeyArr)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
             return getApiResponse;
         }
 

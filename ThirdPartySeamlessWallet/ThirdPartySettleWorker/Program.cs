@@ -42,6 +42,7 @@ builder.Services
     .AddHostedService<MegaWorker>()
     .AddHostedService<AMBWorker>()
     .AddHostedService<SAWorker>()
+    .AddHostedService<SimplePlayWorker>()
     .AddHostedService<SGWorker>()
     .AddHostedService<AllbetWorker>()
     .AddHostedService<PTWorker>()
@@ -57,6 +58,8 @@ builder.Services
     .AddHostedService<NetentWorker>()
     .AddHostedService<RedTigerWorker>()
     .AddHostedService<YLWorker>()
+    .AddHostedService<Kiss918Worker>()
+    .AddHostedService<SkywindWorker>()
     .AddHostedService<BTIWorker>()
     .AddHostedService<NineWWorker>()
     .AddHostedService<One789Worker>();
