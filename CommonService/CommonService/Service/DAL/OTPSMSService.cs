@@ -1,12 +1,7 @@
 ﻿using CommonService.Service.Model;
 using Dapper;
-using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CommonService.Service.DAL
 {
@@ -34,23 +29,26 @@ namespace CommonService.Service.DAL
 
             return result;
         }
-       
-        public SendOTPSMSResult OTPVerifyinfoIns(int custId,string sOtpNum, int type = 0)
+
+        public SendOTPSMSResult OTPVerifyinfoIns(int custId, string sOtpNum, int type = 0)
         {
             string requestId = null;
             var result = new SendOTPSMSResult();
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var p = new DynamicParameters(
-                new { CustId = custId,
-                    _OTPType = type, 
+                new
+                {
+                    CustId = custId,
+                    _OTPType = type,
                     OTPNum = sOtpNum,
-                    TimeOutMin = 5}
+                    TimeOutMin = 5
+                }
                 );
-            
-            p.Add("Request_id",requestId, dbType: DbType.String, direction: ParameterDirection.InputOutput);
+
+            p.Add("Request_id", requestId, dbType: DbType.String, direction: ParameterDirection.InputOutput);
             p.Add("StartUnixTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
             p.Add("OTPstatus", dbType: DbType.Int32, direction: ParameterDirection.Output);
-            
+
             conn.Execute("Service_OTPVerifyinfo_Ins", p, commandType: CommandType.StoredProcedure);
             result.Status = p.Get<int?>("OTPstatus") ?? -1;
             result.StartUnixTime = p.Get<long?>("StartUnixTime") ?? 0;
@@ -58,19 +56,45 @@ namespace CommonService.Service.DAL
 
             return result;
         }
-        public int VerifyOPT(VerifyOTPReq verifyOTPReq, int type = 0)
+
+        public int VerifyOTP(VerifyOTPReq verifyOTPReq, int type = 0)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var p = new DynamicParameters(
-                new {
+                new
+                {
                     verifyOTPReq.CustId,
-                    _OTPType = type, 
-                    OTPNumInput = verifyOTPReq.InputOTP 
+                    _OTPType = type,
+                    OTPNumInput = verifyOTPReq.InputOTP
                 });
-            
+
             p.Add("OTPResult", dbType: DbType.Int32, direction: ParameterDirection.Output);
             conn.Execute("Service_VerifyOTPinfo_Get", p, commandType: CommandType.StoredProcedure);
-            return p.Get<int>("OTPResult");
+            var result = p.Get<int>("OTPResult");
+            if (result == 0)
+            {
+                UpdateOTPLog(new OTPLog()
+                {
+                    CustId = verifyOTPReq.CustId,
+                    OTPType = type,
+                    OTPNum = verifyOTPReq.InputOTP
+                });
+            }
+            return result;
+        }
+
+        public int InsertOTPLog(OTPLog oTPLog)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var result = conn.Execute("Service_OTPLog_Ins", oTPLog, commandType: CommandType.StoredProcedure);
+            return result;
+        }
+
+        public int UpdateOTPLog(OTPLog oTPLog)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var result = conn.Execute("Service_OTPLog_Set", oTPLog, commandType: CommandType.StoredProcedure);
+            return result;
         }
     }
 }
