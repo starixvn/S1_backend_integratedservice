@@ -17,6 +17,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
     public partial class BettingService
     {
 
+        #region GPI
 
         public int PlaceBetRNG_GPI(TpCustInfo tpCustInfo, BettingDataRNG_GPI bettingDataRNG_GPI, out decimal afterAmount, out string Transid)
         {
@@ -39,7 +40,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             if (result > 0 && bettingDataRNG_GPI.amount != 0)
             {
-                //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_GPI.amount, (int)Tp.GPI, TransType.Wagers, $"Stake: {Math.Abs(bettingDataRNG_GPI.amount).ToString("#,##0.##")}", bettingDataRNG_GPI.trx_id, out afterAmount, conn, trans);
                 result = PlaceBetV2(tpCustInfo, bettingDataRNG_GPI.amount, (int)Tp.GPI, bettingDataRNG_GPI.round_id, gameType, bettingDataRNG_GPI.trx_id, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
             }
 
@@ -50,6 +50,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
+        #endregion
 
         public int PlaceBetRNG_PP(TpCustInfo tpCustInfo, BettingDataRNG_PP bettingDataRNG_PP, int gameType, out decimal afterAmount)
         {
