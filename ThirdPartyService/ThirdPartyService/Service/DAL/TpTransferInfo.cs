@@ -186,24 +186,21 @@ namespace ThirdPartyService.Service.DAL
             }
         }
 
-        public IEnumerable<TpTransferInfoModel> TpTransferPendingGet()
+        public IEnumerable<TpTransferInfoModel> TpTransferPendingGet(int limit)
         {
-            using (var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
-            {
-                return conn.Query<TpTransferInfoModel>("TpTransferInfo_Pending_Get", commandType: CommandType.StoredProcedure);
-            }
+            return _mainDbClient.Query<TpTransferInfoModel>("TpTransferInfo_Pending_Get_V2",new DynamicParameters(new { _Limit = limit}));
         }
-        public IEnumerable<TpPendingBonusTransferModel> TpBonusTransferPendingGet()
+        public IEnumerable<TpPendingBonusTransferModel> TpBonusTransferPendingGet(int limit)
         {
-            return _mainDbClient.Query<TpPendingBonusTransferModel>("Admin_PendingBonusList_Get");
+            return _mainDbClient.Query<TpPendingBonusTransferModel>("Service_PendingBonusList_Get",new DynamicParameters(new { _Limit = limit}));
         }
         public TpPendingBonusTransferInfoModel TpBonusTransferInfoPendingGet(int custId , string status)
         {
             return _mainDbClient.QueryFirst<TpPendingBonusTransferInfoModel>("Service_TpTransferBonusInfoPendingByCustId_Get_V2",new DynamicParameters(new {_CustId = custId , _Status = status}));
         }
-        public IEnumerable<TpRemainingTransferBonusModel> TpRemainingTransferBonusGet()
+        public IEnumerable<TpRemainingTransferBonusModel> TpRemainingTransferBonusGet(int limit)
         {
-            return _mainDbClient.Query<TpRemainingTransferBonusModel>("Service_RemainingTransferBonusPending_Get");
+            return _mainDbClient.Query<TpRemainingTransferBonusModel>("Service_RemainingTransferBonusPending_Get_V2",new DynamicParameters(new { _Limit = limit}));
         }
         
         public bool SetTransferFail(string transId)

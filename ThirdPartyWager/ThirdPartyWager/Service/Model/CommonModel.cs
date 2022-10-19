@@ -16,4 +16,10 @@
         public string TpCurrencyId { set; get; }
         public decimal ExchangeRate { set; get; }
     }
+
+    public class CurrencyOption
+    {
+        public int CurrencyId { set; get; }
+        public string IsoCode { set; get; }
+    }
 }

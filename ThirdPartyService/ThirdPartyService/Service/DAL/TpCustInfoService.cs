@@ -120,7 +120,7 @@ namespace ThirdPartyService.Service.DAL
 
                         if (createMemberResult.ErrorCode == ErrorCode.Success)
                         {
-                            conn.Execute("TpCustInfo_Ins", regTpCustInfo, commandType: CommandType.StoredProcedure);
+                            conn.Execute("TpCustInfo_Ins_V2", regTpCustInfo, commandType: CommandType.StoredProcedure);
                             regTpCustInfo.Status = (int)CustStatus.Running;
                             regTpCustInfo.CStatus = (int)CustStatus.Running;
                             tpCustInfo = regTpCustInfo;

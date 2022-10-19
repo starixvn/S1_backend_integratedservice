@@ -77,11 +77,34 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return tpCustInfo;
         }
-        public TpCustInfo GetTpCustInfo(int tpId, string tpUserName)
+
+        public TpCustInfo GetTpCustInfoWithCacheByTpCustId(int tpId, string tpCustId)
         {
-            var tpCustInfo = tpCustInfoService.GetTpCustInfo(tpId, tpUserName);
+            string key = $"TpCustInfo_{tpId}_{tpCustId}";
+            var tpCustInfo = cache.Get<TpCustInfo>(key);
+            if (tpCustInfo == null)
+            {
+                tpCustInfo = GetTpCustInfoByTpCustId(tpId, tpCustId);
+                if (tpCustInfo != null)
+                {
+                    cache.Set(key, tpCustInfo, new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(1)));
+                }
+            }
+
             return tpCustInfo;
         }
+        public TpCustInfo GetTpCustInfo(int tpId, string tpUserName)
+        {
+            var tpCustInfo = tpCustInfoService.GetTpCustInfo(tpId, tpUserName, null);
+            return tpCustInfo;
+        }
+
+        public TpCustInfo GetTpCustInfoByTpCustId(int tpId, string tpCustId)
+        {
+            var tpCustInfo = tpCustInfoService.GetTpCustInfo(tpId, null, tpCustId);
+            return tpCustInfo;
+        }
+
         public int SetCustGotoGame(int custId, int tpId, int gameType)
         {
             return tpCustInfoService.SetCustGotoGame(custId, tpId, gameType);
@@ -113,6 +136,21 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             else
             {
                 var tpCountryCode = tpCustInfoService.GetTpCurrencyCodeByCurrencyId(tpId, tpCurrencyId);
+                tpCountryCodeCache.TryAdd(key, tpCountryCode);
+                return tpCountryCode;
+            }
+        }
+
+        public TpCountryCode GetTpCurrencyCode(int tpId, int currencyId)
+        {
+            var key = $"GetTpCurrencyCode{tpId}{currencyId}";
+            if (tpCountryCodeCache.ContainsKey(key))
+            {
+                return tpCountryCodeCache[key];
+            }
+            else
+            {
+                var tpCountryCode = tpCustInfoService.GetTpCurrencyCode(tpId, currencyId);
                 tpCountryCodeCache.TryAdd(key, tpCountryCode);
                 return tpCountryCode;
             }

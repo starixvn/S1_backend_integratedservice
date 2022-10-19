@@ -65,6 +65,14 @@ namespace ThirdPartyWager.Service.Model
     }
     public class UpdateOdd
     {
+        public int _MatchId { get; set; }
+        public string _Handicap { get; set; }
+        public string _HomeOdds { get; set; }
+        public string _AwayOdds { get; set; }
+    }
+
+    public class UpdateOdd_Old
+    {
         public int id { get; set; }
         public string h { get; set; }
         public string o { get; set; }

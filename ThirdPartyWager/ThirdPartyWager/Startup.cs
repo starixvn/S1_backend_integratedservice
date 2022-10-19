@@ -60,6 +60,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerDGService>();
             services.AddSingleton<WagerAllBetService>();
             services.AddSingleton<WagerSAService>();
+            services.AddSingleton<WagerSimplePlayService>();
             services.AddSingleton<WagerAGService>();
             //services.AddSingleton<WagerCFService>();
             services.AddSingleton<WagerSGService>();
@@ -86,6 +87,7 @@ namespace ThirdPartyWager
             services.AddOptionListByDB<ServerInfo>("Admin_ServerInfoList_Get");
             services.AddOptionListByDB<dynamic>("Service_TpWagerTimer_Get", new { TpId = 1, Type = 1 }, DataBase.Wager);
             services.AddOptionListByDB<dynamic>("Tp_Get", new { TpId = 1 }, DataBase.Main);
+            services.AddOptionListByDB<CurrencyOption>("Common_Currency_Get");
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
@@ -107,6 +109,10 @@ namespace ThirdPartyWager
             services.AddSingleton<ApiSABLL>();
             services.AddSingleton<WagerRedoSABLL>();
             services.AddSingleton<FinanceSABLL>();
+            //SimplePlay
+            services.AddSingleton<ApiSimplePlayBLL>();
+            services.AddSingleton<WagerSimplePlayBLL>();
+            services.AddSingleton<FinanceSimplePlayBLL>();
             // AG
             services.AddSingleton<WagerAGBLL>();
             services.AddSingleton<ApiAGBLL>();
@@ -118,6 +124,10 @@ namespace ThirdPartyWager
             // SG
             services.AddSingleton<WagerSGBLL>();
             services.AddSingleton<ApiSGBLL>();
+            services.AddSingleton<FinanceSGBLL>();
+            // YL
+            services.AddSingleton<ApiYLBLL>();
+            services.AddSingleton<FinanceYLBLL>();
             //SBO
             services.AddSingleton<ISBOBLL, SBOBLL>();
             services.AddSingleton<IApiSBOBLL, ApiSBOBLL>();
@@ -129,7 +139,6 @@ namespace ThirdPartyWager
             // Kiss918
             services.AddSingleton<WagerKiss918BLL>();
             services.AddSingleton<ApiKiss918BLL>();
-            services.AddSingleton<WagerRedoKiss918BLL>();
             // One789
             services.AddSingleton<WagerOne789BLL>();
             services.AddSingleton<ApiOne789BLL>();
@@ -211,6 +220,9 @@ namespace ThirdPartyWager
             //CQ9
             services.AddSingleton<ApiCQ9BLL>();
             services.AddSingleton<FinanceCQ9BLL>();
+            //Skywind
+            services.AddSingleton<ApiSkywindBLL>();
+            services.AddSingleton<WagerSkywindBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -224,10 +236,15 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerSA>();
             services.AddHostedService<WagerRedoSA>();
             services.AddHostedService<FinanceSA>();
+            services.AddHostedService<WagerSimplePlay>();
+            services.AddHostedService<WagerRedoSimplePlay>();
+            services.AddHostedService<FinanceSimplePlay>();
             services.AddHostedService<WagerAG>();
             services.AddHostedService<WagerRedoAG>();
             services.AddHostedService<FinanceAG>();
             services.AddHostedService<WagerSG>();
+            services.AddHostedService<FinanceSG>();
+            services.AddHostedService<FinanceYL>();
             services.AddHostedService<WagerSBO>();
             services.AddHostedService<WagerWM>();
             services.AddHostedService<WagerRedoWM>();
@@ -279,6 +296,9 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceRedTiger>();
             services.AddHostedService<FinanceSexy>();
             services.AddHostedService<FinanceCQ9>();
+            services.AddHostedService<WagerKiss918>();
+            services.AddHostedService<WagerSkywind>();
+            services.AddHostedService<WagerUnsettleCheckSkywind>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

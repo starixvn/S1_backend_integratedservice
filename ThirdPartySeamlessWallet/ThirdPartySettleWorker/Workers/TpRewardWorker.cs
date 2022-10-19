@@ -85,7 +85,7 @@ namespace ThirdPartySettleWorker.Workers
                 var tpUnRewardList = _tpUnRewardBLL.GetTpUnRewardList(tp, tpGameType);
                 if (!tpUnRewardList.Any())
                 {
-                    throw new UnsettleNotFoundException($"{tpName} no reward data.");
+                    throw new UnRewardNotFoundException($"{tpName} no reward data.");
                 }
 
                 forContinue = tpUnRewardList.Count() == 200;
