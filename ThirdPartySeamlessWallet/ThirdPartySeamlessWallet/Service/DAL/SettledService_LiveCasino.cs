@@ -1586,7 +1586,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 settleFlag = (int)SettleFlag.Settled;
                 ticketStatus = (int)TicketStatus.Refund;
             }
-            
+
+            var srcResults = JsonConvert.SerializeObject(bettingData_EBet.detail.srcResults);
+            var results = JsonConvert.SerializeObject(bettingData_EBet.detail.results);
             var p = new DynamicParameters(new
             {
                 TransId = mixUniqueId,
@@ -1608,8 +1610,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 betList = JsonConvert.SerializeObject(bettingData_EBet.detail.betList),
                 payoutTime = bettingData_EBet.detail.payoutTime,
                 payout = bettingData_EBet.detail.payout,
-                srcResults = JsonConvert.SerializeObject(bettingData_EBet.detail.srcResults),
-                results = JsonConvert.SerializeObject(bettingData_EBet.detail.results),
+                srcResults = (string.IsNullOrEmpty(srcResults) || srcResults == "null") ? "[]" : srcResults,
+                results = (string.IsNullOrEmpty(results) || results == "null") ? "[]" : results,
                 TicketStatus = ticketStatus,
                 TicketType = (int)BettransType.Payout,
                 SettleFlag = settleFlag
