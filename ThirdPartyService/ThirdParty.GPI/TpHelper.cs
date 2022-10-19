@@ -76,7 +76,7 @@ namespace ThirdParty.GPI
             string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "";
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
-
+            int tpGameType = inputs.ContainsKey("tpGameType") && !string.IsNullOrEmpty(inputs["tpGameType"]) ? Convert.ToInt32(inputs["tpGameType"]) : (int)TpGameType.GPI_RNG;
 
             ApiResult oApiResult = new ApiResult();
             if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
@@ -91,34 +91,36 @@ namespace ThirdParty.GPI
             applyTokenInputs.Add("ClientIP", inputs["ClientIP"]);
 
             string token = ApplyToken(applyTokenInputs);
-            string gameType = inputs.ContainsKey("gameType") && !string.IsNullOrEmpty(inputs["gameType"]) ? inputs["gameType"] : "slots";
-            
+
             oApiResult.ErrorCode = ErrorCode.Success;
-            switch (gameType.ToLower())
+            switch (tpGameType)
             {
-                case "slots":
+                case (int)TpGameType.GPI_RNG:
                     oApiResult.Message = $"{RslotUrl}{gameId}?token={token}&fun={fun}&op={OperatorId}&lang={TpLangId}&fundsURL={cashierUrl}&homeURL={homeUrl}&lobbyURL={lobbyUrl}&hidelobby=1";
                     break;
-                case "livecasino":
-                    if (appType == AppType.Native)
-                    {
-                        oApiResult.Message = $"{LiveCasinoUrl}v2?token=​{token}​&op={OperatorId}&lang={TpLangId}&sys=CUSTOM";
-                    }
-                    else if (appType == AppType.Mobile)
-                    {
-                        oApiResult.Message = $"{LiveCasinoUrl}html5/mobile?token=​{token}​&op={OperatorId}&lang={TpLangId}&sys=CUSTOM";
-                    }
-                    else
-                    {
-                        oApiResult.Message = $"{LiveCasinoUrl}html5/casino?token=​{token}​&op={OperatorId}&lang={TpLangId}&sys=CUSTOM";
-                    }
-                    break;
-                case "lottery":
+                case (int)TpGameType.GPI_Keno:
+                case (int)TpGameType.GPI_Sode:
+                case (int)TpGameType.GPI_Thai_Lottery:
+                case (int)TpGameType.GPI_Fast3:
                     oApiResult.Message = $"{LotteryUrl}Login/?lang={TpLangId}&vendor={OperatorId}&ticket={token}&game={gameId}";
                     break;
-                case "p2p":
-                    oApiResult.Message = $"{P2PUrl}{gameId}/?op={OperatorId}&lang={TpLangId}&fun={fun}&token={token}";
-                    break;
+                    //case "livecasino":
+                    //    if (appType == AppType.Native)
+                    //    {
+                    //        oApiResult.Message = $"{LiveCasinoUrl}v2?token=​{token}​&op={OperatorId}&lang={TpLangId}&sys=CUSTOM";
+                    //    }
+                    //    else if (appType == AppType.Mobile)
+                    //    {
+                    //        oApiResult.Message = $"{LiveCasinoUrl}html5/mobile?token=​{token}​&op={OperatorId}&lang={TpLangId}&sys=CUSTOM";
+                    //    }
+                    //    else
+                    //    {
+                    //        oApiResult.Message = $"{LiveCasinoUrl}html5/casino?token=​{token}​&op={OperatorId}&lang={TpLangId}&sys=CUSTOM";
+                    //    }
+                    //    break;
+                    //case "p2p":
+                    //    oApiResult.Message = $"{P2PUrl}{gameId}/?op={OperatorId}&lang={TpLangId}&fun={fun}&token={token}";
+                    //    break;
             }
             return oApiResult;
         }
@@ -135,11 +137,24 @@ namespace ThirdParty.GPI
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_GPI_Detail_Get", new { getBetDetail.TransId }, DataBase.Report)
-                .Where(i => (sbyte)i.GetValueOrDefault("type") != 2);
-            var detail = ToJson(detailList);
 
-            var gameCode = detailList.FirstOrDefault()?.GetValueOrDefault("game_id")?.ToString();
+            var spName = (getBetDetail.TpGameTypeOption.CategoryId == TpCategory.Casino) ? "Service_BettransRng_GPI_Detail_Get" : "Service_TpWagerLT_GPI_Detail_Get";
+            var db = (getBetDetail.TpGameTypeOption.CategoryId == TpCategory.Casino) ? DataBase.Report : DataBase.Wager;
+
+            var betList = TpBetRecordProvider.DbQuery(spName, new { getBetDetail.TransId }, db);
+            if (betList == null)
+            {
+                return new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    TpCurrency = tpCurrency,
+                };
+            }
+
+            var detailList = (getBetDetail.TpGameTypeOption.CategoryId == TpCategory.Casino) ? betList.Where(i => (sbyte)i.GetValueOrDefault("type") != 2) : betList;
+            var detail = ToJson(detailList);
+            string gameCode = detailList.FirstOrDefault()?.GetValueOrDefault("game_id")?.ToString();
+
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
                 TpCategory.Casino => new CasinoDetail(getBetDetail.TpGameTypeOption)
@@ -157,6 +172,18 @@ namespace ThirdParty.GPI
                     GameCode = gameCode,
                     GameName = GetGameName(gameCode),
                 },
+                TpCategory.Lottery => new LotteryDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                    RefTransId = detailList.FirstOrDefault()?.GetValueOrDefault("game_code")?.ToString(),
+                    TpUserName = detailList.FirstOrDefault()?.GetValueOrDefault("cust_id")?.ToString(),
+                    UTCBetTime = detailList.Min(i => (DateTime)i.GetValueOrDefault("trans_date", DateTime.MinValue)),
+                    UTCSettledTime = detailList.Max(i => (DateTime)i.GetValueOrDefault("trans_date", DateTime.MaxValue)),
+                    Stake = detailList.Sum(i => (decimal)i.GetValueOrDefault("bet")) * tpCurrency.ExchangeRate,
+                    WinlostAmount = detailList.Where(i => (sbyte)i.GetValueOrDefault("status") == 1).Sum(i => (decimal)i.GetValueOrDefault("winlose")) * tpCurrency.ExchangeRate,
+                },
                 _ => new BaseDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
@@ -168,9 +195,10 @@ namespace ThirdParty.GPI
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_GPI_Detail_Get", new { betRecordInfo.TransId }, DataBase.Main);
+            var spName = (tpGameType.CategoryId == TpCategory.Casino) ? "Service_BettransRng_GPI_Detail_Get" : "Service_TpWagerLT_GPI_Detail_Get";
+            var db = (tpGameType.CategoryId == TpCategory.Casino) ? DataBase.Main : DataBase.Wager;
+            var detailList = TpBetRecordProvider.DbQuery(spName, new { betRecordInfo.TransId }, db);
             var gameCode = detailList.GetFirstStringValue("game_id");
-            
             return tpGameType.CategoryId switch
             {
                 TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
@@ -186,8 +214,21 @@ namespace ThirdParty.GPI
                     DeviceType = GetDeviceType(detailList.GetFirstStringValue("platform")),
                     IP = string.Empty,
                 },
+                TpCategory.Lottery => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = detailList.GetFirstStringValue("game_id"),
+                    Game = detailList.GetFirstStringValue("game_type"),
+                    RefNo = detailList.GetFirstStringValue("game_code"),
+                    Title = tpGameType.TypeName,
+                    MatchID = detailList.GetFirstStringValue("table_id"),
+                    BetType = string.Empty,
+                    BetChoice = ToJson(detailList.Select(s => s.GetStringValue("player_hand"))),
+                    Result = detailList.GetFirstStringValue("game_result"),
+                    DeviceType = GetDeviceType(detailList.GetFirstStringValue("platform")),
+                    IP = string.Empty,
+                },
                 _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
-            };         
+            };
         }
 
         private string GetGameName(string gameCode)
