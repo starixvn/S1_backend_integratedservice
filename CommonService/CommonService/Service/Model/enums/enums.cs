@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace CommonService.Service.Model.enums
+﻿namespace CommonService.Service.Model.enums
 {
     public enum ErrorCode : int
     {
@@ -69,4 +64,20 @@ namespace CommonService.Service.Model.enums
         ResetPassword,
         VerificationMail
     }
+
+    public enum OTPProvider
+    {
+        Skyline,
+        NxCloud,
+        YC
+    }
+
+    public enum OTPStatus
+    {
+        SendToProvider = 1,     //呼叫第三方API成功
+        SendToCustomer = 2,     //第三方發送至客戶成功
+        CustomerVerified = 3,   //客戶完成驗證
+        Fail = 4                
+    }
+
 }
