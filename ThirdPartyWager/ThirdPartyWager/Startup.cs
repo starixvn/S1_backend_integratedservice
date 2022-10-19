@@ -131,6 +131,7 @@ namespace ThirdPartyWager
             //SBO
             services.AddSingleton<ISBOBLL, SBOBLL>();
             services.AddSingleton<IApiSBOBLL, ApiSBOBLL>();
+            services.AddSingleton<FinanceSBOBLL>();
             // WM
             services.AddSingleton<WagerWMBLL>();
             services.AddSingleton<ApiWMBLL>();
@@ -192,6 +193,7 @@ namespace ThirdPartyWager
             services.AddTransient<IMGBLL, MGBLL>();
             //TCG
             services.AddSingleton<TCGBLL>();
+            services.AddSingleton<FinanceTCGBLL>();
             //EVO
             services.AddSingleton<WagerEVOBLL>();
             services.AddSingleton<ApiEVOBLL>();
@@ -246,6 +248,7 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceSG>();
             services.AddHostedService<FinanceYL>();
             services.AddHostedService<WagerSBO>();
+            services.AddHostedService<FinanceSBO>();
             services.AddHostedService<WagerWM>();
             services.AddHostedService<WagerRedoWM>();
             services.AddHostedService<FinanceWM>();
@@ -277,6 +280,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerMG>();
             services.AddHostedService<WagerNineW>();
             services.AddHostedService<WagerTCG>();
+            services.AddHostedService<FinanceTCG>();
             services.AddHostedService<WagerMP>();
             services.AddHostedService<WagerRedoMP>();
             services.AddHostedService<FinanceMP>();
