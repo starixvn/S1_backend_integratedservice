@@ -83,10 +83,10 @@
         public string OTPProvider { get; set; }
         public string PhoneNo { get; set; }
         public string Content { get; set; }
-        public string OTPNum { get; set; }
-        public string Request_id { get; set; }
+        public string OTPNum { get; set; } = string.Empty;
+        public string Request_id { get; set; } = string.Empty;
         public int OTPStatus { get; set; }
-        public string OTPResponse { get; set; }
+        public string OTPResponse { get; set; } = string.Empty;
         public int Verified { get; set; }
         public DateTime? VerifiedTime { get; set; }
     }
