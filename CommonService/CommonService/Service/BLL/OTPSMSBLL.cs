@@ -142,7 +142,7 @@ namespace CommonService.Service.BLL
             {
                 OTPStatus = (int)OTPStatus.Fail,
                 OTPType = (int)OtpType.SMS,
-                OTPProvider = OTPProvider.Skyline.ToString(),
+                OTPProvider = OTPProvider.SkyLine.ToString(),
                 CurrencyId = custInfo.CurrencyId,
                 CustId = custId,
                 UserName = custInfo.UserName,
@@ -213,7 +213,7 @@ namespace CommonService.Service.BLL
             {
                 OTPStatus = (int)OTPStatus.Fail,
                 OTPType = (int)OtpType.SMS,
-                OTPProvider = OTPProvider.Skyline.ToString(),
+                OTPProvider = OTPProvider.SkyLine.ToString(),
                 CurrencyId = custInfo.CurrencyId,
                 CustId = custId,
                 UserName = custInfo.UserName,
