@@ -42,9 +42,9 @@ namespace ThirdPartyCore.Model
         public string ThirdId { get; set; }
         public decimal Difference { get; set; }
     }
-    public class AdjustWalletResult: TransferResult
+    public class AdjustWalletResult : TransferResult
     {
-        public AdjustWalletResult(){}
+        public AdjustWalletResult() { }
         public AdjustWalletResult(TransferResult result, string transId)
         {
             base.Status = result.Status;
@@ -54,7 +54,7 @@ namespace ThirdPartyCore.Model
         }
         public string TransId { get; set; }
     }
-    
+
     public class AutoTransferResult
     {
         public string Guid { get; set; }
@@ -89,6 +89,7 @@ namespace ThirdPartyCore.Model
         public int Status { get; set; }
         public int CStatus { get; set; }
         public string IsoCode { get; set; }
+        public string TpCustId { get; set; } = ""; //Default 空字串
     }
 
     public class TpMerchantInfo
@@ -127,25 +128,13 @@ namespace ThirdPartyCore.Model
         public DateTime CreateTime { set; get; }
         public string ExtensionInfo { set; get; }
     }
-    
+
     public class TpPendingBonusTransferModel
     {
-        public string BonusCode { get; set; }
-        public int PromotionType { get; set; }
-        public string SiteId { get; set; }
-        public string SiteName { get; set; }
-        public string UserName { get; set; }
         public int BonusId { get; set; }
-        public decimal LockedAmount { get; set; }
-        public decimal BonusAmount { get; set; }
-        public decimal Bonus { get; set; }
-        public decimal Rollover { get; set; }
-        public DateTime ExpiryTime { get; set; }
-        public DateTime CreateTime { get; set; }
         public int CustId { get; set; }
-        public int TpId { get; set; }
     }
-    
+
     public class TpRemainingTransferBonusModel
     {
         public int BonusId { get; set; }
@@ -201,10 +190,10 @@ namespace ThirdPartyCore.Model
         public int SiteId { set; get; }
         public int PromoCategoryId { set; get; }
         public int BonusId { set; get; }
-        
+
         [Description("剩餘紅利: BonusAmount + LockedAmount + WinLossAmount")]
         public decimal RemainingBonus { set; get; }
-        
+
         [Description("退還本金: RemainingBonus - BonusAmount")]
         public decimal RefundAmount { set; get; }
 

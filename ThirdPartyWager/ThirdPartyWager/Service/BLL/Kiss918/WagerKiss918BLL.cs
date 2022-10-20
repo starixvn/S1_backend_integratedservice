@@ -16,8 +16,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly WagerKiss918Service _wagerKiss918Service;
         private readonly ILogger<WagerKiss918BLL> _logger;
 
-        private readonly int _tpId = (int)Tp.Kiss918;
-
         public WagerKiss918BLL(IServiceProvider provider)
         {
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
@@ -26,90 +24,54 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<WagerKiss918BLL>>();
         }
 
-        public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime, string currency)
+        public async Task<bool> GetWagersAsync(int tpId, string startTime)
         {
             var msg = "FATAL_ERROR";
-            var guid = Guid.NewGuid().ToString();
             try
             {
                 // get api info
                 var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
 
-                var getReportStartTime = DateTime.Parse(startTime);
-                var ReportStartTime = getReportStartTime.ToString("yyyy-MM-dd");
-                var getReportEndTime = DateTime.Parse(endTime);
-                var ReportEndTime = getReportEndTime.ToString("yyyy-MM-dd");
+                //convert timepoint
+                var timepoint = await _apiKiss918BLL.GetTimepoint(setting["ApiToken"], setting["ApiUrl"], startTime);
 
-                // get report player
-                var dataReportPlayer = await _apiKiss918BLL.GetReportPlayerListByTime(setting["WagerUrl"], setting[$"authcode_{currency}"], setting[$"secretkey_{currency}"], setting[$"userName_{currency}"], ReportStartTime, ReportEndTime, guid);
-
-                if (!dataReportPlayer.success)
+                if (string.IsNullOrWhiteSpace(timepoint))
                 {
-                    msg = "THIRD_PARTY_ERROR";
-                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataReportPlayer)}");
+                    msg = "GET_TIMEPOINT_ERROR";
+                    _logger.LogError($"{msg}\r\n{timepoint}");
                     return false;
                 }
 
-                if (dataReportPlayer.success && dataReportPlayer.results.Count() == 0)
+                // get history bets
+                var (hasData, dataDetails) = await _apiKiss918BLL.GetPlaySession(setting["AccessToken"], setting["ApiUrl"], timepoint);
+
+                if (!hasData)
+                {
+                    msg = "THIRD_PARTY_ERROR";
+                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataDetails)}");
+                    return false;
+                }
+
+                if (hasData && dataDetails.Count() == 0)
                 {
                     msg = "NO_DATA";
-                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataReportPlayer)}");
+                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataDetails)}");
                     return true;
                 }
 
-                var perPage = 100;
-                foreach (var reportList in dataReportPlayer.results)
+                try
                 {
-                    var page = 1;
-                    var totalPage = 1;
-                    var Account = reportList.Account;
-                    while (page <= totalPage)
-                    {
-                        // get wager
-                        var dataWager = await _apiKiss918BLL.GetBetListByTime(setting["WagerUrl"], setting[$"authcode_{currency}"], setting[$"secretkey_{currency}"], setting[$"userName_{currency}"], Account, startTime, endTime, page, perPage, guid);
-
-                        // error condition
-                        var errorCode = dataWager.code;
-                        if (errorCode == 0 && dataWager.total == 0)
-                        {
-                            msg = "NO_DATA";
-                            _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                            break;
-                        }
-
-                        if (errorCode != 0)
-                        {
-                            msg = "THIRD_PARTY_ERROR";
-                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                            return false;
-                        }
-
-                        totalPage = (int)((dataWager.total / perPage) + 1);
-                        foreach (var bet in dataWager.results)
-                        {
-                            try
-                            {
-                                //if (bet.LogDataType != 2)
-                                //{
-                                //    continue;
-                                //}
-                                bet.Account = Account;
-                                bet.Currency = currency;
-                                _wagerKiss918Service.InsertWager(bet);
-                            }
-                            catch (Exception ex)
-                            {
-                                msg = $"INSERT_WAGER(WAGERID: {bet.uuid} )";
-                                _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}\r\n{ex.Message}");
-                                return false;
-                            }
-                        }
-                        page++;
-                    }
+                    _wagerKiss918Service.InsertWager(dataDetails);
                 }
-
+                catch (Exception ex)
+                {
+                    msg = $"INSERT_WAGER";
+                    _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(dataDetails)}\r\n{ex.Message}");
+                    return false;
+                }
+                //}
                 msg = "FINISH";
-                _logger.LogInformation($"GetWagersAsync {msg}\r\n{startTime} ~ {endTime}");
+                _logger.LogInformation($"GetWagersAsync {msg}\r\n{startTime} ~ {dataDetails.MaxBy(x => x.created).created}");
                 return true;
             }
             catch (Exception ex)

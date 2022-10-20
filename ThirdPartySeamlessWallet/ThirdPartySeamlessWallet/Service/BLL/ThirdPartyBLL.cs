@@ -129,6 +129,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             if (int.TryParse(gameId, out int tempGameId))
             {
                 gameType = GameType.PP_LiveCasino;
+
+                // Spaceman 
+                if (tempGameId == 1302)
+                {
+                    gameType = GameType.PP_RNG;
+                }
             }
 
             return gameType;
@@ -246,6 +252,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         return gameType;
                     }
                     break;
+                case (int)Tp.Skywind:
+                    gameType = GameType.Skywind_RNG;
+                    if(gameId == "0")
+                    {
+                        gameType = GameType.Skywind_LiveCasino;
+                    }
+                    else if(gameId == "sw_or" || gameId == "sw_fj" || gameId == "sw_cashdaha")
+                    {
+                        gameType = GameType.Skywind_Fish;
+                    }
+                    break;
                 default:
                     break;
             }
@@ -269,7 +286,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             SettlementType settlementType = SettlementType.SettledForValid;
             var casino = GetGameCasinoWithCache(tpId);
-            var check = casino.FirstOrDefault(x => x.GameId == gameId && x.TypeId == 3);
+
+            //Kiss918(21)
+            var check = tpId == 21 ? casino.FirstOrDefault(x => x.AppId == gameId && x.TypeId == 3)
+                : casino.FirstOrDefault(x => x.GameId == gameId && x.TypeId == 3);
             if (check != null)
             {
                 settlementType = SettlementType.SettledForValidNotRollover;
