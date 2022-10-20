@@ -73,7 +73,7 @@ namespace CommonService.Service.DAL
             var result = p.Get<int>("OTPResult");
             if (result == 0)
             {
-                UpdateOTPLog(new OTPLog()
+                OTPLogVerify(new OTPLog()
                 {
                     CustId = verifyOTPReq.CustId,
                     OTPType = type,
@@ -90,10 +90,10 @@ namespace CommonService.Service.DAL
             return result;
         }
 
-        public int UpdateOTPLog(OTPLog oTPLog)
+        public int OTPLogVerify(OTPLog oTPLog)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var result = conn.Execute("Service_OTPLog_Set", oTPLog, commandType: CommandType.StoredProcedure);
+            var result = conn.Execute("Service_OTPLog_Verify", oTPLog, commandType: CommandType.StoredProcedure);
             return result;
         }
     }
