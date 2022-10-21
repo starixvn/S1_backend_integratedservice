@@ -158,7 +158,7 @@ namespace CommonService.Service.BLL
             if (result.StatusCode == HttpStatusCode.OK)
             {
                 var resultResp = JsonConvert.DeserializeObject<SKYLineSMSResult>(result.Content.ReadAsStringAsync().Result);              
-                oTPLog.OTPResponse = $"StatusCode:{resultResp.status} || {resultResp.reason}";
+                oTPLog.OTPResponse = $"{resultResp.status} || {resultResp.reason}";
 
                 if (resultResp.status == 0)
                 {
@@ -185,7 +185,7 @@ namespace CommonService.Service.BLL
             else
             {
                 _log2File.Error($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_OTP");
-                oTPLog.OTPResponse = $"SkyLine - Error HttpStatus :{result.StatusCode} || {result.ReasonPhrase}";
+                oTPLog.OTPResponse = $"SkyLine - Error HttpStatusCode : {result.StatusCode} || {result.ReasonPhrase}";
             }
 
             _sOtpSmsService.InsertOTPLog(oTPLog);
@@ -229,7 +229,7 @@ namespace CommonService.Service.BLL
             if (result.StatusCode == HttpStatusCode.OK)
             {
                 var resultResp = JsonConvert.DeserializeObject<SKYLineSMSResult>(result.Content.ReadAsStringAsync().Result);        
-                oTPLog.OTPResponse = $"StatusCode:{resultResp.status} || {resultResp.reason}";
+                oTPLog.OTPResponse = $"{resultResp.status} || {resultResp.reason}";
 
                 if (resultResp.status == 0)
                 {
@@ -330,12 +330,13 @@ namespace CommonService.Service.BLL
             if (responseResult.StatusCode == HttpStatusCode.OK)
             {
                 var response = JsonConvert.DeserializeObject<YcSmsSendOtpResult>(responseBody);
-                oTPLog.OTPResponse = $"StatusCode:{response.status} || {response.error_code} || {response.res}";
+                oTPLog.OTPResponse = $"{response.status} || {response.error_code} || {response.res}";
+                oTPLog.Request_id = Guid.NewGuid().ToString();//YC沒提供Request_id，自行建立
                 if (response?.status == "success")
                 {
                     _logger.LogInformation($"YCOTP Success - {phoneNo},{custInfo.UserName},{otpNum}, responseBody：{responseBody}, {siteName}_OTP");
                     apiResult.ErrorCode = ErrorCode.Success;
-                    oTPLog.OTPStatus = (int)OTPStatus.SendToCustomer;//YC不提供檢查API直接視為發送成功
+                    oTPLog.OTPStatus = (int)OTPStatus.SendToProvider;
                 }
                 else
                 {
@@ -347,7 +348,7 @@ namespace CommonService.Service.BLL
             {
                 apiResult.ErrorCode = ErrorCode.Fail;
                 _logger.LogError($"YCOTP HttpRequest Fail -{phoneNo},{custInfo.UserName},{otpNum}, HttpStatusCode：{responseResult.StatusCode} , responseBody：{responseBody}, {siteName}_OTP");
-                oTPLog.OTPResponse = $"StatusCode:{responseResult.StatusCode} || {responseResult.ReasonPhrase}";
+                oTPLog.OTPResponse = $"{responseResult.StatusCode} || {responseResult.ReasonPhrase}";
             }
 
             _sOtpSmsService.InsertOTPLog(oTPLog);

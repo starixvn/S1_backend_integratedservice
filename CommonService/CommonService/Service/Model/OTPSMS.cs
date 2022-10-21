@@ -84,7 +84,7 @@
         public string PhoneNo { get; set; }
         public string Content { get; set; }
         public string OTPNum { get; set; } = string.Empty;
-        public string Request_id { get; set; } = string.Empty;
+        public string Request_id { get; set; }
         public int OTPStatus { get; set; }
         public string OTPResponse { get; set; } = string.Empty;
         public int Verified { get; set; }
