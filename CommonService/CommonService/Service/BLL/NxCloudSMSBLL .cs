@@ -17,7 +17,6 @@ namespace CommonService.Service.BLL
         private readonly Tools tools;
         private readonly SelLangBLL selLangBLL;
         private readonly ILogger<OTPSMSService> logger;
-        private readonly Log2File log2File;
 
         public NxCloudSMSBLL(HttpHelper httpHelper, OTPSMSService sOTPSMSService, IOptions<Dictionary<string, NxcloudSMSServiceTypeConfig>> NxcloudSMSServiceTypeConfig, Tools tools, SelLangBLL selLangBLL, ILogger<OTPSMSService> logger, Log2File log2File)
         {
@@ -27,7 +26,6 @@ namespace CommonService.Service.BLL
             this.tools = tools;
             this.selLangBLL = selLangBLL;
             this.logger = logger;
-            this.log2File = log2File;
         }
         public ApiResult<SendOTPSMSResult> GetOTPVerifyInfo(int custId)
         {
@@ -137,11 +135,11 @@ namespace CommonService.Service.BLL
                         responsjson.TryGetValue("result", out var result);
                         
                         oTPLog.Request_id = messageid.ToString();
-                        oTPLog.OTPResponse = $"StatusCode:{code} || {result}";
+                        oTPLog.OTPResponse = $"{code} || {result}";
 
                         if (code.Equals("0"))
                         {
-                            log2File.Info($"NxCloud - {PhoneNo},{custInfo.UserName},{OTPNum},status:{code},reason:{result},messageid:{messageid}", $"{custInfo.SiteName}_OTP");
+                            logger.LogInformation($"NxCloud - {PhoneNo},{custInfo.UserName},{OTPNum},status:{code},reason:{result},messageid:{messageid}", $"{custInfo.SiteName}_OTP");
                             oTPLog.OTPStatus = (int)OTPStatus.SendToProvider;
                             apiResult.ErrorCode = ErrorCode.Success;
                         }
@@ -153,29 +151,31 @@ namespace CommonService.Service.BLL
                                 apiResult.ErrorCode = ErrorCode.PhoneError;
                                 oTPLog.OTPResponse = ErrorCode.PhoneError.ToString();
                             }
-                            log2File.Error($"NxCloud - {PhoneNo},{custInfo.UserName},{OTPNum},status:{code},reason:{result},messageid:{messageid}", $"{custInfo.SiteName}_OTP");
+                            logger.LogError($"NxCloud - {PhoneNo},{custInfo.UserName},{OTPNum},status:{code},reason:{result},messageid:{messageid}", $"{custInfo.SiteName}_OTP");
                         }
                     }
                     else
                     {
-                        logger.LogError($"SkyLine - Error HttpStatus = {httpResponse.StatusCode}\r\nRespstatus ={content}");
-                        log2File.Error($"SkyLine - Error HttpStatus = {httpResponse.StatusCode}\r\nRespstatus ={content}", $"{custInfo.SiteName}_OTP");
-                        oTPLog.OTPResponse = $"StatusCode:{httpResponse.StatusCode} || {content}";
+                        var msg = $"NxCloud - Error HttpStatus:{httpResponse.StatusCode} || {content}";
+                        logger.LogError(msg);
+                        oTPLog.OTPResponse = msg;
                     }
                 }
                 else
                 {
                     apiResult.ErrorCode = ErrorCode.Fail;
-                    log2File.Error($"NxCloud - Http error code :{httpResponse.StatusCode}", $"{custInfo.SiteName}_OTP");
-                    oTPLog.OTPResponse = $"SkyLine - Error HttpStatus :{httpResponse.StatusCode} || {httpResponse.ReasonPhrase}";
+                    var httpErrorMsg = $"NxCloud - Http error code :{httpResponse.StatusCode}|| {httpResponse.ReasonPhrase}";
+                    logger.LogError(httpErrorMsg);
+                    oTPLog.OTPResponse = httpErrorMsg;
                 }
             }
             catch (Exception ex)
             {
+                var exMsg = $"NxCloud - Exception error :{ex}";
                 apiResult.ErrorCode = ErrorCode.Fail;
-                apiResult.RawMessage = ex.ToString();
-                log2File.Error($"NxCloud - Exception error :{ex}", $"{custInfo.SiteName}_OTP");
-                oTPLog.OTPResponse = $"NxCloud - Exception error :{ex}";
+                apiResult.RawMessage = exMsg;
+                logger.LogError(exMsg);
+                oTPLog.OTPResponse = exMsg;
             }
 
             sOTPSMSService.InsertOTPLog(oTPLog);

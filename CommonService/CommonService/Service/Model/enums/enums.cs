@@ -78,7 +78,6 @@
         SendToCustomer = 2,     //第三方發送至客戶成功
         CustomerVerified = 3,   //客戶完成驗證
         Fail = 4,
-        OTPExpire = 5,          //OTP過期
     }
 
 }
