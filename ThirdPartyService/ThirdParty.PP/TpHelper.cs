@@ -71,7 +71,7 @@ namespace ThirdParty.PP
 
         public TpHelper()
         {
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList(5).ToDictionary(d => d.AppId, d => d.Name);
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList(5).ToDictionary(d => d.GameId, d => d.Name);
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
