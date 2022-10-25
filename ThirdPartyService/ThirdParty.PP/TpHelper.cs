@@ -67,6 +67,13 @@ namespace ThirdParty.PP
             //"userId":"421", "currency":"USD", "cash": 99999.99, "bonus": 99.99, "error":0, "description":"Success"
         }
 
+        private readonly IReadOnlyDictionary<string, string> _gameNameList;
+
+        public TpHelper()
+        {
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList(5).ToDictionary(d => d.GameId, d => d.Name);
+        }
+
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -208,10 +215,11 @@ namespace ThirdParty.PP
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
             }
 
+            var gameId = detail.GetStringValue("gameId");
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
-                GameID = isPromoWin ? detail.GetStringValue("campaignId") : detail.GetStringValue("gameId"),
-                Game = tpGameType.TypeName,
+                GameID = isPromoWin ? detail.GetStringValue("campaignId") : gameId,
+                Game = isPromoWin ? tpGameType.TypeName : GetGameName(gameId),
                 RefNo = isPromoWin ? detail.GetStringValue("reference") : detail.GetStringValue("roundId"),
                 Title = isPromoWin ? "Promo Win" : detail.GetStringValue("roundDetails"),
                 MatchID = isPromoWin ? string.Empty : detail.GetStringValue("roundId"),
@@ -228,6 +236,16 @@ namespace ThirdParty.PP
             public string error { get; set; }
             public string description { get; set; }
             public string url { get; set; }
+        }
+
+        private string GetGameName(string gameCode)
+        {
+            if (!_gameNameList.TryGetValue(gameCode, out var name))
+            {
+                return string.Empty;
+            }
+            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
+            return (dic != null) ? dic.TryGetValue("en", out var result) ? result : string.Empty : string.Empty;
         }
 
     }
