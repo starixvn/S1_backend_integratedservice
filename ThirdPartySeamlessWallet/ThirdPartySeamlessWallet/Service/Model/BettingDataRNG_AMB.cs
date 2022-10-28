@@ -256,7 +256,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class AMBSlotSettleRequest
     {
-        public decimal? roundAmount { get; set; }
+        public decimal roundAmount { get; set; }
         public string type { get; set; }
         public string tranId { get; set; }
 

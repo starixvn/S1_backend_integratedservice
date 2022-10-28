@@ -535,6 +535,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 request.bet *= tpCurrency.ExchangeRate;
                 request.winlose *= tpCurrency.ExchangeRate;
                 request.turnover *= tpCurrency.ExchangeRate;
+                request.roundAmount *= tpCurrency.ExchangeRate;
             }
             var tpCustBalance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.username, (int)GameType);
             var beforeAmount = tpCustBalance.Balance;
@@ -555,7 +556,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 amount = request.amount,
                 winlose = request.winlose,
                 turnover = request.turnover,
-                roundAmount = request.roundAmount ?? 0,
+                roundAmount = request.roundAmount,
                 currency = request.currency,
                 transactionId = request.transactionId,
                 timestamp = partitionTime,
