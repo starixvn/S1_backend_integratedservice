@@ -1154,7 +1154,7 @@ namespace ThirdPartyService.Service.BLL
                 return new ApiResult<object>()
                 {
                     ErrorCode = ErrorCode.InvalidParameter,
-                    RawMessage = "GameType not found."
+                    Message = "GameType not found."
                 };
             }
             gameTypeOption.TpName = GetTpName(gameTypeOption.TpId);
@@ -1165,7 +1165,7 @@ namespace ThirdPartyService.Service.BLL
                 return new ApiResult<object>()
                 {
                     ErrorCode = tpCustInfoResult.ErrorCode,
-                    RawMessage = tpCustInfoResult.RawMessage
+                    Message = tpCustInfoResult.RawMessage
                 };
             }
 
