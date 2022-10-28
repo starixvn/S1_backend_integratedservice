@@ -113,12 +113,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     ReturnAmount = p.Get<decimal>("returnAmount"),
                     Trx_id = p.Get<long>("trx_id"),
                 };
-
+            
                 if (btiResult.SPResult < 1)
                 {
                     return btiResult;
                 }
 
+                btiResult.SPResult = _tpUnsettleService.InsertTpUnsettle(Tp.BTI, GameType.BTI_Sports, request.reserve_id, trans);
                 if (btiResult.SPResult == 1 && btiResult.ReturnAmount <= 0)
                 {
                     trans.Commit();
@@ -176,7 +177,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
                 p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
 
-                _ = await conn.ExecuteAsync("Service_BettransSports_BTI_Credit_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                _ = await conn.ExecuteAsync("Service_BettransSports_BTI_Credit_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 var btiResult = new BTIResult()
                 {
                     SPResult = p.Get<short>("SPResult"),
@@ -206,12 +207,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         AllowNegative.Allow);
 
                 btiResult.AfterAmount = afterAmount;
+                
+
+
                 if (btiResult.SetBalanceResult == 1)
                 {
                     if (bonusId > 0)
                     {
                         _bettingService.AddTpBonus((int)Tp.BTI, credit.BetID, (int)GameType.BTI_Sports, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, credit.amount, bonusId, TpCategory.Sports, conn, trans);
                     }
+
+                    if (credit.SettleFlag == (int)SettleFlag.EndGame)
+                    {
+                        _tpUnsettleService.InsertTpUnsettle(Tp.BTI, GameType.BTI_Sports, credit.reserve_id, trans);
+                    }
+
                     trans.Commit();
                 }
                 return btiResult;
@@ -272,7 +282,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         dto.WinLoss,
                         (int)Tp.SBO,
                         dto.TransferCode,
-                        (int)GameType.SBO_Sports,
+                        (int)dto.TpGameType,
                         TpCategory.Sports,
                         dto.TransferCode,
                         TransType.Payout,
@@ -342,7 +352,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     dto.Amount,
                     (int)Tp.SBO,
                     dto.TransferCode,
-                    (int)GameType.SBO_Sports,
+                    (int)dto.TpGameType,
                     TpCategory.Sports,
                     dto.TransferCode,
                     TransType.Refunds,
@@ -412,7 +422,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     Math.Abs(dto.Amount) * -1,
                     (int)Tp.SBO,
                     dto.TransferCode,
-                    (int)GameType.SBO_Sports,
+                    (int)dto.TpGameType,
                     TpCategory.Sports,
                     dto.TransferCode,
                     TransType.Undo,

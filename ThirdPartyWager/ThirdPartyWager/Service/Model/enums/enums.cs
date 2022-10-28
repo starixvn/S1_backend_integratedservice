@@ -130,5 +130,6 @@
         CheckSettle = 5,//結帳檢查
         ReSettle = 6,//重新結帳
         UserReport = 7,//用戶報表
+        UnSettle = 8,//未結算注單
     }
 }
