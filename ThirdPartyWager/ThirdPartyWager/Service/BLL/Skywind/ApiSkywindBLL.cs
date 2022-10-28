@@ -79,6 +79,42 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
+        public async Task<List<WagerSkywindThridPartyModel>> GetThirdPartyBetListByTime(string apiUrl, string secretKey, string username, string password, string startTime, string endTime)
+        {
+            var jwtToken = await GetJwtTokenAsync(apiUrl, username, password, secretKey);
+            string url = $"{apiUrl}/history/external?insertedAt__gt={startTime}&insertedAt__lt={endTime}&sortBy=finished&limit=100";
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
+            var response = await _httpHelper.GetClient().SendAsync(request);
+            string r = null;
+            using (var sr = new StreamReader(response.Content.ReadAsStreamAsync().Result, Encoding.GetEncoding("utf-8")))
+            {
+                r = sr.ReadToEnd();
+            }
+
+            var result = JsonConvert.DeserializeObject<List<WagerSkywindThridPartyModel>>(r);
+
+            return result;
+        }
+
+        public async Task<WagerSkywindThridPartyModel> GetThirdPartyBetByTransId(string apiUrl, string secretKey, string username, string password, string transId)
+        {
+            var jwtToken = await GetJwtTokenAsync(apiUrl, username, password, secretKey);
+            string url = $"{apiUrl}/history/external?roundId={transId}&sortBy=finished&limit=100";
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
+            var response = await _httpHelper.GetClient().SendAsync(request);
+            string r = null;
+            using (var sr = new StreamReader(response.Content.ReadAsStreamAsync().Result, Encoding.GetEncoding("utf-8")))
+            {
+                r = sr.ReadToEnd();
+            }
+
+            var result = JsonConvert.DeserializeObject<List<WagerSkywindThridPartyModel>>(r).FirstOrDefault();
+
+            return result;
+        }
+
         public int InsertWager(BetSkywind bet)
         {
             return _wagerDbClient.Execute("Service_TpWagerSkywind_Ins", bet);
