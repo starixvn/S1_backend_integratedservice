@@ -65,14 +65,16 @@ namespace ThirdPartySettleWorker.Workers
                         var unsettledList = _tpUnSettledBLL.GetTpUnsettleData<BTISettleData>("Service_BettransSports_BTI_Settle_Get", new { reserve_id = transId }, DataBase.Main);
                         var tpUserName = unsettledList.First().Account;
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
-                        var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
+                        
                         var stake = unsettledList.Sum(i => i.DebitAmount);
                         var payout = unsettledList.Sum(i => i.CreditAmount);
                         var isClosed = unsettledList.Any(i => i.CurrentStatus.Equals("Closed", StringComparison.OrdinalIgnoreCase));
-                        if (tpCurrency.ExchangeRate > 0)
+                        var settlementType = isClosed ? SettlementType.SettledForValid : SettlementType.UnSettled;
+                        var ticketStatus = isClosed ? (payout - stake > 0 ? TicketStatus.Win:TicketStatus.Lost): TicketStatus.UnSettled;
+                        if (unsettledList.First().TicketStatus == (int)TicketStatus.Refund)
                         {
-                            stake *= tpCurrency.ExchangeRate;
-                            payout *= tpCurrency.ExchangeRate;
+                            settlementType = SettlementType.SettledForInvalid;
+                            ticketStatus = TicketStatus.Refund;
                         }
 
                         var betRecordInfo = new BetRecordInfo
@@ -86,8 +88,10 @@ namespace ThirdPartySettleWorker.Workers
                             TpUserName = tpUserName,
                             SettledTime = unsettledList.Max(i => i.SettleTime),
                             TransTime = unsettledList.Min(i => i.TransTime),
-                            SettlementType = isClosed ? SettlementType.SettledForValid : SettlementType.UnSettled,
+                            SettlementType = settlementType,
+                            TicketStatus = ticketStatus,                       
                         };
+
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Sports);
                         if (result == 1)
                         {

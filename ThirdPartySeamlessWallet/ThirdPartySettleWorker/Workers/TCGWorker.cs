@@ -70,7 +70,7 @@ namespace ThirdPartySettleWorker.Workers
 
                 if (tpUnsettleList.Count() == 200)
                 {
-                    dueTimeSpan = TimeSpan.FromSeconds(1);
+                    dueTimeSpan = TimeSpan.FromSeconds(15);
                 }
 
 
@@ -136,8 +136,6 @@ namespace ThirdPartySettleWorker.Workers
                                     new
                                     {
                                         betOrderNo = unsettled.TransId,
-                                        orderNum = unsettled.OrderNum,
-                                        username = unsettled.Account,
                                         isSuccess = true
                                     }, dataBase: DataBase.Wager);
                                 }

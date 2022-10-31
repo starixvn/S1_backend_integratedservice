@@ -149,7 +149,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     amount: Math.Abs(dto.Amount) * -1,
                     tpId: (int)Tp.SBO,
                     tpTransId: dto.TransferCode,
-                    gameType:(int)GameType.SBO_Sports,
+                    gameType:(int)dto.TpGameType,
                     refId: dto.TransferCode,
                     betData: null,
                     tpCategory: TpCategory.Sports,
