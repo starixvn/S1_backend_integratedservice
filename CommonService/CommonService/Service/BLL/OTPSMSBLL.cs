@@ -1,4 +1,7 @@
 ﻿using System.Net;
+using Amazon;
+using Amazon.SimpleNotificationService;
+using Amazon.SimpleNotificationService.Model;
 using CommonService.Service.DAL;
 using CommonService.Service.Library;
 using CommonService.Service.Model;
@@ -19,7 +22,8 @@ namespace CommonService.Service.BLL
         private readonly SelLangBLL _selLangBll;
         private readonly ILogger<OTPSMSService> _logger;
         private readonly Log2File _log2File;
-
+        private readonly AWSSNSHelper _awsSnsHelper;
+       
         public OTPSMSBLL(
             HttpHelper httpHelper, 
             OTPSMSService sOtpSmsService, 
@@ -28,7 +32,7 @@ namespace CommonService.Service.BLL
             Tools tools, 
             SelLangBLL selLangBll, 
             ILogger<OTPSMSService> logger, 
-            Log2File log2File
+            Log2File log2File, AWSSNSHelper awsSnsHelper
             )
         {
             _httpHelper = httpHelper;
@@ -39,6 +43,7 @@ namespace CommonService.Service.BLL
             _selLangBll = selLangBll;
             _logger = logger;
             _log2File = log2File;
+            _awsSnsHelper = awsSnsHelper;
         }
 
         #region Common
@@ -111,7 +116,7 @@ namespace CommonService.Service.BLL
             string url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
 
             string siteName = custInfo.SiteName;
-            string smsMessage = $"[{siteName}]{_selLangBll.GetResourceValue("lbl_OTP", userLang)} {OTPNum}";
+            string smsMessage = $"[{siteName}]{string.Format(_selLangBll.GetResourceValue("lbl_OTP", userLang), OTPNum)}";
 
             //lbl_OTP
             if (custInfo.SiteName.Equals("Bwing", StringComparison.OrdinalIgnoreCase) || custInfo.SiteName.Equals("Goal123", StringComparison.OrdinalIgnoreCase))
@@ -276,7 +281,7 @@ namespace CommonService.Service.BLL
                 return string.Empty;
             }          
         }
-
+        
         #region YC元澄 SMS 平台
 
         public async Task<ApiResult<SendOTPSMSResult>> SendYcOTPMSAsync(string phoneNo, CustInfoProfile custInfo, int custId, string userLang)
@@ -355,6 +360,79 @@ namespace CommonService.Service.BLL
             return apiResult;
         }
 
+        #endregion
+        
+        #region AWS SMS
+        public async Task<ApiResult<SendOTPSMSResult>> SendAwsOtpAsync(string phoneNo, CustInfoProfile custInfo, int custId, string userLang)
+        {
+            var apiResult = new ApiResult<SendOTPSMSResult>();
+            var otpNum = _tools.GetRandomNumString(6);
+            var message = string.Format(_selLangBll.GetResourceValue("lbl_OTP", userLang), otpNum);
+            var responseResult = await SendToAwsOtpAsync(phoneNo, otpNum, message, custInfo, custId);
+
+            //if send SMS Success
+            if (responseResult.ErrorCode == ErrorCode.Success)
+            {
+                apiResult = OTPVerifyinfoInsAsync(custId, otpNum);
+            }
+            else
+            {
+                apiResult.ErrorCode = responseResult.ErrorCode;
+                apiResult.Message = responseResult.Message;
+            }
+            return apiResult;
+        }
+       
+        
+        private async Task<ApiResult> SendToAwsOtpAsync(string phoneNo, string otpNum, string message, CustInfoProfile custInfo, int custId)
+        {
+            var apiResult = new ApiResult
+            {
+                ErrorCode = ErrorCode.Fail
+            };
+            
+            var request = new PublishRequest
+            {
+                PhoneNumber = $"+{phoneNo}",
+                Message = message,
+            };
+            
+            var oTpLog = new OTPLog()
+            {
+                OTPStatus = (int)OTPStatus.Fail,
+                OTPType = (int)OtpType.SMS,
+                OTPProvider = OTPProvider.AWS.ToString(),
+                CurrencyId = custInfo.CurrencyId,
+                CustId = custId,
+                UserName = custInfo.UserName,
+                PhoneNo = phoneNo,
+                Content = message,
+                OTPNum = otpNum
+            };
+
+            try
+            {
+                var response = await _awsSnsHelper.PublishAsync(request);
+                if (response.HttpStatusCode == HttpStatusCode.OK)
+                {
+                    apiResult.ErrorCode = ErrorCode.Success;
+                    oTpLog.OTPStatus = (int)OTPStatus.SendToProvider;
+                }
+                
+                oTpLog.OTPResponse = $"{response.HttpStatusCode} || {apiResult.ErrorCode}";
+                oTpLog.Request_id = response.MessageId;
+                _logger.LogInformation($"AWS OTP {(ErrorCode)Enum.ToObject(typeof(ErrorCode), apiResult.ErrorCode)} - {request.PhoneNumber},{custInfo.UserName},{request.Message}, " +
+                                       $"MessageId={response.MessageId}, StatusCode={response.HttpStatusCode}");
+            }
+            catch (Exception ex)
+            {
+                
+                _logger.LogError(ex, $"AWS OTP Fail - {request.PhoneNumber},{custInfo.UserName},{request.Message}");
+            }
+            
+            _sOtpSmsService.InsertOTPLog(oTpLog);
+            return apiResult;
+        }
         #endregion
     }
 }
