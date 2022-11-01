@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Net;
 using CommonService.Service.DAL;
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using PaymentService.Service.Library;
@@ -23,7 +17,6 @@ namespace CommonService.Service.BLL
         private readonly Tools tools;
         private readonly SelLangBLL selLangBLL;
         private readonly ILogger<OTPSMSService> logger;
-        private readonly Log2File log2File;
 
         public NxCloudSMSBLL(HttpHelper httpHelper, OTPSMSService sOTPSMSService, IOptions<Dictionary<string, NxcloudSMSServiceTypeConfig>> NxcloudSMSServiceTypeConfig, Tools tools, SelLangBLL selLangBLL, ILogger<OTPSMSService> logger, Log2File log2File)
         {
@@ -33,7 +26,6 @@ namespace CommonService.Service.BLL
             this.tools = tools;
             this.selLangBLL = selLangBLL;
             this.logger = logger;
-            this.log2File = log2File;
         }
         public ApiResult<SendOTPSMSResult> GetOTPVerifyInfo(int custId)
         {
@@ -57,7 +49,7 @@ namespace CommonService.Service.BLL
         public ApiResult VerifyOPT(VerifyOTPReq verifyOTPReq)
         {
             var apiResult = new ApiResult();
-            int result = sOTPSMSService.VerifyOPT(verifyOTPReq);
+            int result = sOTPSMSService.VerifyOTP(verifyOTPReq);
 
             apiResult.ErrorCode = (ErrorCode)(result);
             return apiResult;
@@ -66,7 +58,7 @@ namespace CommonService.Service.BLL
         {
             string OTPNum = tools.GetRandomNumString(6);
             var apiResult = new ApiResult<SendOTPSMSResult>();
-            ApiResult apiResult1 = await SendOTPSMSAsync(PhoneNo, OTPNum, custInfo, userLang);
+            ApiResult apiResult1 = await SendOTPSMSAsync(PhoneNo, OTPNum, custInfo, userLang, custId);
             var apiResultSendOTP = apiResult1;
             //if send SMS Success
             if (apiResultSendOTP.ErrorCode == ErrorCode.Success)
@@ -102,11 +94,25 @@ namespace CommonService.Service.BLL
             }
             return smsMessage;
         }
-        public async Task<ApiResult> SendOTPSMSAsync(string PhoneNo, string OTPNum, CustInfoProfile custInfo, string userLang)
+
+        public async Task<ApiResult> SendOTPSMSAsync(string PhoneNo, string OTPNum, CustInfoProfile custInfo, string userLang, int custId)
         {
             var apiResult = new ApiResult();
             var Config = NxcloudSMSServiceTypeConfig.Value[custInfo.SiteName].OTP;
             string smsMessage = MakeSMSContext(custInfo, OTPNum, PhoneNo);
+            var oTPLog = new OTPLog()
+            {
+                OTPStatus = (int)OTPStatus.Fail,
+                OTPType = (int)OtpType.SMS,
+                OTPProvider = OTPProvider.NxCloud.ToString(),
+                CurrencyId = custInfo.CurrencyId,
+                CustId = custId,
+                UserName = custInfo.UserName,
+                PhoneNo = PhoneNo,
+                Content = smsMessage,
+                OTPNum = OTPNum
+            };
+
             try
             {
                 var data = new Dictionary<string, string>()
@@ -115,8 +121,8 @@ namespace CommonService.Service.BLL
                     {"secretkey", Config.Secretkey},
                     {"phone", PhoneNo},
                     {"content", smsMessage},
-                };
-                
+                };              
+
                 using var httpResponse = await httpHelper.HttpFromPostAsync(Config.ResourceURL, null, data, "application/x-www-form-urlencoded");
                 if (httpResponse != null && httpResponse.StatusCode == HttpStatusCode.OK)
                 {
@@ -127,9 +133,14 @@ namespace CommonService.Service.BLL
                     {
                         responsjson.TryGetValue("messageid", out var messageid);
                         responsjson.TryGetValue("result", out var result);
+                        
+                        oTPLog.Request_id = messageid.ToString();
+                        oTPLog.OTPResponse = $"{code} || {result}";
+
                         if (code.Equals("0"))
                         {
-                            log2File.Info($"NxCloud - {PhoneNo},{custInfo.UserName},{OTPNum},status:{code},reason:{result},messageid:{messageid}", $"{custInfo.SiteName}_OTP");
+                            logger.LogInformation($"NxCloud - {PhoneNo},{custInfo.UserName},{OTPNum},status:{code},reason:{result},messageid:{messageid}", $"{custInfo.SiteName}_OTP");
+                            oTPLog.OTPStatus = (int)OTPStatus.SendToProvider;
                             apiResult.ErrorCode = ErrorCode.Success;
                         }
                         else
@@ -138,30 +149,36 @@ namespace CommonService.Service.BLL
                             if (code.Equals("6"))
                             {
                                 apiResult.ErrorCode = ErrorCode.PhoneError;
+                                oTPLog.OTPResponse = ErrorCode.PhoneError.ToString();
                             }
-                            log2File.Error($"NxCloud - {PhoneNo},{custInfo.UserName},{OTPNum},status:{code},reason:{result},messageid:{messageid}", $"{custInfo.SiteName}_OTP");
+                            logger.LogError($"NxCloud - {PhoneNo},{custInfo.UserName},{OTPNum},status:{code},reason:{result},messageid:{messageid}", $"{custInfo.SiteName}_OTP");
                         }
                     }
                     else
                     {
-                        logger.LogError($"SkyLine - Error HttpStatus = {httpResponse.StatusCode}\r\nRespstatus ={content}");
-                        log2File.Error($"SkyLine - Error HttpStatus = {httpResponse.StatusCode}\r\nRespstatus ={content}", $"{custInfo.SiteName}_OTP");
+                        var msg = $"NxCloud - Error HttpStatus:{httpResponse.StatusCode} || {content}";
+                        logger.LogError(msg);
+                        oTPLog.OTPResponse = msg;
                     }
                 }
                 else
                 {
                     apiResult.ErrorCode = ErrorCode.Fail;
-                    log2File.Error($"NxCloud - Http error code :{httpResponse.StatusCode}", $"{custInfo.SiteName}_OTP");
+                    var httpErrorMsg = $"NxCloud - Http error code :{httpResponse.StatusCode}|| {httpResponse.ReasonPhrase}";
+                    logger.LogError(httpErrorMsg);
+                    oTPLog.OTPResponse = httpErrorMsg;
                 }
             }
             catch (Exception ex)
             {
+                var exMsg = $"NxCloud - Exception error :{ex}";
                 apiResult.ErrorCode = ErrorCode.Fail;
-                apiResult.RawMessage = ex.ToString();
-                log2File.Error($"NxCloud - Exception error :{ex.ToString()}", $"{custInfo.SiteName}_OTP");
+                apiResult.RawMessage = exMsg;
+                logger.LogError(exMsg);
+                oTPLog.OTPResponse = exMsg;
             }
 
-
+            sOTPSMSService.InsertOTPLog(oTPLog);
             return apiResult;
         }
         

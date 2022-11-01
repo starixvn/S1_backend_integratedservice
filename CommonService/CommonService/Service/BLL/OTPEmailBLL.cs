@@ -77,7 +77,7 @@ namespace CommonService.Service.BLL
 
         public ApiResult VerifyOtp(int custId, string inputOtp)
         {
-            var result = _otpService.VerifyOPT(new VerifyOTPReq() {CustId = custId, InputOTP = inputOtp}, (int)OtpType.Email);
+            var result = _otpService.VerifyOTP(new VerifyOTPReq() {CustId = custId, InputOTP = inputOtp}, (int)OtpType.Email);
             var apiResult = new ApiResult
             {
                 ErrorCode = (ErrorCode) (result)

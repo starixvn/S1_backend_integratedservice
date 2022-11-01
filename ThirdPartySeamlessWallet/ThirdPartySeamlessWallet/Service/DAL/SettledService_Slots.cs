@@ -4400,7 +4400,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 long timestamp = tools.ConvertLocTime(payoutData_SimplePlay.timestamp, timezone);
                 long payouttime = tools.ConvertLocTime(payoutData_SimplePlay.Payouttime, timezone);
-                var partitionTime = new DateTimeOffset(payoutData_SimplePlay.timestamp, new TimeSpan(timezone, 0, 0)).DateTime;
+                var partitionTime = DateTimeOffset.FromUnixTimeSeconds(timestamp).DateTime;
                 int ticketStatus = payoutData_SimplePlay.PayoutType;
 
                 var p = new DynamicParameters(new
@@ -4485,8 +4485,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 long timestamp = tools.ConvertLocTime(cancelBetData_SimplePlay.timestamp, timezone);
-                var partitionTime = new DateTimeOffset(cancelBetData_SimplePlay.timestamp, new TimeSpan(timezone, 0, 0)).DateTime;
-
+                var partitionTime = DateTimeOffset.FromUnixTimeSeconds(timestamp).DateTime;
                 var refBettrans = _partitionService.Execute(partitionTime, "Service_BettransRng_SimplePlay_CancelBet_Set", new { txnid = cancelBetData_SimplePlay.txn_reverse_id }, trans);
                 if (refBettrans > 0)
                 {
@@ -4623,7 +4622,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         trans);
                 }
 
-                if (result > 0 && bettingData_Skywind.TicketType == (int)BettransType.EndRound && bettingData_Skywind.event_type != "transfer-out")
+                if (result > 0 && bettingData_Skywind.TicketType == (int)BettransType.EndRound)
                 {
                     result = _tpUnsettleService.InsertTpUnsettle(Tp.Skywind, (GameType)gameType, $"{bettingData_Skywind.round_id}-{bettingData_Skywind.game_id}", trans, partitionTime);
                 }
