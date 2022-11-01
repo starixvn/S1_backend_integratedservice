@@ -64,6 +64,8 @@ namespace CommonService
             services.AddSingleton<LiveStreamingBLL>();
             services.AddSingleton<OTPEmailBLL>();
             services.AddSingleton<Tools>();
+            services.Configure<Dictionary<string, AWSKeyConfig>>(Configuration.GetSection("SMSSupportConfig"));
+            services.AddSingleton<AWSSNSHelper>();
 
             services.AddControllers();
 

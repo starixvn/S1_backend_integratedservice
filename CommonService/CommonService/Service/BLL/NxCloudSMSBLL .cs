@@ -77,7 +77,7 @@ namespace CommonService.Service.BLL
         {
             string siteName = custInfo.SiteName;
             string userLang = custInfo.UserLang;
-            string smsMessage = $"{selLangBLL.GetResourceValue("lbl_OTP", userLang)} {OTPNum}";
+            string smsMessage = string.Format(selLangBLL.GetResourceValue("lbl_OTP", userLang), OTPNum);
             string areaCode = custInfo.AreaCode;
             //lbl_OTP
             if (custInfo.SiteName.Equals("Bwing", StringComparison.OrdinalIgnoreCase) || custInfo.SiteName.Equals("Goal123", StringComparison.OrdinalIgnoreCase))
