@@ -368,7 +368,7 @@ namespace CommonService.Service.BLL
             var apiResult = new ApiResult<SendOTPSMSResult>();
             var otpNum = _tools.GetRandomNumString(6);
             var message = string.Format(_selLangBll.GetResourceValue("lbl_OTP", userLang), otpNum);
-            var responseResult = await SendToAwsOtpAsync(phoneNo, otpNum, message, custInfo, custId, userLang);
+            var responseResult = await SendToAwsOtpAsync(phoneNo, otpNum, message, custInfo, custId);
 
             //if send SMS Success
             if (responseResult.ErrorCode == ErrorCode.Success)
