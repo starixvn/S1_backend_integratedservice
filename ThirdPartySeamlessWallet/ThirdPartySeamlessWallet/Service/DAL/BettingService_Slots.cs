@@ -1327,7 +1327,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 long timestamp = tools.ConvertLocTime(bettingData_SimplePlay.timestamp, timezone);
-                var partitionTime = new DateTimeOffset(bettingData_SimplePlay.timestamp, new TimeSpan(timezone, 0, 0)).DateTime;
+                var partitionTime = DateTimeOffset.FromUnixTimeSeconds(timestamp).DateTime;
 
                 var p = new DynamicParameters(new
                 {
