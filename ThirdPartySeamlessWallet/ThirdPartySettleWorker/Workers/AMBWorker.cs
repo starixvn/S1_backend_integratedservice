@@ -72,7 +72,7 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var unsettleData = _partitionService.GetUnsettleDataList<SettleData>("Service_BettransRng_AMB_Unsettle_Get", tpUnsettle).FirstOrDefault();
+                        var unsettleData = _partitionService.GetUnsettleDataList<SettleData>("Service_BettransRng_AMB_Unsettle_Get_V2", tpUnsettle).FirstOrDefault();
                         if (unsettleData != null)
                         {
                             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettleData.Account);
