@@ -470,6 +470,20 @@ namespace ThirdPartySeamlessWallet.Controllers
             var request = JsonConvert.DeserializeObject<AMBSlotCancelRequest>(content);
             return await _AMBBLL.SlotCancel(request);
         }
+        
+        /// <summary>
+        /// Slot取消下注
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("[controller]/v2/settle")]
+        public async Task<AMBSlotSettleResponse> SlotSettleAsync()
+        {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var content = await reader.ReadToEndAsync();
+            var request = JsonConvert.DeserializeObject<AMBSlotSettleRequest>(content);
+            return await _AMBBLL.SlotSettle(request);
+        }
 
         #endregion
 

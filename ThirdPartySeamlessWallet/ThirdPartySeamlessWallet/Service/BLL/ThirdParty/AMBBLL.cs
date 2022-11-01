@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -510,6 +511,141 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
         }
 
+        public async Task<AMBSlotSettleResponse> SlotSettle(AMBSlotSettleRequest request)
+        {
+            var agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
+            if (!CheckAgentId(agent, request.currency))
+            {
+                return CreateSettleError(AMBErrorCode.InvalidAgent);
+            }
+            
+            var bonusId = 0;
+            var afterAmount = 0m;
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, request.username);
+            if (tpCheck == null || tpCheck.Locked)
+            {
+                return CreateSettleError(AMBErrorCode.InvalidUsernameOrToken, "user is not online");
+            }
+
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AMB, request.username);
+            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp.AMB, tpCustInfo.CurrencyId);
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                request.amount *= tpCurrency.ExchangeRate;
+                request.bet *= tpCurrency.ExchangeRate;
+                request.winlose *= tpCurrency.ExchangeRate;
+                request.turnover *= tpCurrency.ExchangeRate;
+                request.roundAmount *= tpCurrency.ExchangeRate;
+            }
+            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.username, (int)GameType);
+            var beforeAmount = tpCustBalance.Balance;
+            if (beforeAmount < request.bet)
+            {
+                return CreateSettleError(AMBErrorCode.BalanceInsufficient);
+            }
+
+            var partitionTime = DateTimeOffset.Parse(request.timestamp).DateTime;
+            var data = new BettingDataRNG_AMB()
+            {
+                username = request.username,
+                agentId = agent,
+                game = request.game,
+                gameId = request.gameId,
+                roundId = request.roundId,
+                bet = Math.Abs(request.bet) * -1,
+                amount = request.amount,
+                winlose = request.winlose,
+                turnover = request.turnover,
+                roundAmount = request.roundAmount,
+                currency = request.currency,
+                transactionId = request.transactionId,
+                timestamp = partitionTime,
+                featureBuy = request.featureBuy,
+                isEndRound = request.isEndRound,
+                type = request.type,
+                tranId = request.tranId,
+                FromAPIType = BettransRng_AMBTypeEnum.FromPayout,
+                TicketType = request.isEndRound ? BettransType.EndRound : BettransType.Payout,
+                TicketStatus = TicketStatus.UnSettled
+            };
+            var slotDatas = _bettingService.IsExist_AMB(false, partitionTime, data);
+            if (slotDatas.Any())
+            {
+                return CreateSettleError(AMBErrorCode.DuplicateRoundId);
+            }
+
+            await using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            await using var trans = await conn.BeginTransactionAsync();
+            var result = _settledService.BetAndPayout_AMB(partitionTime, data, trans);
+            if (!result)
+            {
+                trans.Rollback();
+                _logger.LogError($"Service_BettransRng_AMB_Ins_V2 failed :{JsonConvert.SerializeObject(data)}");
+                return CreateSettleError(AMBErrorCode.ServiceNotAvailable);
+            }
+
+            if (data.bet != 0)
+            {
+                result = _bettingService.SetBalance_AMB(tpCustInfo, data, out afterAmount, ref bonusId, conn, trans);
+                if (!result)
+                {
+                    trans.Rollback();
+                    _logger.LogError("PlaceBetV2 failed");
+                    return CreateSettleError(AMBErrorCode.BalanceInsufficient);
+                }
+            }
+
+            if (data.amount != 0)
+            {
+                result = _settledService.SetBalance_AMB(tpCustInfo, data, TransType.Payout, "Payout", out afterAmount, ref bonusId, conn, trans);
+                if (!result)
+                {
+                    trans.Rollback();
+                    _logger.LogError("PayoutV2 failed");
+                    return CreateSettleError(AMBErrorCode.ServiceNotAvailable);
+                }
+            }
+            if (data.isEndRound)
+            {
+                result = _settledService.InsertUnsettle_AMB(partitionTime, data.roundId, trans);
+                if (!result)
+                {
+                    _logger.LogError($"InsertUnsettle_AMB failed {data.roundId}");
+                    return CreateSettleError(AMBErrorCode.ServiceNotAvailable);
+                }
+            }
+
+            if (afterAmount == 0)
+            {
+                tpCustBalance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.username, (int)GameType);
+                afterAmount = tpCustBalance.Balance;
+            }
+            else
+            {
+                if (tpCurrency.ExchangeRate > 0) 
+                    afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            trans.Commit();
+            if (bonusId > 0)
+            {
+                _logger.LogInformation($"user {tpCustInfo.TpUserName} has bonus wallet bonusId:{bonusId} transId:{data.roundId}");
+                _settledService.UpdateTpBonusFlag((int) Tp.AMB, data.roundId, (int) GameType.AMB_RNG, TpCategory.Slots, out var custId, out bonusId);
+            }
+            return new AMBSlotSettleResponse()
+            {
+                status = new AMBSlotStatusModel() { code = AMBErrorCode.Success, message = "Success" },
+                data = new AMBSlotData()
+                {
+                    username = request.username,
+                    wallet = new AMBSlotWalletModel() { balance = afterAmount, lastUpdate = GetCurrentGameTime() },
+                    balance = new AMBSlotBalanceModel() { before = beforeAmount, after = afterAmount },
+                    refId = request.transactionId
+                }
+            };
+            
+        }
         #endregion
 
         #region Private Methods
@@ -1425,6 +1561,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 _logger.LogError(ex, $"CheckAgentId Exception:{ex.Message}");
                 return false;
             }
+        }
+
+        private AMBSlotSettleResponse CreateSettleError(AMBErrorCode errorCode, string message = "")
+        {
+            return new AMBSlotSettleResponse()
+            {
+                status = new AMBSlotStatusModel()
+                {
+                    code = errorCode, 
+                    message = string.IsNullOrEmpty(message) ? errorCode.GetEnumDescription() : message
+                }
+            };
         }
 
         #endregion
