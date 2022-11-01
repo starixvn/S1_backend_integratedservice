@@ -121,6 +121,6 @@
     <value>Transaksi deposit gagal! Sila hubungi 24/7 LIVE CHAT kami untuk bantuan lanjut.</value>
   </data>
   <data name="lbl_OTP" xml:space="preserve">
-    <value>Helo, kod pengesahan anda ialah</value>
+    <value>Helo, kod pengesahan anda ialah {0}</value>
   </data>
 </root>

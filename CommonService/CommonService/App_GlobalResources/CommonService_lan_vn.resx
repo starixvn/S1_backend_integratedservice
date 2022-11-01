@@ -121,6 +121,6 @@
     <value />
   </data>
   <data name="lbl_OTP" xml:space="preserve">
-    <value>Ung dung xin thong bao ma OTP cua ban la</value>
+    <value>Ung dung xin thong bao ma OTP cua ban la {0}</value>
   </data>
 </root>

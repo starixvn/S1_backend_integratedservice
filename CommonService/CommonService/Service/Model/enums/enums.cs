@@ -69,7 +69,8 @@
     {
         SkyLine,
         NxCloud,
-        YC
+        YC,
+        AWS
     }
 
     public enum OTPStatus

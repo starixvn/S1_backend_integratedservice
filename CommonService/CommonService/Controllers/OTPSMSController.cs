@@ -55,7 +55,12 @@ namespace CommonService.Controllers
                 {
                     var supportOTP = GetSupportOTP(custInfo);
                     apiResult.Message = supportOTP;
-                    if (supportOTP.Equals("SkyLine", StringComparison.OrdinalIgnoreCase))
+                    
+                    if (supportOTP.Equals("AWS", StringComparison.OrdinalIgnoreCase))
+                    {
+                        apiResult = await sOTPSMSBLL.SendAwsOtpAsync(phone, custInfo, req.CustId, custInfo.UserLang);
+                    }
+                    else if (supportOTP.Equals("SkyLine", StringComparison.OrdinalIgnoreCase))
                     {
                         apiResult = await sOTPSMSBLL.SendSkyLineOTPSMSAsync(phone, custInfo, req.CustId, custInfo.UserLang);
                     } else if (supportOTP.Equals("YC", StringComparison.OrdinalIgnoreCase))

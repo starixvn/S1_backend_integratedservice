@@ -121,6 +121,6 @@
     <value>交易失敗，煩請聯繫客服尋求協助。謝謝！</value>
   </data>
   <data name="lbl_OTP" xml:space="preserve">
-    <value>您好，您的驗證碼是 </value>
+    <value>您好，您的驗證碼是 {0}</value>
   </data>
 </root>

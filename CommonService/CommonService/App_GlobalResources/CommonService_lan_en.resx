@@ -121,6 +121,6 @@
     <value>Deposit transaction failed! Please contact our 24/7 LIVE CHAT for further assistance.</value>
   </data>
   <data name="lbl_OTP" xml:space="preserve">
-    <value>Hello, your verification code is</value>
+    <value>Hello, your verification code is {0}</value>
   </data>
 </root>
