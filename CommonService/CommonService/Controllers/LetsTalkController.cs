@@ -104,12 +104,12 @@ namespace CommonService.Controllers
                     }
                     else
                     {
-                        _logger.LogError($"httpResult error URL : {url} Result:{ContentResult} ");
+                        _logger.LogInformation($"httpResult error URL : {url} Result:{ContentResult} ");
                     }
                 }
                 else
                 {
-                    _logger.LogError($"httpResponse error URL : {url} parameters:{parameters} StatusCode: {result.StatusCode}");
+                    _logger.LogInformation($"httpResponse error URL : {url} parameters:{parameters} StatusCode: {result.StatusCode}");
                 }
 
             }
@@ -131,7 +131,7 @@ namespace CommonService.Controllers
                 var result = await _httpHelper.HttpPost1Async(url, header, parameters, "application/json");
                 if (!result.IsSuccessStatusCode)
                 {
-                    _logger.LogError($"StatusCode={result.StatusCode}, ReasonPhrase={result.ReasonPhrase}");
+                    _logger.LogInformation($"StatusCode={result.StatusCode}, ReasonPhrase={result.ReasonPhrase}");
                 }
                 return await result.Content.ReadAsStringAsync();
             }

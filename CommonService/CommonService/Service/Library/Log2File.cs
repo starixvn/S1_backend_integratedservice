@@ -9,22 +9,15 @@ namespace PaymentService.Service.Library
         {
             _logger = provider.GetRequiredService<ILogger<Log2File>>();
         }
-        public void Info(string InfoContent, string PrefixName)
+        public void Info(string infoContent, string PrefixName)
         {
             LogContext.PushProperty("PrefixName", PrefixName);
-            _logger.LogInformation(InfoContent);
+            _logger.LogInformation(infoContent);
         }
-        public void Error(string ErrorContent, string PrefixName, Exception ex = null)
+        public void Error(string errorContent, string PrefixName, Exception ex)
         {
             LogContext.PushProperty("PrefixName", PrefixName);
-            if (ex != null)
-            {
-                _logger.LogError(ex, ErrorContent);
-            }
-            else
-            {
-                _logger.LogError(ErrorContent);
-            }
+            _logger.LogError(ex, errorContent);
         }
 
     }

@@ -143,13 +143,13 @@ namespace CommonService.Service.BLL
                                 apiResult.ErrorCode = ErrorCode.PhoneError;
                                 oTPLog.OTPResponse = ErrorCode.PhoneError.ToString();
                             }
-                            logger.LogError($"NxCloud - {PhoneNo},{custInfo.UserName},{OTPNum},status:{code},reason:{result},messageid:{messageid}", $"{custInfo.SiteName}_OTP");
+                            logger.LogInformation($"NxCloud - {PhoneNo},{custInfo.UserName},{OTPNum},status:{code},reason:{result},messageid:{messageid}", $"{custInfo.SiteName}_OTP");
                         }
                     }
                     else
                     {
                         var msg = $"NxCloud - Error HttpStatus:{httpResponse.StatusCode} || {content}";
-                        logger.LogError(msg);
+                        logger.LogInformation(msg);
                         oTPLog.OTPResponse = msg;
                     }
                 }
@@ -157,7 +157,7 @@ namespace CommonService.Service.BLL
                 {
                     apiResult.ErrorCode = ErrorCode.Fail;
                     var httpErrorMsg = $"NxCloud - Http error code :{httpResponse.StatusCode}|| {httpResponse.ReasonPhrase}";
-                    logger.LogError(httpErrorMsg);
+                    logger.LogInformation(httpErrorMsg);
                     oTPLog.OTPResponse = httpErrorMsg;
                 }
             }
