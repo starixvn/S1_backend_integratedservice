@@ -173,7 +173,7 @@ namespace CommonService.Service.BLL
                 else
                 {
                     _log2File.Error($"SkyLine - {PhoneNo},{custInfo.UserName},{OTPNum},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_OTP");
-                    if (resultResp.status == -6 || resultResp.status == -7 || resultResp.status == -8 || resultResp.status == -9)//號碼錯誤傳5002給前端
+                    if (resultResp.status is -6 or -7 or -8 or -9)//號碼錯誤傳5002給前端
                     {
                         apiResult.ErrorCode = ErrorCode.PhoneError;
                         oTPLog.OTPResponse = ErrorCode.PhoneError.ToString();
@@ -244,7 +244,7 @@ namespace CommonService.Service.BLL
                 else
                 {
                     _log2File.Error($"SkyLine - {PhoneNo},{custInfo.UserName},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_DepositRejectSMS");
-                    if (resultResp.status == -6 || resultResp.status == -7 || resultResp.status == -8 || resultResp.status == -9)//號碼錯誤傳5002給前端
+                    if (resultResp.status is -6 or -7 or -8 or -9)//號碼錯誤傳5002給前端
                     {
                         apiResult.ErrorCode = ErrorCode.PhoneError;
                         oTPLog.OTPResponse = ErrorCode.PhoneError.ToString();
