@@ -19,9 +19,4 @@
         public string screen { get; set; }
         public string di { get; set; }
     }
-
-    public class FPSResult
-    {
-        public string message { get; set; }
-    }
 }

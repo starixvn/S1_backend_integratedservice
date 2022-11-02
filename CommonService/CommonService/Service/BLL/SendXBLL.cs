@@ -88,43 +88,5 @@ namespace CommonService.Service.BLL
             [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public List<string> removeTags { get; set; }
         }
-        public async Task<ApiResult> WelcomeMailAsync(CustInfoProfile custInfo)
-        {
-            var apiResult = new ApiResult();
-
-            var url = $@"{sendXConfig.Value.basePath}/contact/track?team_id={sendXConfig.Value.TeamId}&email={custInfo.Email}";
-            var trackParams = new TrackParams
-            {
-                removeTags = new List<string>
-            {
-                $"{custInfo.SiteName}_Welcome_{custInfo.UserLang}"
-            }
-            };
-            var result = await httpHelper.HttpPostAsync(url, headerParams, JsonConvert.SerializeObject(trackParams), "application/json");
-
-            trackParams = new TrackParams
-            {
-                addTags = new List<string>
-            {
-                $"{custInfo.SiteName}_Welcome_{custInfo.UserLang}"
-            }
-            };
-            result = await httpHelper.HttpPostAsync(url, headerParams, JsonConvert.SerializeObject(trackParams), "application/json");
-
-            var resultResp = JsonConvert.DeserializeObject<Result>(result);
-
-            if (resultResp.status == 200)
-            {
-                apiResult.ErrorCode = 0;
-                apiResult.RawMessage = resultResp.message;
-            }
-            else
-            {
-                apiResult.ErrorCode = ErrorCode.Fail;
-                apiResult.Message = resultResp.message;
-                apiResult.RawMessage = resultResp.message;
-            }
-            return apiResult;
-        }
     }
 }

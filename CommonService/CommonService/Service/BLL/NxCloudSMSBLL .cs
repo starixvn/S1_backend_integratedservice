@@ -27,15 +27,7 @@ namespace CommonService.Service.BLL
             this.selLangBLL = selLangBLL;
             this.logger = logger;
         }
-        public ApiResult<SendOTPSMSResult> GetOTPVerifyInfo(int custId)
-        {
-            var apiResult = new ApiResult<SendOTPSMSResult>();
-            var result = sOTPSMSService.GetOTPVerifyinfo(custId);
-            apiResult.ErrorCode = (ErrorCode)(result.Status == 1 ? 0 : 1000);
-            apiResult.Data = result;
 
-            return apiResult;
-        }
         public ApiResult<SendOTPSMSResult> OTPVerifyinfoInsAsync(int custId, string sOTPNum)
         {
             var apiResult = new ApiResult<SendOTPSMSResult>();

@@ -27,19 +27,5 @@ namespace CommonService.Service.BLL
                 return null;
             }
         }
-        public bool Authenticate<T>(string sToken, out T t)
-        {
-            var sPermissionData = "";
-            t = default;
-            sPermissionData = authService.Authenticate(sToken);
-
-            if (!string.IsNullOrEmpty(sPermissionData))
-            {
-                t = Newtonsoft.Json.JsonConvert.DeserializeObject<T>(sPermissionData);
-                return true;
-            }
-
-            return false;
-        }
     }
 }
