@@ -20,7 +20,7 @@ pipeline {
         stage('Deploy') {
             agent { node { label 'master' } }
             steps {
-                sh 'ansible-playbook -i ${ansible_path}/DEV.AWS.yml ${ansible_path}/deploy.yml --extra-vars "host=linux-dev docker_name=dev_settleworker image=integratedservice/thirdpartysettleworker:${version} env=${env} volume=/logs/settleworker:/settleworker"'
+                sh 'ansible-playbook -i ${ansible_path}/DEV.AWS.yml ${ansible_path}/deploy.yml --extra-vars "host=linux-dev docker_name=dev_settleworker image=integratedservice/thirdpartysettleworker:${version} env=${env} docker_ports=[] volume=/logs/settleworker:/settleworker"'
             }
         }
     }
