@@ -1,9 +1,4 @@
 ﻿using CommonService.Service.DAL;
-using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CommonService.Service.BLL
 {

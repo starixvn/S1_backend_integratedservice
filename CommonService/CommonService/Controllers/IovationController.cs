@@ -1,8 +1,6 @@
 ﻿using CommonService.Service.BLL;
 using CommonService.Service.Model;
-using CommonService.Service.Model.enums;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 
 namespace CommonService.Controllers
 {

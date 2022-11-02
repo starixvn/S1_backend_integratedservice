@@ -1,6 +1,4 @@
 ﻿using System.Net;
-using Amazon;
-using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using CommonService.Service.DAL;
 using CommonService.Service.Library;

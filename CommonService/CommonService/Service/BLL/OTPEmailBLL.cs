@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using CommonService.Service.DAL;
+﻿using CommonService.Service.DAL;
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;

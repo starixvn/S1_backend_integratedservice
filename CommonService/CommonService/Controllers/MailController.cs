@@ -1,9 +1,6 @@
-﻿using System;
-using CommonService.Service.BLL;
+﻿using CommonService.Service.BLL;
 using CommonService.Service.Model;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
 
 namespace CommonService.Controllers
 {

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using CommonService.Service.BLL;
+﻿using CommonService.Service.BLL;
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using Microsoft.AspNetCore.Mvc;

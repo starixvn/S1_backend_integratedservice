@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
-using CommonService.Extensions.Middlewares;
+﻿using CommonService.Extensions.Middlewares;
 
 namespace CommonService.Extensions
 {

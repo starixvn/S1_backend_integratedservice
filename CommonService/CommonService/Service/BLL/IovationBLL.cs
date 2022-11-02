@@ -4,10 +4,6 @@ using CommonService.Service.Model.enums;
 using CommonService.Service.DAL;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Dynamic;
-using System.Threading.Tasks;
 
 namespace CommonService.Service.BLL
 {

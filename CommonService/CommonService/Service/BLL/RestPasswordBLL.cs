@@ -3,8 +3,6 @@ using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using static CommonService.Service.Model.SendGridResetPassword;
 
 namespace CommonService.Service.BLL

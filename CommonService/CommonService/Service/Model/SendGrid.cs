@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using CommonService.Service.Model;
-
-namespace CommonService.Service.Model
+﻿namespace CommonService.Service.Model
 {
     public class SendGridConfig
     {
