@@ -35,6 +35,7 @@ namespace CommonService
             services.Configure<Dictionary<string, SkyLineSMSServiceTypeConfig>>(Configuration.GetSection("SkyLineSMSServiceConfig"));
             services.Configure<Dictionary<string, YcSmsServiceTypeConfig>>(Configuration.GetSection("YcSMSServiceConfig"));
             services.Configure<Dictionary<string, NxcloudSMSServiceTypeConfig>>(Configuration.GetSection("NxCloudSMSServiceConfig"));
+            services.Configure<AWSKeyConfig>(Configuration.GetSection("ailab-sns"));
             services.Configure<Dictionary<string, Dictionary<string, string>>>(Configuration.GetSection("SMSSupportConfig"));
             services.Configure<Dictionary<string, Dictionary<string, string>>>(Configuration.GetSection("Telegram"));
             services.Configure<Dictionary<string, Dictionary<string, string>>>(Configuration.GetSection("LetsTalk"));
@@ -44,6 +45,7 @@ namespace CommonService
             HttpHelper.proxyPort = Configuration.GetValue<int>("ProxyPort");
 
             services.AddSingleton<HttpHelper>();
+            services.AddSingleton<AWSSNSHelper>();
             services.AddSingleton<Log2File>();
 
             services.AddSingleton<CustInfoService>();
@@ -64,8 +66,6 @@ namespace CommonService
             services.AddSingleton<LiveStreamingBLL>();
             services.AddSingleton<OTPEmailBLL>();
             services.AddSingleton<Tools>();
-            services.Configure<Dictionary<string, AWSKeyConfig>>(Configuration.GetSection("SMSSupportConfig"));
-            services.AddSingleton<AWSSNSHelper>();
 
             services.AddControllers();
 
