@@ -166,7 +166,7 @@ namespace CommonService.Service.BLL
                 var exMsg = $"NxCloud - Exception error :{ex}";
                 apiResult.ErrorCode = ErrorCode.Fail;
                 apiResult.RawMessage = exMsg;
-                logger.LogError(exMsg);
+                logger.LogError(ex, exMsg);
                 oTPLog.OTPResponse = exMsg;
             }
 
