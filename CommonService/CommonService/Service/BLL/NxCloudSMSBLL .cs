@@ -27,19 +27,11 @@ namespace CommonService.Service.BLL
             this.selLangBLL = selLangBLL;
             this.logger = logger;
         }
-        public ApiResult<SendOTPSMSResult> GetOTPVerifyInfo(int custId)
-        {
-            var apiResult = new ApiResult<SendOTPSMSResult>();
-            SendOTPSMSResult result = sOTPSMSService.GetOTPVerifyinfo(custId);
-            apiResult.ErrorCode = (ErrorCode)(result.Status == 1 ? 0 : 1000);
-            apiResult.Data = result;
 
-            return apiResult;
-        }
         public ApiResult<SendOTPSMSResult> OTPVerifyinfoInsAsync(int custId, string sOTPNum)
         {
             var apiResult = new ApiResult<SendOTPSMSResult>();
-            SendOTPSMSResult result = sOTPSMSService.OTPVerifyinfoIns(custId, sOTPNum);
+            var result = sOTPSMSService.OTPVerifyinfoIns(custId, sOTPNum);
             apiResult.ErrorCode = (ErrorCode)result.Status;
             apiResult.Data = result;
 
@@ -49,16 +41,16 @@ namespace CommonService.Service.BLL
         public ApiResult VerifyOPT(VerifyOTPReq verifyOTPReq)
         {
             var apiResult = new ApiResult();
-            int result = sOTPSMSService.VerifyOTP(verifyOTPReq);
+            var result = sOTPSMSService.VerifyOTP(verifyOTPReq);
 
             apiResult.ErrorCode = (ErrorCode)(result);
             return apiResult;
         }
         public async Task<ApiResult<SendOTPSMSResult>> SendOTPSMSAsync(string PhoneNo, CustInfoProfile custInfo, int custId, string userLang)
         {
-            string OTPNum = tools.GetRandomNumString(6);
+            var OTPNum = tools.GetRandomNumString(6);
             var apiResult = new ApiResult<SendOTPSMSResult>();
-            ApiResult apiResult1 = await SendOTPSMSAsync(PhoneNo, OTPNum, custInfo, userLang, custId);
+            var apiResult1 = await SendOTPSMSAsync(PhoneNo, OTPNum, custInfo, userLang, custId);
             var apiResultSendOTP = apiResult1;
             //if send SMS Success
             if (apiResultSendOTP.ErrorCode == ErrorCode.Success)
@@ -75,10 +67,10 @@ namespace CommonService.Service.BLL
         }
         public string MakeSMSContext(CustInfoProfile custInfo, string OTPNum, string PhoneNo)
         {
-            string siteName = custInfo.SiteName;
-            string userLang = custInfo.UserLang;
-            string smsMessage = string.Format(selLangBLL.GetResourceValue("lbl_OTP", userLang), OTPNum);
-            string areaCode = custInfo.AreaCode;
+            var siteName = custInfo.SiteName;
+            var userLang = custInfo.UserLang;
+            var smsMessage = string.Format(selLangBLL.GetResourceValue("lbl_OTP", userLang), OTPNum);
+            var areaCode = custInfo.AreaCode;
             //lbl_OTP
             if (custInfo.SiteName.Equals("Bwing", StringComparison.OrdinalIgnoreCase) || custInfo.SiteName.Equals("Goal123", StringComparison.OrdinalIgnoreCase))
             {
@@ -99,7 +91,7 @@ namespace CommonService.Service.BLL
         {
             var apiResult = new ApiResult();
             var Config = NxcloudSMSServiceTypeConfig.Value[custInfo.SiteName].OTP;
-            string smsMessage = MakeSMSContext(custInfo, OTPNum, PhoneNo);
+            var smsMessage = MakeSMSContext(custInfo, OTPNum, PhoneNo);
             var oTPLog = new OTPLog()
             {
                 OTPStatus = (int)OTPStatus.Fail,
@@ -124,7 +116,7 @@ namespace CommonService.Service.BLL
                 };              
 
                 using var httpResponse = await httpHelper.HttpFromPostAsync(Config.ResourceURL, null, data, "application/x-www-form-urlencoded");
-                if (httpResponse != null && httpResponse.StatusCode == HttpStatusCode.OK)
+                if (httpResponse is { StatusCode: HttpStatusCode.OK })
                 {
                     var content = await httpResponse.Content.ReadAsStringAsync();
                     var responsjson = JsonConvert.DeserializeObject<Dictionary<string, object>>(content);
@@ -151,13 +143,13 @@ namespace CommonService.Service.BLL
                                 apiResult.ErrorCode = ErrorCode.PhoneError;
                                 oTPLog.OTPResponse = ErrorCode.PhoneError.ToString();
                             }
-                            logger.LogError($"NxCloud - {PhoneNo},{custInfo.UserName},{OTPNum},status:{code},reason:{result},messageid:{messageid}", $"{custInfo.SiteName}_OTP");
+                            logger.LogInformation($"NxCloud - {PhoneNo},{custInfo.UserName},{OTPNum},status:{code},reason:{result},messageid:{messageid}", $"{custInfo.SiteName}_OTP");
                         }
                     }
                     else
                     {
                         var msg = $"NxCloud - Error HttpStatus:{httpResponse.StatusCode} || {content}";
-                        logger.LogError(msg);
+                        logger.LogInformation(msg);
                         oTPLog.OTPResponse = msg;
                     }
                 }
@@ -165,7 +157,7 @@ namespace CommonService.Service.BLL
                 {
                     apiResult.ErrorCode = ErrorCode.Fail;
                     var httpErrorMsg = $"NxCloud - Http error code :{httpResponse.StatusCode}|| {httpResponse.ReasonPhrase}";
-                    logger.LogError(httpErrorMsg);
+                    logger.LogInformation(httpErrorMsg);
                     oTPLog.OTPResponse = httpErrorMsg;
                 }
             }
@@ -174,7 +166,7 @@ namespace CommonService.Service.BLL
                 var exMsg = $"NxCloud - Exception error :{ex}";
                 apiResult.ErrorCode = ErrorCode.Fail;
                 apiResult.RawMessage = exMsg;
-                logger.LogError(exMsg);
+                logger.LogError(ex, exMsg);
                 oTPLog.OTPResponse = exMsg;
             }
 

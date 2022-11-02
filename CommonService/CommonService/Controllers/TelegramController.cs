@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Threading.Tasks;
-using CommonService.Service.Library;
+﻿using CommonService.Service.Library;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace CommonService.Controllers
@@ -80,7 +73,7 @@ namespace CommonService.Controllers
                 var result = await _httpHelper.HttpPost1Async(url, null, parameters, "application/json");
                 if (!result.IsSuccessStatusCode)
                 {
-                    _logger.LogError($"StatusCode={result.StatusCode}, ReasonPhrase={result.ReasonPhrase}");
+                    _logger.LogInformation($"StatusCode={result.StatusCode}, ReasonPhrase={result.ReasonPhrase}");
                 }
                 return await result.Content.ReadAsStringAsync();
             }

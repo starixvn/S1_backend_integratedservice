@@ -1,6 +1,4 @@
 ﻿using System.Net;
-using Amazon;
-using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using CommonService.Service.DAL;
 using CommonService.Service.Library;
@@ -109,14 +107,14 @@ namespace CommonService.Service.BLL
         private async Task<ApiResult> SendSkyLineOTPSMSAsync(string PhoneNo, string OTPNum, CustInfoProfile custInfo, string userLang, int custId)
         {
             var apiResult = new ApiResult();
-            string areaCode = custInfo.AreaCode;
-            string dateTime = new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyyMMddHHmmss");
+            var areaCode = custInfo.AreaCode;
+            var dateTime = new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyyMMddHHmmss");
             var Config = _skyLineSmsServiceTypeConfig.Value[custInfo.SiteName].OTP;
-            string sign = MakeSignString(Config.Account, Config.Password, dateTime);
-            string url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
+            var sign = MakeSignString(Config.Account, Config.Password, dateTime);
+            var url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
 
-            string siteName = custInfo.SiteName;
-            string smsMessage = $"[{siteName}]{string.Format(_selLangBll.GetResourceValue("lbl_OTP", userLang), OTPNum)}";
+            var siteName = custInfo.SiteName;
+            var smsMessage = $"[{siteName}]{string.Format(_selLangBll.GetResourceValue("lbl_OTP", userLang), OTPNum)}";
 
             //lbl_OTP
             if (custInfo.SiteName.Equals("Bwing", StringComparison.OrdinalIgnoreCase) || custInfo.SiteName.Equals("Goal123", StringComparison.OrdinalIgnoreCase))
@@ -136,7 +134,7 @@ namespace CommonService.Service.BLL
                 smsMessage = string.Format(_selLangBll.GetResourceValue("lbl_OTP", userLang), siteName, OTPNum);
             }
 
-            Dictionary<string, string> AcknowledgeVerifySMS = new Dictionary<string, string>
+            var AcknowledgeVerifySMS = new Dictionary<string, string>
             {
                 { "content", smsMessage },
                 { "numbers", PhoneNo},
@@ -174,22 +172,22 @@ namespace CommonService.Service.BLL
                 }
                 else
                 {
-                    _log2File.Error($"SkyLine - {PhoneNo},{custInfo.UserName},{OTPNum},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_OTP");
-                    if (resultResp.status == -6 || resultResp.status == -7 || resultResp.status == -8 || resultResp.status == -9)//號碼錯誤傳5002給前端
+                    _log2File.Info($"SkyLine - {PhoneNo},{custInfo.UserName},{OTPNum},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_OTP");
+                    if (resultResp.status is -6 or -7 or -8 or -9)//號碼錯誤傳5002給前端
                     {
                         apiResult.ErrorCode = ErrorCode.PhoneError;
                         oTPLog.OTPResponse = ErrorCode.PhoneError.ToString();
                     }
                     else
                     {
-                        _logger.LogError($"SkyLine - Error HttpStatus = {result.StatusCode}\r\nRespstatus ={resultResp.status}\r\nRespMsg = {resultResp.reason}");
+                        _logger.LogInformation($"SkyLine - Error HttpStatus = {result.StatusCode}\r\nRespstatus ={resultResp.status}\r\nRespMsg = {resultResp.reason}");
                         apiResult.ErrorCode = ErrorCode.Fail;
                     }
                 }
             }
             else
             {
-                _log2File.Error($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_OTP");
+                _log2File.Info($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_OTP");
                 oTPLog.OTPResponse = $"SkyLine - Error HttpStatusCode : {result.StatusCode} || {result.ReasonPhrase}";
             }
 
@@ -200,15 +198,15 @@ namespace CommonService.Service.BLL
         public async Task<ApiResult> SendSkyLineSMSAsync(string PhoneNo, CustInfoProfile custInfo, string userLang, int custId)
         {
             var apiResult = new ApiResult();
-            string dateTime = new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyyMMddHHmmss");
+            var dateTime = new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyyMMddHHmmss");
             var Config = _skyLineSmsServiceTypeConfig.Value[custInfo.SiteName].SMS;
-            string sign = MakeSignString(Config.Account, Config.Password, dateTime);
-            string url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
+            var sign = MakeSignString(Config.Account, Config.Password, dateTime);
+            var url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
 
-            string siteName = custInfo.SiteName;
-            string smsMessage = $"[{siteName}]{_selLangBll.GetResourceValue("lbl_DepositReject", userLang)}  https://direct.lc.chat/11638088/";
+            var siteName = custInfo.SiteName;
+            var smsMessage = $"[{siteName}]{_selLangBll.GetResourceValue("lbl_DepositReject", userLang)}  https://direct.lc.chat/11638088/";
             
-            Dictionary<string, string> AcknowledgeVerifySMS = new Dictionary<string, string>
+            var AcknowledgeVerifySMS = new Dictionary<string, string>
             {
                 { "content", smsMessage },
                 { "numbers", PhoneNo},
@@ -245,22 +243,22 @@ namespace CommonService.Service.BLL
                 }
                 else
                 {
-                    _log2File.Error($"SkyLine - {PhoneNo},{custInfo.UserName},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_DepositRejectSMS");
-                    if (resultResp.status == -6 || resultResp.status == -7 || resultResp.status == -8 || resultResp.status == -9)//號碼錯誤傳5002給前端
+                    _log2File.Info($"SkyLine - {PhoneNo},{custInfo.UserName},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_DepositRejectSMS");
+                    if (resultResp.status is -6 or -7 or -8 or -9)//號碼錯誤傳5002給前端
                     {
                         apiResult.ErrorCode = ErrorCode.PhoneError;
                         oTPLog.OTPResponse = ErrorCode.PhoneError.ToString();
                     }
                     else
                     {
-                        _logger.LogError($"SkyLine - Error HttpStatus = {result.StatusCode}\r\nRespstatus ={resultResp.status}\r\nRespMsg = {resultResp.reason}");
+                        _logger.LogInformation($"SkyLine - Error HttpStatus = {result.StatusCode}\r\nRespstatus ={resultResp.status}\r\nRespMsg = {resultResp.reason}");
                         apiResult.ErrorCode = ErrorCode.Fail;
                     }
                 }
             }
             else
             {
-                _log2File.Error($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_DepositRejectSMS");
+                _log2File.Info($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_DepositRejectSMS");
                 oTPLog.OTPResponse = $"SkyLine - Error HttpStatus :{result.StatusCode} || {result.ReasonPhrase}";
             }
 
@@ -345,14 +343,14 @@ namespace CommonService.Service.BLL
                 }
                 else
                 {
-                    _logger.LogError($"YCOTP Fail - {phoneNo},{custInfo.UserName},{otpNum}, responseBody：{responseBody}, {siteName}_OTP");
+                    _logger.LogInformation($"YCOTP Fail - {phoneNo},{custInfo.UserName},{otpNum}, responseBody：{responseBody}, {siteName}_OTP");
                     apiResult.ErrorCode = ErrorCode.Fail;
                 }
             }
             else
             {
                 apiResult.ErrorCode = ErrorCode.Fail;
-                _logger.LogError($"YCOTP HttpRequest Fail -{phoneNo},{custInfo.UserName},{otpNum}, HttpStatusCode：{responseResult.StatusCode} , responseBody：{responseBody}, {siteName}_OTP");
+                _logger.LogInformation($"YCOTP HttpRequest Fail -{phoneNo},{custInfo.UserName},{otpNum}, HttpStatusCode：{responseResult.StatusCode} , responseBody：{responseBody}, {siteName}_OTP");
                 oTPLog.OTPResponse = $"{responseResult.StatusCode} || {responseResult.ReasonPhrase}";
             }
 

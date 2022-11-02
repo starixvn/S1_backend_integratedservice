@@ -13,7 +13,7 @@ public class AWSSNSHelper
     public AWSSNSHelper(IServiceProvider provider)
     {
         var configuration = provider.GetRequiredService<IConfiguration>();
-        var awsKeyConfig = provider.GetRequiredService<IOptions<Dictionary<string, AWSKeyConfig>>>().Value["ailab-sns"];
+        var awsKeyConfig = provider.GetRequiredService<IOptions<AWSKeyConfig>>();
         var proxyHost = configuration.GetValue<string>("ProxyHost");
         var proxyPort = configuration.GetValue<int>("ProxyPort");
 
@@ -28,7 +28,7 @@ public class AWSSNSHelper
             config.ProxyPort = proxyPort;
         }
 
-        _client = new AmazonSimpleNotificationServiceClient(awsKeyConfig.AccessKey, awsKeyConfig.SecretKey, config);
+        _client = new AmazonSimpleNotificationServiceClient(awsKeyConfig.Value.AccessKey, awsKeyConfig.Value.SecretKey, config);
         var attributes = new SetSMSAttributesRequest();
         attributes.Attributes.Add("DefaultSMSType", "Transactional");
         _client.SetSMSAttributesAsync(attributes);

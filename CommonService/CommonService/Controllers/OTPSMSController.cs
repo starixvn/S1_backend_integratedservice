@@ -88,7 +88,7 @@ namespace CommonService.Controllers
         [HttpPost]
         public ApiResult VerifyOTP(VerifyOTPReq verifyOTPReq)
         {
-            ApiResult apiResult = new ApiResult();
+            var apiResult = new ApiResult();
 
             try
             {
