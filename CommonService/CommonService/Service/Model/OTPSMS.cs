@@ -67,12 +67,6 @@
         public string Appkey { get; set; }
         public string Secretkey { get; set; }
     }
-    public class NxcloudSMSResponse
-    {
-        public string result { get; set; }
-        public string messageid { get; set; }
-        public string code { get; set; }
-    }
 
     public class OTPLog
     {

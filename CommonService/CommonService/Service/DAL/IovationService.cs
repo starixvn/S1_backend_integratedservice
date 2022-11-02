@@ -1,6 +1,5 @@
 ﻿using CommonService.Service.Model;
 using Dapper;
-using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using System.Data;
@@ -17,7 +16,7 @@ namespace CommonService.Service.DAL
         public int IovationResultIns(IovationResult iovationResult)
         {
             var deviceId = iovationResult?.details?.device?.alias;
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringLog"));
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringLog"));
             var p = new
             {
                 AccountCode = iovationResult.accountCode,

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace CommonService.Service.Model
+﻿namespace CommonService.Service.Model
 {
     public class SendGridResetPassword
     {

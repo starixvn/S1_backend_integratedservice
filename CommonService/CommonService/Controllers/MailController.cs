@@ -1,9 +1,6 @@
-﻿using System;
-using CommonService.Service.BLL;
+﻿using CommonService.Service.BLL;
 using CommonService.Service.Model;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
 
 namespace CommonService.Controllers
 {
@@ -35,7 +32,7 @@ namespace CommonService.Controllers
         [HttpPost]
         public async Task<ApiResult> SendWelcomeMailAsync(Req req)
         {
-            ApiResult apiResult = new ApiResult();
+            var apiResult = new ApiResult();
             var custInfo = custInfoBLL.GetCustInfoProfile(req.custId);
 
             if (custInfo != null)
@@ -45,14 +42,6 @@ namespace CommonService.Controllers
                 apiResult.ErrorCode = resultResp.ErrorCode;
                 apiResult.Message = resultResp.Message;
                 apiResult.RawMessage = resultResp.RawMessage;
-
-                //if (apiResult.ErrorCode == 0)
-                //{
-                //    resultResp = await sendXBLL.WelcomeMailAsync(custInfo);
-                //    apiResult.ErrorCode = resultResp.ErrorCode;
-                //    apiResult.Message = resultResp.Message;
-                //    apiResult.RawMessage = resultResp.RawMessage;
-                //}
             }
 
             return apiResult;
@@ -68,7 +57,7 @@ namespace CommonService.Controllers
         [HttpPost]
         public async Task<ApiResult> SendMailAsync(Req1 req)
         {
-            ApiResult apiResult = new ApiResult();
+            var apiResult = new ApiResult();
             var custInfo = custInfoBLL.GetCustInfoProfile(req.custId);
 
             if (custInfo != null)
@@ -78,14 +67,6 @@ namespace CommonService.Controllers
                 apiResult.ErrorCode = resultResp.ErrorCode;
                 apiResult.Message = resultResp.Message;
                 apiResult.RawMessage = resultResp.RawMessage;
-
-                //if (apiResult.ErrorCode == 0)
-                //{
-                //    resultResp = await sendXBLL.WelcomeMailAsync(custInfo);
-                //    apiResult.ErrorCode = resultResp.ErrorCode;
-                //    apiResult.Message = resultResp.Message;
-                //    apiResult.RawMessage = resultResp.RawMessage;
-                //}
             }
 
             return apiResult;
@@ -101,7 +82,7 @@ namespace CommonService.Controllers
         public async Task<ApiResult> RestPasswordAsync(Req2 req2)
         {
             logger.LogInformation(Newtonsoft.Json.JsonConvert.SerializeObject(req2));
-            ApiResult apiResult = new ApiResult();
+            var apiResult = new ApiResult();
             var custInfo = custInfoBLL.GetCustInfoProfile(req2.custId);
             if (custInfo != null)
             {
