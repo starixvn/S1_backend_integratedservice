@@ -124,7 +124,7 @@ namespace CommonService.Service.BLL
                 };              
 
                 using var httpResponse = await httpHelper.HttpFromPostAsync(Config.ResourceURL, null, data, "application/x-www-form-urlencoded");
-                if (httpResponse != null && httpResponse.StatusCode == HttpStatusCode.OK)
+                if (httpResponse is { StatusCode: HttpStatusCode.OK })
                 {
                     var content = await httpResponse.Content.ReadAsStringAsync();
                     var responsjson = JsonConvert.DeserializeObject<Dictionary<string, object>>(content);
