@@ -27,7 +27,7 @@ namespace CommonService.Service.BLL
         {
             var apiResult = new ApiResult<IovationCheckResult>();
 
-            Dictionary<string, dynamic> sendIovationChecks = new Dictionary<string, dynamic>
+            var sendIovationChecks = new Dictionary<string, dynamic>
             {
                 { "accountCode", iovationChecksRequest.accountCode },
                 { "blackbox", iovationChecksRequest.blackbox },
@@ -36,12 +36,12 @@ namespace CommonService.Service.BLL
                 { "type",iovationChecksRequest.type}
             };
 
-            string Authtoken = $"{iovationServicesConfig.Value.SubscriberID}/{iovationServicesConfig.Value.SubscriberAccount}:{iovationServicesConfig.Value.Password}";
-            byte[] bytes = System.Text.Encoding.GetEncoding("utf-8").GetBytes(Authtoken);
+            var Authtoken = $"{iovationServicesConfig.Value.SubscriberID}/{iovationServicesConfig.Value.SubscriberAccount}:{iovationServicesConfig.Value.Password}";
+            var bytes = System.Text.Encoding.GetEncoding("utf-8").GetBytes(Authtoken);
             //編成 Base64 字串
-            string Base64Authtoken = Convert.ToBase64String(bytes);
+            var Base64Authtoken = Convert.ToBase64String(bytes);
 
-            Dictionary<string, string> Authorization = new Dictionary<string, string>
+            var Authorization = new Dictionary<string, string>
             {
                 { "Authorization", $"Basic {Base64Authtoken}" }
             };

@@ -17,7 +17,7 @@ namespace CommonService.Service.DAL
         public int IovationResultIns(IovationResult iovationResult)
         {
             var deviceId = iovationResult?.details?.device?.alias;
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringLog"));
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringLog"));
             var p = new
             {
                 AccountCode = iovationResult.accountCode,

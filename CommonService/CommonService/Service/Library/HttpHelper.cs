@@ -50,7 +50,7 @@ namespace CommonService.Service.Library
             using var data = new StringContent(parameters, Encoding.UTF8, contentType);
             using var response = await client.PostAsync(url, data);
 
-            string result = response.Content.ReadAsStringAsync().Result;
+            var result = response.Content.ReadAsStringAsync().Result;
             _logger.LogInformation($"HttpHelper.Request.Response:{result}");
             return result;
         }
@@ -153,7 +153,7 @@ namespace CommonService.Service.Library
                 }
             }
 
-            UriBuilder builder = new UriBuilder(url)
+            var builder = new UriBuilder(url)
             {
                 Port = -1
             };
@@ -166,7 +166,7 @@ namespace CommonService.Service.Library
                 }
             }
             builder.Query = query.ToString();
-            string newurl = builder.ToString();
+            var newurl = builder.ToString();
             LogContext.PushProperty("HttpHelper.Request.URL", newurl);
             using var data = new HttpRequestMessage(HttpMethod.Get, newurl);
             var response = await client.SendAsync(data);

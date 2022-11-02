@@ -47,13 +47,13 @@ namespace CommonService.Service.BLL
         }
         public async Task<ApiResult> IdentifyAsync(CustInfoProfile custInfo)
         {
-            ApiResult apiResult = new ApiResult();
+            var apiResult = new ApiResult();
             var pattern = "^([0-9a-zA-Z]([-\\.\\w]*[0-9a-zA-Z])*@([0-9a-zA-Z][-\\w]*[0-9a-zA-Z]\\.)+[a-zA-Z]{2,9})$";
 
             if (!string.IsNullOrEmpty(custInfo.Email) && Regex.IsMatch(custInfo.Email, pattern))
             {
-                string url = $@"{sendXConfig.Value.basePath}/contact/identify?team_id={sendXConfig.Value.TeamId}";
-                IdentifyParams identifyParams = new IdentifyParams
+                var url = $@"{sendXConfig.Value.basePath}/contact/identify?team_id={sendXConfig.Value.TeamId}";
+                var identifyParams = new IdentifyParams
                 {
                     email = custInfo.Email,
                     firstName = custInfo.UserName,
@@ -95,10 +95,10 @@ namespace CommonService.Service.BLL
         }
         public async Task<ApiResult> WelcomeMailAsync(CustInfoProfile custInfo)
         {
-            ApiResult apiResult = new ApiResult();
+            var apiResult = new ApiResult();
 
-            string url = $@"{sendXConfig.Value.basePath}/contact/track?team_id={sendXConfig.Value.TeamId}&email={custInfo.Email}";
-            TrackParams trackParams = new TrackParams
+            var url = $@"{sendXConfig.Value.basePath}/contact/track?team_id={sendXConfig.Value.TeamId}&email={custInfo.Email}";
+            var trackParams = new TrackParams
             {
                 removeTags = new List<string>
             {

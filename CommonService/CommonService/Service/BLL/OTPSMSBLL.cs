@@ -109,14 +109,14 @@ namespace CommonService.Service.BLL
         private async Task<ApiResult> SendSkyLineOTPSMSAsync(string PhoneNo, string OTPNum, CustInfoProfile custInfo, string userLang, int custId)
         {
             var apiResult = new ApiResult();
-            string areaCode = custInfo.AreaCode;
-            string dateTime = new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyyMMddHHmmss");
+            var areaCode = custInfo.AreaCode;
+            var dateTime = new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyyMMddHHmmss");
             var Config = _skyLineSmsServiceTypeConfig.Value[custInfo.SiteName].OTP;
-            string sign = MakeSignString(Config.Account, Config.Password, dateTime);
-            string url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
+            var sign = MakeSignString(Config.Account, Config.Password, dateTime);
+            var url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
 
-            string siteName = custInfo.SiteName;
-            string smsMessage = $"[{siteName}]{string.Format(_selLangBll.GetResourceValue("lbl_OTP", userLang), OTPNum)}";
+            var siteName = custInfo.SiteName;
+            var smsMessage = $"[{siteName}]{string.Format(_selLangBll.GetResourceValue("lbl_OTP", userLang), OTPNum)}";
 
             //lbl_OTP
             if (custInfo.SiteName.Equals("Bwing", StringComparison.OrdinalIgnoreCase) || custInfo.SiteName.Equals("Goal123", StringComparison.OrdinalIgnoreCase))
@@ -136,7 +136,7 @@ namespace CommonService.Service.BLL
                 smsMessage = string.Format(_selLangBll.GetResourceValue("lbl_OTP", userLang), siteName, OTPNum);
             }
 
-            Dictionary<string, string> AcknowledgeVerifySMS = new Dictionary<string, string>
+            var AcknowledgeVerifySMS = new Dictionary<string, string>
             {
                 { "content", smsMessage },
                 { "numbers", PhoneNo},
@@ -200,15 +200,15 @@ namespace CommonService.Service.BLL
         public async Task<ApiResult> SendSkyLineSMSAsync(string PhoneNo, CustInfoProfile custInfo, string userLang, int custId)
         {
             var apiResult = new ApiResult();
-            string dateTime = new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyyMMddHHmmss");
+            var dateTime = new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyyMMddHHmmss");
             var Config = _skyLineSmsServiceTypeConfig.Value[custInfo.SiteName].SMS;
-            string sign = MakeSignString(Config.Account, Config.Password, dateTime);
-            string url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
+            var sign = MakeSignString(Config.Account, Config.Password, dateTime);
+            var url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
 
-            string siteName = custInfo.SiteName;
-            string smsMessage = $"[{siteName}]{_selLangBll.GetResourceValue("lbl_DepositReject", userLang)}  https://direct.lc.chat/11638088/";
+            var siteName = custInfo.SiteName;
+            var smsMessage = $"[{siteName}]{_selLangBll.GetResourceValue("lbl_DepositReject", userLang)}  https://direct.lc.chat/11638088/";
             
-            Dictionary<string, string> AcknowledgeVerifySMS = new Dictionary<string, string>
+            var AcknowledgeVerifySMS = new Dictionary<string, string>
             {
                 { "content", smsMessage },
                 { "numbers", PhoneNo},

@@ -47,12 +47,12 @@ namespace CommonService.Controllers
         [HttpPost]
         public async Task<ApiResult> IdentifyAsync(IdentifyReq identifyReq)
         {
-            ApiResult apiResult = new ApiResult();
+            var apiResult = new ApiResult();
             var custInfo = custInfoBLL.GetCustInfoProfile(identifyReq.custId);
             if (custInfo != null)
             {
-                string url = $@"{sendXConfig.Value.basePath}/contact/identify?team_id={sendXConfig.Value.TeamId}";
-                IdentifyParams identifyParams = new IdentifyParams();
+                var url = $@"{sendXConfig.Value.basePath}/contact/identify?team_id={sendXConfig.Value.TeamId}";
+                var identifyParams = new IdentifyParams();
                 identifyParams.email = custInfo.Email;
                 identifyParams.firstName = custInfo.UserName;
                 identifyParams.lastName = "";
@@ -81,14 +81,14 @@ namespace CommonService.Controllers
         [HttpPost]
         public async Task<ApiResult> trackAsync(TrackReq trackReq)
         {
-            ApiResult apiResult = new ApiResult();
+            var apiResult = new ApiResult();
             var custInfo = custInfoBLL.GetCustInfoProfile(trackReq.custId);
             //custInfo = new CustInfoProfile();
             //custInfo.Email = "celine.saw99@gmail.com";
             if (custInfo != null)
             {
-                string url = $@"{sendXConfig.Value.basePath}/contact/track?team_id={sendXConfig.Value.TeamId}&email={custInfo.Email}";
-                TrackParams trackParams = new TrackParams();
+                var url = $@"{sendXConfig.Value.basePath}/contact/track?team_id={sendXConfig.Value.TeamId}&email={custInfo.Email}";
+                var trackParams = new TrackParams();
                 trackParams.removeTags = new List<string>();
                 trackParams.removeTags.Add($"{custInfo.SiteName}_Welcome_{custInfo.UserLang}");
                 //trackParams.addTags.Add($"first sign up");

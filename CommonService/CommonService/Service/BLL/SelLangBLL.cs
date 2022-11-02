@@ -20,8 +20,8 @@ namespace CommonService.Service.BLL
         private string GetResourceValue(string key, string categoryId, string langId)
         {
             //
-            string labelString = string.Empty;
-            string sKey = $"{Assembly.GetExecutingAssembly().GetName().Name}.App_GlobalResources.{categoryId}_{langId}";
+            var labelString = string.Empty;
+            var sKey = $"{Assembly.GetExecutingAssembly().GetName().Name}.App_GlobalResources.{categoryId}_{langId}";
             if (!rm.ContainsKey(sKey))
             {
                 rm.TryAdd(sKey, new ResourceManager(sKey, Assembly.GetExecutingAssembly()));

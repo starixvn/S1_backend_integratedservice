@@ -15,8 +15,8 @@ namespace CommonService.Service.DAL
         }
         public SendOTPSMSResult GetOTPVerifyinfo(int custId, int type = 0)
         {
-            SendOTPSMSResult result = new SendOTPSMSResult();
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            var result = new SendOTPSMSResult();
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var p = new DynamicParameters(new { CustId = custId, _OTPType = type });
             p.Add("Request_id", dbType: DbType.String, direction: ParameterDirection.Output);
             p.Add("StartUnixTime", dbType: DbType.Int64, direction: ParameterDirection.Output);

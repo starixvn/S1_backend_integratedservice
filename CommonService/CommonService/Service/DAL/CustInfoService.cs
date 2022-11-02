@@ -19,7 +19,7 @@ namespace CommonService.Service.DAL
         }
         public CustInfoProfile GetCustInfoProfile(int custId)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.QueryFirstOrDefault<CustInfoProfile>("Service_CustProfile_Get", new { CustId = custId }, commandType: CommandType.StoredProcedure);
         }
     }

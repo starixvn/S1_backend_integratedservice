@@ -60,7 +60,7 @@ namespace CommonService.Controllers
             {
                 var url = _letsTalk["Common"]["SandMessageURL"];
                 var group = _letsTalk.ContainsKey(req.GroupName) ? _letsTalk[req.GroupName] : throw new Exception("GroupName");
-                string token = await GetLetsTalkToken(req.GroupName);
+                var token = await GetLetsTalkToken(req.GroupName);
                 if (string.IsNullOrEmpty(token))
                 {
                     throw new Exception("token");
@@ -129,7 +129,7 @@ namespace CommonService.Controllers
         {
             try
             {
-                Dictionary<string, string> header = new Dictionary<string, string> {
+                var header = new Dictionary<string, string> {
                     { "Authorization", $"Bearer {token}"}
                 };
                 var result = await _httpHelper.HttpPost1Async(url, header, parameters, "application/json");

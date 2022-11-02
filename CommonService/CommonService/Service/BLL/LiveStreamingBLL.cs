@@ -22,8 +22,8 @@ namespace CommonService.Service.BLL
         {
             var apiResult = new ApiResult();
             var config = liveStreamingConfig.Value[liveStreamingLinkReq.SiteName.Trim()];
-            string url = config.ApiURL;
-            Dictionary<string, string> liveStreaming = new Dictionary<string, string>
+            var url = config.ApiURL;
+            var liveStreaming = new Dictionary<string, string>
             {
                 { "action", config.Action },
                 { "apiuser", config.Apiuser},

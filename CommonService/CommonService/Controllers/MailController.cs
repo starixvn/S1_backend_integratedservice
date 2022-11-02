@@ -35,7 +35,7 @@ namespace CommonService.Controllers
         [HttpPost]
         public async Task<ApiResult> SendWelcomeMailAsync(Req req)
         {
-            ApiResult apiResult = new ApiResult();
+            var apiResult = new ApiResult();
             var custInfo = custInfoBLL.GetCustInfoProfile(req.custId);
 
             if (custInfo != null)
@@ -68,7 +68,7 @@ namespace CommonService.Controllers
         [HttpPost]
         public async Task<ApiResult> SendMailAsync(Req1 req)
         {
-            ApiResult apiResult = new ApiResult();
+            var apiResult = new ApiResult();
             var custInfo = custInfoBLL.GetCustInfoProfile(req.custId);
 
             if (custInfo != null)
@@ -101,7 +101,7 @@ namespace CommonService.Controllers
         public async Task<ApiResult> RestPasswordAsync(Req2 req2)
         {
             logger.LogInformation(Newtonsoft.Json.JsonConvert.SerializeObject(req2));
-            ApiResult apiResult = new ApiResult();
+            var apiResult = new ApiResult();
             var custInfo = custInfoBLL.GetCustInfoProfile(req2.custId);
             if (custInfo != null)
             {
