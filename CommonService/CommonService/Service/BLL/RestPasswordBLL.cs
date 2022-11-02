@@ -37,22 +37,25 @@ namespace CommonService.Service.BLL
             };
 
             var url = config.ApiUrl;
-            var sendGridResetPasswordBody = new SendGridResetPasswordBody();
-            sendGridResetPasswordBody.from = new NameEmail()
+            var sendGridResetPasswordBody = new SendGridResetPasswordBody
             {
-                name = config.mailFrom.name,
-                email = config.mailFrom.email
+                from = new NameEmail()
+                {
+                    name = config.mailFrom.name,
+                    email = config.mailFrom.email
+                },
+                personalizations = new List<ResetPasswordPersonalization>()
             };
-
-            sendGridResetPasswordBody.personalizations = new List<ResetPasswordPersonalization>();
 
             var resetPasswordPersonalization = new ResetPasswordPersonalization();
             sendGridResetPasswordBody.personalizations.Add(resetPasswordPersonalization);
 
             resetPasswordPersonalization.to = new List<NameEmail>();
-            var to = new NameEmail();
-            to.email = custInfo.Email;
-            to.name = custInfo.UserName;
+            var to = new NameEmail
+            {
+                email = custInfo.Email,
+                name = custInfo.UserName
+            };
             resetPasswordPersonalization.to.Add(to);
             var key = authBLL.ApplyToken(custInfo);
             var dynamicTemplateData = new DynamicTemplateData();

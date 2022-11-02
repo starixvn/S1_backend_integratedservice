@@ -60,9 +60,11 @@ namespace CommonService.Controllers
                     throw new Exception("token");
                 }
 
-                var data = new LetsTalkMsgParam();
-                data.msg = new LetsTalkMsgtext();
-                data.receiver = group["SandMessageRoomID"];
+                var data = new LetsTalkMsgParam
+                {
+                    msg = new LetsTalkMsgtext(),
+                    receiver = group["SandMessageRoomID"]
+                };
                 data.msg.type = "text";
                 data.msg.text = req.Message;
 

@@ -48,13 +48,14 @@ namespace CommonService.Controllers
             if (custInfo != null)
             {
                 var url = $@"{sendXConfig.Value.basePath}/contact/identify?team_id={sendXConfig.Value.TeamId}";
-                var identifyParams = new IdentifyParams();
-                identifyParams.email = custInfo.Email;
-                identifyParams.firstName = custInfo.UserName;
-                identifyParams.lastName = "";
-                identifyParams.userName = custInfo.UserName;
-                identifyParams.tags = new List<string>();
-                identifyParams.tags.Add($"{custInfo.SiteName}_Welcome_{custInfo.UserLang}");
+                var identifyParams = new IdentifyParams
+                {
+                    email = custInfo.Email,
+                    firstName = custInfo.UserName,
+                    lastName = "",
+                    userName = custInfo.UserName,
+                    tags = new List<string> { $"{custInfo.SiteName}_Welcome_{custInfo.UserLang}" }
+                };
                 var result = await httpHelper.HttpPostAsync(url, headerParams, JsonConvert.SerializeObject(identifyParams), "application/json");
                 apiResult.ErrorCode = 0;
                 apiResult.RawMessage = result;
@@ -84,17 +85,19 @@ namespace CommonService.Controllers
             if (custInfo != null)
             {
                 var url = $@"{sendXConfig.Value.basePath}/contact/track?team_id={sendXConfig.Value.TeamId}&email={custInfo.Email}";
-                var trackParams = new TrackParams();
-                trackParams.removeTags = new List<string>();
-                trackParams.removeTags.Add($"{custInfo.SiteName}_Welcome_{custInfo.UserLang}");
+                var trackParams = new TrackParams
+                {
+                    removeTags = new List<string> { $"{custInfo.SiteName}_Welcome_{custInfo.UserLang}" }
+                };
                 //trackParams.addTags.Add($"first sign up");
                 var result = await httpHelper.HttpPostAsync(url, headerParams, JsonConvert.SerializeObject(trackParams), "application/json");
 
-                trackParams = new TrackParams();
-                //trackParams.removeTags = new List<string>();
-                //trackParams.removeTags.Add($"internal test");
-                trackParams.addTags = new List<string>();
-                trackParams.addTags.Add($"{custInfo.SiteName}_Welcome_{custInfo.UserLang}");
+                trackParams = new TrackParams
+                {
+                    //trackParams.removeTags.Add($"internal test");
+                    //trackParams.removeTags = new List<string>();
+                    addTags = new List<string> { $"{custInfo.SiteName}_Welcome_{custInfo.UserLang}" }
+                };
                 //trackParams.addTags.Add($"first sign up");
                 result = await httpHelper.HttpPostAsync(url, headerParams, JsonConvert.SerializeObject(trackParams), "application/json");
 

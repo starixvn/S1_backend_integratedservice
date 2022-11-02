@@ -68,14 +68,16 @@ namespace CommonService.Service.BLL
             };
 
             var url = config.ApiUrl;
-            var sendMailBody = new SendMailBody();
-            sendMailBody.from = new From()
+            var sendMailBody = new SendMailBody
             {
-                name = config.mailFrom.name,
-                email = config.mailFrom.email
+                from = new From()
+                {
+                    name = config.mailFrom.name,
+                    email = config.mailFrom.email
+                },
+                personalizations = new List<Personalization>()
             };
 
-            sendMailBody.personalizations = new List<Personalization>();
             var personalization = new Personalization();
             sendMailBody.personalizations.Add(personalization);
             personalization.subject = subject;
