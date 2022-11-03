@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using CommonService.Service.Library;
+﻿using CommonService.Service.Library;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace CommonService.Controllers
@@ -60,15 +54,17 @@ namespace CommonService.Controllers
             {
                 var url = _letsTalk["Common"]["SandMessageURL"];
                 var group = _letsTalk.ContainsKey(req.GroupName) ? _letsTalk[req.GroupName] : throw new Exception("GroupName");
-                string token = await GetLetsTalkToken(req.GroupName);
+                var token = await GetLetsTalkToken(req.GroupName);
                 if (string.IsNullOrEmpty(token))
                 {
                     throw new Exception("token");
                 }
 
-                var data = new LetsTalkMsgParam();
-                data.msg = new LetsTalkMsgtext();
-                data.receiver = group["SandMessageRoomID"];
+                var data = new LetsTalkMsgParam
+                {
+                    msg = new LetsTalkMsgtext(),
+                    receiver = group["SandMessageRoomID"]
+                };
                 data.msg.type = "text";
                 data.msg.text = req.Message;
 
@@ -108,12 +104,12 @@ namespace CommonService.Controllers
                     }
                     else
                     {
-                        _logger.LogError($"httpResult error URL : {url} Result:{ContentResult} ");
+                        _logger.LogInformation($"httpResult error URL : {url} Result:{ContentResult} ");
                     }
                 }
                 else
                 {
-                    _logger.LogError($"httpResponse error URL : {url} parameters:{parameters} StatusCode: {result.StatusCode}");
+                    _logger.LogInformation($"httpResponse error URL : {url} parameters:{parameters} StatusCode: {result.StatusCode}");
                 }
 
             }
@@ -129,13 +125,13 @@ namespace CommonService.Controllers
         {
             try
             {
-                Dictionary<string, string> header = new Dictionary<string, string> {
+                var header = new Dictionary<string, string> {
                     { "Authorization", $"Bearer {token}"}
                 };
                 var result = await _httpHelper.HttpPost1Async(url, header, parameters, "application/json");
                 if (!result.IsSuccessStatusCode)
                 {
-                    _logger.LogError($"StatusCode={result.StatusCode}, ReasonPhrase={result.ReasonPhrase}");
+                    _logger.LogInformation($"StatusCode={result.StatusCode}, ReasonPhrase={result.ReasonPhrase}");
                 }
                 return await result.Content.ReadAsStringAsync();
             }

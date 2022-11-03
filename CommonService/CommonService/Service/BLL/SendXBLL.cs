@@ -1,14 +1,9 @@
 ﻿using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace CommonService.Service.BLL
 {
@@ -47,13 +42,13 @@ namespace CommonService.Service.BLL
         }
         public async Task<ApiResult> IdentifyAsync(CustInfoProfile custInfo)
         {
-            ApiResult apiResult = new ApiResult();
+            var apiResult = new ApiResult();
             var pattern = "^([0-9a-zA-Z]([-\\.\\w]*[0-9a-zA-Z])*@([0-9a-zA-Z][-\\w]*[0-9a-zA-Z]\\.)+[a-zA-Z]{2,9})$";
 
             if (!string.IsNullOrEmpty(custInfo.Email) && Regex.IsMatch(custInfo.Email, pattern))
             {
-                string url = $@"{sendXConfig.Value.basePath}/contact/identify?team_id={sendXConfig.Value.TeamId}";
-                IdentifyParams identifyParams = new IdentifyParams
+                var url = $@"{sendXConfig.Value.basePath}/contact/identify?team_id={sendXConfig.Value.TeamId}";
+                var identifyParams = new IdentifyParams
                 {
                     email = custInfo.Email,
                     firstName = custInfo.UserName,
@@ -92,44 +87,6 @@ namespace CommonService.Service.BLL
             public List<string> addTags { get; set; }
             [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public List<string> removeTags { get; set; }
-        }
-        public async Task<ApiResult> WelcomeMailAsync(CustInfoProfile custInfo)
-        {
-            ApiResult apiResult = new ApiResult();
-
-            string url = $@"{sendXConfig.Value.basePath}/contact/track?team_id={sendXConfig.Value.TeamId}&email={custInfo.Email}";
-            TrackParams trackParams = new TrackParams
-            {
-                removeTags = new List<string>
-            {
-                $"{custInfo.SiteName}_Welcome_{custInfo.UserLang}"
-            }
-            };
-            var result = await httpHelper.HttpPostAsync(url, headerParams, JsonConvert.SerializeObject(trackParams), "application/json");
-
-            trackParams = new TrackParams
-            {
-                addTags = new List<string>
-            {
-                $"{custInfo.SiteName}_Welcome_{custInfo.UserLang}"
-            }
-            };
-            result = await httpHelper.HttpPostAsync(url, headerParams, JsonConvert.SerializeObject(trackParams), "application/json");
-
-            var resultResp = JsonConvert.DeserializeObject<Result>(result);
-
-            if (resultResp.status == 200)
-            {
-                apiResult.ErrorCode = 0;
-                apiResult.RawMessage = resultResp.message;
-            }
-            else
-            {
-                apiResult.ErrorCode = ErrorCode.Fail;
-                apiResult.Message = resultResp.message;
-                apiResult.RawMessage = resultResp.message;
-            }
-            return apiResult;
         }
     }
 }

@@ -9,5 +9,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface
         Task<AMBSlotBetResponse> SlotBet(AMBSlotBetRequest request);
         Task<AMBSlotPayoutResponse> SlotPayout(AMBSlotPayoutRequest request);
         Task<AMBSlotCancelResponse> SlotCancel(AMBSlotCancelRequest request);
+        Task<AMBSlotSettleResponse> SlotSettle(AMBSlotSettleRequest request);
     }
 }

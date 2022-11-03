@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace CommonService.Service.Model
+﻿namespace CommonService.Service.Model
 {
     public class FPSServicesConfig
     {
@@ -21,10 +18,5 @@ namespace CommonService.Service.Model
         public string userAgent { get; set; }
         public string screen { get; set; }
         public string di { get; set; }
-    }
-
-    public class FPSResult
-    {
-        public string message { get; set; }
     }
 }

@@ -3,8 +3,6 @@ using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using static CommonService.Service.Model.SendGridResetPassword;
 
 namespace CommonService.Service.BLL
@@ -25,7 +23,7 @@ namespace CommonService.Service.BLL
         }
         public async Task<ApiResult> SendMailAsync(CustInfoProfile custInfo, string resetPasswordUrl)
         {
-            ApiResult apiResult = new ApiResult();
+            var apiResult = new ApiResult();
 
             if (!sendGridConfig.Value.ContainsKey(custInfo.SiteName))
             {
@@ -34,30 +32,33 @@ namespace CommonService.Service.BLL
 
             var config = sendGridConfig.Value[custInfo.SiteName];
 
-            Dictionary<string, string> headerParams = new Dictionary<string, string> {
+            var headerParams = new Dictionary<string, string> {
                 { "Authorization", $"Bearer {config.ApiKey}"}
             };
 
-            string url = config.ApiUrl;
-            SendGridResetPasswordBody sendGridResetPasswordBody = new SendGridResetPasswordBody();
-            sendGridResetPasswordBody.from = new NameEmail()
+            var url = config.ApiUrl;
+            var sendGridResetPasswordBody = new SendGridResetPasswordBody
             {
-                name = config.mailFrom.name,
-                email = config.mailFrom.email
+                from = new NameEmail()
+                {
+                    name = config.mailFrom.name,
+                    email = config.mailFrom.email
+                },
+                personalizations = new List<ResetPasswordPersonalization>()
             };
 
-            sendGridResetPasswordBody.personalizations = new List<ResetPasswordPersonalization>();
-
-            ResetPasswordPersonalization resetPasswordPersonalization = new ResetPasswordPersonalization();
+            var resetPasswordPersonalization = new ResetPasswordPersonalization();
             sendGridResetPasswordBody.personalizations.Add(resetPasswordPersonalization);
 
             resetPasswordPersonalization.to = new List<NameEmail>();
-            NameEmail to = new NameEmail();
-            to.email = custInfo.Email;
-            to.name = custInfo.UserName;
+            var to = new NameEmail
+            {
+                email = custInfo.Email,
+                name = custInfo.UserName
+            };
             resetPasswordPersonalization.to.Add(to);
             var key = authBLL.ApplyToken(custInfo);
-            DynamicTemplateData dynamicTemplateData = new DynamicTemplateData();
+            var dynamicTemplateData = new DynamicTemplateData();
             resetPasswordUrl ??= config.ResetPasswordUrl;
             dynamicTemplateData.resetpwdurl = $"{resetPasswordUrl}?key={key}";
             resetPasswordPersonalization.dynamic_template_data = dynamicTemplateData;
