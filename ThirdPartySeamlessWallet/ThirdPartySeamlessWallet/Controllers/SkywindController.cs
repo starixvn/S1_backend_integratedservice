@@ -321,7 +321,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, req.cust_id, gameType);
 
             result.error_code = (int)SkywindErrorCode.NoErrors;
-            result.balance = tpCustBalance.Balance;
+            result.balance = Math.Truncate(tpCustBalance.Balance);
             result.currency_code = tpCurrency.TpCurrencyId;
 
             return result;
@@ -360,7 +360,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             else if (req.amount < 0)
             {
                 var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, req.cust_id, gameType);
-                result.balance = tpCustBalance.Balance;
+                result.balance = Math.Truncate(tpCustBalance.Balance);
                 result.error_code = (int)SkywindErrorCode.InsufficientBalance;
                 result.error_msg = SkywindErrorCode.InsufficientBalance.ToString();
                 logger.LogError($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(result)}\r\n Stake < 0");
@@ -394,13 +394,13 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 if (bettingBLL.PlaceBet_Skywind(tpCustInfo, betReq, gameType, out decimal tpAffterAmount) > 0)
                 {
-                    result.balance = tpAffterAmount;
+                    result.balance = Math.Truncate(tpAffterAmount);
                     result.error_code = (int)SkywindErrorCode.NoErrors;
                     result.trx_id = req.trx_id;
                 }
                 else
                 {
-                    result.balance = tpAffterAmount;
+                    result.balance = Math.Truncate(tpAffterAmount);
                     result.error_code = (int)SkywindErrorCode.MerchantInternalError;
                     result.trx_id = req.trx_id;
                 }
@@ -458,21 +458,21 @@ namespace ThirdPartySeamlessWallet.Controllers
                 if (SettleResult > 0)
                 {
                     result.error_code = (int)SkywindErrorCode.NoErrors;
-                    result.balance = tpAffterAmount;
+                    result.balance = Math.Truncate(tpAffterAmount);
                     result.trx_id = req.trx_id;
                     logger.LogInformation($"{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}");
                 }
                 else if (SettleResult == -1)
                 {
                     result.error_code = (int)SkywindErrorCode.DuplicateTransaction;
-                    result.balance = tpAffterAmount;
+                    result.balance = Math.Truncate(tpAffterAmount);
                     result.trx_id = req.trx_id;
                     logger.LogInformation($"{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}");
                 }
                 else
                 {
                     result.error_code = (int)SkywindErrorCode.MerchantInternalError;
-                    result.balance = tpAffterAmount;
+                    result.balance = Math.Truncate(tpAffterAmount);
                     result.trx_id = req.trx_id;
                     logger.LogError($"{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}");
                 }
@@ -527,7 +527,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 if (cancelresult > 0)
                 {
                     result.error_code = (int)SkywindErrorCode.NoErrors;
-                    result.balance = tpAffterAmount;
+                    result.balance = Math.Truncate(tpAffterAmount);
                     result.trx_id = req.trx_id;
                     logger.LogInformation($"{JsonConvert.SerializeObject(result)}\r\n cancelresult:{cancelresult}");
                     return result;
@@ -535,7 +535,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else if (cancelresult == -1)
                 {
                     result.error_code = (int)SkywindErrorCode.DuplicateTransaction;
-                    result.balance = tpAffterAmount;
+                    result.balance = Math.Truncate(tpAffterAmount);
                     result.trx_id = req.trx_id;
                     logger.LogInformation($"{JsonConvert.SerializeObject(result)}\r\n cancelresult:{cancelresult}");
                     return result;
@@ -543,7 +543,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else if (cancelresult == -2)
                 {
                     result.error_code = (int)SkywindErrorCode.TransactionNotFound;
-                    result.balance = tpAffterAmount;
+                    result.balance = Math.Truncate(tpAffterAmount);
                     result.trx_id = req.trx_id;
                     logger.LogError($"{JsonConvert.SerializeObject(result)}\r\n cancelresult:{cancelresult}");
                     return result;
