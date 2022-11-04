@@ -73,31 +73,6 @@ namespace ThirdPartyWager.Service.BLL
                     continue;
                 var details = data.Split(",");
 
-                //if (details.Count() == 17)
-                //{
-                //    result.Add(new WagerKiss918Model()
-                //    {
-                //        playerID = Convert.ToInt32(details[0]),
-                //        extplayerID = Convert.ToInt32(details[1]),
-                //        gameID = details[2].Trim('"'),
-                //        methodType = details[3].Trim('"'),
-                //        playSessionID = details[4].Trim('"'),
-                //        referenceID = details[5].Trim('"'),
-                //        status = details[6].Trim('"'),
-                //        created = DateTime.ParseExact(details[7].Trim('"'), "yyyy-MM-dd HH:mm:ss.fff", null),
-                //        updated = DateTime.ParseExact(details[8].Trim('"'), "yyyy-MM-dd HH:mm:ss.fff", null),
-                //        betAmount = Convert.ToDecimal(details[9]),
-                //        winAmount = Convert.ToDecimal(details[10]),
-                //        jackpotModule = Convert.ToInt32(details[11]),
-                //        jackpotContributionAmt = Convert.ToDecimal(details[12]),
-                //        currency = details[13].Trim('"'),
-                //        resultUrl = details[14].Trim('"'),
-                //        roundDetails = details[15].Trim('"'),
-                //        platform = details[16].Trim('"')
-                //    });
-                //}
-                //else
-                //{
                 result.Add(new WagerKiss918Model()
                 {
                     playerID = Convert.ToInt32(details[0]),
@@ -116,10 +91,8 @@ namespace ThirdPartyWager.Service.BLL
                     currency = details[13].Trim('"'),
                     resultUrl = details[14].Trim('"'),
                     roundDetails = ConvertRoundDetails(15, details.Length - 1, details),
-                    //platform = details[details.Length - 1].Trim('"')
-                    platform = "MOBILE"
+                    platform = ConvertPlatform(details[details.Length - 1].Trim('"'))
                 });
-                //}
             }
             return result;
         }
@@ -132,6 +105,14 @@ namespace ThirdPartyWager.Service.BLL
                 result = result + details[i].Trim('"') + ",";
             }
             return result.Trim(',');
+        }
+
+        private string ConvertPlatform(string value)
+        {
+            if (value.Contains("MOBILE")) return "MOBILE";
+            else if (value.Contains("WEB")) return "WEB";
+            else if (value.Contains("DOWNLOAD")) return "DOWNLOAD";
+            else  return value;
         }
 
         protected async Task<string> HttpGet(string url,
