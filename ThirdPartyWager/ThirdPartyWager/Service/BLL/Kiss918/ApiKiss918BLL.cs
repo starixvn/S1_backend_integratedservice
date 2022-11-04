@@ -130,7 +130,7 @@ namespace ThirdPartyWager.Service.BLL
             {
                 result = result + details[i].Trim('"') + ",";
             }
-            return result;
+            return result.Trim(',');
         }
 
         protected async Task<string> HttpGet(string url,
