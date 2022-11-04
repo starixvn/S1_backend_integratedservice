@@ -71,7 +71,7 @@ namespace ThirdPartyWager.Service.BLL
             {
                 if (string.IsNullOrWhiteSpace(data))
                     continue;
-                var details = data.Split(",");
+                var details = data.Split(",\"");
 
                 result.Add(new WagerKiss918Model()
                 {
