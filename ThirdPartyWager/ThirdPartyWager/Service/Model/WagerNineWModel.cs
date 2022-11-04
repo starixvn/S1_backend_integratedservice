@@ -128,7 +128,8 @@ namespace ThirdPartyWager.Service.Model.NineW
             eventId = reSettleBet.eventId;
             marketName = reSettleBet.marketName;
             marketId = reSettleBet.marketId;
-            
+            currencyType = reSettleBet.currencyType;
+
             //將ReSettleBet欄位對應至SettleBet
             matchSettledDate = reSettleBet.resettledDate;
             profitLoss = reSettleBet.profitLoss;
@@ -146,6 +147,64 @@ namespace ThirdPartyWager.Service.Model.NineW
             selectionName = detail.selectionName;
             matchType = detail.matchType;
             matchOddsReq = detail.txOddsMatched;
+        }
+
+        public SettleBet(MatchedResult unSettleBet)
+        {
+            userId = unSettleBet.userId;
+            agentId = unSettleBet.agentId;
+            categoryType = unSettleBet.categoryType;
+            eventType = unSettleBet.eventType;
+            eventTypeName = unSettleBet.eventTypeName;
+            eventName = unSettleBet.eventName;
+            eventId = unSettleBet.eventId;
+            marketName = unSettleBet.marketName;
+            marketId = unSettleBet.marketId;
+            betId = unSettleBet.betId;
+            betStatus = unSettleBet.betStatus;
+            selectionName = unSettleBet.selectionName;
+            selectionId = unSettleBet.selectionId;
+            matchType = unSettleBet.matchType;     
+            matchSettledDate = default;
+            profitLoss = default;          
+            oddsType = unSettleBet.oddsType;
+            betPlaced = unSettleBet.betPlaced;
+            site = unSettleBet.site;
+            currencyType = unSettleBet.currencyType;
+
+            var detail = unSettleBet.transactionData?.First();
+            if (detail == null)
+            {
+                throw new Exception($"NineW ReSettleBet to  SettleBet Exception：transactionData is null.");
+            }
+            matchStake = detail.txStake;
+            matchOddsReq = detail.txOddsMatched;           
+        }
+
+        public SettleBet(UnmatchedResult unSettleBet)
+        {
+            userId = unSettleBet.userId;
+            agentId = unSettleBet.agentId;
+            categoryType = unSettleBet.categoryType;
+            eventType = unSettleBet.eventType;
+            eventTypeName = unSettleBet.eventTypeName;
+            eventName = unSettleBet.eventName;
+            eventId = unSettleBet.eventId;
+            marketName = unSettleBet.marketName;
+            marketId = unSettleBet.marketId;
+            betId = unSettleBet.betId;
+            betStatus = unSettleBet.betStatus;
+            selectionName = unSettleBet.selectionName;
+            selectionId = unSettleBet.selectionId;
+            matchType = unSettleBet.matchType;
+            matchSettledDate = default;
+            profitLoss = default;
+            oddsType = unSettleBet.oddsType;
+            betPlaced = unSettleBet.betPlaced;
+            matchStake = default;
+            matchOddsReq = default;
+            site = unSettleBet.site;
+            currencyType = unSettleBet.currencyType;
         }
     }
 
