@@ -79,6 +79,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerKMService>();
             services.AddSingleton<WagerMPService>();
             services.AddSingleton<WagerEVOService>();
+            services.AddSingleton<WagerGPIService>();
             services.AddSingleton<IWagerSBOService, WagerSBOService>();
             services.AddSingleton<TpUnsettleService>();
             services.AddSingleton<ConfigService>();
@@ -225,6 +226,9 @@ namespace ThirdPartyWager
             //Skywind
             services.AddSingleton<ApiSkywindBLL>();
             services.AddSingleton<WagerSkywindBLL>();
+            //GPI
+            services.AddSingleton<WagerGPIBLL>();
+            services.AddSingleton<ApiGPIBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -304,7 +308,9 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerRedoKiss918>();
             services.AddHostedService<WagerSkywind>();
             services.AddHostedService<WagerKiss918>();
-            services.AddHostedService<WagerUnsettleCheckSkywind>();
+            services.AddHostedService<WagerGPI>();
+            services.AddHostedService<WagerRedoGPI>();
+            //services.AddHostedService<WagerUnsettleCheckSkywind>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

@@ -56,6 +56,7 @@
         Allbet_LiveCasino = 6,
         AG_LiveCasino = 8,
         SA_LiveCasino = 9,
+        GPI_RNG = 11,
         One789_Lottery = 35,
         One789_Lottery_789 = 36,
         One789_LiveCasino = 37,
@@ -76,6 +77,10 @@
         Skywind_LiveCasino = 84,
         Skywind_Fish = 85,
         SimplePlay_RNG = 86,
+        GPI_Keno = 88,
+        GPI_Sode = 89,
+        GPI_Thai_Lottery = 90,
+        GPI_Fast3 = 91,
     }
 
 	 public enum SettlementType
