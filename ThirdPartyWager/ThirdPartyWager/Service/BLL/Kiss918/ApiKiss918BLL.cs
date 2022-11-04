@@ -116,7 +116,8 @@ namespace ThirdPartyWager.Service.BLL
                     currency = details[13].Trim('"'),
                     resultUrl = details[14].Trim('"'),
                     roundDetails = ConvertRoundDetails(15, details.Length - 1, details),
-                    platform = details[details.Length - 1].Trim('"')
+                    //platform = details[details.Length - 1].Trim('"')
+                    platform = "MOBILE"
                 });
                 //}
             }
