@@ -71,8 +71,33 @@ namespace ThirdPartyWager.Service.BLL
             {
                 if (string.IsNullOrWhiteSpace(data))
                     continue;
-                var details = data.Split(",\"");
+                var details = data.Split(",");
 
+                //if (details.Count() == 17)
+                //{
+                //    result.Add(new WagerKiss918Model()
+                //    {
+                //        playerID = Convert.ToInt32(details[0]),
+                //        extplayerID = Convert.ToInt32(details[1]),
+                //        gameID = details[2].Trim('"'),
+                //        methodType = details[3].Trim('"'),
+                //        playSessionID = details[4].Trim('"'),
+                //        referenceID = details[5].Trim('"'),
+                //        status = details[6].Trim('"'),
+                //        created = DateTime.ParseExact(details[7].Trim('"'), "yyyy-MM-dd HH:mm:ss.fff", null),
+                //        updated = DateTime.ParseExact(details[8].Trim('"'), "yyyy-MM-dd HH:mm:ss.fff", null),
+                //        betAmount = Convert.ToDecimal(details[9]),
+                //        winAmount = Convert.ToDecimal(details[10]),
+                //        jackpotModule = Convert.ToInt32(details[11]),
+                //        jackpotContributionAmt = Convert.ToDecimal(details[12]),
+                //        currency = details[13].Trim('"'),
+                //        resultUrl = details[14].Trim('"'),
+                //        roundDetails = details[15].Trim('"'),
+                //        platform = details[16].Trim('"')
+                //    });
+                //}
+                //else
+                //{
                 result.Add(new WagerKiss918Model()
                 {
                     playerID = Convert.ToInt32(details[0]),
@@ -90,9 +115,20 @@ namespace ThirdPartyWager.Service.BLL
                     jackpotContributionAmt = Convert.ToDecimal(details[12]),
                     currency = details[13].Trim('"'),
                     resultUrl = details[14].Trim('"'),
-                    roundDetails = details[15].Trim('"'),
-                    platform = details[16].Trim('"')
+                    roundDetails = ConvertRoundDetails(15, details.Length - 1, details),
+                    platform = details[details.Length - 1].Trim('"')
                 });
+                //}
+            }
+            return result;
+        }
+
+        private string ConvertRoundDetails(int fromIndex, int lastIndex, string[] details)
+        {
+            var result = string.Empty;
+            for (var i = fromIndex; i < lastIndex; i++)
+            {
+                result = result + details[i].Trim('"') + ",";
             }
             return result;
         }
