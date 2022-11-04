@@ -199,7 +199,7 @@ namespace ThirdPartySettleWorker.Workers
             }
 
             var stake = bettrans.Stake;
-            var winLost = Math.Round(bettrans.WinLostAmount, 1);
+            var winLost = Math.Round(bettrans.WinLostAmount, 1, MidpointRounding.AwayFromZero);
             return stake == targetStake && winLost == targetWinLost;
         }
     }
