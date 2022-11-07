@@ -1,13 +1,5 @@
-using System;
-using System.Configuration;
 using System.Net;
-using System.Net.Http;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using StackExchange.Redis;
 using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Extensions.ActionFilters;
 using ThirdPartySeamlessWallet.Service.BLL;
@@ -18,7 +10,6 @@ using ThirdPartySeamlessWallet.Service.DAL.Interface;
 using ThirdPartySeamlessWallet.Service.DAL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model.Options;
-using ThirdPartySeamlessWallet.Service.Workers;
 
 namespace ThirdPartySeamlessWallet
 {
@@ -65,6 +56,9 @@ namespace ThirdPartySeamlessWallet
             services.AddHttpClient();
             services.AddMvc().AddXmlSerializerFormatters();
             services.AddDatabaseConnection(Configuration);
+            services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(Configuration.GetValue<string>("RedisConnection")));
+            services.AddSingleton<ICacheHelper, RedisCacheHelper>();
+
             /*Library*/
             services.AddSingleton<Tools>();
             services.AddSingleton<HttpHelper>();
