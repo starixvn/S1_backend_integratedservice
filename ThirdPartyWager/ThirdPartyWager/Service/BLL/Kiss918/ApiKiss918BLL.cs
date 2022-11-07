@@ -90,11 +90,29 @@ namespace ThirdPartyWager.Service.BLL
                     jackpotContributionAmt = Convert.ToDecimal(details[12]),
                     currency = details[13].Trim('"'),
                     resultUrl = details[14].Trim('"'),
-                    roundDetails = details[15].Trim('"'),
-                    platform = details[16].Trim('"')
+                    roundDetails = ConvertRoundDetails(15, details.Length - 1, details),
+                    platform = ConvertPlatform(details[details.Length - 1].Trim('"'))
                 });
             }
             return result;
+        }
+
+        private string ConvertRoundDetails(int fromIndex, int lastIndex, string[] details)
+        {
+            var result = string.Empty;
+            for (var i = fromIndex; i < lastIndex; i++)
+            {
+                result = result + details[i].Trim('"') + ",";
+            }
+            return result.Trim(',');
+        }
+
+        private string ConvertPlatform(string value)
+        {
+            if (value.Contains("MOBILE")) return "MOBILE";
+            else if (value.Contains("WEB")) return "WEB";
+            else if (value.Contains("DOWNLOAD")) return "DOWNLOAD";
+            else  return value;
         }
 
         protected async Task<string> HttpGet(string url,
