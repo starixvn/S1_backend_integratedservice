@@ -27,7 +27,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public TpCustBalance GetBalanceByHalfSecCache(int tpId, string tpUserName, int gameType = 0)
         {
             var tpCustBalance = _redisHelper.TryGetOrCreate(
-                $"TpCustBalance_{tpId}_{tpUserName}", 
+                $"TpCustBalance:{tpId}:{tpUserName}", 
                 TimeSpan.FromSeconds(0.5),
                 () => GetBalance(tpId, tpUserName, gameType),
                 RedisDataBase.Shared);
@@ -58,7 +58,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public TpCustInfo GetTpCustInfoWithCache(int tpId, string tpUserName)
         {
             var tpCustInfo = _redisHelper.TryGetOrCreate(
-                $"TpCustInfo_{tpId}_{tpUserName}", 
+                $"TpCustInfo:{tpId}:{tpUserName}", 
                 TimeSpan.FromMinutes(1),
                () => GetTpCustInfo(tpId, tpUserName),
                RedisDataBase.Shared);
@@ -68,7 +68,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public TpCustInfo GetTpCustInfoWithCacheByTpCustId(int tpId, string tpCustId)
         {
             var tpCustInfo = _redisHelper.TryGetOrCreate(
-               $"TpCustInfo_{tpId}_{tpCustId}",
+               $"TpCustInfo:{tpId}:{tpCustId}",
                TimeSpan.FromMinutes(1),
               () => GetTpCustInfoByTpCustId(tpId, tpCustId),
               RedisDataBase.Shared);
