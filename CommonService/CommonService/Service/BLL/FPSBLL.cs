@@ -2,9 +2,6 @@
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace CommonService.Service.BLL
 {
@@ -22,9 +19,9 @@ namespace CommonService.Service.BLL
         {
             var apiResult = new ApiResult();
             var config = fpsServicesConfig.Value[custInfo.SiteName];
-            string url = config.ResourceURL;
+            var url = config.ResourceURL;
 
-            Dictionary<string, string> sendIovationChecks = new Dictionary<string, string>
+            var sendIovationChecks = new Dictionary<string, string>
             {
                 { "Account", custInfo.TpUserName },
                 { "Action", fpsChecksRequest.action },

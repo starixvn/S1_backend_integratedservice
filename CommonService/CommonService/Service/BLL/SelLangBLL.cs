@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Concurrent;
 using System.Reflection;
 using System.Resources;
-using System.Threading.Tasks;
 
 namespace CommonService.Service.BLL
 {
@@ -20,8 +16,8 @@ namespace CommonService.Service.BLL
         private string GetResourceValue(string key, string categoryId, string langId)
         {
             //
-            string labelString = string.Empty;
-            string sKey = $"{Assembly.GetExecutingAssembly().GetName().Name}.App_GlobalResources.{categoryId}_{langId}";
+            var labelString = string.Empty;
+            var sKey = $"{Assembly.GetExecutingAssembly().GetName().Name}.App_GlobalResources.{categoryId}_{langId}";
             if (!rm.ContainsKey(sKey))
             {
                 rm.TryAdd(sKey, new ResourceManager(sKey, Assembly.GetExecutingAssembly()));

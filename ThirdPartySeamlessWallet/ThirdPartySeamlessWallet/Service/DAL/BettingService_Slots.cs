@@ -1139,7 +1139,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
             var result = PlaceBetV2(tpCustInfo,
-                                data.amount,
+                                data.bet == 0 ? data.amount : data.bet,
                                 (int)Tp.AMB,
                                 data.roundId,  //TpTransId
                                 (int)GameType.AMB_RNG,
@@ -1327,7 +1327,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 long timestamp = tools.ConvertLocTime(bettingData_SimplePlay.timestamp, timezone);
-                var partitionTime = new DateTimeOffset(bettingData_SimplePlay.timestamp, new TimeSpan(timezone, 0, 0)).DateTime;
+                var partitionTime = DateTimeOffset.FromUnixTimeSeconds(timestamp).DateTime;
 
                 var p = new DynamicParameters(new
                 {

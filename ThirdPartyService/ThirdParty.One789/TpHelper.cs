@@ -111,6 +111,15 @@ namespace ThirdParty.One789
             };
             var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_One789_Detail_Get", 
                 new { getBetDetail.TransId , GameType = getBetDetail.TpGameTypeOption.Type }, DataBase.Wager);
+            if (wagerDetail == null)
+            {
+                return new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    TpCurrency = tpCurrency,
+                };
+            }
+
             var detail = ToJson(wagerDetail);
             
             return getBetDetail.TpGameTypeOption.CategoryId switch

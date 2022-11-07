@@ -55,7 +55,12 @@ namespace CommonService.Controllers
                 {
                     var supportOTP = GetSupportOTP(custInfo);
                     apiResult.Message = supportOTP;
-                    if (supportOTP.Equals("SkyLine", StringComparison.OrdinalIgnoreCase))
+                    
+                    if (supportOTP.Equals("AWS", StringComparison.OrdinalIgnoreCase))
+                    {
+                        apiResult = await sOTPSMSBLL.SendAwsOtpAsync(phone, custInfo, req.CustId, custInfo.UserLang);
+                    }
+                    else if (supportOTP.Equals("SkyLine", StringComparison.OrdinalIgnoreCase))
                     {
                         apiResult = await sOTPSMSBLL.SendSkyLineOTPSMSAsync(phone, custInfo, req.CustId, custInfo.UserLang);
                     } else if (supportOTP.Equals("YC", StringComparison.OrdinalIgnoreCase))
@@ -83,7 +88,7 @@ namespace CommonService.Controllers
         [HttpPost]
         public ApiResult VerifyOTP(VerifyOTPReq verifyOTPReq)
         {
-            ApiResult apiResult = new ApiResult();
+            var apiResult = new ApiResult();
 
             try
             {
@@ -164,7 +169,7 @@ namespace CommonService.Controllers
                 var phoneNo = custInfo.PhoneNo.StartsWith("0") ? custInfo.PhoneNo.Substring(1) : custInfo.PhoneNo;
                 var areacode = custInfo.AreaCode.StartsWith("+") ? custInfo.AreaCode.Substring(1) : custInfo.AreaCode;
                 var phone = $"{areacode}{phoneNo}";
-                apiResult = await sOTPSMSBLL.SendSkyLineSMSAsync(phone, custInfo, custInfo.UserLang);
+                apiResult = await sOTPSMSBLL.SendSkyLineSMSAsync(phone, custInfo, custInfo.UserLang, req.CustId);
             }
             else if (custInfo != null && string.IsNullOrEmpty(custInfo.PhoneNo))
             {

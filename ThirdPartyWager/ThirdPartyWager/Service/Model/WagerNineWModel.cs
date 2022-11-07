@@ -132,6 +132,7 @@ namespace ThirdPartyWager.Service.Model.NineW
             eventId = reSettleBet.eventId;
             marketName = reSettleBet.marketName;
             marketId = reSettleBet.marketId;
+            currencyType = reSettleBet.currencyType;
 
             //將ReSettleBet欄位對應至SettleBet
             matchSettledDate = reSettleBet.resettledDate;
@@ -171,7 +172,9 @@ namespace ThirdPartyWager.Service.Model.NineW
             matchSettledDate = default;
             profitLoss = default;          
             oddsType = unSettleBet.oddsType;
-            betPlaced = unSettleBet.betPlaced;       
+            betPlaced = unSettleBet.betPlaced;
+            site = unSettleBet.site;
+            currencyType = unSettleBet.currencyType;
 
             var detail = unSettleBet.transactionData?.First();
             if (detail == null)
@@ -204,6 +207,8 @@ namespace ThirdPartyWager.Service.Model.NineW
             betPlaced = unSettleBet.betPlaced;
             matchStake = default;
             matchOddsReq = default;
+            site = unSettleBet.site;
+            currencyType = unSettleBet.currencyType;
         }
     }
 
