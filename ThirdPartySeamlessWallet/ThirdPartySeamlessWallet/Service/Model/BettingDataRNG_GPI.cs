@@ -49,6 +49,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string cust_id { get; set; }
         public string round_id { get; set; }
         public string game_id { get; set; }
+        public int status { get; set; }
     }
 
     public class CancelBet_GPI
