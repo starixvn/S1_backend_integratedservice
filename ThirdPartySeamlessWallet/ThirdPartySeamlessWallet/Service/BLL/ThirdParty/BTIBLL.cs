@@ -332,26 +332,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public async Task<string> Credit(BTIRequestObj request)
         {
-            try
+            var (tpCustInfo, tpCurrency) = GetTPInfo(request.cust_id);
+            request.amount *= tpCurrency.ExchangeRate;
+
+            var btiResult = await settledService.Credit_BTIAsync(tpCustInfo, new BTICreditRequest(request));
+
+            if (btiResult.SPResult == 0)
             {
-                var (tpCustInfo, tpCurrency) = GetTPInfo(request.cust_id);
-                request.amount *= tpCurrency.ExchangeRate;
-
-                var btiResult = await settledService.Credit_BTIAsync(tpCustInfo, new BTICreditRequest(request));
-
-                if (btiResult.SPResult == 0)
-                {
-                    btiResult.AfterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
-                    return ReturnBTI(new Dictionary<string, string>
-                    {
-                        { "error_code", "0" },
-                        { "error_message", "OK" },
-                        { "balance", btiResult.AfterAmount.ToString() },
-                        { "trx_id", btiResult.Trx_id.ToString()},
-                    });
-                }
-
-                btiResult.AfterAmount /= tpCurrency.ExchangeRate;
+                btiResult.AfterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
                 return ReturnBTI(new Dictionary<string, string>
                 {
                     { "error_code", "0" },
@@ -360,16 +348,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     { "trx_id", btiResult.Trx_id.ToString()},
                 });
             }
-            catch (Exception ex)
+
+            btiResult.AfterAmount /= tpCurrency.ExchangeRate;
+            return ReturnBTI(new Dictionary<string, string>
             {
-                return ReturnBTI(new Dictionary<string, string>
-                {
-                    { "error_code", "0" },
-                    { "error_message", ex.Message },
-                    { "balance", "0" },
-                    { "trx_id", $"{DateTime.UtcNow.ToFileTimeUtc()}"},
-                });
-            }
+                { "error_code", "0" },
+                { "error_message", "OK" },
+                { "balance", btiResult.AfterAmount.ToString() },
+                { "trx_id", btiResult.Trx_id.ToString()},
+            });       
         }
 
         private (string authToken, string sessionToken, string tpUserName) GetToken(string auth_token)
