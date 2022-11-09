@@ -46,7 +46,9 @@
         Netent = 37,
         RedTiger = 38,
         AP = 39,
-        SBO = 42
+        SBO = 42,
+        Skywind = 43,
+        SimplePlay = 44
     }
 
     public enum GameType
@@ -70,6 +72,10 @@
         PT_LiveCasino = 48,
         YGG_RNG = 14,
         AMB_RNG = 76,
+        Skywind_RNG = 82,
+        Skywind_LiveCasino = 84,
+        Skywind_Fish = 85,
+        SimplePlay_RNG = 86,
     }
     
     
@@ -124,5 +130,6 @@
         CheckSettle = 5,//結帳檢查
         ReSettle = 6,//重新結帳
         UserReport = 7,//用戶報表
+        UnSettle = 8,//未結算注單
     }
 }

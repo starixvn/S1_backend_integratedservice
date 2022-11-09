@@ -199,6 +199,10 @@ namespace ThirdParty.N2Live
         {
             return gameCode switch
             {
+                "20001" => "Dragon Tiger Commission",
+                "20002" => "Dragon Tiger Non - Commission",
+                "21001" => "RNG Dragon Tiger Commission",
+                "21002" => "RNG Dragon Tiger Non - Commission",
                 "50002" => "Roulette",
                 "50003" => "Lucky Boost Roulette",
                 "51002" => "RNG Roulette",
@@ -221,6 +225,8 @@ namespace ThirdParty.N2Live
                 "400002" => "Free Pick San Gong Non-Commission",
                 "400004" => "Fortune Koi Non-Commission",
                 "500002" => "Andar Bahar Non-Commission",
+                "500101" => "Teen Patti",
+                "510101" => "RNG Patti",
                 "990000" => "Slot Game",
                 _ => gameCode,
             };

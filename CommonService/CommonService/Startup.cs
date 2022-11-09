@@ -3,15 +3,7 @@ using CommonService.Service.BLL;
 using CommonService.Service.DAL;
 using CommonService.Service.Library;
 using CommonService.Service.Model;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using PaymentService.Service.Library;
-using System;
-using System.Collections.Generic;
 
 namespace CommonService
 {
@@ -29,14 +21,13 @@ namespace CommonService
         {
             services.Configure<SendXConfig>(Configuration.GetSection("SendXConfig"));
             services.Configure<Dictionary<string, SendGridConfig>>(Configuration.GetSection("SendGridConfig"));
-            services.Configure<Dictionary<string, MoviderVerifySMSConfig>>(Configuration.GetSection("MoviderVerifySMSConfig"));
-            services.Configure<Dictionary<string, TwilioVerifySMSServices>>(Configuration.GetSection("TwilioVerifySMSServices"));
             services.Configure<IovationServicesConfig>(Configuration.GetSection("IovationServicesConfig"));
             services.Configure<Dictionary<string, FPSServicesConfig>>(Configuration.GetSection("FPSServicesConfig"));
             services.Configure<Dictionary<string, LiveStreamingConfig>>(Configuration.GetSection("LiveStreamingConfig"));
-            services.Configure<Dictionary<string, FireBaseConfig>>(Configuration.GetSection("FireBaseConfig"));
             services.Configure<Dictionary<string, SkyLineSMSServiceTypeConfig>>(Configuration.GetSection("SkyLineSMSServiceConfig"));
+            services.Configure<Dictionary<string, YcSmsServiceTypeConfig>>(Configuration.GetSection("YcSMSServiceConfig"));
             services.Configure<Dictionary<string, NxcloudSMSServiceTypeConfig>>(Configuration.GetSection("NxCloudSMSServiceConfig"));
+            services.Configure<AWSKeyConfig>(Configuration.GetSection("ailab-sns"));
             services.Configure<Dictionary<string, Dictionary<string, string>>>(Configuration.GetSection("SMSSupportConfig"));
             services.Configure<Dictionary<string, Dictionary<string, string>>>(Configuration.GetSection("Telegram"));
             services.Configure<Dictionary<string, Dictionary<string, string>>>(Configuration.GetSection("LetsTalk"));
@@ -46,6 +37,7 @@ namespace CommonService
             HttpHelper.proxyPort = Configuration.GetValue<int>("ProxyPort");
 
             services.AddSingleton<HttpHelper>();
+            services.AddSingleton<AWSSNSHelper>();
             services.AddSingleton<Log2File>();
 
             services.AddSingleton<CustInfoService>();
@@ -58,15 +50,12 @@ namespace CommonService
             services.AddSingleton<SendXBLL>();
             services.AddSingleton<SendGridBLL>();
             services.AddSingleton<RestPasswordBLL>();
-            services.AddSingleton<MoviderSMSBLL>();
-            services.AddSingleton<TwilioSMSBLL>();
             services.AddSingleton<IovationBLL>();
             services.AddSingleton<OTPSMSBLL>();
             services.AddSingleton<NxCloudSMSBLL>();
             services.AddSingleton<SelLangBLL>();
             services.AddSingleton<FPSBLL>();
             services.AddSingleton<LiveStreamingBLL>();
-            services.AddSingleton<FireBaseBLL>();
             services.AddSingleton<OTPEmailBLL>();
             services.AddSingleton<Tools>();
 

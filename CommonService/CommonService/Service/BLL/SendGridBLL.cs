@@ -3,10 +3,6 @@ using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CommonService.Service.BLL
 {
@@ -64,32 +60,34 @@ namespace CommonService.Service.BLL
 
         public async Task<ApiResult> SendMailAsync(CustInfoProfile custInfo, string subject, string content)
         {
-            ApiResult apiResult = new ApiResult();
+            var apiResult = new ApiResult();
             var config = sendGridConfig.Value[custInfo.SiteName];
 
-            Dictionary<string, string> headerParams = new Dictionary<string, string> {
+            var headerParams = new Dictionary<string, string> {
                 { "Authorization", $"Bearer {config.ApiKey}"}
             };
 
-            string url = config.ApiUrl;
-            SendMailBody sendMailBody = new SendMailBody();
-            sendMailBody.from = new From()
+            var url = config.ApiUrl;
+            var sendMailBody = new SendMailBody
             {
-                name = config.mailFrom.name,
-                email = config.mailFrom.email
+                from = new From()
+                {
+                    name = config.mailFrom.name,
+                    email = config.mailFrom.email
+                },
+                personalizations = new List<Personalization>()
             };
 
-            sendMailBody.personalizations = new List<Personalization>();
-            Personalization personalization = new Personalization();
+            var personalization = new Personalization();
             sendMailBody.personalizations.Add(personalization);
             personalization.subject = subject;
             personalization.to = new List<From>();
-            From from = new From();
+            var from = new From();
             personalization.to.Add(from);
             from.email = custInfo.Email;
             from.name = custInfo.UserName;
             sendMailBody.content = new List<Content>();
-            Content content1 = new Content();
+            var content1 = new Content();
             sendMailBody.content.Add(content1);
             content1.type = "text/html";
 

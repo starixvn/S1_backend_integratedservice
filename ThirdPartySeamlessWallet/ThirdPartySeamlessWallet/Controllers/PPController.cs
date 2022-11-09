@@ -41,9 +41,21 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         public class AuthenticateResp
         {
+            private decimal _cash = 0m;
             public string userId { get; set; }
             public string currency { get; set; }
-            public decimal cash { get; set; }
+            public decimal cash
+            {
+                get
+                {
+                    decimal.TryParse(_cash.ToString("#.00"), out _cash);
+                    return _cash;
+                }
+                set
+                {
+                    _cash = value;
+                }
+            }
             public decimal bonus { get; set; }
             public int error { get; set; }
             public string description { get; set; }
@@ -122,8 +134,20 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
         public class BalanceResp
         {
+            private decimal _cash = 0m;
             public string currency { get; set; }
-            public decimal cash { get; set; }
+            public decimal cash
+            {
+                get
+                {
+                    decimal.TryParse(_cash.ToString("#.00"), out _cash);
+                    return _cash;
+                }
+                set
+                {
+                    _cash = value;
+                }
+            }
             public decimal bonus { get; set; }
             public int error { get; set; }
             public string description { get; set; }
@@ -201,9 +225,21 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         public class BetResp
         {
+            private decimal _cash = 0m;
             public string transactionId { get; set; }
             public string currency { get; set; }
-            public decimal cash { get; set; }
+            public decimal cash
+            {
+                get
+                {
+                    decimal.TryParse(_cash.ToString("#.00"), out _cash);
+                    return _cash;
+                }
+                set
+                {
+                    _cash = value;
+                }
+            }
             public decimal bonus { get; set; }
             public decimal usedPromo { get; set; }
             public int error { get; set; }
@@ -304,9 +340,21 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         public class PayoutResp
         {
+            private decimal _cash = 0m;
             public string transactionId { get; set; }
             public string currency { get; set; }
-            public decimal cash { get; set; }
+            public decimal cash
+            {
+                get
+                {
+                    decimal.TryParse(_cash.ToString("#.00"), out _cash);
+                    return _cash;
+                }
+                set
+                {
+                    _cash = value;
+                }
+            }
             public decimal bonus { get; set; }
             public int error { get; set; }
             public string description { get; set; }
@@ -584,7 +632,19 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         public class EndRoundResp
         {
-            public decimal cash { get; set; }
+            private decimal _cash = 0m;
+            public decimal cash
+            {
+                get
+                {
+                    decimal.TryParse(_cash.ToString("#.00"), out _cash);
+                    return _cash;
+                }
+                set
+                {
+                    _cash = value;
+                }
+            }
             public decimal bonus { get; set; }
             public int error { get; set; }
             public string description { get; set; }
@@ -599,7 +659,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 description = "Internal server error."
             };
             var betReq = JsonConvert.DeserializeObject<BetReq>(JsonConvert.SerializeObject(endRoundReqq));
-            
+
             try
             {
                 var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
@@ -627,7 +687,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 endRoundResp.error = 100;
-                _tpRequestFailBll.SetRequestFail( RequestFailureType.Tp, Tp.PP, TpRequestFailureCategory.EndRound, JsonConvert.SerializeObject(betReq), ex.Message);
+                _tpRequestFailBll.SetRequestFail(RequestFailureType.Tp, Tp.PP, TpRequestFailureCategory.EndRound, JsonConvert.SerializeObject(betReq), ex.Message);
                 _log2File.Error($"{JsonConvert.SerializeObject(endRoundReqq)}\r\n{JsonConvert.SerializeObject(endRoundResp)}\r\n{ex}", $"{thisTp}_EndRound", ex);
             }
 
@@ -702,9 +762,21 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         public class AdjustmentResp
         {
+            private decimal _cash = 0m;
             public string transactionId { get; set; }
             public string currency { get; set; }
-            public decimal cash { get; set; }
+            public decimal cash
+            {
+                get
+                {
+                    decimal.TryParse(_cash.ToString("#.00"), out _cash);
+                    return _cash;
+                }
+                set
+                {
+                    _cash = value;
+                }
+            }
             public decimal bonus { get; set; }
             public int error { get; set; }
             public string description { get; set; }

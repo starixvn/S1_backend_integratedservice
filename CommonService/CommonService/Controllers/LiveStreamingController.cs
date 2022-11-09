@@ -2,7 +2,6 @@
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 
 namespace CommonService.Controllers
 {
@@ -18,7 +17,7 @@ namespace CommonService.Controllers
         [HttpPost]
         public async Task<ApiResult> GetLiveStreamingLinkAsync(LiveStreamingLinkReq liveStreamingLinkReq )
         {
-            ApiResult apiResult = new ApiResult();
+            var apiResult = new ApiResult();
 
             if (liveStreamingLinkReq.Ch != 0 && !string.IsNullOrEmpty(liveStreamingLinkReq.SiteName.Trim()) && !string.IsNullOrEmpty(liveStreamingLinkReq.Uid.Trim()) && !string.IsNullOrEmpty(liveStreamingLinkReq.Ip.Trim()))
             {

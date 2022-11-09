@@ -603,5 +603,70 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
         #endregion
+
+        #region JILI
+
+        public int PlaceBetRNG_JILI(TpCustInfo tpCustInfo, BettingData_JILI bettingData_JILI, out decimal afterAmount)
+        {
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.JILI, tpCustInfo.CurrencyId);
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                bettingData_JILI.betAmount *= tpCurrency.ExchangeRate;
+                bettingData_JILI.winloseAmount *= tpCurrency.ExchangeRate;
+                bettingData_JILI.turnover *= tpCurrency.ExchangeRate;
+                bettingData_JILI.preserve *= tpCurrency.ExchangeRate;
+            }
+
+            var result = bettingService.PlaceBetRNG_JILI(tpCustInfo, bettingData_JILI, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        #endregion
+
+        #region SimplePlay
+
+        public int PlaceBetRNG_SimplePlay(BettingData_SimplePlay bettingData_SimplePlay, int gameType, out decimal afterAmount)
+        {
+            var tpId = (int)Tp.SimplePlay;
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(tpId, bettingData_SimplePlay.username);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingData_SimplePlay.amount *= tpCurrency.ExchangeRate;
+                bettingData_SimplePlay.JackpotContribution *= tpCurrency.ExchangeRate;
+            }
+
+            var result = bettingService.PlaceBetRNG_SimplePlay(tpCustInfo, bettingData_SimplePlay, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        #endregion
+
+
+        #region Skywind
+        public int PlaceBet_Skywind(TpCustInfo tpCustInfo, BettingData_Skywind bettingData_Skywind, int gameType, out decimal afterAmount)
+        {
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingData_Skywind.amount *= tpCurrency.ExchangeRate;
+            }
+            var result = bettingService.PlaceBet_Skywind(tpCustInfo, bettingData_Skywind, gameType, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+        #endregion
     }
 }

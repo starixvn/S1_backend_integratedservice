@@ -31,9 +31,7 @@ namespace ThirdPartyWager.Service.BLL
                 return dailyData;
             }
 
-            var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
-            var _currencyId = tpCurrencyList.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
-
+            // 目前僅支援THB
             foreach (var item in reportData)
             {
                 dailyData.Add(new FincanceDailySummary()
@@ -41,7 +39,7 @@ namespace ThirdPartyWager.Service.BLL
                     SummaryType = SummaryType.TpBetRecord,
                     SummaryDate = reportDate,
                     TpId = tpId,
-                    CurrencyId = _currencyId[item.currency],
+                    CurrencyId = 4,
                     Stake = item.totalBetAmount,
                     ValidBet = item.totalBetAmount,
                     Payout = item.totalWinAmount,
@@ -57,28 +55,24 @@ namespace ThirdPartyWager.Service.BLL
             var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
             var reportData = new List<dynamic>();
 
-            foreach (var item in tpCurrencyList)
+            CurrencyStats_MP getWagerSummary = await _apiMPBLL.GetBetSummaryByTime(setting, reportTime.startTime, reportTime.endTime);
+
+            if ((getWagerSummary.d.code != 0 && getWagerSummary.d.code != 16) || getWagerSummary.d.msg != null)
             {
-                var currency = item.TpCurrencyId;
-                CurrencyStats_MP getWagerSummary = await _apiMPBLL.GetBetSummaryByTime(setting, currency, reportTime.startTime, reportTime.endTime);
-
-                if ((getWagerSummary.d.code != 0 && getWagerSummary.d.code != 16) || getWagerSummary.d.msg != null)
-                {
-                    var msg = "THIRD_PARTY_ERROR";
-                    _logger.LogError($"{msg}\r\n{currency}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                    SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
-                    throw systemException;
-                }
-
-                if (getWagerSummary.d.code == 16 || getWagerSummary.d.Transactions[0].betCount == 0)
-                {
-                    var msg = "NO_DATA";
-                    _logger.LogInformation($"{msg}\r\n{currency}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                    continue;
-                }
-
-                reportData.AddRange(getWagerSummary.d.Transactions);
+                var msg = "THIRD_PARTY_ERROR";
+                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
+                throw systemException;
             }
+
+            if (getWagerSummary.d.code == 16 || getWagerSummary.d.Transactions[0].betCount == 0)
+            {
+                var msg = "NO_DATA";
+                _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                return reportData;
+            }
+
+            reportData.AddRange(getWagerSummary.d.Transactions);
             return reportData;
         }
 

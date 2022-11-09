@@ -2,7 +2,6 @@
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 
 namespace CommonService.Controllers
 {
@@ -20,7 +19,7 @@ namespace CommonService.Controllers
         [HttpPost]
         public async Task<ApiResult> FPSChecksAsync(FPSChecksRequest fpsChecksRequest)
         {
-            ApiResult apiResult = new ApiResult();
+            var apiResult = new ApiResult();
             var custInfo = custInfoBLL.GetCustInfoProfile(fpsChecksRequest.account);
 
             if (custInfo != null && !string.IsNullOrEmpty(custInfo.TpUserName))
