@@ -153,7 +153,7 @@ namespace ThirdPartyCore.Model
             if (_sportType == "997")
             {
                 // Saba Soccer deeplink
-                return $"&menutype=0&act=1&leaguekey={act}";
+                return $"&menutype=0&act={_sportType}";
             }
 
             return $"&act={act}&menutype={_menuType}";
