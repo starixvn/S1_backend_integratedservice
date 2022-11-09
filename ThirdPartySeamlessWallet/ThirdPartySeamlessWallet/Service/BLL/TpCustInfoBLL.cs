@@ -29,8 +29,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var tpCustBalance = _redisHelper.TryGetOrCreate(
                 $"TpCustBalance:{tpId}:{tpUserName}", 
                 TimeSpan.FromSeconds(0.5),
-                () => GetBalance(tpId, tpUserName, gameType),
-                RedisDataBase.Shared);
+                () => GetBalance(tpId, tpUserName, gameType));
             return tpCustBalance;
         }
 
@@ -60,8 +59,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var tpCustInfo = _redisHelper.TryGetOrCreate(
                 $"TpCustInfo:{tpId}:{tpUserName}", 
                 TimeSpan.FromMinutes(1),
-               () => GetTpCustInfo(tpId, tpUserName),
-               RedisDataBase.Shared);
+               () => GetTpCustInfo(tpId, tpUserName));
             return tpCustInfo;
         }
 
@@ -70,8 +68,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var tpCustInfo = _redisHelper.TryGetOrCreate(
                $"TpCustInfo:{tpId}:{tpCustId}",
                TimeSpan.FromMinutes(1),
-              () => GetTpCustInfoByTpCustId(tpId, tpCustId),
-              RedisDataBase.Shared);
+              () => GetTpCustInfoByTpCustId(tpId, tpCustId));
             return tpCustInfo;
         }
 
