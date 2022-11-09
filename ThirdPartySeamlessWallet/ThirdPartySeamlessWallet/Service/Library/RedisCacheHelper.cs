@@ -17,7 +17,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
         }
 
         public TItem TryGetOrCreate<TItem>(string key, TimeSpan timeSpan, Func<TItem> factory,
-            RedisDataBase redisDataBase = RedisDataBase.Member)
+            RedisDataBase redisDataBase = RedisDataBase.Tp)
         {
             key = $"{redisDataBase}:{RemoveSpecialChars(key)}";
             try
@@ -46,7 +46,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
         }
 
         public async Task<TItem> TryGetOrCreateAsync<TItem>(string key, TimeSpan? timeSpan, Func<Task<TItem>> factory,
-            RedisDataBase redisDataBase = RedisDataBase.Member)
+            RedisDataBase redisDataBase = RedisDataBase.Tp)
         {
             key = $"{redisDataBase}:{RemoveSpecialChars(key)}";
             try
@@ -75,7 +75,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
         }
 
         public async Task<bool> StringFireAndForgetSetAsync(string key, RedisValue value, TimeSpan? timeSpan,
-            RedisDataBase redisDataBase = RedisDataBase.Member)
+            RedisDataBase redisDataBase = RedisDataBase.Tp)
         {
             key = $"{redisDataBase}:{RemoveSpecialChars(key)}";
             try
@@ -91,7 +91,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
         }
 
         public bool StringSet(string key, RedisValue value, TimeSpan? timeSpan,
-            RedisDataBase redisDataBase = RedisDataBase.Member)
+            RedisDataBase redisDataBase = RedisDataBase.Tp)
         {
             key = $"{redisDataBase}:{RemoveSpecialChars(key)}";
             try
@@ -106,7 +106,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             }
         }
 
-        public bool KeyExists(string key, RedisDataBase redisDataBase = RedisDataBase.Member)
+        public bool KeyExists(string key, RedisDataBase redisDataBase = RedisDataBase.Tp)
         {
             key = $"{redisDataBase}:{RemoveSpecialChars(key)}";
             try
@@ -121,7 +121,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             }
         }
 
-        public async Task<TItem> StringGetAsync<TItem>(string key, RedisDataBase redisDataBase = RedisDataBase.Member)
+        public async Task<TItem> StringGetAsync<TItem>(string key, RedisDataBase redisDataBase = RedisDataBase.Tp)
         {
             key = $"{redisDataBase}:{RemoveSpecialChars(key)}";
             try
@@ -137,7 +137,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             }
         }
 
-        public List<TItem> GetCacheList<TItem>(IEnumerable<string> keys, RedisDataBase redisDataBase = RedisDataBase.Member)
+        public List<TItem> GetCacheList<TItem>(IEnumerable<string> keys, RedisDataBase redisDataBase = RedisDataBase.Tp)
         {
             try
             {
@@ -172,7 +172,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
         }
 
         public bool SetCacheList<TItem>(Dictionary<string, TItem> dataList, TimeSpan? timeSpan,
-            RedisDataBase redisDataBase = RedisDataBase.Member)
+            RedisDataBase redisDataBase = RedisDataBase.Tp)
         {
             try
             {
@@ -196,7 +196,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
         }
 
         public bool InsertList<TItem>(string key, TimeSpan? timeSpan, IEnumerable<TItem> list,
-            RedisDataBase redisDataBase = RedisDataBase.Member)
+            RedisDataBase redisDataBase = RedisDataBase.Tp)
         {
             try
             {
@@ -227,7 +227,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
         }
 
         public List<TItem> GetListByRange<TItem>(string key, long startIndex, long endIndex,
-            RedisDataBase redisDataBase = RedisDataBase.Member)
+            RedisDataBase redisDataBase = RedisDataBase.Tp)
         {
             try
             {
@@ -258,7 +258,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             }
         }
 
-        public long GetListLength(string key, RedisDataBase redisDataBase = RedisDataBase.Member)
+        public long GetListLength(string key, RedisDataBase redisDataBase = RedisDataBase.Tp)
         {
             try
             {
@@ -273,7 +273,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             }
         }
 
-        public async Task<bool> KeyDeleteAsync(string key, RedisDataBase redisDataBase = RedisDataBase.Member)
+        public async Task<bool> KeyDeleteAsync(string key, RedisDataBase redisDataBase = RedisDataBase.Tp)
         {
             try
             {
