@@ -1,13 +1,8 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Concurrent;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.BLL
 {
@@ -16,29 +11,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         private readonly WalletService walletService;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly TpCustInfoService tpCustInfoService;
-        private readonly IMemoryCache cache;
         private readonly Tools tools;
-        private ConcurrentDictionary<string, TpCountryCode> tpCountryCodeCache = new ConcurrentDictionary<string, TpCountryCode>();
+        private ConcurrentDictionary<string, TpCountryCode> tpCountryCodeCache = new();
+        private readonly ICacheHelper _redisHelper;
 
-        public TpCustInfoBLL(IMemoryCache cache, IConfiguration configuration, WalletService walletService, TpCustInfoService tpCustInfoService, ThirdPartyBLL thirdPartyBLL, Tools tools)
+        public TpCustInfoBLL(IServiceProvider provider)
         {
-            this.walletService = walletService;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.tpCustInfoService = tpCustInfoService;
-            this.cache = cache;
-            this.tools = tools;
+            walletService = provider.GetRequiredService<WalletService>();
+            thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            tpCustInfoService = provider.GetRequiredService<TpCustInfoService>();
+            tools = provider.GetRequiredService<Tools>();
+            _redisHelper = provider.GetRequiredService<ICacheHelper>();
         }
+
         public TpCustBalance GetBalanceByHalfSecCache(int tpId, string tpUserName, int gameType = 0)
         {
-            string key = $"TpCustBalance_{tpId}_{tpUserName}";
-            var tpCustBalance = cache.Get<TpCustBalance>(key);
-            if (tpCustBalance == null)
-            {
-                tpCustBalance = GetBalance(tpId, tpUserName, gameType);
-                if (tpCustBalance != null)
-                    cache.Set(key, tpCustBalance, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(0.5)));
-            }
-
+            var tpCustBalance = _redisHelper.TryGetOrCreate(
+                $"TpCustBalance:{tpId}:{tpUserName}", 
+                TimeSpan.FromSeconds(0.5),
+                () => GetBalance(tpId, tpUserName, gameType));
             return tpCustBalance;
         }
 
@@ -62,37 +53,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             tpCustBalance.TpCurrencyId = tpCurrency.TpCurrencyId;
             return tpCustBalance;
         }
+
         public TpCustInfo GetTpCustInfoWithCache(int tpId, string tpUserName)
         {
-            string key = $"TpCustInfo_{tpId}_{tpUserName}";
-            var tpCustInfo = cache.Get<TpCustInfo>(key);
-            if (tpCustInfo == null)
-            {
-                tpCustInfo = GetTpCustInfo(tpId, tpUserName);
-                if (tpCustInfo != null)
-                {
-                    cache.Set(key, tpCustInfo, new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(1)));
-                }
-            }
-
+            var tpCustInfo = _redisHelper.TryGetOrCreate(
+                $"TpCustInfo:{tpId}:{tpUserName}", 
+                TimeSpan.FromMinutes(1),
+               () => GetTpCustInfo(tpId, tpUserName));
             return tpCustInfo;
         }
 
         public TpCustInfo GetTpCustInfoWithCacheByTpCustId(int tpId, string tpCustId)
         {
-            string key = $"TpCustInfo_{tpId}_{tpCustId}";
-            var tpCustInfo = cache.Get<TpCustInfo>(key);
-            if (tpCustInfo == null)
-            {
-                tpCustInfo = GetTpCustInfoByTpCustId(tpId, tpCustId);
-                if (tpCustInfo != null)
-                {
-                    cache.Set(key, tpCustInfo, new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(1)));
-                }
-            }
-
+            var tpCustInfo = _redisHelper.TryGetOrCreate(
+               $"TpCustInfo:{tpId}:{tpCustId}",
+               TimeSpan.FromMinutes(1),
+              () => GetTpCustInfoByTpCustId(tpId, tpCustId));
             return tpCustInfo;
         }
+
         public TpCustInfo GetTpCustInfo(int tpId, string tpUserName)
         {
             var tpCustInfo = tpCustInfoService.GetTpCustInfo(tpId, tpUserName, null);

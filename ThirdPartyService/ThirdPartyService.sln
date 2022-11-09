@@ -100,6 +100,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.Skywind", "Third
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.SimplePlay", "ThirdParty.SimplePlay\ThirdParty.SimplePlay.csproj", "{36AE4DD7-C7B8-4EDD-BFDB-3F0E26BF4302}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.CryptoSports", "ThirdParty.CryptoSports\ThirdParty.CryptoSports.csproj", "{10F42EAD-A2F0-4AF8-B12A-5CCA5197E5E1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -290,6 +292,10 @@ Global
 		{36AE4DD7-C7B8-4EDD-BFDB-3F0E26BF4302}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{36AE4DD7-C7B8-4EDD-BFDB-3F0E26BF4302}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{36AE4DD7-C7B8-4EDD-BFDB-3F0E26BF4302}.Release|Any CPU.Build.0 = Release|Any CPU
+		{10F42EAD-A2F0-4AF8-B12A-5CCA5197E5E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10F42EAD-A2F0-4AF8-B12A-5CCA5197E5E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10F42EAD-A2F0-4AF8-B12A-5CCA5197E5E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10F42EAD-A2F0-4AF8-B12A-5CCA5197E5E1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -338,6 +344,7 @@ Global
 		{69C2BEEB-B5D4-4B0A-AA85-E68DBA9462F0} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{5631C337-2051-4A0D-ADFE-FB3DEF90F1A9} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{36AE4DD7-C7B8-4EDD-BFDB-3F0E26BF4302} = {54887B85-B528-486C-A102-3E5FF55C1282}
+		{10F42EAD-A2F0-4AF8-B12A-5CCA5197E5E1} = {54887B85-B528-486C-A102-3E5FF55C1282}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {88130080-DA6F-45D5-BA4E-3A91181A0592}
