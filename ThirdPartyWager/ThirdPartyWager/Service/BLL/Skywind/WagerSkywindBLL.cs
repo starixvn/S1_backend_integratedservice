@@ -91,47 +91,6 @@ namespace ThirdPartyWager.Service.BLL
 					}
 				}
 
-                var dataThirdPartyWager = await _apiSkywindBLL.GetThirdPartyBetListByTime(apiUrl, secretKey, username, password, startTime, endTime);
-
-                foreach (var bet in dataThirdPartyWager)
-                {
-                    try
-                    {
-                        var betSkywind = new BetSkywind()
-                        {
-                            finished = bet.finished ? 1 : 0,
-                            revenue = bet.revenue,
-                            currency = bet.currency,
-                            debit = 0,
-                            credit = 0,
-                            roundId = bet.roundId,
-                            brandId = bet.brandId,
-                            playerCode = bet.playerCode,
-                            gameCode = bet.gameCode,
-                            device = string.Empty,
-                            win = bet.win,
-                            bet = bet.bet,
-                            balanceAfter = bet.balanceAfter.HasValue ? bet.balanceAfter.Value : 0,
-                            balanceBefore = bet.balanceBefore.HasValue ? bet.balanceBefore.Value : 0,
-                            totalEvents = string.Empty,
-                            firstTs = Convert.ToDateTime(bet.insertedAt),
-                            ts = Convert.ToDateTime(bet.insertedAt),
-                            isTest = bet.isTest ? 1 : 0,
-                            insertedAt = Convert.ToDateTime(bet.insertedAt),
-                            recoveryType = string.Empty,
-                            totalJpContribution = 0,
-                            totalJpWin = 0,
-                        };
-
-                        var result = _apiSkywindBLL.InsertWager(betSkywind);
-                    }
-                    catch (Exception ex)
-                    {
-                        msg = $"INSERT_WAGER(WAGERID: {bet.roundId} )";
-                        _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
-                        return false;
-                    }
-                }
                 msg = "FINISH";
 				_logger.LogInformation($"GetWagersAsync {msg}\r\n{startTime} ~ {endTime}");
 				return true;
@@ -192,29 +151,29 @@ namespace ThirdPartyWager.Service.BLL
                         else
                         {
                             var thirdPartyBet = await _apiSkywindBLL.GetThirdPartyBetByTransId(setting["ApiUrl"], setting["SecretKey"], setting["Username"], setting["Password"], sArray[0]);
-                            if (thirdPartyBet != null)
+                            if (thirdPartyBet.Any())
                             {
                                 var betSkywind = new BetSkywind()
                                 {
-                                    finished = thirdPartyBet.finished ? 1 : 0,
-                                    revenue = thirdPartyBet.revenue,
-                                    currency = thirdPartyBet.currency,
+                                    finished =  1 ,
+                                    revenue = thirdPartyBet.Sum(x=> x.revenue),
+                                    currency = thirdPartyBet.FirstOrDefault().currency,
                                     debit = 0,
                                     credit = 0,
-                                    roundId = thirdPartyBet.roundId,
-                                    brandId = thirdPartyBet.brandId,
-                                    playerCode = thirdPartyBet.playerCode,
-                                    gameCode = thirdPartyBet.gameCode,
+                                    roundId = thirdPartyBet.FirstOrDefault().roundId,
+                                    brandId = thirdPartyBet.FirstOrDefault().brandId,
+                                    playerCode = thirdPartyBet.FirstOrDefault().playerCode,
+                                    gameCode = thirdPartyBet.FirstOrDefault().gameCode,
                                     device = string.Empty,
-                                    win = thirdPartyBet.win,
-                                    bet = thirdPartyBet.bet,
-                                    balanceAfter = thirdPartyBet.balanceAfter.HasValue ? thirdPartyBet.balanceAfter.Value : 0,
-                                    balanceBefore = thirdPartyBet.balanceBefore.HasValue ? thirdPartyBet.balanceBefore.Value : 0,
-                                    totalEvents = string.Empty,
-                                    firstTs = Convert.ToDateTime(thirdPartyBet.insertedAt),
-                                    ts = Convert.ToDateTime(thirdPartyBet.insertedAt),
-                                    isTest = thirdPartyBet.isTest ? 1 : 0,
-                                    insertedAt = Convert.ToDateTime(thirdPartyBet.insertedAt),
+                                    win = thirdPartyBet.Sum(x => x.win),
+                                    bet = thirdPartyBet.Sum(x => x.bet),
+                                    balanceAfter =  0,
+                                    balanceBefore =  0,
+                                    totalEvents = thirdPartyBet.Count.ToString(),
+                                    firstTs = Convert.ToDateTime(thirdPartyBet.Min(x => x.insertedAt)),
+                                    ts = Convert.ToDateTime(thirdPartyBet.Min(x => x.insertedAt)),
+                                    isTest = thirdPartyBet.FirstOrDefault().isTest ? 1 : 0,
+                                    insertedAt = Convert.ToDateTime(thirdPartyBet.Max(x => x.insertedAt)),
                                     recoveryType = string.Empty,
                                     totalJpContribution = 0,
                                     totalJpWin = 0,
