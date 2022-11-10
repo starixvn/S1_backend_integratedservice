@@ -97,7 +97,7 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task<WagerSkywindThridPartyModel> GetThirdPartyBetByTransId(string apiUrl, string secretKey, string username, string password, string transId)
+        public async Task<List<WagerSkywindThridPartyModel>> GetThirdPartyBetByTransId(string apiUrl, string secretKey, string username, string password, string transId)
         {
             var jwtToken = await GetJwtTokenAsync(apiUrl, username, password, secretKey);
             string url = $"{apiUrl}/history/external?roundId={transId}&sortBy=finished&limit=100";
@@ -110,7 +110,7 @@ namespace ThirdPartyWager.Service.BLL
                 r = sr.ReadToEnd();
             }
 
-            var result = JsonConvert.DeserializeObject<List<WagerSkywindThridPartyModel>>(r).FirstOrDefault();
+            var result = JsonConvert.DeserializeObject<List<WagerSkywindThridPartyModel>>(r);
 
             return result;
         }
