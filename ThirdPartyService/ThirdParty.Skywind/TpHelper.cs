@@ -128,6 +128,14 @@ namespace ThirdParty.Skywind
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
+            Dictionary<string, string> itgGame = new Dictionary<string, string>();
+            itgGame.Add("itg_moneytreesofspring", "itg_moneytreesofspring");
+            itgGame.Add("itg_goldenroad", "itg_goldenroad");
+            itgGame.Add("itg_megatrail", "itg_megatrail");
+            itgGame.Add("itg_megamonkeys", "itg_megamonkeys");
+            itgGame.Add("itg_bigirishbucks", "itg_bigirishbucks");
+            itgGame.Add("itg_bigmoneyvegas", "itg_bigmoneyvegas");
+            itgGame.Add("itg_monkeyhero", "itg_monkeyhero");
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
             string SecretKey = inputs.ContainsKey("SecretKey") && !string.IsNullOrEmpty(inputs["SecretKey"]) ? inputs["SecretKey"] : throw new Exception();
             string Username = inputs.ContainsKey("Username") && !string.IsNullOrEmpty(inputs["Username"]) ? inputs["Username"] : throw new Exception();
@@ -136,23 +144,47 @@ namespace ThirdParty.Skywind
             string[] sArray = Regex.Split(getBetDetail.TransId, "-", RegexOptions.IgnoreCase);
             var roundId = sArray[0];
 
-            var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
-            var detailUrl = $"{ApiUrl}/history/game/{roundId}/image";
-            Dictionary<string, string> header = new Dictionary<string, string>();
-            header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
-            string json = HttpGet(detailUrl, "", "application/json", header);
-            var result = FromJson<DetailUrl>(json);
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_Skywind_Detail_Get", new { TransId = roundId }, DataBase.Wager);
+            var GameID = detail.GetStringValue("gameCode");
 
-            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            if (itgGame.ContainsKey(GameID))
             {
-                TransId = getBetDetail.TransId,
-                DetailUrl = result.imageUrl,
-                TpCurrency = new TpCurrency()
+                var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
+                var detailUrl = $"{ApiUrl}/history/external?roundId={roundId}&sortBy=finished&limit=100";
+                Dictionary<string, string> header = new Dictionary<string, string>();
+                header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
+                string json = HttpGet(detailUrl, "", "application/json", header);
+                return new BaseDetail(getBetDetail.TpGameTypeOption)
                 {
-                    ExchangeRate = tpCustInfo.ExchangeRate,
-                    TpCurrencyId = tpCustInfo.TpCurrencyId,
-                },
-            };
+                    TransId = getBetDetail.TransId,
+                    Detail = json,
+                    TpCurrency = new TpCurrency()
+                    {
+                        ExchangeRate = tpCustInfo.ExchangeRate,
+                        TpCurrencyId = tpCustInfo.TpCurrencyId,
+                    },
+                };
+            }
+            else
+            {
+                var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
+                var detailUrl = $"{ApiUrl}/history/game/{roundId}/image";
+                Dictionary<string, string> header = new Dictionary<string, string>();
+                header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
+                string json = HttpGet(detailUrl, "", "application/json", header);
+                var result = FromJson<DetailUrl>(json);
+
+                return new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    DetailUrl = result.imageUrl,
+                    TpCurrency = new TpCurrency()
+                    {
+                        ExchangeRate = tpCustInfo.ExchangeRate,
+                        TpCurrencyId = tpCustInfo.TpCurrencyId,
+                    },
+                };
+            }
         }
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
