@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
@@ -81,5 +82,81 @@ namespace ThirdPartyWager.Service.BLL
                 return false;
             }
         }
+
+        public async Task<bool> GetWagersRedoAsync(int tpId, string startTime)
+        {
+            var msg = "FATAL_ERROR";
+            try
+            {
+                // get api info
+                var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
+
+                //convert timepoint
+                var timepoint = await _apiKiss918BLL.GetTimepoint(setting["ApiToken"], setting["ApiUrl"], startTime);
+
+                if (string.IsNullOrWhiteSpace(timepoint))
+                {
+                    msg = "GET_TIMEPOINT_ERROR";
+                    _logger.LogError($"{msg}\r\n{timepoint}");
+                    return false;
+                }
+
+                // get history bets
+                var (hasData, dataDetails) = await _apiKiss918BLL.GetPlaySession(setting["AccessToken"], setting["ApiUrl"], timepoint);
+
+                if (!hasData)
+                {
+                    msg = "THIRD_PARTY_ERROR";
+                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataDetails)}");
+                    return false;
+                }
+
+                if (hasData && dataDetails.Count() == 0)
+                {
+                    msg = "NO_DATA";
+                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataDetails)}");
+                    return true;
+                }
+
+                try
+                {
+                    var lostData = new List<WagerKiss918Model>();
+                    foreach (var data in dataDetails)
+                    {
+                        if ((await _wagerKiss918Service.GetWager(data.referenceID)).Any())
+                            continue;
+                        else
+                            lostData.Add(data);
+                    }
+                    if (lostData.Count() == 0)
+                    {
+                        msg = "NO_LOST_DATA";
+                        _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(lostData)}");
+                        return true;
+                    }
+
+                    msg = "CHECK_LOST_DATA";
+                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(lostData.Select(x=>x.referenceID))}");
+                    _wagerKiss918Service.InsertWager(lostData);
+                }
+                catch (Exception ex)
+                {
+                    msg = $"INSERT_WAGER";
+                    _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(dataDetails)}\r\n{ex.Message}");
+                    return false;
+                }
+                msg = "FINISH";
+                _logger.LogInformation($"GetWagersRedoAsync {msg}\r\n{startTime} ~ {dataDetails.MaxBy(x => x.created).created}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                msg = "FATAL_ERROR";
+                _logger.LogError(ex, $"GetWagersRedoAsync {msg}\r\n{ex.Message}");
+                return false;
+            }
+        }
+
     }
+
 }

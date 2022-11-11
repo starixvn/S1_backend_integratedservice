@@ -69,7 +69,7 @@ public class WagerRedoKiss918 : BackgroundService
                 if (timerTime < DateTime.Now)
                 {
                     var time = _dateTimeHelper.GetTimeByMinute(last, TimeZone, "yyyy-MM-dd HH:mm:ss.fff", timerTime);
-                    var result = await _wagerKiss918BLL.GetWagersAsync(tpId, time.startTime);
+                    var result = await _wagerKiss918BLL.GetWagersRedoAsync(tpId, time.startTime);
 
                     if (result)
                         _thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, item.TpCurrencyId);
