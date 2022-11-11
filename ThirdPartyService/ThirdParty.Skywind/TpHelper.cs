@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
@@ -150,10 +151,11 @@ namespace ThirdParty.Skywind
             if (itgGame.ContainsKey(GameID))
             {
                 var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
-                var detailUrl = $"{ApiUrl}/history/external?roundId={roundId}&sortBy=finished&limit=100";
+                var detailUrl = $"{ApiUrl}/history/external";
+                string getParams = $"roundId={roundId}&sortBy=finished&limit=100";
                 Dictionary<string, string> header = new Dictionary<string, string>();
                 header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
-                string json = HttpGet(detailUrl, "", "application/json", header);
+                string json = HttpGet(detailUrl, getParams, "application/json", header);
                 return new BaseDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
