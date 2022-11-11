@@ -132,12 +132,13 @@ namespace ThirdPartyWager.Service.BLL
                     {
                         msg = "NO_LOST_DATA";
                         _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(lostData)}");
-                        return true;
                     }
-
-                    msg = "CHECK_LOST_DATA";
-                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(lostData.Select(x=>x.referenceID))}");
-                    _wagerKiss918Service.InsertWager(lostData);
+                    else
+                    {
+                        msg = "CHECK_LOST_DATA";
+                        _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(lostData.Select(x => x.referenceID))}");
+                        _wagerKiss918Service.InsertWager(lostData);
+                    }
                 }
                 catch (Exception ex)
                 {
