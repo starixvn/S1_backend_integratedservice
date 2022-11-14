@@ -301,6 +301,7 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceSexy>();
             services.AddHostedService<FinanceCQ9>();
             services.AddHostedService<WagerKiss918>();
+            services.AddHostedService<WagerRedoKiss918>();
             services.AddHostedService<WagerSkywind>();
             services.AddHostedService<WagerUnsettleCheckSkywind>();
         }
