@@ -359,16 +359,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     return new SBOResult() { Result = -2 };
                 }
                 
-                if (dto.Status == 1)
+                var partitionTime = dto.ResultTime ?? DateTime.UtcNow;
+                result = _tpUnsettleService.InsertTpUnsettle(Tp.SBO, dto.TpGameType, dto.TransferCode, trans, partitionTime);
+                if (result < 1)
                 {
-                    var partitionTime = dto.ResultTime.HasValue ? dto.ResultTime : DateTime.Now;
-                    result = _tpUnsettleService.InsertTpUnsettle(Tp.SBO, dto.TpGameType, dto.TransferCode, trans, partitionTime);
-                    if (result < 1)
-                    {
-                        logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode}" +
-                                        $" exec Service_TpUnsettle_Ins_V2 failed return Result:-3");
-                        return new SBOResult() { Result = -3 };
-                    }
+                    logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode}" +
+                                    $" exec Service_TpUnsettle_Ins_V2 failed return Result:-3");
+                    return new SBOResult() { Result = -3 };
                 }
                 
                 var sboResult = new SBOResult
