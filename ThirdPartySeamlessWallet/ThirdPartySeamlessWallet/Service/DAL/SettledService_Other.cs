@@ -776,7 +776,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 RefTx = bettingDataLT_One789.Tx,
                 Tx = bettingDataLT_One789.Source,
                 TicketStatus = (int)TicketStatus.Refund,
-                SettleFlag = 1
+                SettleFlag = (gameType == (int)GameType.One789_LiveCasino) ? SettleFlag.Settled : SettleFlag.EndGame
             });
 
             conn.Open();
