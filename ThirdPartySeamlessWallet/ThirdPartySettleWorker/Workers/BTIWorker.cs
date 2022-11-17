@@ -65,12 +65,12 @@ namespace ThirdPartySettleWorker.Workers
                         var unsettledList = _tpUnSettledBLL.GetTpUnsettleData<BTISettleData>("Service_BettransSports_BTI_Settle_Get", new { reserve_id = transId }, DataBase.Main);
                         var tpUserName = unsettledList.First().Account;
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
-                        
+
                         var stake = unsettledList.First().DebitAmount;
                         var payout = unsettledList.Sum(i => i.CreditAmount);
                         var isClosed = unsettledList.Any(i => i.CurrentStatus.Equals("Closed", StringComparison.OrdinalIgnoreCase));
                         var settlementType = isClosed ? SettlementType.SettledForValid : SettlementType.UnSettled;
-                        var ticketStatus = isClosed ? (payout - stake > 0 ? TicketStatus.Win:TicketStatus.Lost): TicketStatus.UnSettled;
+                        var ticketStatus = isClosed ? (payout - stake > 0 ? TicketStatus.Win : TicketStatus.Lost) : TicketStatus.UnSettled;
                         if (unsettledList.First().TicketStatus == (int)TicketStatus.Refund)
                         {
                             settlementType = SettlementType.SettledForInvalid;
@@ -89,7 +89,7 @@ namespace ThirdPartySettleWorker.Workers
                             SettledTime = unsettledList.Max(i => i.SettleTime),
                             TransTime = unsettledList.Min(i => i.TransTime),
                             SettlementType = settlementType,
-                            TicketStatus = ticketStatus,                       
+                            TicketStatus = ticketStatus,
                         };
 
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Sports);
@@ -115,7 +115,7 @@ namespace ThirdPartySettleWorker.Workers
                         _logger.LogError(ex, $"BTI Settle exception. {ex.Message} || TransId : {transId}");
                     }
                 }
-                
+
             }
             catch (UnsettleNotFoundException ex)
             {
