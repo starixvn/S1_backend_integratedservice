@@ -61,6 +61,7 @@ namespace ThirdPartyWager.Service
         public string Source { get; set; }
         public string Type { get; set; }
         public string RefSource { get; set; }
+        public int TicketStatus { get; set; }
     }
 
     public class TicketDataOne789

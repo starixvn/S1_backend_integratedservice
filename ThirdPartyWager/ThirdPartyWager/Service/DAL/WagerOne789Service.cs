@@ -57,5 +57,26 @@ namespace ThirdPartyWager.Service.DAL
             var sp = $"Service_Bettrans{game}_Bet_Pending_Get";
             return _mainDbClient.Query<BettransDataOne789>(sp);
         }
+
+        public BettransDataOne789 GetBettransData(int gameType, string tx)
+        {
+            var game = "";
+            switch (gameType)
+            {
+                case (int)GameType.One789_Lottery:
+                    game = "LT_One789";
+                    break;
+                case (int)GameType.One789_Lottery_789:
+                    game = "LT_One789_789";
+                    break;
+                case (int)GameType.One789_LiveCasino:
+                    game = "LC_One789";
+                    break;
+                default:
+                    break;
+            }
+            var sp = $"Service_Bettrans{game}_Get";
+            return _mainDbClient.QueryFirst<BettransDataOne789>(sp, new DynamicParameters(new { Source = tx }));
+        }
     }
 }
