@@ -1,12 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Serilog.Context;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service
 {
@@ -30,12 +26,21 @@ namespace ThirdPartyWager.Service
         }
 
         // TpRefundWorker
-        public async Task<bool> CheckTicketStatusAsync(dynamic setting, dynamic pending)
+        public async Task<bool> CheckTicketStatusAsync(dynamic setting, dynamic pending, int gameType)
         {
             LogContext.PushProperty("SystemJob", $"Auto-Dispatch");
             var func = "CheckTicketStatusAsync";
             var msg = "";
 
+            // check bettrans status
+            BettransDataOne789 bettrans = _wagerOne789Service.GetBettransData(gameType, pending.Tx);
+            if (bettrans.TicketStatus == (int)TicketStatus.Refund)
+            {
+                _logger.LogWarning($"Refunded : {pending.Tx}");
+                return true;
+            }
+
+            // check one789 status
             var param = new List<string> { pending.Tx };
 
             var data = await _apiOne789BLL.CheckTicketStatus(setting, param);
