@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+ï»¿using Newtonsoft.Json;
 using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -132,12 +132,21 @@ namespace ThirdPartySettleWorker.Workers
                         }
                         else
                         {
-                            //±m²¼¶i¦æ¥¼µ²ºâ¬yµ{
+<<<<<<< HEAD
+                            //ï¿½mï¿½ï¿½ï¿½iï¿½æ¥¼ï¿½ï¿½ï¿½ï¿½yï¿½{
                             if (tpCategory == TpCategory.Lottery)
                             {
                                 /*
-                                 * °w¹ï¤w¼g¤JTpBetRecord SettlementType.UnSettled¦ý«áÄòCancel
-                                 * ¦]³¡¤À±¡ªp¤£¤@©w·|¦³wager¡A»Ý¨Ï¥ÎBettrans§PÂ_¨Ó§ó·sTpBetRecordª¬ºA
+                                 * ï¿½wï¿½ï¿½wï¿½gï¿½JTpBetRecord SettlementType.UnSettledï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Cancel
+                                 * ï¿½]ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½pï¿½ï¿½ï¿½@ï¿½wï¿½|ï¿½ï¿½wagerï¿½Aï¿½Ý¨Ï¥ï¿½Bettransï¿½Pï¿½_ï¿½Ó§ï¿½sTpBetRecordï¿½ï¿½ï¿½A
+=======
+                            //å½©ç¥¨é€²è¡Œæœªçµç®—æµç¨‹
+                            if (tpCategory == TpCategory.Lottery)
+                            {
+                                /*
+                                 * é‡å°å·²å¯«å…¥TpBetRecord SettlementType.UnSettledä½†å¾ŒçºŒCancel
+                                 * å› éƒ¨åˆ†æƒ…æ³ä¸ä¸€å®šæœƒæœ‰wagerï¼Œéœ€ä½¿ç”¨Bettransåˆ¤æ–·ä¾†æ›´æ–°TpBetRecordç‹€æ…‹
+>>>>>>> PRD
                                  */
                                 bool isRefund = false;
                                 if (unsettled.TicketType == (int)BettransType.Bet && unsettled.TicketStatus == (int)TicketStatus.Refund)
