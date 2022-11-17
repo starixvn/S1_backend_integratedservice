@@ -132,21 +132,12 @@ namespace ThirdPartySettleWorker.Workers
                         }
                         else
                         {
-<<<<<<< HEAD
-                            //�m���i�楼����y�{
-                            if (tpCategory == TpCategory.Lottery)
-                            {
-                                /*
-                                 * �w��w�g�JTpBetRecord SettlementType.UnSettled������Cancel
-                                 * �]�������p���@�w�|��wager�A�ݨϥ�Bettrans�P�_�ӧ�sTpBetRecord���A
-=======
                             //彩票進行未結算流程
                             if (tpCategory == TpCategory.Lottery)
                             {
                                 /*
                                  * 針對已寫入TpBetRecord SettlementType.UnSettled但後續Cancel
                                  * 因部分情況不一定會有wager，需使用Bettrans判斷來更新TpBetRecord狀態
->>>>>>> PRD
                                  */
                                 bool isRefund = false;
                                 if (unsettled.TicketType == (int)BettransType.Bet && unsettled.TicketStatus == (int)TicketStatus.Refund)
