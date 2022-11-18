@@ -278,13 +278,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 GetTpBonus(betRecordInfo.TpId, betRecordInfo.ReferenceNo, gameType, tpCategory, out custId, out bonusId);
             }
 
-            if (bonusId == 0 && betRecordInfo.TpId == (int)Tp.Skywind)
-            {
-                string[] sArray = Regex.Split(betRecordInfo.TransId, "-", RegexOptions.IgnoreCase);
-                var roundId = sArray[0];
-                GetTpBonus(betRecordInfo.TpId, roundId, gameType, tpCategory, out custId, out bonusId);
-            }
-
             betRecordInfo.BonusId = bonusId;
 
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
