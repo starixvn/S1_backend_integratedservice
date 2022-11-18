@@ -15,7 +15,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.BLL;
 using System.Threading.Tasks;
-using System.Text.RegularExpressions;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
