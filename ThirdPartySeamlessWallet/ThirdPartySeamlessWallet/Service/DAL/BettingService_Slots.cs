@@ -1421,7 +1421,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             if (result > 0 && bettingData_Skywind.amount != 0)
             {
-                result = PlaceBetV2(tpCustInfo, Math.Abs(bettingData_Skywind.amount) * -1, (int)Tp.Skywind, bettingData_Skywind.round_id, gameType, bettingData_Skywind.round_id, null, tpCategory, out afterAmount, ref bonusId, conn, trans);
+                var TransId = $"{bettingData_Skywind.round_id}-{bettingData_Skywind.game_id}";
+                result = PlaceBetV2(tpCustInfo, Math.Abs(bettingData_Skywind.amount) * -1, (int)Tp.Skywind, TransId, gameType, TransId, null, tpCategory, out afterAmount, ref bonusId, conn, trans);
             }
 
             if (result > 0)
