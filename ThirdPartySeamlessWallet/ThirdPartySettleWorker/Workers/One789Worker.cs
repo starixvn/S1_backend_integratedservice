@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -131,10 +131,20 @@ namespace ThirdPartySettleWorker.Workers
                             }
                         }
                         else
-                        {                                
-                            //�m���i�楼����y�{
+                        {
+                            //彩票進行未結算流程
                             if (tpCategory == TpCategory.Lottery)
                             {
+                                /*
+                                 * 針對已寫入TpBetRecord SettlementType.UnSettled但後續Cancel
+                                 * 因部分情況不一定會有wager，需使用Bettrans判斷來更新TpBetRecord狀態
+                                 */
+                                bool isRefund = false;
+                                if (unsettled.TicketType == (int)BettransType.Bet && unsettled.TicketStatus == (int)TicketStatus.Refund)
+                                {
+                                    isRefund = true;
+                                }
+
                                 var betRecordInfo = new BetRecordInfo
                                 {
                                     TpId = (int)Tp,
@@ -149,16 +159,21 @@ namespace ThirdPartySettleWorker.Workers
                                     TicketStatus = TicketStatus.UnSettled,
                                     SettlementType = SettlementType.UnSettled
                                 };
+
+                                if (isRefund)
+                                {
+                                    betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
+                                    betRecordInfo.TicketStatus = TicketStatus.Refund;
+                                }
                                 _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                                 _settledBLL.SetSettleFlag_Bettrans_One789((int)gameType, unsettled.TransId);
-                            }                          
+                            }
                         }
                     }
                     catch (Exception ex1)
                     {
                         _logger.LogError(ex1, $"{logName} || {JsonConvert.SerializeObject(unsettled)}");
                     }
-                    
                 }
             }
             catch (UnsettleNotFoundException ex)

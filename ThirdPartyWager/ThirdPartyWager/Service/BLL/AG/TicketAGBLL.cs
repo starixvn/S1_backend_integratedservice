@@ -32,7 +32,7 @@ namespace ThirdPartyWager.Service.BLL
         }
 
         // TpRefundWorker
-        public async Task<bool> CheckTicketStatusAsync(dynamic setting, dynamic pending)
+        public async Task<bool> CheckTicketStatusAsync(dynamic setting, dynamic pending, int gameType)
         {
             LogContext.PushProperty("SystemJob", $"Auto-Dispatch");
             var func = "CheckTicketStatusAsync";

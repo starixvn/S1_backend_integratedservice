@@ -66,7 +66,7 @@ namespace ThirdPartySettleWorker.Workers
                         var tpUserName = unsettledList.First().Account;
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
                         
-                        var stake = unsettledList.Sum(i => i.DebitAmount);
+                        var stake = unsettledList.First().DebitAmount;
                         var payout = unsettledList.Sum(i => i.CreditAmount);
                         var isClosed = unsettledList.Any(i => i.CurrentStatus.Equals("Closed", StringComparison.OrdinalIgnoreCase));
                         var settlementType = isClosed ? SettlementType.SettledForValid : SettlementType.UnSettled;

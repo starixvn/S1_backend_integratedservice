@@ -14,9 +14,9 @@ public class WagerKiss918 : BackgroundService
     private readonly CommonBLL _commonBLL;
 
     private readonly int tpId = (int)Tp.Kiss918;
-    private readonly string _tpName = Tp.Kiss918.ToString();
     private readonly int tpType = (int)WagerTimerType.Wager;
     private readonly int intervalMins = 3;
+    private readonly int intervalFasterMins = 1;
     private readonly int iRangMins = 60;
 
     private const int TimeZone = 0;
@@ -91,7 +91,7 @@ public class WagerKiss918 : BackgroundService
         {
             if (isFaster)
             {
-                var dueTimeSpan = TimeSpan.FromSeconds(intervalMins);
+                var dueTimeSpan = TimeSpan.FromSeconds(intervalFasterMins);
                 _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
             else
