@@ -4561,6 +4561,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
             afterAmount = 0;
             var tpCategory = TpCategory.Slots;
+            var TransId = $"{bettingData_Skywind.round_id}-{bettingData_Skywind.game_id}";
             try
             {
                 switch (gameType)
@@ -4609,10 +4610,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo,
                         bettingData_Skywind.amount,
                         (int)Tp.Skywind,
-                        bettingData_Skywind.round_id,
+                        TransId,
                         gameType,
                         tpCategory,
-                        bettingData_Skywind.round_id,
+                        TransId,
                         TransType.Payout,
                         null,
                         out afterAmount,
@@ -4624,7 +4625,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0 && bettingData_Skywind.TicketType == (int)BettransType.EndRound)
                 {
-                    result = _tpUnsettleService.InsertTpUnsettle(Tp.Skywind, (GameType)gameType, $"{bettingData_Skywind.round_id}-{bettingData_Skywind.game_id}", trans, partitionTime);
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.Skywind, (GameType)gameType, TransId, trans, partitionTime);
                 }
 
                 if (result > 0)
@@ -4648,7 +4649,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             afterAmount = 0;
             var tpCategory = gameType == (int)GameType.Skywind_RNG ? TpCategory.Slots : TpCategory.LiveCasino;
             var partitionTime = DateTimeOffset.FromUnixTimeSeconds(cancelBetData_Skywind.timestamp).DateTime;
-
+            var TransId = $"{cancelBetData_Skywind.roundid}-{cancelBetData_Skywind.gameid}";
             var query = new
             {
                 trx_id = cancelBetData_Skywind.trxid
@@ -4678,10 +4679,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo,
                         Math.Abs(bettransSkywind.amount),
                         (int)Tp.Skywind,
-                        cancelBetData_Skywind.roundid,
+                        TransId,
                         gameType,
                         tpCategory,
-                        cancelBetData_Skywind.roundid,
+                        TransId,
                         TransType.Refunds,
                         null,
                         out afterAmount,
