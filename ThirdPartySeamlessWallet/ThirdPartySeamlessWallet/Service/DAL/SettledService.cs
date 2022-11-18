@@ -15,6 +15,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.BLL;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -275,6 +276,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 // for n2 smart bet use
                 // for n2 temporary fix noraml bet
                 GetTpBonus(betRecordInfo.TpId, betRecordInfo.ReferenceNo, gameType, tpCategory, out custId, out bonusId);
+            }
+
+            if (bonusId == 0 && betRecordInfo.TpId == (int)Tp.Skywind)
+            {
+                string[] sArray = Regex.Split(betRecordInfo.TransId, "-", RegexOptions.IgnoreCase);
+                var roundId = sArray[0];
+                GetTpBonus(betRecordInfo.TpId, roundId, gameType, tpCategory, out custId, out bonusId);
             }
 
             betRecordInfo.BonusId = bonusId;
