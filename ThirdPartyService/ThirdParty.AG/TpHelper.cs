@@ -17,11 +17,11 @@ namespace ThirdParty.AG
     {
         Dictionary<string, string> oddsTypeDic = new Dictionary<string, string>() {
             {"MYR","GF4B" },
-            {"CNY","C" },
+            {"CNY","B" },
             {"THB","GF4A" },
             {"IDR","GF4A" },
             {"VND ","GF4A" },
-            {"USD ","GF4A" },
+            {"USD ","A" },
             {"INR ","GF4A" }
         };
 
