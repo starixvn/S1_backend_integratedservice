@@ -229,6 +229,7 @@ namespace ThirdPartyWager
             //GPI
             services.AddSingleton<WagerGPIBLL>();
             services.AddSingleton<ApiGPIBLL>();
+            services.AddSingleton<FinanceGPIBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -310,6 +311,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerKiss918>();
             services.AddHostedService<WagerGPI>();
             services.AddHostedService<WagerRedoGPI>();
+            services.AddHostedService<FinanceGPI>();
             //services.AddHostedService<WagerUnsettleCheckSkywind>();
         }
 
