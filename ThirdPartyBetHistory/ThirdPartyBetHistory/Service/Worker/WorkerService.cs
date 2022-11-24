@@ -73,7 +73,7 @@ namespace ThirdPartyBetHistory.Service.Worker
             }
             finally
             {
-                timerWorkerList[tpBetHelp.SiteId].Change(TimeSpan.FromSeconds(1), TimeSpan.Zero);
+                timerWorkerList[tpBetHelp.SiteId].Change(TimeSpan.FromSeconds(6), TimeSpan.Zero);
             }
         }
     }
