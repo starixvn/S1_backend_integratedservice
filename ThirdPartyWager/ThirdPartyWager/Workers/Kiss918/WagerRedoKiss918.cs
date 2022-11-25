@@ -1,4 +1,5 @@
-﻿using Serilog.Context;
+﻿using Google.Protobuf.WellKnownTypes;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -17,7 +18,7 @@ public class WagerRedoKiss918 : BackgroundService
     private readonly int tpType = (int)WagerTimerType.RedoWager;
     private readonly int intervalMins = 30;
     private readonly int intervalFasterMins = 15;
-    private readonly int iRangMins = 60;
+    private readonly int iRangMins = 180;
 
     private const int TimeZone = 0;
     private Timer _timer;
@@ -53,6 +54,11 @@ public class WagerRedoKiss918 : BackgroundService
             foreach (var item in TpCurrencyList)
             {
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, item.TpCurrencyId);
+
+                var ts = DateTime.Now - dataTpTimer.StartTime;
+                var diffMin = (int)ts.TotalMinutes;
+                if (diffMin < 120) continue;
+
                 DateTime timerTime;
                 int last;
                 if (dataTpTimer == null)
@@ -72,12 +78,17 @@ public class WagerRedoKiss918 : BackgroundService
                     var result = await _wagerKiss918BLL.GetWagersRedoAsync(tpId, time.startTime);
 
                     if (result)
-                        _thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, item.TpCurrencyId);
+                    {
+
+                        // 取得下個結帳時間
+                        var nextCheckTime = new DateTimeOffset(Convert.ToDateTime(time.startTime).AddMinutes(30), TimeSpan.Zero).ToUnixTimeSeconds();
+                        _thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, nextCheckTime, item.TpCurrencyId);
+                    }
                 }
 
-                var ts = DateTime.Now - timerTime;
-                var diffMin = (int)ts.TotalMinutes;
-                if (diffMin > 5)
+                ts = DateTime.Now - timerTime;
+                diffMin = (int)ts.TotalMinutes;
+                if (diffMin > 120)
                     isFaster = true;
                 else
                     isFaster = false;
@@ -91,12 +102,12 @@ public class WagerRedoKiss918 : BackgroundService
         {
             if (isFaster)
             {
-                var dueTimeSpan = TimeSpan.FromSeconds(intervalFasterMins);
+                var dueTimeSpan = TimeSpan.FromSeconds(intervalFasterMins); //15 Sec
                 _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
             else
             {
-                var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                var dueTimeSpan = TimeSpan.FromMinutes(intervalMins); // 30 Min
                 _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
