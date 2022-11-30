@@ -308,7 +308,6 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerKiss918>();
             services.AddHostedService<WagerRedoKiss918>();
             services.AddHostedService<WagerSkywind>();
-            services.AddHostedService<WagerKiss918>();
             services.AddHostedService<WagerGPI>();
             services.AddHostedService<WagerRedoGPI>();
             services.AddHostedService<FinanceGPI>();
