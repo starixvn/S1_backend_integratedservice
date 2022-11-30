@@ -83,9 +83,8 @@ namespace ThirdPartyWager.Service.Model.NineW
                 _betPlaced = value;
             }
         }
-        private  DateTime? _betPlaced { get; set; }
-
-        public DateTime matchSettledDate { get; set; } = default;
+        private DateTime? _betPlaced { get; set; }
+        public DateTime matchSettledDate { get; set; } = new DateTime(1970,1,1);
         public string marketName { get; set; } = string.Empty;
         public string selectionName { get; set; } = string.Empty;
         public string matchType { get; set; } = string.Empty;
@@ -109,6 +108,10 @@ namespace ThirdPartyWager.Service.Model.NineW
         {
             get
             {
+                if (matchSettledDate == new DateTime(1970, 1, 1))
+                {
+                    return 0;
+                }
                 return new DateTimeOffset(matchSettledDate, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
             }
         }
@@ -165,7 +168,7 @@ namespace ThirdPartyWager.Service.Model.NineW
             selectionName = unSettleBet.selectionName;
             selectionId = unSettleBet.selectionId;
             matchType = unSettleBet.matchType;     
-            matchSettledDate = default;
+            matchSettledDate = new DateTime(1970, 1, 1);
             profitLoss = default;          
             oddsType = unSettleBet.oddsType;
             betPlaced = unSettleBet.betPlaced;
@@ -197,7 +200,7 @@ namespace ThirdPartyWager.Service.Model.NineW
             selectionName = unSettleBet.selectionName;
             selectionId = unSettleBet.selectionId;
             matchType = unSettleBet.matchType;
-            matchSettledDate = default;
+            matchSettledDate = new DateTime(1970, 1, 1);
             profitLoss = default;
             oddsType = unSettleBet.oddsType;
             betPlaced = unSettleBet.betPlaced;
