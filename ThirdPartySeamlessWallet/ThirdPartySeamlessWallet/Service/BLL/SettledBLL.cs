@@ -253,7 +253,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
 
             var result = settledService.PayoutRNG_GPI(tpCustInfo, settledDataRNG_GPI, out afterAmount, out TransId);
-
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
