@@ -188,11 +188,11 @@ namespace ThirdPartyService.Service.DAL
 
         public IEnumerable<TpTransferInfoModel> TpTransferPendingGet(int limit)
         {
-            return _mainDbClient.Query<TpTransferInfoModel>("TpTransferInfo_Pending_Get_V2",new DynamicParameters(new { _Limit = limit}));
+            return _mainDbClient.QueryUseCommandDefinition<TpTransferInfoModel>("TpTransferInfo_Pending_Get_V2",new DynamicParameters(new { _Limit = limit}));
         }
         public IEnumerable<TpPendingBonusTransferModel> TpBonusTransferPendingGet(int limit)
         {
-            return _mainDbClient.Query<TpPendingBonusTransferModel>("Service_PendingBonusList_Get",new DynamicParameters(new { _Limit = limit}));
+            return _mainDbClient.QueryUseCommandDefinition<TpPendingBonusTransferModel>("Service_PendingBonusList_Get",new DynamicParameters(new { _Limit = limit}));
         }
         public TpPendingBonusTransferInfoModel TpBonusTransferInfoPendingGet(int custId , string status)
         {
@@ -200,7 +200,7 @@ namespace ThirdPartyService.Service.DAL
         }
         public IEnumerable<TpRemainingTransferBonusModel> TpRemainingTransferBonusGet(int limit)
         {
-            return _mainDbClient.Query<TpRemainingTransferBonusModel>("Service_RemainingTransferBonusPending_Get_V2",new DynamicParameters(new { _Limit = limit}));
+            return _mainDbClient.QueryUseCommandDefinition<TpRemainingTransferBonusModel>("Service_RemainingTransferBonusPending_Get_V2",new DynamicParameters(new { _Limit = limit}));
         }
         
         public bool SetTransferFail(string transId)
