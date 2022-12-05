@@ -487,7 +487,7 @@ namespace ThirdPartySettleWorker.Workers
             int thisTp = (int)Tp.JILI;
             string logName = "TransactionCheck";
             var tpName = Enum.GetName(typeof(Tp), thisTp);
-            var YYYYMM = "202212";
+            var YYYYMM = "202211";
 
             try
             {
