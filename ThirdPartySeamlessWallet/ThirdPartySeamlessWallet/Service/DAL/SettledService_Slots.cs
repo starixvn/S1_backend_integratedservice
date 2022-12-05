@@ -3412,6 +3412,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             return result;
         }
+
+        public IEnumerable<CheckBettingData_JILI> GetTransactionCheck_JILI(string YYYYMM)
+        {
+            var query = new { _YYYYMM = YYYYMM };
+            string sp = "Service_BettransRng_JILI_TransactionCheck_Get";
+            return _mainDbClient.Query<CheckBettingData_JILI>(sp, CommandType.StoredProcedure, new DynamicParameters(query));
+        }
+
+        public int SetTransactionCheckSettleFlag_JILI(string YYYYMM, long TransId, int SettleFlag)
+        {
+            string sp = "Service_BettransRng_JILI_TransactionCheck_Set";
+            return _mainDbClient.Execute(sp, parameters: new DynamicParameters(new { _YYYYMM = YYYYMM, _TransId = TransId, _SettleFlag = SettleFlag }));
+        }
         #endregion
 
         #region Netent
