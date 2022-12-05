@@ -301,5 +301,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return thirdPartyService.AddTpBetFailureRecord(tpBetFailureRecord);
         }
+
+        public IEnumerable<FinancialLog> GetFinancialLogTransactionCheck(string RefTransId, string YYYYMM)
+        {
+            return thirdPartyService.GetFinancialLogTransactionCheck(RefTransId, YYYYMM);
+        }
+
+        public IEnumerable<BonusLog> GetBonusLogTransactionCheck(string RefTransId)
+        {
+            return thirdPartyService.GetBonusLogTransactionCheck(RefTransId);
+        }
     }
 }

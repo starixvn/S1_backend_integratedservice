@@ -51,4 +51,32 @@
     {
         public int WagerCount { get; set; }
     }
+
+    public class CheckBettingData_JILI
+    {
+        public long SQ { get; set; }
+        public long TransId { get; set; }
+        public string reqId { get; set; }
+        public long round { get; set; }
+        public string userId { get; set; }
+        public string currency { get; set; }
+        public int game { get; set; }
+        public long wagersTime { get; set; }
+        public decimal betAmount { get; set; }
+        public decimal winloseAmount { get; set; }
+        public decimal turnover { get; set; }
+        public decimal preserve { get; set; }
+        public decimal jpContribute { get; set; }
+        public decimal jpWin { get; set; }
+        public bool isFreeRound { get; set; }
+        public long TransactionID { get; set; }
+        public long sessionId { get; set; }
+        public int type { get; set; }
+        public int SiteId { get; set; }
+        public int CurrencyId { get; set; }
+        public int CustId { get; set; }
+        public int TicketType { get; set; }
+        public int TicketStatus { get; set; }
+        public int SettleFlag { get; set; }
+    }
 }
