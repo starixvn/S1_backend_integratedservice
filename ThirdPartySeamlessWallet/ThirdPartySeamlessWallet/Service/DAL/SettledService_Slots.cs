@@ -2966,6 +2966,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             conn,
                             trans
                         );
+
+                        
+
+                        if (result != 1)
+                        {
+                            return 0;
+                        }
+
+
                     }
 
                     var transId = (bettingData_JILI.TransactionID != 0) ? bettingData_JILI.TransactionID.ToString() : bettingData_JILI.round.ToString();
