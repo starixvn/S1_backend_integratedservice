@@ -61,4 +61,39 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int CurrencyId { set; get; }
         public string TpCurrencyId { set; get; }
     }
+
+    public class FinancialLog
+    {
+        public long Id { set; get; }
+        public int CustId { set; get; }
+        public string UserName { set; get; }
+        public int SiteId { set; get; }
+        public int Type { set; get; }
+        public int Direction { set; get; }
+        public decimal ChangeAmount { set; get; }
+        public decimal BeforeAmount { set; get; }
+        public decimal AfterAmount { set; get; }
+        public string Memo { set; get; }
+        public string RefTransId { set; get; }
+        public DateTime CreateTime { set; get; }
+    }
+
+    public class BonusLog
+    {
+        public long Id { set; get; }
+        public int BonusId { set; get; }
+        public int CustId { set; get; }
+        public string UserName { set; get; }
+        public int SiteId { set; get; }
+        public int Type { set; get; }
+        public int WalletType { set; get; }
+        public int PromoCategoryId { set; get; }
+        public int Direction { set; get; }
+        public decimal ChangeBonus { set; get; }
+        public decimal BeforeBonus { set; get; }
+        public decimal AfterBonus { set; get; }
+        public string Memo { set; get; }
+        public string RefTransId { set; get; }
+        public DateTime CreateTime { set; get; }
+    }
 }
