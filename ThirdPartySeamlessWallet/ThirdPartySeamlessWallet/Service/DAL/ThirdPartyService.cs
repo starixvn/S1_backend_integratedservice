@@ -59,5 +59,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Execute("Service_TpBetFailureRecord_Ins", tpBetFailureRecord, commandType: CommandType.StoredProcedure);
         }
+        public IEnumerable<FinancialLog> GetFinancialLogTransactionCheck(string RefTransId, string YYYYMM)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<FinancialLog>("Service_FinancialLog_TransactionCheck_Get", new { _RefTransId = RefTransId, _YYYYMM = YYYYMM }, commandType: CommandType.StoredProcedure);
+        }
+
+        public IEnumerable<BonusLog> GetBonusLogTransactionCheck(string RefTransId)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.Query<BonusLog>("Service_BonusLog_TransactionCheck_Get", new { _RefTransId = RefTransId }, commandType: CommandType.StoredProcedure);
+        }
     }
 }
