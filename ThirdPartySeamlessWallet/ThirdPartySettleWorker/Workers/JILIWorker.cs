@@ -1,14 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Serilog.Context;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -27,6 +18,7 @@ namespace ThirdPartySettleWorker.Workers
         private Timer timerRngBySessionIdCancel;
         private Timer timerSettleJILIRng;
         private Timer timerSettleJILIFish;
+        private Timer timerTransactionCheck;
 
         private readonly SettledBLL _settledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
@@ -56,6 +48,7 @@ namespace ThirdPartySettleWorker.Workers
             timerRngBySessionId = new Timer(DoSettleRngBySessionIdWork, GameType.JILI_RNG, TimeSpan.Zero, TimeSpan.Zero);
             timerRngBySessionIdCancel = new Timer(DoSettleRngBySessionIdCancelWork, GameType.JILI_RNG, TimeSpan.Zero, TimeSpan.Zero);
             //timerSettleJILIFish = new Timer(DoSettleJILIFishWork, GameType.JILI_Fish, TimeSpan.Zero, TimeSpan.Zero);
+            timerTransactionCheck = new Timer(DoTransactionCheckWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -66,6 +59,7 @@ namespace ThirdPartySettleWorker.Workers
             timerRngBySessionIdCancel?.Change(Timeout.Infinite, 0);
             timerSettleJILIRng?.Change(Timeout.Infinite, 0);
             timerSettleJILIFish?.Change(Timeout.Infinite, 0);
+            timerTransactionCheck?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
 
@@ -483,6 +477,85 @@ namespace ThirdPartySettleWorker.Workers
             {
                 var dueTimeSpan = GetDueTimeSpan(forContinue, isError);
                 timerSettleJILIFish.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
+
+        private void DoTransactionCheckWork(object state)
+        {
+            bool forContinue = false;
+            bool isError = false;
+            int thisTp = (int)Tp.JILI;
+            string logName = "TransactionCheck";
+            var tpName = Enum.GetName(typeof(Tp), thisTp);
+            var YYYYMM = "202211";
+
+            try
+            {
+                var checkList = _settledBLL.GetTransactionCheck_JILI(YYYYMM);
+
+                if (checkList.Any())
+                {
+                    if (checkList != null)
+                    {
+                        forContinue = checkList.Count() == 500;
+                        foreach (var check in checkList)
+                        {
+                            try
+                            {
+                                bool isBet = false;
+                                var transId = check.TransId.ToString();
+
+                                // check FinancialLog
+                                var financialData = _thirdPartyBLL.GetFinancialLogTransactionCheck(transId, YYYYMM);
+                                if (financialData.Any())
+                                {
+                                    if (financialData.Any(x => x.Type == 11032))
+                                    {
+                                        isBet = true;
+                                    }
+                                }
+
+                                // check BonusLog
+                                if (!isBet)
+                                {
+                                    var bonusData = _thirdPartyBLL.GetBonusLogTransactionCheck(transId);
+                                    if (bonusData.Any())
+                                    {
+                                        if (bonusData.Any(x => x.Type == 11032))
+                                        {
+                                            isBet = true;
+                                        }
+                                    }
+                                }
+
+                                // set settleflag -1:check done、-2:abnormal
+                                var settleFlag = (isBet) ? -1 : -2;
+                                _settledBLL.SetTransactionCheckSettleFlag_JILI(YYYYMM, check.TransId, settleFlag);
+                            }
+                            catch (Exception ex1)
+                            {
+                                LogContext.PushProperty("TP", tpName);
+                                isError = true;
+                                _logger.LogError($"{JsonConvert.SerializeObject(check)}\r\n{ex1}", logName);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (UnsettleNotFoundException ex)
+            {
+                _logger.LogInformation(ex, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                LogContext.PushProperty("TP", tpName);
+                _logger.LogError(ex.ToString(), logName);
+                isError = true;
+            }
+            finally
+            {
+                var dueTimeSpan = GetDueTimeSpan(forContinue, isError);
+                timerTransactionCheck.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 

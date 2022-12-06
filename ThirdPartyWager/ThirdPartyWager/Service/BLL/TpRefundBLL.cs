@@ -61,13 +61,12 @@ namespace ThirdPartyWager.Service.BLL
                 // process
                 foreach (var pending in pendingList)
                 {
-                    var check = _bll.CheckTicketStatusAsync(setting, pending).Result;
+                    var check = _bll.CheckTicketStatusAsync(setting, pending, gameType).Result;
                     if (!check)
                     {
                         result = false;
                     }
                 }
-
             }
             catch (Exception ex)
             {

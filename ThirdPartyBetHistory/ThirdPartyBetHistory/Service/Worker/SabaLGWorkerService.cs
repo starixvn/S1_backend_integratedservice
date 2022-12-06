@@ -31,18 +31,18 @@ namespace ThirdPartyBetHistory.Service.Worker
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
 
-            foreach (var siteTpBetHelper in _sabaSiteList)
-            {
-                try
-                {
-                    var timer = new Timer(DoTask, siteTpBetHelper, TimeSpan.Zero, TimeSpan.Zero);
-                    timerWorkerList.Add(siteTpBetHelper.SiteId, timer);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error: SabaLGWorkerService");
-                }
-            }
+            //foreach (var siteTpBetHelper in _sabaSiteList)
+            //{
+            //    try
+            //    {
+            //        var timer = new Timer(DoTask, siteTpBetHelper, TimeSpan.Zero, TimeSpan.Zero);
+            //        timerWorkerList.Add(siteTpBetHelper.SiteId, timer);
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        _logger.LogError(ex, "Error: SabaLGWorkerService");
+            //    }
+            //}
 
             return Task.CompletedTask;
         }
