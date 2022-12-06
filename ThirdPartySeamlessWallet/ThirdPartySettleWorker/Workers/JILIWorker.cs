@@ -497,7 +497,7 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     if (checkList != null)
                     {
-                        forContinue = checkList.Count() == 500;
+                        forContinue = checkList.Count() != 0;
                         foreach (var check in checkList)
                         {
                             try
@@ -554,7 +554,17 @@ namespace ThirdPartySettleWorker.Workers
             }
             finally
             {
-                var dueTimeSpan = GetDueTimeSpan(forContinue, isError);
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(20);
+
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(2);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                }
+
                 timerTransactionCheck.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
