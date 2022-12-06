@@ -85,7 +85,7 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> GetWagersRedoAsync(int tpId, string startTime)
         {
-            var msg = "FATAL_ERROR";
+            var msg = "REDO_FATAL_ERROR";
             try
             {
                 // get api info
@@ -96,7 +96,7 @@ namespace ThirdPartyWager.Service.BLL
 
                 if (string.IsNullOrWhiteSpace(timepoint))
                 {
-                    msg = "GET_TIMEPOINT_ERROR";
+                    msg = "REDO_GET_TIMEPOINT_ERROR";
                     _logger.LogError($"{msg}\r\n{timepoint}");
                     return false;
                 }
@@ -106,14 +106,14 @@ namespace ThirdPartyWager.Service.BLL
 
                 if (!hasData)
                 {
-                    msg = "THIRD_PARTY_ERROR";
+                    msg = "REDO_THIRD_PARTY_ERROR";
                     _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataDetails)}");
                     return false;
                 }
 
                 if (hasData && dataDetails.Count() == 0)
                 {
-                    msg = "NO_DATA";
+                    msg = "REDO_NO_DATA";
                     _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataDetails)}");
                     return true;
                 }
@@ -130,29 +130,29 @@ namespace ThirdPartyWager.Service.BLL
                     }
                     if (lostData.Count() == 0)
                     {
-                        msg = "NO_LOST_DATA";
+                        msg = "REDO_NO_LOST_DATA";
                         _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(lostData)}");
                     }
                     else
                     {
-                        msg = "CHECK_LOST_DATA";
+                        msg = "REDO_CHECK_LOST_DATA";
                         _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(lostData.Select(x => x.referenceID))}");
                         _wagerKiss918Service.InsertWager(lostData);
                     }
                 }
                 catch (Exception ex)
                 {
-                    msg = $"INSERT_WAGER";
+                    msg = $"REDO_INSERT_WAGER";
                     _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(dataDetails)}\r\n{ex.Message}");
                     return false;
                 }
-                msg = "FINISH";
+                msg = "REDO_FINISH";
                 _logger.LogInformation($"GetWagersRedoAsync {msg}\r\n{startTime} ~ {dataDetails.MaxBy(x => x.created).created}");
                 return true;
             }
             catch (Exception ex)
             {
-                msg = "FATAL_ERROR";
+                msg = "REDO_FATAL_ERROR";
                 _logger.LogError(ex, $"GetWagersRedoAsync {msg}\r\n{ex.Message}");
                 return false;
             }
