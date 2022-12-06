@@ -554,11 +554,11 @@ namespace ThirdPartySettleWorker.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(20);
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(3);
 
                 if (forContinue)
                 {
-                    dueTimeSpan = TimeSpan.FromSeconds(2);
+                    dueTimeSpan = TimeSpan.FromSeconds(1);
                 }
                 else if (isError)
                 {
