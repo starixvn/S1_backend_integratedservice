@@ -33,7 +33,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<bool> ExecReportPlayerListWorker(int type, string currency, int timeRange)
         {
             // redo
-            var deduct = (type == 2) ? -3 : -1;
+            var deduct = (type == 2) ? -2 : -1;
             var excess = (type == 2) ? 3 : 1;
 
             // 結帳時間
