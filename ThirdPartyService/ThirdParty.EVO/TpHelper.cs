@@ -92,11 +92,11 @@ namespace ThirdParty.EVO
                         id = sessionKey,
                         ip = inputs["ClientIP"]
                     },
-                    group = new
-                    {
-                        id = siteName.ToString(),
-                        action = "assign"
-                    }
+                    //group = new
+                    //{
+                    //    id = siteName.ToString(),
+                    //    action = "assign"
+                    //}
                 },
                 config = new
                 {
