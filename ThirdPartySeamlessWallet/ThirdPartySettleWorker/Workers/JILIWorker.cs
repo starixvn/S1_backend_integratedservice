@@ -48,7 +48,7 @@ namespace ThirdPartySettleWorker.Workers
             timerRngBySessionId = new Timer(DoSettleRngBySessionIdWork, GameType.JILI_RNG, TimeSpan.Zero, TimeSpan.Zero);
             timerRngBySessionIdCancel = new Timer(DoSettleRngBySessionIdCancelWork, GameType.JILI_RNG, TimeSpan.Zero, TimeSpan.Zero);
             //timerSettleJILIFish = new Timer(DoSettleJILIFishWork, GameType.JILI_Fish, TimeSpan.Zero, TimeSpan.Zero);
-            timerTransactionCheck = new Timer(DoTransactionCheckWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            //timerTransactionCheck = new Timer(DoTransactionCheckWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
