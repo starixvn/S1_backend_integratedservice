@@ -1,4 +1,6 @@
-﻿using Serilog.Context;
+﻿using System.Xml.Linq;
+
+using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -14,7 +16,6 @@ namespace ThirdPartySettleWorker.Workers
         private readonly SettledBLL _settledBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ILogger<BTIWorker> _logger;
         private readonly string _tpName;
 
@@ -23,7 +24,6 @@ namespace ThirdPartySettleWorker.Workers
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _logger = provider.GetRequiredService<ILogger<BTIWorker>>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
             LogContext.PushProperty("TP", _tpName);
@@ -58,20 +58,43 @@ namespace ThirdPartySettleWorker.Workers
                     dueTimeSpan = TimeSpan.FromSeconds(1);
                 }
 
-                foreach (var transId in tpUnsettleList.Select(tpUnsettle => tpUnsettle.TransId))
+                foreach (var reserve_id in tpUnsettleList.Select(tpUnsettle => tpUnsettle.TransId))
                 {
                     try
                     {
-                        var unsettledList = _tpUnSettledBLL.GetTpUnsettleData<BTISettleData>("Service_BettransSports_BTI_Settle_Get", new { reserve_id = transId }, DataBase.Main);
+                        var unsettledList = _tpUnSettledBLL.GetTpUnsettleData<BTISettleData>("Service_BettransSports_BTI_Settle_Get", new { reserve_id }, DataBase.Main);
+                        var debitList = _tpUnSettledBLL.GetTpUnsettleData<BTIDebitData>("Service_BettransSports_BTI_Debit_Get", new { reserve_id }, DataBase.Main);
+
                         var tpUserName = unsettledList.First().Account;
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
 
+                        //使用Reserve單號的第一筆BetID作為transId
+                        var transId = unsettledList.First().BetID;
+
+                        // 下注總金額
                         var stake = unsettledList.First().DebitAmount;
+                        // 派彩總金額
                         var payout = unsettledList.Sum(i => i.CreditAmount);
+                        // 計算有效下注
+                        var validBet = CaculateValidBetAmount(unsettledList, debitList);
+                        // 注單狀態是否完成
                         var isClosed = unsettledList.Any(i => i.CurrentStatus.Equals("Closed", StringComparison.OrdinalIgnoreCase));
-                        var settlementType = isClosed ? SettlementType.SettledForValid : SettlementType.UnSettled;
-                        var ticketStatus = isClosed ? (payout - stake > 0 ? TicketStatus.Win : TicketStatus.Lost) : TicketStatus.UnSettled;
-                        if (unsettledList.First().TicketStatus == (int)TicketStatus.Refund)
+                       
+                        //未結算預設值
+                        var winlostAmount = 0m;
+                        var settlementType = SettlementType.UnSettled;
+                        var ticketStatus = TicketStatus.UnSettled;
+
+                        //設定結算值
+                        if (isClosed)
+                        {
+                            winlostAmount = payout - stake;
+                            settlementType = SettlementType.SettledForValid;
+                            ticketStatus = winlostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost;
+                        }
+
+                        //Reserve.TicketStatus = 3就是下注失敗退款
+                        if (unsettledList.Any(i => i.TicketStatus == (int)TicketStatus.Refund))
                         {
                             settlementType = SettlementType.SettledForInvalid;
                             ticketStatus = TicketStatus.Refund;
@@ -81,9 +104,9 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             TpId = (int)Tp,
                             Stake = stake,
-                            ValidBet = stake,
-                            WinlostAmount = isClosed ? payout - stake : 0,
-                            TransId = unsettledList.First().BetID,
+                            ValidBet = validBet,
+                            WinlostAmount = winlostAmount,
+                            TransId = transId,
                             GameType = gameType,
                             TpUserName = tpUserName,
                             SettledTime = unsettledList.Max(i => i.SettleTime),
@@ -99,9 +122,9 @@ namespace ThirdPartySettleWorker.Workers
                             {
                                 if (isClosed)
                                 {
-                                    _tpUnSettledBLL.SetSettleFlag("Service_BettransSports_BTI_Settle_Set_V2", new { account = tpUserName, transId, isSuccess = true });
+                                    _tpUnSettledBLL.SetSettleFlag("Service_BettransSports_BTI_Settle_Set_V2", new { account = tpUserName, transId = reserve_id, isSuccess = true });
                                 }
-                                _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, transId, true);
+                                _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, reserve_id, true);
                             });
                         }
                     }
@@ -109,10 +132,10 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         Task.Run(() =>
                         {
-                            _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, transId, false);
+                            _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, reserve_id, false);
                         });
                         LogContext.PushProperty("TP", _tpName);
-                        _logger.LogError(ex, $"BTI Settle exception. {ex.Message} || TransId : {transId}");
+                        _logger.LogError(ex, $"BTI Settle exception. {ex.Message} || reserve_id : {reserve_id}");
                     }
                 }
 
@@ -130,6 +153,34 @@ namespace ThirdPartySettleWorker.Workers
             {
                 _timerSports.Change(dueTimeSpan, TimeSpan.Zero);
             }
+        }
+
+        private decimal CaculateValidBetAmount(IEnumerable<BTISettleData> settleList, IEnumerable<BTIDebitData> debitList)
+        {
+            var validBetAmount = 0m;
+
+            foreach (var debit in debitList)
+            {
+                //該注單號碼的下注金額
+                var debitAmount = debit.amount;
+                //找出該注單號碼最後結算狀態
+                var settleStatus = settleList.Where(i => i.BetID == debit.BetID)
+                    ?.MaxBy(i => i.seq_num)
+                    ?.GetSettleStatus() ?? "";
+
+                // 注單結算為贏 或 輸 => 有效投注額為100 %
+                // 結算為 半贏 或 半輸 => 有效投注額為50 %
+                // 結算為 取消 或 平局 或 提前結算 => 有效投注額為0
+                validBetAmount += settleStatus switch
+                {
+                    "Lost" or "Won" => debitAmount * 1,
+                    "Half Lost" or "Half Won" => debitAmount * 0.5m,
+                    "Draw" or "Canceled" or "Cashout" => 0m,
+                    _ => 0m,
+                };
+            }
+
+            return validBetAmount;  
         }
     }
 }

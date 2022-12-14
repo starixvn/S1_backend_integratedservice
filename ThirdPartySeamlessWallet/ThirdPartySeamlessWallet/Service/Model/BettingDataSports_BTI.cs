@@ -172,6 +172,42 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal CreditAmount { get; set; }
 
         public string CurrentStatus { get; set; }
+
+        public string BodyData { get; set; }
+
+        public int seq_num { get; set; }
+
+        public string GetSettleStatus()
+        {
+            try
+            {
+                var XD = XDocument.Parse(BodyData);
+                foreach (XElement item in XD.Descendants("Change"))
+                {
+                    //比對狀態不同的回傳ID
+                    if (item.Attribute("OldStatus").Value != item.Attribute("NewStatus").Value)
+                    {
+                        return item.Attribute("NewStatus").Value;
+                    }
+                }
+                //都沒找到使用第一筆找到的
+                return XD.Descendants("Change").FirstOrDefault().Attribute("NewStatus").Value;
+            }
+            catch (Exception)
+            {
+                return "";
+            }
+
+        }
+    }
+
+    public class BTIDebitData
+    {
+        public string reserve_id { get; set; }
+
+        public decimal amount { get; set; }
+
+        public string BetID { get; set; }
     }
 
 
