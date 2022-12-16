@@ -312,6 +312,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             if (unsettled.TicketStatus > 0)
                             {
                                 betRecordInfo.TicketStatus = TicketStatus.Refund;
+                                betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
                             }
                             var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
 
