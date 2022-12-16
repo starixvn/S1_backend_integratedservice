@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Serilog.Context;
 using ThirdPartyCore.Model;
 using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.BLL;
@@ -65,6 +66,7 @@ namespace ThirdPartyService.Service.Worker
 
         private void DoWorker(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             Interlocked.Increment(ref execCount);
             if (execCount == 1)
             {

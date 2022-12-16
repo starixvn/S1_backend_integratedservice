@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Serilog.Context;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Extensions;
@@ -39,6 +40,7 @@ namespace ThirdPartyService.Service.Worker
         /// <param name="state"></param>
         private void DoTask(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             try
             {
                 var tpTransferList = _tpTransferInfo.TpTransferPendingGet(_random.Next(950, 1000));// 避免 ORM 或 db execution plan cache
@@ -76,6 +78,7 @@ namespace ThirdPartyService.Service.Worker
         /// <param name="state"></param>
         private void DoTaskForBonusTransfer(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             try
             {
                 var tpTransferList = _tpTransferInfo.TpBonusTransferPendingGet(_random.Next(950, 1000));
@@ -121,6 +124,7 @@ namespace ThirdPartyService.Service.Worker
         /// <param name="state"></param>
         private void DoTaskRemainingBonusAmountTransfer(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             try
             {
                 var tpTransferList = _tpTransferInfo.TpRemainingTransferBonusGet(_random.Next(950, 1000));
