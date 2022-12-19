@@ -114,6 +114,10 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Skywind_LiveCasino = 84,
         Skywind_Fish = 85,
         SimplePlay_RNG = 86,
+        GPI_Keno = 88,
+        GPI_Sode = 89,
+        GPI_Thai_Lottery = 90,
+        GPI_Fast3 = 91,
     }
     public enum Tp
     {

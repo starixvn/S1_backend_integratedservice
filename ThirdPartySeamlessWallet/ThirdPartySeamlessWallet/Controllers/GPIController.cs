@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -16,26 +11,87 @@ namespace ThirdPartySeamlessWallet.Controllers
     [ApiController]
     public class GPIController : ControllerBase
     {
-        private readonly AuthBLL authBLL;
-        private readonly ILogger<GPIController> logger;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly TpCustInfoBLL tpCustInfoBLL;
-        private readonly BettingBLL bettingBLL;
-        private readonly SettledBLL settledBLL;
-        private readonly Log2File log2File;
-        private readonly int gameType = 0;
+        private readonly AuthBLL _authBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly BettingBLL _bettingBLL;
+        private readonly SettledBLL _settledBLL;
+        private readonly TpUnSettledBLL _tpUnSettledBLL;
+        private readonly ILogger<GPIController> _logger;
+        private readonly Log2File _log2File;
+        private readonly Tp _thisTp;
+        private readonly IHostEnvironment _environment;
 
-        public GPIController(ILogger<GPIController> logger, AuthBLL authBLL, ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File)
+        public GPIController(
+            IServiceProvider provider,
+            ILogger<GPIController> logger,
+            IHostEnvironment environment
+        )
         {
-            this.authBLL = authBLL;
-            this.logger = logger;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.tpCustInfoBLL = tpCustInfoBLL;
-            this.bettingBLL = bettingBLL;
-            this.settledBLL = settledBLL;
-            this.log2File = log2File;
-            gameType = (int)GameType.GPI_RNG;
+            _logger = logger;
+            _log2File = provider.GetRequiredService<Log2File>();
+            _environment = environment;
+            _authBLL = provider.GetRequiredService<AuthBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _bettingBLL = provider.GetRequiredService<BettingBLL>();
+            _settledBLL = provider.GetRequiredService<SettledBLL>();
+            _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
+            _thisTp = Tp.GPI;
         }
+
+        #region Request
+
+        public class GetbalanceReq
+        {
+            public string merch_id { get; set; }
+            public string merch_pwd { get; set; }
+            public string cust_id { get; set; }
+            public string currency { get; set; }
+            public string Operator { get; set; }
+            public string game_id { get; set; }
+            public string platform { get; set; }
+        }
+
+        public class DebitReq : BettingDataRNG_GPI
+        {
+            public string merch_id { get; set; }
+            public string merch_pwd { get; set; }
+        }
+
+        public class CreditReq : SettledDataRNG_GPI
+        {
+            public string merch_id { get; set; }
+            public string merch_pwd { get; set; }
+        }
+
+        public class VoidBetReq : BettingDataRNG_GPI
+        {
+            public string merch_id { get; set; }
+            public string merch_pwd { get; set; }
+        }
+
+        public class EditBetReq : BettingDataRNG_GPI
+        {
+            public string merch_id { get; set; }
+            public string merch_pwd { get; set; }
+        }
+
+        public class CancelBetReq : CancelBet_GPI
+        {
+            public string merch_id { get; set; }
+            public string merch_pwd { get; set; }
+        }
+
+        public class EndgameReq : EndgameRNG_GPI
+        {
+            public string merch_id { get; set; }
+            public string merch_pwd { get; set; }
+        }
+
+        #endregion
+
+        #region Response
 
         [XmlRoot(ElementName = "resp")]
         public class ValidateTicketResp
@@ -62,27 +118,98 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string Ip { get; set; }
         }
 
+        [XmlRoot(ElementName = "resp")]
+        public class GetbalanceResp
+        {
+            [XmlElement(ElementName = "error_code")]
+            public int Error_code { get; set; }
+            [XmlElement(ElementName = "error_msg")]
+            public string Error_msg { get; set; }
+            [XmlElement(ElementName = "balance")]
+            public decimal Balance { get; set; }
+        }
+
+        [XmlRoot(ElementName = "resp")]
+        public class DebitResp
+        {
+            [XmlElement(ElementName = "error_code")]
+            public int Error_code { get; set; }
+            [XmlElement(ElementName = "error_msg")]
+            public string Error_msg { get; set; }
+            [XmlElement(ElementName = "before")]
+            public decimal Before { get; set; }
+            [XmlElement(ElementName = "after")]
+            public decimal After { get; set; }
+            [XmlElement(ElementName = "exchange_rate")]
+            public decimal Exchange_rate { get; set; }
+            [XmlElement(ElementName = "trx_id")]
+            public string Trx_id { get; set; }
+        }
+
+        [XmlRoot(ElementName = "resp")]
+        public class CreditResp
+        {
+            [XmlElement(ElementName = "error_code")]
+            public int Error_code { get; set; }
+            [XmlElement(ElementName = "error_msg")]
+            public string Error_msg { get; set; }
+            [XmlElement(ElementName = "before")]
+            public decimal Before { get; set; }
+            [XmlElement(ElementName = "after")]
+            public decimal After { get; set; }
+            [XmlElement(ElementName = "exchange_rate")]
+            public decimal Exchange_rate { get; set; }
+            [XmlElement(ElementName = "trx_id")]
+            public string Trx_id { get; set; }
+        }
+
+        [XmlRoot(ElementName = "resp")]
+        public class VoidBetResp : CreditResp
+        {
+        }
+
+        [XmlRoot(ElementName = "resp")]
+        public class EditBetResp : CreditResp
+        {
+        }
+
+        [XmlRoot(ElementName = "resp")]
+        public class CancelBetResp : CreditResp
+        {
+        }
+
+        [XmlRoot(ElementName = "resp")]
+        public class EndgameResp
+        {
+            [XmlElement(ElementName = "error_code")]
+            public int Error_code { get; set; }
+            [XmlElement(ElementName = "error_msg")]
+            public string Error_msg { get; set; }
+        }
+
+        #endregion
+
         [Route("[controller]/ms/validateticket")]
         [HttpPost]
         [Produces("application/xml")]
         public ValidateTicketResp validateticket([FromForm] string ticket)
         {
-            logger.LogInformation(ticket);
+            string logName = $"{_thisTp}_validateticket";
 
             ValidateTicketResp validateTicketResp = new ValidateTicketResp();
             TpCustInfoAuth tpCustInfoAuth = null;
-            if (authBLL.Authenticate(ticket, out tpCustInfoAuth))
+            if (_authBLL.Authenticate(ticket, out tpCustInfoAuth))
             {
-                var tpCountryCode = tpCustInfoBLL.GetTpCurrencyCodeByCurrencyId((int)Tp.GPI, tpCustInfoAuth.TpCurrencyId);
+                var tpCountryCode = _tpCustInfoBLL.GetTpCurrencyCodeByCurrencyId((int)_thisTp, tpCustInfoAuth.TpCurrencyId);
                 if (tpCountryCode == null)
                 {
                     validateTicketResp.Error_code = -3;
                     validateTicketResp.Error_msg = "Authentication Failed";
-                    logger.LogError($"TpCountryCodeError\r\n{JsonConvert.SerializeObject(validateTicketResp)}");
+                    _log2File.Error($"TpCountryCodeError\r\n{JsonConvert.SerializeObject(validateTicketResp)}", logName);
                     return validateTicketResp;
                 }
 
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.GPI, tpCustInfoAuth.TpUserName);
+                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, tpCustInfoAuth.TpUserName);
                 if (tpCheck == null)
                 {
                     validateTicketResp.Error_code = -3;
@@ -105,7 +232,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     validateTicketResp.Date_of_birth = "30-7-1970";
                     validateTicketResp.Ip = tpCustInfoAuth.ClientIP;
 
-                    logger.LogInformation(JsonConvert.SerializeObject(validateTicketResp));
+                    _log2File.Info(JsonConvert.SerializeObject(validateTicketResp), logName);
                     return validateTicketResp;
                 }
             }
@@ -115,31 +242,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                 validateTicketResp.Error_msg = "Authentication Failed";
             }
 
-            logger.LogError(JsonConvert.SerializeObject(validateTicketResp));
+            _log2File.Error(JsonConvert.SerializeObject(validateTicketResp), logName);
             return validateTicketResp;
-        }
-
-        public class GetbalanceReq
-        {
-            public string merch_id { get; set; }
-            public string merch_pwd { get; set; }
-            public string cust_id { get; set; }
-            public string currency { get; set; }
-            public string Operator { get; set; }
-            public string game_id { get; set; }
-            public string platform { get; set; }
-        }
-
-
-        [XmlRoot(ElementName = "resp")]
-        public class GetbalanceResp
-        {
-            [XmlElement(ElementName = "error_code")]
-            public int Error_code { get; set; }
-            [XmlElement(ElementName = "error_msg")]
-            public string Error_msg { get; set; }
-            [XmlElement(ElementName = "balance")]
-            public decimal Balance { get; set; }
         }
 
         [Route("[controller]/ms/getbalance")]
@@ -147,9 +251,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Produces("application/xml")]
         public GetbalanceResp getbalance([FromForm] GetbalanceReq getbalanceReq)
         {
+            string logName = $"{_thisTp}_getbalance";
+
             GetbalanceResp getbalanceResp = new GetbalanceResp();
 
-            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.GPI, getbalanceReq.cust_id, gameType);
+            var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, getbalanceReq.game_id);
+            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getbalanceReq.cust_id, (int)gameType);
             if (getbalanceReq.currency != tpCustBalance.TpCurrencyId)
             {
                 getbalanceResp.Error_code = -29;
@@ -158,45 +265,26 @@ namespace ThirdPartySeamlessWallet.Controllers
             else
             {
                 getbalanceResp.Balance = tpCustBalance.Balance;
-                logger.LogInformation($"{JsonConvert.SerializeObject(getbalanceReq)}\r\n{JsonConvert.SerializeObject(getbalanceResp)}");
+                _log2File.Info($"{JsonConvert.SerializeObject(getbalanceReq)}\r\n{JsonConvert.SerializeObject(getbalanceResp)}", logName);
                 return getbalanceResp;
             }
 
-            logger.LogError($"{JsonConvert.SerializeObject(getbalanceReq)}\r\n{JsonConvert.SerializeObject(getbalanceResp)}");
+            _log2File.Error($"{JsonConvert.SerializeObject(getbalanceReq)}\r\n{JsonConvert.SerializeObject(getbalanceResp)}", logName);
             return getbalanceResp;
         }
-        public class DebitReq : BettingDataRNG_GPI
-        {
-            public string merch_id { get; set; }
-            public string merch_pwd { get; set; }
-        }
 
-        [XmlRoot(ElementName = "resp")]
-        public class DebitResp
-        {
-            [XmlElement(ElementName = "error_code")]
-            public int Error_code { get; set; }
-            [XmlElement(ElementName = "error_msg")]
-            public string Error_msg { get; set; }
-            [XmlElement(ElementName = "before")]
-            public decimal Before { get; set; }
-            [XmlElement(ElementName = "after")]
-            public decimal After { get; set; }
-            [XmlElement(ElementName = "exchange_rate")]
-            public decimal Exchange_rate { get; set; }
-            [XmlElement(ElementName = "trx_id")]
-            public string Trx_id { get; set; }
-        }
         [Route("[controller]/ms/debit")]
         [HttpPost]
         [Produces("application/xml")]
         public DebitResp debit([FromForm] DebitReq debitReq)
         {
+            string logName = $"{_thisTp}_debit";
+
             DebitResp debitResp = new DebitResp();
             debitResp.Error_code = -1;
             debitResp.Error_msg = "Unknown error";
 
-            var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.GPI, debitReq.cust_id);
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, debitReq.cust_id);
             if (tpCheck == null)
             {
                 debitResp.Error_code = -7;
@@ -211,13 +299,19 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 try
                 {
-                    if (bettingBLL.PlaceBetRNG_GPI(debitReq, out decimal tpAffterAmount, out string TransId) > 0)
+                    decimal tpAffterAmount = 0;
+                    var TransId = "";
+
+                    var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, debitReq.game_id);
+                    int result = (gameType == GameType.GPI_RNG) ? _bettingBLL.PlaceBetRNG_GPI(debitReq, out tpAffterAmount, out TransId) : _bettingBLL.PlaceBetLT_GPI(debitReq, (int)gameType, out tpAffterAmount, out TransId);
+
+                    if (result > 0)
                     {
                         debitResp.Error_code = 0;
                         debitResp.Error_msg = "No errors";
                         if (debitReq.amount == 0)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.GPI, debitReq.cust_id, gameType);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, debitReq.cust_id, (int)gameType);
                             debitResp.After = tpCustBalance.Balance;
                             debitResp.Before = debitResp.After;
                         }
@@ -229,7 +323,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         debitResp.Exchange_rate = 1;
                         debitResp.Trx_id = TransId;
 
-                        log2File.Info($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(debitResp)}", "GPI_debit");
+                        _log2File.Info($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(debitResp)}", logName);
                         return debitResp;
                     }
                     else if (tpAffterAmount < 0)
@@ -247,36 +341,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     debitResp.Error_code = -1;
                     debitResp.Error_msg = "Unknown error";
-                    log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(debitResp)}\r\n{ex}", "GPI_debit", ex);
+                    _log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(debitResp)}\r\n{ex}", logName, ex);
                     return debitResp;
                 }
             }
 
-            log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(debitResp)}", "GPI_debit");
+            _log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(debitResp)}", logName);
             return debitResp;
-        }
-
-        public class CreditReq : SettledDataRNG_GPI
-        {
-            public string merch_id { get; set; }
-            public string merch_pwd { get; set; }
-        }
-
-        [XmlRoot(ElementName = "resp")]
-        public class CreditResp
-        {
-            [XmlElement(ElementName = "error_code")]
-            public int Error_code { get; set; }
-            [XmlElement(ElementName = "error_msg")]
-            public string Error_msg { get; set; }
-            [XmlElement(ElementName = "before")]
-            public decimal Before { get; set; }
-            [XmlElement(ElementName = "after")]
-            public decimal After { get; set; }
-            [XmlElement(ElementName = "exchange_rate")]
-            public decimal Exchange_rate { get; set; }
-            [XmlElement(ElementName = "trx_id")]
-            public string Trx_id { get; set; }
         }
 
         [Route("[controller]/ms/credit")]
@@ -284,6 +355,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Produces("application/xml")]
         public CreditResp credit([FromForm] CreditReq creditReq)
         {
+            string logName = $"{_thisTp}_credit";
+
             CreditResp creditResp = new CreditResp();
             creditResp.Exchange_rate = 1;
             creditResp.Error_code = -1;
@@ -291,7 +364,19 @@ namespace ThirdPartySeamlessWallet.Controllers
             //logger.LogCritical(JsonConvert.SerializeObject(creditReq));
             try
             {
-                int result = settledBLL.PayoutRNG_GPI(creditReq, out decimal tpAffterAmount, out string TransId);
+                decimal tpAffterAmount = 0;
+                var TransId = "";
+
+                var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, creditReq.game_id);
+                if (gameType != GameType.GPI_RNG && creditReq.amount == 0)
+                {
+                    // Live Casino & Lottery system do not send credit request to seamless wallet endpoint with amount = 0
+                    creditResp.Error_code = -33;
+                    creditResp.Error_msg = "Invalid amount";
+                    _log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}", logName);
+                    return creditResp;
+                }
+                int result = (gameType == GameType.GPI_RNG) ? _settledBLL.PayoutRNG_GPI(creditReq, out tpAffterAmount, out TransId) : _settledBLL.PayoutLT_GPI(creditReq, (int)gameType, out tpAffterAmount, out TransId);
 
                 if (result > 0)
                 {
@@ -303,30 +388,30 @@ namespace ThirdPartySeamlessWallet.Controllers
                         creditResp.Error_code = 0;
                         creditResp.Error_msg = "No errors";
 
-                        log2File.Info($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}", "GPI_credit");
+                        _log2File.Info($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}", logName);
                         return creditResp;
                     }
                     else if (creditReq.amount == 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.GPI, creditReq.cust_id, gameType);
+                        var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, creditReq.cust_id, (int)gameType);
                         creditResp.After = tpCustBalance.Balance;
                         creditResp.Before = tpCustBalance.Balance;
                         creditResp.Error_code = 0;
                         creditResp.Error_msg = "No errors";
 
-                        log2File.Info($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}", "GPI_credit");
+                        _log2File.Info($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}", logName);
                         return creditResp;
                     }
                 }
                 else if (result == -1)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.GPI, creditReq.cust_id, gameType);
+                    var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, creditReq.cust_id, (int)gameType);
                     creditResp.After = tpCustBalance.Balance;
                     creditResp.Before = tpCustBalance.Balance;
                     creditResp.Error_code = 0;
                     creditResp.Error_msg = "No errors";
 
-                    log2File.Info($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}", "GPI_credit");
+                    _log2File.Info($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}", logName);
                     return creditResp;
                 }
             }
@@ -334,26 +419,198 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 creditResp.Error_code = -1;
                 creditResp.Error_msg = "Unknown error";
-                log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}\r\n{ex}", "GPI_credit", ex);
-                throw ex;
+                _log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}\r\n{ex}", logName, ex);
+                throw;
             }
 
-            log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}", "GPI_credit");
+            _log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}", logName);
             return creditResp;
         }
-        public class EndgameReq : EndgameRNG_GPI
+
+        [Route("[controller]/ms/changeBalance")]
+        [HttpPost]
+        [Produces("application/xml")]
+        public VoidBetResp changeBalance([FromForm] VoidBetReq voidBetReq)
         {
-            public string merch_id { get; set; }
-            public string merch_pwd { get; set; }
+            string logName = $"{_thisTp}_changeBalance";
+
+            VoidBetResp voidBetResp = new VoidBetResp();
+            voidBetResp.Exchange_rate = 1;
+            voidBetResp.Error_code = -1;
+            try
+            {
+                var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, voidBetReq.game_id);
+                if (gameType == GameType.GPI_RNG)
+                {
+                    voidBetResp.Error_msg = "Unknown error(not support slot)";
+                    _log2File.Error($"{JsonConvert.SerializeObject(voidBetReq)}\r\n{JsonConvert.SerializeObject(voidBetResp)}", logName);
+                    return voidBetResp;
+                }
+                var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, voidBetReq.cust_id, (int)gameType);
+                int result = _settledBLL.VoidBetLT_GPI(voidBetReq, (int)gameType, out decimal tpAffterAmount, out string TransId);
+
+                if (result > 0)
+                {
+                    voidBetResp.Trx_id = TransId;
+                    voidBetResp.After = (voidBetReq.amount == 0) ? tpCustBalance.Balance : tpAffterAmount;
+                    voidBetResp.Before = (voidBetReq.amount == 0) ? tpCustBalance.Balance : tpAffterAmount - voidBetReq.amount;
+                    voidBetResp.Error_code = 0;
+                    voidBetResp.Error_msg = "No errors";
+
+                    _log2File.Info($"{JsonConvert.SerializeObject(voidBetReq)}\r\n{JsonConvert.SerializeObject(voidBetResp)}", logName);
+                    return voidBetResp;
+                }
+                else if (result == -1)
+                {
+                    voidBetResp.After = tpCustBalance.Balance;
+                    voidBetResp.Before = tpCustBalance.Balance;
+                    voidBetResp.Error_code = 1;
+                    voidBetResp.Error_msg = "Transaction already exists";
+                }
+                else if (result == -2)
+                {
+                    voidBetResp.After = tpCustBalance.Balance;
+                    voidBetResp.Before = tpCustBalance.Balance;
+                    voidBetResp.Error_code = -201;
+                    voidBetResp.Error_msg = "Transaction not exist";
+                }
+            }
+            catch (Exception ex)
+            {
+                voidBetResp.Error_code = -1;
+                voidBetResp.Error_msg = "Unknown error";
+                _log2File.Error($"{JsonConvert.SerializeObject(voidBetReq)}\r\n{JsonConvert.SerializeObject(voidBetResp)}\r\n{ex}", logName, ex);
+                throw;
+            }
+
+            _log2File.Error($"{JsonConvert.SerializeObject(voidBetReq)}\r\n{JsonConvert.SerializeObject(voidBetResp)}", logName);
+            return voidBetResp;
         }
 
-        [XmlRoot(ElementName = "resp")]
-        public class EndgameResp
+        [Route("[controller]/ms/editResult")]
+        [HttpPost]
+        [Produces("application/xml")]
+        public EditBetResp editResult([FromForm] EditBetReq editBetReq)
         {
-            [XmlElement(ElementName = "error_code")]
-            public int Error_code { get; set; }
-            [XmlElement(ElementName = "error_msg")]
-            public string Error_msg { get; set; }
+            
+            string logName = $"{_thisTp}_editResult";
+
+            EditBetResp editBetResp = new EditBetResp();
+            editBetResp.Exchange_rate = 1;
+            editBetResp.Error_code = -1;
+            // Gameplay，上午 10:50 是的，目前彩票类暂不使用此API
+            return editBetResp;
+            /*
+            try
+            {
+                var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, editBetReq.game_id);
+                
+                if (gameType == GameType.GPI_RNG)
+                {
+                    editBetResp.Error_msg = "Unknown error(not support slot)";
+                    _log2File.Error($"{JsonConvert.SerializeObject(editBetReq)}\r\n{JsonConvert.SerializeObject(editBetResp)}", logName);
+                    return editBetResp;
+                }
+                var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, editBetReq.cust_id, (int)gameType);
+                int result = _settledBLL.EditBetLT_GPI(editBetReq, (int)gameType, out decimal tpAffterAmount, out string TransId);
+
+                if (result > 0)
+                {
+                    editBetResp.Trx_id = TransId;
+                    editBetResp.After = (editBetReq.amount == 0) ? tpCustBalance.Balance : tpAffterAmount;
+                    editBetResp.Before = (editBetReq.amount == 0) ? tpCustBalance.Balance : tpAffterAmount - editBetReq.amount;
+                    editBetResp.Error_code = 0;
+                    editBetResp.Error_msg = "No errors";
+
+                    _log2File.Info($"{JsonConvert.SerializeObject(editBetReq)}\r\n{JsonConvert.SerializeObject(editBetResp)}", logName);
+                    return editBetResp;
+                }
+                else if (result == -1)
+                {
+                    editBetResp.After = tpCustBalance.Balance;
+                    editBetResp.Before = tpCustBalance.Balance;
+                    editBetResp.Error_code = 1;
+                    editBetResp.Error_msg = "Transaction already exists";
+                }
+                else if (result == -2)
+                {
+                    editBetResp.After = tpCustBalance.Balance;
+                    editBetResp.Before = tpCustBalance.Balance;
+                    editBetResp.Error_code = -201;
+                    editBetResp.Error_msg = "Transaction not exist";
+                }
+            }
+            catch (Exception ex)
+            {
+                editBetResp.Error_code = -1;
+                editBetResp.Error_msg = "Unknown error";
+                _log2File.Error($"{JsonConvert.SerializeObject(editBetReq)}\r\n{JsonConvert.SerializeObject(editBetResp)}\r\n{ex}", logName, ex);
+                throw;
+            }
+
+            _log2File.Error($"{JsonConvert.SerializeObject(editBetReq)}\r\n{JsonConvert.SerializeObject(editBetResp)}", logName);
+            return editBetResp;
+            */
+        }
+
+        [Route("[controller]/ms/rollback")]
+        [HttpPost]
+        [Produces("application/xml")]
+        public CancelBetResp rollback([FromForm] CancelBetReq cancelBetReq)
+        {
+            string logName = $"{_thisTp}_rollback";
+
+            CancelBetResp cancelBetResp = new CancelBetResp();
+            cancelBetResp.Exchange_rate = 1;
+            cancelBetResp.Error_code = -1;
+            try
+            {
+                var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, cancelBetReq.game_id);
+                if (gameType == GameType.GPI_RNG)
+                {
+                    cancelBetResp.Error_msg = "Unknown error(not support slot)";
+                    _log2File.Error($"{JsonConvert.SerializeObject(cancelBetReq)}\r\n{JsonConvert.SerializeObject(cancelBetResp)}", logName);
+                    return cancelBetResp;
+                }
+                var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, cancelBetReq.cust_id, (int)gameType);
+                int result = _settledBLL.CancelBetLT_GPI(cancelBetReq, (int)gameType, out decimal tpAffterAmount, out string TransId);
+
+                if (result > 0)
+                {
+                    cancelBetResp.Trx_id = TransId;
+                    cancelBetResp.After = tpAffterAmount;
+                    cancelBetResp.Before = tpCustBalance.Balance;
+                    cancelBetResp.Error_code = 0;
+                    cancelBetResp.Error_msg = "No errors";
+
+                    _log2File.Info($"{JsonConvert.SerializeObject(cancelBetReq)}\r\n{JsonConvert.SerializeObject(cancelBetResp)}", logName);
+                    return cancelBetResp;
+                }
+                else if (result == -1)
+                {
+                    cancelBetResp.After = tpCustBalance.Balance;
+                    cancelBetResp.Before = tpCustBalance.Balance;
+                    cancelBetResp.Error_code = 1;
+                    cancelBetResp.Error_msg = "Transaction already exists";
+                }
+                else if (result == -2)
+                {
+                    cancelBetResp.After = tpCustBalance.Balance;
+                    cancelBetResp.Before = tpCustBalance.Balance;
+                    cancelBetResp.Error_code = -201;
+                    cancelBetResp.Error_msg = "Transaction not exist";
+                }
+            }
+            catch (Exception ex)
+            {
+                cancelBetResp.Error_code = -1;
+                cancelBetResp.Error_msg = "Unknown error";
+                _log2File.Error($"{JsonConvert.SerializeObject(cancelBetReq)}\r\n{JsonConvert.SerializeObject(cancelBetResp)}\r\n{ex}", logName, ex);
+                throw;
+            }
+
+            _log2File.Error($"{JsonConvert.SerializeObject(cancelBetReq)}\r\n{JsonConvert.SerializeObject(cancelBetResp)}", logName);
+            return cancelBetResp;
         }
 
         [Route("[controller]/ms/endgame")]
@@ -361,18 +618,39 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Produces("application/xml")]
         public EndgameResp endgame([FromForm] EndgameReq endgameReq)
         {
+            string logName = $"{_thisTp}_endgame";
             EndgameResp endgameResp = new EndgameResp();
             endgameResp.Error_code = -1;
             endgameResp.Error_msg = "Unknown error";
 
-            int result = settledBLL.SetSettleFlagRNG_GPI(endgameReq.round_id, endgameReq.cust_id, 2);
+            try
+            {
+                var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, endgameReq.game_id);
+                if (gameType != GameType.GPI_RNG)
+                {
+                    int result = _tpUnSettledBLL.InsertTpUnsettle(_thisTp, gameType, endgameReq.round_id);
+                }
+                else
+                {
+                    int result = _settledBLL.SetSettleFlagRNG_GPI(endgameReq.round_id, endgameReq.cust_id, 2);
+                }
+            }
+            catch (Exception ex)
+            {
+                endgameResp.Error_code = -1;
+                endgameResp.Error_msg = "Unknown error";
+                _log2File.Error($"{JsonConvert.SerializeObject(endgameReq)}\r\n{JsonConvert.SerializeObject(endgameResp)}\r\n{ex}", logName, ex);
+                throw;
+            }
+
             endgameResp.Error_code = 0;
             endgameResp.Error_msg = "No errors";
 
             string endgameLog = $"{JsonConvert.SerializeObject(endgameReq)}\r\n{JsonConvert.SerializeObject(endgameResp)}";
-            log2File.Info(endgameLog, "GPI_endgame");
+            _log2File.Info(endgameLog, logName);
 
             return endgameResp;
         }
+
     }
 }
