@@ -26,7 +26,7 @@ namespace ThirdPartyWager.Workers
         {
             // lottery 統一使用一款取得注單即可
             timerLT = new Timer(DoTask, GameType.GPI_Keno, TimeSpan.Zero, TimeSpan.Zero);
-            timerRNG = new Timer(DoTask, GameType.GPI_RNG, TimeSpan.Zero, TimeSpan.Zero);
+            timerRNG = new Timer(DoTask, GameType.GPI_RNG, TimeSpan.FromSeconds(17), TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
