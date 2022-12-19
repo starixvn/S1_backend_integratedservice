@@ -24,8 +24,8 @@ namespace ThirdPartyWager.Workers
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             // lottery 統一使用一款取得注單即可
-            timerLT = new Timer(DoTask, GameType.GPI_Keno, TimeSpan.Zero, TimeSpan.Zero);
-            timerRNG = new Timer(DoTask, GameType.GPI_RNG, TimeSpan.Zero, TimeSpan.Zero);
+            timerLT = new Timer(DoTask, GameType.GPI_Keno, TimeSpan.FromSeconds(46), TimeSpan.Zero);
+            timerRNG = new Timer(DoTask, GameType.GPI_RNG, TimeSpan.FromSeconds(71), TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
