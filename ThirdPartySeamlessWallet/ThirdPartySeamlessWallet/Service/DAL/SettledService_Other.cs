@@ -1032,7 +1032,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         #endregion
 
         #region TCG
-       
+
         public async Task<TCGResult> Credit_TCG(TpCustInfo tpCustInfo, GameType gameType, TCGRequest request, TCGTransactionData data)
         {
             try
@@ -1119,8 +1119,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     TransType = TCGTransType.Reserve.ToString(),
                     data.username,
-                    data.ref_no,                   
-                    data.amount,                 
+                    data.ref_no,
+                    data.amount,
                     TicketType = (int)BettransType.CancelBet,
                     TicketStatus = (int)TicketStatus.Refund,
                     SettleFlag = (int)SettleFlag.Settled
@@ -1312,5 +1312,306 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 };
             }
         }
+
+        #region GPI
+
+        public int PayoutLT_GPI(TpCustInfo tpCustInfo, SettledDataRNG_GPI settledDataRNG_GPI, int gameType, out decimal afterAmount, out string TransId)
+        {
+            int bonusId = 0;
+            var category = TpCategory.Lottery;
+
+            afterAmount = 0;
+            TransId = settledDataRNG_GPI.trx_id;
+
+            var result = 0;
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            var p = new DynamicParameters(settledDataRNG_GPI);
+            p.Add("TicketStatus", (int)TicketStatus.Win);
+            p.Add("TicketType", (int)BettransType.Payout);
+
+            try
+            {
+                result = conn.Execute("Service_BettransLT_GPI_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    if (settledDataRNG_GPI.amount > 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            settledDataRNG_GPI.amount,
+                            (int)Tp.GPI,
+                            settledDataRNG_GPI.round_id,
+                            gameType,
+                            category,
+                            settledDataRNG_GPI.round_id,
+                            TransType.Payout,
+                            null,
+                            out afterAmount,
+                            $"Payout",
+                            out bonusId,
+                            conn,
+                            trans,
+                            AllowNegative.Allow
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
+        public int VoidBetLT_GPI(TpCustInfo tpCustInfo, BettingDataRNG_GPI bettingDataRNG_GPI, int gameType, out decimal afterAmount, out string TransId)
+        {
+            int bonusId = 0;
+            var category = TpCategory.Lottery;
+
+            afterAmount = 0;
+            TransId = bettingDataRNG_GPI.trx_id;
+
+            var result = 0;
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            var p = new DynamicParameters(bettingDataRNG_GPI);
+            p.Add("TicketStatus", (int)TicketStatus.Refund);
+            p.Add("TicketType", (int)BettransType.Payout);
+
+            try
+            {
+                var check = conn.Query<BettransData_GPI>("Service_BettransLT_GPI_Get", new { round_id = bettingDataRNG_GPI.round_id }, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (!check.Any())
+                {
+                    // no bet data
+                    return -2;
+                }
+                var subChk = check.Where(x => x.TicketType == (int)BettransType.Payout && x.TicketStatus == (int)TicketStatus.Refund);
+                if (subChk.Any())
+                {
+                    // had void
+                    return -1;
+                }
+
+                result = conn.Execute("Service_BettransLT_GPI_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (result > 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        bettingDataRNG_GPI.amount,
+                        (int)Tp.GPI,
+                        bettingDataRNG_GPI.round_id,
+                        gameType,
+                        category,
+                        bettingDataRNG_GPI.round_id,
+                        TransType.Refunds,
+                        null,
+                        out afterAmount,
+                        "VoidBet",
+                        out bonusId,
+                        conn,
+                        trans,
+                        AllowNegative.Allow
+                    );
+
+                    if (result > 0)
+                    {
+                        _ = _tpUnsettleService.InsertTpUnsettle(Tp.GPI, (GameType)gameType, bettingDataRNG_GPI.round_id, trans);
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                throw mySqlEx;
+            }
+
+            return result;
+        }
+
+        public int EditBetLT_GPI(TpCustInfo tpCustInfo, BettingDataRNG_GPI bettingDataRNG_GPI, int gameType, out decimal afterAmount, out string TransId)
+        {
+            int bonusId = 0;
+            var category = TpCategory.Lottery;
+
+            afterAmount = 0;
+            TransId = bettingDataRNG_GPI.trx_id;
+
+            var result = 0;
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            var p = new DynamicParameters(bettingDataRNG_GPI);
+            p.Add("TicketStatus", (int)TicketStatus.UnSettled);
+            p.Add("TicketType", (int)BettransType.Payout);
+
+            try
+            {
+                var check = conn.Query<BettransData_GPI>("Service_BettransLT_GPI_Get", new { round_id = bettingDataRNG_GPI.round_id }, transaction: trans, commandType: CommandType.StoredProcedure);
+                if (!check.Any())
+                {
+                    // no bet data
+                    return -2;
+                }
+                var subChk = check.Where(x => x.Edit == 1);
+                if (subChk.Any())
+                {
+                    // had edit
+                    return -1;
+                }
+
+                result = conn.Execute("Service_BettransLT_GPI_EditBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        bettingDataRNG_GPI.amount,
+                        (int)Tp.GPI,
+                        bettingDataRNG_GPI.round_id,
+                        gameType,
+                        category,
+                        bettingDataRNG_GPI.round_id,
+                        TransType.Undo,
+                        null,
+                        out afterAmount,
+                        "EditBet",
+                        out bonusId,
+                        conn,
+                        trans,
+                        AllowNegative.Allow
+                    );
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                throw mySqlEx;
+            }
+
+            return result;
+        }
+
+        public int CancelBetLT_GPI(TpCustInfo tpCustInfo, CancelBet_GPI cancelBet_GPI, int gameType, out decimal afterAmount, out string TransId)
+        {
+            int bonusId = 0;
+            var category = TpCategory.Lottery;
+
+            afterAmount = 0;
+            TransId = cancelBet_GPI.trx_id;
+
+            var result = 0;
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            var p = new DynamicParameters(cancelBet_GPI);
+            p.Add("TicketStatus", (int)TicketStatus.Refund);
+            p.Add("TicketType", (int)BettransType.CancelBet);
+
+            try
+            {
+                p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+                result = conn.Execute("Service_BettransLT_GPI_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0)
+                {
+                    decimal stake = p.Get<decimal>("out_stake");
+                    if (stake != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            Math.Abs(stake),
+                            (int)Tp.GPI,
+                            cancelBet_GPI.round_id,
+                            gameType,
+                            category,
+                            cancelBet_GPI.round_id,
+                            TransType.Refunds,
+                            null,
+                            out afterAmount,
+                            "CancelBet",
+                            out bonusId,
+                            conn,
+                            trans,
+                            AllowNegative.Allow
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        trans.Commit();
+                    }
+                }
+                else
+                {
+                    var check = conn.Query<BettransData_GPI>("Service_BettransLT_GPI_ByTrxId_Get", new { trx_id = cancelBet_GPI.trx_id }, transaction: trans, commandType: CommandType.StoredProcedure);
+                    var subChk = check.Where(x => x.TicketType == 2);
+                    if (subChk.Any())
+                    {
+                        // had cancel
+                        return -1;
+                    }
+                    if (!check.Any())
+                    {
+                        // no bet data insert cancel
+                        var cancelParam = new DynamicParameters(new
+                        {
+                            trx_id = cancelBet_GPI.trx_id,
+                            cust_id = cancelBet_GPI.cust_id,
+                            currency = cancelBet_GPI.currency,
+                            amount = 0,
+                            Operator = cancelBet_GPI.Operator,
+                            game_id = cancelBet_GPI.game_id,
+                            round_id = cancelBet_GPI.round_id,
+                            platform = "",
+                            TicketType = (int)TransferType.CancelBet,
+                            TicketStatus = (int)TicketStatus.Refund,
+                        });
+
+                        var cancelInsert = conn.Execute("Service_BettransLT_GPI_Ins", cancelParam, transaction: trans, commandType: CommandType.StoredProcedure);
+                        if (cancelInsert > 0)
+                        {
+                            // insert cancel record
+                            trans.Commit();
+                        }
+                        return -2;
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                throw mySqlEx;
+            }
+
+            return result;
+        }
+
+        #endregion
     }
 }

@@ -751,5 +751,73 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 };
             }
         }
+
+        #region GPI
+
+        public int PlaceBetLT_GPI(TpCustInfo tpCustInfo, int gameType, BettingDataRNG_GPI bettingDataRNG_GPI, out decimal afterAmount, out string Transid)
+        {
+            var result = 0;
+            int bonusId = 0;
+            afterAmount = 0;
+            var category = TpCategory.Lottery;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            Transid = bettingDataRNG_GPI.trx_id;
+            try
+            {
+                bettingDataRNG_GPI.amount *= -1;
+                var p = new DynamicParameters(bettingDataRNG_GPI);
+                p.Add("TicketType", (int)BettransType.Bet);
+                p.Add("TicketStatus", (int)TicketStatus.UnSettled);
+                result = conn.Execute("Service_BettransLT_GPI_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                if (result > 0 && bettingDataRNG_GPI.amount != 0)
+                {
+                    result = PlaceBetV2(
+                        tpCustInfo,
+                        bettingDataRNG_GPI.amount,
+                        (int)Tp.GPI,
+                        bettingDataRNG_GPI.round_id,
+                        gameType,
+                        bettingDataRNG_GPI.round_id,
+                        null,
+                        category,
+                        out afterAmount,
+                        ref bonusId,
+                        conn,
+                        trans
+                    );
+
+                    if (bonusId > 0)
+                    {
+                        AddTpBonus((int)Tp.GPI, bettingDataRNG_GPI.trx_id, gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, bettingDataRNG_GPI.amount, bonusId, TpCategory.Lottery, conn, trans);
+                    }
+                }
+
+                if (result > 0)
+                {
+                    _ = _tpUnsettleService.InsertTpUnsettle(Tp.GPI, (GameType)gameType, bettingDataRNG_GPI.round_id, trans);
+                    trans.Commit();
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+            return result;
+        }
+
+        #endregion
     }
 }

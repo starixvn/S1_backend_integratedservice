@@ -254,13 +254,32 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     break;
                 case (int)Tp.Skywind:
                     gameType = GameType.Skywind_RNG;
-                    if(gameId == "0")
+                    if (gameId == "0")
                     {
                         gameType = GameType.Skywind_LiveCasino;
                     }
-                    else if(gameId == "sw_or" || gameId == "sw_fj" || gameId == "sw_cashdaha")
+                    else if (gameId == "sw_or" || gameId == "sw_fj" || gameId == "sw_cashdaha")
                     {
                         gameType = GameType.Skywind_Fish;
+                    }
+                    break;
+                case (int)Tp.GPI:
+                    gameType = GameType.GPI_RNG;
+                    if (string.Equals(gameId, "keno", StringComparison.OrdinalIgnoreCase))
+                    {
+                        gameType = GameType.GPI_Keno;
+                    }
+                    else if (string.Equals(gameId, "sode", StringComparison.OrdinalIgnoreCase))
+                    {
+                        gameType = GameType.GPI_Sode;
+                    }
+                    else if (string.Equals(gameId, "thailottery", StringComparison.OrdinalIgnoreCase))
+                    {
+                        gameType = GameType.GPI_Thai_Lottery;
+                    }
+                    else if (string.Equals(gameId, "fast3", StringComparison.OrdinalIgnoreCase))
+                    {
+                        gameType = GameType.GPI_Fast3;
                     }
                     break;
                 default:

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ThirdPartySeamlessWallet.Service.Model;
+﻿using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.BLL
@@ -163,5 +159,28 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #endregion
 
+        #region GPI
+
+        public int PlaceBetLT_GPI(BettingDataRNG_GPI bettingDataRNG_GPI, int gameType, out decimal afterAmount, out string TransId)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.GPI, bettingDataRNG_GPI.cust_id);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.GPI, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataRNG_GPI.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = bettingService.PlaceBetLT_GPI(tpCustInfo, gameType, bettingDataRNG_GPI, out afterAmount, out TransId);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+                bettingDataRNG_GPI.amount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        #endregion
     }
 }
