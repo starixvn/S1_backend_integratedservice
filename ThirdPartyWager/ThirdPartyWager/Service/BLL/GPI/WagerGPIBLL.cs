@@ -181,9 +181,9 @@ namespace ThirdPartyWager.Service.BLL
         {
             // table summary
             var spName = (gameType == (int)GameType.GPI_RNG) ? "Finance_TpWagerRng_GPI_Summary_Get" : "Finance_TpWagerLT_GPI_Summary_Get";
-            var summarySlot = await _commonBLL.GetWagerSummary(spName, wagerTime.startUnix, wagerTime.endUnix);
-            var summaryStake = summarySlot.Sum(x => x.Stake);
-            var summaryWinlose = summarySlot.Sum(x => x.WinlostAmount);
+            var summary = await _commonBLL.GetWagerSummary(spName, wagerTime.startUnix, wagerTime.endUnix);
+            var summaryStake = summary.Sum(x => x.Stake);
+            var summaryWinlose = summary.Sum(x => x.WinlostAmount);
 
             return (cp.bet == summaryStake && cp.winlose == summaryWinlose) ? true : false;
         }
