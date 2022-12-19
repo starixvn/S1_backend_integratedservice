@@ -28,7 +28,7 @@ namespace ThirdPartyWager
         }
 
         public void ConfigureServices(IServiceCollection services)
-        {            
+        {
             services.AddMemoryCache();
             services.AddDatabaseConnection(configuration);
 
@@ -308,10 +308,10 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerKiss918>();
             services.AddHostedService<WagerRedoKiss918>();
             services.AddHostedService<WagerSkywind>();
+            //services.AddHostedService<WagerUnsettleCheckSkywind>();
             services.AddHostedService<WagerGPI>();
             services.AddHostedService<WagerRedoGPI>();
             services.AddHostedService<FinanceGPI>();
-            //services.AddHostedService<WagerUnsettleCheckSkywind>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
