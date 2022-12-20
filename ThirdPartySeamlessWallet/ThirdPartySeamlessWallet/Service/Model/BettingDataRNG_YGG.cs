@@ -29,6 +29,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public decimal bonusprize { get; set; }
         public int tickets { get; set; }
+        public string org { get; set; }
     }
 
     public class SettleData_YGG 
