@@ -36,7 +36,7 @@ namespace ThirdParty.YGG
             // YGG 正式遊戲
 
             var apiUrl = config.GameUrl;
-            var sParam = $"loaginame={tpCustInfo.TpUserName}&key={sessionKey}&currency={tpCustInfo.TpCurrencyId}" +
+            var sParam = $"loginname={tpCustInfo.TpUserName}&key={sessionKey}&currency={tpCustInfo.TpCurrencyId}" +
                 $"&lang={TpLangId}&gameid={config.GameId}&org={config.Org}&channel={channel}&home={config.HomeUrl}&fullscreen=yes";
 
             var responseJson = HttpPost(apiUrl, sParam, config.ContentType);
