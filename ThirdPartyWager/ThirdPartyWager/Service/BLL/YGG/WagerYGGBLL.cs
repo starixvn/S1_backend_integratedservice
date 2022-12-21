@@ -77,7 +77,7 @@ namespace ThirdPartyWager.Service.BLL
 
             var betRecordResponse = _common.FromJson<WagerYggResponse>(json);
 
-            if (betRecordResponse.Code == SuccessCode && betRecordResponse.Data.Count > 0)
+            if (betRecordResponse.Code == SuccessCode && (betRecordResponse.Data != null && betRecordResponse.Data.Count > 0))
             {
                 var insertData = betRecordResponse.Data.Where(r => r.Type == "wager").ToList(); // wager 投注
                 var updateWinLoseAmount = betRecordResponse.Data.Where(r => r.Type == "endwager").ToList(); // endwager 結算
