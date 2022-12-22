@@ -1182,7 +1182,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             ref bonusId,
                             conn,
                             trans
-                       );
+                        );
+
+                        if (result != 1)
+                        {
+                            return 0;
+                        }
                     }
 
                     bool getBonus = false;
@@ -1258,6 +1263,33 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
 
             return result;
+        }
+
+        public TpBetFailureRecord GetTpBetFailureParam_PG(TpCustInfo tpCustInfo, TpCustBalance custBalance, TpCurrency tpCurrency, TransferInOutDataRNG_PG transferInOutDataRNG_PG, TpCheckRecordCode Code, decimal AfterAmount)
+        {
+            // BLL會經過匯率換算 下列還原為原始資料
+            TpBetFailureRecordInfo_PG InfoData = new TpBetFailureRecordInfo_PG
+            {
+                CurrentBalance = custBalance.Balance / tpCurrency.ExchangeRate,
+                BetAmount = transferInOutDataRNG_PG.BetAmount / tpCurrency.ExchangeRate,
+                WinAmount = transferInOutDataRNG_PG.WinAmount / tpCurrency.ExchangeRate,
+                TransferAmount = transferInOutDataRNG_PG.TransferAmount / tpCurrency.ExchangeRate,
+                InsufficientBalance = AfterAmount,
+                ExchangeRate = tpCurrency.ExchangeRate,
+            };
+
+            return new TpBetFailureRecord
+            {
+                TransId = transferInOutDataRNG_PG.TransactionId,
+                TpId = (int)Tp.PG,
+                TpGameType = (int)GameType.PG_RNG,
+                SiteId = tpCustInfo.SiteId,
+                CustId = tpCustInfo.CustId,
+                UserName = tpCustInfo.UserName,
+                Code = (int)Code,
+                TransTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                Info = JsonConvert.SerializeObject(InfoData),
+            };
         }
 
         #endregion
@@ -2967,14 +2999,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             trans
                         );
 
-                        
-
                         if (result != 1)
                         {
                             return 0;
                         }
-
-
                     }
 
                     var transId = (bettingData_JILI.TransactionID != 0) ? bettingData_JILI.TransactionID.ToString() : bettingData_JILI.round.ToString();
@@ -3265,6 +3293,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             conn,
                             trans
                         );
+
+                        if (result != 1)
+                        {
+                            return 0;
+                        }
                     }
                     //if (betAmount != 0)
                     //{
@@ -3428,6 +3461,32 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             string sp = "Service_BettransRng_JILI_TransactionCheck_Set";
             return _mainDbClient.Execute(sp, parameters: new DynamicParameters(new { _YYYYMM = YYYYMM, _TransId = TransId, _SettleFlag = SettleFlag }));
+        }
+
+        public TpBetFailureRecord GetTpBetFailureParam_JILI(TpCustInfo tpCustInfo, TpCustBalance custBalance, TpCurrency tpCurrency, BettingData_JILI bettingData_JILI, int gameType, TpCheckRecordCode Code, decimal AfterAmount)
+        {
+            // BLL會經過匯率換算 下列還原為原始資料
+            TpBetFailureRecordInfo_JILI InfoData = new TpBetFailureRecordInfo_JILI
+            {
+                CurrentBalance = custBalance.Balance / tpCurrency.ExchangeRate,
+                betAmount = bettingData_JILI.betAmount / tpCurrency.ExchangeRate,
+                winloseAmount = bettingData_JILI.winloseAmount / tpCurrency.ExchangeRate,
+                InsufficientBalance = AfterAmount,
+                ExchangeRate = tpCurrency.ExchangeRate,
+            };
+
+            return new TpBetFailureRecord
+            {
+                TransId = (bettingData_JILI.sessionId == 0) ? bettingData_JILI.round.ToString() : bettingData_JILI.sessionId.ToString(),
+                TpId = (int)Tp.JILI,
+                TpGameType = gameType,
+                SiteId = tpCustInfo.SiteId,
+                CustId = tpCustInfo.CustId,
+                UserName = tpCustInfo.UserName,
+                Code = (int)Code,
+                TransTime = bettingData_JILI.wagersTime,
+                Info = JsonConvert.SerializeObject(InfoData),
+            };
         }
         #endregion
 
