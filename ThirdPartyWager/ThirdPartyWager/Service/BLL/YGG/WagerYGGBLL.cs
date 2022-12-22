@@ -80,8 +80,8 @@ namespace ThirdPartyWager.Service.BLL
             if (betRecordResponse.Code == SuccessCode && (betRecordResponse.Data != null && betRecordResponse.Data.Count > 0))
             {
                 var insertData = betRecordResponse.Data.Where(r => r.Type == "wager").ToList(); // wager 投注
-                var updateWinLoseAmount = betRecordResponse.Data.Where(r => r.Type == "endwager").ToList(); // endwager 結算
-                var updateJackpotAmount = betRecordResponse.Data.Where(r => r.Type == "appendwager").ToList(); // 獎金池
+                var updateWinLoseAmount = betRecordResponse.Data.Where(r => r.Type == "endwager" || r.Type == "endWager").ToList(); // endwager 結算
+                var updateJackpotAmount = betRecordResponse.Data.Where(r => r.Type == "appendwager" || r.Type == "appendWager").ToList(); // 獎金池
 
                 var tasks = new List<Task<int>>();
                 if (insertData.Count > 0) tasks.AddRange(insertData.Select(item => Task.Run(() => InsertWager(item))).ToList());
