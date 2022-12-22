@@ -53,6 +53,9 @@ namespace ThirdPartyWager.Service.BLL
                     return false;
                 }
 
+                // get fail transactions history
+                var (hasFailData, failDataDetails) = await _apiKiss918BLL.GetFailTransaction(setting["AccessToken"], setting["ApiUrl"], timepoint);
+
                 if (hasData && dataDetails.Count() == 0)
                 {
                     msg = "NO_DATA";
@@ -63,6 +66,8 @@ namespace ThirdPartyWager.Service.BLL
                 try
                 {
                     _wagerKiss918Service.InsertWager(dataDetails);
+                    if (hasFailData && dataDetails.Count() > 0)
+                        _wagerKiss918Service.InsertWager(failDataDetails);
                 }
                 catch (Exception ex)
                 {
@@ -118,10 +123,12 @@ namespace ThirdPartyWager.Service.BLL
                     return true;
                 }
 
+                var (hasFailData, failDataDetails) = await _apiKiss918BLL.GetFailTransaction(setting["AccessToken"], setting["ApiUrl"], timepoint);
+
                 try
                 {
                     var lostData = new List<WagerKiss918Model>();
-                    foreach (var data in dataDetails)
+                    foreach (var data in dataDetails.Union(failDataDetails))
                     {
                         if ((await _wagerKiss918Service.GetWager(data.referenceID)).Any())
                             continue;
