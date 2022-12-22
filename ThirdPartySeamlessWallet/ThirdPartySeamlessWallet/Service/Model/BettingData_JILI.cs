@@ -79,4 +79,13 @@
         public int TicketStatus { get; set; }
         public int SettleFlag { get; set; }
     }
+
+    public class TpBetFailureRecordInfo_JILI
+    {
+        public decimal CurrentBalance { get; set; }
+        public decimal betAmount { get; set; }
+        public decimal winloseAmount { get; set; }
+        public decimal ExchangeRate { get; set; }
+        public decimal InsufficientBalance { get; set; }
+    }
 }

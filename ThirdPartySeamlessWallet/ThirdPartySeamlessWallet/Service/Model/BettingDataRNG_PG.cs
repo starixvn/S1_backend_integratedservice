@@ -188,4 +188,14 @@ namespace ThirdPartySeamlessWallet.Service.Model
         [JsonProperty("bet_transaction_id")]
         public string BetTransactionId { get; set; }
     }
+
+    public class TpBetFailureRecordInfo_PG
+    {
+        public decimal CurrentBalance { get; set; }
+        public decimal BetAmount { get; set; }
+        public decimal WinAmount { get; set; }
+        public decimal TransferAmount { get; set; }
+        public decimal ExchangeRate { get; set; }
+        public decimal InsufficientBalance { get; set; }
+    }
 }
