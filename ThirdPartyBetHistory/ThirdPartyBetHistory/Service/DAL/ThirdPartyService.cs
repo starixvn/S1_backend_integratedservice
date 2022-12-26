@@ -99,6 +99,13 @@ namespace ThirdPartyBetHistory.Service.DAL
                         betRecord.BonusId = RefBetRecord.BonusId;
                         bonusId = betRecord.BonusId;
                     }
+                    else if(RefBetRecord != null && RefBetRecord.BonusId == 0)
+                    {
+                        // 下注時會先寫入未結算注單進TpBetRecord，後續結算時依下注的BonusId判斷是否計算winlose、withdraw
+                        hasJoinBonus = false;
+                        betRecord.BonusId = RefBetRecord.BonusId;
+                        bonusId = betRecord.BonusId;
+                    }
                     else
                     {
                         hasJoinBonus = _settledService.GetBonusIdByTpId((int)Tp.Saba, tpCustInfo.CustId, out bonusId);
