@@ -281,7 +281,7 @@ namespace ThirdPartyService.Controllers
                 return new ApiResult<object>()
                 {
                     ErrorCode = ErrorCode.BetDetailNotFound,
-                    RawMessage = ex.Message,
+                    Message = ex.Message,
                 };
             }
             catch (NotImplementedException ex)
@@ -289,7 +289,7 @@ namespace ThirdPartyService.Controllers
                 return new ApiResult<object>()
                 {
                     ErrorCode = ErrorCode.GetBetDetailNotImplemented,
-                    RawMessage = ex.Message,
+                    Message = ex.Message,
                 };
             }
             catch (Exception ex)
@@ -298,7 +298,7 @@ namespace ThirdPartyService.Controllers
                 return new ApiResult<object>()
                 {
                     ErrorCode = ErrorCode.SystemError,
-                    RawMessage = ex.Message,
+                    Message = ex.Message,
                 };
             }
         }
