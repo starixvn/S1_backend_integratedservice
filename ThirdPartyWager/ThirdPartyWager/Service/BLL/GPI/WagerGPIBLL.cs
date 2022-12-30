@@ -181,7 +181,7 @@ namespace ThirdPartyWager.Service.BLL
         {
             // table summary
             var spName = (gameType == (int)GameType.GPI_RNG) ? "Finance_TpWagerRng_GPI_Summary_Get" : "Finance_TpWagerLT_GPI_Summary_Get";
-            var summary = await _commonBLL.GetWagerSummary(spName, wagerTime.startUnix, wagerTime.endUnix);
+            var summary = await _commonBLL.GetWagerSummary(spName, wagerTime.startUnix, wagerTime.endUnix - 1);
             var summaryStake = summary.Sum(x => x.Stake);
             var summaryWinlose = summary.Sum(x => x.WinlostAmount);
 
