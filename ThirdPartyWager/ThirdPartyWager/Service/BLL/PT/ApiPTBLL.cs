@@ -46,7 +46,7 @@ namespace ThirdPartyWager.Service.BLL
             var param = new
             {
                 exitgame = true,
-                showdetailedinfo = true,
+                //showdetailedinfo = true,
                 showbonustype = true,
                 //excludezero = false,
                 //progressiveonly = false,
@@ -121,7 +121,6 @@ namespace ThirdPartyWager.Service.BLL
                 _log2File.InsertResponseLog(_tpName, url, sParam, result);
                 result = "{\"error\":\"fatal error\",\"errorcode\":999999}";
             }
-
             return (response.StatusCode == HttpStatusCode.ServiceUnavailable) ? "{\"error\":\"SYSTEM_MATAINING\",\"errorcode\":999999}" : result;
         }
 
