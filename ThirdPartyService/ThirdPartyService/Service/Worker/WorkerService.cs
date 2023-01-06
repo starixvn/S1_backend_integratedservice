@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Serilog.Context;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Extensions;
@@ -39,10 +40,12 @@ namespace ThirdPartyService.Service.Worker
         /// <param name="state"></param>
         private void DoTask(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             try
             {
                 var tpTransferList = _tpTransferInfo.TpTransferPendingGet(_random.Next(950, 1000));// 避免 ORM 或 db execution plan cache
-        
+                _logger.LogInformation($"TpTransferInfo Pending Data Count：{tpTransferList?.Count()}");
+                
                 if (tpTransferList != null)
                 {
                     foreach (var tpTransfer in tpTransferList)
@@ -75,9 +78,12 @@ namespace ThirdPartyService.Service.Worker
         /// <param name="state"></param>
         private void DoTaskForBonusTransfer(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             try
             {
                 var tpTransferList = _tpTransferInfo.TpBonusTransferPendingGet(_random.Next(950, 1000));
+                _logger.LogInformation($"PendingBonusList Pending Data Count：{tpTransferList?.Count()}");
+                
                 var statusList = new List<int> { (int)TransferStatus.Pending, (int)TransferStatus.PendingD };
                 
                 if (tpTransferList != null)
@@ -118,9 +124,12 @@ namespace ThirdPartyService.Service.Worker
         /// <param name="state"></param>
         private void DoTaskRemainingBonusAmountTransfer(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             try
             {
                 var tpTransferList = _tpTransferInfo.TpRemainingTransferBonusGet(_random.Next(950, 1000));
+                _logger.LogInformation($"RemainingTransferBonusPending Pending Data Count：{tpTransferList?.Count()}");
+                
                 foreach (var tpTransfer in tpTransferList)
                 {
                     Task.Run(() =>

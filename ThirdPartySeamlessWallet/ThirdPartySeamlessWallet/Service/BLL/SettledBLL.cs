@@ -253,7 +253,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
 
             var result = settledService.PayoutRNG_GPI(tpCustInfo, settledDataRNG_GPI, out afterAmount, out TransId);
-
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
@@ -710,11 +709,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 custBalance.Balance *= tpCurrency.ExchangeRate;
             }
 
-            // check
+            if (custBalance.Balance < 0)
+            {
+                afterAmount = custBalance.Balance / tpCurrency.ExchangeRate;
+                var TpCheckRecordParam = settledService.GetTpBetFailureParam_PG(tpCustInfo, custBalance, tpCurrency, transferInOutDataRNG_PG, TpCheckRecordCode.InsufficientBalance, afterAmount);
+                thirdPartyBLL.AddTpBetFailureRecord(TpCheckRecordParam);
+                return 0;
+            }
+
             var checkBalance = custBalance.Balance - Math.Abs(transferInOutDataRNG_PG.BetAmount);
             if (checkBalance < 0)
             {
                 afterAmount = checkBalance / tpCurrency.ExchangeRate;
+                var TpCheckRecordParam = settledService.GetTpBetFailureParam_PG(tpCustInfo, custBalance, tpCurrency, transferInOutDataRNG_PG, TpCheckRecordCode.InsufficientBalance, afterAmount);
+                thirdPartyBLL.AddTpBetFailureRecord(TpCheckRecordParam);
                 return 0;
             }
 
@@ -1814,11 +1822,30 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.JILI, bettingData_JILI.userId);
             var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.JILI, tpCustInfo.CurrencyId);
+            var custBalance = tpCustInfoBLL.GetBalance((int)Tp.JILI, bettingData_JILI.userId, gameType);
 
             if (tpCurrency.ExchangeRate > 0)
             {
                 bettingData_JILI.betAmount *= tpCurrency.ExchangeRate;
                 bettingData_JILI.winloseAmount *= tpCurrency.ExchangeRate;
+                custBalance.Balance *= tpCurrency.ExchangeRate;
+            }
+
+            if (custBalance.Balance < 0)
+            {
+                afterAmount = custBalance.Balance / tpCurrency.ExchangeRate;
+                var TpCheckRecordParam = settledService.GetTpBetFailureParam_JILI(tpCustInfo, custBalance, tpCurrency, bettingData_JILI, gameType, TpCheckRecordCode.InsufficientBalance, afterAmount);
+                thirdPartyBLL.AddTpBetFailureRecord(TpCheckRecordParam);
+                return -2;
+            }
+
+            var checkBalance = custBalance.Balance - bettingData_JILI.betAmount;
+            if (checkBalance < 0)
+            {
+                afterAmount = checkBalance / tpCurrency.ExchangeRate;
+                var TpCheckRecordParam = settledService.GetTpBetFailureParam_JILI(tpCustInfo, custBalance, tpCurrency, bettingData_JILI, gameType, TpCheckRecordCode.InsufficientBalance, afterAmount);
+                thirdPartyBLL.AddTpBetFailureRecord(TpCheckRecordParam);
+                return -2;
             }
 
             var result = (gameType == (int)GameType.JILI_RNG) ? settledService.BetAndPayoutRNG_JILI(tpCustInfo, bettingData_JILI, thirdPartyBLL, out afterAmount) : settledService.BetAndPayoutFish_JILI(tpCustInfo, bettingData_JILI, out afterAmount);

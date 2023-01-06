@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ThirdPartySeamlessWallet.Service.Model.enums;
+﻿using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -53,5 +49,24 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string cust_id { get; set; }
         public string round_id { get; set; }
         public string game_id { get; set; }
+        public int status { get; set; }
     }
+
+    public class CancelBet_GPI
+    {
+        public string cust_id { get; set; }
+        public string Operator { get; set; }
+        public string trx_id { get; set; }
+        public string game_id { get; set; }
+        public string round_id { get; set; }
+        public string currency { get; set; }
+    }
+
+    public class BettransData_GPI : BettingDataRNG_GPI
+    {
+        public int Edit { get; set; }
+        public int TicketType { get; set; }
+        public int TicketStatus { get; set; }
+    }
+
 }

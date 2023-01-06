@@ -1154,7 +1154,7 @@ namespace ThirdPartyService.Service.BLL
                 return new ApiResult<object>()
                 {
                     ErrorCode = ErrorCode.InvalidParameter,
-                    RawMessage = "GameType not found."
+                    Message = "GameType not found."
                 };
             }
             gameTypeOption.TpName = GetTpName(gameTypeOption.TpId);
@@ -1165,7 +1165,7 @@ namespace ThirdPartyService.Service.BLL
                 return new ApiResult<object>()
                 {
                     ErrorCode = tpCustInfoResult.ErrorCode,
-                    RawMessage = tpCustInfoResult.RawMessage
+                    Message = tpCustInfoResult.RawMessage
                 };
             }
 
@@ -1173,9 +1173,7 @@ namespace ThirdPartyService.Service.BLL
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper.GetThirdPartyBySite(gameTypeOption.TpId, tpCustInfoResult.Data.SiteId).Setting);
             var getBetDetail = new GetBetDetail(request, gameTypeOption);
             var result = tpHelper.GetBetDetail(getBetDetail, tpCustInfoResult.Data, inputs);
-            var resultCode = string.IsNullOrEmpty(result.DetailUrl) ? ErrorCode.Success : ErrorCode.BetDetailIsUrl;
-            return new ApiResult<object>(resultCode, "success", result);
-
+            return new ApiResult<object>(ErrorCode.Success, "success", result);
         }
 
         /// <summary>

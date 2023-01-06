@@ -26,7 +26,7 @@ startup.ConfigureServices(builder.Services);
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
 
-const int minWorkers = 32;
+const int minWorkers = 96;
 const int minIOCPs = 4;
 ThreadPool.SetMinThreads(minWorkers, minIOCPs);
 

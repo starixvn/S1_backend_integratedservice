@@ -63,6 +63,24 @@ namespace ThirdPartyWager.Service.BLL
             return (true, convertDatas);
         }
 
+        public async Task<(bool, List<WagerKiss918Model>)> GetFailTransaction(string accessToken, string wagerUrl, string timepoint)
+        {
+            // param
+            var url = $"{wagerUrl}/api/failedtransactions";
+            var param = new { timepoint = timepoint };
+
+            var header = new Dictionary<string, string>() { { "Token", $"{accessToken}" } };
+            var dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(param));
+            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+            // request: 會拿到一串文本，要對文本拆解&加工
+            var response = await HttpGet(url, "query history bets", sParam, header, "text/plain");
+            if (response == null) return (false, null);
+            var convertDatas = ConvertToWagerData(response);
+            return (true, convertDatas);
+        }
+
+
         private List<WagerKiss918Model> ConvertToWagerData(string plain)
         {
             List<WagerKiss918Model> result = new();

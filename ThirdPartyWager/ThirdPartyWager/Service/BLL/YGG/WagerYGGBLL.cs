@@ -72,20 +72,22 @@ namespace ThirdPartyWager.Service.BLL
             {
                 throw new Exception($"StatusCode:{response.StatusCode} | Reason:{response.ReasonPhrase}");
             }
-            var json = await response.Content.ReadAsStringAsync();
-            _logger.LogInformation($"WagerYGG：{json}");
 
-            var betRecordResponse = _common.FromJson<WagerYggResponse>(json);
+            var responseResult = await response.Content.ReadAsStringAsync();
+            var requestContent = await httpContent.ReadAsStringAsync();
+            _logger.LogInformation($"{config.WagerUrl} RequestParameter：{requestContent} WagerYGG：{responseResult}");
 
-            if (betRecordResponse.Code == SuccessCode && betRecordResponse.Data.Count > 0)
+            var betRecordResponse = _common.FromJson<WagerYggResponse>(responseResult);
+
+            if (betRecordResponse.Code == SuccessCode && (betRecordResponse.Data != null && betRecordResponse.Data.Count > 0))
             {
                 var insertData = betRecordResponse.Data.Where(r => r.Type == "wager").ToList(); // wager 投注
-                var updateWinLoseAmount = betRecordResponse.Data.Where(r => r.Type == "endwager").ToList(); // endwager 結算
-                var updateJackpotAmount = betRecordResponse.Data.Where(r => r.Type == "appendwager").ToList(); // 獎金池
+                var updateWinLoseAmount = betRecordResponse.Data.Where(r => r.Type == "endwager" || r.Type == "endWager").ToList(); // endwager 結算
+                var updateJackpotAmount = betRecordResponse.Data.Where(r => r.Type == "appendwager" || r.Type == "appendWager").ToList(); // 獎金池
 
                 var tasks = new List<Task<int>>();
                 if (insertData.Count > 0) tasks.AddRange(insertData.Select(item => Task.Run(() => InsertWager(item))).ToList());
-                if (tasks.Count > 0) 
+                if (tasks.Count > 0)
                     await Task.WhenAll(tasks); // 寫入Wager資料
 
                 tasks.Clear();

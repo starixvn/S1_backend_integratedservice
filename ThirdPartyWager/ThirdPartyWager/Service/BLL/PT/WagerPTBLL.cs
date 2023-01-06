@@ -81,6 +81,16 @@ namespace ThirdPartyWager.Service.BLL
                             {
                                 continue;
                             }
+                            if(bet.BONUSTYPE == null){
+                                bet.BONUSTYPE = 0;
+                            }
+                            if(bet.INFO == null){
+                                bet.INFO = "";
+                            }
+                            if (bet.LIVENETWORK == null)
+                            {
+                                bet.LIVENETWORK = "";
+                            }
 
                             bet.gameUnix = new DateTimeOffset(bet.GAMEDATE, new TimeSpan(gmt, gmtMinute, 0)).ToUnixTimeSeconds();
                             

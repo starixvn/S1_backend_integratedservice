@@ -40,7 +40,7 @@ namespace ThirdPartyWager.Service.Model
         public string LIVENETWORK { get; set; }
         public int EXITGAME { get; set; }
         public string INFO { get; set; }
-        public int BONUSTYPE { get; set; }
+        public dynamic BONUSTYPE { get; set; }
         public decimal GOLDENCHIPBET { get; set; }
         public decimal GOLDENCHIPWIN { get; set; }
         public decimal RETURNEDGOLDENCHIPS { get; set; }
