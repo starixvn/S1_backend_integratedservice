@@ -36,6 +36,16 @@ public class AWSSNSHelper
 
     public async Task<PublishResponse> PublishAsync(PublishRequest request)
     {
+        if (request.PhoneNumber.StartsWith("+66"))
+        {
+            var senderId = new MessageAttributeValue
+            {
+                StringValue = "NWBusiness",
+                DataType = "String"
+            };
+            request.MessageAttributes.Add("AWS.SNS.SMS.SenderID", senderId);
+        }
+        
         return await _client.PublishAsync(request);
     }
 }
