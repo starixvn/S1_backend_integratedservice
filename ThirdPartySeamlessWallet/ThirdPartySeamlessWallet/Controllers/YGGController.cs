@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
+using System.Web;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -238,7 +236,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(playerInfoReq.sessiontoken));
+                var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(playerInfoReq.sessiontoken)));
                 var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
                 var authToken = sessionKeyArr[0]; /* 1 Time*/
                 var sessionToken = sessionKeyArr[1];/* Long Time*/
@@ -321,7 +319,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return wagerRep;
             }
 
-            var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(wagerReq.sessiontoken));
+            var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(wagerReq.sessiontoken)));
             var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
             var sessionToken = sessionKeyArr[1];/* Long Time*/
 
@@ -661,7 +659,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return wagerRep;
             }
 
-            var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(wagerReq.sessiontoken));
+            var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(wagerReq.sessiontoken)));
             var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
             var sessionToken = sessionKeyArr[1];/* Long Time*/
 
@@ -712,7 +710,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getBalanceRep;
             }
 
-            var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(balanceReq.sessiontoken));
+            var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(balanceReq.sessiontoken)));
             var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
             var sessionToken = sessionKeyArr[1];/* Long Time*/
 
