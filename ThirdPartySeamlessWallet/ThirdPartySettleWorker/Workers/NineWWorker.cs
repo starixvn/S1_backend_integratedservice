@@ -81,7 +81,8 @@ namespace ThirdPartySettleWorker.Workers
                             unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
                         }
 
-                        var isSettled = unsettled.BetStatus.Equals("Settled", StringComparison.OrdinalIgnoreCase);
+                        var isSettled = unsettled.BetStatus.Equals("Settled", StringComparison.OrdinalIgnoreCase) 
+                            || unsettled.BetStatus.Equals("Voided", StringComparison.OrdinalIgnoreCase);
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
