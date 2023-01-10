@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Web;
@@ -34,10 +35,9 @@ namespace ThirdParty.YGG
             if (config.Fun.Equals("1", StringComparison.OrdinalIgnoreCase)) return GetPlayForFunLaunchUrl(TpLangId, config, channel);
 
             // YGG 正式遊戲
-
             var apiUrl = config.GameUrl;
-            var sParam = $"loginname={tpCustInfo.TpUserName}&key={sessionKey}&currency={tpCustInfo.TpCurrencyId}" +
-                $"&lang={TpLangId}&gameid={config.GameId}&org={config.Org}&channel={channel}&home={config.HomeUrl}&fullscreen=yes";
+            var sParam = $"loginname={tpCustInfo.TpUserName}&key={HttpUtility.UrlEncode(sessionKey)}&currency={tpCustInfo.TpCurrencyId}" +
+               $"&lang={TpLangId}&gameid={config.GameId}&org={config.Org}&channel={channel}&home={config.HomeUrl}&fullscreen=yes";
 
             var responseJson = HttpPost(apiUrl, sParam, config.ContentType);
             var responseResult = FromJson<LoginResponse>(responseJson);
@@ -223,7 +223,7 @@ namespace ThirdParty.YGG
             inputs.TryGetValue("Token", out var token);
             var sessionKeyArr = new string[] { key, token };
             var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
-            var sessionKey = Convert.ToBase64String(bytes);
+            var sessionKey = HttpUtility.UrlEncode(Convert.ToBase64String(bytes));
             return sessionKey;
         }
 
@@ -278,6 +278,5 @@ namespace ThirdParty.YGG
 
             return DeviceType.None;
         }
-              
     }
 }
