@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
@@ -34,7 +26,6 @@ namespace ThirdPartyService.Service.BLL
 
         private readonly TpCustInfoService tpCustInfoService;
         private readonly TpTransferBonusInfoService tpTransferBonusInfoService;
-        private readonly ServerInfoService _serverInfoService;
         private readonly TpCustBalanceService _tpCustBalanceService;
         private readonly TpTransferInfo _tpTransferInfo;
         private readonly CacheHelper _cacheHelper;
@@ -73,7 +64,6 @@ namespace ThirdPartyService.Service.BLL
 
             tpCustInfoService = provider.GetRequiredService<TpCustInfoService>();
             tpTransferBonusInfoService = provider.GetRequiredService<TpTransferBonusInfoService>();
-            _serverInfoService = provider.GetRequiredService<ServerInfoService>();
             _tpCustBalanceService = provider.GetRequiredService<TpCustBalanceService>();
             _tpTransferInfo = provider.GetRequiredService<TpTransferInfo>();
             _cacheHelper = provider.GetRequiredService<CacheHelper>();

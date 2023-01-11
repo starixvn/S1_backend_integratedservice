@@ -1,14 +1,6 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Concurrent;
 using ThirdPartyCore;
-using ThirdPartyCore.Model;
 using ThirdPartyService.Service.DAL;
-using ThirdPartyService.Service.Library;
 using ThirdPartyService.Service.Model;
 
 namespace ThirdPartyService.Service.BLL
