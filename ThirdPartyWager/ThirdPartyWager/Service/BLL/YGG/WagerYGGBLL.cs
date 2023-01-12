@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using ThirdPartyWager.Service.Library;
+﻿using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -22,6 +15,11 @@ namespace ThirdPartyWager.Service.BLL
 
         private const int TpId = (int)Tp.YGG;
         private const int SuccessCode = 0;
+
+        private int _jobRunCounter = 0; // Job計數器，每一分鐘執行一次，每1小時會累積到 60
+        private int _JobCounterLimit = 60;
+        private const string DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
+
 
         public WagerYGGBLL(IServiceProvider provider)
         {
@@ -45,7 +43,28 @@ namespace ThirdPartyWager.Service.BLL
             try
             {
                 await QueryBetRecordAsync(_config, startTime, endTime);
+                _jobRunCounter++;
+                if (_jobRunCounter != _JobCounterLimit) return true;
+
+                #region 補撈2天前的資料
+
+                var hours = -54; // Hans說做前54小時
+                const int addHours = 18;
+                while (hours < 0)
+                {
+                    var redoStartTime = DateTime.Parse(endTime).AddHours(hours);
+                    var redoEndTime = redoStartTime.AddHours(addHours);
+
+                    await QueryBetRecordAsync(_config, redoStartTime.ToString(DateTimeFormat), redoEndTime.ToString(DateTimeFormat));
+                    hours += addHours;
+                }
+
+                _jobRunCounter = 0; // 歸零
+
                 return true;
+
+                #endregion
+
             }
             catch (Exception ex)
             {
