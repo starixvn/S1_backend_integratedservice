@@ -128,27 +128,21 @@ namespace ThirdPartySettleWorker.Workers
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)
                         {
-                            Task.Run(() =>
+                            if (isClosed)
                             {
-                                if (isClosed)
+                                _tpUnSettledBLL.SetSettleFlag(setSP,
+                                new
                                 {
-                                    _tpUnSettledBLL.SetSettleFlag(setSP,
-                                    new
-                                    {
-                                        betOrderNo = unsettled.TransId,
-                                        isSuccess = true
-                                    }, dataBase: DataBase.Wager);
-                                }
-                                _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, transId, true);
-                            });
+                                    betOrderNo = unsettled.TransId,
+                                    isSuccess = true
+                                }, dataBase: DataBase.Wager);
+                            }
+                            _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, transId, true);
                         }
                     }
                     catch (Exception ex1)
                     {
-                        Task.Run(() =>
-                        {
-                            _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, transId, false);
-                        });
+                        _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, transId, false);
                         _logger.LogError(ex1, $"exMessage:{ex1.Message} || TransId : {transId}");
                     }
                 }
