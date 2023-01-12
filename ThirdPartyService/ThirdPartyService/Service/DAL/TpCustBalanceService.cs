@@ -1,12 +1,7 @@
 ﻿using Dapper;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 using ThirdPartyCore.Model;
+using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Service.Library;
 
 namespace ThirdPartyService.Service.DAL
@@ -14,8 +9,7 @@ namespace ThirdPartyService.Service.DAL
     public class TpCustBalanceService
     {
         #region Fields
-
-        private readonly IConfiguration _configuration;
+        
         private readonly MySqlClient _mainDbClient;
         private readonly MySqlClient _reportDbClient;
 
@@ -23,12 +17,10 @@ namespace ThirdPartyService.Service.DAL
 
         #region Constructors
 
-        public TpCustBalanceService(IConfiguration configuration,
-                                 ILogger<MySqlClient> logger)
+        public TpCustBalanceService(IServiceProvider provider)
         {
-            _configuration = configuration;
-            _mainDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionString"), logger);
-            _reportDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionStringReport"), logger);
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+            _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
         }
 
         #endregion
@@ -55,7 +47,7 @@ namespace ThirdPartyService.Service.DAL
         public int InsertBalance(string timeString, TpCustBalanceModel custBalance)
         {
             var parameter = new DynamicParameters();
-            int affectCount = 0;
+            var affectCount = 0;
 
             parameter.Add("_Time", timeString);
             parameter.Add("_TpId", custBalance.TpId);
@@ -67,7 +59,7 @@ namespace ThirdPartyService.Service.DAL
             parameter.Add("_ResponseTime", custBalance.ResponseTIme);
             parameter.Add("AffectCount", affectCount, dbType: DbType.Int32, direction: ParameterDirection.InputOutput);
 
-            bool result = _mainDbClient.Execute("Service_TpCustBalanceHistory_Set", parameter);
+            var result = _mainDbClient.Execute("Service_TpCustBalanceHistory_Set", parameter) > 0;
 
             if (!result)
             {

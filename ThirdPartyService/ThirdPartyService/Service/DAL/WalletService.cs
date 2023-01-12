@@ -1,12 +1,5 @@
 ﻿using Dapper;
-using Microsoft.Extensions.Configuration;
-using MySql.Data.MySqlClient;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Service.Library;
 
@@ -23,7 +16,7 @@ namespace ThirdPartyService.Service.DAL
         }
 
         public int SetBalance(int custId, int siteId, string userName, decimal amount, int tpId, string memo,
-            string refTransId, out decimal afterAmount, MySqlConnection conn, MySqlTransaction trans)
+            string refTransId, out decimal afterAmount, IDbTransaction trans)
         {
             var type = TypePosition + tpId;
             var p = new DynamicParameters(new
@@ -38,13 +31,13 @@ namespace ThirdPartyService.Service.DAL
             });
             p.Add("Is1stDepoist", dbType: DbType.Boolean, direction: ParameterDirection.Output);
             p.Add("AfterAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            _mainDbClient.Execute("Wallet_Set_V2", p, conn, trans);
+            _mainDbClient.Execute("Wallet_Set_V2", trans, p);
             afterAmount = p.Get<decimal>("AfterAmount");
             return afterAmount >= 0 ? 0 : -1;
         }
 
         public int SetWithdrawalLimit(int custId, string userName, int siteId, decimal withdrawalLimit, string memo,
-            string refTransId, out decimal afterWithdrawalLimit, MySqlConnection conn, MySqlTransaction trans)
+            string refTransId, out decimal afterWithdrawalLimit, IDbTransaction trans)
         {
             var p = new DynamicParameters(new
             {
@@ -56,7 +49,7 @@ namespace ThirdPartyService.Service.DAL
                 RefTransId = refTransId
             });
             p.Add("AfterWithdrawalLimit", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            var result = _mainDbClient.Execute("Common_WithdrawalLimit_Set", p, conn, trans);
+            var result = _mainDbClient.Execute("Common_WithdrawalLimit_Set", trans, p);
             afterWithdrawalLimit = p.Get<decimal?>("AfterWithdrawalLimit") ?? 0;
             return result;
         }
