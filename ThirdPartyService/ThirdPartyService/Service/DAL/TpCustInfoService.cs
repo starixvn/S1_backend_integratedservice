@@ -1,15 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
-using MySql.Data.MySqlClient;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ThirdPartyCore.Model;
+﻿using ThirdPartyCore.Model;
 using Dapper;
 using System.Data;
 using ThirdPartyCore.Model.enums;
-using Microsoft.AspNetCore.Hosting;
-using ThirdPartyCore;
 using ThirdPartyService.Service.Library;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Caching.Memory;
@@ -20,31 +12,33 @@ namespace ThirdPartyService.Service.DAL
 {
     public class TpCustInfoService
     {
-        private readonly IConfiguration configuration;
-        private readonly IWebHostEnvironment environment;
-        private readonly Tools tools;
-        private readonly ThirdPartyHelper thirdPartyHelper;
-        private readonly Common common;
-        private readonly IMemoryCache cache;
-        private readonly ServerInfoBLL serverInfoBLL;
+        private readonly IWebHostEnvironment _environment;
+        private readonly Tools _tools;
+        private readonly ThirdPartyHelper _thirdPartyHelper;
+        private readonly Common _common;
+        private readonly IMemoryCache _cache;
+        private readonly ServerInfoBLL _serverInfoBll;
+        private readonly MySqlClient _mainDbClient;
+        private readonly MySqlClient _reportDbClient;
 
-        public TpCustInfoService(IWebHostEnvironment environment, IConfiguration configuration, IMemoryCache cache, Tools tools, ThirdPartyHelper thirdPartyHelper, Common common, ServerInfoBLL serverInfoBLL)
+        public TpCustInfoService(IServiceProvider provider)
         {
-            this.configuration = configuration;
-            this.environment = environment;
-            this.tools = tools;
-            this.thirdPartyHelper = thirdPartyHelper;
-            this.common = common;
-            this.cache = cache;
-            this.serverInfoBLL = serverInfoBLL;
+            _environment = provider.GetRequiredService<IWebHostEnvironment>();
+            _tools = provider.GetRequiredService<Tools>();
+            _thirdPartyHelper = provider.GetRequiredService<ThirdPartyHelper>();
+            _common = provider.GetRequiredService<Common>();
+            _cache = provider.GetRequiredService<IMemoryCache>();
+            _serverInfoBll = provider.GetRequiredService<ServerInfoBLL>();
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+            _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
         }
+        
         public ApiResult<TpCustInfo> GetTpCustInfo(int custId, int tpId)
         {
             var apiResult = new ApiResult<TpCustInfo>();
-            TpCustInfo tpCustInfo = null;
 
-            string sTpCustInfoKey = $"TpCustInfo{tpId}_{custId}";
-            tpCustInfo = cache.Get<TpCustInfo>(sTpCustInfoKey);
+            var sTpCustInfoKey = $"TpCustInfo{tpId}_{custId}";
+            var tpCustInfo = _cache.Get<TpCustInfo>(sTpCustInfoKey);
             if (tpCustInfo == null)
             {
                 // dev not available
@@ -54,103 +48,96 @@ namespace ThirdPartyService.Service.DAL
                     apiResult.Message = "Test environment not supported";
                     return apiResult;
                 }
-                using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
+                
+                tpCustInfo = _mainDbClient.QueryFirst<TpCustInfo>("TpCustInfo_Get", new { CustId = custId, TpId = tpId });
+
+                if (tpCustInfo == null)
                 {
-                    conn.Open();
-                    tpCustInfo = conn.QueryFirstOrDefault<TpCustInfo>("TpCustInfo_Get", new { CustId = custId, TpId = tpId }, commandType: CommandType.StoredProcedure);
+                    var customer = _mainDbClient.QueryFirst<Customer>("Customer_Get", new { CustId = custId });
 
-                    if (tpCustInfo == null)
+                    if (customer == null)
                     {
-                        var customer = conn.QueryFirstOrDefault<Customer>("Customer_Get", new { CustId = custId }, commandType: CommandType.StoredProcedure);
-
-                        if (customer == null)
-                        {
-                            apiResult.ErrorCode = ErrorCode.UserNotExist;
-                            return apiResult;
-                        }
-                        else if (customer.Status == (int)CustStatus.Closed || customer.Status == (int)CustStatus.Suspend)
-                        {
-                            apiResult.ErrorCode = ErrorCode.UserLocked;
-                            return apiResult;
-                        }
-
-                        IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpId, customer.SiteId);
-                        var serverInfo = serverInfoBLL.GetServerInfo(customer.SiteId);
-
-                        var regTpCustInfo = new TpCustInfo();
-                        regTpCustInfo.TpId = tpId;
-                        regTpCustInfo.CustId = customer.CustId;
-                        regTpCustInfo.UserName = customer.UserName;
-                        regTpCustInfo.SiteId = customer.SiteId;
-                        regTpCustInfo.TpUserName = $"{serverInfo.SiteName}_{customer.CustId}";
-
-                        if (environment.EnvironmentName != "Production")
-                        {
-                            regTpCustInfo.TpUserName = $"{common.GetEnv()}{serverInfo.SiteName}_{customer.CustId}";
-                        }
-
-                        regTpCustInfo.TpPwd = tools.GetRandomString(7);
-                        regTpCustInfo.IsTest = customer.IsTest;
-                        regTpCustInfo.ActStatus = customer.ActStatus;
-
-                        //if (customer.IsTest)
-                        //{
-                        //    regTpCustInfo.TpUserName = $"{regTpCustInfo.TpUserName}_test";
-                        //}
-
-                        var tpCurrency = conn.QueryFirstOrDefault<TpCurrency>("TpCurrency_Get", new { TpId = tpId, customer.CurrencyId }, commandType: CommandType.StoredProcedure);
-
-                        if (tpCurrency == null)
-                        {
-                            apiResult.ErrorCode = ErrorCode.InvalidCurrency;
-                            return apiResult;
-                        }
-
-                        regTpCustInfo.TpCurrencyId = tpCurrency.TpCurrencyId;
-                        regTpCustInfo.ExchangeRate = tpCurrency.ExchangeRate;
-                        Dictionary<string, string> inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper.GetThirdPartyBySite(tpId, customer.SiteId).Setting);
-
-                        if (inputs == null)
-                        {
-                            apiResult.ErrorCode = ErrorCode.SettingNotFound;
-                            return apiResult;
-                        }
-
-                        var createMemberResult = tpHelper.CreateMember(regTpCustInfo, inputs);
-
-                        if (createMemberResult.ErrorCode == ErrorCode.Success)
-                        {
-                            conn.Execute("TpCustInfo_Ins_V2", regTpCustInfo, commandType: CommandType.StoredProcedure);
-                            regTpCustInfo.Status = (int)CustStatus.Running;
-                            regTpCustInfo.CStatus = (int)CustStatus.Running;
-                            tpCustInfo = regTpCustInfo;
-                            apiResult.Data = tpCustInfo;
-                            apiResult.ErrorCode = ErrorCode.Success;
-                        }
-                        else
-                        {
-                            apiResult.ErrorCode = createMemberResult.ErrorCode;
-                            apiResult.RawMessage = createMemberResult.RawMessage;
-                            apiResult.RawErrorCode = createMemberResult.RawErrorCode;
-                            return apiResult;
-                        }
+                        apiResult.ErrorCode = ErrorCode.UserNotExist;
+                        return apiResult;
                     }
-                    else if (tpCustInfo.Status == (int)CustStatus.Closed ||
-                        tpCustInfo.Status == (int)CustStatus.Suspend ||
-                        tpCustInfo.CStatus == (int)CustStatus.Closed ||
-                        tpCustInfo.CStatus == (int)CustStatus.Suspend)
+                    else if (customer.Status == (int)CustStatus.Closed || customer.Status == (int)CustStatus.Suspend)
                     {
-                        apiResult.Data = tpCustInfo;
                         apiResult.ErrorCode = ErrorCode.UserLocked;
                         return apiResult;
                     }
 
-                    if (tpCustInfo != null && tpCustInfo.CustId > 0)
+                    var tpHelper = _thirdPartyHelper.GetThirdPartyHelper(tpId, customer.SiteId);
+                    var serverInfo = _serverInfoBll.GetServerInfo(customer.SiteId);
+
+                    var regTpCustInfo = new TpCustInfo
                     {
-                        cache.Set(sTpCustInfoKey, tpCustInfo, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(30)));
+                        TpId = tpId,
+                        CustId = customer.CustId,
+                        UserName = customer.UserName,
+                        SiteId = customer.SiteId,
+                        TpUserName = $"{serverInfo.SiteName}_{customer.CustId}"
+                    };
+
+                    if (_environment.EnvironmentName != "Production")
+                    {
+                        regTpCustInfo.TpUserName = $"{_common.GetEnv()}{serverInfo.SiteName}_{customer.CustId}";
+                    }
+
+                    regTpCustInfo.TpPwd = _tools.GetRandomString(7);
+                    regTpCustInfo.IsTest = customer.IsTest;
+                    regTpCustInfo.ActStatus = customer.ActStatus;
+
+                    
+                    var tpCurrency = _mainDbClient.QueryFirst<TpCurrency>("TpCurrency_Get", new { TpId = tpId, customer.CurrencyId });
+
+                    if (tpCurrency == null)
+                    {
+                        apiResult.ErrorCode = ErrorCode.InvalidCurrency;
+                        return apiResult;
+                    }
+
+                    regTpCustInfo.TpCurrencyId = tpCurrency.TpCurrencyId;
+                    regTpCustInfo.ExchangeRate = tpCurrency.ExchangeRate;
+                    var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(_thirdPartyHelper.GetThirdPartyBySite(tpId, customer.SiteId).Setting);
+
+                    if (inputs == null)
+                    {
+                        apiResult.ErrorCode = ErrorCode.SettingNotFound;
+                        return apiResult;
+                    }
+
+                    var createMemberResult = tpHelper.CreateMember(regTpCustInfo, inputs);
+
+                    if (createMemberResult.ErrorCode == ErrorCode.Success)
+                    {
+                        _mainDbClient.Execute("TpCustInfo_Ins_V2", regTpCustInfo);
+                        regTpCustInfo.Status = (int)CustStatus.Running;
+                        regTpCustInfo.CStatus = (int)CustStatus.Running;
+                        tpCustInfo = regTpCustInfo;
                         apiResult.Data = tpCustInfo;
                         apiResult.ErrorCode = ErrorCode.Success;
                     }
+                    else
+                    {
+                        apiResult.ErrorCode = createMemberResult.ErrorCode;
+                        apiResult.RawMessage = createMemberResult.RawMessage;
+                        apiResult.RawErrorCode = createMemberResult.RawErrorCode;
+                        return apiResult;
+                    }
+                }
+                else if (tpCustInfo.Status is (int)CustStatus.Closed or (int)CustStatus.Suspend ||
+                         tpCustInfo.CStatus is (int)CustStatus.Closed or (int)CustStatus.Suspend)
+                {
+                    apiResult.Data = tpCustInfo;
+                    apiResult.ErrorCode = ErrorCode.UserLocked;
+                    return apiResult;
+                }
+
+                if (tpCustInfo is {CustId: > 0})
+                {
+                    _cache.Set(sTpCustInfoKey, tpCustInfo, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(30)));
+                    apiResult.Data = tpCustInfo;
+                    apiResult.ErrorCode = ErrorCode.Success;
                 }
             }
             else
@@ -161,21 +148,20 @@ namespace ThirdPartyService.Service.DAL
 
             return apiResult;
         }
+        
         public void SetTpLastLoginTime(int custId, int tpId)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Execute("TpLastLoginTime_Set", new { TpId = tpId, CustId = custId }, commandType: CommandType.StoredProcedure);
+            _mainDbClient.Execute("TpLastLoginTime_Set", new { TpId = tpId, CustId = custId });
         }
+        
         public void SetTpLastTradingTime(int custId, int tpId)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Execute("TpLastTradingTime_Set", new { TpId = tpId, CustId = custId }, commandType: CommandType.StoredProcedure);
+            _mainDbClient.Execute("TpLastTradingTime_Set", new { TpId = tpId, CustId = custId });
         }
 
         public CustWalletModel GetCustWallet(int custId)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.QueryFirstOrDefault<CustWalletModel>("Service_CustWallet_Get", new { CustId = custId }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.QueryFirst<CustWalletModel>("Service_CustWallet_Get", new { CustId = custId });
         }
 
         /// <summary>
@@ -190,26 +176,23 @@ namespace ThirdPartyService.Service.DAL
             parameter.Add("_FirstRun", firstRun);
             parameter.Add("_TpId", tpId);
             parameter.Add("_SiteId", siteId);
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringReport"));
-            return conn.Query<BalanceTpCustInfoModel>("Service_TpCustInfo_Get", parameter, commandType: CommandType.StoredProcedure);
+            return _reportDbClient.Query<BalanceTpCustInfoModel>("Service_TpCustInfo_Get", parameter, commandType: CommandType.StoredProcedure);
         }
 
         public void SetCustGotoGame(int custId, int tpId, int gameType)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Execute("Service_CustGotoGame_Set", new { CustId = custId, TpId = tpId, GameType = gameType }, commandType: CommandType.StoredProcedure);
+            _mainDbClient.Execute("Service_CustGotoGame_Set", new { CustId = custId, TpId = tpId, GameType = gameType });
         }
 
         public TpCountryCode GetTpCurrencyCodeByCurrencyId(int tpId, string tpCurrencyId)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.QueryFirst<TpCountryCode>("Service_TpCountryCodeByTpCurrencyId_Get", new { TpId = tpId, TpCurrencyId = tpCurrencyId }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.QueryFirst<TpCountryCode>("Service_TpCountryCodeByTpCurrencyId_Get", new { TpId = tpId, TpCurrencyId = tpCurrencyId });
         }
 
         private bool CheckTpForbidden(int custId, int tpId)
         {
             // priority custid > tpid
-            if (environment.EnvironmentName != "Production")
+            if (_environment.EnvironmentName != "Production")
             {
                 if (tpId == (int)TpEnum.PT)
                 {

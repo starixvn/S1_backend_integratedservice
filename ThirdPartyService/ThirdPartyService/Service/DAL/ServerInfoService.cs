@@ -1,13 +1,4 @@
-﻿using Dapper;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using MySql.Data.MySqlClient;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
-using ThirdPartyCore.Model;
+﻿using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Service.Library;
 using ThirdPartyService.Service.Model;
 
@@ -17,18 +8,16 @@ namespace ThirdPartyService.Service.DAL
     {
 
         #region Fields
-
-        private readonly IConfiguration _configuration;
+        
         private readonly MySqlClient _mainDbClient;
 
         #endregion
 
         #region Constructors
 
-        public ServerInfoService(IConfiguration configuration, ILogger<MySqlClient> logger)
+        public ServerInfoService(IServiceProvider provider)
         {
-            _configuration = configuration;
-            _mainDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionString"), logger);
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
 
         #endregion
@@ -42,8 +31,7 @@ namespace ThirdPartyService.Service.DAL
         /// <returns></returns>
         public ServerInfo GetServerInfo(int siteId)
         {
-            using MySqlConnection conn = new MySqlConnection(_configuration.GetConnectionString("ConnectionString"));
-            return conn.QueryFirstOrDefault<ServerInfo>("ServerInfo_Get", new { SiteId = siteId }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.QueryFirst<ServerInfo>("ServerInfo_Get", new { SiteId = siteId });
         }
 
         /// <summary>
