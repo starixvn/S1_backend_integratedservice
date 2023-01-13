@@ -44,7 +44,8 @@ namespace ThirdPartyWager.Service.BLL
                     ValidBet = item.ValidBet,
                     Payout = item.Payout,
                     WinlostAmount = item.WinlostAmount,
-                    ProgressiveBet = item.ProgressiveBet
+                    ProgressiveBet = item.ProgressiveBet,
+                    ProgressiveWin = item.ProgressiveWin
                 });
             }
             return dailyData;
