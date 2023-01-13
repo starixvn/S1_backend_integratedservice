@@ -35,6 +35,8 @@ namespace ThirdPartyService.Service.Library
             try
             {
                 connection = new MySqlConnection(_connectionString);
+                if (connection.State != ConnectionState.Open) connection.Open();
+
                 var command = new CommandDefinition(name,
                     commandType: CommandType.StoredProcedure,
                     flags: CommandFlags.NoCache);
@@ -69,6 +71,7 @@ namespace ThirdPartyService.Service.Library
             try
             {
                 connection = new MySqlConnection(_connectionString);
+                if (connection.State != ConnectionState.Open) connection.Open();
                 var command = new CommandDefinition(name, parameters,
                     commandTimeout: commandTimeout,
                     commandType: CommandType.StoredProcedure,
@@ -105,7 +108,8 @@ namespace ThirdPartyService.Service.Library
             {
                 var connectionString = $"{_connectionString}ProcedureCacheSize=0;";
                 connection = new MySqlConnection(connectionString);
-                
+                if (connection.State != ConnectionState.Open) connection.Open();
+
                 var command = new CommandDefinition(name, parameters,
                     commandTimeout: commandTimeout,
                     commandType: CommandType.StoredProcedure,
@@ -141,6 +145,7 @@ namespace ThirdPartyService.Service.Library
             try
             {
                 connection = new MySqlConnection(_connectionString);
+                if (connection.State != ConnectionState.Open) connection.Open();
 
                 var command = new CommandDefinition(name, parameters,
                     commandTimeout: null,
@@ -178,6 +183,7 @@ namespace ThirdPartyService.Service.Library
             try
             {
                 connection = new MySqlConnection(_connectionString);
+                if (connection.State != ConnectionState.Open) connection.Open();
 
                 var command = new CommandDefinition(name, parameters,
                     commandTimeout: null,
@@ -214,6 +220,7 @@ namespace ThirdPartyService.Service.Library
             try
             {
                 connection = new MySqlConnection(_connectionString);
+                if (connection.State != ConnectionState.Open) connection.Open();
 
                 var command = new CommandDefinition(name, parameters,
                     commandTimeout: null,
@@ -251,6 +258,7 @@ namespace ThirdPartyService.Service.Library
             try
             {
                 connection = new MySqlConnection(_connectionString);
+                if (connection.State != ConnectionState.Open) connection.Open();
 
                 var command = new CommandDefinition(name, parameters,
                     commandTimeout: null,
@@ -287,6 +295,7 @@ namespace ThirdPartyService.Service.Library
             try
             {
                 connection = new MySqlConnection(_connectionString);
+                if (connection.State != ConnectionState.Open) connection.Open();
 
                 var command = new CommandDefinition(name, parameters,
                     commandTimeout: null,
@@ -323,6 +332,7 @@ namespace ThirdPartyService.Service.Library
             try
             {
                 connection = new MySqlConnection(_connectionString);
+                if (connection.State != ConnectionState.Open) connection.Open();
 
                 var command = new CommandDefinition(sql, parameters,
                     commandTimeout: null,
@@ -361,6 +371,7 @@ namespace ThirdPartyService.Service.Library
             {
                 //  這個暫時不沒辦法動，要改底層
                 connection = new MySqlConnection(_connectionString);
+                if (connection.State != ConnectionState.Open) connection.Open();
                 result = connection.QueryFirstOrDefault(name, parameters, commandType: CommandType.StoredProcedure);
             }
             catch (Exception e)
@@ -392,6 +403,7 @@ namespace ThirdPartyService.Service.Library
             {
                 //  這個暫時不沒辦法動，要改底層
                 connection = new MySqlConnection(_connectionString);
+                if (connection.State != ConnectionState.Open) connection.Open();
                 result = connection.Query(name, parameters, commandType: CommandType.StoredProcedure);
             }
             catch (Exception e)
