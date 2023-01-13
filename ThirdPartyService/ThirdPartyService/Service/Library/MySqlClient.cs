@@ -35,7 +35,11 @@ namespace ThirdPartyService.Service.Library
             try
             {
                 connection = new MySqlConnection(_connectionString);
-                result = connection.Query<T>(name, commandType: CommandType.Text);
+                var command = new CommandDefinition(name,
+                    commandType: CommandType.StoredProcedure,
+                    flags: CommandFlags.NoCache);
+
+                result = connection.Query<T>(command);
             }
             catch (Exception e)
             {
@@ -60,15 +64,30 @@ namespace ThirdPartyService.Service.Library
         {
             IEnumerable<T> result;
             var sw = Stopwatch.StartNew();
+            MySqlConnection connection = null;
+
             try
             {
-                using var connection = new MySqlConnection(_connectionString);
-                result = connection.Query<T>(name, parameters, commandTimeout: commandTimeout, commandType: CommandType.StoredProcedure);
+                connection = new MySqlConnection(_connectionString);
+                var command = new CommandDefinition(name, parameters,
+                    commandTimeout: commandTimeout,
+                    commandType: CommandType.StoredProcedure,
+                    flags: CommandFlags.NoCache);
+
+                result = connection.Query<T>(command);
             }
             catch (Exception e)
             {
                 _logger.LogError(e, name);
                 throw;
+            }
+            finally
+            {
+                if (connection != null)
+                {
+                    connection.Close();
+                    connection.Dispose();
+                }
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
@@ -86,9 +105,8 @@ namespace ThirdPartyService.Service.Library
             {
                 var connectionString = $"{_connectionString}ProcedureCacheSize=0;";
                 connection = new MySqlConnection(connectionString);
-                if (connection.State != ConnectionState.Open) connection.Open();// 自己 Control connection open close，不要讓 ORM 自己做
-
-                var command = new CommandDefinition(name, parameters, // 使用 CommandDefinition 不讓Dapper cache
+                
+                var command = new CommandDefinition(name, parameters,
                     commandTimeout: commandTimeout,
                     commandType: CommandType.StoredProcedure,
                     flags: CommandFlags.NoCache);
@@ -118,16 +136,32 @@ namespace ThirdPartyService.Service.Library
         {
             T result;
             var sw = Stopwatch.StartNew();
+            MySqlConnection connection = null;
+
             try
             {
-                using var connection = new MySqlConnection(_connectionString);
-                var multiple = connection.QueryMultiple(name, parameters, commandType: CommandType.StoredProcedure);
+                connection = new MySqlConnection(_connectionString);
+
+                var command = new CommandDefinition(name, parameters,
+                    commandTimeout: null,
+                    commandType: CommandType.StoredProcedure,
+                    flags: CommandFlags.NoCache);
+
+                var multiple = connection.QueryMultiple(command);
                 result = func.Invoke(multiple);
             }
             catch (Exception e)
             {
                 _logger.LogError(e, name);
                 throw;
+            }
+            finally
+            {
+                if (connection != null)
+                {
+                    connection.Close();
+                    connection.Dispose();
+                }
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
@@ -139,15 +173,31 @@ namespace ThirdPartyService.Service.Library
         {
             IEnumerable<T> result;
             var sw = Stopwatch.StartNew();
+            MySqlConnection connection = null;
+
             try
             {
-                await using var connection = new MySqlConnection(_connectionString);
-                result = await connection.QueryAsync<T>(name, parameters, commandType: CommandType.StoredProcedure);
+                connection = new MySqlConnection(_connectionString);
+
+                var command = new CommandDefinition(name, parameters,
+                    commandTimeout: null,
+                    commandType: CommandType.StoredProcedure,
+                    flags: CommandFlags.NoCache);
+
+                result = await connection.QueryAsync<T>(command);
             }
             catch (Exception e)
             {
                 _logger.LogError(e, name);
                 throw;
+            }
+            finally
+            {
+                if (connection != null)
+                {
+                    await connection.CloseAsync();
+                    await connection.DisposeAsync();
+                }
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
@@ -159,17 +209,32 @@ namespace ThirdPartyService.Service.Library
         {
             T result;
             var sw = Stopwatch.StartNew();
+            MySqlConnection connection = null;
+
             try
             {
-                await using var connection = new MySqlConnection(_connectionString);
-                var multiple =
-                    connection.QueryMultipleAsync(name, parameters, commandType: CommandType.StoredProcedure);
+                connection = new MySqlConnection(_connectionString);
+
+                var command = new CommandDefinition(name, parameters,
+                    commandTimeout: null,
+                    commandType: CommandType.StoredProcedure,
+                    flags: CommandFlags.NoCache);
+
+                var multiple = connection.QueryMultipleAsync(command);
                 result = func.Invoke(await multiple);
             }
             catch (Exception e)
             {
                 _logger.LogError(e, name);
                 throw;
+            }
+            finally
+            {
+                if (connection != null)
+                {
+                    await connection.CloseAsync();
+                    await connection.DisposeAsync();
+                }
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
@@ -181,16 +246,31 @@ namespace ThirdPartyService.Service.Library
         {
             T result;
             var sw = Stopwatch.StartNew();
+            MySqlConnection connection = null;
+
             try
             {
-                await using var connection = new MySqlConnection(_connectionString);
-                result = await connection.QueryFirstOrDefaultAsync<T>(name, parameters,
-                    commandType: CommandType.StoredProcedure);
+                connection = new MySqlConnection(_connectionString);
+
+                var command = new CommandDefinition(name, parameters,
+                    commandTimeout: null,
+                    commandType: CommandType.StoredProcedure,
+                    flags: CommandFlags.NoCache);
+
+                result = await connection.QueryFirstOrDefaultAsync<T>(command);
             }
             catch (Exception e)
             {
                 _logger.LogError(e, name);
                 throw;
+            }
+            finally
+            {
+                if (connection != null)
+                {
+                    await connection.CloseAsync();
+                    await connection.DisposeAsync();
+                }
             }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
@@ -207,7 +287,13 @@ namespace ThirdPartyService.Service.Library
             try
             {
                 connection = new MySqlConnection(_connectionString);
-                result = connection.QueryFirstOrDefault<T>(name, parameters, commandType: CommandType.StoredProcedure);
+
+                var command = new CommandDefinition(name, parameters,
+                    commandTimeout: null,
+                    commandType: CommandType.StoredProcedure,
+                    flags: CommandFlags.NoCache);
+
+                result = connection.QueryFirstOrDefault<T>(command);
             }
             catch (Exception e)
             {
@@ -237,7 +323,13 @@ namespace ThirdPartyService.Service.Library
             try
             {
                 connection = new MySqlConnection(_connectionString);
-                result = connection.Query<T>(sql, param: parameters, commandType: commandType);
+
+                var command = new CommandDefinition(sql, parameters,
+                    commandTimeout: null,
+                    commandType: CommandType.StoredProcedure,
+                    flags: CommandFlags.NoCache);
+
+                result = connection.Query<T>(command);
             }
             catch (Exception e)
             {
@@ -257,15 +349,17 @@ namespace ThirdPartyService.Service.Library
             _logger.LogDebug($"{sql} {sw.Elapsed:c}");
             return result;
         }
+
         
         public dynamic QueryFirst(string name, object parameters)
         {
             dynamic result;
             var sw = Stopwatch.StartNew();
             MySqlConnection connection = null;
-            
+
             try
             {
+                //  這個暫時不沒辦法動，要改底層
                 connection = new MySqlConnection(_connectionString);
                 result = connection.QueryFirstOrDefault(name, parameters, commandType: CommandType.StoredProcedure);
             }
@@ -293,9 +387,10 @@ namespace ThirdPartyService.Service.Library
             dynamic result;
             var sw = Stopwatch.StartNew();
             MySqlConnection connection = null;
-            
+
             try
             {
+                //  這個暫時不沒辦法動，要改底層
                 connection = new MySqlConnection(_connectionString);
                 result = connection.Query(name, parameters, commandType: CommandType.StoredProcedure);
             }
@@ -317,7 +412,7 @@ namespace ThirdPartyService.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
-        
+
         #endregion
 
         #region Excute
