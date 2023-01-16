@@ -295,15 +295,15 @@ namespace ThirdParty.Saba
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
 
-            #region Test Pending Bonus Response
+            #region Test Backend Pending Bonus Response
 
-            return new ApiResult<TransferResult>()
-            {
-                RawMessage = "No Result",
-                RawErrorCode = "1",
-                ErrorCode = ErrorCode.TransferPending,
-                Data = new TransferResult() { Status = TransferStatus.Pending }
-            };
+            //return new ApiResult<TransferResult>()
+            //{
+            //    RawMessage = "No Result",
+            //    RawErrorCode = "1",
+            //    ErrorCode = ErrorCode.TransferPending,
+            //    Data = new TransferResult() { Status = TransferStatus.Pending }
+            //};
 
             #endregion
 
