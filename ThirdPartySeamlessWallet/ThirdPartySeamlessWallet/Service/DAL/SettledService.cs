@@ -671,10 +671,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             var p = new DynamicParameters(new { BonusId = bonusId, CurrencyId = currencyId, GameType = gameType, CustId = custId, UserName = userName, SiteId = siteId, AfterBonus = afterBonus });
             p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
-            p.Add("RunningAfterBonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("CancelBonusAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             var result = conn.Execute("Service_AutoRunningSeamlessBonus_Set_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
             int outResult = p.Get<int>("out_result");
-            var runningAfterBonus = p.Get<decimal>("RunningAfterBonus");
+            var runningAfterBonus = p.Get<decimal>("CancelBonusAmount");
             if (outResult == 2)
             {
                 var parameter = new
