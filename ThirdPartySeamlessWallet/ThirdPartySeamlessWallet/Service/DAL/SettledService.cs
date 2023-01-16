@@ -671,8 +671,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             var p = new DynamicParameters(new { BonusId = bonusId, CurrencyId = currencyId, GameType = gameType, CustId = custId, UserName = userName, SiteId = siteId, AfterBonus = afterBonus });
             p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
-            var result = conn.Execute("Service_AutoRunningSeamlessBonus_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            p.Add("CancelBonusAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            var result = conn.Execute("Service_AutoRunningSeamlessBonus_Set_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
             int outResult = p.Get<int>("out_result");
+            var runningAfterBonus = p.Get<decimal>("CancelBonusAmount");
             if (outResult == 2)
             {
                 var parameter = new
@@ -684,6 +686,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     OutResult = outResult
                 };
                 log2File.Info($"{JsonConvert.SerializeObject(parameter)}", MethodBase.GetCurrentMethod().Name);
+
+                if (runningAfterBonus > 0) //將退回主帳戶的餘額重新扣掉
+                {
+                    var amount = runningAfterBonus * -1;
+                    result = walletService.SetBalance(custId, siteId, userName, amount, 0, TransType.Prize, $"Bonus: {Math.Abs(amount).ToString("#,##0.##")}", bonusId.ToString(), out _, conn, trans, AllowNegative.Allow);
+                }
             }
             return result;
         }

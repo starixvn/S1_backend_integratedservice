@@ -15,6 +15,12 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Undo = 5,
         Tip = 6
     }
+
+    public enum FinancialType
+    {
+        BonusReward = 5
+    }
+    
     public enum SettlementType
     {
         UnSettled = 0,
