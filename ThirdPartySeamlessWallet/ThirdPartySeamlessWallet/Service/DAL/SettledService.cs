@@ -690,7 +690,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (runningAfterBonus > 0) //將退回主帳戶的餘額重新扣掉
                 {
                     var amount = runningAfterBonus * -1;
-                    result = walletService.SetBalance(custId, siteId, userName, amount, 0, TransType.Prize, $"Bonus: {Math.Abs(amount).ToString("#,##0.##")}", bonusId.ToString(), out _, conn, trans);
+                    result = walletService.SetBalance(custId, siteId, userName, amount, 0, TransType.Prize, $"Bonus: {Math.Abs(amount).ToString("#,##0.##")}", bonusId.ToString(), out _, conn, trans, AllowNegative.Allow);
                 }
             }
             return result;
