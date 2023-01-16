@@ -294,6 +294,19 @@ namespace ThirdParty.Saba
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
+
+            #region Test Pending Bonus Response
+
+            return new ApiResult<TransferResult>()
+            {
+                RawMessage = "No Result",
+                RawErrorCode = "1",
+                ErrorCode = ErrorCode.TransferPending,
+                Data = new TransferResult() { Status = TransferStatus.Pending }
+            };
+
+            #endregion
+
             ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
 
             try
@@ -432,17 +445,6 @@ namespace ThirdParty.Saba
 
         public ApiResult<TransferResult> BonusTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal bonus, decimal lockedAmount, decimal rolloverAmount, long expiredDate, string transID, string thirdPartyTransID)
         {
-            #region Test Pending Bonus Response
-
-            return new ApiResult<TransferResult>()
-            {
-                RawMessage = "No Result",
-                RawErrorCode = "1",
-                ErrorCode = ErrorCode.TransferPending,
-                Data = new TransferResult() { Status = TransferStatus.Pending }
-            };
-
-            #endregion
 
             string ApiUrl = new SabaConfig(inputs).ApiUrl;
             BonusTransferReg input = new BonusTransferReg();
