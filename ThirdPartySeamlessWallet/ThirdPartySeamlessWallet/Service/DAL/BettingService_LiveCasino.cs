@@ -705,8 +705,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
             try
             {
-                long unixTimestamp = tools.GetUnixTimestampByTicks(bettingDataRNG_MG.creationTime);
-                var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(unixTimestamp).DateTime;
+                var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataRNG_MG.creationTimeMs).DateTime;
 
                 // 檢查該局是否已經結算
                 var checkBetId = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLC_MG_Check", new { bettingDataRNG_MG.betId });
@@ -732,7 +731,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 var p = new DynamicParameters(bettingDataRNG_MG);
                 p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
-                result = _partitionService.Execute(partitionTime, "Service_BettransLC_MG_Ins", p, trans);
+                result = _partitionService.Execute(partitionTime, "Service_BettransLC_MG_Ins_V2", p, trans);
                 var extTxnId = p.Get<long>("extTxnId");
 
                 if (result > 0 && bettingDataRNG_MG.amount != 0)

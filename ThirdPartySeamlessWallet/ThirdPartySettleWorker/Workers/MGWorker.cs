@@ -80,16 +80,13 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>("Service_BettransRng_MG_Unsettle_Get_V3",
+                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData_MG>("Service_BettransRng_MG_Unsettle_Get_V4",
                             new { tpUnsettle.TransId }, DataBase.Main).First();
 
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
 
-                        long settleTime = settleData.SettleTime - new DateTime(1970, 1, 1).Ticks;
-                        settleTime /= TimeSpan.TicksPerSecond;
-
-                        long transTime = settleData.TransTime - new DateTime(1970, 1, 1).Ticks;
-                        transTime /= TimeSpan.TicksPerSecond;
+                        long settleTime = convertTpBetRecordTime(settleData.SettleTime, settleData.SettleTimeNew);
+                        long transTime = convertTpBetRecordTime(settleData.TransTime, settleData.TransTimeNew);
 
                         var betRecordInfo = new BetRecordInfo
                         {
@@ -179,11 +176,13 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var settleData = _partitionService.GetUnsettleDataList<SettleData>("Service_BettransLC_MG_Settle_Get", tpUnsettle);
+                        var settleData = _partitionService.GetUnsettleDataList<SettleData_MG>("Service_BettransLC_MG_Settle_Get_V2", tpUnsettle);
                         var tpUserName = settleData.FirstOrDefault().Account;
                         var transId = settleData.FirstOrDefault().TransId;
                         var settleTime1 = settleData.Max(x => x.SettleTime);
+                        var settleTimeMs = settleData.Max(x => x.SettleTimeNew);
                         var transTime1 = settleData.Min(x => x.TransTime);
+                        var transTimeMs = settleData.Min(x => x.TransTimeNew);
                         var stake = settleData.Sum(x => x.Stake);
                         var validBet = settleData.Sum(x => x.ValidBet);
                         var winLostAmount = settleData.Sum(x => x.WinLostAmount);
@@ -194,11 +193,8 @@ namespace ThirdPartySettleWorker.Workers
                             throw new UnsettleNotFoundException($"{tpUserName} TpCustInfo not found.");
                         }
 
-                        long settleTime = settleTime1 - new DateTime(1970, 1, 1).Ticks;
-                        settleTime /= TimeSpan.TicksPerSecond;
-
-                        long transTime = transTime1 - new DateTime(1970, 1, 1).Ticks;
-                        transTime /= TimeSpan.TicksPerSecond;
+                        long settleTime = convertTpBetRecordTime(settleTime1, settleTimeMs);
+                        long transTime = convertTpBetRecordTime(transTime1, transTimeMs);
 
                         var betRecordInfo = new BetRecordInfo
                         {
@@ -264,6 +260,18 @@ namespace ThirdPartySettleWorker.Workers
 
                 timerLC?.Change(dueTimeSpan, TimeSpan.Zero);
             }
+        }
+
+        private long convertTpBetRecordTime(long creationTime, long creationTimeMs)
+        {
+            if (creationTime == 0 && creationTimeMs != 0)
+            {
+                return creationTimeMs / 1000;
+            }
+
+            long time = creationTime - new DateTime(1970, 1, 1).Ticks;
+            time /= TimeSpan.TicksPerSecond;
+            return time;
         }
     }
 }
