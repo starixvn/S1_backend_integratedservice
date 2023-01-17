@@ -2582,7 +2582,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     };
                 }
 
-                var result = conn.Execute("Service_BettransRng_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var result = conn.Execute("Service_BettransRng_MG_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 var extTxnId = p.Get<long>("extTxnId");
 
                 if (result > 0 && bettingDataRNG_MG.amount > 0)
@@ -2742,7 +2742,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return conn.Execute(spName, new { betId = transId }, commandType: CommandType.StoredProcedure);
         }
 
-        public int GetTpGameType_MG(string betId, long creationTime)
+        public int GetTpGameType_MG(string betId, long creationTimeMs)
         {
             var tpGameType = 0;
             var p = new DynamicParameters(new
@@ -2760,8 +2760,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 return tpGameType;
             }
 
-            long unixTimestamp = tools.GetUnixTimestampByTicks(creationTime);
-            var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(unixTimestamp).DateTime;
+            var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(creationTimeMs).DateTime;
 
             var live = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLC_MG_BetId_Get", p);
             if (live.Any())
