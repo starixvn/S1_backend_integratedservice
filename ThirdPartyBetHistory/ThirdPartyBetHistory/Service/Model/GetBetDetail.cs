@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using ThirdPartyBetHistory.Service.Model.Interfaces;
+﻿using ThirdPartyBetHistory.Service.Model.Interfaces;
 
 namespace ThirdPartyBetHistory.Service.Model
 {
