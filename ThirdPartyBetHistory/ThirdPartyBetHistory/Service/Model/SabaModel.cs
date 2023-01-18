@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ThirdPartyBetHistory.Service.Model
+﻿namespace ThirdPartyBetHistory.Service.Model
 {
     public class UnSettle
     {
