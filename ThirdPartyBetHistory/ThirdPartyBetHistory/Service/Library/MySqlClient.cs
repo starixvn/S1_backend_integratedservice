@@ -38,6 +38,8 @@ namespace ThirdPartyBetHistory.Service.Library
                 await using var connection = new MySqlConnection(_connectionString);
                 result = await connection.QueryFirstOrDefaultAsync<T>(name, parameters,
                     commandType: CommandType.StoredProcedure);
+                await connection.CloseAsync();
+                await connection.DisposeAsync();
             }
             catch (Exception e)
             {
@@ -61,6 +63,8 @@ namespace ThirdPartyBetHistory.Service.Library
                     commandType: CommandType.StoredProcedure,
                     flags: CommandFlags.NoCache);
                 result = connection.QueryFirstOrDefault<T>(command);
+                connection.Close();
+                connection.Dispose();
             }
             catch (Exception e)
             {
@@ -84,6 +88,8 @@ namespace ThirdPartyBetHistory.Service.Library
                     commandType: CommandType.Text,
                     flags: CommandFlags.NoCache);
                 result = connection.Query<T>(command);
+                connection.Close();
+                connection.Dispose();
             }
             catch (Exception e)
             {
@@ -107,6 +113,8 @@ namespace ThirdPartyBetHistory.Service.Library
                     commandType: CommandType.StoredProcedure,
                     flags: CommandFlags.NoCache);
                 result = connection.Query<T>(command);
+                connection.Close();
+                connection.Dispose();
             }
             catch (Exception e)
             {
@@ -128,6 +136,8 @@ namespace ThirdPartyBetHistory.Service.Library
                 using var connection = new MySqlConnection(_connectionString);
                 var multiple = connection.QueryMultiple(name, parameters, commandType: CommandType.StoredProcedure);
                 result = func.Invoke(multiple);
+                connection.Close();
+                connection.Dispose();
             }
             catch (Exception e)
             {
@@ -148,6 +158,8 @@ namespace ThirdPartyBetHistory.Service.Library
             {
                 await using var connection = new MySqlConnection(_connectionString);
                 result = await connection.QueryAsync<T>(name, parameters, commandType: CommandType.StoredProcedure);
+                await connection.CloseAsync();
+                await connection.DisposeAsync();
             }
             catch (Exception e)
             {
@@ -170,6 +182,8 @@ namespace ThirdPartyBetHistory.Service.Library
                 var multiple =
                     connection.QueryMultipleAsync(name, parameters, commandType: CommandType.StoredProcedure);
                 result = func.Invoke(await multiple);
+                await connection.CloseAsync();
+                await connection.DisposeAsync();
             }
             catch (Exception e)
             {
@@ -194,6 +208,8 @@ namespace ThirdPartyBetHistory.Service.Library
             {
                 using var connection = new MySqlConnection(_connectionString);
                 result = connection.Execute(name, parameters, commandType: CommandType.StoredProcedure);
+                connection.Close();
+                connection.Dispose();
             }
             catch (Exception e)
             {
@@ -253,6 +269,8 @@ namespace ThirdPartyBetHistory.Service.Library
             {
                 using var connection = new MySqlConnection(_connectionString);
                 result = connection.Execute(command, CommandType.Text);
+                connection.Close();
+                connection.Dispose();
             }
             catch (Exception e)
             {
@@ -273,6 +291,8 @@ namespace ThirdPartyBetHistory.Service.Library
             {
                 await using var connection = new MySqlConnection(_connectionString);
                 result = await connection.ExecuteAsync(name, parameters, commandType: CommandType.StoredProcedure);
+                await connection.CloseAsync();
+                await connection.DisposeAsync();
             }
             catch (Exception e)
             {
