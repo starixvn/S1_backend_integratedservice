@@ -9,12 +9,12 @@ namespace CommonService
 {
     public class Startup
     {
+        public IConfiguration Configuration { get; }
+        
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
-
-        public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -33,6 +33,7 @@ namespace CommonService
             services.Configure<Dictionary<string, Dictionary<string, string>>>(Configuration.GetSection("LetsTalk"));
 
             services.AddMemoryCache();
+            services.AddDatabaseConnection(Configuration);
             HttpHelper.proxyHost = Configuration.GetValue<string>("ProxyHost");
             HttpHelper.proxyPort = Configuration.GetValue<int>("ProxyPort");
 
