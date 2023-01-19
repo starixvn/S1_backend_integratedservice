@@ -137,6 +137,17 @@ namespace ThirdParty.Skywind
             itgGame.Add("itg_bigirishbucks", "itg_bigirishbucks");
             itgGame.Add("itg_bigmoneyvegas", "itg_bigmoneyvegas");
             itgGame.Add("itg_monkeyhero", "itg_monkeyhero");
+            itgGame.Add("itg_moneytreesofspring_9606", "itg_moneytreesofspring_9606");
+            itgGame.Add("itg_goldenroad_9599", "itg_goldenroad_9599");
+            itgGame.Add("itg_goldenroad_9401", "itg_goldenroad_9401");
+            itgGame.Add("itg_megatrail_9601", "itg_megatrail_9601");
+            itgGame.Add("itg_megatrail_9400", "itg_megatrail_9400");
+            itgGame.Add("itg_megamonkeys_9605", "itg_megamonkeys_9605");
+            itgGame.Add("itg_megamonkeys_9402", "itg_megamonkeys_9402");
+            itgGame.Add("itg_bigirishbucks_9599", "itg_bigirishbucks_9599");
+            itgGame.Add("itg_bigirishbucks_9404", "itg_bigirishbucks_9404");
+            itgGame.Add("itg_bigmoneyvegas_9600", "itg_bigmoneyvegas_9600");
+
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
             string SecretKey = inputs.ContainsKey("SecretKey") && !string.IsNullOrEmpty(inputs["SecretKey"]) ? inputs["SecretKey"] : throw new Exception();
             string Username = inputs.ContainsKey("Username") && !string.IsNullOrEmpty(inputs["Username"]) ? inputs["Username"] : throw new Exception();
