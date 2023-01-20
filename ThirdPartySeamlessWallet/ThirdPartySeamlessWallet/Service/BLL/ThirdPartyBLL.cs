@@ -135,6 +135,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 {
                     gameType = GameType.PP_RNG;
                 }
+                return gameType;
+            }
+            
+            var casino = GetGameCasinoWithCache((int)Tp.PP);
+            var check = casino.FirstOrDefault(x => x.GameId == gameId);
+            if (check == null)
+            {
+                gameType = GameType.PP_LiveCasino;
             }
 
             return gameType;
@@ -202,6 +210,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 case (int)Tp.PP:
                     gameType = GameType.PP_RNG;
                     if (int.TryParse(gameId, out int tempGameId))
+                    {
+                        gameType = GameType.PP_LiveCasino;
+                        
+                        // Spaceman 
+                        if (tempGameId == 1302)
+                        {
+                            gameType = GameType.PP_RNG;
+                        }
+                        return gameType;
+                    }
+                    
+                    var pp = GetGameCasinoWithCache(tpId);
+                    var checkPP = pp.FirstOrDefault(x => x.GameId == gameId);
+                    if (checkPP == null)
                     {
                         gameType = GameType.PP_LiveCasino;
                     }
