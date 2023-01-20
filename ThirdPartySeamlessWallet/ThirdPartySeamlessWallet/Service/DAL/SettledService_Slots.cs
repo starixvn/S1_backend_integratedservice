@@ -1824,6 +1824,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 if (payoffDataRNG_CQ9.amount != 0)
                 {
+                    var TransId = payoffDataRNG_CQ9.mtcode;
+                    if (payoffDataRNG_CQ9.mtcode.StartsWith("atm-betaward", StringComparison.OrdinalIgnoreCase))
+                    {
+                        TransId = payoffDataRNG_CQ9.mtcode.Replace("atm-betaward", "atm-award");
+                    }
+
                     result = walletService.SetBalance(
                         tpCustInfo.CustId,
                         tpCustInfo.SiteId,
@@ -1832,7 +1838,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         (int)Tp.CQ9,
                         TransType.Prize,
                         $"Prize: {Math.Abs(payoffDataRNG_CQ9.amount):#,##0.##}",
-                        payoffDataRNG_CQ9.mtcode,
+                        TransId,
                         out afterAmount,
                         conn,
                         trans
