@@ -152,7 +152,7 @@ namespace ThirdPartyWager.Workers
             finally
             {
                 var dueTimeSpan = (quick == 1) ? TimeSpan.FromSeconds(5) : TimeSpan.FromMinutes(intervalMins);
-                _timer.Change(dueTimeSpan, TimeSpan.Zero);
+                _unSettleTimer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 
