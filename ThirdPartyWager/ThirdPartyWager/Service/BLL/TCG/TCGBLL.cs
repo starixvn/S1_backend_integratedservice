@@ -133,7 +133,6 @@ namespace ThirdPartyWager.Service.BLL
                     method = isVN ? "gluoh" : "elubd",
                     product_type = isVN ? 420 : 384,
                     batch_name = $"{batchTime:yyyyMMddHHmm}",
-                    product_group = isVN ? "IH" : "TP",
                     page
                 };
                 var httpContent = new FormUrlEncodedContent(GetBody(sParam, config));
