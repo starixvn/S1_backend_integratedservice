@@ -18,52 +18,85 @@ namespace ThirdPartyService.Service.Library
             _connectionString = connectionString;
             _logger = logger;
         }
-        
+
         public MySqlConnection GetMySqlConnection()
         {
             return new MySqlConnection(_connectionString);
         }
-        
+
         #region Query
 
         public IEnumerable<T> Query<T>(string name)
         {
             IEnumerable<T> result;
             var sw = Stopwatch.StartNew();
-            MySqlConnection connection = null;
-            
+
             try
             {
-                connection = new MySqlConnection(_connectionString);
-                result = connection.Query<T>(name, commandType: CommandType.Text);
+                using var connection = new MySqlConnection(_connectionString);
+
+                var command = new CommandDefinition(name,
+                    parameters:null, 
+                    commandTimeout: null,
+                    commandType: CommandType.Text,
+                    flags: CommandFlags.NoCache);
+
+                result = connection.Query<T>(command);
             }
             catch (Exception e)
             {
                 _logger.LogError(e, name);
                 throw;
             }
-            finally
-            {
-                if (connection != null)
-                {
-                    connection.Close();
-                    connection.Dispose();
-                }
-            }
-            
+
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug(name);
-            return result;
+            return result.ToList();
         }
 
-        public IEnumerable<T> Query<T>(string name, SqlMapper.IDynamicParameters parameters, int? commandTimeout = null)
+        public IEnumerable<T> Query<T>(string sql, object parameters, CommandType commandType = CommandType.StoredProcedure)
         {
             IEnumerable<T> result;
             var sw = Stopwatch.StartNew();
+
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                result = connection.Query<T>(name, parameters, commandTimeout: commandTimeout, commandType: CommandType.StoredProcedure);
+                var command = new CommandDefinition(sql,
+                    parameters: parameters,
+                    commandTimeout: null,
+                    commandType: CommandType.StoredProcedure,
+                    flags: CommandFlags.NoCache);
+
+                result = connection.Query<T>(command);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, sql);
+                throw;
+            }
+
+            LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
+            _logger.LogDebug($"{sql} {sw.Elapsed:c}");
+            return result.ToList();
+        }
+
+        public IEnumerable<dynamic> Query(string name, object parameters)
+        {
+            dynamic result;
+            var sw = Stopwatch.StartNew();
+
+            try
+            {
+                using var connection = new MySqlConnection(_connectionString);
+
+                var command = new CommandDefinition(name,
+                    parameters: parameters,
+                    commandTimeout: null,
+                    commandType: CommandType.StoredProcedure,
+                    flags: CommandFlags.NoCache);
+
+                result = connection.Query<dynamic>(command);
             }
             catch (Exception e)
             {
@@ -73,22 +106,21 @@ namespace ThirdPartyService.Service.Library
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return result;
+            return result.ToList();
         }
+
 
         public IEnumerable<T> QueryUseCommandDefinition<T>(string name, SqlMapper.IDynamicParameters parameters, int? commandTimeout = null)
         {
             IEnumerable<T> result;
             var sw = Stopwatch.StartNew();
-            MySqlConnection connection = null;
-            
+
             try
             {
                 var connectionString = $"{_connectionString}ProcedureCacheSize=0;";
-                connection = new MySqlConnection(connectionString);
-                if (connection.State != ConnectionState.Open) connection.Open();// 自己 Control connection open close，不要讓 ORM 自己做
-
-                var command = new CommandDefinition(name, parameters, // 使用 CommandDefinition 不讓Dapper cache
+                using var connection = new MySqlConnection(connectionString);
+                
+                var command = new CommandDefinition(name, parameters, 
                     commandTimeout: commandTimeout,
                     commandType: CommandType.StoredProcedure,
                     flags: CommandFlags.NoCache);
@@ -100,99 +132,28 @@ namespace ThirdPartyService.Service.Library
                 _logger.LogError(e, name);
                 throw;
             }
-            finally
-            {
-                if (connection != null)
-                {
-                    connection.Close();
-                    connection.Dispose();
-                }
-            }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return result;
+            return result.ToList();
         }
-        
-        public T Query<T>(string name, SqlMapper.IDynamicParameters parameters, Func<SqlMapper.GridReader, T> func)
+
+        public dynamic QueryFirst(string name, object parameters)
         {
-            T result;
+            dynamic result;
             var sw = Stopwatch.StartNew();
+
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                var multiple = connection.QueryMultiple(name, parameters, commandType: CommandType.StoredProcedure);
-                result = func.Invoke(multiple);
+                result = connection.QueryFirstOrDefault(name, parameters, commandType: CommandType.StoredProcedure);
             }
             catch (Exception e)
             {
                 _logger.LogError(e, name);
                 throw;
             }
-
-            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return result;
-        }
-
-        public async Task<IEnumerable<T>> QueryAsync<T>(string name, SqlMapper.IDynamicParameters parameters)
-        {
-            IEnumerable<T> result;
-            var sw = Stopwatch.StartNew();
-            try
-            {
-                await using var connection = new MySqlConnection(_connectionString);
-                result = await connection.QueryAsync<T>(name, parameters, commandType: CommandType.StoredProcedure);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, name);
-                throw;
-            }
-
-            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return result;
-        }
-
-        public async Task<T> QueryAsync<T>(string name, SqlMapper.IDynamicParameters parameters, Func<SqlMapper.GridReader, T> func)
-        {
-            T result;
-            var sw = Stopwatch.StartNew();
-            try
-            {
-                await using var connection = new MySqlConnection(_connectionString);
-                var multiple =
-                    connection.QueryMultipleAsync(name, parameters, commandType: CommandType.StoredProcedure);
-                result = func.Invoke(await multiple);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, name);
-                throw;
-            }
-
-            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return result;
-        }
-
-        public async Task<T> QueryFirstAsync<T>(string name, SqlMapper.IDynamicParameters parameters)
-        {
-            T result;
-            var sw = Stopwatch.StartNew();
-            try
-            {
-                await using var connection = new MySqlConnection(_connectionString);
-                result = await connection.QueryFirstOrDefaultAsync<T>(name, parameters,
-                    commandType: CommandType.StoredProcedure);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, name);
-                throw;
-            }
-
+            
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
@@ -202,11 +163,10 @@ namespace ThirdPartyService.Service.Library
         {
             T result;
             var sw = Stopwatch.StartNew();
-            MySqlConnection connection = null;
-            
+
             try
             {
-                connection = new MySqlConnection(_connectionString);
+                using var connection = new MySqlConnection(_connectionString);
                 result = connection.QueryFirstOrDefault<T>(name, parameters, commandType: CommandType.StoredProcedure);
             }
             catch (Exception e)
@@ -214,110 +174,12 @@ namespace ThirdPartyService.Service.Library
                 _logger.LogError(e, name);
                 throw;
             }
-            finally
-            {
-                if (connection != null)
-                {
-                    connection.Close();
-                    connection.Dispose();
-                }
-            }
-
-            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return result;
-        }
-        
-        public IEnumerable<T> Query<T>(string sql, object parameters, CommandType commandType = CommandType.StoredProcedure)
-        {
-            IEnumerable<T> result;
-            var sw = Stopwatch.StartNew();
-            MySqlConnection connection = null;
-            
-            try
-            {
-                connection = new MySqlConnection(_connectionString);
-                result = connection.Query<T>(sql, param: parameters, commandType: commandType);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, sql);
-                throw;
-            }
-            finally
-            {
-                if (connection != null)
-                {
-                    connection.Close();
-                    connection.Dispose();
-                }
-            }
-
-            LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{sql} {sw.Elapsed:c}");
-            return result;
-        }
-        
-        public dynamic QueryFirst(string name, object parameters)
-        {
-            dynamic result;
-            var sw = Stopwatch.StartNew();
-            MySqlConnection connection = null;
-            
-            try
-            {
-                connection = new MySqlConnection(_connectionString);
-                result = connection.QueryFirstOrDefault(name, parameters, commandType: CommandType.StoredProcedure);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, name);
-                throw;
-            }
-            finally
-            {
-                if (connection != null)
-                {
-                    connection.Close();
-                    connection.Dispose();
-                }
-            }
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
 
-        public IEnumerable<dynamic> Query(string name, object parameters)
-        {
-            dynamic result;
-            var sw = Stopwatch.StartNew();
-            MySqlConnection connection = null;
-            
-            try
-            {
-                connection = new MySqlConnection(_connectionString);
-                result = connection.Query(name, parameters, commandType: CommandType.StoredProcedure);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, name);
-                throw;
-            }
-            finally
-            {
-                if (connection != null)
-                {
-                    connection.Close();
-                    connection.Dispose();
-                }
-            }
-
-            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return result;
-        }
-        
         #endregion
 
         #region Excute
@@ -327,7 +189,7 @@ namespace ThirdPartyService.Service.Library
             int result;
             var sw = Stopwatch.StartNew();
             MySqlConnection connection = null;
-            
+
             try
             {
                 connection = new MySqlConnection(_connectionString);
@@ -370,7 +232,7 @@ namespace ThirdPartyService.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
-        
+
         public bool Execute(string command)
         {
             var sw = Stopwatch.StartNew();
@@ -408,9 +270,9 @@ namespace ThirdPartyService.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return true;
         }
-        
+
         #endregion
-        
+
     }
 }
 
