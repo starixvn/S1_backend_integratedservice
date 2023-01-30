@@ -89,14 +89,8 @@ namespace ThirdPartyService.Service.Library
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-
-                var command = new CommandDefinition(name,
-                    parameters: parameters,
-                    commandTimeout: null,
-                    commandType: CommandType.StoredProcedure,
-                    flags: CommandFlags.NoCache);
-
-                result = connection.Query<dynamic>(command);
+                result = connection.Query(name, parameters, commandType: CommandType.StoredProcedure);
+                // Query 非泛型底層回傳行無不同，不無法使用
             }
             catch (Exception e)
             {
@@ -106,9 +100,8 @@ namespace ThirdPartyService.Service.Library
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return result.ToList();
+            return result;
         }
-
 
         public IEnumerable<T> QueryUseCommandDefinition<T>(string name, SqlMapper.IDynamicParameters parameters, int? commandTimeout = null)
         {
@@ -138,6 +131,33 @@ namespace ThirdPartyService.Service.Library
             return result.ToList();
         }
 
+        public T QueryFirst<T>(string name, object parameters)
+        {
+            T result;
+            var sw = Stopwatch.StartNew();
+
+            try
+            {
+                using var connection = new MySqlConnection(_connectionString);
+
+                var command = new CommandDefinition(name, parameters,
+                    commandTimeout: null,
+                    commandType: CommandType.StoredProcedure,
+                    flags: CommandFlags.NoCache);
+
+                result = connection.QueryFirstOrDefault<T>(command);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, name);
+                throw;
+            }
+
+            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
+            _logger.LogDebug($"{name} {sw.Elapsed:c}");
+            return result;
+        }
+
         public dynamic QueryFirst(string name, object parameters)
         {
             dynamic result;
@@ -147,6 +167,7 @@ namespace ThirdPartyService.Service.Library
             {
                 using var connection = new MySqlConnection(_connectionString);
                 result = connection.QueryFirstOrDefault(name, parameters, commandType: CommandType.StoredProcedure);
+                // QueryFirstOrDefault 非泛型底層回傳行無不同，不無法使用
             }
             catch (Exception e)
             {
@@ -154,27 +175,6 @@ namespace ThirdPartyService.Service.Library
                 throw;
             }
             
-            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return result;
-        }
-
-        public T QueryFirst<T>(string name, object parameters)
-        {
-            T result;
-            var sw = Stopwatch.StartNew();
-
-            try
-            {
-                using var connection = new MySqlConnection(_connectionString);
-                result = connection.QueryFirstOrDefault<T>(name, parameters, commandType: CommandType.StoredProcedure);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, name);
-                throw;
-            }
-
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
