@@ -56,7 +56,7 @@ namespace ThirdPartyWager.Service.BLL
             try
             {
                 var config = new TCGConfig(_setting, currency);
-                var result = await GetUnsettleData<T>(config, batchTime);
+                var result = await GetUnsettleData<T>(config, batchTime, currency);
                 var tasks = result.Select(item => Task.Run(() => InsertWager(item))).ToArray();
                 await Task.WhenAll(tasks);
                 return true;
@@ -120,7 +120,7 @@ namespace ThirdPartyWager.Service.BLL
             return _wagerDbClient.ExecuteAsync(spName, new DynamicParameters(wager));
         }
 
-        private async Task<List<T>> GetUnsettleData<T>(TCGConfig config, DateTimeOffset batchTime)
+        private async Task<List<T>> GetUnsettleData<T>(TCGConfig config, DateTimeOffset batchTime, string currency)
         {
             var isVN = typeof(T) == typeof(TCGVNWagerData);
             var result = new List<T>();
@@ -139,7 +139,7 @@ namespace ThirdPartyWager.Service.BLL
                 var httpContent = new FormUrlEncodedContent(GetBody(sParam, config));
                 var response = await _httpHelper.GetClient().PostAsync(config.ApiUrl, httpContent);
                 var json = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation(json);
+                _logger.LogInformation($"{currency} || {json}");
 
                 var queryReuslt = _common.FromJson<TCGUnSettleObj>(json);
                 if (queryReuslt.status != 0)
