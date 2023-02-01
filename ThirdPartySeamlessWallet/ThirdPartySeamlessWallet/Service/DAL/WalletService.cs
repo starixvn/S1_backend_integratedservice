@@ -27,7 +27,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             if (tpId == 0 && transType == TransType.Prize)
             {
-                type = 5;
+                type = (int)FinancialType.BonusReward;
             }
 
             var p = new DynamicParameters(new { CustId = custId, SiteId = siteId, UserName = userName, Amount = Amount, Type = type, Memo = $"{tp} {Memo}", RefTransId = RefTransId });
