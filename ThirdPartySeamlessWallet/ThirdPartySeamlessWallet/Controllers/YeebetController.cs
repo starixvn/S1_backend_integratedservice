@@ -1,5 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
+using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 
 namespace ThirdPartySeamlessWallet.Controllers;
 
@@ -8,13 +12,22 @@ public class YeebetController : ControllerBase
 {
     #region Fields
 
+    private readonly Tp thisTp;
+
+    private readonly ThirdPartyBLL _thirdPartyBLL;
+    private readonly IYeebetBLL _yeebetBll;
+
     #endregion
 
     #region Constructors
 
-    #endregion
+    public YeebetController(IServiceProvider provider)
+    {
+        thisTp = Tp.Yeebet;
 
-    #region Model
+        _thirdPartyBLL = provider.GetService<ThirdPartyBLL>();
+        _yeebetBll = provider.GetService<IYeebetBLL>();
+    }
 
     #endregion
 
@@ -35,9 +48,9 @@ public class YeebetController : ControllerBase
     /// <returns></returns>
     [HttpPost]
     [Route("[controller]/balance")]
-    public async Task<BalanceResponse_Yeebet> BalanceAsync()
+    public async Task<BalanceResponse_Yeebet> BalanceAsync([FromForm] BalanceRequest_Yeebet request)
     {
-        return new BalanceResponse_Yeebet("balance test", 0, 1000);
+        return await _yeebetBll.Balance(request.username);
     }
 
     /// <summary>
@@ -46,7 +59,7 @@ public class YeebetController : ControllerBase
     /// <returns></returns>
     [HttpPost]
     [Route("[controller]/deposit")]
-    public async Task<DepositResponse_Yeebet> DepositAsync()
+    public async Task<DepositResponse_Yeebet> DepositAsync([FromForm] DepositRequest_Yeebet request)
     {
         return new DepositResponse_Yeebet("", "deposit test", 0, 1000);
     }
@@ -57,7 +70,7 @@ public class YeebetController : ControllerBase
     /// <returns></returns>
     [HttpPost]
     [Route("[controller]/withdraw")]
-    public async Task<DeductResponse_Yeebet> WithdrawAsync()
+    public async Task<DeductResponse_Yeebet> WithdrawAsync([FromForm] DeductRequest_Yeebet request)
     {
         return new DeductResponse_Yeebet("", "", "withdraw test", 0, 1000);
     }
@@ -68,7 +81,7 @@ public class YeebetController : ControllerBase
     /// <returns></returns>
     [HttpPost]
     [Route("[controller]/rollback")]
-    public async Task<RollbackResponse_Yeebet> RollbackAsync()
+    public async Task<RollbackResponse_Yeebet> RollbackAsync([FromForm] RollbackRequest_Yeebet request)
     {
         return new RollbackResponse_Yeebet("rollback test", 0, 1000);
     }
