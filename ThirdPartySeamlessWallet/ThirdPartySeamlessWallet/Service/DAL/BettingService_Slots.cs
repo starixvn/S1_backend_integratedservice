@@ -427,7 +427,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 var p = new DynamicParameters(bettingDataRNG_MG);
                 p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
-                result = conn.Execute("Service_BettransRng_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransRng_MG_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 var extTxnId = p.Get<long>("extTxnId");
 
                 if (result > 0 && bettingDataRNG_MG.amount != 0)
