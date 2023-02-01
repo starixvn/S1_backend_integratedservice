@@ -46,7 +46,7 @@ public class YeebetController : ControllerBase
     /// 2.8.2 商户用户金额查询接口（/api/balance）
     /// </summary>
     /// <returns></returns>
-    [HttpPost]
+    [HttpGet]
     [Route("[controller]/balance")]
     public async Task<BalanceResponse_Yeebet> BalanceAsync([FromForm] BalanceRequest_Yeebet request)
     {
