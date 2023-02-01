@@ -4,7 +4,19 @@ namespace ThirdPartySeamlessWallet.Service.Model;
 
 public class BettingDataLC_Yeebet
 {
-
+    public int SQ { get; set; }
+    public string appid { get; set; } = "";
+    public string username { get; set; } = "";
+    public decimal amount { get; set; } = 0;
+    public string notifyid { get; set; } = "";
+    public int type { get; set; } = 0;
+    public string serialnumber { get; set; } = "";
+    public string errmsg { get; set; } = "";
+    public string sign { get; set; } = "";
+    public string bets { get; set; } = "";
+    public BettransLC_YeebetTypeEnum FromAPIType { get; set; }
+    public BettransType TicketType { get; set; }
+    public TicketStatus TicketStatus { get; set; }
 }
 
 #region Request Model
@@ -32,7 +44,7 @@ public class RequestModel_Yeebet
     public string sign { get; set; }
 }
 
-public class BalanceRequest_Yeebet: RequestModel_Yeebet
+public class BalanceRequest_Yeebet : RequestModel_Yeebet
 {
 }
 
@@ -43,13 +55,18 @@ public class DeductRequest_Yeebet : RequestModel_Yeebet
     /// </summary>
     public decimal amount { get; set; }
     /// <summary>
-    /// 讯息编号
+    /// 讯息编号，1=投注,7=撤單(取消投注),9=頒獎(派彩),10=重新評獎(重新派彩),12=回滾
     /// </summary>
     public int type { get; set; }
     /// <summary>
     /// 请求的订单号（注单，打赏记录编号）
     /// </summary>
     public string serialnumber { get; set; }
+
+    /// <summary>
+    /// 明細資訊
+    /// </summary>
+    public string bets { get; set; }
 }
 
 public class DepositRequest_Yeebet : RequestModel_Yeebet
@@ -59,13 +76,17 @@ public class DepositRequest_Yeebet : RequestModel_Yeebet
     /// </summary>
     public decimal amount { get; set; }
     /// <summary>
-    /// 讯息编号
+    /// 讯息编号，1=投注,7=撤單(取消投注),9=頒獎(派彩),10=重新評獎(重新派彩),12=回滾
     /// </summary>
     public int type { get; set; }
     /// <summary>
     /// 请求的订单号（注单，打赏记录编号）
     /// </summary>
     public string serialnumber { get; set; }
+    /// <summary>
+    /// 明細資訊
+    /// </summary>
+    public string bets { get; set; }
 }
 
 public class RollbackRequest_Yeebet : RequestModel_Yeebet
@@ -75,7 +96,7 @@ public class RollbackRequest_Yeebet : RequestModel_Yeebet
     /// </summary>
     public decimal amount { get; set; }
     /// <summary>
-    /// 讯息编号
+    /// 讯息编号，1=投注,7=撤單(取消投注),9=頒獎(派彩),10=重新評獎(重新派彩),12=回滾
     /// </summary>
     public int type { get; set; }
     /// <summary>
@@ -99,13 +120,13 @@ public class RollbackRequest_Yeebet : RequestModel_Yeebet
 public class ResponseModel_Yeebet
 {
     /// <summary>
+    /// 结果信息(0成功，失败<0)
+    /// </summary>
+    public YeebetErrorCode result { get; set; }
+    /// <summary>
     /// 描述
     /// </summary>
     public string desc { get; set; }
-    /// <summary>
-    /// 结果信息(0成功，失败<0)
-    /// </summary>
-    public int result { get; set; }
     /// <summary>
     /// 用户余额
     /// </summary>
@@ -114,7 +135,7 @@ public class ResponseModel_Yeebet
 
 public class BalanceResponse_Yeebet : ResponseModel_Yeebet
 {
-    public BalanceResponse_Yeebet(string desc = "", int result = 0, decimal balance = 0)
+    public BalanceResponse_Yeebet(YeebetErrorCode result, string desc = "", decimal balance = 0)
     {
         this.desc = desc;
         this.result = result;
@@ -132,7 +153,7 @@ public class DeductResponse_Yeebet : ResponseModel_Yeebet
     /// 商户商户记录单号
     /// </summary>
     public string orderno { get; set; }
-    public DeductResponse_Yeebet(string serialnumber, string orderno, string desc = "", int result = 0, decimal balance = 0)
+    public DeductResponse_Yeebet(YeebetErrorCode result, string serialnumber, string orderno, string desc = "", decimal balance = 0)
     {
         this.serialnumber = serialnumber;
         this.orderno = orderno;
@@ -148,7 +169,7 @@ public class DepositResponse_Yeebet : ResponseModel_Yeebet
     /// 商户商户记录单号
     /// </summary>
     public string orderno { get; set; }
-    public DepositResponse_Yeebet(string orderno, string desc = "", int result = 0, decimal balance = 0)
+    public DepositResponse_Yeebet(YeebetErrorCode result, string orderno, string desc = "", decimal balance = 0)
     {
         this.orderno = orderno;
         this.desc = desc;
@@ -159,7 +180,7 @@ public class DepositResponse_Yeebet : ResponseModel_Yeebet
 
 public class RollbackResponse_Yeebet : ResponseModel_Yeebet
 {
-    public RollbackResponse_Yeebet(string desc = "", int result = 0, decimal balance = 0)
+    public RollbackResponse_Yeebet(YeebetErrorCode result, string desc = "", decimal balance = 0)
     {
         this.desc = desc;
         this.result = result;

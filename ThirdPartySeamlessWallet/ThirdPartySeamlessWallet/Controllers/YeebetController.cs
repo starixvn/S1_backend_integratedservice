@@ -4,6 +4,11 @@ using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
+using Newtonsoft.Json;
+using ThirdPartySeamlessWallet.Service.Model.Exceptions;
+using ThirdPartySeamlessWallet.Service.Library;
+using System.Text;
+using NuGet.Protocol;
 
 namespace ThirdPartySeamlessWallet.Controllers;
 
@@ -16,6 +21,7 @@ public class YeebetController : ControllerBase
 
     private readonly ThirdPartyBLL _thirdPartyBLL;
     private readonly IYeebetBLL _yeebetBll;
+    private readonly Tools _tools;
 
     #endregion
 
@@ -27,6 +33,7 @@ public class YeebetController : ControllerBase
 
         _thirdPartyBLL = provider.GetService<ThirdPartyBLL>();
         _yeebetBll = provider.GetService<IYeebetBLL>();
+        _tools = provider.GetService<Tools>();
     }
 
     #endregion
@@ -61,7 +68,13 @@ public class YeebetController : ControllerBase
     [Route("[controller]/deposit")]
     public async Task<DepositResponse_Yeebet> DepositAsync([FromForm] DepositRequest_Yeebet request)
     {
-        return new DepositResponse_Yeebet("", "deposit test", 0, 1000);
+        var dicP = JsonConvert.DeserializeObject<Dictionary<string, string>>(request.ToJson());
+        string content = string.Join("&", dicP.Where(x => x.Key != "bets" && x.Key != "sign").Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+        if (!CheckAppidAndSign(request.appid, content, request.sign, out string message))
+            return new DepositResponse_Yeebet(YeebetErrorCode.SystemError, "", message);
+
+        return await _yeebetBll.Deposit(request);
     }
 
     /// <summary>
@@ -70,9 +83,15 @@ public class YeebetController : ControllerBase
     /// <returns></returns>
     [HttpPost]
     [Route("[controller]/withdraw")]
-    public async Task<DeductResponse_Yeebet> WithdrawAsync([FromForm] DeductRequest_Yeebet request)
+    public async Task<DeductResponse_Yeebet> DeductAsync([FromForm] DeductRequest_Yeebet request)
     {
-        return new DeductResponse_Yeebet("", "", "withdraw test", 0, 1000);
+        var dicP = JsonConvert.DeserializeObject<Dictionary<string, string>>(request.ToJson());
+        string content = string.Join("&", dicP.Where(x => x.Key != "bets" && x.Key != "sign").Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+        if (!CheckAppidAndSign(request.appid, content, request.sign, out string message))
+            return new DeductResponse_Yeebet(YeebetErrorCode.SystemError, request.serialnumber, "", message);
+
+        return await _yeebetBll.Deduct(request);
     }
 
     /// <summary>
@@ -83,7 +102,38 @@ public class YeebetController : ControllerBase
     [Route("[controller]/rollback")]
     public async Task<RollbackResponse_Yeebet> RollbackAsync([FromForm] RollbackRequest_Yeebet request)
     {
-        return new RollbackResponse_Yeebet("rollback test", 0, 1000);
+        return new RollbackResponse_Yeebet(YeebetErrorCode.Success, "rollback test", 1000);
+    }
+
+    #endregion
+
+    #region Private Methods
+
+    private bool CheckAppidAndSign(string appid, string content, string sign, out string message)
+    {
+        message = string.Empty;
+
+        var setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(_thirdPartyBLL.GetThirdPartySetting((int)thisTp).Setting);
+        string seamlessAppid = setting.ContainsKey("SeamlessAppId") && !string.IsNullOrEmpty(setting["SeamlessAppId"])
+            ? setting["SeamlessAppId"]
+            : throw new Kiss918Exception(Kiss918ErrorCode.ServiceNotAvailable, "SeamlessAppId is Invaild.");
+        if (seamlessAppid != appid)
+        {
+            message = "appid is invaild.";
+            return false;
+        }
+
+        string secretKey = setting.ContainsKey("SeamlessSecretKey") && !string.IsNullOrEmpty(setting["SeamlessSecretKey"])
+            ? setting["SeamlessSecretKey"]
+            : throw new Kiss918Exception(Kiss918ErrorCode.ServiceNotAvailable, "SeamlessSecretKey is Invaild.");
+        var result = _tools.ToMD5($"{content}&key={secretKey}").ToLower();
+        if (result != sign)
+        {
+            message = "sign is invaild.";
+            return true;
+            return false;
+        }
+        return true;
     }
 
     #endregion

@@ -1,10 +1,18 @@
-﻿namespace ThirdPartySeamlessWallet.Service.Model.enums;
+﻿using System.ComponentModel;
 
-public enum YeebetEnum
+namespace ThirdPartySeamlessWallet.Service.Model.enums;
+
+public enum YeebetErrorCode
 {
+    [Description("Success")]
+    Success = 0,
+    [Description("Insufficient balance")]
+    InsufficientBalance = -1030,
+    [Description("System error")]
+    SystemError = -1001
 }
 
-public enum BettransRngLC_YeebetTypeEnum
+public enum BettransLC_YeebetTypeEnum
 {
     FromDeposit = 1,
     FromWithdraw = 2,

@@ -3281,5 +3281,78 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region Yeebet
+
+        //public IEnumerable<BettingDataRNG_Kiss918> IsExistBet_Yeebet(DateTime partitionTime, BettingDataRNG_Kiss918 data)
+        //{
+        //    var query = new { playSessionID = data.playSessionID };
+        //    return _partitionService.Query<BettingDataRNG_Kiss918>(partitionTime, "Service_BettransRng_Kiss918_Cancel_Check", query);
+        //}
+
+        public bool Payout_Yeebet(DateTime partitionTime, BettingDataLC_Yeebet data, MySqlTransaction trans)
+        {
+            var result = _partitionService.Execute(partitionTime, "Service_BettransLC_Yeebet_Ins", data, trans);
+
+            if (result == 0)
+                return false;
+
+            return true;
+        }
+
+        //public bool Refund_Yeebet(DateTime partitionTime, BettingDataRNG_Kiss918 data, MySqlTransaction trans)
+        //{
+        //    var result = _partitionService.Execute(partitionTime, "Service_BettransRng_Kiss918_Ins", data, trans);
+
+        //    if (result == 0)
+        //        return false;
+
+        //    return true;
+        //}
+
+        public bool SetBalance_Yeebet(TpCustInfo tpCustInfo, BettingDataLC_Yeebet data, TransType transType, string memo,
+                                       out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+
+            var result = PayoutV2(
+                tpCustInfo,
+                data.amount,
+                (int)Tp.Kiss918,
+                data.serialnumber,
+                (int)GameType.Kiss918_RNG,
+                TpCategory.Slots,
+                data.serialnumber,
+                transType,
+                null,
+                out afterAmount,
+                $"{memo} - {data.notifyid} ",
+                out bonusId,
+                conn,
+                trans
+            );
+
+            if (result == 0)
+                return false;
+
+            return true;
+        }
+
+        public bool InsertUnsettle_Yeebet(DateTime partitionTime, string serialnumber, MySqlTransaction trans)
+        {
+            var result = _tpUnsettleService.InsertTpUnsettle(Tp.Yeebet, GameType.Yeebet_LiveCasino, serialnumber, trans, partitionTime);
+
+            if (result == 0)
+                return false;
+
+            return true;
+        }
+
+        //public IEnumerable<SettleData_Kiss918> GetSettle_TpWager_Yeebet(string playSessionID, string referenceID)
+        //{
+        //    using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+        //    return conn.Query<SettleData_Kiss918>("Service_TpWagerKiss918_Get", new { _playSessionID = playSessionID, _referenceID = referenceID }, commandType: CommandType.StoredProcedure);
+        //}
+
+        #endregion
     }
 }
