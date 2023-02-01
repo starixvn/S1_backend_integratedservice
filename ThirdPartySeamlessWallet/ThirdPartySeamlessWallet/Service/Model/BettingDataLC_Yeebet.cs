@@ -21,15 +21,15 @@ public class RequestModel_Yeebet
     /// <summary>
     /// 用户名（唯一识别）
     /// </summary>
-    public int username { get; set; }
+    public string username { get; set; }
     /// <summary>
     /// 讯息号，每一次通知的讯息号都不一样，但须注意网络原因的重送机制会造成重复收到，商户端可利用notifyid判断防止重复扣款100032155222301
     /// </summary>
-    public decimal notifyid { get; set; }
+    public string notifyid { get; set; }
     /// <summary>
     /// 加密秘钥
     /// </summary>
-    public decimal sign { get; set; }
+    public string sign { get; set; }
 }
 
 public class BalanceRequest_Yeebet: RequestModel_Yeebet
