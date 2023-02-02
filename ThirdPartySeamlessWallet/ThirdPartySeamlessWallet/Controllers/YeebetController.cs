@@ -85,7 +85,7 @@ public class YeebetController : ControllerBase
     [Route("[controller]/withdraw")]
     public async Task<DeductResponse_Yeebet> DeductAsync([FromForm] DeductRequest_Yeebet request)
     {
-        Thread.Sleep(5 * 60 * 1000);  //Test Rollback, sleep 5 mins
+        //Thread.Sleep(5 * 60 * 1000);  //Test Rollback, sleep 5 mins
         var requestDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(request.ToJson());
 
         if (!CheckAppidAndSign(request.appid, requestDic, out string message))
