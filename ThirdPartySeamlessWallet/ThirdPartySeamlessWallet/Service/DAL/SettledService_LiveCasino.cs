@@ -3284,11 +3284,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region Yeebet
 
-        //public IEnumerable<BettingDataRNG_Kiss918> IsExistBet_Yeebet(DateTime partitionTime, BettingDataRNG_Kiss918 data)
-        //{
-        //    var query = new { playSessionID = data.playSessionID };
-        //    return _partitionService.Query<BettingDataRNG_Kiss918>(partitionTime, "Service_BettransRng_Kiss918_Cancel_Check", query);
-        //}
+        public IEnumerable<BettingDataLC_Yeebet> IsExistBet_Yeebet(DateTime partitionTime, BettingDataLC_Yeebet data)
+        {
+            var query = new { serialnumber = data.serialnumber, type = data.type };
+            return _partitionService.Query<BettingDataLC_Yeebet>(partitionTime, "Service_BettransLC_Yeebet_Cancel_Check", query);
+        }
 
         public bool Payout_Yeebet(DateTime partitionTime, BettingDataLC_Yeebet data, MySqlTransaction trans, out int SQ)
         {
