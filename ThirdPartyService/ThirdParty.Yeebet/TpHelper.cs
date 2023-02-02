@@ -52,10 +52,11 @@ namespace ThirdParty.Yeebet
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
+            string word = $"{tpCustInfo.SiteId}_{tpCustInfo.IsoCode}";
             string currency = tpCustInfo.TpCurrencyId;
             string apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string apiAppId = inputs.ContainsKey("ApiAppId") && !string.IsNullOrEmpty(inputs["ApiAppId"]) ? inputs["ApiAppId"] : throw new Exception("ApiAppId");
-            string secretKey = inputs.ContainsKey("ApiSecretKey") && !string.IsNullOrEmpty(inputs["ApiSecretKey"]) ? inputs["ApiSecretKey"] : throw new Exception("ApiSecretKey");
+            string apiAppId = inputs.ContainsKey($"ApiAppId_{word}") && !string.IsNullOrEmpty(inputs[$"ApiAppId_{word}"]) ? inputs[$"ApiAppId_{word}"] : throw new Exception($"ApiAppId_{word}");
+            string secretKey = inputs.ContainsKey($"ApiSecretKey_{word}") && !string.IsNullOrEmpty(inputs[$"ApiSecretKey_{word}"]) ? inputs[$"ApiSecretKey_{word}"] : throw new Exception($"ApiSecretKey_{word}");
             var homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
             apiUrl = $"{apiUrl}/api/login";
 
