@@ -39,7 +39,7 @@ namespace ThirdPartyWager.Service.BLL.MG
                     RequestUri = new Uri($"{_url}/MG/updatebalance"),
                     Headers = {
                         { "X-MGP-REQ-ID", Guid.NewGuid().ToString()},
-                        { "X-MGP-REQUEST-TIME", DateTime.UtcNow.Ticks.ToString()},
+                        { "X-MGP-REQUEST-TIMEMS", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString()},
                     },
                     Content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json")
                 };
