@@ -874,13 +874,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _partitionService.Query<BettingDataLC_Yeebet>(partitionTime, "Service_BettransLC_Yeebet_Check", query);
         }
 
-        public bool PlaceBet_Yeebet(DateTime partitionTime, BettingDataLC_Yeebet data, MySqlTransaction trans)
+        public bool PlaceBet_Yeebet(DateTime partitionTime, BettingDataLC_Yeebet data, MySqlTransaction trans, out int SQ)
         {
-            var result = _partitionService.Execute(partitionTime, "Service_BettransLC_Yeebet_Ins", data, trans);
+            SQ = 0;
+            var insertSQ = _partitionService.Execute(partitionTime, "Service_BettransLC_Yeebet_Ins", data, trans);
 
-            if (result == 0)
+            if (insertSQ == 0)
                 return false;
 
+            SQ = insertSQ;
             return true;
         }
 

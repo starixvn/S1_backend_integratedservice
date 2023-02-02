@@ -111,16 +111,16 @@ public class YeebetBLL : IYeebetBLL
         conn.Open();
         await using var trans = await conn.BeginTransactionAsync();
 
-        if (!PlaceData(partitionTime, data, out message, trans))
+        if (!PlaceData(partitionTime, data, trans, out int SQ, out message))
         {
             trans.Rollback();
             return new DeductResponse_Yeebet(YeebetErrorCode.SystemError, request.serialnumber, "", message);
         }
 
+        var orderno = GenOrderNo(partitionTime, SQ);
+
         if (data.amount != 0)
         {
-            string newRoundId = string.Empty;
-
             if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
             {
                 trans.Rollback();
@@ -129,7 +129,7 @@ public class YeebetBLL : IYeebetBLL
         }
 
         trans.Commit();
-        return new DeductResponse_Yeebet(YeebetErrorCode.Success, request.serialnumber, "", "", balance);
+        return new DeductResponse_Yeebet(YeebetErrorCode.Success, request.serialnumber, orderno, "", balance);
     }
 
     public async Task<DepositResponse_Yeebet> Deposit(DepositRequest_Yeebet request)
@@ -185,11 +185,13 @@ public class YeebetBLL : IYeebetBLL
         conn.Open();
         await using var trans = await conn.BeginTransactionAsync();
 
-        if (!PlaceData(partitionTime, data, out message, trans))
+        if (!PlaceData(partitionTime, data, trans, out int SQ, out message))
         {
             trans.Rollback();
             return new DepositResponse_Yeebet(YeebetErrorCode.SystemError, "", message);
         }
+
+        var orderno = GenOrderNo(partitionTime, SQ);
 
         if (data.amount != 0)
         {
@@ -203,7 +205,7 @@ public class YeebetBLL : IYeebetBLL
         {
             //lost => 沒有派彩，balance取db資料
             if (!GetBalance(tpCustInfo.TpUserName, out balance, out message))
-                return new DepositResponse_Yeebet(YeebetErrorCode.SystemError, "", message);
+                return new DepositResponse_Yeebet(YeebetErrorCode.Success, orderno, message);
         }
 
         if (!InsertUnsettleData(partitionTime, data.serialnumber, out message, trans))
@@ -213,8 +215,7 @@ public class YeebetBLL : IYeebetBLL
         }
 
         trans.Commit();
-
-        return new DepositResponse_Yeebet(YeebetErrorCode.Success, "", "", balance);
+        return new DepositResponse_Yeebet(YeebetErrorCode.Success, orderno, "", balance);
     }
 
     public async Task<RollbackResponse_Yeebet> Rollback(RollbackRequest_Yeebet request)
@@ -270,19 +271,20 @@ public class YeebetBLL : IYeebetBLL
             return false;
         }
 
-        if (request.amount >= 0)
+        if (request.amount < 0)
         {
             message = "request.amount is Invalid.";
             _logger.LogError($"CheckRequest Fail:{message}");
             return false;
         }
 
-        if (request.type <= 0)
-        {
-            message = "request.type is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
+        //暫不簡查，稍後測試再看要怎麼檢核
+        //if (request.type <= 0)
+        //{
+        //    message = "request.type is Invalid.";
+        //    _logger.LogError($"CheckRequest Fail:{message}");
+        //    return false;
+        //}
 
         if (string.IsNullOrWhiteSpace(request.serialnumber))
         {
@@ -521,8 +523,9 @@ public class YeebetBLL : IYeebetBLL
         }
     }
 
-    private bool PlaceData(DateTime partitionTime, BettingDataLC_Yeebet data, out string message, MySqlTransaction trans)
+    private bool PlaceData(DateTime partitionTime, BettingDataLC_Yeebet data, MySqlTransaction trans, out int SQ, out string message)
     {
+        SQ = 0;
         message = string.Empty;
         var result = false;
         try
@@ -530,10 +533,10 @@ public class YeebetBLL : IYeebetBLL
             switch (data.FromAPIType)
             {
                 case BettransLC_YeebetTypeEnum.FromWithdraw:
-                    result = _bettingService.PlaceBet_Yeebet(partitionTime, data, trans);
+                    result = _bettingService.PlaceBet_Yeebet(partitionTime, data, trans, out SQ);
                     break;
                 case BettransLC_YeebetTypeEnum.FromDeposit:
-                    result = _settledService.Payout_Yeebet(partitionTime, data, trans);
+                    result = _settledService.Payout_Yeebet(partitionTime, data, trans, out SQ);
                     break;
                     //case BettransLC_YeebetTypeEnum.FromRollback:
                     //    result = _settledService.Refund_Kiss918(partitionTime, data, trans);
@@ -625,5 +628,7 @@ public class YeebetBLL : IYeebetBLL
         }
     }
 
+    private string GenOrderNo(DateTime partitionTime, int SQ)
+    => $"{partitionTime.ToString("yyyyMM")}-{SQ}";
     #endregion
 }

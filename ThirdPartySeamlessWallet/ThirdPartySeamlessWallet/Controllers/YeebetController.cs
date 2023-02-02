@@ -68,10 +68,9 @@ public class YeebetController : ControllerBase
     [Route("[controller]/deposit")]
     public async Task<DepositResponse_Yeebet> DepositAsync([FromForm] DepositRequest_Yeebet request)
     {
-        var dicP = JsonConvert.DeserializeObject<Dictionary<string, string>>(request.ToJson());
-        string content = string.Join("&", dicP.Where(x => x.Key != "bets" && x.Key != "sign").Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+        var requestDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(request.ToJson());
 
-        if (!CheckAppidAndSign(request.appid, content, request.sign, out string message))
+        if (!CheckAppidAndSign(request.appid, requestDic, out string message))
             return new DepositResponse_Yeebet(YeebetErrorCode.SystemError, "", message);
 
         return await _yeebetBll.Deposit(request);
@@ -85,10 +84,9 @@ public class YeebetController : ControllerBase
     [Route("[controller]/withdraw")]
     public async Task<DeductResponse_Yeebet> DeductAsync([FromForm] DeductRequest_Yeebet request)
     {
-        var dicP = JsonConvert.DeserializeObject<Dictionary<string, string>>(request.ToJson());
-        string content = string.Join("&", dicP.Where(x => x.Key != "bets" && x.Key != "sign").Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+        var requestDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(request.ToJson());
 
-        if (!CheckAppidAndSign(request.appid, content, request.sign, out string message))
+        if (!CheckAppidAndSign(request.appid, requestDic, out string message))
             return new DeductResponse_Yeebet(YeebetErrorCode.SystemError, request.serialnumber, "", message);
 
         return await _yeebetBll.Deduct(request);
@@ -109,28 +107,43 @@ public class YeebetController : ControllerBase
 
     #region Private Methods
 
-    private bool CheckAppidAndSign(string appid, string content, string sign, out string message)
+    private bool CheckAppidAndSign(string appid, Dictionary<string, string> request, out string message)
     {
         message = string.Empty;
 
+        string content = string.Join("&",
+            request
+            .Where(x => x.Key != "bets" && x.Key != "sign")
+            .OrderBy(x => x.Key)
+            .Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+        // Check appid
         var setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(_thirdPartyBLL.GetThirdPartySetting((int)thisTp).Setting);
         string seamlessAppid = setting.ContainsKey("SeamlessAppId") && !string.IsNullOrEmpty(setting["SeamlessAppId"])
             ? setting["SeamlessAppId"]
-            : throw new Kiss918Exception(Kiss918ErrorCode.ServiceNotAvailable, "SeamlessAppId is Invaild.");
+            : throw new YeebetException(YeebetErrorCode.SystemError, "SeamlessAppId is Invaild.");
+
         if (seamlessAppid != appid)
         {
             message = "appid is invaild.";
             return false;
         }
 
+        //Check Sign
+        if (!request.ContainsKey("sign"))
+        {
+            message = "sign not found.";
+            return false;
+        }
+
         string secretKey = setting.ContainsKey("SeamlessSecretKey") && !string.IsNullOrEmpty(setting["SeamlessSecretKey"])
             ? setting["SeamlessSecretKey"]
-            : throw new Kiss918Exception(Kiss918ErrorCode.ServiceNotAvailable, "SeamlessSecretKey is Invaild.");
+            : throw new YeebetException(YeebetErrorCode.SystemError, "SeamlessSecretKey is Invaild.");
+
         var result = _tools.ToMD5($"{content}&key={secretKey}").ToLower();
-        if (result != sign)
+        if (result != request["sign"])
         {
             message = "sign is invaild.";
-            return true;
             return false;
         }
         return true;

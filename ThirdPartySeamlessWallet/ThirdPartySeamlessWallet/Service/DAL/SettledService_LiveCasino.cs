@@ -2949,7 +2949,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     logger.LogError($"{cancelDataRng_MG.betId} is completed");
                     return new MGCancelResult() { Result = 1 };
                 }
-                
+
                 var bet = bettrans.FirstOrDefault(a => a.TxnId == cancelDataRng_MG.txnId);
                 // 注單不存在
                 if (bet == null)
@@ -3290,13 +3290,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         //    return _partitionService.Query<BettingDataRNG_Kiss918>(partitionTime, "Service_BettransRng_Kiss918_Cancel_Check", query);
         //}
 
-        public bool Payout_Yeebet(DateTime partitionTime, BettingDataLC_Yeebet data, MySqlTransaction trans)
+        public bool Payout_Yeebet(DateTime partitionTime, BettingDataLC_Yeebet data, MySqlTransaction trans, out int SQ)
         {
-            var result = _partitionService.Execute(partitionTime, "Service_BettransLC_Yeebet_Ins", data, trans);
+            SQ = 0;
+            var insertSQ = _partitionService.Execute(partitionTime, "Service_BettransLC_Yeebet_Ins", data, trans);
 
-            if (result == 0)
+            if (insertSQ == 0)
                 return false;
 
+            SQ = insertSQ;
             return true;
         }
 
@@ -3317,10 +3319,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = PayoutV2(
                 tpCustInfo,
                 data.amount,
-                (int)Tp.Kiss918,
+                (int)Tp.Yeebet,
                 data.serialnumber,
-                (int)GameType.Kiss918_RNG,
-                TpCategory.Slots,
+                (int)GameType.Yeebet_LiveCasino,
+                TpCategory.LiveCasino,
                 data.serialnumber,
                 transType,
                 null,
