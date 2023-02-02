@@ -102,7 +102,12 @@ public class YeebetController : ControllerBase
     [Route("[controller]/rollback")]
     public async Task<RollbackResponse_Yeebet> RollbackAsync([FromForm] RollbackRequest_Yeebet request)
     {
-        return new RollbackResponse_Yeebet(YeebetErrorCode.Success, "rollback test", 1000);
+        var requestDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(request.ToJson());
+
+        if (!CheckAppidAndSign(request.appid, requestDic, out string message))
+            return new RollbackResponse_Yeebet(YeebetErrorCode.SystemError, message);
+
+        return await _yeebetBll.Rollback(request);
     }
 
     #endregion
