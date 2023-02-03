@@ -135,7 +135,6 @@ public class YeebetBLL : IYeebetBLL
     public async Task<DepositResponse_Yeebet> Deposit(DepositRequest_Yeebet request)
     {
         var message = string.Empty;
-        string newRoundId = string.Empty;
         decimal balance = 0;
 
         if (!CheckRequestForDeposit(request, out message))
@@ -245,6 +244,7 @@ public class YeebetBLL : IYeebetBLL
             type = request.type,
             serialnumber = request.serialnumber,
             sign = request.sign,
+            bets = null,
             FromAPIType = BettransLC_YeebetTypeEnum.FromRollback,
             TicketType = request.type == 1 ? BettransType.CancelBet : BettransType.Reserve,
             TicketStatus = TicketStatus.Refund
@@ -386,7 +386,8 @@ public class YeebetBLL : IYeebetBLL
             return false;
         }
 
-        if (request.amount < 0)
+        if ((request.type == 1 && request.amount < 0)
+            || (request.type == 9 && request.amount > 0))
         {
             message = "request.amount is Invalid.";
             _logger.LogError($"CheckRequest Fail:{message}");
@@ -558,19 +559,18 @@ public class YeebetBLL : IYeebetBLL
         existDatas = null;
         try
         {
-
-            existDatas = _settledService.IsExistBet_Kiss918(partitionTime, data);
+            existDatas = _settledService.IsExistBet_Yeebet(partitionTime, data);
             if (existDatas.Count() != 1)
             {
                 //不存在指定有效投注
-                message = "not exist valid bet by playSessionID.";
+                message = "not exist valid bet by serialnumber.";
                 _logger.LogError($"IsExistBetData Fail:{message}");
                 return false;
             }
-            if (existDatas.First().amount != data.amount)
+            if (existDatas.First().amount != (data.amount * -1))
             {
                 //退款金額與已存在投注不符
-                message = "amount not equal with exist valid bet by playSessionID.";
+                message = "amount not equal with exist valid bet by serialnumber.";
                 _logger.LogError($"IsExistBetData Fail:{message}");
                 return false;
             }
@@ -618,9 +618,12 @@ public class YeebetBLL : IYeebetBLL
                 case BettransLC_YeebetTypeEnum.FromDeposit:
                     result = _settledService.Payout_Yeebet(partitionTime, data, trans, out SQ);
                     break;
-                    //case BettransLC_YeebetTypeEnum.FromRollback:
-                    //    result = _settledService.Refund_Kiss918(partitionTime, data, trans);
-                    //    break;
+                case BettransLC_YeebetTypeEnum.FromRollback:
+                    if (data.type == 1) //withdraw rollback
+                        result = _settledService.Refund_Yeebet(partitionTime, data, trans);
+                    else if (data.type == 9) //deposit rollback, 重新派彩?
+                        result = _bettingService.PlaceBet_Yeebet(partitionTime, data, trans, out SQ);
+                    break;
             }
 
             if (!result)
@@ -653,17 +656,25 @@ public class YeebetBLL : IYeebetBLL
             switch (data.FromAPIType)
             {
                 case BettransLC_YeebetTypeEnum.FromWithdraw:
-                    result = _bettingService.SetBalance_Yeebet(tpCustInfo, data,
+                    result = _bettingService.SetBalance_Yeebet(tpCustInfo, data, "withdraw",
                              out afterAmount, ref bonusId, conn, trans);
                     break;
                 case BettransLC_YeebetTypeEnum.FromDeposit:
-                    result = _settledService.SetBalance_Yeebet(tpCustInfo, data,
-                             TransType.Payout, "Payout", out afterAmount, ref bonusId, conn, trans);
+                    if (data.type == 9)
+                        result = _settledService.SetBalance_Yeebet(tpCustInfo, data,
+                                 TransType.Payout, "Payout", out afterAmount, ref bonusId, conn, trans);
+                    else if (data.type == 7)
+                        result = _settledService.SetBalance_Yeebet(tpCustInfo, data,
+                          TransType.Payout, "Refund", out afterAmount, ref bonusId, conn, trans);
                     break;
-                    //case BettransLC_YeebetTypeEnum.FromRollback:
-                    //    result = _settledService.SetBalance_Kiss918(tpCustInfo, data,
-                    //             TransType.Payout, "Refund", out afterAmount, ref bonusId, conn, trans);
-                    //    break;
+                case BettransLC_YeebetTypeEnum.FromRollback:
+                    if (data.type == 1) //withdraw rollback
+                        result = _settledService.SetBalance_Yeebet(tpCustInfo, data,
+                                 TransType.Payout, "Refund_rollback_withdraw", out afterAmount, ref bonusId, conn, trans);
+                    else if (data.type == 9) //deposit rollback, 重新派彩=>把錢扣回去
+                        result = _bettingService.SetBalance_Yeebet(tpCustInfo, data, "rollback_deposit",
+                             out afterAmount, ref bonusId, conn, trans);
+                    break;
             }
 
             if (!result)

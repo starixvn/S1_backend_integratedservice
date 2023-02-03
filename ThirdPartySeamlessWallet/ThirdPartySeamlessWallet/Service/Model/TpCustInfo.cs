@@ -14,6 +14,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string TpPwd { set; get; }
         public int SiteId { set; get; }
         public string TpCustId { get; set; }
+        public string TpCurrencyId { get; set; }
     }
     public class TpCustInfoAuth
     {
