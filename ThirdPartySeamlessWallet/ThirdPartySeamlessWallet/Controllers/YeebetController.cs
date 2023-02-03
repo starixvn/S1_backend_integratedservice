@@ -20,6 +20,7 @@ public class YeebetController : ControllerBase
     private readonly Tp thisTp;
 
     private readonly ThirdPartyBLL _thirdPartyBLL;
+    private readonly TpCustInfoBLL _tpCustInfoBll;
     private readonly IYeebetBLL _yeebetBll;
     private readonly Tools _tools;
 
@@ -32,6 +33,7 @@ public class YeebetController : ControllerBase
         thisTp = Tp.Yeebet;
 
         _thirdPartyBLL = provider.GetService<ThirdPartyBLL>();
+        _tpCustInfoBll = provider.GetService<TpCustInfoBLL>();
         _yeebetBll = provider.GetService<IYeebetBLL>();
         _tools = provider.GetService<Tools>();
     }
@@ -118,6 +120,24 @@ public class YeebetController : ControllerBase
     {
         message = string.Empty;
 
+        if (!request.ContainsKey("username"))
+        {
+            message = "username not found.";
+            return false;
+        }
+
+        var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)thisTp, request["username"]);
+        if (tpCustInfo == null)
+        {
+            message = "TpUserInfo not found.";
+            return false;
+        }
+
+        if (request.ContainsKey("errmsg"))
+            request["errmsg"] = request["errmsg"].Replace(" ", "+");
+
+        var word = $"{tpCustInfo.SiteId}_{tpCustInfo.TpCurrencyId}";
+
         string content = string.Join("&",
             request
             .Where(x => x.Key != "bets" && x.Key != "sign")
@@ -126,9 +146,9 @@ public class YeebetController : ControllerBase
 
         // Check appid
         var setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(_thirdPartyBLL.GetThirdPartySetting((int)thisTp).Setting);
-        string seamlessAppid = setting.ContainsKey("SeamlessAppId") && !string.IsNullOrEmpty(setting["SeamlessAppId"])
-            ? setting["SeamlessAppId"]
-            : throw new YeebetException(YeebetErrorCode.SystemError, "SeamlessAppId is Invaild.");
+        string seamlessAppid = setting.ContainsKey($"SeamlessAppId_{word}") && !string.IsNullOrEmpty(setting[$"SeamlessAppId_{word}"])
+            ? setting[$"SeamlessAppId_{word}"]
+            : throw new YeebetException(YeebetErrorCode.SystemError, $"SeamlessAppId_{word} is Invaild.");
 
         if (seamlessAppid != appid)
         {
@@ -143,9 +163,9 @@ public class YeebetController : ControllerBase
             return false;
         }
 
-        string secretKey = setting.ContainsKey("SeamlessSecretKey") && !string.IsNullOrEmpty(setting["SeamlessSecretKey"])
-            ? setting["SeamlessSecretKey"]
-            : throw new YeebetException(YeebetErrorCode.SystemError, "SeamlessSecretKey is Invaild.");
+        string secretKey = setting.ContainsKey($"SeamlessSecretKey_{word}") && !string.IsNullOrEmpty(setting[$"SeamlessSecretKey_{word}"])
+            ? setting[$"SeamlessSecretKey_{word}"]
+            : throw new YeebetException(YeebetErrorCode.SystemError, $"SeamlessSecretKey_{word} is Invaild.");
 
         var result = _tools.ToMD5($"{content}&key={secretKey}").ToLower();
         if (result != request["sign"])
