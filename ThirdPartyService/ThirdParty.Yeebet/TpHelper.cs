@@ -52,7 +52,7 @@ namespace ThirdParty.Yeebet
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string word = $"{tpCustInfo.SiteId}_{tpCustInfo.IsoCode}";
+            string word = $"{tpCustInfo.SiteId}_{tpCustInfo.TpCurrencyId}";
             string currency = tpCustInfo.TpCurrencyId;
             string apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
             string apiAppId = inputs.ContainsKey($"ApiAppId_{word}") && !string.IsNullOrEmpty(inputs[$"ApiAppId_{word}"]) ? inputs[$"ApiAppId_{word}"] : throw new Exception($"ApiAppId_{word}");
