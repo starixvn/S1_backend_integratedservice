@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using ThirdPartyBetHistory.Service.DAL;
 using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.Model;
