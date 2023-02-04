@@ -1,7 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace ThirdPartyWager.Service.Model.NineW
 {
@@ -27,7 +24,6 @@ namespace ThirdPartyWager.Service.Model.NineW
             ? inputs[$"agent"] : throw new Exception($"agent is empty");
         }
     }
-
 
     public class QuerySettleBetHistoryObj<T>
     {
@@ -57,7 +53,7 @@ namespace ThirdPartyWager.Service.Model.NineW
         public string betId { get; set; } = string.Empty;
 
         public DateTime? startTime { get; set; }
-        public DateTime betPlaced 
+        public DateTime betPlaced
         {
             get
             {
@@ -78,7 +74,7 @@ namespace ThirdPartyWager.Service.Model.NineW
 
                 return default;
             }
-            set 
+            set
             {
                 _betPlaced = value;
             }
@@ -101,6 +97,10 @@ namespace ThirdPartyWager.Service.Model.NineW
         {
             get
             {
+                if (betPlaced == default(DateTime))
+                {
+                    return 0;
+                }
                 return new DateTimeOffset(betPlaced, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
             }
         }
@@ -211,8 +211,6 @@ namespace ThirdPartyWager.Service.Model.NineW
         }
     }
 
-
-
     public class ReSettleBet
     {
         public string userId { get; set; }
@@ -253,7 +251,6 @@ namespace ThirdPartyWager.Service.Model.NineW
         public string betStatus { get; set; }
     }
 
-
     public class CountSummaryTransaction
     {
         public string status { get; set; }
@@ -269,7 +266,6 @@ namespace ThirdPartyWager.Service.Model.NineW
         public decimal commission { get; set; }
         public decimal stakeTotal { get; set; }
     }
-
 
     public class SummaryTransaction
     {
@@ -314,6 +310,106 @@ namespace ThirdPartyWager.Service.Model.NineW
                 return resettledDate != null ? new DateTimeOffset(resettledDate.Value, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds() : 0;
             }
         }
+    }
+
+
+    public class UnSettleBet
+    {
+        public string status { get; set; }
+        public int totalPage { get; set; }
+        public int currentPage { get; set; }
+        public Matched matched { get; set; }
+        public Unmatched unmatched { get; set; }
+        public long lastUpdateDate { get; set; }
+    }
+
+    public class Matched
+    {
+        public MatchedResult[] resultList { get; set; }
+    }
+
+    public class MatchedResult
+    {
+        public string eventTypeName { get; set; }
+        public string eventName { get; set; }
+        public int eventId { get; set; }
+        public int site { get; set; }
+        public int currencyType { get; set; }
+        public int eventType { get; set; }
+        public string selectionId { get; set; }
+        public int categoryType { get; set; }
+        public string ip { get; set; }
+        public decimal matchOddsReq { get; set; }
+        public string userId { get; set; }
+        public string betId { get; set; }
+        public int oddsType { get; set; }
+        public long updateDate { get; set; }
+        public string agentId { get; set; }
+        public DateTime betPlaced { get; set; }
+        public string matchSettledDate { get; set; }
+        public string marketName { get; set; }
+        public string selectionName { get; set; }
+        public string matchType { get; set; }
+        public string marketId { get; set; }
+        public decimal? fancyBetRuns { get; set; }
+        public decimal? fancyBetExtendedRuns { get; set; }
+        public int fancyBetMarketType { get; set; }
+        public object extension1 { get; set; }
+        public UnSettleBetTransactiondata[] transactionData { get; set; }
+        public decimal? matchAvgOdds { get; set; }
+        public string betStatus { get; set; }
+        public decimal? matchAmount { get; set; }
+        public decimal? unMatchAmount { get; set; }
+        public DateTime dateMatched { get; set; }
+    }
+
+    public class UnSettleBetTransactiondata
+    {
+        public DateTime betTaken { get; set; }
+        public decimal txStake { get; set; }
+        public decimal txLiability { get; set; }
+        public decimal txOddsMatched { get; set; }
+        public decimal actualOdds { get; set; }
+        public decimal? txFancyBetRuns { get; set; }
+    }
+
+    public class Unmatched
+    {
+        public UnmatchedResult[] resultList { get; set; }
+    }
+
+    public class UnmatchedResult
+    {
+        public string eventTypeName { get; set; }
+        public string eventName { get; set; }
+        public int eventId { get; set; }
+        public int site { get; set; }
+        public int currencyType { get; set; }
+        public int eventType { get; set; }
+        public string selectionId { get; set; }
+        public int categoryType { get; set; }
+        public string ip { get; set; }
+        public decimal matchOddsReq { get; set; }
+        public string userId { get; set; }
+        public string betId { get; set; }
+        public int oddsType { get; set; }
+        public long updateDate { get; set; }
+        public string agentId { get; set; }
+        public DateTime betPlaced { get; set; }
+        public string matchSettledDate { get; set; }
+        public string marketName { get; set; }
+        public string selectionName { get; set; }
+        public string matchType { get; set; }
+        public string marketId { get; set; }
+        public decimal? fancyBetRuns { get; set; }
+        public decimal? fancyBetExtendedRuns { get; set; }
+        public int fancyBetMarketType { get; set; }
+        public object extension1 { get; set; }
+        public object transactionData { get; set; }
+        public decimal? matchAvgOdds { get; set; }
+        public string betStatus { get; set; }
+        public decimal? matchAmount { get; set; }
+        public decimal? unMatchAmount { get; set; }
     }
 
 }
