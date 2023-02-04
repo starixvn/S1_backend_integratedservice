@@ -1,22 +1,22 @@
 ﻿using CommonService.Service.Model;
-using Dapper;
-using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
-using System.Data;
+using CommonService.Service.Library;
+using CommonService.Service.Model.enums;
 
 namespace CommonService.Service.DAL
 {
     public class IovationService
     {
-        private readonly IConfiguration configuration;
-        public IovationService(IConfiguration configuration)
+        private readonly MySqlClient _logbClient;
+      
+        public IovationService(IServiceProvider provider)
         {
-            this.configuration = configuration;
+            _logbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Log);
         }
+        
         public int IovationResultIns(IovationResult iovationResult)
         {
             var deviceId = iovationResult?.details?.device?.alias;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringLog"));
             var p = new
             {
                 AccountCode = iovationResult.accountCode,
@@ -28,7 +28,7 @@ namespace CommonService.Service.DAL
                 StatedIp = iovationResult.statedIp,
                 TrackingNumber = iovationResult.trackingNumber
             };
-            return conn.Execute("Common_IovationLog_Ins_V2", p, commandType: CommandType.StoredProcedure);
+            return _logbClient.Execute("Common_IovationLog_Ins_V2", p);
         }
     }
 }

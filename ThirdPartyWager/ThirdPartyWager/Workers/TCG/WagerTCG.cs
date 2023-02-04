@@ -43,6 +43,7 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
+            LogContext.PushProperty("WagerTimerType", WagerTimerType.Wager.ToString());
             var quick = 0;
             var failed = 0;
             var tasks = new List<Task>();

@@ -154,11 +154,11 @@ namespace ThirdParty.TCG
                     RefTransId = wagerDetail.GetValueOrDefault("orderNum")?.ToString(),
                     TpUserName = wagerDetail.GetValueOrDefault("username")?.ToString(),
                     UTCBetTime = gameType == GameType.SEALottery 
-                    ? ToUTC(DateTime.Parse(wagerDetail.GetValueOrDefault("betTime").ToString()))
-                    : ToUTC(DateTime.Parse(wagerDetail.GetValueOrDefault("bettingTime").ToString())),
+                    ? ToUTC(wagerDetail.GetValueOrDefault("betTime"))
+                    : ToUTC(wagerDetail.GetValueOrDefault("bettingTime")),
                     UTCSettledTime = gameType == GameType.SEALottery
-                    ? ToUTC(DateTime.Parse(wagerDetail.GetValueOrDefault("settlementTime").ToString()))
-                    : ToUTC(DateTime.Parse(wagerDetail.GetValueOrDefault("drawTime").ToString())),
+                    ? ToUTC(wagerDetail.GetValueOrDefault("settlementTime"))
+                    : ToUTC(wagerDetail.GetValueOrDefault("drawTime")),
                     Stake = gameType == GameType.SEALottery 
                     ? (decimal)wagerDetail.GetValueOrDefault("betAmount") * tpCurrency.ExchangeRate 
                     : (decimal)wagerDetail.GetValueOrDefault("actualBetAmount") * tpCurrency.ExchangeRate,
@@ -359,9 +359,19 @@ namespace ThirdParty.TCG
             return BitConverter.ToString(outputBytes).Replace("-", "").ToLower();
         }
 
-        private DateTime ToUTC(DateTime time)
+        private DateTime ToUTC(object time)
         {
-            return new DateTimeOffset(time, new TimeSpan(8, 0, 0)).UtcDateTime;
+            if (time is null)
+            {
+                return default;
+            }
+            var timeString = time.ToString();
+            if (string.IsNullOrEmpty(timeString) || timeString.Equals("0001-01-01 00:00:00"))
+            {
+                return default;
+            }
+
+            return new DateTimeOffset(DateTime.Parse(timeString), new TimeSpan(8, 0, 0)).UtcDateTime;
         } 
     }
 }

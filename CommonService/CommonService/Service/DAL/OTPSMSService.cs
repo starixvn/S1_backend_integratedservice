@@ -1,28 +1,29 @@
 ﻿using CommonService.Service.Model;
 using Dapper;
-using MySql.Data.MySqlClient;
 using System.Data;
+using CommonService.Service.Library;
+using CommonService.Service.Model.enums;
 
 namespace CommonService.Service.DAL
 {
     public class OTPSMSService
     {
-        private readonly IConfiguration configuration;
-
-        public OTPSMSService(IConfiguration configuration)
+        private readonly MySqlClient _mainDbClient;
+      
+        public OTPSMSService(IServiceProvider provider)
         {
-            this.configuration = configuration;
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
+        
         public SendOTPSMSResult GetOTPVerifyinfo(int custId, int type = 0)
         {
             var result = new SendOTPSMSResult();
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var p = new DynamicParameters(new { CustId = custId, _OTPType = type });
             p.Add("Request_id", dbType: DbType.String, direction: ParameterDirection.Output);
             p.Add("StartUnixTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
             p.Add("OTPstatus", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-            conn.Execute("Service_OTPVerifyinfo_Get", p, commandType: CommandType.StoredProcedure);
+            _mainDbClient.Execute("Service_OTPVerifyinfo_Get", p);
             result.Status = p.Get<int?>("OTPstatus") ?? -1;
             result.StartUnixTime = p.Get<long?>("StartUnixTime") ?? 0;
             result.Request_id = p.Get<string>("Request_id");
@@ -34,7 +35,6 @@ namespace CommonService.Service.DAL
         {
             string requestId = null;
             var result = new SendOTPSMSResult();
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var p = new DynamicParameters(
                 new
                 {
@@ -49,7 +49,7 @@ namespace CommonService.Service.DAL
             p.Add("StartUnixTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
             p.Add("OTPstatus", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-            conn.Execute("Service_OTPVerifyinfo_Ins", p, commandType: CommandType.StoredProcedure);
+            _mainDbClient.Execute("Service_OTPVerifyinfo_Ins", p);
             result.Status = p.Get<int?>("OTPstatus") ?? -1;
             result.StartUnixTime = p.Get<long?>("StartUnixTime") ?? 0;
             result.Request_id = p.Get<string>("Request_id");
@@ -59,7 +59,6 @@ namespace CommonService.Service.DAL
 
         public int VerifyOTP(VerifyOTPReq verifyOTPReq, int type = 0)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var p = new DynamicParameters(
                 new
                 {
@@ -69,7 +68,7 @@ namespace CommonService.Service.DAL
                 });
 
             p.Add("OTPResult", dbType: DbType.Int32, direction: ParameterDirection.Output);
-            conn.Execute("Service_VerifyOTPinfo_Get", p, commandType: CommandType.StoredProcedure);
+            _mainDbClient.Execute("Service_VerifyOTPinfo_Get", p);
             var result = p.Get<int>("OTPResult");
             if (result == 0)
             {
@@ -85,15 +84,13 @@ namespace CommonService.Service.DAL
 
         public int InsertOTPLog(OTPLog oTPLog)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var result = conn.Execute("Service_OTPLog_Ins", oTPLog, commandType: CommandType.StoredProcedure);
+            var result = _mainDbClient.Execute("Service_OTPLog_Ins", oTPLog);
             return result;
         }
 
-        public int OTPLogVerify(OTPLog oTPLog)
+        private int OTPLogVerify(OTPLog oTPLog)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var result = conn.Execute("Service_OTPLog_Verify", oTPLog, commandType: CommandType.StoredProcedure);
+            var result = _mainDbClient.Execute("Service_OTPLog_Verify", oTPLog);
             return result;
         }
     }

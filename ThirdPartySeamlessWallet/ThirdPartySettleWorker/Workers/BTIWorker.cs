@@ -68,12 +68,14 @@ namespace ThirdPartySettleWorker.Workers
                         var tpUserName = unsettledList.First().Account;
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
 
-                        //使用Reserve單號的第一筆BetID作為transId
-                        var transId = unsettledList.First().BetID;
+                        //先從DebitList取得第一筆BetID
+                        var betID = debitList.Any() ? debitList.First().BetID : null;
+                        //使用BetID作為transId，如果DebitList是空的，使用unsettledList裡面的ReserveId
+                        var transId = betID ?? unsettledList.First().TransId;
 
-                        // 下注總金額
+                        // 下注總金額，使用Reserve的Amout，只會有一筆所以用First
                         var stake = unsettledList.First().DebitAmount;
-                        // 派彩總金額
+                        // 派彩總金額，使用Credit的Amout，會有一筆所以用Sum
                         var payout = unsettledList.Sum(i => i.CreditAmount);
                         // 計算有效下注
                         var validBet = CaculateValidBetAmount(unsettledList, debitList);
