@@ -1,15 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using ThirdPartyBetHistory.Service;
+﻿using ThirdPartyBetHistory.Service;
 using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.DAL;
 using ThirdPartyBetHistory.Service.Library;
 using ThirdPartyBetHistory.Service.Model.enums;
-using ThirdPartyBetHistory.Service.Worker;
 
 namespace ThirdPartyBetHistory.Extensions
 {

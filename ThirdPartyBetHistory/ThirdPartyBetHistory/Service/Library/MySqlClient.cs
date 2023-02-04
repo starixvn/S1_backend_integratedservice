@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using Dapper;
-using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
-using Newtonsoft.Json;
 using Serilog.Context;
 using ThirdPartyBetHistory.Service.Model.enums;
 
@@ -17,7 +12,7 @@ namespace ThirdPartyBetHistory.Service.Library
         private readonly string _connectionString;
 
         private readonly ILogger<MySqlClient> _logger;
-
+        
         public DataBase DataBase { get; set; }
 
         public MySqlClient(string connectionString, ILogger<MySqlClient> logger, DataBase dataBase)
@@ -26,6 +21,13 @@ namespace ThirdPartyBetHistory.Service.Library
             _logger = logger;
             DataBase = dataBase;
         }
+        
+        public MySqlConnection GetMySqlConnection()
+        {
+            return new MySqlConnection(_connectionString);
+        }
+
+        #region Query
 
         public async Task<T> QueryFirstAsync<T>(string name, DynamicParameters parameters)
         {
@@ -36,6 +38,8 @@ namespace ThirdPartyBetHistory.Service.Library
                 await using var connection = new MySqlConnection(_connectionString);
                 result = await connection.QueryFirstOrDefaultAsync<T>(name, parameters,
                     commandType: CommandType.StoredProcedure);
+                await connection.CloseAsync();
+                await connection.DisposeAsync();
             }
             catch (Exception e)
             {
@@ -55,89 +59,12 @@ namespace ThirdPartyBetHistory.Service.Library
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                result = connection.QueryFirstOrDefault<T>(name, parameters,
-                    commandType: CommandType.StoredProcedure);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, name);
-                throw;
-            }
-
-            LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return result;
-        }
-
-        public int Execute(string name, object parameters)
-        {
-            var result = 0;
-            var sw = Stopwatch.StartNew();
-            try
-            {
-                using var connection = new MySqlConnection(_connectionString);
-                result = connection.Execute(name, parameters, commandType: CommandType.StoredProcedure);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, name);
-                throw;
-            }
-
-            LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return result;
-        }
-
-        public int Execute(string name, DynamicParameters parameters, MySqlConnection connection,
-            MySqlTransaction trans)
-        {
-            var result = 0;
-            var sw = Stopwatch.StartNew();
-            try
-            {
-                result = connection.Execute(name, parameters, commandType: CommandType.StoredProcedure,
-                    transaction: trans);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, name);
-                throw;
-            }
-
-            LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return result;
-        }
-        
-        public int Execute(string command)
-        {
-            var result = 0;
-            var sw = Stopwatch.StartNew();
-            try
-            {
-                using var connection = new MySqlConnection(_connectionString);
-                result = connection.Execute(command, CommandType.Text);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, command);
-                throw;
-            }
-
-            LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug(command);
-            return result;
-        }
-
-        public async Task<int> ExecuteAsync(string name, DynamicParameters parameters)
-        {
-            var result = 0;
-            var sw = Stopwatch.StartNew();
-            try
-            {
-                await using var connection = new MySqlConnection(_connectionString);
-                result = await connection.ExecuteAsync(name, parameters, commandType: CommandType.StoredProcedure);
+                var command = new CommandDefinition(name,parameters,
+                    commandType: CommandType.StoredProcedure,
+                    flags: CommandFlags.NoCache);
+                result = connection.QueryFirstOrDefault<T>(command);
+                connection.Close();
+                connection.Dispose();
             }
             catch (Exception e)
             {
@@ -157,7 +84,12 @@ namespace ThirdPartyBetHistory.Service.Library
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                result = connection.Query<T>(name, commandType: CommandType.Text);
+                var command = new CommandDefinition(name,
+                    commandType: CommandType.Text,
+                    flags: CommandFlags.NoCache);
+                result = connection.Query<T>(command);
+                connection.Close();
+                connection.Dispose();
             }
             catch (Exception e)
             {
@@ -167,7 +99,7 @@ namespace ThirdPartyBetHistory.Service.Library
 
             LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug(name);
-            return result;
+            return result.ToList();
         }
 
         public IEnumerable<T> Query<T>(string name, object parameters)
@@ -177,7 +109,12 @@ namespace ThirdPartyBetHistory.Service.Library
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                result = connection.Query<T>(name, parameters, commandType: CommandType.StoredProcedure);
+                var command = new CommandDefinition(name,parameters,
+                    commandType: CommandType.StoredProcedure,
+                    flags: CommandFlags.NoCache);
+                result = connection.Query<T>(command);
+                connection.Close();
+                connection.Dispose();
             }
             catch (Exception e)
             {
@@ -187,7 +124,7 @@ namespace ThirdPartyBetHistory.Service.Library
 
             LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return result;
+            return result.ToList();
         }
 
         public T Query<T>(string name, DynamicParameters parameters, Func<SqlMapper.GridReader, T> func)
@@ -199,6 +136,8 @@ namespace ThirdPartyBetHistory.Service.Library
                 using var connection = new MySqlConnection(_connectionString);
                 var multiple = connection.QueryMultiple(name, parameters, commandType: CommandType.StoredProcedure);
                 result = func.Invoke(multiple);
+                connection.Close();
+                connection.Dispose();
             }
             catch (Exception e)
             {
@@ -219,6 +158,8 @@ namespace ThirdPartyBetHistory.Service.Library
             {
                 await using var connection = new MySqlConnection(_connectionString);
                 result = await connection.QueryAsync<T>(name, parameters, commandType: CommandType.StoredProcedure);
+                await connection.CloseAsync();
+                await connection.DisposeAsync();
             }
             catch (Exception e)
             {
@@ -241,6 +182,8 @@ namespace ThirdPartyBetHistory.Service.Library
                 var multiple =
                     connection.QueryMultipleAsync(name, parameters, commandType: CommandType.StoredProcedure);
                 result = func.Invoke(await multiple);
+                await connection.CloseAsync();
+                await connection.DisposeAsync();
             }
             catch (Exception e)
             {
@@ -252,5 +195,117 @@ namespace ThirdPartyBetHistory.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
+        
+        #endregion
+
+        #region Execute
+
+        public int Execute(string name, object parameters)
+        {
+            int result;
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                using var connection = new MySqlConnection(_connectionString);
+                result = connection.Execute(name, parameters, commandType: CommandType.StoredProcedure);
+                connection.Close();
+                connection.Dispose();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, name);
+                throw;
+            }
+
+            LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
+            _logger.LogDebug($"{name} {sw.Elapsed:c}");
+            return result;
+        }
+
+        public int Execute(string name, DynamicParameters parameters, MySqlConnection connection, MySqlTransaction trans)
+        {
+            var result = 0;
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                result = connection.Execute(name, parameters, commandType: CommandType.StoredProcedure,
+                    transaction: trans);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, name);
+                throw;
+            }
+
+            LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
+            _logger.LogDebug($"{name} {sw.Elapsed:c}");
+            return result;
+        }
+        
+        public int Execute(string name, DynamicParameters parameters, IDbTransaction transaction)
+        {
+            int result;
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                result = transaction.Connection.Execute(name, parameters, commandType: CommandType.StoredProcedure);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, name);
+                throw;
+            }
+
+            LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
+            _logger.LogDebug($"{name} {sw.Elapsed:c}");
+            return result;
+        }
+        
+        public int Execute(string command)
+        {
+            var result = 0;
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                using var connection = new MySqlConnection(_connectionString);
+                result = connection.Execute(command, CommandType.Text);
+                connection.Close();
+                connection.Dispose();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, command);
+                throw;
+            }
+
+            LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
+            _logger.LogDebug(command);
+            return result;
+        }
+
+        public async Task<int> ExecuteAsync(string name, DynamicParameters parameters)
+        {
+            var result = 0;
+            var sw = Stopwatch.StartNew();
+            try
+            {
+                await using var connection = new MySqlConnection(_connectionString);
+                result = await connection.ExecuteAsync(name, parameters, commandType: CommandType.StoredProcedure);
+                await connection.CloseAsync();
+                await connection.DisposeAsync();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, name);
+                throw;
+            }
+
+            LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
+            _logger.LogDebug($"{name} {sw.Elapsed:c}");
+            return result;
+        }
+
+        #endregion
+        
     }
 }
