@@ -1,20 +1,20 @@
-﻿using Dapper;
-using MySql.Data.MySqlClient;
-using System.Data;
+﻿using CommonService.Service.Library;
+using CommonService.Service.Model.enums;
 
 namespace CommonService.Service.DAL
 {
     public class AuthService
     {
-        private readonly IConfiguration configuration;
-        public AuthService(IConfiguration configuration)
+        private readonly MySqlClient _mainDbClient;
+
+        public AuthService(IServiceProvider provider)
         {
-            this.configuration = configuration;
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
+        
         public int ApplyToken(string Key, string Value, int Expiry)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Common_AuthToken_Ins", new { Token = Key, PermissionData = Value, Expiry = Expiry }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Execute("Common_AuthToken_Ins", new { Token = Key, PermissionData = Value, Expiry = Expiry });
         }
     }
 }
