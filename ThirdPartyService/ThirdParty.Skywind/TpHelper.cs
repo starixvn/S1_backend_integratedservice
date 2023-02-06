@@ -162,33 +162,16 @@ namespace ThirdParty.Skywind
 
             if (itgGame.ContainsKey(GameID))
             {
-                //var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
-                //var detailUrl = $"{HistoryUrl}/history/external";
-                //string getParams = $"roundId={roundId}&sortBy=finished&limit=100";
-                //Dictionary<string, string> header = new Dictionary<string, string>();
-                //header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
-                //string json = HttpGet(detailUrl, getParams, "application/json", header);
-                //return new BaseDetail(getBetDetail.TpGameTypeOption)
-                //{
-                //    TransId = getBetDetail.TransId,
-                //    Detail = json,
-                //    TpCurrency = new TpCurrency()
-                //    {
-                //        ExchangeRate = tpCustInfo.ExchangeRate,
-                //        TpCurrencyId = tpCustInfo.TpCurrencyId,
-                //    },
-                //};
                 var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
-                var detailUrl = $"{HistoryUrl}/history/game/{roundId}/image";
+                var detailUrl = $"{ApiUrl}/history/game";
+                string getParams = $"roundId={roundId}";
                 Dictionary<string, string> header = new Dictionary<string, string>();
                 header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
-                string json = HttpGet(detailUrl, "", "application/json", header);
-                var result = FromJson<DetailUrl>(json);
-
+                string json = HttpGet(detailUrl, getParams, "application/json", header);
                 return new BaseDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
-                    DetailUrl = result.imageUrl,
+                    Detail = json,
                     TpCurrency = new TpCurrency()
                     {
                         ExchangeRate = tpCustInfo.ExchangeRate,
