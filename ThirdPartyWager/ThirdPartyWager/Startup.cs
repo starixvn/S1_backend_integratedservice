@@ -15,6 +15,7 @@ using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
+using ThirdPartyWager.Workers.Yeebet;
 
 namespace ThirdPartyWager
 {
@@ -234,7 +235,7 @@ namespace ThirdPartyWager
             //Yeebet
             services.AddSingleton<WagerYeebetBLL>();
             services.AddSingleton<ApiYeebetBLL>();
-            //services.AddSingleton<FinanceYeebetBLL>();
+            services.AddSingleton<FinanceYeebetBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -318,6 +319,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerRedoGPI>();
             services.AddHostedService<FinanceGPI>();
             services.AddHostedService<WagerYeebet>();
+            services.AddHostedService<FinanceYeebet>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
