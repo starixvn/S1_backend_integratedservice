@@ -1,7 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using ThirdPartyBetHistory.Service.DAL;
+﻿using ThirdPartyBetHistory.Service.DAL;
 using ThirdPartyBetHistory.Service.Model;
 
 namespace ThirdPartyBetHistory.Service.BLL

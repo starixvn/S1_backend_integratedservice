@@ -1,12 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Serilog.Context;
+﻿using Serilog.Context;
 using ThirdPartyBetHistory.Service.Model.enums;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace ThirdPartyBetHistory.Service.Worker
 {
@@ -23,6 +16,7 @@ namespace ThirdPartyBetHistory.Service.Worker
             _sabaSiteList = provider.GetServices<IThirdPartyBetHelper>();
             _timerWorkerList = new Dictionary<int, Timer>();
         }
+        
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             try

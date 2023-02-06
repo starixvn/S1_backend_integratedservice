@@ -1,8 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using ThirdPartyBetHistory.Service.Library;
+﻿using ThirdPartyBetHistory.Service.Library;
 using ThirdPartyBetHistory.Service.Model.enums;
 
 namespace ThirdPartyBetHistory.Service.DAL

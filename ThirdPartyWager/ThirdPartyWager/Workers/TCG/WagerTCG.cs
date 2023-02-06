@@ -38,6 +38,7 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
+            LogContext.PushProperty("WagerTimerType", WagerTimerType.Wager.ToString());
             var quick = 0;
             var failed = 0;
             var tasks = new List<Task>();
@@ -115,6 +116,8 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
+            LogContext.PushProperty("WagerTimerType", WagerTimerType.UnSettle.ToString());
+
             var quick = 0;
             var failed = 0;
             var tasks = new List<Task>();
@@ -152,7 +155,7 @@ namespace ThirdPartyWager.Workers
             finally
             {
                 var dueTimeSpan = (quick == 1) ? TimeSpan.FromSeconds(5) : TimeSpan.FromMinutes(intervalMins);
-                _timer.Change(dueTimeSpan, TimeSpan.Zero);
+                _unSettleTimer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 
@@ -187,7 +190,7 @@ namespace ThirdPartyWager.Workers
             isSuccess = await _tcgBLL.GetUnsettleAsync<TCGSEAWagerData>(timezoneBatchTime, currency);                 
             if (isSuccess)
             {
-                _logger.LogInformation($"TCG {currency} Get {timezoneBatchTime:yyyyMMddHHmm} batch file success.");
+                _logger.LogInformation($"TCG {currency} Get Unsettle {timezoneBatchTime:yyyyMMddHHmm} batch file success.");
                 _thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, timerType, batchTime.ToUnixTimeSeconds(), currency);
             }
 

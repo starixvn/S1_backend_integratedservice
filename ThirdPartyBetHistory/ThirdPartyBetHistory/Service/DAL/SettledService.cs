@@ -1,28 +1,21 @@
 ﻿using Dapper;
-using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using Microsoft.Extensions.Logging;
 using ThirdPartyBetHistory.Service.Library;
 using ThirdPartyBetHistory.Service.Model;
 using ThirdPartyBetHistory.Service.Model.enums;
-using System;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace ThirdPartyBetHistory.Service.DAL
 {
     public class SettledService
     {
         private readonly MySqlClient _mainDbClient;
-        private readonly string _connectionString;
 
         public SettledService(IServiceProvider provider)
         {
-            _connectionString = provider.GetRequiredService<IConfiguration>().GetConnectionString("ConnectionString");
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
+        
         public bool GetBonusIdByTpId(int tpId, int custId, out int bonusId)
         {
             bonusId = 0;
@@ -41,20 +34,23 @@ namespace ThirdPartyBetHistory.Service.DAL
         {
             return _mainDbClient.Query<BonusFulfill>("Service_BonusFulfill_Get");
         }
+        
         public bool BonusSettle(BonusFulfill bonusFulfill)
         {
-            using var conn = new MySqlConnection(_connectionString);
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             
             var p = new DynamicParameters(bonusFulfill);
             p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            var result = _mainDbClient.Execute("Service_BonusSettle_Set", p, conn, trans);
+            var result = _mainDbClient.Execute("Service_BonusSettle_Set", p, trans);
             if (result >= 0)
             {
                 trans.Commit();
             }
 
+            conn.Close();
+            conn.Dispose();
             return result > 0;
         }
     }

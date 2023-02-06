@@ -1,14 +1,6 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Serilog.Context;
+﻿using Serilog.Context;
 using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.Model.enums;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace ThirdPartyBetHistory.Service.Worker
 {
@@ -16,14 +8,12 @@ namespace ThirdPartyBetHistory.Service.Worker
     {
         private readonly ILogger<SabaLGWorkerService> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly IEnumerable<IThirdPartyBetHelper> _sabaSiteList;
         private readonly Dictionary<SiteId, Timer> timerWorkerList;
         private readonly WorkerType workerType = WorkerType.LGVirtualSportsWager;
 
         public SabaLGWorkerService(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<SabaLGWorkerService>>();
-            _sabaSiteList = provider.GetServices<IThirdPartyBetHelper>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             timerWorkerList = new Dictionary<SiteId, Timer>();
         }

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using Microsoft.Extensions.DependencyInjection;
+﻿using System.Data;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -19,9 +15,7 @@ namespace ThirdPartyWager.Service.DAL
         }
         public int InsertWager(IEnumerable<BetSA> bets, IDbTransaction transaction)
         {
-            return _wagerDbClient.Execute("Service_TpWagerSA_Ins",
-                transaction,
-                bets);
+            return _wagerDbClient.Execute("Service_TpWagerSA_Ins", transaction, bets);
         }
 
         public WagerSATotal GetWagerTotal(long beginTime, long endTime)
