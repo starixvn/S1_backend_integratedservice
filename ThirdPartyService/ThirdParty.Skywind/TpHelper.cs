@@ -152,7 +152,8 @@ namespace ThirdParty.Skywind
             string SecretKey = inputs.ContainsKey("SecretKey") && !string.IsNullOrEmpty(inputs["SecretKey"]) ? inputs["SecretKey"] : throw new Exception();
             string Username = inputs.ContainsKey("Username") && !string.IsNullOrEmpty(inputs["Username"]) ? inputs["Username"] : throw new Exception();
             string Password = inputs.ContainsKey("Password") && !string.IsNullOrEmpty(inputs["Password"]) ? inputs["Password"] : throw new Exception();
-            
+            string HistoryUrl = inputs.ContainsKey("HistoryUrl") && !string.IsNullOrEmpty(inputs["HistoryUrl"]) ? inputs["HistoryUrl"] : throw new Exception();
+
             string[] sArray = Regex.Split(getBetDetail.TransId, "-", RegexOptions.IgnoreCase);
             var roundId = sArray[0];
 
@@ -162,7 +163,7 @@ namespace ThirdParty.Skywind
             if (itgGame.ContainsKey(GameID))
             {
                 var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
-                var detailUrl = $"{ApiUrl}/history/external";
+                var detailUrl = $"{HistoryUrl}/history/external";
                 string getParams = $"roundId={roundId}&sortBy=finished&limit=100";
                 Dictionary<string, string> header = new Dictionary<string, string>();
                 header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
