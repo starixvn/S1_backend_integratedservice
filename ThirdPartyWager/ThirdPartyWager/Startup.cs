@@ -80,6 +80,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerMPService>();
             services.AddSingleton<WagerEVOService>();
             services.AddSingleton<WagerGPIService>();
+            services.AddSingleton<WagerYeebetService>();
             services.AddSingleton<IWagerSBOService, WagerSBOService>();
             services.AddSingleton<TpUnsettleService>();
             services.AddSingleton<ConfigService>();
@@ -230,6 +231,10 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerGPIBLL>();
             services.AddSingleton<ApiGPIBLL>();
             services.AddSingleton<FinanceGPIBLL>();
+            //Yeebet
+            services.AddSingleton<WagerYeebetBLL>();
+            services.AddSingleton<ApiYeebetBLL>();
+            //services.AddSingleton<FinanceYeebetBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -312,6 +317,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerGPI>();
             services.AddHostedService<WagerRedoGPI>();
             services.AddHostedService<FinanceGPI>();
+            services.AddHostedService<WagerYeebet>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
