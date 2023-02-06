@@ -5,7 +5,7 @@ using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model;
 
-namespace ThirdPartyWager.Workers.Yeebet;
+namespace ThirdPartyWager.Workers;
 
 public class FinanceYeebet : BackgroundService
 {
