@@ -27,7 +27,7 @@ public class WagerYeebetModel
     public int serialnumber { get; set; } = 0;
     public int gametype { get; set; } = 0;
     public int gameid { get; set; } = 0;
-    public int gameno { get; set; } = 0;
+    public long gameno { get; set; } = 0;
     public string gameroundid { get; set; } = "";
     public string gameresult { get; set; } = "";
     public int bettype { get; set; } = 0;
