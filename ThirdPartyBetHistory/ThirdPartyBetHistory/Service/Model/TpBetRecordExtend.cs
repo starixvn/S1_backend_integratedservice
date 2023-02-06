@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using ThirdPartyBetHistory.Service.Model.enums;
+﻿using ThirdPartyBetHistory.Service.Model.enums;
 
 namespace ThirdPartyBetHistory.Service.Model
 {
