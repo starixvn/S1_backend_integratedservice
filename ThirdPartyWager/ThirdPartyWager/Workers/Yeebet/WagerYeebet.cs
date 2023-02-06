@@ -1,0 +1,64 @@
+﻿using Serilog.Context;
+using System;
+using System.Security.Policy;
+using System.Text.Json;
+using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model.enums;
+
+namespace ThirdPartyWager.Workers;
+
+public class WagerYeebet : BackgroundService
+{
+    private readonly ILogger<WagerYeebet> _logger;
+    private readonly WagerYeebetBLL _wagerYeebetBLL;
+    private readonly CommonBLL _commonBLL;
+
+    private readonly int tpId = (int)Tp.Yeebet;
+    private Timer _timer;
+
+    public WagerYeebet(ILogger<WagerYeebet> logger,
+                       WagerYeebetBLL wagerYeebetBLL,
+                       CommonBLL commonBll)
+    {
+        _logger = logger;
+        _wagerYeebetBLL = wagerYeebetBLL;
+        _commonBLL = commonBll;
+    }
+
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        _timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
+        return Task.CompletedTask;
+    }
+
+    private async void DoTask(object state)
+    {
+        LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+        LogContext.PushProperty("Tp", Tp.Yeebet.ToString());
+        try
+        {
+            var TpCurrencyList = _commonBLL.GetTpCurrencyList((int)Tp.Yeebet);
+            foreach (var item in TpCurrencyList)
+            {
+                var isSuccess = true;
+                var isContinue = true;
+                while (isSuccess && isContinue)
+                {
+                    (isSuccess, isContinue) = await _wagerYeebetBLL.GetWagersAsync(tpId, item.TpCurrencyId);
+                    Thread.Sleep(3 * 1000);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+        }
+        finally
+        {
+            var dueTimeSpan = TimeSpan.FromMinutes(1);
+
+            _timer.Change(dueTimeSpan, TimeSpan.Zero);
+        }
+    }
+}

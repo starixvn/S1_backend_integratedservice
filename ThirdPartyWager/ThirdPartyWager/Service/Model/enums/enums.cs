@@ -6,7 +6,7 @@
         Goal123 = 2,
         Bwing = 3
     }
-    
+
     public enum Tp
     {
         None = 0,
@@ -48,7 +48,8 @@
         AP = 39,
         SBO = 42,
         Skywind = 43,
-        SimplePlay = 44
+        SimplePlay = 44,
+        Yeebet = 46
     }
 
     public enum GameType
@@ -81,6 +82,7 @@
         GPI_Sode = 89,
         GPI_Thai_Lottery = 90,
         GPI_Fast3 = 91,
+        Yeebet_LiveCasino = 93
     }
 
 	 public enum SettlementType
@@ -90,9 +92,9 @@
         SettledForInvalid = 2,
         SettledForValidNotRollover = 3,
         Cheating = 4
-   
+
     }
-    
+
     public enum TicketStatus
     {
         UnSettled = 0,/*Running, Waiting*/
