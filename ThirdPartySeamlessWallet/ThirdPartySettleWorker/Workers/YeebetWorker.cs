@@ -17,7 +17,7 @@ namespace ThirdPartySettleWorker.Workers;
 
 internal class YeebetWorker : BackgroundService, ISettleWorker
 {
-    public Tp Tp => Tp.Kiss918;
+    public Tp Tp => Tp.Yeebet;
 
     private Timer _timer;
 
@@ -59,8 +59,8 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
 
         var forContinue = false;
         var isError = false;
-        var gametype = GameType.Kiss918_RNG;
-        var tpCategory = TpCategory.Slots;
+        var gametype = GameType.Yeebet_LiveCasino;
+        var tpCategory = TpCategory.LiveCasino;
         try
         {
             var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype);
@@ -75,20 +75,19 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
             {
                 try
                 {
-                    var unsettleData = _partitionService.GetUnsettleDataList<SettleData>("Service_BettransRng_Kiss918_Unsettle_Get", tpUnsettle).FirstOrDefault();
+                    var unsettleData = _partitionService.GetUnsettleDataList<SettleData>("Service_BettransLC_Yeebet_Unsettle_Get", tpUnsettle).FirstOrDefault();
                     if (unsettleData != null)
                     {
-                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCacheByTpCustId((int)Tp, unsettleData.Account);
+                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettleData.Account);
                         if (tpCustInfo == null)
-                        {
                             throw new UnsettleNotFoundException($"{unsettleData.Account} TpCustInfo not found.");
-                        }
 
-                        var wager = _settledBLL.GetSettle_TpWager_Kiss918(unsettleData.TransId, tpUnsettle.TransId); //playSessionID
+                        //從這裡開始
+                        var wager = _settledBLL.GetSettle_TpWagerLC_Yeebet(unsettleData.TransId); //serialnumber
 
-                        if (wager == null) continue;
+                        if (wager == null || !wager.Any()) continue;
 
-                        if (!CanSettle(unsettleData, wager, tpCustInfo)) continue;
+                        if (!CanSettle(unsettleData, wager.First(), tpCustInfo)) continue;
 
                         var betRecordInfo = new BetRecordInfo
                         {
@@ -99,10 +98,10 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
                             TransId = tpUnsettle.TransId, //referenceID
                             GameType = gametype,
                             TpUserName = tpCustInfo.TpUserName,
-                            SettledTime = wager.Select(x => x.SettleTime).Max(),
-                            TransTime = wager.Select(x => x.TransTime).Min(),
+                            SettledTime = wager.First().SettleTime,
+                            TransTime = wager.First().TransTime,
                             SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, unsettleData.GameId),
-                            TicketStatus = SetTicketStatus(unsettleData.WinLostAmount, wager.Select(x => x.type))
+                            TicketStatus = SetTicketStatus(unsettleData.WinLostAmount, unsettleData.TicketStatus)
                         };
 
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
@@ -151,9 +150,9 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
         }
     }
 
-    private TicketStatus SetTicketStatus(decimal winLostAmount, IEnumerable<string> typeList)
+    private TicketStatus SetTicketStatus(decimal winLostAmount, int ticketStatus)
     {
-        if (typeList.Contains("RF")) return TicketStatus.Refund;
+        if (ticketStatus == 1) return TicketStatus.Refund;
 
         if (winLostAmount == 0) return TicketStatus.Draw;
 
@@ -162,19 +161,19 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
         return TicketStatus.Lost;
     }
 
-    private bool CanSettle(SettleData beettrans, IEnumerable<SettleData_Kiss918> wager, TpCustInfo tpCustInfo)
+    private bool CanSettle(SettleData beettrans, SettleData_Yeebet wager, TpCustInfo tpCustInfo)
     {
         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
         if (tpCurrency.ExchangeRate <= 0) return false;
 
-        var stake = wager.Select(x => x.Stake).Sum();
-        var winlostAmount = wager.Select(x => x.WinLostAmount).Sum();
         // 加入幣別匯率轉換，tpWager 是原始資料
-        decimal wagerStake = stake * tpCurrency.ExchangeRate;
-        decimal? wagerWinLostAmount = winlostAmount * tpCurrency.ExchangeRate;
+        decimal wagerStake = wager.Stake * tpCurrency.ExchangeRate;
+        decimal wagerValidBet = wager.ValidBet * tpCurrency.ExchangeRate;
+        decimal? wagerWinLostAmount = wager.WinLostAmount * tpCurrency.ExchangeRate;
 
-        return wager.First().Account == beettrans.Account
+        return wager.Account == beettrans.Account
                && wagerStake == beettrans.Stake
+               && wagerValidBet == beettrans.ValidBet
                && wagerWinLostAmount == beettrans.WinLostAmount;
     }
 

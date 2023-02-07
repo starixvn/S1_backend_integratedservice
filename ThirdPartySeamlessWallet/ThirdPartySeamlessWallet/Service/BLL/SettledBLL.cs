@@ -2338,5 +2338,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #endregion
 
+        #region Yeebet
+
+        public IEnumerable<SettleData_Yeebet> GetSettle_TpWagerLC_Yeebet(string serialnumber)
+        {
+            return settledService.GetSettle_TpWagerLC_Yeebet(serialnumber);
+        }
+
+        #endregion
     }
 }
