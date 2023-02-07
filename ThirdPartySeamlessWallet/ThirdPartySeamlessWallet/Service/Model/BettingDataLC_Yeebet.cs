@@ -14,9 +14,24 @@ public class BettingDataLC_Yeebet
     public string errmsg { get; set; } = "";
     public string sign { get; set; } = "";
     public string bets { get; set; } = "";
+    public int IsRollback { get; set; } = 0;
     public BettransLC_YeebetTypeEnum FromAPIType { get; set; }
     public BettransType TicketType { get; set; }
     public TicketStatus TicketStatus { get; set; }
+}
+
+public class SettleData_Yeebet
+{
+    public string Account { get; set; }
+    /// <summary>
+    /// state:-2=撤銷,-1=廢棄，0=投注，1=结算
+    /// </summary>
+    public int Status { get; set; }
+    public decimal Stake { get; set; }
+    public decimal ValidBet { get; set; }
+    public decimal WinLostAmount { get; set; }
+    public long TransTime { get; set; }
+    public long SettleTime { get; set; }
 }
 
 #region Request Model

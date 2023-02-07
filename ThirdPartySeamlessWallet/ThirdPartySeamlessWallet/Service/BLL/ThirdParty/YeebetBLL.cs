@@ -5,6 +5,7 @@ using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 
@@ -86,11 +87,10 @@ public class YeebetBLL : IYeebetBLL
             notifyid = request.notifyid,
             type = request.type,
             serialnumber = request.serialnumber,
-            sign = request.sign,
             bets = request.bets.Replace("\\\"", "\""),
             FromAPIType = BettransLC_YeebetTypeEnum.FromWithdraw,
-            TicketType = BettransType.Bet,
-            TicketStatus = TicketStatus.UnSettled
+            TicketType = CheckBettransType(request.type),
+            TicketStatus = CheckTicketStatus(request.type)
         };
 
         data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
@@ -159,11 +159,10 @@ public class YeebetBLL : IYeebetBLL
             notifyid = request.notifyid,
             type = request.type,
             serialnumber = request.serialnumber,
-            sign = request.sign,
             bets = request.bets.Replace("\\\"", "\""),
             FromAPIType = BettransLC_YeebetTypeEnum.FromDeposit,
-            TicketType = BettransType.Payout,
-            TicketStatus = TicketStatus.UnSettled
+            TicketType = CheckBettransType(request.type),
+            TicketStatus = CheckTicketStatus(request.type)
         };
 
         data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
@@ -243,11 +242,11 @@ public class YeebetBLL : IYeebetBLL
             notifyid = request.notifyid,
             type = request.type,
             serialnumber = request.serialnumber,
-            sign = request.sign,
             bets = null,
+            IsRollback = 1, //true
             FromAPIType = BettransLC_YeebetTypeEnum.FromRollback,
-            TicketType = request.type == 1 ? BettransType.CancelBet : BettransType.Reserve,
-            TicketStatus = TicketStatus.Refund
+            TicketType = CheckBettransType(request.type),
+            TicketStatus = CheckTicketStatus(request.type)
         };
 
         data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
@@ -613,16 +612,20 @@ public class YeebetBLL : IYeebetBLL
             switch (data.FromAPIType)
             {
                 case BettransLC_YeebetTypeEnum.FromWithdraw:
-                    result = _bettingService.PlaceBet_Yeebet(partitionTime, data, trans, out SQ);
+                    if (data.type == 1) //下注
+                        result = _bettingService.PlaceBet_Yeebet(partitionTime, data, trans, out SQ);
+                    else if (data.type == 10) //重新派彩(少派彩，減項)
+                        result = _settledService.Payout_Yeebet(partitionTime, data, trans, out SQ);
                     break;
                 case BettransLC_YeebetTypeEnum.FromDeposit:
-                    result = _settledService.Payout_Yeebet(partitionTime, data, trans, out SQ);
+                    if (data.type == 9 || data.type == 10) //派彩、重新派彩(多派彩、加項)
+                        result = _settledService.Payout_Yeebet(partitionTime, data, trans, out SQ);
+                    else if (data.type == 7) //取消下注
+                        result = _settledService.Refund_Yeebet(partitionTime, data, trans);
                     break;
                 case BettransLC_YeebetTypeEnum.FromRollback:
-                    if (data.type == 1) //withdraw rollback
-                        result = _settledService.Refund_Yeebet(partitionTime, data, trans);
-                    else if (data.type == 9) //deposit rollback, 重新派彩?
-                        result = _bettingService.PlaceBet_Yeebet(partitionTime, data, trans, out SQ);
+                    //下注回滾異常、重新派彩(少派彩，減項)回滾異常、取消下注回滾異常、派彩回滾異常、重新派彩(多派彩、加項)回滾異常
+                    result = _settledService.Rollback_Yeebet(partitionTime, data, trans);
                     break;
             }
 
@@ -656,23 +659,28 @@ public class YeebetBLL : IYeebetBLL
             switch (data.FromAPIType)
             {
                 case BettransLC_YeebetTypeEnum.FromWithdraw:
-                    result = _bettingService.SetBalance_Yeebet(tpCustInfo, data, "withdraw",
+                    if (data.type == 1) //下注
+                        result = _bettingService.SetBalance_Yeebet(tpCustInfo, data, "withdraw",
                              out afterAmount, ref bonusId, conn, trans);
+                    else if (data.type == 10) //重新派彩(少派彩，減項)
+                        result = _settledService.SetBalance_Yeebet(tpCustInfo, data,
+                                 TransType.Payout, YeebetTypeMemo(data.type, data.amount), out afterAmount, ref bonusId, conn, trans);
                     break;
                 case BettransLC_YeebetTypeEnum.FromDeposit:
-                    if (data.type == 9)
+                    if (data.type == 9 || data.type == 10) //派彩、重新派彩(多派彩、加項)
                         result = _settledService.SetBalance_Yeebet(tpCustInfo, data,
-                                 TransType.Payout, "Payout", out afterAmount, ref bonusId, conn, trans);
-                    else if (data.type == 7)
+                                 TransType.Payout, YeebetTypeMemo(data.type, data.amount), out afterAmount, ref bonusId, conn, trans);
+                    else if (data.type == 7) //取消下注
                         result = _settledService.SetBalance_Yeebet(tpCustInfo, data,
-                          TransType.Payout, "Refund", out afterAmount, ref bonusId, conn, trans);
+                          TransType.Payout, YeebetTypeMemo(data.type, data.amount), out afterAmount, ref bonusId, conn, trans);
                     break;
                 case BettransLC_YeebetTypeEnum.FromRollback:
-                    if (data.type == 1) //withdraw rollback
+                    if (data.type == 1) //下注回滾異常、重新派彩(少派彩，減項)回滾異常
+                        result = _bettingService.SetBalance_Yeebet(tpCustInfo, data, $"{YeebetTypeMemo(data.type, data.amount)}_rollback",
+                                 out afterAmount, ref bonusId, conn, trans);
+                    else if (data.type == 7 || data.type == 9 || data.type == 10) //取消下注、派彩回滾異常、重新派彩(少派彩，減項)回滾異常、重新派彩(多派彩、加項)回滾異常
                         result = _settledService.SetBalance_Yeebet(tpCustInfo, data,
-                                 TransType.Payout, "Refund_rollback_withdraw", out afterAmount, ref bonusId, conn, trans);
-                    else if (data.type == 9) //deposit rollback, 重新派彩=>把錢扣回去
-                        result = _bettingService.SetBalance_Yeebet(tpCustInfo, data, "rollback_deposit",
+                            TransType.Payout, $"{YeebetTypeMemo(data.type, data.amount)}_rollback",
                              out afterAmount, ref bonusId, conn, trans);
                     break;
             }
@@ -721,5 +729,41 @@ public class YeebetBLL : IYeebetBLL
 
     private string GenOrderNo(DateTime partitionTime, int SQ)
     => $"{partitionTime.ToString("yyyyMM")}-{SQ}";
+
+    private BettransType CheckBettransType(int type)
+    {
+        switch (type)
+        {
+            case 1: return BettransType.Bet;
+            case 7: return BettransType.CancelBet;
+            case 9:
+            case 10: return BettransType.Payout;
+            default: throw new YeebetException();
+        }
+    }
+
+    private TicketStatus CheckTicketStatus(int type)
+    {
+        switch (type)
+        {
+            case 1:
+            case 9:
+            case 10: return TicketStatus.UnSettled;
+            case 7: return TicketStatus.Refund;
+            default: throw new YeebetException();
+        }
+    }
+
+    private string YeebetTypeMemo(int type, decimal amount)
+    {
+        switch (type)
+        {
+            case 1: return "Bet";
+            case 7: return "Refund";
+            case 9: return "Payout";
+            case 10: return (amount >= 0 ? "Re-Payout (Plus)" : "Re-Payout (Minus)");
+            default: return string.Empty;
+        }
+    }
     #endregion
 }
