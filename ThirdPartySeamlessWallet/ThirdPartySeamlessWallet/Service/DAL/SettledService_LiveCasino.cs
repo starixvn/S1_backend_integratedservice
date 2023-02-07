@@ -3310,6 +3310,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return true;
         }
 
+        public bool Rollback_Yeebet(DateTime partitionTime, BettingDataLC_Yeebet data, MySqlTransaction trans)
+        {
+            var insertSQ = _partitionService.Execute(partitionTime, "Service_BettransLC_Yeebet_Set",
+                new DynamicParameters(new { notifyid = data.notifyid, serialnumber = data.serialnumber }), trans);
+
+            if (insertSQ == 0)
+                return false;
+
+            return true;
+        }
+
+
         public bool SetBalance_Yeebet(TpCustInfo tpCustInfo, BettingDataLC_Yeebet data, TransType transType, string memo,
                                        out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
@@ -3347,11 +3359,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return true;
         }
 
-        //public IEnumerable<SettleData_Kiss918> GetSettle_TpWager_Yeebet(string playSessionID, string referenceID)
-        //{
-        //    using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-        //    return conn.Query<SettleData_Kiss918>("Service_TpWagerKiss918_Get", new { _playSessionID = playSessionID, _referenceID = referenceID }, commandType: CommandType.StoredProcedure);
-        //}
+        public IEnumerable<SettleData_Yeebet> GetSettle_TpWagerLC_Yeebet(string serialnumber)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Query<SettleData_Yeebet>("Service_TpWagerLC_Yeebet_Get", new { _serialnumber = serialnumber }, commandType: CommandType.StoredProcedure);
+        }
 
         #endregion
     }

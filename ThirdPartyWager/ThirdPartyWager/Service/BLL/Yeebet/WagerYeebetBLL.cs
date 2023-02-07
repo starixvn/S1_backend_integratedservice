@@ -56,7 +56,7 @@ public class WagerYeebetBLL
                 return (isSuccess: true, isContinue: false);
             }
 
-            var finishData = getResult.array.Where(x => x.state == 1); //state:-2=撤銷,-1=廢棄，0=投注，1=结算
+            var finishData = getResult.array.Where(x => x.state == 1 || x.state == -2); //state:-2=撤銷,-1=廢棄，0=投注，1=结算
 
             // insert wager to db
             foreach (var bet in finishData)
