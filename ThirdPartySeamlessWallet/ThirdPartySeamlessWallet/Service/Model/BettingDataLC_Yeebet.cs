@@ -12,7 +12,6 @@ public class BettingDataLC_Yeebet
     public int type { get; set; } = 0;
     public string serialnumber { get; set; } = "";
     public string errmsg { get; set; } = "";
-    public string sign { get; set; } = "";
     public string bets { get; set; } = "";
     public int IsRollback { get; set; } = 0;
     public BettransLC_YeebetTypeEnum FromAPIType { get; set; }
