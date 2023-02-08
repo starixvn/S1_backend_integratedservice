@@ -1,14 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
+﻿using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 using ThirdPartySeamlessWallet.Service.Library;
-using System.Text;
 using NuGet.Protocol;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ThirdPartySeamlessWallet.Controllers;
 
