@@ -206,11 +206,12 @@ public class YeebetBLL : IYeebetBLL
                 return new DepositResponse_Yeebet(YeebetErrorCode.Success, orderno, message);
         }
 
-        if (!InsertUnsettleData(partitionTime, data.serialnumber, out message, trans))
-        {
-            trans.Rollback();
-            return new DepositResponse_Yeebet(YeebetErrorCode.SystemError, "", message);
-        }
+        if (data.type != 7)  //因為Refund Wager沒辦法抄單，所以不作帳
+            if (!InsertUnsettleData(partitionTime, data.serialnumber, out message, trans))
+            {
+                trans.Rollback();
+                return new DepositResponse_Yeebet(YeebetErrorCode.SystemError, "", message);
+            }
 
         trans.Commit();
         return new DepositResponse_Yeebet(YeebetErrorCode.Success, orderno, "", balance);

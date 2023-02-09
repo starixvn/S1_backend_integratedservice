@@ -101,7 +101,7 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
                             SettledTime = wager.First().SettleTime,
                             TransTime = wager.First().TransTime,
                             SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, unsettleData.GameId),
-                            TicketStatus = SetTicketStatus(unsettleData.WinLostAmount, unsettleData.TicketStatus)
+                            TicketStatus = SetTicketStatus(unsettleData.WinLostAmount)
                         };
 
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
@@ -150,10 +150,8 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
         }
     }
 
-    private TicketStatus SetTicketStatus(decimal winLostAmount, int ticketStatus)
+    private TicketStatus SetTicketStatus(decimal winLostAmount)
     {
-        if (ticketStatus == 1) return TicketStatus.Refund;
-
         if (winLostAmount == 0) return TicketStatus.Draw;
 
         if (winLostAmount > 0) return TicketStatus.Win;
