@@ -71,8 +71,9 @@ public class YeebetBLL : IYeebetBLL
         if (!GetTpInfoByUserName(request.username, out TpCustInfo tpCustInfo, out message))
             return new DeductResponse_Yeebet(YeebetErrorCode.SystemError, request.serialnumber, "", message);
 
-        if (!CheckThirdParty(tpCustInfo.TpUserName, out message))
-            return new DeductResponse_Yeebet(YeebetErrorCode.SystemError, request.serialnumber, "", message);
+        if (request.type == typeEnum.Betting) //下注需檢查cust是否在線上
+            if (!CheckThirdParty(tpCustInfo.TpUserName, out message))
+                return new DeductResponse_Yeebet(YeebetErrorCode.SystemError, request.serialnumber, "", message);
 
         if (!GetTpCurrency(tpCustInfo.CurrencyId, out TpCurrency tpCurrency, out message))
             return new DeductResponse_Yeebet(YeebetErrorCode.SystemError, request.serialnumber, "", message);
@@ -143,9 +144,6 @@ public class YeebetBLL : IYeebetBLL
         if (!GetTpInfoByUserName(request.username, out TpCustInfo tpCustInfo, out message))
             return new DepositResponse_Yeebet(YeebetErrorCode.SystemError, "", message);
 
-        if (!CheckThirdParty(tpCustInfo.TpUserName, out message))
-            return new DepositResponse_Yeebet(YeebetErrorCode.SystemError, "", message);
-
         if (!GetTpCurrency(tpCustInfo.CurrencyId, out TpCurrency tpCurrency, out message))
             return new DepositResponse_Yeebet(YeebetErrorCode.SystemError, "", message);
 
@@ -206,7 +204,7 @@ public class YeebetBLL : IYeebetBLL
                 return new DepositResponse_Yeebet(YeebetErrorCode.Success, orderno, message);
         }
 
-        if (data.type != 7)  //因為Refund Wager沒辦法抄單，所以不作帳
+        if (data.type != typeEnum.CancelOrder)  //因為Refund Wager沒辦法抄單，所以不作帳
             if (!InsertUnsettleData(partitionTime, data.serialnumber, out message, trans))
             {
                 trans.Rollback();
@@ -244,6 +242,7 @@ public class YeebetBLL : IYeebetBLL
             type = request.type,
             serialnumber = request.serialnumber,
             bets = null,
+            errmsg = request.errmsg,
             IsRollback = 1, //true
             FromAPIType = BettransLC_YeebetTypeEnum.FromRollback,
             TicketType = CheckBettransType(request.type),
@@ -322,13 +321,13 @@ public class YeebetBLL : IYeebetBLL
             return false;
         }
 
-        //暫不簡查，稍後測試再看要怎麼檢核
-        //if (request.type <= 0)
-        //{
-        //    message = "request.type is Invalid.";
-        //    _logger.LogError($"CheckRequest Fail:{message}");
-        //    return false;
-        //}
+        if (request.type != typeEnum.Betting
+            || request.type != typeEnum.ReEvaluation)
+        {
+            message = "request.type is Invalid.";
+            _logger.LogError($"CheckRequest Fail:{message}");
+            return false;
+        }
 
         if (string.IsNullOrWhiteSpace(request.serialnumber))
         {
@@ -357,13 +356,14 @@ public class YeebetBLL : IYeebetBLL
             return false;
         }
 
-        //暫不簡查，稍後測試再看要怎麼檢核
-        //if (request.type <= 0)
-        //{
-        //    message = "request.type is Invalid.";
-        //    _logger.LogError($"CheckRequest Fail:{message}");
-        //    return false;
-        //}
+        if (request.type != typeEnum.CancelOrder
+           || request.type != typeEnum.Awards
+           || request.type != typeEnum.ReEvaluation)
+        {
+            message = "request.type is Invalid.";
+            _logger.LogError($"CheckRequest Fail:{message}");
+            return false;
+        }
 
         if (string.IsNullOrWhiteSpace(request.serialnumber))
         {
@@ -386,21 +386,15 @@ public class YeebetBLL : IYeebetBLL
             return false;
         }
 
-        if ((request.type == 1 && request.amount < 0)
-            || (request.type == 9 && request.amount > 0))
+        if (request.type != typeEnum.Betting
+           || request.type != typeEnum.CancelOrder
+           || request.type != typeEnum.Awards
+           || request.type != typeEnum.ReEvaluation)
         {
-            message = "request.amount is Invalid.";
+            message = "request.type is Invalid.";
             _logger.LogError($"CheckRequest Fail:{message}");
             return false;
         }
-
-        //暫不簡查，稍後測試再看要怎麼檢核
-        //if (request.type <= 0)
-        //{
-        //    message = "request.type is Invalid.";
-        //    _logger.LogError($"CheckRequest Fail:{message}");
-        //    return false;
-        //}
 
         if (string.IsNullOrWhiteSpace(request.serialnumber))
         {
@@ -409,12 +403,13 @@ public class YeebetBLL : IYeebetBLL
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(request.errmsg))
-        {
-            message = "request.errmsg is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
+        //暫不檢查
+        //if (string.IsNullOrWhiteSpace(request.errmsg))
+        //{
+        //    message = "request.errmsg is Invalid.";
+        //    _logger.LogError($"CheckRequest Fail:{message}");
+        //    return false;
+        //}
 
         return true;
     }
@@ -613,15 +608,15 @@ public class YeebetBLL : IYeebetBLL
             switch (data.FromAPIType)
             {
                 case BettransLC_YeebetTypeEnum.FromWithdraw:
-                    if (data.type == 1) //下注
+                    if (data.type == typeEnum.Betting) //下注
                         result = _bettingService.PlaceBet_Yeebet(partitionTime, data, trans, out SQ);
-                    else if (data.type == 10) //重新派彩(少派彩，減項)
+                    else if (data.type == typeEnum.ReEvaluation) //重新派彩(少派彩，減項)
                         result = _settledService.Payout_Yeebet(partitionTime, data, trans, out SQ);
                     break;
                 case BettransLC_YeebetTypeEnum.FromDeposit:
-                    if (data.type == 9 || data.type == 10) //派彩、重新派彩(多派彩、加項)
+                    if (data.type == typeEnum.Awards || data.type == typeEnum.ReEvaluation) //派彩、重新派彩(多派彩、加項)
                         result = _settledService.Payout_Yeebet(partitionTime, data, trans, out SQ);
-                    else if (data.type == 7) //取消下注
+                    else if (data.type == typeEnum.CancelOrder) //取消下注
                         result = _settledService.Refund_Yeebet(partitionTime, data, trans);
                     break;
                 case BettransLC_YeebetTypeEnum.FromRollback:
@@ -660,26 +655,26 @@ public class YeebetBLL : IYeebetBLL
             switch (data.FromAPIType)
             {
                 case BettransLC_YeebetTypeEnum.FromWithdraw:
-                    if (data.type == 1) //下注
+                    if (data.type == typeEnum.Betting) //下注
                         result = _bettingService.SetBalance_Yeebet(tpCustInfo, data, "withdraw",
                              out afterAmount, ref bonusId, conn, trans);
-                    else if (data.type == 10) //重新派彩(少派彩，減項)
+                    else if (data.type == typeEnum.ReEvaluation) //重新派彩(少派彩，減項)
                         result = _settledService.SetBalance_Yeebet(tpCustInfo, data,
                                  TransType.Payout, YeebetTypeMemo(data.type, data.amount), out afterAmount, ref bonusId, conn, trans);
                     break;
                 case BettransLC_YeebetTypeEnum.FromDeposit:
-                    if (data.type == 9 || data.type == 10) //派彩、重新派彩(多派彩、加項)
+                    if (data.type == typeEnum.Awards || data.type == typeEnum.ReEvaluation) //派彩、重新派彩(多派彩、加項)
                         result = _settledService.SetBalance_Yeebet(tpCustInfo, data,
                                  TransType.Payout, YeebetTypeMemo(data.type, data.amount), out afterAmount, ref bonusId, conn, trans);
-                    else if (data.type == 7) //取消下注
+                    else if (data.type == typeEnum.CancelOrder) //取消下注
                         result = _settledService.SetBalance_Yeebet(tpCustInfo, data,
                           TransType.Payout, YeebetTypeMemo(data.type, data.amount), out afterAmount, ref bonusId, conn, trans);
                     break;
                 case BettransLC_YeebetTypeEnum.FromRollback:
-                    if (data.type == 1) //下注回滾異常、重新派彩(少派彩，減項)回滾異常
+                    if (data.type == typeEnum.Betting) //下注回滾異常、重新派彩(少派彩，減項)回滾異常
                         result = _bettingService.SetBalance_Yeebet(tpCustInfo, data, $"{YeebetTypeMemo(data.type, data.amount)}_rollback",
                                  out afterAmount, ref bonusId, conn, trans);
-                    else if (data.type == 7 || data.type == 9 || data.type == 10) //取消下注、派彩回滾異常、重新派彩(少派彩，減項)回滾異常、重新派彩(多派彩、加項)回滾異常
+                    else if (data.type == typeEnum.CancelOrder || data.type == typeEnum.Awards || data.type == typeEnum.ReEvaluation) //取消下注、派彩回滾異常、重新派彩(少派彩，減項)回滾異常、重新派彩(多派彩、加項)回滾異常
                         result = _settledService.SetBalance_Yeebet(tpCustInfo, data,
                             TransType.Payout, $"{YeebetTypeMemo(data.type, data.amount)}_rollback",
                              out afterAmount, ref bonusId, conn, trans);
@@ -731,38 +726,38 @@ public class YeebetBLL : IYeebetBLL
     private string GenOrderNo(DateTime partitionTime, int SQ)
     => $"{partitionTime.ToString("yyyyMM")}-{SQ}";
 
-    private BettransType CheckBettransType(int type)
+    private BettransType CheckBettransType(typeEnum type)
     {
         switch (type)
         {
-            case 1: return BettransType.Bet;
-            case 7: return BettransType.CancelBet;
-            case 9:
-            case 10: return BettransType.Payout;
+            case typeEnum.Betting: return BettransType.Bet;
+            case typeEnum.CancelOrder: return BettransType.CancelBet;
+            case typeEnum.Awards:
+            case typeEnum.ReEvaluation: return BettransType.Payout;
             default: throw new YeebetException();
         }
     }
 
-    private TicketStatus CheckTicketStatus(int type)
+    private TicketStatus CheckTicketStatus(typeEnum type)
     {
         switch (type)
         {
-            case 1:
-            case 9:
-            case 10: return TicketStatus.UnSettled;
-            case 7: return TicketStatus.Refund;
+            case typeEnum.Betting:
+            case typeEnum.Awards:
+            case typeEnum.ReEvaluation: return TicketStatus.UnSettled;
+            case typeEnum.CancelOrder: return TicketStatus.Refund;
             default: throw new YeebetException();
         }
     }
 
-    private string YeebetTypeMemo(int type, decimal amount)
+    private string YeebetTypeMemo(typeEnum type, decimal amount)
     {
         switch (type)
         {
-            case 1: return "Bet";
-            case 7: return "Refund";
-            case 9: return "Payout";
-            case 10: return (amount >= 0 ? "Re-Payout (Plus)" : "Re-Payout (Minus)");
+            case typeEnum.Betting: return "Bet";
+            case typeEnum.CancelOrder: return "Refund";
+            case typeEnum.Awards: return "Payout";
+            case typeEnum.ReEvaluation: return amount >= 0 ? "Re-Payout (Plus)" : "Re-Payout (Minus)";
             default: return string.Empty;
         }
     }
