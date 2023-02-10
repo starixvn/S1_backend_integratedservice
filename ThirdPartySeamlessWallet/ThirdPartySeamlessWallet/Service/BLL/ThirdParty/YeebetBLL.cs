@@ -106,7 +106,7 @@ public class YeebetBLL : IYeebetBLL
             return new DeductResponse_Yeebet(YeebetErrorCode.SystemError, request.serialnumber, "", message, 0);
 
         if (existDatas.Any()) //已存在指定有效投注
-            return new DeductResponse_Yeebet(YeebetErrorCode.Success, request.serialnumber, existDatas.First().SQ.ToString(), "already exist this data.", 0);
+            return new DeductResponse_Yeebet(YeebetErrorCode.Success, request.serialnumber, existDatas.First().SQ.ToString(), "already exist this data.", balance);
 
         await using var conn = _mainDbClient.GetMySqlConnection();
         conn.Open();
@@ -165,6 +165,10 @@ public class YeebetBLL : IYeebetBLL
 
         data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
 
+        if (request.type == 7)
+            if (!IsExistBetData(partitionTime, data, out IEnumerable<BettingDataLC_Yeebet> existBetDatas, out message))
+                return new DepositResponse_Yeebet(YeebetErrorCode.SystemError, message);
+
         if (!GetExistData(partitionTime, data, out IEnumerable<BettingDataLC_Yeebet> existDatas, out message))
             return new DepositResponse_Yeebet(YeebetErrorCode.SystemError, "", message);
 
@@ -174,7 +178,8 @@ public class YeebetBLL : IYeebetBLL
             if (!GetBalance(tpCustInfo.TpUserName, out balance, out message))
                 return new DepositResponse_Yeebet(YeebetErrorCode.SystemError, "", message);
 
-            return new DepositResponse_Yeebet(YeebetErrorCode.SystemError, "", "already exist this data.", balance);
+            var exitOrderno = GenOrderNo(partitionTime, existDatas.First().SQ);
+            return new DepositResponse_Yeebet(YeebetErrorCode.Success, exitOrderno, "already exist this data.", balance);
         }
 
         await using var conn = _mainDbClient.GetMySqlConnection();
@@ -204,7 +209,7 @@ public class YeebetBLL : IYeebetBLL
                 return new DepositResponse_Yeebet(YeebetErrorCode.Success, orderno, message);
         }
 
-        if (data.type != 7)  //因為Refund Wager沒辦法抄單，所以不作帳
+        if (request.type != 7)  //因為Refund Wager沒辦法抄單，所以不作帳
             if (!InsertUnsettleData(partitionTime, data.serialnumber, out message, trans))
             {
                 trans.Rollback();
@@ -218,7 +223,6 @@ public class YeebetBLL : IYeebetBLL
     public async Task<RollbackResponse_Yeebet> Rollback(RollbackRequest_Yeebet request)
     {
         var message = string.Empty;
-        var newRoundId = string.Empty;
         decimal balance = 0;
 
         if (!CheckRequestForRollBack(request, out message))
@@ -251,19 +255,16 @@ public class YeebetBLL : IYeebetBLL
 
         data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
 
-        if (!IsExistBetData(partitionTime, data, out IEnumerable<BettingDataLC_Yeebet> existBetDatas, out message))
-            return new RollbackResponse_Yeebet(YeebetErrorCode.SystemError, message);
-
         if (!GetExistData(partitionTime, data, out IEnumerable<BettingDataLC_Yeebet> existDatas, out message))
             return new RollbackResponse_Yeebet(YeebetErrorCode.SystemError, message);
 
-        if (existDatas.Any())
+        if (!existDatas.Any())
         {
-            //已存在指定有效投注
+            //已不存在指定有效資料，不需rollback
             if (!GetBalance(tpCustInfo.TpUserName, out balance, out message))
                 return new RollbackResponse_Yeebet(YeebetErrorCode.SystemError, message);
 
-            return new RollbackResponse_Yeebet(YeebetErrorCode.Success, "already exist this data.", balance);
+            return new RollbackResponse_Yeebet(YeebetErrorCode.Success, "already not exist this data.", balance);
         }
 
         await using var conn = _mainDbClient.GetMySqlConnection();
@@ -604,6 +605,8 @@ public class YeebetBLL : IYeebetBLL
                 case BettransLC_YeebetTypeEnum.FromWithdraw:
                     if (data.type == 1) //下注
                         result = _bettingService.PlaceBet_Yeebet(partitionTime, data, trans, out SQ);
+                    else if (data.type == 7) //取消下注
+                        result = _settledService.Refund_Yeebet(partitionTime, data, trans, out SQ);
                     else if (data.type == 10) //重新派彩(少派彩，減項)
                         result = _settledService.Payout_Yeebet(partitionTime, data, trans, out SQ);
                     break;
@@ -611,7 +614,7 @@ public class YeebetBLL : IYeebetBLL
                     if (data.type == 9 || data.type == 10) //派彩、重新派彩(多派彩、加項)
                         result = _settledService.Payout_Yeebet(partitionTime, data, trans, out SQ);
                     else if (data.type == 7) //取消下注
-                        result = _settledService.Refund_Yeebet(partitionTime, data, trans);
+                        result = _settledService.Refund_Yeebet(partitionTime, data, trans, out SQ);
                     break;
                 case BettransLC_YeebetTypeEnum.FromRollback:
                     //下注回滾異常、重新派彩(少派彩，減項)回滾異常、取消下注回滾異常、派彩回滾異常、重新派彩(多派彩、加項)回滾異常
@@ -652,17 +655,13 @@ public class YeebetBLL : IYeebetBLL
                     if (data.type == 1) //下注
                         result = _bettingService.SetBalance_Yeebet(tpCustInfo, data, "withdraw",
                              out afterAmount, ref bonusId, conn, trans);
-                    else if (data.type == 10) //重新派彩(少派彩，減項)
+                    else if (data.type == 7 || data.type == 10) //取消下注、重新派彩(少派彩，減項)
                         result = _settledService.SetBalance_Yeebet(tpCustInfo, data,
                                  TransType.Payout, YeebetTypeMemo(data.type, data.amount), out afterAmount, ref bonusId, conn, trans);
                     break;
-                case BettransLC_YeebetTypeEnum.FromDeposit:
-                    if (data.type == 9 || data.type == 10) //派彩、重新派彩(多派彩、加項)
-                        result = _settledService.SetBalance_Yeebet(tpCustInfo, data,
-                                 TransType.Payout, YeebetTypeMemo(data.type, data.amount), out afterAmount, ref bonusId, conn, trans);
-                    else if (data.type == 7) //取消下注
-                        result = _settledService.SetBalance_Yeebet(tpCustInfo, data,
-                          TransType.Payout, YeebetTypeMemo(data.type, data.amount), out afterAmount, ref bonusId, conn, trans);
+                case BettransLC_YeebetTypeEnum.FromDeposit: //7=取消下注、9=派彩、10=重新派彩(多派彩、加項)
+                    result = _settledService.SetBalance_Yeebet(tpCustInfo, data,
+                             TransType.Payout, YeebetTypeMemo(data.type, data.amount), out afterAmount, ref bonusId, conn, trans);
                     break;
                 case BettransLC_YeebetTypeEnum.FromRollback:
                     if (data.type == 1) //下注回滾異常、重新派彩(少派彩，減項)回滾異常
