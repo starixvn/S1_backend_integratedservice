@@ -3313,7 +3313,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public bool Rollback_Yeebet(DateTime partitionTime, BettingDataLC_Yeebet data, MySqlTransaction trans)
         {
             var insertSQ = _partitionService.Execute(partitionTime, "Service_BettransLC_Yeebet_Set",
-                new DynamicParameters(new { notifyid = data.notifyid, serialnumber = data.serialnumber }), trans);
+                new DynamicParameters(new { notifyid = data.notifyid, serialnumber = data.serialnumber, errmsg = data.errmsg }), trans);
 
             if (insertSQ == 0)
                 return false;
