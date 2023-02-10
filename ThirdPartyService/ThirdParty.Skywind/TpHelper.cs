@@ -137,11 +137,23 @@ namespace ThirdParty.Skywind
             itgGame.Add("itg_bigirishbucks", "itg_bigirishbucks");
             itgGame.Add("itg_bigmoneyvegas", "itg_bigmoneyvegas");
             itgGame.Add("itg_monkeyhero", "itg_monkeyhero");
+            itgGame.Add("itg_moneytreesofspring_9606", "itg_moneytreesofspring_9606");
+            itgGame.Add("itg_goldenroad_9599", "itg_goldenroad_9599");
+            itgGame.Add("itg_goldenroad_9401", "itg_goldenroad_9401");
+            itgGame.Add("itg_megatrail_9601", "itg_megatrail_9601");
+            itgGame.Add("itg_megatrail_9400", "itg_megatrail_9400");
+            itgGame.Add("itg_megamonkeys_9605", "itg_megamonkeys_9605");
+            itgGame.Add("itg_megamonkeys_9402", "itg_megamonkeys_9402");
+            itgGame.Add("itg_bigirishbucks_9599", "itg_bigirishbucks_9599");
+            itgGame.Add("itg_bigirishbucks_9404", "itg_bigirishbucks_9404");
+            itgGame.Add("itg_bigmoneyvegas_9600", "itg_bigmoneyvegas_9600");
+
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
             string SecretKey = inputs.ContainsKey("SecretKey") && !string.IsNullOrEmpty(inputs["SecretKey"]) ? inputs["SecretKey"] : throw new Exception();
             string Username = inputs.ContainsKey("Username") && !string.IsNullOrEmpty(inputs["Username"]) ? inputs["Username"] : throw new Exception();
             string Password = inputs.ContainsKey("Password") && !string.IsNullOrEmpty(inputs["Password"]) ? inputs["Password"] : throw new Exception();
-            
+            string HistoryUrl = inputs.ContainsKey("HistoryUrl") && !string.IsNullOrEmpty(inputs["HistoryUrl"]) ? inputs["HistoryUrl"] : throw new Exception();
+
             string[] sArray = Regex.Split(getBetDetail.TransId, "-", RegexOptions.IgnoreCase);
             var roundId = sArray[0];
 
@@ -151,8 +163,8 @@ namespace ThirdParty.Skywind
             if (itgGame.ContainsKey(GameID))
             {
                 var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
-                var detailUrl = $"{ApiUrl}/history/external";
-                string getParams = $"roundId={roundId}&sortBy=finished&limit=100";
+                var detailUrl = $"{ApiUrl}/history/game";
+                string getParams = $"roundId={roundId}";
                 Dictionary<string, string> header = new Dictionary<string, string>();
                 header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
                 string json = HttpGet(detailUrl, getParams, "application/json", header);
