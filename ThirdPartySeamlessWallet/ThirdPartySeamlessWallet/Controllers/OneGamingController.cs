@@ -27,8 +27,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly BettingBLL bettingBLL;
         private readonly SettledBLL settledBLL;
         private readonly Log2File log2File;
-        private readonly Tools tools;
         private readonly Tp thisTp;
+        private readonly string _tpName;
         private readonly IHostEnvironment environment;
 
         public OneGamingController(
@@ -39,8 +39,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             TpCustInfoBLL tpCustInfoBLL,
             BettingBLL bettingBLL,
             SettledBLL settledBLL,
-            Log2File log2File,
-            Tools tools
+            Log2File log2File
         )
         {
             this.authBLL = authBLL;
@@ -50,8 +49,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.bettingBLL = bettingBLL;
             this.settledBLL = settledBLL;
             this.log2File = log2File;
-            this.tools = tools;
             this.thisTp = Tp.OneGaming;
+            _tpName = Enum.GetName(typeof(Tp), thisTp);
             this.environment = environment;
         }
 
@@ -538,7 +537,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     string clientIp = "";
                     tpCustInfoBLL.AddLoginRecord(tpCustInfo.CustId, tpCustInfo.SiteId, clientIp, out token);
-                    tpCustInfoBLL.AddUserLoginLog(tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, clientIp, "App", "App");
+                    tpCustInfoBLL.AddUserLoginLog(tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, clientIp, $"App - {_tpName}", $"App - {_tpName}");
                     tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, mobileReq.username);
                 }
                 else
