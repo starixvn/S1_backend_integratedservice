@@ -9,7 +9,7 @@ public class BettingDataLC_Yeebet
     public string username { get; set; } = "";
     public decimal amount { get; set; } = 0;
     public string notifyid { get; set; } = "";
-    public int type { get; set; } = 0;
+    public typeEnum type { get; set; } = typeEnum.None;
     public string serialnumber { get; set; } = "";
     public string errmsg { get; set; } = "";
     public string bets { get; set; } = "";
@@ -23,7 +23,7 @@ public class SettleData_Yeebet
 {
     public string Account { get; set; }
     /// <summary>
-    /// state:-2=撤銷,-1=廢棄，0=投注，1=结算
+    /// 對應藍位state:-2=撤銷,-1=廢棄，0=投注，1=结算
     /// </summary>
     public int Status { get; set; }
     public decimal Stake { get; set; }
@@ -71,7 +71,7 @@ public class DeductRequest_Yeebet : RequestModel_Yeebet
     /// <summary>
     /// 讯息编号，1=投注,7=撤單(取消投注),9=頒獎(派彩),10=重新評獎(重新派彩),12=回滾
     /// </summary>
-    public int type { get; set; }
+    public typeEnum type { get; set; }
     /// <summary>
     /// 请求的订单号（注单，打赏记录编号）
     /// </summary>
@@ -92,7 +92,7 @@ public class DepositRequest_Yeebet : RequestModel_Yeebet
     /// <summary>
     /// 讯息编号，1=投注,7=撤單(取消投注),9=頒獎(派彩),10=重新評獎(重新派彩),12=回滾
     /// </summary>
-    public int type { get; set; }
+    public typeEnum type { get; set; }
     /// <summary>
     /// 请求的订单号（注单，打赏记录编号）
     /// </summary>
@@ -112,7 +112,7 @@ public class RollbackRequest_Yeebet : RequestModel_Yeebet
     /// <summary>
     /// 讯息编号，1=投注,7=撤單(取消投注),9=頒獎(派彩),10=重新評獎(重新派彩),12=回滾
     /// </summary>
-    public int type { get; set; }
+    public typeEnum type { get; set; }
     /// <summary>
     /// 请求的订单号（注单，打赏记录编号）
     /// </summary>
