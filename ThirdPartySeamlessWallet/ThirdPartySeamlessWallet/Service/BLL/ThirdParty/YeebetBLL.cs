@@ -321,7 +321,7 @@ public class YeebetBLL : IYeebetBLL
             return false;
         }
 
-        if (request.type != 1 || request.type != 10) //下注、重新派彩
+        if (request.type != 1 && request.type != 7 && request.type != 10) //下注、取消下注、重新派彩
         {
             message = "request.type is Invalid.";
             _logger.LogError($"CheckRequest Fail:{message}");
@@ -355,7 +355,7 @@ public class YeebetBLL : IYeebetBLL
             return false;
         }
 
-        if (request.type != 7 || request.type != 9 || request.type != 10) //取消下注、派彩、重新派彩
+        if (request.type != 7 && request.type != 9 && request.type != 10) //取消下注、派彩、重新派彩
         {
             message = "request.type is Invalid.";
             _logger.LogError($"CheckRequest Fail:{message}");
@@ -383,7 +383,7 @@ public class YeebetBLL : IYeebetBLL
             return false;
         }
 
-        if (request.type != 1 || request.type != 7 || request.type != 9 || request.type != 10) //下注、取消下注、派彩、重新派彩
+        if (request.type != 1 && request.type != 7 && request.type != 9 && request.type != 10) //下注、取消下注、派彩、重新派彩
         {
             message = "request.type is Invalid.";
             _logger.LogError($"CheckRequest Fail:{message}");
