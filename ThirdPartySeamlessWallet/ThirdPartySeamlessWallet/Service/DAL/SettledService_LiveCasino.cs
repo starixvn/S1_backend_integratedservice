@@ -3284,7 +3284,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<BettingDataLC_Yeebet> IsExistBet_Yeebet(DateTime partitionTime, BettingDataLC_Yeebet data)
         {
-            var query = new { notifyid = data.notifyid, serialnumber = data.serialnumber, type = data.type };
+            var query = new { serialnumber = data.serialnumber };
             return _partitionService.Query<BettingDataLC_Yeebet>(partitionTime, "Service_BettransLC_Yeebet_Cancel_Check", query);
         }
 
@@ -3300,20 +3300,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return true;
         }
 
-        public bool Refund_Yeebet(DateTime partitionTime, BettingDataLC_Yeebet data, MySqlTransaction trans)
+        public bool Refund_Yeebet(DateTime partitionTime, BettingDataLC_Yeebet data, MySqlTransaction trans, out int SQ)
         {
+            SQ = 0;
             var insertSQ = _partitionService.Execute(partitionTime, "Service_BettransLC_Yeebet_Ins", data, trans);
 
             if (insertSQ == 0)
                 return false;
-
+            SQ = insertSQ;
             return true;
         }
 
         public bool Rollback_Yeebet(DateTime partitionTime, BettingDataLC_Yeebet data, MySqlTransaction trans)
         {
-            var insertSQ = _partitionService.Execute(partitionTime, "Service_BettransLC_Yeebet_Set",
-                new DynamicParameters(new { notifyid = data.notifyid, serialnumber = data.serialnumber, errmsg = data.errmsg }), trans);
+            var insertSQ = _partitionService.Execute(partitionTime, "Service_BettransLC_Yeebet_Cancel_Set",
+                new DynamicParameters(new { notifyid = data.notifyid, type = data.type, serialnumber = data.serialnumber, errmsg = data.errmsg }), trans);
 
             if (insertSQ == 0)
                 return false;
