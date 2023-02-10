@@ -106,7 +106,10 @@ public class YeebetBLL : IYeebetBLL
             return new DeductResponse_Yeebet(YeebetErrorCode.SystemError, request.serialnumber, "", message, 0);
 
         if (existDatas.Any()) //已存在指定有效投注
-            return new DeductResponse_Yeebet(YeebetErrorCode.Success, request.serialnumber, existDatas.First().SQ.ToString(), "already exist this data.", balance);
+        {
+            var exitOrderno = GenOrderNo(partitionTime, existDatas.First().SQ);
+            return new DeductResponse_Yeebet(YeebetErrorCode.Success, request.serialnumber, exitOrderno, "already exist this data.", balance);
+        }
 
         await using var conn = _mainDbClient.GetMySqlConnection();
         conn.Open();
@@ -206,7 +209,7 @@ public class YeebetBLL : IYeebetBLL
         {
             //lost => 沒有派彩，balance取db資料
             if (!GetBalance(tpCustInfo.TpUserName, out balance, out message))
-                return new DepositResponse_Yeebet(YeebetErrorCode.Success, orderno, message);
+                return new DepositResponse_Yeebet(YeebetErrorCode.SystemError, orderno, message);
         }
 
         if (request.type != 7)  //因為Refund Wager沒辦法抄單，所以不作帳
