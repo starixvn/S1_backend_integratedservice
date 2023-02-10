@@ -87,15 +87,16 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
 
                         if (wager == null || !wager.Any()) continue;
 
-                        if (!CanSettle(unsettleData, wager.First(), tpCustInfo)) continue;
+                        if (!CanSettle(unsettleData, wager.First(), tpCustInfo,
+                            out decimal stake, out decimal validbet, out decimal winlost)) continue;
 
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
-                            Stake = unsettleData.Stake,
-                            ValidBet = unsettleData.ValidBet,
-                            WinlostAmount = unsettleData.WinLostAmount,
-                            TransId = tpUnsettle.TransId, //referenceID
+                            Stake = stake,
+                            ValidBet = validbet,
+                            WinlostAmount = winlost,
+                            TransId = tpUnsettle.TransId, //serialnumber
                             GameType = gametype,
                             TpUserName = tpCustInfo.TpUserName,
                             SettledTime = wager.First().SettleTime,
@@ -159,8 +160,11 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
         return TicketStatus.Lost;
     }
 
-    private bool CanSettle(SettleData beettrans, SettleData_Yeebet wager, TpCustInfo tpCustInfo)
+    private bool CanSettle(SettleData beettrans, SettleData_Yeebet wager, TpCustInfo tpCustInfo,
+        out decimal stake, out decimal vaildbet, out decimal winlost)
     {
+        stake = beettrans.Stake; vaildbet = beettrans.ValidBet; winlost = beettrans.WinLostAmount;
+
         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
         if (tpCurrency.ExchangeRate <= 0) return false;
 
@@ -168,6 +172,16 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
         decimal wagerStake = wager.Stake * tpCurrency.ExchangeRate;
         decimal wagerValidBet = wager.ValidBet * tpCurrency.ExchangeRate;
         decimal? wagerWinLostAmount = wager.WinLostAmount * tpCurrency.ExchangeRate;
+
+
+        if (wager.Stake != 0 && wager.ValidBet == 0 && wager.WinLostAmount == 0)
+        {
+            // 如果投注player或banker，但結果為tie，Yeebet後台的有效投注資料為0
+            vaildbet = wagerValidBet;
+            return wager.Account == beettrans.Account
+               && wagerStake == beettrans.Stake
+               && wagerWinLostAmount == beettrans.WinLostAmount;
+        }
 
         return wager.Account == beettrans.Account
                && wagerStake == beettrans.Stake

@@ -291,11 +291,12 @@ public class YeebetBLL : IYeebetBLL
                 return new RollbackResponse_Yeebet(YeebetErrorCode.SystemError, message);
         }
 
-        if (!InsertUnsettleData(partitionTime, data.serialnumber, out message, trans))
-        {
-            trans.Rollback();
-            return new RollbackResponse_Yeebet(YeebetErrorCode.SystemError, message);
-        }
+        if (request.type == 9 || request.type == 10) //派彩或重新派彩才需要重新settle
+            if (!InsertUnsettleData(partitionTime, data.serialnumber, out message, trans))
+            {
+                trans.Rollback();
+                return new RollbackResponse_Yeebet(YeebetErrorCode.SystemError, message);
+            }
 
         trans.Commit();
 
