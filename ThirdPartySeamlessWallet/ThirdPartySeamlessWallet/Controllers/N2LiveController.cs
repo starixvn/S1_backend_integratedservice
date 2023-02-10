@@ -450,8 +450,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly BettingBLL bettingBLL;
         private readonly SettledBLL settledBLL;
         private readonly Log2File log2File;
-        private readonly Tools tools;
         private readonly Tp thisTp;
+        private readonly string _tpName;
         private readonly IHostEnvironment environment;
         private readonly int gameType = 0;
 
@@ -463,7 +463,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             BettingBLL bettingBLL,
             SettledBLL settledBLL,
             Log2File log2File,
-            Tools tools,
             IHostEnvironment environment
         )
         {
@@ -474,8 +473,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.bettingBLL = bettingBLL;
             this.settledBLL = settledBLL;
             this.log2File = log2File;
-            this.tools = tools;
             thisTp = Tp.N2Live;
+            _tpName = Enum.GetName(typeof(Tp), thisTp);
             this.environment = environment;
             gameType = (int)GameType.N2Live_LiveCasino;
         }
@@ -552,7 +551,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         string clientIp = "";
                         var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)thisTp, getLoginManualReq.request.userid);
                         tpCustInfoBLL.AddLoginRecord(tpCustInfo.CustId, tpCustInfo.SiteId, clientIp, out token);
-                        tpCustInfoBLL.AddUserLoginLog(tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, clientIp, "Web", "Web");
+                        tpCustInfoBLL.AddUserLoginLog(tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, clientIp, $"Web - {_tpName}", $"Web - {_tpName}");
                         tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, getLoginManualReq.request.userid);
                     }
                     if (tpCheck == null || tpCheck.Locked)

@@ -22,12 +22,11 @@ namespace ThirdPartySeamlessWallet.Controllers
     {
         private readonly ILogger<MegaController> _logger;
         private readonly IHostEnvironment _environment;
-        private readonly AuthBLL _authBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly Log2File _log2File;
-        private readonly Tools _tools;
         private readonly Tp thisTp;
+        private readonly string _tpName;
 
         public MegaController(
             IServiceProvider provider,
@@ -38,11 +37,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             _logger = logger;
             _log2File = provider.GetRequiredService<Log2File>();
             _environment = environment;
-            _authBLL = provider.GetRequiredService<AuthBLL>();
+            provider.GetRequiredService<AuthBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
-            _tools = provider.GetRequiredService<Tools>();
+            provider.GetRequiredService<Tools>();
             thisTp = Tp.Mega;
+            _tpName = Enum.GetName(typeof(Tp), thisTp);
         }
 
         #region Request
@@ -158,7 +158,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 if (tpCustInfo.TpPwd == getLoginReq.Params.password)
                 {
-                    _tpCustInfoBLL.AddUserLoginLog(tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, "", "App", "App");
+                    _tpCustInfoBLL.AddUserLoginLog(tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, "", $"App - {_tpName}", $"App - {_tpName}");
                     resp.result.success = "1";
                     resp.result.sessionId = tpCheck.Token;
                     resp.result.msg = "login success";
