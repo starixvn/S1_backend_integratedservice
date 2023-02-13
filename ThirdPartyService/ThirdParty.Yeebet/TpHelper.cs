@@ -172,7 +172,7 @@ namespace ThirdParty.Yeebet
                     TransId = getBetDetail.TransId,
                     Detail = detail,
                     TpCurrency = tpCurrency,
-                    RefTransId = wagerDetail.GetValueOrDefault("tableId")?.ToString(),
+                    RefTransId = wagerDetail.GetValueOrDefault("serialnumber")?.ToString(),
                     TpUserName = wagerDetail.GetValueOrDefault("username")?.ToString(),
                     UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("createtimeConvert", DateTime.MinValue),
                     UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("settletimeConvert", DateTime.MinValue),
