@@ -132,6 +132,13 @@ public class YeebetBLL : IYeebetBLL
             }
         }
 
+        if (request.type == 10)  //Re_Payout需要重新結算
+            if (!InsertUnsettleData(partitionTime, data.serialnumber, out message, trans))
+            {
+                trans.Rollback();
+                return new DeductResponse_Yeebet(YeebetErrorCode.SystemError, "", message);
+            }
+
         trans.Commit();
         return new DeductResponse_Yeebet(YeebetErrorCode.Success, request.serialnumber, orderno, "", balance);
     }
