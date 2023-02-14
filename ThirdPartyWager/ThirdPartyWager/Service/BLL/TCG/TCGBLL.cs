@@ -4,11 +4,10 @@ using Serilog.Context;
 using System.Net;
 using System.Text;
 using System.Security.Cryptography;
-using System.Web;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
-
+using System.Collections.Concurrent;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -21,6 +20,9 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Dictionary<string, string> _setting;
         private readonly HttpHelper _httpHelper;
         private readonly Common _common;
+        private const int ErrorCount = 3; //容許錯誤次數
+        private readonly ConcurrentDictionary<string, int> _errorCountr = new();
+        private readonly CommonBLL _commonBLL;
 
         public TCGBLL(IServiceProvider provider)
         {
@@ -31,14 +33,15 @@ namespace ThirdPartyWager.Service.BLL
             _setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
+            _commonBLL = provider.GetRequiredService<CommonBLL>();
         }
 
-        public async Task<bool> GetWagersAsync<T>(DateTimeOffset batchTime, string currency)
+        public async Task<bool> GetWagersAsync<T>(DateTimeOffset batchTime, string currency, WagerTimerType timerType)
         {
             try
             {
                 var config = new TCGConfig(_setting, currency);
-                var result = await QuerySettleBetHistoryAsync<T>(config, batchTime);
+                var result = await QuerySettleBetHistoryAsync<T>(config, batchTime, timerType);
                 var tasks = result.Select(item => Task.Run(() => InsertWager(item))).ToArray();
                 await Task.WhenAll(tasks);
 
@@ -68,7 +71,7 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        private async Task<List<T>> QuerySettleBetHistoryAsync<T>(TCGConfig config, DateTimeOffset batchTime)
+        private async Task<List<T>> QuerySettleBetHistoryAsync<T>(TCGConfig config, DateTimeOffset batchTime, WagerTimerType timerType)
         {
             var result = new List<T>();
             var reportType = config.WagerTypeList.Split(",").Where(i => i != string.Empty);
@@ -79,7 +82,25 @@ namespace ThirdPartyWager.Service.BLL
                 while (page <= totalPage)
                 {
                     var fileUrl = $"{config.WagerUrl}{type}/SETTLED/{batchTime:yyyyMMdd}/{batchTime:yyyyMMddHHmm}_{page:0000}.json";
-                    var queryReuslt = DownloadFTPFile<T>(config, fileUrl);
+                    var queryReuslt = DownloadFTPFile<T>(config, fileUrl, batchTime);
+                    if (queryReuslt.Pass) // 回傳Pass = True先略過此次時間
+                    {
+                        //pass先寫入DB的Redo Table，用redo的worker另外處理
+                        if (timerType == WagerTimerType.Wager)
+                        {
+                            _commonBLL.InsertTpWagerRedo(new TpWagerRedo()
+                            {
+                                TpId = _tpId,
+                                Time = batchTime.DateTime,
+                                Parameter = JsonConvert.SerializeObject(new TCGRedoObj
+                                {
+                                    Config = config
+                                })
+                            });
+                        }                     
+                        return new List<T>();
+                    }
+
                     if (queryReuslt.list.Count > 0)
                     {
                         result.AddRange(queryReuslt.list);
@@ -91,7 +112,7 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        private TCGQueryWagerObj<T> DownloadFTPFile<T>(TCGConfig config, string fileUrl)
+        private TCGQueryWagerObj<T> DownloadFTPFile<T>(TCGConfig config, string fileUrl, DateTimeOffset batchTime)
         {
             try
             {
@@ -109,9 +130,45 @@ namespace ThirdPartyWager.Service.BLL
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"TCG: {config.WagerAccount} || FTP Fail: {config.WagerUrl}{fileUrl} {ex.Message}.");
-                throw;
+                _logger.LogError(ex, $"TCG: {config.WagerAccount} || FTP Fail: {fileUrl} {ex.Message}.");
+                var pass = FTPErrorHandler(fileUrl);
+                if (pass)
+                {
+                    return new TCGQueryWagerObj<T>()
+                    {
+                        Pass = true
+                    };
+                }
+                else
+                {
+                    throw;
+                }
             }
+        }
+
+        /// <summary>
+        /// 計算這筆FTP路徑錯誤次數，超過一定次數會另外存放紀錄，回傳True會略過此次Batch時間
+        /// </summary>
+        private bool FTPErrorHandler(string fileUrl)
+        {
+            if (_errorCountr.TryGetValue(fileUrl, out var count))
+            {
+                var newCount = count + 1;
+                if (newCount >= ErrorCount) // 超過容許次數另外存放
+                {
+                    _errorCountr.Remove(fileUrl, out var _);
+                    return true;
+                }
+                else
+                {
+                    _errorCountr.TryUpdate(fileUrl, newCount, count);
+                }
+            }
+            else
+            {
+                _errorCountr.TryAdd(fileUrl, 1);
+            }
+            return false;
         }
 
         private Task<int> InsertWager<T>(T wager)
@@ -195,6 +252,4 @@ namespace ThirdPartyWager.Service.BLL
             return BitConverter.ToString(outputBytes).Replace("-", "").ToLower();
         }
     }
-
-
 }

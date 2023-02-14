@@ -25,5 +25,20 @@ namespace ThirdPartyWager.Service.BLL
         {
             return commonService.GetWagerSummary(spName, beginTime, endTime);
         }
+
+        public int InsertTpWagerRedo(TpWagerRedo redo)
+        {
+            return commonService.InsertTpWagerRedo(redo);
+        }
+
+        public IEnumerable<TpWagerRedo> GetTpWagerRedo(int tpId)
+        {
+            return commonService.GetTpWagerRedo(tpId);
+        }
+
+        public int DeleteTpWagerRedo(TpWagerRedo redo)
+        {
+            return commonService.DeleteTpWagerRedo(redo);
+        }
     }
 }

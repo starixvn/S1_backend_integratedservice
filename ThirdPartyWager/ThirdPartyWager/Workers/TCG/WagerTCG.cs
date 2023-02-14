@@ -1,4 +1,7 @@
-﻿using Serilog.Context;
+﻿using Newtonsoft.Json;
+
+using Serilog.Context;
+
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model;
@@ -15,6 +18,7 @@ namespace ThirdPartyWager.Workers
 
         private Timer _timer;
         private Timer _unSettleTimer;
+        private Timer _redoTimer;
 
         private readonly int tpId = (int)Tp.TCG;
         private readonly string _tpName = Tp.TCG.ToString();
@@ -32,6 +36,7 @@ namespace ThirdPartyWager.Workers
         {
             _timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
             _unSettleTimer = new Timer(DoUnsettle, null, TimeSpan.Zero, TimeSpan.Zero);
+            _redoTimer = new Timer(DoRedo, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
         private async void DoTask(object state)
@@ -85,10 +90,10 @@ namespace ThirdPartyWager.Workers
         private async Task<int> Main(string currency)
         {
             var quick = 0;
-            var timerType = (int)WagerTimerType.Wager;
+            var timerType = WagerTimerType.Wager;
             var dataRangeMins = 5;
 
-            var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, timerType, currency);
+            var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, (int)timerType, currency);
             var thisTime = lastTime?.StartTime.AddMinutes(dataRangeMins) ?? DateTime.Now.BeginningOfTheDay();
 
             if (thisTime < DateTime.Now.AddMinutes(-10))
@@ -96,12 +101,12 @@ namespace ThirdPartyWager.Workers
                 var batchTime = new DateTimeOffset(thisTime);
                 var timezoneBatchTime = batchTime.ToOffset(new TimeSpan(TimeZone, 0, 0));
                 var isSuccess = currency == "VNDK" ?
-                    await _tcgBLL.GetWagersAsync<TCGVNWagerData>(timezoneBatchTime, currency) :
-                    await _tcgBLL.GetWagersAsync<TCGSEAWagerData>(timezoneBatchTime, currency);
+                    await _tcgBLL.GetWagersAsync<TCGVNWagerData>(timezoneBatchTime, currency, timerType) :
+                    await _tcgBLL.GetWagersAsync<TCGSEAWagerData>(timezoneBatchTime, currency, timerType);
                 if (isSuccess)
                 {
                     _logger.LogInformation($"TCG {currency} Get {timezoneBatchTime:yyyyMMddHHmm} batch file success.");
-                    _thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, timerType, batchTime.ToUnixTimeSeconds(), currency);
+                    _thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, (int)timerType, batchTime.ToUnixTimeSeconds(), currency);
                 }
             }
 
@@ -187,7 +192,7 @@ namespace ThirdPartyWager.Workers
             }
 
             //其餘類型5分鐘一個批次
-            isSuccess = await _tcgBLL.GetUnsettleAsync<TCGSEAWagerData>(timezoneBatchTime, currency);                 
+            isSuccess = await _tcgBLL.GetUnsettleAsync<TCGSEAWagerData>(timezoneBatchTime, currency);
             if (isSuccess)
             {
                 _logger.LogInformation($"TCG {currency} Get Unsettle {timezoneBatchTime:yyyyMMddHHmm} batch file success.");
@@ -201,10 +206,46 @@ namespace ThirdPartyWager.Workers
             return quick;
         }
 
+        private async void DoRedo(object state)
+        {
+            var timerType = WagerTimerType.RedoWager;
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
+            LogContext.PushProperty("WagerTimerType", timerType.ToString());
+
+            var intervalMins = 10;
+            try
+            {
+                foreach (var redo in _commonBLL.GetTpWagerRedo(tpId))
+                {
+                    var time = redo.Time;
+                    var currency = JsonConvert.DeserializeObject<TCGRedoObj>(redo.Parameter).Config.TpCurrencyId;                    
+                    var isSuccess = currency == "VNDK" ?
+                         await _tcgBLL.GetWagersAsync<TCGVNWagerData>(time, currency, timerType) :
+                         await _tcgBLL.GetWagersAsync<TCGSEAWagerData>(time, currency, timerType);
+
+                    if (isSuccess)
+                    {
+                        _logger.LogInformation($"TCG {currency} Redo Get {time:yyyyMMddHHmm} batch file success.");
+                        _commonBLL.DeleteTpWagerRedo(redo);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"WagerTCG.{timerType}.Exception");
+            }
+            finally
+            {
+                _redoTimer.Change(TimeSpan.FromMinutes(intervalMins), TimeSpan.Zero);
+            }
+        }
+
         public override Task StopAsync(CancellationToken cancellationToken)
         {
             _timer?.Change(Timeout.Infinite, 0);
             _unSettleTimer?.Change(Timeout.Infinite, 0);
+            _redoTimer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

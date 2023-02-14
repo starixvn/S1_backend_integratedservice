@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using Dapper;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using MySql.Data.MySqlClient;
+﻿using Dapper;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -15,7 +8,6 @@ namespace ThirdPartyWager.Service.DAL
     public class CommonService
     {
         private readonly IEnumerable<ServerInfo> _serverInfos;
-
         private readonly MySqlClient _reportDbClient;
         private readonly MySqlClient _wagerDbClient;
 
@@ -39,6 +31,21 @@ namespace ThirdPartyWager.Service.DAL
         public Task<IEnumerable<FincanceDailySummary>> GetWagerSummary(string spName, long beginTime, long endTime)
         {
             return _wagerDbClient.QueryAsync<FincanceDailySummary>(spName, new DynamicParameters(new { _BeginTime = beginTime, _EndTime = endTime }));
+        }
+
+        public int InsertTpWagerRedo(TpWagerRedo redo)
+        {
+            return _wagerDbClient.Execute("Service_TpWagerRedo_Ins", redo);
+        }
+
+        public IEnumerable<TpWagerRedo> GetTpWagerRedo(int tpId)
+        {
+            return _wagerDbClient.Query<TpWagerRedo>("Service_TpWagerRedo_Get", new { TpId = tpId });
+        }
+
+        public int DeleteTpWagerRedo(TpWagerRedo redo)
+        {
+            return _wagerDbClient.Execute("Service_TpWagerRedo_Del", redo);
         }
     }
 }
