@@ -25,8 +25,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         #region Fields
 
         private readonly ILogger<EVOController> _logger;
-        private readonly IConfiguration _configuration;
-        private readonly IHostEnvironment _environment;
         private readonly AuthBLL _authBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
@@ -34,8 +32,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly SettledBLL _settledBLL;
         private readonly TpRequestFailBLL _tpRequestFailBll;
         private readonly Log2File _log2File;
-        private readonly Tools _tools;
         private readonly Tp thisTp;
+        private readonly string _tpName;
         public string[] promoTransactionTypeList { get; set; }
         #endregion
 
@@ -43,23 +41,20 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         public EVOController(
             IServiceProvider provider,
-            ILogger<EVOController> logger,
-            IConfiguration configuration,
-            IHostEnvironment environment
+            ILogger<EVOController> logger
         )
         {
             _logger = logger;
             _log2File = provider.GetRequiredService<Log2File>();
-            _configuration = configuration;
-            _environment = environment;
             _authBLL = provider.GetRequiredService<AuthBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _bettingBLL = provider.GetRequiredService<BettingBLL>();
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tpRequestFailBll = provider.GetRequiredService<TpRequestFailBLL>();
-            _tools = provider.GetRequiredService<Tools>();
+            provider.GetRequiredService<Tools>();
             thisTp = Tp.EVO;
+            _tpName = Enum.GetName(typeof(Tp), thisTp);
 
             promoTransactionTypeList = new string[] { "JackpotWin",
                 "FreeRoundPlayableSpent",
@@ -218,7 +213,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     string clientIp = "";
                     tpCustInfo = _tpCustInfoBLL.GetTpCustInfo((int)thisTp, getReq.userId);
                     _tpCustInfoBLL.AddLoginRecord(tpCustInfo.CustId, tpCustInfo.SiteId, clientIp, out token);
-                    _tpCustInfoBLL.AddUserLoginLog(tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, clientIp, "Web", "Web");
+                    _tpCustInfoBLL.AddUserLoginLog(tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, clientIp, $"Web - {_tpName}", $"Web - {_tpName}");
                     tpCheck = _thirdPartyBLL.ThirdPartyCheck((int)thisTp, getReq.userId);
                 }
                 if (tpCheck == null || tpCheck.Locked)
