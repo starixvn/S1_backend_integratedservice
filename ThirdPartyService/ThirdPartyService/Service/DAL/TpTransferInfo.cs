@@ -135,7 +135,7 @@ namespace ThirdPartyService.Service.DAL
                     }
                 }
 
-                if (rwalletServiceResult == 0)
+                if (rwalletServiceResult is 0 or -1)
                     trans.Commit();
             }
             else if (transferResult.Data.Status == TransferStatus.Fail)
