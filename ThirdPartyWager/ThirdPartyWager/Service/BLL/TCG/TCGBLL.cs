@@ -94,7 +94,7 @@ namespace ThirdPartyWager.Service.BLL
                                 Time = batchTime.DateTime,
                                 Parameter = JsonConvert.SerializeObject(new TCGRedoObj
                                 {
-                                    Config = config
+                                    TpCurrencyId = config.TpCurrencyId
                                 })
                             });
                         }                     

@@ -313,6 +313,6 @@ namespace ThirdPartyWager.Service.Model
 
     public class TCGRedoObj
     {
-        public TCGConfig Config { get; set; }
+        public string TpCurrencyId { get; set; }
     }
 }
