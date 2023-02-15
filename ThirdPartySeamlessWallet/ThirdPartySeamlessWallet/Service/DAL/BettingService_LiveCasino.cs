@@ -865,5 +865,50 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region Yeebet
+
+        public IEnumerable<BettingDataLC_Yeebet> IsExist_Yeebet(DateTime partitionTime, BettingDataLC_Yeebet data)
+        {
+            var query = new { notifyid = data.notifyid, type = data.type, serialnumber = data.serialnumber };
+            return _partitionService.Query<BettingDataLC_Yeebet>(partitionTime, "Service_BettransLC_Yeebet_Check", query);
+        }
+
+        public bool PlaceBet_Yeebet(DateTime partitionTime, BettingDataLC_Yeebet data, MySqlTransaction trans, out int SQ)
+        {
+            SQ = 0;
+            var insertSQ = _partitionService.Execute(partitionTime, "Service_BettransLC_Yeebet_Ins", data, trans);
+
+            if (insertSQ == 0)
+                return false;
+
+            SQ = insertSQ;
+            return true;
+        }
+
+        public bool SetBalance_Yeebet(TpCustInfo tpCustInfo, BettingDataLC_Yeebet data, string memo,
+            out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var result = PlaceBetV2(tpCustInfo,
+                                data.amount,
+                                (int)Tp.Yeebet,
+                                data.serialnumber,  //TpTransId
+                                (int)GameType.Yeebet_LiveCasino,
+                                data.serialnumber,  //RefId
+                                null,
+                                TpCategory.LiveCasino,
+                                out afterAmount,
+                                ref bonusId,
+                                conn,
+                                trans,
+                                memo: $" - {memo}_{data.notifyid} ");
+
+            if (result <= 0)
+                return false;
+
+            return true;
+        }
+
+        #endregion
     }
 }

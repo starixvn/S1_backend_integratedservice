@@ -2949,7 +2949,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     logger.LogError($"{cancelDataRng_MG.betId} is completed");
                     return new MGCancelResult() { Result = 1 };
                 }
-                
+
                 var bet = bettrans.FirstOrDefault(a => a.TxnId == cancelDataRng_MG.txnId);
                 // 注單不存在
                 if (bet == null)
@@ -3278,6 +3278,94 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             var query = new { userId = data.userId, PromoTransactionId = data.promoTransaction.id, TpId = tpId, TpGameType = tpGameType };
             return _mainDbClient.Query<Reward_EVO>("Service_Reward_EVO_Check", CommandType.StoredProcedure, new DynamicParameters(query));
+        }
+
+        #endregion
+
+        #region Yeebet
+
+        public IEnumerable<BettingDataLC_Yeebet> IsExistBet_Yeebet(DateTime partitionTime, BettingDataLC_Yeebet data)
+        {
+            var query = new { serialnumber = data.serialnumber };
+            return _partitionService.Query<BettingDataLC_Yeebet>(partitionTime, "Service_BettransLC_Yeebet_Cancel_Check", query);
+        }
+
+        public bool Payout_Yeebet(DateTime partitionTime, BettingDataLC_Yeebet data, MySqlTransaction trans, out int SQ)
+        {
+            SQ = 0;
+            var insertSQ = _partitionService.Execute(partitionTime, "Service_BettransLC_Yeebet_Ins", data, trans);
+
+            if (insertSQ == 0)
+                return false;
+
+            SQ = insertSQ;
+            return true;
+        }
+
+        public bool Refund_Yeebet(DateTime partitionTime, BettingDataLC_Yeebet data, MySqlTransaction trans, out int SQ)
+        {
+            SQ = 0;
+            var insertSQ = _partitionService.Execute(partitionTime, "Service_BettransLC_Yeebet_Ins", data, trans);
+
+            if (insertSQ == 0)
+                return false;
+            SQ = insertSQ;
+            return true;
+        }
+
+        public bool Rollback_Yeebet(DateTime partitionTime, BettingDataLC_Yeebet data, MySqlTransaction trans)
+        {
+            var insertSQ = _partitionService.Execute(partitionTime, "Service_BettransLC_Yeebet_Rollback_Set",
+                new DynamicParameters(new { notifyid = data.notifyid, type = data.type, serialnumber = data.serialnumber, errmsg = data.errmsg }), trans);
+
+            if (insertSQ == 0)
+                return false;
+
+            return true;
+        }
+
+
+        public bool SetBalance_Yeebet(TpCustInfo tpCustInfo, BettingDataLC_Yeebet data, TransType transType, string memo,
+                                       out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+
+            var result = PayoutV2(
+                tpCustInfo,
+                data.amount,
+                (int)Tp.Yeebet,
+                data.serialnumber,
+                (int)GameType.Yeebet_LiveCasino,
+                TpCategory.LiveCasino,
+                data.serialnumber,
+                transType,
+                null,
+                out afterAmount,
+                $"{memo} - {data.notifyid} ",
+                out bonusId,
+                conn,
+                trans
+            );
+
+            if (result == 0)
+                return false;
+
+            return true;
+        }
+
+        public bool InsertUnsettle_Yeebet(DateTime partitionTime, string serialnumber, MySqlTransaction trans)
+        {
+            var result = _tpUnsettleService.InsertTpUnsettle(Tp.Yeebet, GameType.Yeebet_LiveCasino, serialnumber, trans, partitionTime);
+
+            if (result == 0)
+                return false;
+
+            return true;
+        }
+
+        public IEnumerable<SettleData_Yeebet> GetSettle_TpWagerLC_Yeebet(string serialnumber)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Query<SettleData_Yeebet>("Service_TpWagerLC_Yeebet_Get", new { _serialnumber = serialnumber }, commandType: CommandType.StoredProcedure);
         }
 
         #endregion

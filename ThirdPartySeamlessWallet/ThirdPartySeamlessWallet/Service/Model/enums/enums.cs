@@ -20,7 +20,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
     {
         BonusReward = 5
     }
-    
+
     public enum SettlementType
     {
         UnSettled = 0,
@@ -91,8 +91,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         NineW_Sports = 51,
         KM_Poker = 52,
         JILI_RNG = 53,
-        TCG_SEA_Lottery=54,
-        TCG_VN_Lottery =55,
+        TCG_SEA_Lottery = 54,
+        TCG_VN_Lottery = 55,
         JILI_Fish = 56,
         MG_RNG = 57,
         MG_LiveCasino = 58,
@@ -124,6 +124,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         GPI_Sode = 89,
         GPI_Thai_Lottery = 90,
         GPI_Fast3 = 91,
+        Yeebet_LiveCasino = 93
     }
     public enum Tp
     {
@@ -170,7 +171,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         SBSW = 41,
         SBO = 42,
         Skywind = 43,
-        SimplePlay = 44
+        SimplePlay = 44,
+        Yeebet = 46
     }
     public enum TransferType : int
     {
@@ -192,8 +194,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         ConfirmReserve = 9,
         EndRound = 10, //回合結束
     }
-    
-    [Description ("是否允許餘額變負值")]
+
+    [Description("是否允許餘額變負值")]
     public enum AllowNegative
     {
         Allow = 1,
@@ -260,7 +262,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
     {
         InsufficientBalance = 1,
     }
-    
+
     public enum RequestFailureType
     {
         Tp = 1,
@@ -275,13 +277,13 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Settle = 4,
         ReSettle = 4
     }
-    
+
     public enum SeamlessBonusType
     {
         TpCategory,
         TpId,
     }
-    
+
     public enum WalletType
     {
         TransferWallet = 0,
