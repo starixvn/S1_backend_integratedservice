@@ -25,10 +25,6 @@ namespace ThirdPartyWager.Service.Model
             DesKey = inputs.GetValue($"DESKey_{tpCurrencyId}");
             SignKey = inputs.GetValue($"SHA256Key_{tpCurrencyId}");           
         }
-
-        public TCGConfig()
-        {
-        }
     }
 
     public class TCGQueryWagerObj<T>
@@ -313,6 +309,6 @@ namespace ThirdPartyWager.Service.Model
 
     public class TCGRedoObj
     {
-        public TCGConfig Config { get; set; }
+        public string TpCurrencyId { get; set; }
     }
 }

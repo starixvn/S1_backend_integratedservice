@@ -82,7 +82,7 @@ namespace ThirdPartyWager.Service.BLL
                 while (page <= totalPage)
                 {
                     var fileUrl = $"{config.WagerUrl}{type}/SETTLED/{batchTime:yyyyMMdd}/{batchTime:yyyyMMddHHmm}_{page:0000}.json";
-                    var queryReuslt = DownloadFTPFile<T>(config, fileUrl, batchTime);
+                    var queryReuslt = DownloadFTPFile<T>(config, fileUrl);
                     if (queryReuslt.Pass) // 回傳Pass = True先略過此次時間
                     {
                         //pass先寫入DB的Redo Table，用redo的worker另外處理
@@ -94,7 +94,7 @@ namespace ThirdPartyWager.Service.BLL
                                 Time = batchTime.DateTime,
                                 Parameter = JsonConvert.SerializeObject(new TCGRedoObj
                                 {
-                                    Config = config
+                                    TpCurrencyId = config.TpCurrencyId
                                 })
                             });
                         }                     
@@ -112,7 +112,7 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        private TCGQueryWagerObj<T> DownloadFTPFile<T>(TCGConfig config, string fileUrl, DateTimeOffset batchTime)
+        private TCGQueryWagerObj<T> DownloadFTPFile<T>(TCGConfig config, string fileUrl)
         {
             try
             {
