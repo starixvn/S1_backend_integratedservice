@@ -134,7 +134,7 @@ public class YeebetController : ControllerBase
         if (request.ContainsKey("errmsg"))
             request["errmsg"] = request["errmsg"].Replace(" ", "+");
 
-        var word = $"{tpCustInfo.TpCurrencyId}";
+        var word = $"{tpCustInfo.SiteId}_{tpCustInfo.TpCurrencyId}";
 
         string content = string.Join("&",
             request
