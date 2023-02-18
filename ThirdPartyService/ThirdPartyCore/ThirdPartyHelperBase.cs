@@ -241,6 +241,9 @@ namespace ThirdPartyCore
             handler.ClientCertificateOptions = ClientCertificateOption.Manual;
             handler.SslProtocols = SslProtocols.Tls12;
             handler.ClientCertificates.Add(new X509Certificate2(certificate["path"], certificate["password"], X509KeyStorageFlags.MachineKeySet));
+            
+            //ignore Certificate
+            handler.ServerCertificateCustomValidationCallback += (_, _, _, _) => true;
             using var client = new HttpClient(handler);
             try
             {
