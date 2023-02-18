@@ -1,9 +1,5 @@
 ﻿using Newtonsoft.Json;
-using System.Collections.Generic;
-using System.Drawing;
 using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Model;
-using ThirdPartyWager.Workers;
 
 namespace ThirdPartyWager.Service.BLL;
 

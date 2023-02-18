@@ -1,12 +1,5 @@
-﻿using Newtonsoft.Json;
-using Serilog.Context;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL;
-using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySettleWorker.Model.Exceptions;
@@ -160,10 +153,10 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
         return TicketStatus.Lost;
     }
 
-    private bool CanSettle(SettleData beettrans, SettleData_Yeebet wager, TpCustInfo tpCustInfo,
+    private bool CanSettle(SettleData bettrans, SettleData_Yeebet wager, TpCustInfo tpCustInfo,
         out decimal stake, out decimal vaildbet, out decimal winlost)
     {
-        stake = beettrans.Stake; vaildbet = beettrans.ValidBet; winlost = beettrans.WinLostAmount;
+        stake = bettrans.Stake; vaildbet = bettrans.ValidBet; winlost = bettrans.WinLostAmount;
 
         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
         if (tpCurrency.ExchangeRate <= 0) return false;
@@ -178,15 +171,15 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
         {
             // 如果投注player或banker，但結果為tie，Yeebet後台的有效投注資料為0
             vaildbet = wagerValidBet;
-            return wager.Account == beettrans.Account
-               && wagerStake == beettrans.Stake
-               && wagerWinLostAmount == beettrans.WinLostAmount;
+            return wager.Account == bettrans.Account
+               && wagerStake == bettrans.Stake
+               && wagerWinLostAmount == bettrans.WinLostAmount;
         }
 
-        return wager.Account == beettrans.Account
-               && wagerStake == beettrans.Stake
-               && wagerValidBet == beettrans.ValidBet
-               && wagerWinLostAmount == beettrans.WinLostAmount;
+        return wager.Account == bettrans.Account
+               && wagerStake == bettrans.Stake
+               && wagerValidBet == bettrans.ValidBet
+               && wagerWinLostAmount == bettrans.WinLostAmount;
     }
 
 }

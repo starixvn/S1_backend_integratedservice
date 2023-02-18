@@ -18,3 +18,23 @@ public enum BettransLC_YeebetTypeEnum
     FromWithdraw = 2,
     FromRollback = 3
 }
+
+public enum typeEnum
+{
+    /// <summary>
+    /// 下注
+    /// </summary>
+    Betting = 1,
+    /// <summary>
+    /// 取消下注
+    /// </summary>
+    CancelBetting = 7,
+    /// <summary>
+    /// 派彩
+    /// </summary>
+    Awards = 9,
+    /// <summary>
+    /// 重新派彩
+    /// </summary>
+    ReEvaluation = 10,
+}

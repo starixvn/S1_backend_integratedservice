@@ -150,14 +150,14 @@ public class YeebetController : ControllerBase
 
         if (seamlessAppid != appid)
         {
-            message = "appid is invaild.";
+            message = "request.appid is invaild.";
             return false;
         }
 
         //Check Sign
         if (!request.ContainsKey("sign"))
         {
-            message = "sign not found.";
+            message = "request.sign not found.";
             return false;
         }
 
@@ -168,7 +168,7 @@ public class YeebetController : ControllerBase
         var result = _tools.ToMD5($"{content}&key={secretKey}").ToLower();
         if (result != request["sign"])
         {
-            message = "sign is invaild.";
+            message = $"sign is invaild.request.sign={request["sign"]}. correct sign={result}.";
             return false;
         }
         return true;
