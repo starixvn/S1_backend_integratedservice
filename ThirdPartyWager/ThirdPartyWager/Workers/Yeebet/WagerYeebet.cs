@@ -38,15 +38,20 @@ public class WagerYeebet : BackgroundService
         LogContext.PushProperty("Tp", Tp.Yeebet.ToString());
         try
         {
+            var siteList = _commonBLL.GetSiteList().Where(x => x.SiteId != 4);
             var TpCurrencyList = _commonBLL.GetTpCurrencyList((int)Tp.Yeebet);
-            foreach (var item in TpCurrencyList)
+            foreach (var siteInfo in siteList)
             {
-                var isSuccess = true;
-                var isContinue = true;
-                while (isSuccess && isContinue)
+                var currencyList = JsonSerializer.Deserialize<IEnumerable<int>>(siteInfo.CurrencyList);
+                foreach (var item in TpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
                 {
-                    (isSuccess, isContinue) = await _wagerYeebetBLL.GetWagersAsync(tpId, item.TpCurrencyId);
-                    Thread.Sleep(3 * 1000);
+                    var isSuccess = true;
+                    var isContinue = true;
+                    while (isSuccess && isContinue)
+                    {
+                        (isSuccess, isContinue) = await _wagerYeebetBLL.GetWagersAsync(tpId, siteInfo.SiteId, item.TpCurrencyId);
+                        Thread.Sleep(3 * 1000);
+                    }
                 }
             }
         }
