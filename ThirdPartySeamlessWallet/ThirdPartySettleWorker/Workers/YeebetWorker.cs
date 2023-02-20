@@ -68,45 +68,49 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
             {
                 try
                 {
-                    var unsettleData = _partitionService.GetUnsettleDataList<SettleData>("Service_BettransLC_Yeebet_Unsettle_Get", tpUnsettle).FirstOrDefault();
-                    if (unsettleData != null)
+                    var unsettleData = _partitionService.GetUnsettleDataList<SettleData>("Service_BettransLC_Yeebet_Unsettle_Get", tpUnsettle);
+
+                    if (!unsettleData.Any())
                     {
-                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettleData.Account);
-                        if (tpCustInfo == null)
-                            throw new UnsettleNotFoundException($"{unsettleData.Account} TpCustInfo not found.");
-
-                        //從這裡開始
-                        var wager = _settledBLL.GetSettle_TpWagerLC_Yeebet(unsettleData.TransId); //serialnumber
-
-                        if (wager == null || !wager.Any()) continue;
-
-                        if (!CanSettle(unsettleData, wager.First(), tpCustInfo,
-                            out decimal stake, out decimal validbet, out decimal winlost)) continue;
-
-                        var betRecordInfo = new BetRecordInfo
-                        {
-                            TpId = (int)Tp,
-                            Stake = stake,
-                            ValidBet = validbet,
-                            WinlostAmount = winlost,
-                            TransId = tpUnsettle.TransId, //serialnumber
-                            GameType = gametype,
-                            TpUserName = tpCustInfo.TpUserName,
-                            SettledTime = wager.First().SettleTime,
-                            TransTime = wager.First().TransTime,
-                            SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, unsettleData.GameId),
-                            TicketStatus = SetTicketStatus(unsettleData.WinLostAmount)
-                        };
-
-                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
-                        if (result == 1)
-                        {
-                            Task.Run(() =>
-                            {
-                                _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, tpUnsettle.TransId, true);
-                            });
-                        }
+                        continue;
                     }
+
+                    var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettleData.FirstOrDefault().Account);
+                    if (tpCustInfo == null)
+                        throw new UnsettleNotFoundException($"{unsettleData.FirstOrDefault().Account} TpCustInfo not found.");
+
+                    //從這裡開始
+                    var wager = _settledBLL.GetSettle_TpWagerLC_Yeebet(unsettleData.FirstOrDefault().TransId); //serialnumber
+
+                    if (wager == null || !wager.Any()) continue;
+
+                    if (!CanSettle(unsettleData, wager.First(), tpCustInfo,
+                        out decimal stake, out decimal validbet, out decimal winlost)) continue;
+
+                    var betRecordInfo = new BetRecordInfo
+                    {
+                        TpId = (int)Tp,
+                        Stake = stake,
+                        ValidBet = validbet,
+                        WinlostAmount = winlost,
+                        TransId = tpUnsettle.TransId, //serialnumber
+                        GameType = gametype,
+                        TpUserName = tpCustInfo.TpUserName,
+                        SettledTime = wager.First().SettleTime,
+                        TransTime = wager.First().TransTime,
+                        SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, unsettleData.FirstOrDefault().GameId),
+                        TicketStatus = SetTicketStatus(winlost)
+                    };
+
+                    var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
+                    if (result == 1)
+                    {
+                        Task.Run(() =>
+                        {
+                            _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, tpUnsettle.TransId, true);
+                        });
+                    }
+
                 }
                 catch (Exception ex1)
                 {
@@ -153,10 +157,11 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
         return TicketStatus.Lost;
     }
 
-    private bool CanSettle(SettleData bettrans, SettleData_Yeebet wager, TpCustInfo tpCustInfo,
+    private bool CanSettle(IEnumerable<SettleData> bettrans, SettleData_Yeebet wager, TpCustInfo tpCustInfo,
         out decimal stake, out decimal vaildbet, out decimal winlost)
     {
-        stake = bettrans.Stake; vaildbet = bettrans.ValidBet; winlost = bettrans.WinLostAmount;
+        var account = bettrans.FirstOrDefault().Account;
+        stake = bettrans.Sum(x => x.Stake); vaildbet = bettrans.Sum(x => x.ValidBet); winlost = bettrans.Sum(x => x.WinLostAmount);
 
         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
         if (tpCurrency.ExchangeRate <= 0) return false;
@@ -167,19 +172,14 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
         decimal? wagerWinLostAmount = wager.WinLostAmount * tpCurrency.ExchangeRate;
 
 
+        // 如果投注player或banker，但結果為tie，Yeebet後台的有效投注資料為0
         if (wager.Stake != 0 && wager.ValidBet == 0 && wager.WinLostAmount == 0)
-        {
-            // 如果投注player或banker，但結果為tie，Yeebet後台的有效投注資料為0
             vaildbet = wagerValidBet;
-            return wager.Account == bettrans.Account
-               && wagerStake == bettrans.Stake
-               && wagerWinLostAmount == bettrans.WinLostAmount;
-        }
 
-        return wager.Account == bettrans.Account
-               && wagerStake == bettrans.Stake
-               && wagerValidBet == bettrans.ValidBet
-               && wagerWinLostAmount == bettrans.WinLostAmount;
+        return wager.Account == account
+               && wagerStake == stake
+               && wagerValidBet == vaildbet
+               && wagerWinLostAmount == winlost;
     }
 
 }
