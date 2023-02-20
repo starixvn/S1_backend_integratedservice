@@ -92,7 +92,7 @@ namespace CommonService.Service.BLL
             var apiResult = new ApiResult();
             var Config = NxcloudSMSServiceTypeConfig.Value[custInfo.SiteName].OTP;
             var smsMessage = MakeSMSContext(custInfo, OTPNum, PhoneNo);
-            var oTPLog = new OTPLog()
+            var oTPLog = new OTPLog
             {
                 OTPStatus = (int)OTPStatus.Fail,
                 OTPType = (int)OtpType.SMS,
@@ -107,7 +107,7 @@ namespace CommonService.Service.BLL
 
             try
             {
-                var data = new Dictionary<string, string>()
+                var data = new Dictionary<string, string>
                 {
                     {"appkey", Config.Appkey},
                     {"secretkey", Config.Secretkey},

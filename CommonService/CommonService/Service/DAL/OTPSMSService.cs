@@ -1,8 +1,8 @@
-﻿using CommonService.Service.Model;
-using Dapper;
-using System.Data;
+﻿using System.Data;
 using CommonService.Service.Library;
+using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
+using Dapper;
 
 namespace CommonService.Service.DAL
 {
@@ -72,7 +72,7 @@ namespace CommonService.Service.DAL
             var result = p.Get<int>("OTPResult");
             if (result == 0)
             {
-                OTPLogVerify(new OTPLog()
+                OTPLogVerify(new OTPLog
                 {
                     CustId = verifyOTPReq.CustId,
                     OTPType = type,

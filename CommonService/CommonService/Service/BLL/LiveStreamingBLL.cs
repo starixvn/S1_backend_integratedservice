@@ -1,4 +1,5 @@
-﻿using CommonService.Service.Library;
+﻿using System.Net;
+using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
 using Microsoft.Extensions.Options;
@@ -35,7 +36,7 @@ namespace CommonService.Service.BLL
             using var result = await httpHelper.HttpGetAsync(url, null, liveStreaming, null);
             var resultResp = JsonConvert.DeserializeObject<LiveStreamingLinkResult>(result.Content.ReadAsStringAsync().Result); ;
 
-            if (result.StatusCode == System.Net.HttpStatusCode.OK && resultResp.Status == "OK")
+            if (result.StatusCode == HttpStatusCode.OK && resultResp.Status == "OK")
             {
                 apiResult.ErrorCode = 0;
                 apiResult.Message = resultResp.H5LINKROW;

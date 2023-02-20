@@ -14,7 +14,7 @@ namespace CommonService.Service.DAL
         
         public int ApplyToken(string Key, string Value, int Expiry)
         {
-            return _mainDbClient.Execute("Common_AuthToken_Ins", new { Token = Key, PermissionData = Value, Expiry = Expiry });
+            return _mainDbClient.Execute("Common_AuthToken_Ins", new { Token = Key, PermissionData = Value, Expiry });
         }
     }
 }

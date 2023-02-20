@@ -1,9 +1,9 @@
-﻿using Newtonsoft.Json;
-using Serilog.Context;
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Web;
+using Newtonsoft.Json;
+using Serilog.Context;
 
 namespace CommonService.Service.Library
 {
@@ -23,7 +23,7 @@ namespace CommonService.Service.Library
             HttpClientHandler handler = null;
             if (!string.IsNullOrEmpty(proxyHost))
             {
-                handler = new HttpClientHandler()
+                handler = new HttpClientHandler
                 {
                     Proxy = new WebProxy(proxyHost, proxyPort),
                     UseProxy = true,
@@ -55,7 +55,7 @@ namespace CommonService.Service.Library
             HttpClientHandler handler = null;
             if (!string.IsNullOrEmpty(proxyHost))
             {
-                handler = new HttpClientHandler()
+                handler = new HttpClientHandler
                 {
                     Proxy = new WebProxy(proxyHost, proxyPort),
                     UseProxy = true,
@@ -88,7 +88,7 @@ namespace CommonService.Service.Library
             HttpClientHandler handler = null;
             if (!string.IsNullOrEmpty(proxyHost))
             {
-                handler = new HttpClientHandler()
+                handler = new HttpClientHandler
                 {
                     Proxy = new WebProxy(proxyHost, proxyPort),
                     UseProxy = true,
@@ -122,7 +122,7 @@ namespace CommonService.Service.Library
             HttpClientHandler handler;
             if (!string.IsNullOrEmpty(proxyHost))
             {
-                handler = new HttpClientHandler()
+                handler = new HttpClientHandler
                 {
                     Proxy = new WebProxy(proxyHost, proxyPort),
                     UseProxy = true,
