@@ -1,7 +1,9 @@
-﻿using CommonService.Service.Library;
+﻿using System.Net;
+using System.Text;
+using CommonService.Service.DAL;
+using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-using CommonService.Service.DAL;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
@@ -33,7 +35,7 @@ namespace CommonService.Service.BLL
             };
 
             var Authtoken = $"{iovationServicesConfig.Value.SubscriberID}/{iovationServicesConfig.Value.SubscriberAccount}:{iovationServicesConfig.Value.Password}";
-            var bytes = System.Text.Encoding.GetEncoding("utf-8").GetBytes(Authtoken);
+            var bytes = Encoding.GetEncoding("utf-8").GetBytes(Authtoken);
             //編成 Base64 字串
             var Base64Authtoken = Convert.ToBase64String(bytes);
 
@@ -47,7 +49,7 @@ namespace CommonService.Service.BLL
             var resultResp = JsonConvert.DeserializeObject<IovationResult>(await result.Content.ReadAsStringAsync());
             var resultIns = iovationService.IovationResultIns(resultResp);
 
-            if (result.StatusCode == System.Net.HttpStatusCode.OK && resultIns > 0)
+            if (result.StatusCode == HttpStatusCode.OK && resultIns > 0)
             {
                 var deviceId = resultResp?.details?.device?.alias;
                 var deviceType = resultResp?.details?.device?.type;
@@ -55,7 +57,7 @@ namespace CommonService.Service.BLL
 
                 apiResult.ErrorCode = ErrorCode.Success;
                 apiResult.Message = resultResp.result;
-                apiResult.Data = new IovationCheckResult()
+                apiResult.Data = new IovationCheckResult
                 {
                     Result = resultResp.result,
                     Reason = string.IsNullOrEmpty(resultResp.reason) ? "" : resultResp.reason,

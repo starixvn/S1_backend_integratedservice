@@ -141,7 +141,7 @@ namespace CommonService.Service.BLL
                 { "senderid", siteName }
             };
 
-            var oTPLog = new OTPLog()
+            var oTPLog = new OTPLog
             {
                 OTPStatus = (int)OTPStatus.Fail,
                 OTPType = (int)OtpType.SMS,
@@ -212,7 +212,7 @@ namespace CommonService.Service.BLL
                 { "numbers", PhoneNo},
                 { "senderid", siteName }
             };
-            var oTPLog = new OTPLog()
+            var oTPLog = new OTPLog
             {
                 OTPStatus = (int)OTPStatus.Fail,
                 OTPType = (int)OtpType.SMS,
@@ -307,14 +307,14 @@ namespace CommonService.Service.BLL
             var config = _YcSmsServiceTypeConfig.Value[custInfo.SiteName].OTP;
             var siteName = custInfo.SiteName;
             var phone = $"86{phoneNo}";
-            var postData = new Dictionary<string, string>()
+            var postData = new Dictionary<string, string>
             {
                 {"merchant", config.Merchant},
                 {"token", config.Token},
                 {"phone", phone},
                 {"content", otpNum},
             };
-            var oTPLog = new OTPLog()
+            var oTPLog = new OTPLog
             {
                 OTPStatus = (int)OTPStatus.Fail,
                 OTPType = (int)OtpType.SMS,
@@ -395,7 +395,7 @@ namespace CommonService.Service.BLL
                 Message = message,
             };
             
-            var oTpLog = new OTPLog()
+            var oTpLog = new OTPLog
             {
                 OTPStatus = (int)OTPStatus.Fail,
                 OTPType = (int)OtpType.SMS,

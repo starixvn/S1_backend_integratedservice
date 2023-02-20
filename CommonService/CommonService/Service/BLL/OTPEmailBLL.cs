@@ -43,7 +43,7 @@ namespace CommonService.Service.BLL
                     {
                         var insertOtpResult = _otpService.OTPVerifyinfoIns(custId, code, (int)OtpType.Email);
                         apiResult.ErrorCode = (ErrorCode)insertOtpResult.Status;
-                        apiResult.Data = new SendOTPEmailResult()
+                        apiResult.Data = new SendOTPEmailResult
                         {
                             Status = insertOtpResult.Status,
                             StartUnixTime = insertOtpResult.StartUnixTime,
@@ -59,7 +59,7 @@ namespace CommonService.Service.BLL
                 else
                 {
                     apiResult.ErrorCode = (ErrorCode)(otpResult.Status == 1 ? 0 : 1000);
-                    apiResult.Data = new SendOTPEmailResult()
+                    apiResult.Data = new SendOTPEmailResult
                     {
                         Status = otpResult.Status,
                         StartUnixTime = otpResult.StartUnixTime,
@@ -76,7 +76,7 @@ namespace CommonService.Service.BLL
 
         public ApiResult VerifyOtp(int custId, string inputOtp)
         {
-            var result = _otpService.VerifyOTP(new VerifyOTPReq() {CustId = custId, InputOTP = inputOtp}, (int)OtpType.Email);
+            var result = _otpService.VerifyOTP(new VerifyOTPReq {CustId = custId, InputOTP = inputOtp}, (int)OtpType.Email);
             var apiResult = new ApiResult
             {
                 ErrorCode = (ErrorCode) (result)

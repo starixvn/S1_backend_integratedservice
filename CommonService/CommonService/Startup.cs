@@ -19,7 +19,6 @@ namespace CommonService
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<SendXConfig>(Configuration.GetSection("SendXConfig"));
             services.Configure<Dictionary<string, SendGridConfig>>(Configuration.GetSection("SendGridConfig"));
             services.Configure<IovationServicesConfig>(Configuration.GetSection("IovationServicesConfig"));
             services.Configure<Dictionary<string, FPSServicesConfig>>(Configuration.GetSection("FPSServicesConfig"));
@@ -48,7 +47,6 @@ namespace CommonService
 
             services.AddSingleton<CustInfoBLL>();
             services.AddSingleton<AuthBLL>();
-            services.AddSingleton<SendXBLL>();
             services.AddSingleton<SendGridBLL>();
             services.AddSingleton<RestPasswordBLL>();
             services.AddSingleton<IovationBLL>();

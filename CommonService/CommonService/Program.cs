@@ -3,7 +3,6 @@ using CommonService.Extensions;
 using Serilog;
 using Serilog.Exceptions;
 
-
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
 
