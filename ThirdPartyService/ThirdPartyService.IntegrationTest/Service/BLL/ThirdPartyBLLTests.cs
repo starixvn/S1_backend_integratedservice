@@ -53,7 +53,6 @@ namespace ThirdPartyService.Service.BLL.Tests
             services.AddTransient(p => Substitute.For<ILogger<MySqlClient>>());
             services.AddTransient(p => Substitute.For<ILogger<ThirdPartyBLL>>());
             services.AddTransient(p => Substitute.For<ILogger<ThirdPartyHelper>>());
-            services.AddTransient(p => Substitute.For<ILogger<Log2File>>());
 
             var startup = new StubStartUp(_configuration);
 
