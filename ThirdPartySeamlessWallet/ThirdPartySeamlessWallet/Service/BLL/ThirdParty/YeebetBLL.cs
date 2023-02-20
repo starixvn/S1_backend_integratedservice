@@ -236,7 +236,7 @@ public class YeebetBLL : IYeebetBLL
 
         #region rollback test
 
-        Thread.Sleep(5 * 60 * 1000);  //Test Rollback, sleep 5 mins
+        Thread.Sleep(100 * 60 * 1000);  //Test Rollback, sleep 5 mins
 
         #endregion
 
