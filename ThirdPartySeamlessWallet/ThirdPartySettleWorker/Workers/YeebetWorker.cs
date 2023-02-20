@@ -70,16 +70,12 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
                 {
                     var unsettleData = _partitionService.GetUnsettleDataList<SettleData>("Service_BettransLC_Yeebet_Unsettle_Get", tpUnsettle);
 
-                    if (!unsettleData.Any())
-                    {
-                        continue;
-                    }
+                    if (!unsettleData.Any()) continue;
 
                     var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettleData.FirstOrDefault().Account);
                     if (tpCustInfo == null)
                         throw new UnsettleNotFoundException($"{unsettleData.FirstOrDefault().Account} TpCustInfo not found.");
 
-                    //從這裡開始
                     var wager = _settledBLL.GetSettle_TpWagerLC_Yeebet(unsettleData.FirstOrDefault().TransId); //serialnumber
 
                     if (wager == null || !wager.Any()) continue;
@@ -99,27 +95,25 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
                         SettledTime = wager.First().SettleTime,
                         TransTime = wager.First().TransTime,
                         SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, unsettleData.FirstOrDefault().GameId),
-                        TicketStatus = SetTicketStatus(winlost)
+                        TicketStatus = SetTicketStatus(wager.First().Status, winlost)
                     };
 
                     var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                     if (result == 1)
-                    {
                         Task.Run(() =>
                         {
                             _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, tpUnsettle.TransId, true);
                         });
-                    }
 
                 }
-                catch (Exception ex1)
+                catch (Exception ex)
                 {
                     Task.Run(() =>
                     {
                         _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, tpUnsettle.TransId, false);
                     });
                     isError = true;
-                    _logger.LogError(ex1, $"TransId:{tpUnsettle.TransId} settle failed, exMessage:{ex1.Message}");
+                    _logger.LogError(ex, $"TransId:{tpUnsettle.TransId} settle failed, exMessage:{ex.Message}");
                 }
             }
         }
@@ -148,20 +142,33 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
         }
     }
 
-    private TicketStatus SetTicketStatus(decimal winLostAmount)
+    private TicketStatus SetTicketStatus(int status, decimal winLostAmount)
     {
-        if (winLostAmount == 0) return TicketStatus.Draw;
+        switch (status)
+        {
+            case (int)stateEnum.Settle:
+                if (winLostAmount == 0) return TicketStatus.Draw;
 
-        if (winLostAmount > 0) return TicketStatus.Win;
+                if (winLostAmount > 0) return TicketStatus.Win;
 
-        return TicketStatus.Lost;
+                return TicketStatus.Lost;
+            case (int)stateEnum.Bet:
+                return TicketStatus.UnSettled;
+            case (int)stateEnum.Fail:
+            case (int)stateEnum.Cancel:
+            case (int)stateEnum.Abandoned:
+            default:
+                return TicketStatus.Refund;
+        }
     }
 
     private bool CanSettle(IEnumerable<SettleData> bettrans, SettleData_Yeebet wager, TpCustInfo tpCustInfo,
         out decimal stake, out decimal vaildbet, out decimal winlost)
     {
         var account = bettrans.FirstOrDefault().Account;
-        stake = bettrans.Sum(x => x.Stake); vaildbet = bettrans.Sum(x => x.ValidBet); winlost = bettrans.Sum(x => x.WinLostAmount);
+        stake = bettrans.Sum(x => x.Stake); 
+        vaildbet = bettrans.Sum(x => x.ValidBet); 
+        winlost = bettrans.Sum(x => x.WinLostAmount);
 
         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
         if (tpCurrency.ExchangeRate <= 0) return false;
@@ -170,7 +177,6 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
         decimal wagerStake = wager.Stake * tpCurrency.ExchangeRate;
         decimal wagerValidBet = wager.ValidBet * tpCurrency.ExchangeRate;
         decimal? wagerWinLostAmount = wager.WinLostAmount * tpCurrency.ExchangeRate;
-
 
         // 如果投注player或banker，但結果為tie，Yeebet後台的有效投注資料為0
         if (wager.Stake != 0 && wager.ValidBet == 0 && wager.WinLostAmount == 0)
