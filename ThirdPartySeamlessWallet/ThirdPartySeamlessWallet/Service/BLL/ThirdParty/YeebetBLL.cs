@@ -233,6 +233,13 @@ public class YeebetBLL : IYeebetBLL
             }
 
         trans.Commit();
+
+        #region rollback test
+
+        Thread.Sleep(5 * 60 * 1000);  //Test Rollback, sleep 5 mins
+
+        #endregion
+
         return new DepositResponse_Yeebet(YeebetErrorCode.Success, orderno, "", balance);
     }
 
