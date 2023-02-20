@@ -19,7 +19,6 @@ namespace ThirdPartyService.Service.BLL
         private readonly IWebHostEnvironment env;
         private readonly IConfiguration configuration;
         private readonly ILogger<ThirdPartyBLL> _logger;
-        private readonly Log2File log2File;
 
         private readonly ThirdPartyHelper thirdPartyHelper;
         private readonly TpTransferInfo tpTransferInfo;
@@ -57,7 +56,6 @@ namespace ThirdPartyService.Service.BLL
             env = provider.GetRequiredService<IWebHostEnvironment>();
             configuration = provider.GetRequiredService<IConfiguration>();
             _logger = provider.GetRequiredService<ILogger<ThirdPartyBLL>>();
-            log2File = provider.GetRequiredService<Log2File>();
 
             thirdPartyHelper = provider.GetRequiredService<ThirdPartyHelper>();
             tpTransferInfo = provider.GetRequiredService<TpTransferInfo>();
@@ -952,7 +950,7 @@ namespace ThirdPartyService.Service.BLL
                     apiResult.ErrorCode = ErrorCode.AutoTransferIsSeamless;
                     apiResult.Message = "Go To Seamless Game Is No Need To Transfer";
                 }
-                log2File.Info(msg, "AutoTransfer");
+                _logger.LogInformation($"AutoTransfer:{msg}");
             }
             else
             {
@@ -979,10 +977,6 @@ namespace ThirdPartyService.Service.BLL
             _logger.LogInformation($"GetBalanceWorker-GetBalance-Start_"
                                    + $"TpId={tpId} SiteId={siteId} "
                                    + $"StartTime={DateTime.UtcNow.AddHours(8)}");
-
-            //log2File.Info($"GetBalanceWorker-GetBalance-Start_"
-            //                       + $"TpId={tpId} SiteId={siteId} "
-            //                       + $"EndTime={DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
 
             var custInfoList = GetTpCustInfoList(firstrRun, tpId, siteId);
             var tpCurrencyId = "";
@@ -1022,11 +1016,6 @@ namespace ThirdPartyService.Service.BLL
             _logger.LogInformation($"GetBalanceWorker-GetBalance-End_"
                                    + $"TpId={tpId} SiteId={siteId} "
                                    + $"EndTime={DateTime.UtcNow.AddHours(8)}");
-
-            //log2File.Info($"GetBalanceWorker-GetBalance-End_"
-            //                       + $"TpId={tpId} SiteId={siteId} "
-            //                       + $"EndTime={DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
-
             return true;
         }
 
@@ -1090,9 +1079,6 @@ namespace ThirdPartyService.Service.BLL
             _logger.LogInformation($"GetBalanceWorker-InsertBalance-Start_"
                                    + $"StartTime={DateTime.UtcNow.AddHours(8)}");
 
-            //log2File.Info($"GetBalanceWorker-InsertBalance-Start_"
-            //                           + $"StartTime={DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
-
             foreach (var data in datas.OrderBy(x => x.TpId).ThenBy(x => x.CustId).ThenBy(x => x.RequestTime))
             {
                 var result = InsertBalance(timeString, data);
@@ -1103,19 +1089,11 @@ namespace ThirdPartyService.Service.BLL
                                        + $"TimeString={timeString}"
                                        + $"BalanceData={JsonConvert.SerializeObject(data)}"
                                        + "Insert balance data fail.");
-
-                    //log2File.Error($"GetBalanceWorker-InsertBalance-Warning_"
-                    //                   + $"TableDate={tableDate} TimeString={timeString}"
-                    //                   + $"BalanceData={JsonConvert.SerializeObject(data)}"
-                    //                   + "Insert balance data fail.", "GetBalanceWorker");
                 }
             }
 
             _logger.LogInformation($"GetBalanceWorker-InsertBalance-End_"
                                    + $"EndTime={DateTime.UtcNow.AddHours(8)}");
-
-            //log2File.Info($"GetBalanceWorker-InsertBalance-End_"
-            //                       + $"EndTime={DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
         }
 
         /// <summary>
@@ -1295,10 +1273,6 @@ namespace ThirdPartyService.Service.BLL
                     _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
                                        + $"TpId={tpId} SiteId={siteId}" +
                                        " Not Success when get this condiction datas.");
-
-                    //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
-                    //                       + $"TpId={tpId} SiteId={siteId}" +
-                    //                       " Not Success when get this condiction datas.", "GetBalanceWorker");
                 }
 
                 foreach (var cust in custInfoList)
@@ -1311,10 +1285,6 @@ namespace ThirdPartyService.Service.BLL
                         _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
                                            + $"TpId={tpId} SiteId={siteId}" +
                                            $" CustId={cust.CustId}.Can't get this cust data.");
-
-                        //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
-                        //                       + $"TpId={tpId} SiteId={siteId}" +
-                        //                       $" CustId={cust.CustId}.Can't get this cust data.", "GetBalanceWorker");
                         continue;
                     }
                     else if (data.ErrorCode != 0)
@@ -1322,10 +1292,6 @@ namespace ThirdPartyService.Service.BLL
                         _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
                                            + $" TpId={tpId} SiteId={siteId}" +
                                            $" CustId={cust.CustId}.Not Success when get this cust data.");
-
-                        //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
-                        //                       + $" TpId={tpId} SiteId={siteId}" +
-                        //                       $" CustId={cust.CustId}.Not Success when get this cust data.", "GetBalanceWorker");
                         continue;
                     }
 
@@ -1348,11 +1314,6 @@ namespace ThirdPartyService.Service.BLL
             catch (Exception ex)
             {
                 _logger.LogError(ex, MethodExtension.GetCurrentMethod());
-
-                //log2File.Error($"GetBalanceWorker-GetBalance-Exception_"
-                //                       + $"TpId={tpId} SiteId={siteId} "
-                //                       + $"ex={ex}", "GetBalanceWorker");
-
                 return false;
             }
         }
@@ -1399,10 +1360,6 @@ namespace ThirdPartyService.Service.BLL
                         _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
                                            + $" TpId={cust.TpId} SiteId={cust.SiteId}" +
                                            $" CustId={cust.CustId}.Get Data Fail.");
-
-                        //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
-                        //                       + $" TpId={tpId} SiteId={siteId}" +
-                        //                       $" CustId={cust.CustId}.Get Data Fail.", "GetBalanceWorker");
                         continue;
                     }
                     else if (balanceResult.ErrorCode != ErrorCode.Success)
@@ -1410,10 +1367,6 @@ namespace ThirdPartyService.Service.BLL
                         _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
                                            + $" TpId={cust.TpId} SiteId={cust.SiteId}" +
                                            $" CustId={cust.CustId}.Not success when get this cust data.");
-
-                        //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
-                        //                       + $" TpId={tpId} SiteId={siteId}" +
-                        //                       $" CustId={cust.CustId}.Not success when get this cust data.", "GetBalanceWorker");
                         continue;
                     }
 
@@ -1434,11 +1387,6 @@ namespace ThirdPartyService.Service.BLL
             catch (Exception ex)
             {
                 _logger.LogError(ex, MethodExtension.GetCurrentMethod());
-
-                //log2File.Error($"GetBalanceWorker-GetBalance-Exception_"
-                //                       + $"TpId={tpId} SiteId={siteId} "
-                //                       + $"ex={ex}", "GetBalanceWorker");
-
                 return false;
             }
         }

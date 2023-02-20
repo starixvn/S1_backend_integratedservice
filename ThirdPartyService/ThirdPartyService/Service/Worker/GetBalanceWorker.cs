@@ -22,7 +22,6 @@ namespace ThirdPartyService.Service.Worker
 
         private readonly IConfiguration _configuration;
         private readonly ILogger<GetBalanceWorker> _logger;
-        private readonly Log2File _log2File;
         private readonly ServerInfoBLL _serverInfoBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
 
@@ -42,13 +41,11 @@ namespace ThirdPartyService.Service.Worker
         public GetBalanceWorker(IHostEnvironment environment,
             IConfiguration configuration,
             ILogger<GetBalanceWorker> logger,
-            Log2File log2File,
             ServerInfoBLL serverInfoBLL,
             ThirdPartyBLL thirdPartyBLL)
         {
             _configuration = configuration;
             _logger = logger;
-            _log2File = log2File;
 
             _serverInfoBLL = serverInfoBLL;
             _thirdPartyBLL = thirdPartyBLL;
@@ -79,9 +76,6 @@ namespace ThirdPartyService.Service.Worker
                         success = true;
                         _logger.LogInformation($"GetBalanceWorker-Worker Start At {DateTime.UtcNow.AddHours(8)},Retry Times={reRun}");
 
-                        //_log2File.Info($"GetBalanceWorker-Worker Start At {DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
-
-
                         var tpIdList = _configuration.GetSection("GetTpBalanceParam:TpId").Get<IEnumerable<int>>();
                         var siteList = _serverInfoBLL.GetServerInfoList();
 
@@ -110,8 +104,6 @@ namespace ThirdPartyService.Service.Worker
                         }
 
                         _logger.LogInformation($"GetBalanceWorker-Worker End At {DateTime.UtcNow.AddHours(8)},Retry Times={reRun}");
-                        //_log2File.Info($"GetBalanceWorker-Worker End At {DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
-
                         latestProcessTime = DateTime.UtcNow;
                         firstRun = false;
                         reRun++;
