@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System.Net;
 using System.Text;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -13,7 +12,7 @@ public class ApiYeebetBLL
     private readonly Common _common;
     private readonly Log2File _log2File;
     private readonly ILogger<ApiYeebetBLL> _logger;
-    private readonly string _tpName = Tp.DG.ToString();
+    private readonly string _tpName = Tp.Yeebet.ToString();
 
     public ApiYeebetBLL(IServiceProvider provider)
     {
@@ -54,6 +53,7 @@ public class ApiYeebetBLL
     {
         try
         {
+            _log2File.InsertRequestLog(_tpName, url, parameters, "1");
             var request = new HttpRequestMessage(HttpMethod.Get, $"{url}?{parameters}");
 
             if (!string.IsNullOrWhiteSpace(contentType))

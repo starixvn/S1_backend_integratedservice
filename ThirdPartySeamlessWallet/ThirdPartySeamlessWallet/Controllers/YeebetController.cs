@@ -85,7 +85,13 @@ public class YeebetController : ControllerBase
     [Route("[controller]/withdraw")]
     public async Task<DeductResponse_Yeebet> DeductAsync([FromForm] DeductRequest_Yeebet request)
     {
+        #region rollback test
+
         //Thread.Sleep(5 * 60 * 1000);  //Test Rollback, sleep 5 mins
+        //return new DeductResponse_Yeebet(YeebetErrorCode.Success, request.serialnumber, "rollback_test", "",0);
+
+        #endregion
+        
         var requestDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(request.ToJson());
 
         if (!CheckAppidAndSign(request.appid, requestDic, out string message))
@@ -134,7 +140,7 @@ public class YeebetController : ControllerBase
         if (request.ContainsKey("errmsg"))
             request["errmsg"] = request["errmsg"].Replace(" ", "+");
 
-        var word = $"{tpCustInfo.TpCurrencyId}";
+        var word = $"{tpCustInfo.SiteId}_{tpCustInfo.TpCurrencyId}";
 
         string content = string.Join("&",
             request
@@ -150,14 +156,14 @@ public class YeebetController : ControllerBase
 
         if (seamlessAppid != appid)
         {
-            message = "appid is invaild.";
+            message = "request.appid is invaild.";
             return false;
         }
 
         //Check Sign
         if (!request.ContainsKey("sign"))
         {
-            message = "sign not found.";
+            message = "request.sign not found.";
             return false;
         }
 
@@ -168,7 +174,7 @@ public class YeebetController : ControllerBase
         var result = _tools.ToMD5($"{content}&key={secretKey}").ToLower();
         if (result != request["sign"])
         {
-            message = "sign is invaild.";
+            message = $"sign is invaild.request.sign={request["sign"]}. correct sign={result}.";
             return false;
         }
         return true;

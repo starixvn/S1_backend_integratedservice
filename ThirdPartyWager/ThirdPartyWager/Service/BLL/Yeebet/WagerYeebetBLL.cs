@@ -1,9 +1,5 @@
 ﻿using Newtonsoft.Json;
-using System.Collections.Generic;
-using System.Drawing;
 using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Model;
-using ThirdPartyWager.Workers;
 
 namespace ThirdPartyWager.Service.BLL;
 
@@ -23,7 +19,7 @@ public class WagerYeebetBLL
         _logger = provider.GetRequiredService<ILogger<WagerYeebetBLL>>();
     }
 
-    public async Task<(bool isSuccess, bool isContinue)> GetWagersAsync(int tpId, string tpCurrencyId)
+    public async Task<(bool isSuccess, bool isContinue)> GetWagersAsync(int tpId, int siteId, string tpCurrencyId)
     {
         var wagerIds = new List<long>();
         var msg = "FATAL_ERROR";
@@ -32,7 +28,7 @@ public class WagerYeebetBLL
             // get tp info for api
             var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
 
-            if (!GetAppIdAndKey(setting, tpCurrencyId, out string appid, out string key))
+            if (!GetAppIdAndKey(setting, $"{siteId}_{tpCurrencyId}", out string appid, out string key))
             {
                 msg = "THIRD_PARTY_SETTING_ERROR";
                 _logger.LogError($"{msg}");
@@ -96,24 +92,24 @@ public class WagerYeebetBLL
         }
     }
 
-    private bool GetAppIdAndKey(Dictionary<string, string> setting, string tpCurrencyId, out string appid, out string key)
+    private bool GetAppIdAndKey(Dictionary<string, string> setting, string siteIdAndtpCurrencyId, out string appid, out string key)
     {
         appid = string.Empty;
         key = string.Empty;
-        if (!setting.ContainsKey($"ApiAppId_{tpCurrencyId}")
-            || string.IsNullOrWhiteSpace(setting[$"ApiAppId_{tpCurrencyId}"]))
+        if (!setting.ContainsKey($"ApiAppId_{siteIdAndtpCurrencyId}")
+            || string.IsNullOrWhiteSpace(setting[$"ApiAppId_{siteIdAndtpCurrencyId}"]))
         {
             _logger.LogError($"ApiAppId is invaild.");
             return false;
         }
-        appid = setting[$"ApiAppId_{tpCurrencyId}"];
-        if (!setting.ContainsKey($"ApiSecretKey_{tpCurrencyId}")
-            || string.IsNullOrWhiteSpace(setting[$"ApiSecretKey_{tpCurrencyId}"]))
+        appid = setting[$"ApiAppId_{siteIdAndtpCurrencyId}"];
+        if (!setting.ContainsKey($"ApiSecretKey_{siteIdAndtpCurrencyId}")
+            || string.IsNullOrWhiteSpace(setting[$"ApiSecretKey_{siteIdAndtpCurrencyId}"]))
         {
             _logger.LogError($"ApiSecretKey is invaild.");
             return false;
         }
-        key = setting[$"ApiSecretKey_{tpCurrencyId}"];
+        key = setting[$"ApiSecretKey_{siteIdAndtpCurrencyId}"];
         return true;
     }
 }

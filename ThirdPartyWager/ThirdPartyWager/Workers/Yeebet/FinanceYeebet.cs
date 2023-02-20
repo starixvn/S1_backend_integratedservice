@@ -9,7 +9,7 @@ namespace ThirdPartyWager.Workers;
 
 public class FinanceYeebet : BackgroundService
 {
-    private readonly ILogger<FinanceDG> _logger;
+    private readonly ILogger<FinanceYeebet> _logger;
     private readonly FinanceYeebetBLL _financeYeebetBLL;
     private readonly ThirdPartyBLL _thirdPartyBLL;
     private readonly FincanceService _fincanceService;
@@ -21,7 +21,7 @@ public class FinanceYeebet : BackgroundService
 
     public FinanceYeebet(IServiceProvider provider)
     {
-        _logger = provider.GetRequiredService<ILogger<FinanceDG>>();
+        _logger = provider.GetRequiredService<ILogger<FinanceYeebet>>();
         _financeYeebetBLL = provider.GetRequiredService<FinanceYeebetBLL>();
         _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         _fincanceService = provider.GetRequiredService<FincanceService>();
