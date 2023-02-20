@@ -3361,10 +3361,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         public IEnumerable<SettleData_Yeebet> GetSettle_TpWagerLC_Yeebet(string serialnumber)
-        {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Query<SettleData_Yeebet>("Service_TpWagerLC_Yeebet_Get", new { _serialnumber = serialnumber }, commandType: CommandType.StoredProcedure);
-        }
+        => _wagerDbClient.Query<SettleData_Yeebet>("Service_TpWagerLC_Yeebet_Get", parameters: new DynamicParameters(new { _serialnumber = serialnumber }));
+
 
         #endregion
     }
