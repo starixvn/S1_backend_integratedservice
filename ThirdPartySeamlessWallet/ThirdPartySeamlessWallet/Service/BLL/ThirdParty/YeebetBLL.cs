@@ -786,7 +786,6 @@ public class YeebetBLL : IYeebetBLL
     /// <returns>true(取消下注)，false(取消已派彩注單)</returns>
     private bool IsCancelBet(string bets)
     {
-        var aaa = bets.ToJson();
         var betsInfo = JsonConvert.DeserializeObject<Dictionary<string, string>>(bets);
         if (betsInfo.ContainsKey("gameresult") && string.IsNullOrWhiteSpace(betsInfo["gameresult"]))
             return true;
