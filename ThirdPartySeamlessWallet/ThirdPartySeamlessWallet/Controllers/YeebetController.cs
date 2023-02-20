@@ -87,8 +87,8 @@ public class YeebetController : ControllerBase
     {
         #region rollback test
 
-        Thread.Sleep(5 * 60 * 1000);  //Test Rollback, sleep 5 mins
-        return new DeductResponse_Yeebet(YeebetErrorCode.Success, request.serialnumber, "rollback_test", "",0);
+        //Thread.Sleep(5 * 60 * 1000);  //Test Rollback, sleep 5 mins
+        //return new DeductResponse_Yeebet(YeebetErrorCode.Success, request.serialnumber, "rollback_test", "",0);
 
         #endregion
         
