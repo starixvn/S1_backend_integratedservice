@@ -1,5 +1,5 @@
-﻿using CommonService.Service.Model;
-using CommonService.Service.Library;
+﻿using CommonService.Service.Library;
+using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
 
 namespace CommonService.Service.DAL

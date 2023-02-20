@@ -1,7 +1,7 @@
-﻿using CommonService.Service.Model;
-using Newtonsoft.Json;
-using CommonService.Service.Library;
+﻿using CommonService.Service.Library;
+using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
+using Newtonsoft.Json;
 
 namespace CommonService.Service.DAL
 {

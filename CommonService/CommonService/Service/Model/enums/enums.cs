@@ -8,7 +8,7 @@
         Log,//ConnectionStringLog
     }
     
-    public enum ErrorCode : int
+    public enum ErrorCode
     {
         Success = 0,
         #region api response fail (1xxxx)
@@ -70,7 +70,8 @@
     public enum TemplateType
     {
         ResetPassword,
-        VerificationMail
+        VerificationMail,
+        WelcomeMail
     }
 
     public enum OTPProvider

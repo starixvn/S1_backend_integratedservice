@@ -1,4 +1,5 @@
-﻿using CommonService.Service.Library;
+﻿using System.Net;
+using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
 using Microsoft.Extensions.Options;
@@ -8,17 +9,13 @@ namespace CommonService.Service.BLL
 {
     public class SendGridBLL
     {
-        private readonly IOptions<Dictionary<string, SendGridConfig>> sendGridConfig;
-        private readonly HttpHelper httpHelper;
-        private readonly CustInfoBLL custInfoBLL;
-        private readonly AuthBLL authBLL;
+        private readonly IOptions<Dictionary<string, SendGridConfig>> _sendGridConfig;
+        private readonly HttpHelper _httpHelper;
 
-        public SendGridBLL(IOptions<Dictionary<string, SendGridConfig>> sendGridConfig, HttpHelper httpHelper, CustInfoBLL custInfoBLL, AuthBLL authBLL)
+        public SendGridBLL(IOptions<Dictionary<string, SendGridConfig>> sendGridConfig, HttpHelper httpHelper)
         {
-            this.sendGridConfig = sendGridConfig;
-            this.httpHelper = httpHelper;
-            this.custInfoBLL = custInfoBLL;
-            this.authBLL = authBLL;
+            _sendGridConfig = sendGridConfig;
+            _httpHelper = httpHelper;
         }
 
         public class Result
@@ -33,94 +30,16 @@ namespace CommonService.Service.BLL
             public string help { get; set; }
         }
 
-        public class SendMailBody
-        {
-            public From from { get; set; }
-            public List<Personalization> personalizations { get; set; }
-            public List<Content> content { get; set; }
-        }
-
-        public class Content
-        {
-            public string type { get; set; }
-            public string value { get; set; }
-        }
-
-        public class From
-        {
-            public string name { get; set; }
-            public string email { get; set; }
-        }
-
-        public class Personalization
-        {
-            public List<From> to { get; set; }
-            public string subject { get; set; }
-        }
-
-        public async Task<ApiResult> SendMailAsync(CustInfoProfile custInfo, string subject, string content)
-        {
-            var apiResult = new ApiResult();
-            var config = sendGridConfig.Value[custInfo.SiteName];
-
-            var headerParams = new Dictionary<string, string> {
-                { "Authorization", $"Bearer {config.ApiKey}"}
-            };
-
-            var url = config.ApiUrl;
-            var sendMailBody = new SendMailBody
-            {
-                from = new From()
-                {
-                    name = config.mailFrom.name,
-                    email = config.mailFrom.email
-                },
-                personalizations = new List<Personalization>()
-            };
-
-            var personalization = new Personalization();
-            sendMailBody.personalizations.Add(personalization);
-            personalization.subject = subject;
-            personalization.to = new List<From>();
-            var from = new From();
-            personalization.to.Add(from);
-            from.email = custInfo.Email;
-            from.name = custInfo.UserName;
-            sendMailBody.content = new List<Content>();
-            var content1 = new Content();
-            sendMailBody.content.Add(content1);
-            content1.type = "text/html";
-
-            var key = authBLL.ApplyToken(custInfo);
-
-            content1.value = $"key={key}";
-
-            using var result = await httpHelper.HttpPost1Async(url, headerParams, JsonConvert.SerializeObject(sendMailBody), "application/json");
-            if (result.StatusCode == System.Net.HttpStatusCode.Accepted)
-            {
-                apiResult.ErrorCode = 0;
-            }
-            else
-            {
-                var resultResp = JsonConvert.DeserializeObject<Result>(result.Content.ReadAsStringAsync().Result);
-                apiResult.ErrorCode = ErrorCode.Fail;
-                apiResult.Message = resultResp.errors[0].message;
-                apiResult.RawMessage = resultResp.errors[0].message;
-            }
-
-            return apiResult;
-        }
-        
         public async Task<ApiResult> SendMailAsync(CustInfoProfile custInfo, dynamic dynamicTemplateData, TemplateType type)
         {
             var apiResult = new ApiResult();
 
-            if (!sendGridConfig.Value.ContainsKey(custInfo.SiteName))
+            if (!_sendGridConfig.Value.ContainsKey(custInfo.SiteName))
             {
                 apiResult.ErrorCode = ErrorCode.Fail;
             }
 
-            var config = sendGridConfig.Value[custInfo.SiteName];
+            var config = _sendGridConfig.Value[custInfo.SiteName];
 
             var headerParams = new Dictionary<string, string> {
                 { "Authorization", $"Bearer {config.ApiKey}"}
@@ -129,12 +48,12 @@ namespace CommonService.Service.BLL
             var apiUrl = config.ApiUrl;
             var sendGridResetPasswordBody = new SendGridTemplateBody
             {
-                from = new NameEmail() {name = config.mailFrom.name, email = config.mailFrom.email},
-                personalizations = new List<TemplatePersonalization>()
+                from = new NameEmail {name = config.mailFrom.name, email = config.mailFrom.email},
+                personalizations = new List<TemplatePersonalization>
                 {
-                    new TemplatePersonalization()
+                    new TemplatePersonalization
                     {
-                        to = new List<NameEmail>()
+                        to = new List<NameEmail>
                         {
                             new NameEmail {name = custInfo.UserName, email = custInfo.Email}
                         },
@@ -144,8 +63,8 @@ namespace CommonService.Service.BLL
                 template_id = CreateTemplate(type, config, GetUserLang(custInfo.UserLang))
             };
             
-            using var result = await httpHelper.HttpPost1Async(apiUrl, headerParams, JsonConvert.SerializeObject(sendGridResetPasswordBody), "application/json");
-            if (result.StatusCode == System.Net.HttpStatusCode.Accepted)
+            using var result = await _httpHelper.HttpPost1Async(apiUrl, headerParams, JsonConvert.SerializeObject(sendGridResetPasswordBody), "application/json");
+            if (result.StatusCode == HttpStatusCode.Accepted)
             {
                 apiResult.ErrorCode = 0;
             }
@@ -169,11 +88,12 @@ namespace CommonService.Service.BLL
             {
                 TemplateType.ResetPassword => config.ResetPasswordTemplate[lang],
                 TemplateType.VerificationMail => config.VerifyMailTemplate[lang],
+                TemplateType.WelcomeMail => config.WelcomeMailTemplate[lang],
                 _ => throw new ArgumentOutOfRangeException(nameof(type), type, @"template type not define")
             };
         }
 
-        public string GetUserLang(string langId)
+        private string GetUserLang(string langId)
         {
             var lang = langId.Split('_');
             return lang.Length > 1 ? lang[1] : lang[0];
