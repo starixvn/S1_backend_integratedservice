@@ -1,9 +1,5 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Security.Cryptography.X509Certificates;
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -39,7 +35,7 @@ namespace ThirdParty.PT
             apiUrl = $"{apiUrl}/player/create";
 
             var header = GetHeader(entityKey);
-            var certificate = GetCertificate(currency, pass);
+            var certificate = GetCertificate(currency);
             var playerName = $"{prefix}_{tpCustInfo.TpUserName}";
 
             var signUp = new
@@ -138,7 +134,7 @@ namespace ThirdParty.PT
             apiUrl = $"{apiUrl}/player/balance";
 
             var header = GetHeader(entityKey);
-            var certificate = GetCertificate(currency, pass);
+            var certificate = GetCertificate(currency);
 
             var balance = new
             {
@@ -193,7 +189,7 @@ namespace ThirdParty.PT
             var transUrl = $"{apiUrl}/player/deposit";
 
             var header = GetHeader(entityKey);
-            var certificate = GetCertificate(currency, pass);
+            var certificate = GetCertificate(currency);
 
             var transfer = new DepositParam
             {
@@ -314,7 +310,7 @@ namespace ThirdParty.PT
                 apiUrl = $"{apiUrl}/player/checktransaction";
 
                 var header = GetHeader(entityKey);
-                var certificate = GetCertificate(currency, pass);
+                var certificate = GetCertificate(currency);
 
                 var checkTransfer = new
                 {
@@ -406,7 +402,7 @@ namespace ThirdParty.PT
                 apiUrl = $"{apiUrl}/player/games";
 
                 var header = GetHeader(entityKey);
-                var certificate = GetCertificate(currency, pass);
+                var certificate = GetCertificate(currency);
 
                 var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_PT_Detail_Get",
                    new { getBetDetail.TransId, GameType = getBetDetail.TpGameTypeOption.Type }, DataBase.Wager);
@@ -495,7 +491,7 @@ namespace ThirdParty.PT
             apiUrl = $"{apiUrl}/player/changepassword";
 
             var header = GetHeader(entityKey);
-            var certificate = GetCertificate(currency, pass);
+            var certificate = GetCertificate(currency);
 
             var changePassword = new
             {
@@ -558,7 +554,7 @@ namespace ThirdParty.PT
             apiUrl = $"{apiUrl}/admin/info/adminname/{adminName}";
 
             var header = GetHeader(entityKey);
-            var certificate = GetCertificate(currency, pass);
+            var certificate = GetCertificate(currency);
 
             var signUp = new
             {
@@ -613,19 +609,15 @@ namespace ThirdParty.PT
         #region private method
 
         /// <summary>
-        /// 取得憑證
+        /// 取得X509Certificate2憑證
         /// </summary>
         /// <param name="currency"></param>
-        /// <param name="pass"></param>
         /// <returns></returns>
-        private Dictionary<string, string> GetCertificate(string currency, string pass)
+        private X509Certificate2 GetCertificate(string currency)
         {
-            var certificate = new Dictionary<string, string>
-           {
-               { "path", Path.Combine(storagePath, $"{currency}.p12") },
-               { "password", pass }
-           };
-            return certificate;
+            var pem = Path.Combine(storagePath, "PEM", $"{currency}.pem");
+            var key = Path.Combine(storagePath, "PEM", $"{currency}.key");
+            return X509Certificate2.CreateFromPemFile(pem, key);
         }
 
         /// <summary>
