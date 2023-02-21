@@ -241,52 +241,6 @@ namespace ThirdPartyCore
             }
         }
 
-        protected string HttpPostWithX509(string url, Dictionary<string, string> parameters, string contentType, Dictionary<string, string> headers = null, Dictionary<string, string> certificate = null)
-        {
-            InsertLog?.Invoke(url, JsonConvert.SerializeObject(parameters), "1");
-
-            if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
-            {
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
-                ServicePointManager.ServerCertificateValidationCallback = CheckValidationResult;
-            }
-
-            using var handler = new HttpClientHandler();
-            if (!string.IsNullOrEmpty(proxyHost))
-            {
-                handler.UseProxy = true;
-                handler.Proxy = new WebProxy(proxyHost, proxyPort);
-            }
-            handler.ClientCertificateOptions = ClientCertificateOption.Manual;
-            handler.SslProtocols = SslProtocols.Tls12;
-            handler.ClientCertificates.Add(new X509Certificate2(certificate["path"], certificate["password"], X509KeyStorageFlags.MachineKeySet));
-            
-            //ignore Certificate
-            handler.ServerCertificateCustomValidationCallback += (_, _, _, _) => true;
-            using var client = new HttpClient(handler);
-            try
-            {
-                if (headers != null)
-                {
-                    foreach (var item in headers)
-                    {
-                        client.DefaultRequestHeaders.Add(item.Key, item.Value);
-                    }
-                }
-                var formData = new FormUrlEncodedContent(parameters);
-                var response = client.PostAsync(url, formData).Result;
-                var sb = response.Content.ReadAsStringAsync().Result;
-                InsertLog?.Invoke(url, JsonConvert.SerializeObject(parameters), sb);
-                return sb;
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e, e.Message);
-                InsertLog?.Invoke(url, JsonConvert.SerializeObject(parameters), e.Message);
-                return e.Message;
-            }
-        }
-
         protected string HttpPostWithX509(string url, Dictionary<string, string> parameters, string contentType, Dictionary<string, string> headers = null, X509Certificate2 certificate = null)
         {
             InsertLog?.Invoke(url, JsonConvert.SerializeObject(parameters), "1");
@@ -317,13 +271,21 @@ namespace ThirdPartyCore
                 InsertLog?.Invoke(url, JsonConvert.SerializeObject(parameters), sb);
                 return sb;
             }
+            catch (AggregateException ae)
+            {
+                foreach (var ex in ae.InnerExceptions)
+                {
+                    logger.LogError(ex, ex.InnerException.Message);
+                }
+                throw;
+            }
             catch (HttpRequestException ex)
             {
                 if (ex.InnerException != null)
                 {
                     logger.LogError(ex, ex.InnerException.Message);
                 }
-                throw ex;
+                throw;
             }
             catch (Exception e)
             {
