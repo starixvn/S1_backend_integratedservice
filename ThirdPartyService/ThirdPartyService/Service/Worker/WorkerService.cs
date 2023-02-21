@@ -67,7 +67,7 @@ namespace ThirdPartyService.Service.Worker
             }
             finally
             {
-                var dueTimeSpan = TimeSpan.FromMinutes(5);
+                var dueTimeSpan = TimeSpan.FromMinutes(2);
                 _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
