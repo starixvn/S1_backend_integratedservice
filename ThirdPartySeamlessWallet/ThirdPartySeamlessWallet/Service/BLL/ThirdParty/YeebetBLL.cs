@@ -188,11 +188,7 @@ public class YeebetBLL : IYeebetBLL
 
         if (existDatas.Any())
         {
-            #region rollback test
-
-            Thread.Sleep(5 * 60 * 1000);  //Test Rollback, sleep 5 mins
-
-            #endregion
+            //Thread.Sleep(5 * 60 * 1000);  //Test Rollback, sleep 5 mins
 
             //已存在指定有效投注
             if (!GetBalance(tpCustInfo.TpUserName, out balance, out message))
@@ -240,11 +236,7 @@ public class YeebetBLL : IYeebetBLL
 
         trans.Commit();
 
-        #region rollback test
-
-        Thread.Sleep(5 * 60 * 1000);  //Test Rollback, sleep 5 mins
-
-        #endregion
+        //Thread.Sleep(5 * 60 * 1000);  //Test Rollback, sleep 5 mins
 
         return new DepositResponse_Yeebet(YeebetErrorCode.Success, orderno, "", balance);
     }
