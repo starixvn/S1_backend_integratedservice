@@ -94,7 +94,7 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
                         TpUserName = tpCustInfo.TpUserName,
                         SettledTime = wager.First().SettleTime,
                         TransTime = wager.First().TransTime,
-                        SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, unsettleData.FirstOrDefault().GameId),
+                        SettlementType = SetSettlementType(wager.First().Status, unsettleData.FirstOrDefault().GameId),
                         TicketStatus = SetTicketStatus(wager.First().Status, winlost)
                     };
 
@@ -142,6 +142,22 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
         }
     }
 
+    private SettlementType SetSettlementType(int status, string gameId)
+    {
+        switch (status)
+        {
+            case (int)stateEnum.Settle:
+                return _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, gameId);
+            case (int)stateEnum.Bet:
+                return SettlementType.UnSettled;
+            case (int)stateEnum.Fail:
+            case (int)stateEnum.Cancel:
+            case (int)stateEnum.Abandoned:
+            default:
+                return SettlementType.SettledForInvalid;
+        }
+    }
+
     private TicketStatus SetTicketStatus(int status, decimal winLostAmount)
     {
         switch (status)
@@ -166,8 +182,8 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
         out decimal stake, out decimal vaildbet, out decimal winlost)
     {
         var account = bettrans.FirstOrDefault().Account;
-        stake = bettrans.Sum(x => x.Stake); 
-        vaildbet = bettrans.Sum(x => x.ValidBet); 
+        stake = bettrans.Sum(x => x.Stake);
+        vaildbet = bettrans.Sum(x => x.ValidBet);
         winlost = bettrans.Sum(x => x.WinLostAmount);
 
         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
