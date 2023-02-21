@@ -609,22 +609,6 @@ namespace ThirdParty.PT
         #region private method
 
         /// <summary>
-        /// 取得憑證
-        /// </summary>
-        /// <param name="currency"></param>
-        /// <param name="pass"></param>
-        /// <returns></returns>
-        private Dictionary<string, string> GetCertificate(string currency, string pass)
-        {
-            var certificate = new Dictionary<string, string>
-           {
-               { "path", Path.Combine(storagePath, $"{currency}.p12") },
-               { "password", pass }
-           };
-            return certificate;
-        }
-
-        /// <summary>
         /// 取得X509Certificate2憑證
         /// </summary>
         /// <param name="currency"></param>
