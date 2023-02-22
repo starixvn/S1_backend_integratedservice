@@ -306,6 +306,8 @@ namespace ThirdPartyService.Service.DAL
                             tpBonusCancelTransfer.RefundAmount, 
                             memo,
                             tpBonusCancelTransfer.BonusId.ToString(),
+                            (int)WithdrawalLimitLogCreateFromEnum.Bonus,
+                            "System",
                             out _,trans);
                     }
                 }
