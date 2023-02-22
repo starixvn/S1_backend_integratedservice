@@ -37,7 +37,7 @@ namespace ThirdPartyService.Service.DAL
         }
 
         public int SetWithdrawalLimit(int custId, string userName, int siteId, decimal withdrawalLimit, string memo,
-            string refTransId, out decimal afterWithdrawalLimit, IDbTransaction trans)
+            string refTransId, int createFrom, string creator, out decimal afterWithdrawalLimit, IDbTransaction trans)
         {
             var p = new DynamicParameters(new
             {
@@ -46,10 +46,12 @@ namespace ThirdPartyService.Service.DAL
                 SiteId = siteId,
                 WithdrawalLimit = withdrawalLimit,
                 Memo = memo,
-                RefTransId = refTransId
+                RefTransId = refTransId,
+                CreateFrom = createFrom,
+                Creator = creator
             });
             p.Add("AfterWithdrawalLimit", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            var result = _mainDbClient.Execute("Common_WithdrawalLimit_Set", trans, p);
+            var result = _mainDbClient.Execute("Common_WithdrawalLimit_Set_V2", trans, p);
             afterWithdrawalLimit = p.Get<decimal?>("AfterWithdrawalLimit") ?? 0;
             return result;
         }
