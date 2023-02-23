@@ -22,40 +22,37 @@ namespace ThirdPartyService.Controllers
     [ApiController]
     public class APIController : ControllerBase
     {
-        private readonly IHostEnvironment env;
-        private readonly IConfiguration configuration;
-        private readonly Common common;
-        private readonly TpCustInfoService tpCustInfoService;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly ILogger<APIController> logger;
-        private readonly Log2File log2File;
+        private readonly IHostEnvironment _env;
+        private readonly TpCustInfoService _tpCustInfoService;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly ILogger<APIController> _logger;
 
-        public APIController(IHostEnvironment env, IConfiguration configuration, ILogger<APIController> logger, Common common, TpCustInfoService tpCustInfoService, ThirdPartyBLL thirdPartyBLL, Log2File log2File)
-        {
-            this.env = env;
-            ThirdPartyHelperBase.EnvironmentName = env.EnvironmentName;
-            ThirdPartyHelperBase.IsDevelopment = env.IsDevelopment();
-            ThirdPartyHelperBase.ContentRootPath = env.ContentRootPath;
+        public APIController(IServiceProvider provider)
+        {                   
+            _env = provider.GetRequiredService<IHostEnvironment>();
+            _tpCustInfoService = provider.GetRequiredService<TpCustInfoService>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _logger = provider.GetRequiredService<ILogger<APIController>>();
+
+            var configuration = provider.GetRequiredService<IConfiguration>();
+            ThirdPartyHelperBase.EnvironmentName = _env.EnvironmentName;
+            ThirdPartyHelperBase.IsDevelopment = _env.IsDevelopment();
+            ThirdPartyHelperBase.ContentRootPath = _env.ContentRootPath;
             ThirdPartyHelperBase.CommonServiceHost = configuration.GetValue<string>("AiLabServiceHost:CommonServiceHost");
             ThirdPartyHelperBase.LetsTalkGroupName = configuration.GetValue<string>("LetsTalkConfig:LetsTalkGroupName");
-            this.configuration = configuration;
-            this.common = common;
-            this.tpCustInfoService = tpCustInfoService;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.logger = logger;
-            this.log2File = log2File;
+            ThirdPartyHelperBase.logger = provider.GetRequiredService<ILogger<IThirdPartyHelper>>();
         }
 
         [HttpGet]
         public ActionResult<IEnumerable<string>> ApiInfo()
         {
-            return new string[] { env.EnvironmentName };
+            return new string[] { _env.EnvironmentName };
         }
 
         [HttpGet]
         public ActionResult<ApiResult<TpCustInfo>> test()
         {
-            return tpCustInfoService.GetTpCustInfo(4, 1);
+            return _tpCustInfoService.GetTpCustInfo(4, 1);
         }
 
         [HttpPost]
@@ -65,18 +62,18 @@ namespace ThirdPartyService.Controllers
 
             try
             {            
-                apiResult = thirdPartyBLL.GotoGame(tpInfo);
-                logger.LogInformation(apiResult.Message);
+                apiResult = _thirdPartyBLL.GotoGame(tpInfo);
+                _logger.LogInformation(apiResult.Message);
 
                 if (apiResult.ErrorCode == ErrorCode.Success && tpInfo.CustId != 0)
                 {
-                    thirdPartyBLL.AutoTransfer(tpInfo);
+                    _thirdPartyBLL.AutoTransfer(tpInfo);
                 }
 
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
                 apiResult.ErrorCode = ErrorCode.SystemError;
                 apiResult.RawMessage = ex.Message;
             }
@@ -93,19 +90,18 @@ namespace ThirdPartyService.Controllers
 
             try
             {
-                apiResult = thirdPartyBLL.Transfer(tpTransfer);
+                apiResult = _thirdPartyBLL.Transfer(tpTransfer);
 
                 if (apiResult.ErrorCode != 0)
                 {
-                    log2File.Error(JsonConvert.SerializeObject(apiResult), $"{tpTransfer.TpId}_Transfer");
+                    _logger.LogError(JsonConvert.SerializeObject(apiResult));
                 }
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
                 apiResult.ErrorCode = ErrorCode.SystemError;
                 apiResult.RawMessage = ex.Message;
-                log2File.Error(ex.ToString(), $"{tpTransfer.TpId}_Transfer");
             }
 
             return apiResult;
@@ -118,11 +114,11 @@ namespace ThirdPartyService.Controllers
 
             try
             {
-                apiResult = thirdPartyBLL.GetBalance(tpInfo);
+                apiResult = _thirdPartyBLL.GetBalance(tpInfo);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
                 apiResult.ErrorCode = ErrorCode.SystemError;
                 apiResult.RawMessage = ex.Message;
                 return apiResult;
@@ -138,11 +134,11 @@ namespace ThirdPartyService.Controllers
 
             try
             {
-                apiResult = thirdPartyBLL.Logout(tpInfo);
+                apiResult = _thirdPartyBLL.Logout(tpInfo);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
                 apiResult.ErrorCode = ErrorCode.SystemError;
                 apiResult.RawMessage = ex.Message;
                 return apiResult;
@@ -159,11 +155,11 @@ namespace ThirdPartyService.Controllers
 
             try
             {
-                apiResult = thirdPartyBLL.BonusTransfer(tpBonusTransfer);
+                apiResult = _thirdPartyBLL.BonusTransfer(tpBonusTransfer);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
                 apiResult.ErrorCode = ErrorCode.SystemError;
                 apiResult.RawMessage = ex.Message;
                 return apiResult;
@@ -182,11 +178,11 @@ namespace ThirdPartyService.Controllers
 
             try
             {
-                apiResult = thirdPartyBLL.BonusCancelTransfer(tpBonusCancelTransfer);
+                apiResult = _thirdPartyBLL.BonusCancelTransfer(tpBonusCancelTransfer);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
                 apiResult.ErrorCode = ErrorCode.SystemError;
                 apiResult.RawMessage = ex.Message;
                 return apiResult;
@@ -203,11 +199,11 @@ namespace ThirdPartyService.Controllers
 
             try
             {
-                apiResult = thirdPartyBLL.FixNegative(tpInfo);
+                apiResult = _thirdPartyBLL.FixNegative(tpInfo);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
                 apiResult.ErrorCode = ErrorCode.SystemError;
                 apiResult.RawMessage = ex.Message;
                 return apiResult;
@@ -225,11 +221,11 @@ namespace ThirdPartyService.Controllers
 
             try
             {
-                apiResult = thirdPartyBLL.AdjustWallet(adminTpTransfer);
+                apiResult = _thirdPartyBLL.AdjustWallet(adminTpTransfer);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
                 apiResult.ErrorCode = ErrorCode.SystemError;
                 apiResult.RawMessage = ex.Message;
             }
@@ -242,11 +238,11 @@ namespace ThirdPartyService.Controllers
             var apiResult = new ApiResult();
             try
             {
-                apiResult = thirdPartyBLL.SetBetLimit(setBetLimit);
+                apiResult = _thirdPartyBLL.SetBetLimit(setBetLimit);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
                 apiResult.ErrorCode = ErrorCode.SystemError;
                 apiResult.RawMessage = ex.Message;
             }
@@ -258,11 +254,11 @@ namespace ThirdPartyService.Controllers
             var apiResult = new ApiResult();
             try
             {
-                apiResult = thirdPartyBLL.GetBetLimit(getBetLimit);
+                apiResult = _thirdPartyBLL.GetBetLimit(getBetLimit);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
                 apiResult.ErrorCode = ErrorCode.SystemError;
                 apiResult.RawMessage = ex.Message;
             }
@@ -274,7 +270,7 @@ namespace ThirdPartyService.Controllers
         {
             try
             {
-                return thirdPartyBLL.GetBetDetail(request);
+                return _thirdPartyBLL.GetBetDetail(request);
             }
             catch (BetDetailNotFoundException ex)
             {
@@ -294,7 +290,7 @@ namespace ThirdPartyService.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
                 return new ApiResult<object>()
                 {
                     ErrorCode = ErrorCode.SystemError,
@@ -313,7 +309,7 @@ namespace ThirdPartyService.Controllers
         {
             try
             {
-                return thirdPartyBLL.GetMerchantBalance(tpMerchantInfo);
+                return _thirdPartyBLL.GetMerchantBalance(tpMerchantInfo);
             }
             catch (GetMerchantBalanceNotImplementedException ex)
             {
@@ -325,7 +321,7 @@ namespace ThirdPartyService.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
                 return new ApiResult<MerchantBalanceResponse>()
                 {
                     ErrorCode = ErrorCode.SystemError,
@@ -339,11 +335,11 @@ namespace ThirdPartyService.Controllers
         {
             try
             {
-                return thirdPartyBLL.GetTpBetRecordExtend(request);
+                return _thirdPartyBLL.GetTpBetRecordExtend(request);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
                 return new ApiResult<TpBetRecordExtend>()
                 {
                     ErrorCode = ErrorCode.SystemError,

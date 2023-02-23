@@ -7,8 +7,7 @@ namespace CommonService.Service.BLL
     public class SelLangBLL
     {
         private ConcurrentDictionary<string, ResourceManager> rm = new ConcurrentDictionary<string, ResourceManager>();
-        public SelLangBLL()
-        { }
+
         public string GetResourceValue(string key, string langId)
         {
             return GetResourceValue(key, "CommonService_lan", langId);

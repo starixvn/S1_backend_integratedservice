@@ -5,14 +5,11 @@ namespace CommonService.Service.Library
 {
     public class Tools
     {
-        public Tools()
-        {
-        }
         public string ToMD5(string encodeStr)
         {
             using (var cryptoMD5 = MD5.Create())
             {
-                var bytes = System.Text.Encoding.UTF8.GetBytes(encodeStr);
+                var bytes = Encoding.UTF8.GetBytes(encodeStr);
                 var hash = cryptoMD5.ComputeHash(bytes);
                 var md5 = BitConverter.ToString(hash)
                 .Replace("-", String.Empty)

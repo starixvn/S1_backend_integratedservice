@@ -15,7 +15,6 @@
         public class DynamicTemplateData
         {
             public string resetpwdurl { get; set; }
-
         }
     }
 }

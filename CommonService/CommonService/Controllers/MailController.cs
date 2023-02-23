@@ -1,5 +1,6 @@
 ﻿using CommonService.Service.BLL;
 using CommonService.Service.Model;
+using CommonService.Service.Model.enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CommonService.Controllers
@@ -8,21 +9,19 @@ namespace CommonService.Controllers
     [ApiController]
     public class MailController : ControllerBase
     {
-        private readonly CustInfoBLL custInfoBLL;
-        private readonly SendXBLL sendXBLL;
-        private readonly SendGridBLL sendGridBLL;
-        private readonly RestPasswordBLL restPasswordBLL;
+        private readonly CustInfoBLL _custInfoBll;
+        private readonly SendGridBLL _sendGridBll;
+        private readonly RestPasswordBLL _restPasswordBll;
         private readonly OTPEmailBLL _otpEmailBll;
-        private readonly ILogger<MailController> logger;
+        private readonly ILogger<MailController> _logger;
 
-        public MailController(ILogger<MailController> logger, CustInfoBLL custInfoBLL, SendXBLL sendXBLL, SendGridBLL sendGridBLL, RestPasswordBLL restPasswordBLL, OTPEmailBLL otpEmailBll)
+        public MailController(ILogger<MailController> logger, CustInfoBLL custInfoBll, SendGridBLL sendGridBll, RestPasswordBLL restPasswordBll, OTPEmailBLL otpEmailBll)
         {
-            this.custInfoBLL = custInfoBLL;
-            this.sendXBLL = sendXBLL;
-            this.sendGridBLL = sendGridBLL;
-            this.restPasswordBLL = restPasswordBLL;
+            _custInfoBll = custInfoBll;
+            _sendGridBll = sendGridBll;
+            _restPasswordBll = restPasswordBll;
             _otpEmailBll = otpEmailBll;
-            this.logger = logger;
+            _logger = logger;
         }
         public class Req
         {
@@ -33,36 +32,11 @@ namespace CommonService.Controllers
         public async Task<ApiResult> SendWelcomeMailAsync(Req req)
         {
             var apiResult = new ApiResult();
-            var custInfo = custInfoBLL.GetCustInfoProfile(req.custId);
+            var custInfo = _custInfoBll.GetCustInfoProfile(req.custId);
 
             if (custInfo != null)
             {
-                var resultResp = await sendXBLL.IdentifyAsync(custInfo);
-
-                apiResult.ErrorCode = resultResp.ErrorCode;
-                apiResult.Message = resultResp.Message;
-                apiResult.RawMessage = resultResp.RawMessage;
-            }
-
-            return apiResult;
-        }
-
-        public class Req1
-        {
-            public int custId { get; set; }
-            public string subject { get; set; }
-            public string content { get; set; }
-        }
-
-        [HttpPost]
-        public async Task<ApiResult> SendMailAsync(Req1 req)
-        {
-            var apiResult = new ApiResult();
-            var custInfo = custInfoBLL.GetCustInfoProfile(req.custId);
-
-            if (custInfo != null)
-            {
-                var resultResp = await sendGridBLL.SendMailAsync(custInfo, req.subject, req.content);
+                var resultResp = await _sendGridBll.SendMailAsync(custInfo, null, TemplateType.WelcomeMail);
 
                 apiResult.ErrorCode = resultResp.ErrorCode;
                 apiResult.Message = resultResp.Message;
@@ -81,12 +55,12 @@ namespace CommonService.Controllers
         [HttpPost]
         public async Task<ApiResult> RestPasswordAsync(Req2 req2)
         {
-            logger.LogInformation(Newtonsoft.Json.JsonConvert.SerializeObject(req2));
+            _logger.LogInformation(Newtonsoft.Json.JsonConvert.SerializeObject(req2));
             var apiResult = new ApiResult();
-            var custInfo = custInfoBLL.GetCustInfoProfile(req2.custId);
+            var custInfo = _custInfoBll.GetCustInfoProfile(req2.custId);
             if (custInfo != null)
             {
-                var resultResp = await restPasswordBLL.SendMailAsync(custInfo, req2.resetPasswordUrl);
+                var resultResp = await _restPasswordBll.SendMailAsync(custInfo, req2.resetPasswordUrl);
                 apiResult.ErrorCode = resultResp.ErrorCode;
                 apiResult.Message = resultResp.Message;
                 apiResult.RawMessage = resultResp.RawMessage;

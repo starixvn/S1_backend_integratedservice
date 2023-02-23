@@ -1,22 +1,18 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Net;
-using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Serialization;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpMerchantBalance.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
+using Microsoft.Extensions.Logging;
 
 namespace ThirdPartyCore
 {
@@ -58,17 +54,23 @@ namespace ThirdPartyCore
     }
 
     public abstract class ThirdPartyHelperBase : IThirdPartyHelper, IThirdPartyTpBetRecordDetail, IThirdPartyTpGetMerchantBalance
-    {
+    {  
         public static string proxyHost;
+
         public static int proxyPort;
+
         private bool _isHeathly;
+
         public event InsertLogEventHandler InsertLog;
+
         public static IServerInfoProvider ServerInfoProvider { set; get; }
+
         public static IAuthProvider AuthProvider { set; get; }
 
         public static ITpBetRecordProvider TpBetRecordProvider { set; get; }
 
         public static ITpCustInfoProvider TpCustInfoProvider { set; get; }
+
         public static IBetLimitProvider BetLimitProvider { set; get; }
 
         public static string CommonServiceHost { get; set; }
@@ -76,8 +78,13 @@ namespace ThirdPartyCore
         public static string LetsTalkGroupName { get; set; }
 
         public static string EnvironmentName { set; get; }
+
         public static bool IsDevelopment { set; get; }
+
         public static string ContentRootPath { set; get; }
+
+        public static ILogger<IThirdPartyHelper> logger { set; get; }
+
         public bool isHeathly
         {
             set
@@ -96,70 +103,81 @@ namespace ThirdPartyCore
         }
 
         public bool isUnderMaintenance { set; get; }
+
         public DateTime CheckTime { set; get; }
+
         public ThirdPartyHelperBase()
         {
             isHeathly = true;
         }
+
         public bool CheckValidationResult(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors errors) { return true; }
+
         protected string HttpPost(string url, string parameters, string contentType, Dictionary<string, string> headers = null, int timeOutTime = 0)
         {
-
-            var parametersLog = parameters;
-            if (headers != null)
-            {
-                parametersLog = $"{parametersLog}, Header={JsonConvert.SerializeObject(headers)}";
-            }
-            InsertLog?.Invoke(url, parametersLog, "1");
-
-            if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
-            {
-                ServicePointManager.SecurityProtocol = (SecurityProtocolType)192 | (SecurityProtocolType)768 | (SecurityProtocolType)3072;
-                ServicePointManager.ServerCertificateValidationCallback = CheckValidationResult;
-            }
-
-            WebRequest request = WebRequest.Create(url);
-            if (!string.IsNullOrEmpty(proxyHost))
-            {
-                request.Proxy = new WebProxy(proxyHost, proxyPort);
-            }
-
-            if (timeOutTime > 0)
-            {
-                request.Timeout = timeOutTime * 1000;
-            }
-
-            request.Method = "POST";
-            byte[] byteArray = Encoding.UTF8.GetBytes(parameters);
-            request.ContentType = contentType;
-            request.ContentLength = byteArray.Length;
-
-            if (headers != null)
-            {
-                foreach (var item in headers)
+            try
+            {           
+                var parametersLog = parameters;
+                if (headers != null)
                 {
-                    request.Headers.Add(item.Key, item.Value);
+                    parametersLog = $"{parametersLog}, Header={JsonConvert.SerializeObject(headers)}";
                 }
-            }
-            using (Stream RequestStream = request.GetRequestStream())
-            {
-                RequestStream.Write(byteArray, 0, byteArray.Length);
-            }
+                InsertLog?.Invoke(url, parametersLog, "1");
 
-            StringBuilder sb = new StringBuilder();
-            using (WebResponse response = request.GetResponse())
-            using (Stream ResponseStream = response.GetResponseStream())
-            using (StreamReader reader = new StreamReader(ResponseStream, Encoding.UTF8))
-            {
-                string line;
-                while ((line = reader.ReadLine()) != null)
+                if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
                 {
-                    sb.Append(line);
+                    ServicePointManager.SecurityProtocol = (SecurityProtocolType)192 | (SecurityProtocolType)768 | (SecurityProtocolType)3072;
+                    ServicePointManager.ServerCertificateValidationCallback = CheckValidationResult;
                 }
-            }
 
-            InsertLog?.Invoke(url, parameters, sb.ToString());
-            return sb.ToString();
+                WebRequest request = WebRequest.Create(url);
+                if (!string.IsNullOrEmpty(proxyHost))
+                {
+                    request.Proxy = new WebProxy(proxyHost, proxyPort);
+                }
+
+                if (timeOutTime > 0)
+                {
+                    request.Timeout = timeOutTime * 1000;
+                }
+
+                request.Method = "POST";
+                byte[] byteArray = Encoding.UTF8.GetBytes(parameters);
+                request.ContentType = contentType;
+                request.ContentLength = byteArray.Length;
+
+                if (headers != null)
+                {
+                    foreach (var item in headers)
+                    {
+                        request.Headers.Add(item.Key, item.Value);
+                    }
+                }
+                using (Stream RequestStream = request.GetRequestStream())
+                {
+                    RequestStream.Write(byteArray, 0, byteArray.Length);
+                }
+
+                StringBuilder sb = new StringBuilder();
+                using (WebResponse response = request.GetResponse())
+                using (Stream ResponseStream = response.GetResponseStream())
+                using (StreamReader reader = new StreamReader(ResponseStream, Encoding.UTF8))
+                {
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        sb.Append(line);
+                    }
+                }
+
+                InsertLog?.Invoke(url, parameters, sb.ToString());
+                return sb.ToString();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, e.Message);
+                throw;
+            }
         }
         
         protected string HttpPostClient(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
@@ -217,20 +235,15 @@ namespace ThirdPartyCore
             }
             catch (Exception e)
             {
+                logger.LogError(e, e.Message);
                 InsertLog?.Invoke(url, parametersLog, e.Message);
                 return e.Message;
             }
         }
 
-        protected string HttpPostWithX509(string url, Dictionary<string, string> parameters, string contentType, Dictionary<string, string> headers = null, Dictionary<string, string> certificate = null)
+        protected string HttpPostWithX509(string url, Dictionary<string, string> parameters, string contentType, Dictionary<string, string> headers = null, X509Certificate2 certificate = null)
         {
             InsertLog?.Invoke(url, JsonConvert.SerializeObject(parameters), "1");
-
-            if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
-            {
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
-                ServicePointManager.ServerCertificateValidationCallback = CheckValidationResult;
-            }
 
             using var handler = new HttpClientHandler();
             if (!string.IsNullOrEmpty(proxyHost))
@@ -238,9 +251,10 @@ namespace ThirdPartyCore
                 handler.UseProxy = true;
                 handler.Proxy = new WebProxy(proxyHost, proxyPort);
             }
-            handler.ClientCertificateOptions = ClientCertificateOption.Manual;
-            handler.SslProtocols = SslProtocols.Tls12;
-            handler.ClientCertificates.Add(new X509Certificate2(certificate["path"], certificate["password"], X509KeyStorageFlags.MachineKeySet));
+            handler.ClientCertificates.Add(certificate);
+            //ignore Certificate
+            handler.ServerCertificateCustomValidationCallback = delegate { return true; };
+
             using var client = new HttpClient(handler);
             try
             {
@@ -257,8 +271,25 @@ namespace ThirdPartyCore
                 InsertLog?.Invoke(url, JsonConvert.SerializeObject(parameters), sb);
                 return sb;
             }
+            catch (AggregateException ae)
+            {
+                foreach (var ex in ae.InnerExceptions)
+                {
+                    logger.LogError(ex, ex.InnerException.Message);
+                }
+                throw;
+            }
+            catch (HttpRequestException ex)
+            {
+                if (ex.InnerException != null)
+                {
+                    logger.LogError(ex, ex.InnerException.Message);
+                }
+                throw;
+            }
             catch (Exception e)
             {
+                logger.LogError(e, e.Message);
                 InsertLog?.Invoke(url, JsonConvert.SerializeObject(parameters), e.Message);
                 return e.Message;
             }
@@ -266,35 +297,43 @@ namespace ThirdPartyCore
 
         protected string HttpGet(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
         {
-            InsertLog?.Invoke(url, parameters, "1");
-            WebRequest request = WebRequest.Create($"{url}?{parameters}");
-            if (!string.IsNullOrEmpty(proxyHost))
-            {
-                request.Proxy = new WebProxy(proxyHost, proxyPort);
-            }
-            request.Method = "GET";
-            request.ContentType = contentType;
-            if (headers != null)
-            {
-                foreach (var item in headers)
+            try
+            {            
+                InsertLog?.Invoke(url, parameters, "1");
+                WebRequest request = WebRequest.Create($"{url}?{parameters}");
+                if (!string.IsNullOrEmpty(proxyHost))
                 {
-                    request.Headers.Add(item.Key, item.Value);
+                    request.Proxy = new WebProxy(proxyHost, proxyPort);
                 }
-            }
+                request.Method = "GET";
+                request.ContentType = contentType;
+                if (headers != null)
+                {
+                    foreach (var item in headers)
+                    {
+                        request.Headers.Add(item.Key, item.Value);
+                    }
+                }
 
-            StringBuilder sb = new StringBuilder();
-            using (WebResponse response = request.GetResponse())
-            using (Stream dataStream = response.GetResponseStream())
-            using (StreamReader reader = new StreamReader(dataStream))
-            {
-                string line;
-                while ((line = reader.ReadLine()) != null)
+                StringBuilder sb = new StringBuilder();
+                using (WebResponse response = request.GetResponse())
+                using (Stream dataStream = response.GetResponseStream())
+                using (StreamReader reader = new StreamReader(dataStream))
                 {
-                    sb.Append(line);
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        sb.Append(line);
+                    }
                 }
+                InsertLog?.Invoke(url, parameters, sb.ToString());
+                return sb.ToString();
             }
-            InsertLog?.Invoke(url, parameters, sb.ToString());
-            return sb.ToString();
+            catch (Exception e)
+            {
+                logger.LogError(e, e.Message);
+                throw;
+            }
         }
 
         protected string HttpGet(string url, string parameters, Dictionary<string, string> headers = null)
@@ -324,6 +363,7 @@ namespace ThirdPartyCore
             }
             catch (Exception e)
             {
+                logger.LogError(e, e.Message);
                 InsertLog?.Invoke(url, JsonConvert.SerializeObject(parameters), e.Message);
                 return e.Message;
             }
@@ -601,6 +641,7 @@ namespace ThirdPartyCore
 		}
         public abstract TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
     }
+
     public interface IThirdPartyTpBetRecordDetail
     {
         BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);

@@ -1,4 +1,5 @@
-﻿using CommonService.Service.Library;
+﻿using System.Net;
+using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
 using Microsoft.Extensions.Options;
@@ -42,7 +43,7 @@ namespace CommonService.Service.BLL
             using var result = await httpHelper.HttpFromPostAsync(url, null, sendIovationChecks, "application/x-www-form-urlencoded");
             //var resultResp = JsonConvert.DeserializeObject<FPSResult>(result.Content.ReadAsStringAsync().Result);
 
-            if (result.StatusCode == System.Net.HttpStatusCode.OK)
+            if (result.StatusCode == HttpStatusCode.OK)
             {
                 apiResult.ErrorCode = ErrorCode.Success;
                 apiResult.Message = result.Content.ReadAsStringAsync().Result;

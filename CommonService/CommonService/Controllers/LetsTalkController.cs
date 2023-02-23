@@ -1,4 +1,5 @@
-﻿using CommonService.Service.Library;
+﻿using System.Net;
+using CommonService.Service.Library;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -85,7 +86,8 @@ namespace CommonService.Controllers
                 var url = _letsTalk["Common"]["SignInURL"];
                 var group = _letsTalk.ContainsKey(groupName) ? _letsTalk[groupName] : throw new Exception("GroupName");
 
-                var data = new Dictionary<string, string>(){
+                var data = new Dictionary<string, string>
+                {
                     {"id", group["SignInId"]},
                     {"token", group["SignInToken"]}
                 };
@@ -93,7 +95,7 @@ namespace CommonService.Controllers
                 var parameters = JsonConvert.SerializeObject(data);
                 using var result = await _httpHelper.HttpPost1Async(url, null, parameters, "application/json");
 
-                if (result.StatusCode == System.Net.HttpStatusCode.OK)
+                if (result.StatusCode == HttpStatusCode.OK)
                 {
                     var ContentResult = await result.Content.ReadAsStringAsync();
                     var resultResp = JsonConvert.DeserializeObject<LetsTalkSignResult>(ContentResult);
@@ -102,10 +104,8 @@ namespace CommonService.Controllers
                     {
                         return resultResp.token;
                     }
-                    else
-                    {
-                        _logger.LogInformation($"httpResult error URL : {url} Result:{ContentResult} ");
-                    }
+
+                    _logger.LogInformation($"httpResult error URL : {url} Result:{ContentResult} ");
                 }
                 else
                 {

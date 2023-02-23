@@ -1,4 +1,5 @@
-﻿using CommonService.Service.Library;
+﻿using System.Net;
+using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
 using Microsoft.Extensions.Options;
@@ -11,14 +12,12 @@ namespace CommonService.Service.BLL
     {
         private readonly IOptions<Dictionary<string, SendGridConfig>> sendGridConfig;
         private readonly HttpHelper httpHelper;
-        private readonly CustInfoBLL custInfoBLL;
         private readonly AuthBLL authBLL;
 
-        public RestPasswordBLL(IOptions<Dictionary<string, SendGridConfig>> sendGridConfig, HttpHelper httpHelper, CustInfoBLL custInfoBLL, AuthBLL authBLL)
+        public RestPasswordBLL(IOptions<Dictionary<string, SendGridConfig>> sendGridConfig, HttpHelper httpHelper, AuthBLL authBLL)
         {
             this.sendGridConfig = sendGridConfig;
             this.httpHelper = httpHelper;
-            this.custInfoBLL = custInfoBLL;
             this.authBLL = authBLL;
         }
         public async Task<ApiResult> SendMailAsync(CustInfoProfile custInfo, string resetPasswordUrl)
@@ -39,7 +38,7 @@ namespace CommonService.Service.BLL
             var url = config.ApiUrl;
             var sendGridResetPasswordBody = new SendGridResetPasswordBody
             {
-                from = new NameEmail()
+                from = new NameEmail
                 {
                     name = config.mailFrom.name,
                     email = config.mailFrom.email
@@ -68,7 +67,7 @@ namespace CommonService.Service.BLL
             sendGridResetPasswordBody.template_id = config.ResetPasswordTemplate[lang];
 
             using var result = await httpHelper.HttpPost1Async(url, headerParams, JsonConvert.SerializeObject(sendGridResetPasswordBody), "application/json");
-            if (result.StatusCode == System.Net.HttpStatusCode.Accepted)
+            if (result.StatusCode == HttpStatusCode.Accepted)
             {
                 apiResult.ErrorCode = 0;
             }

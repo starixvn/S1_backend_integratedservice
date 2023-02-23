@@ -7,6 +7,7 @@
         public NameEmail mailFrom { get; set; }
         public Dictionary<string, string> ResetPasswordTemplate { get; set; }
         public Dictionary<string, string> VerifyMailTemplate { get; set; }
+        public Dictionary<string, string> WelcomeMailTemplate { get; set; }
         public string ResetPasswordUrl { get; set; }
     }
     public class NameEmail
@@ -31,24 +32,10 @@
     {
         public NameEmail from { get; set; }
     }
-    public class SendCustomContentMailBody : SendMailBody
-    {
-        public List<Content> content { get; set; }
-        public List<CustomPersonalization> personalizations { get; set; }
-    }
 
-    public class Content
-    {
-        public string type { get; set; }
-        public string value { get; set; }
-    }
     public class Personalization
     {
         public List<NameEmail> to { get; set; }
-    }
-    public class CustomPersonalization : Personalization
-    {
-        public string subject { get; set; }
     }
 
     public class SendGridTemplateBody : SendMailBody

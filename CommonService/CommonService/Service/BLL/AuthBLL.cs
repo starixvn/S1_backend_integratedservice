@@ -1,4 +1,5 @@
 ﻿using CommonService.Service.DAL;
+using Newtonsoft.Json;
 
 namespace CommonService.Service.BLL
 {
@@ -18,14 +19,12 @@ namespace CommonService.Service.BLL
             var GuidString = Convert.ToBase64String(g.ToByteArray());
             GuidString = GuidString.Replace("=", "");
             GuidString = GuidString.Replace("+", "");
-            if (authService.ApplyToken(GuidString, Newtonsoft.Json.JsonConvert.SerializeObject(t), config.GetValue<int>("TokenExpireTime")) > 0)
+            if (authService.ApplyToken(GuidString, JsonConvert.SerializeObject(t), config.GetValue<int>("TokenExpireTime")) > 0)
             {
                 return GuidString;
             }
-            else
-            {
-                return null;
-            }
+
+            return null;
         }
     }
 }
