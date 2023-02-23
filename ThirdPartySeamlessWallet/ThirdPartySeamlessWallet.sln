@@ -5,16 +5,11 @@ VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdPartySeamlessWallet", "ThirdPartySeamlessWallet\ThirdPartySeamlessWallet.csproj", "{492DEE35-660A-41DA-8C3E-5C3E7C683776}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{42C3DAFD-986A-4AE2-9255-9171B6D7A6C7}"
-	ProjectSection(SolutionItems) = preProject
-		.editorconfig = .editorconfig
-	EndProjectSection
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdPartySeamlessWallet.IntegrationTest", "ThirdPartySeamlessWallet.IntegrationTest\ThirdPartySeamlessWallet.IntegrationTest.csproj", "{257694CA-7877-410B-81ED-39006513DD0C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdPartySettleWorker", "ThirdPartySettleWorker\ThirdPartySettleWorker.csproj", "{A23FC41F-D662-4A7E-ADD0-A062ECF74D57}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdPartySeamlessWallet.Core", "ThirdPartySeamlessWallet.Core\ThirdPartySeamlessWallet.Core.csproj", "{0575E56D-B4B7-457E-9755-B0C4919AA28E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdPartySeamlessWallet.Core", "ThirdPartySeamlessWallet.Core\ThirdPartySeamlessWallet.Core.csproj", "{0575E56D-B4B7-457E-9755-B0C4919AA28E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
