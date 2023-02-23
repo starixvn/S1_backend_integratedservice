@@ -63,6 +63,7 @@
     <ProjectReference Include="..\ThirdParty.TCG\ThirdParty.TCG.csproj" />
     <ProjectReference Include="..\ThirdParty.V8\ThirdParty.V8.csproj" />
     <ProjectReference Include="..\ThirdParty.WM\ThirdParty.WM.csproj" />
+    <ProjectReference Include="..\ThirdParty.Yeebet\ThirdParty.Yeebet.csproj" />
     <ProjectReference Include="..\ThirdParty.YGG\ThirdParty.YGG.csproj" />
     <ProjectReference Include="..\ThirdParty.YL\ThirdParty.YL.csproj" />
     <ProjectReference Include="..\ThirdParty.Skywind\ThirdParty.Skywind.csproj" />
