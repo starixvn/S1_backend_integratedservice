@@ -104,6 +104,7 @@ namespace ThirdPartySettleWorker.Workers
                             TransTime = transTime,
                             SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, settleData.GameId),
                             TicketStatus = settleData.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
+                            GameID = settleData.GameId,
                         };
 
                         if (betRecordInfo.WinlostAmount == 0)
@@ -187,6 +188,7 @@ namespace ThirdPartySettleWorker.Workers
                         var stake = settleData.Sum(x => x.Stake);
                         var validBet = settleData.Sum(x => x.ValidBet);
                         var winLostAmount = settleData.Sum(x => x.WinLostAmount);
+                        var gameId = settleData.FirstOrDefault().GameId;
 
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
                         if (tpCustInfo == null)
@@ -213,6 +215,7 @@ namespace ThirdPartySettleWorker.Workers
                             TransTime = transTime,
                             SettlementType = SettlementType.SettledForValid,
                             TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
+                            GameID = gameId,
                         };
 
                         if (betRecordInfo.WinlostAmount == 0)
