@@ -117,6 +117,7 @@ namespace ThirdPartySettleWorker.Workers
                             TransTime = bettransData.TransTime,
                             SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType(thisTp, bettransData.GameId.ToString()),
                             TicketStatus = (TicketStatus)bettransData.TicketStatus,
+                            GameID = bettransData.GameId
                         };
 
                         if (bettrans.Any(x => x.TicketStatus == (int)TicketStatus.Refund))
@@ -227,6 +228,7 @@ namespace ThirdPartySettleWorker.Workers
                             SettledTime = bettrans.Last().SettleTime,
                             TransTime = bettransData.TransTime,
                             SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType(thisTp, bettransData.GameId.ToString()),
+                            GameID = bettransData.GameId,
                         };
 
                         var tt = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.TransTime).DateTime.ToString("yyyyMM");
@@ -370,6 +372,7 @@ namespace ThirdPartySettleWorker.Workers
                                 TransTime = unsettled.SettleTime,
                                 SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType(thisTp, unsettled.GameId.ToString()),
                                 TicketStatus = (TicketStatus)unsettled.TicketStatus,
+                                GameID = unsettled.GameId,
                             };
                             if (unsettled.TicketStatus == (int)TicketStatus.Refund)
                             {
@@ -448,7 +451,8 @@ namespace ThirdPartySettleWorker.Workers
                                 SettledTime = unsettled.SettleTime,
                                 TransTime = unsettled.SettleTime,
                                 SettlementType = unsettled.TicketStatus == (int)TicketStatus.Refund ? SettlementType.SettledForInvalid : SettlementType.SettledForValid,
-                                TicketStatus = (TicketStatus)unsettled.TicketStatus
+                                TicketStatus = (TicketStatus)unsettled.TicketStatus,
+                                GameID = unsettled.GameId
                             };
 
                             _settledBLL.Settled(tpCustInfo, betRecordInfo, category);
