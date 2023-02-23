@@ -114,6 +114,7 @@ namespace ThirdPartySettleWorker.Workers
                             SettlementType = gametype == GameType.PP_LiveCasino ?
                             SettlementType.SettledForValid : _settledBLL.GetSettlementType(gametype, settleData.GameId),
                             TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
+                            GameID = settleData.GameId
                         };
 
                         if (betRecordInfo.WinlostAmount == 0)
