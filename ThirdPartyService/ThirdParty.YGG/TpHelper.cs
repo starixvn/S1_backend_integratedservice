@@ -114,7 +114,7 @@ namespace ThirdParty.YGG
             {
                 TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
-                    GameID = detailList.GetFirstStringValue("cat3"),
+                    GameID = detailList.GetFirstStringValue("cat5"),
                     Game = detailList.GetFirstStringValue("cat4"),
                     RefNo = detailList.GetFirstStringValue("reference"),
                     Title = detailList.GetFirstStringValue("tag1"),
