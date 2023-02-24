@@ -106,7 +106,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 
                                         if (betList.Sum(x => x.Value) == wager.Stake)
                                         {
-                                            BetRecordInfo betRecordInfo = new BetRecordInfo
+                                            var betRecordInfo = new BetRecordInfo
                                             {
                                                 TpId = (int)Tp.AG,
                                                 Stake = wager.Stake,
@@ -117,7 +117,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                                 TpUserName = username,
                                                 SettledTime = wager.SettleTime,
                                                 TransTime = wager.TransTime,
-                                                SettlementType = SettlementType.SettledForValid
+                                                SettlementType = SettlementType.SettledForValid,
+                                                GameID = wager.GameId,
                                             };
 
                                             var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
@@ -215,7 +216,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                     wager.WinLostAmount *= tpCurrency.ExchangeRate;
                                 }
 
-                                BetRecordInfo betRecordInfo = new BetRecordInfo
+                                var betRecordInfo = new BetRecordInfo
                                 {
                                     TpId = thisTp,
                                     Stake = wager.Stake,
@@ -226,7 +227,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                     TpUserName = unsettled.Username,
                                     SettledTime = wager.SettleTime,
                                     TransTime = wager.TransTime,
-                                    SettlementType = SettlementType.SettledForValid
+                                    SettlementType = SettlementType.SettledForValid,
+                                    GameID = wager.GameId.ToString(),
                                 };
 
                                 var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
@@ -295,7 +297,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             decimal validBet = unsettled.ValidBet;
                             decimal winLostAmount = unsettled.WinLostAmount;
 
-                            BetRecordInfo betRecordInfo = new BetRecordInfo
+                            var betRecordInfo = new BetRecordInfo
                             {
                                 TpId = thisTp,
                                 Stake = stake,
@@ -384,7 +386,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 }
                                 if (wager.Stake == unsettled.RealBetAmount && wager.WinLostAmount == unsettled.WinLostAmount)
                                 {
-                                    BetRecordInfo betRecordInfo = new BetRecordInfo
+                                    var betRecordInfo = new BetRecordInfo
                                     {
                                         TpId = thisTp,
                                         Stake = wager.Stake,
@@ -472,7 +474,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 }
                                 if (wager.Stake == unsettled.Stake && wager.WinLostAmount == unsettled.WinLostAmount)
                                 {
-                                    BetRecordInfo betRecordInfo = new BetRecordInfo
+                                    var betRecordInfo = new BetRecordInfo
                                     {
                                         TpId = thisTp,
                                         Stake = wager.Stake,
@@ -565,7 +567,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
                             }
 
-                            BetRecordInfo betRecordInfo = new BetRecordInfo
+                            var betRecordInfo = new BetRecordInfo
                             {
                                 TpId = thisTp,
                                 Stake = unsettled.Stake,
@@ -642,7 +644,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             decimal validBet = unsettled.ValidBet;
                             decimal winLostAmount = unsettled.WinLostAmount;
 
-                            BetRecordInfo betRecordInfo = new BetRecordInfo
+                            var betRecordInfo = new BetRecordInfo
                             {
                                 TpId = thisTp,
                                 Stake = stake,
@@ -729,7 +731,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 
                                 if (wager.Stake == stake)
                                 {
-                                    BetRecordInfo betRecordInfo = new BetRecordInfo
+                                    var betRecordInfo = new BetRecordInfo
                                     {
                                         TpId = thisTp,
                                         Stake = stake,
@@ -807,7 +809,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(unsettled.TpId, unsettled.userId);
                             var tpCurrency = thirdPartyBLL.GetTpCurrency(unsettled.TpId, tpCustInfo.CurrencyId);
 
-                            BetRecordInfo betRecordInfo = new BetRecordInfo
+                            var betRecordInfo = new BetRecordInfo
                             {
                                 TpId = unsettled.TpId,
                                 GameType = (GameType)unsettled.TpGameType,
