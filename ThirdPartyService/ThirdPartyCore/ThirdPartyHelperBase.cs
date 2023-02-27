@@ -176,7 +176,7 @@ namespace ThirdPartyCore
             catch (Exception e)
             {
                 logger.LogError(e, e.Message);
-                throw;
+                return e.Message;
             }
         }
         
@@ -332,7 +332,7 @@ namespace ThirdPartyCore
             catch (Exception e)
             {
                 logger.LogError(e, e.Message);
-                throw;
+                return e.Message;
             }
         }
 
