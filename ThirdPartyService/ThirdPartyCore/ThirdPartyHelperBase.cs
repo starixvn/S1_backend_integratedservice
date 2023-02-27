@@ -277,7 +277,7 @@ namespace ThirdPartyCore
                 {
                     logger.LogError(ex, ex.InnerException.Message);
                 }
-                throw;
+                return ae.Message;
             }
             catch (HttpRequestException ex)
             {
@@ -285,7 +285,7 @@ namespace ThirdPartyCore
                 {
                     logger.LogError(ex, ex.InnerException.Message);
                 }
-                throw;
+                return ex.Message;
             }
             catch (Exception e)
             {
