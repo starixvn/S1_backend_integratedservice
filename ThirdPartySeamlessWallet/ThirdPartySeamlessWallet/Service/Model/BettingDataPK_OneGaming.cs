@@ -64,5 +64,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal WinLostAmount { get; set; }
         public string Account { get; set; }
         public long SettleTime { get; set; }
+        public string GameId { get; set; }
     }
 }
