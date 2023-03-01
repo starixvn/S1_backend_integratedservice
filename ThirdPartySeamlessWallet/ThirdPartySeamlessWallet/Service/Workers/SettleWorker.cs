@@ -656,7 +656,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 SettledTime = unsettled.SettleTime,
                                 TransTime = unsettled.TransTime,
                                 SettlementType = unsettled.TicketStatus == 0 ? SettlementType.UnSettled : SettlementType.SettledForValid,
-                                TicketStatus = (TicketStatus)unsettled.TicketStatus
+                                TicketStatus = (TicketStatus)unsettled.TicketStatus,
+                                GameID = unsettled.GameId,
                             };
 
                             settledBLL.Settled(tpCustInfo, betRecordInfo, category);
