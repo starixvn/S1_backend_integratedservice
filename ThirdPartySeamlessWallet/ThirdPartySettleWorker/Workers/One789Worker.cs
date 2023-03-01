@@ -115,7 +115,8 @@ namespace ThirdPartySettleWorker.Workers
                                     TpUserName = wager.Account,
                                     SettledTime = wager.SettleTime,
                                     TransTime = wager.TransTime,
-                                    SettlementType = SettlementType.SettledForValid
+                                    SettlementType = SettlementType.SettledForValid,
+                                    GameID = wager.GameId,
                                 };
 
                                 if (isRefund)
