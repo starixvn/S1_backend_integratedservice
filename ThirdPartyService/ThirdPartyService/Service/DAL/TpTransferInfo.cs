@@ -126,6 +126,7 @@ namespace ThirdPartyService.Service.DAL
                             tpCustInfo.UserName,
                             tpCustInfo.SiteId,
                             Memo = memo,
+                            ReasonId = 0,
                             RefTransId = transId,
                             CreateFrom = (int)WithdrawalLimitLogCreateFromEnum.Bonus, 
                             Creator = "System"
