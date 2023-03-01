@@ -36,7 +36,7 @@ namespace ThirdPartyService.Service.DAL
             return afterAmount >= 0 ? 0 : -1;
         }
 
-        public int SetWithdrawalLimit(int custId, string userName, int siteId, decimal withdrawalLimit, string memo,
+        public int SetWithdrawalLimit(int custId, string userName, int siteId, decimal withdrawalLimit, int reasonId ,string memo,
             string refTransId, int createFrom, string creator, out decimal afterWithdrawalLimit, IDbTransaction trans)
         {
             var p = new DynamicParameters(new
@@ -46,6 +46,7 @@ namespace ThirdPartyService.Service.DAL
                 SiteId = siteId,
                 WithdrawalLimit = withdrawalLimit,
                 Memo = memo,
+                ReasonId = reasonId,
                 RefTransId = refTransId,
                 CreateFrom = createFrom,
                 Creator = creator
