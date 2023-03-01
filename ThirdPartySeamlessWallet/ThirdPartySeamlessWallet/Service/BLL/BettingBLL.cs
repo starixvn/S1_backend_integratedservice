@@ -129,16 +129,23 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
-        public int PlaceBetRNG_YGG(BettingDataRNG_YGG bettingDataRNG_YGG, out decimal afterAmount)
+        public int PlaceBetRNG_YGG(BettingDataRNG_YGG bettingDataRNG_YGG, out decimal afterAmount, out string countryCode)
         {
             var result = 0;
             afterAmount = 0;
+            countryCode = string.Empty;
 
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.YGG, bettingDataRNG_YGG.playerid);
 
             if (tpCustInfo != null)
             {
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.YGG, tpCustInfo.CurrencyId);
+                var tpCountry = tpCustInfoBLL.GetTpCurrencyCodeByCurrencyId((int)Tp.YGG, tpCustInfo.TpCurrencyId);
+
+                if (tpCountry != null)
+                {
+                    countryCode = tpCountry.CountryCode;
+                }
 
                 var insertData = new BettingDataRNG_YGG()
                 {

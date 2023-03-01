@@ -115,6 +115,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string homeCurrency { get; set; }
 
             public string bonus => "0";
+            public string country { get; set; } = string.Empty;
         }
 
         #endregion
@@ -349,7 +350,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 try
                 {
-                    if (_bettingBll.PlaceBetRNG_YGG(wagerReq, out decimal tpAfterAmount) > 0)
+                    if (_bettingBll.PlaceBetRNG_YGG(wagerReq, out decimal tpAfterAmount, out string countryCode) > 0)
                     {
                         if (wagerReq.amount == 0)
                         {
@@ -360,6 +361,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         {
                             wagerData.balance = tpAfterAmount;
                         }
+                        wagerData.country = countryCode;
                         statusCode = 0;
                     }
                     else if (tpAfterAmount < 0)
@@ -424,7 +426,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 var payoutDataRngYgg = JsonConvert.DeserializeObject<PayoutDataRNG_YGG>(Content);
-                var result = _settledBll.PayoutRNG_YGG(payoutDataRngYgg, out decimal tpAfterAmount, SettleFlag.EndGame);
+                var result = _settledBll.PayoutRNG_YGG(payoutDataRngYgg, out decimal tpAfterAmount, out string countryCode, SettleFlag.EndGame);
 
                 wagerData = new WagerData()
                 {
@@ -432,7 +434,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     organization = payoutDataRngYgg.org,
                     currency = payoutDataRngYgg.currency,
                     homeCurrency = payoutDataRngYgg.currency,
-                    applicableBonus = 0
+                    applicableBonus = 0,
+                    country = countryCode
                 };
 
                 if (result > 0)
@@ -573,7 +576,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 var payoutDataRngYgg = JsonConvert.DeserializeObject<PayoutDataRNG_YGG>(Content);
-                var result = _settledBll.PayoutRNG_YGG(payoutDataRngYgg, out decimal tpAfterAmount, SettleFlag.Running);
+                var result = _settledBll.PayoutRNG_YGG(payoutDataRngYgg, out decimal tpAfterAmount, out string countryCode, SettleFlag.Running);
 
                 wagerData = new WagerData()
                 {
@@ -581,7 +584,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     organization = payoutDataRngYgg.org,
                     currency = payoutDataRngYgg.currency,
                     homeCurrency = payoutDataRngYgg.currency,
-                    applicableBonus = 0
+                    applicableBonus = 0,
+                    country = countryCode
                 };
 
                 if (result > 0)
