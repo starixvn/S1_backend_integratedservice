@@ -96,7 +96,8 @@ namespace ThirdPartySettleWorker.Workers
                                 TpUserName = account,
                                 SettledTime = unsettled.SettleTime,
                                 TransTime = unsettled.TransTime,
-                                SettlementType = SettlementType.SettledForValid
+                                SettlementType = SettlementType.SettledForValid,
+                                GameID = unsettled.KindID.ToString(),                                
                             };
                             var result = _settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
                             _settledBLL.SetSettleFlag_TpWagerPK_V8(unsettled.GameID);
