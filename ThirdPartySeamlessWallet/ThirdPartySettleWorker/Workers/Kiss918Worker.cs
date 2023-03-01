@@ -102,7 +102,8 @@ namespace ThirdPartySettleWorker.Workers
                                 SettledTime = wager.Select(x => x.SettleTime).Max(),
                                 TransTime = wager.Select(x => x.TransTime).Min(),
                                 SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, unsettleData.GameId),
-                                TicketStatus = SetTicketStatus(unsettleData.WinLostAmount, wager.Select(x => x.type))
+                                TicketStatus = SetTicketStatus(unsettleData.WinLostAmount, wager.Select(x => x.type)),
+                                GameID = unsettleData.GameId,
                             };
 
                             var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
