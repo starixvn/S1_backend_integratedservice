@@ -308,7 +308,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime / 1000,
                                 TransTime = unsettled.TransTime / 1000,
-                                SettlementType = SettlementType.SettledForValid
+                                SettlementType = SettlementType.SettledForValid,
+                                GameID = unsettled.GameId,
                             };
                             // check refund
                             if (unsettled.TicketStatus > 0)
@@ -397,7 +398,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         TpUserName = wager.Account,
                                         SettledTime = wager.SettleTime,
                                         TransTime = wager.TransTime,
-                                        SettlementType = SettlementType.SettledForValid
+                                        SettlementType = SettlementType.SettledForValid,
+                                        GameID = wager.GameId,
                                     };
 
                                     var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
