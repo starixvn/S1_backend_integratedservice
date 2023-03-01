@@ -26,7 +26,20 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketKey { get; set; }
         public int BonusId { get; set; }
         public string ReferenceNo { get; set; }
-        public string GameID { get; set; } = string.Empty;
+        public string GameID 
+        {
+            get
+            {
+                return _gameID;
+            }
+            set
+            {
+                //DB欄位長度限制為50，限制長度為50避免造成結算錯誤
+                _gameID = (value.Length > 50) ? value.Substring(0, 50) : value;
+            }
+        }
+
+        private string _gameID = string.Empty;
     }
 
     public class SettleData

@@ -78,7 +78,8 @@ namespace ThirdPartySettleWorker.Workers
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
                                 TransTime = unsettled.SettleTime,
-                                SettlementType = SettlementType.SettledForValid
+                                SettlementType = SettlementType.SettledForValid,
+                                GameID = unsettled.GameId
                             };
 
                             var result = _settledBLL.Settled_OneGaming(tpCustInfo, betRecordInfo);
