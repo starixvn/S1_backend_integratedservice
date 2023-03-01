@@ -488,7 +488,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         SettledTime = wager.SettleTime,
                                         TransTime = wager.TransTime,
                                         SettlementType = SettlementType.SettledForValid,
-                                        ReferenceNo = wager.betid // for fix cant mapping bonusid when data fixed can remove
+                                        ReferenceNo = wager.betid, // for fix cant mapping bonusid when data fixed can remove
+                                        GameID = wager.GameId,
                                     };
 
                                     var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
