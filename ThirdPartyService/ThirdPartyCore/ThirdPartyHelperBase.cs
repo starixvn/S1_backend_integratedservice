@@ -248,7 +248,7 @@ namespace ThirdPartyCore
             LogContext.PushProperty("contentType", contentType);
             logger.LogInformation($"headers: {JsonConvert.SerializeObject(headers)} " +
                 $"| parameters: {JsonConvert.SerializeObject(parameters)}" +
-                $"| certificate: {JsonConvert.SerializeObject(certificate)} ");
+                $"| certificate: {certificate.SubjectName} ");
 
             using var handler = new HttpClientHandler();
             if (!string.IsNullOrEmpty(proxyHost))
@@ -284,7 +284,7 @@ namespace ThirdPartyCore
             {
                 foreach (var ex in ae.InnerExceptions)
                 {
-                    logger.LogError(ex, ex.InnerException.Message);
+                    logger.LogError(ex, ex.Message);
                 }
                 return ae.Message;
             }
