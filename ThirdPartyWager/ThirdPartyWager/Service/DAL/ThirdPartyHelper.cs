@@ -61,6 +61,11 @@ namespace ThirdPartyWager.Service.DAL
             return _wagerDbClient.QueryFirst<TpWagerTimerReferenceModel>("Service_TpWagerTimerReference_ByGameType_Get", new { TpId = tpId, Type = type, GameType = gameType });
         }
 
+        public TpWagerTimerReferenceModel GetThirdPartyTimerReferenceByReference(int tpId, int type, int gameType, string reference)
+        {
+            return _wagerDbClient.QueryFirst<TpWagerTimerReferenceModel>("Service_TpWagerTimerReference_ByReference_Get", new { TpId = tpId, Type = type, GameType = gameType, Reference = reference });
+        }
+
         public int SetThirdPartyTimerByCurrency(int tpId, int type, long start, string currency, int gameType = 0)
         {
             return _wagerDbClient.Execute("Service_TpWagerTimerReference_Currency_Set", new { TpId = tpId, Type = type, StartUnix = start, Currency = currency, GameType = gameType });
@@ -70,7 +75,12 @@ namespace ThirdPartyWager.Service.DAL
         { 
             return _wagerDbClient.Execute("Service_TpWagerTimerReference_GameType_Set", new { TpId = tpId, Type = type, StartUnix = start, GameType = gameType });
         }
-        
+
+        public int SetThirdPartyTimerByReference(int tpId, int type, long start, int gameType, string reference)
+        {
+            return _wagerDbClient.Execute("Service_TpWagerTimerReference_Reference_Set", new { TpId = tpId, Type = type, StartUnix = start, GameType = gameType, Reference = reference });
+        }
+
         public IEnumerable<TpGameCasino> GetGameCasino(int tpId)
         {
             return _reportDbClient.Query<TpGameCasino>("Service_GameCasino_Get_V2", new { TpId = tpId });
