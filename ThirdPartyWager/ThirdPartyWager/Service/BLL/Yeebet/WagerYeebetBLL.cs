@@ -26,7 +26,7 @@ public class WagerYeebetBLL
         try
         {
             // get tp info for api
-            var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
+            var setting = _thirdPartyBLL.GetThirdPartyBySite(tpId, siteId);
 
             if (!GetAppIdAndKey(setting, $"{siteId}_{tpCurrencyId}", out string appid, out string key))
             {
