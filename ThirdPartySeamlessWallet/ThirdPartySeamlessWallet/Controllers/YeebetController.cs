@@ -91,7 +91,7 @@ public class YeebetController : ControllerBase
         //return new DeductResponse_Yeebet(YeebetErrorCode.Success, request.serialnumber, "rollback_test", "",0);
 
         #endregion
-        
+
         var requestDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(request.ToJson());
 
         if (!CheckAppidAndSign(request.appid, requestDic, out string message))
@@ -149,7 +149,7 @@ public class YeebetController : ControllerBase
             .Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
         // Check appid
-        var setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(_thirdPartyBLL.GetThirdPartySetting((int)thisTp).Setting);
+        var setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(_thirdPartyBLL.GetThirdPartyBySite((int)thisTp, tpCustInfo.SiteId).Setting);
         string seamlessAppid = setting.ContainsKey($"SeamlessAppId_{word}") && !string.IsNullOrEmpty(setting[$"SeamlessAppId_{word}"])
             ? setting[$"SeamlessAppId_{word}"]
             : throw new YeebetException(YeebetErrorCode.SystemError, $"SeamlessAppId_{word} is Invaild.");
