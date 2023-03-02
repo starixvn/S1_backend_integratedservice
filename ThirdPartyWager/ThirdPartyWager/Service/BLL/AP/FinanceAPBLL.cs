@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -12,6 +13,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly CommonBLL _commonBLL;
         private readonly ApiAPBLL _apiAPBLL;
         private readonly DateTimeHelper _dateTimeHelper;
+        private readonly WagerAPService _wagerAPService;
         private readonly int _timeZone = 0;
         private readonly List<int> _siteList = new List<int>() { 1, 2, 3 };
 
@@ -22,6 +24,7 @@ namespace ThirdPartyWager.Service.BLL
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _apiAPBLL = provider.GetRequiredService<ApiAPBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _wagerAPService = provider.GetRequiredService<WagerAPService>();
         }
 
         public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
@@ -69,27 +72,59 @@ namespace ThirdPartyWager.Service.BLL
                 // 分Site取得TpList
                 setting = _thirdPartyBLL.GetThirdPartyBySite(tpId, siteId);
 
-                var getWagerSummary = await _apiAPBLL.GetBetSummaryByTime(setting, reportTime.startTime, reportTime.endTime);
-
-                if (getWagerSummary.ErrorCode != 0)
+                foreach (var type in new List<string> { "slot", "mini" })
                 {
-                    var msg = "THIRD_PARTY_ERROR";
-                    _logger.LogError($"{msg}\r\nSiteId=\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                    SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
-                    throw systemException;
+                    switch (type)
+                    {
+                        case "slot":
+                            var getWagerSummary = await _apiAPBLL.GetBetSummaryByTime(setting, reportTime.startTime, reportTime.endTime);
+                            if (getWagerSummary.ErrorCode != 0)
+                            {
+                                var msg = "THIRD_PARTY_ERROR";
+                                _logger.LogError($"{msg}\r\nSiteId=\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                                SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
+                                throw systemException;
+                            }
+
+                            if (getWagerSummary.ErrorCode == 0 && getWagerSummary.Results == null)
+                            {
+                                var msg = "NO_DATA";
+                                _logger.LogInformation($"{msg}\r\nSiteId={siteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                                continue;
+                            }
+
+                            foreach (var item in getWagerSummary.Results)
+                            {
+                                reportData.Add(item);
+                            }
+                            break;
+                        case "mini":
+                            var getWagerSummaryOfMini = await _apiAPBLL.GetBetListByTimeOfMini(setting, reportTime.startTime, reportTime.endTime);
+                            if (getWagerSummaryOfMini == null || getWagerSummaryOfMini.httpStatus != 0)
+                            {
+                                var msg = "THIRD_PARTY_ERROR";
+                                _logger.LogError($"{msg}\r\nSiteId=\r\n{JsonConvert.SerializeObject(getWagerSummaryOfMini)}");
+                                SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
+                                throw systemException;
+                            }
+
+                            if (getWagerSummaryOfMini.httpStatus == 0 && getWagerSummaryOfMini.result.Count == 0)
+                            {
+                                var msg = "NO_DATA";
+                                _logger.LogInformation($"{msg}\r\nSiteId={siteId}\r\n{JsonConvert.SerializeObject(getWagerSummaryOfMini)}");
+                                continue;
+                            }
+
+                            foreach (var item in getWagerSummaryOfMini.result)
+                            {
+                                reportData.Add(item);
+                            }
+                            break;
+                        default:
+                            break;
+                    }
                 }
 
-                if (getWagerSummary.ErrorCode == 0 && getWagerSummary.Results == null)
-                {
-                    var msg = "NO_DATA";
-                    _logger.LogInformation($"{msg}\r\nSiteId={siteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                    continue;
-                }
-
-                foreach (var item in getWagerSummary.Results)
-                {
-                    reportData.Add(item);
-                }
             }
             return reportData;
         }

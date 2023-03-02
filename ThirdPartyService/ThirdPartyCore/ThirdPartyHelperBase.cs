@@ -179,7 +179,7 @@ namespace ThirdPartyCore
                 return e.Message;
             }
         }
-        
+
         protected string HttpPostClient(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
         {
             var parametersLog = parameters;
@@ -536,6 +536,27 @@ namespace ThirdPartyCore
 
             return isEncodeUrl ? System.Web.HttpUtility.UrlEncode(base64Str) : base64Str;
         }
+
+        public string AesEncryptV2(string jsonObject, string secretKey)
+        {
+            byte[] toEncryptArray = Encoding.UTF8.GetBytes(jsonObject);
+            byte[] keyBytes = new byte[16];
+            byte[] secretKeyBytes = Encoding.UTF8.GetBytes(secretKey);
+            Array.Copy(secretKeyBytes, keyBytes, Math.Min(keyBytes.Length, secretKeyBytes.Length));
+            RijndaelManaged rm = new RijndaelManaged
+            {
+                Mode = CipherMode.CBC,
+                Padding = PaddingMode.PKCS7,
+                KeySize = 128,
+                BlockSize = 128,
+                Key = keyBytes,
+                IV = keyBytes
+
+            };
+            byte[] resultArray = rm.CreateEncryptor().TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+            return Convert.ToBase64String(resultArray, 0, resultArray.Length);
+        }
+
         public string AesDecrypt(string str, string key, bool isDecodeUrl = true)
         {
             if (string.IsNullOrEmpty(str)) return null;
@@ -556,6 +577,27 @@ namespace ThirdPartyCore
 
             return Encoding.UTF8.GetString(resultArray);
         }
+
+        public string AesDecryptV2(string str, string secretKey)
+        {
+            byte[] toEncryptArray = Convert.FromBase64String(str);
+            byte[] keyBytes = new byte[16];
+            byte[] secretKeyBytes = Encoding.UTF8.GetBytes(secretKey);
+            Array.Copy(secretKeyBytes, keyBytes, Math.Min(keyBytes.Length, secretKeyBytes.Length));
+            using RijndaelManaged rm = new RijndaelManaged
+            {
+                Mode = CipherMode.CBC,
+                Padding = PaddingMode.PKCS7,
+                KeySize = 128,
+                BlockSize = 128,
+                Key = keyBytes,
+                IV = keyBytes
+            };
+
+            byte[] resultArray = rm.CreateDecryptor().TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+            return Encoding.UTF8.GetString(resultArray);
+        }
+
         public string SHA1(string dataToSign)
         {
             SHA1 sha1 = new SHA1CryptoServiceProvider();//建立一個SHA1
@@ -634,11 +676,11 @@ namespace ThirdPartyCore
         public abstract ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID);
         public abstract ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID);
         public abstract TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-        public abstract BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);      
+        public abstract BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
         public virtual ApiResult<MerchantBalanceResponse> GetMerchantBalance(TpMerchantInfo tpMerchantInfo, Dictionary<string, string> inputs)
         {
             throw new GetMerchantBalanceNotImplementedException($"TpId:{tpMerchantInfo.TpId} GetMerchantBalance NotImplemented.");
-		}
+        }
         public abstract TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
     }
 
