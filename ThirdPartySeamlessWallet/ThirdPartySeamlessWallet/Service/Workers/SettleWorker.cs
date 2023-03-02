@@ -747,6 +747,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                         SettledTime = wager.SettleTime,
                                         TransTime = wager.TransTime,
                                         SettlementType = SettlementType.SettledForValid,
+                                        GameID = wager.GameId,
                                     };
 
                                     if (betRecordInfo.WinlostAmount == 0)
