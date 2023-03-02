@@ -104,7 +104,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.SimplePlay", "Th
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.Yeebet", "ThirdParty.Yeebet\ThirdParty.Yeebet.csproj", "{FB9339C8-C4FC-44E3-ABC1-1F7924ECE3E0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThiryParty.BG", "ThiryParty.BG\ThiryParty.BG.csproj", "{8DB6FBDB-22DA-4A0D-899E-AA8CAA61F519}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.BG", "ThiryParty.BG\ThirdParty.BG.csproj", "{8DB6FBDB-22DA-4A0D-899E-AA8CAA61F519}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

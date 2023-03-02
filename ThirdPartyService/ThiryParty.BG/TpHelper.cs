@@ -8,7 +8,7 @@ using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
-namespace ThiryParty.BG;
+namespace ThirdParty.BG;
 
 public class TpHelper : ThirdPartyHelperBase
 {
@@ -33,66 +33,159 @@ public class TpHelper : ThirdPartyHelperBase
 
     #region Model
 
-    private class LoginResponse
+    private class CreateMemberResult
     {
         /// <summary>
-        /// 描述
+        /// 注册是否成功. True:成功; false:失败;
         /// </summary>
-        public string desc { get; set; }
+        public bool success { get; set; } = false;
         /// <summary>
-        /// 结果信息(成功>=0，错误<0，小于零为异常)
+        /// 系统分配的内部ID
         /// </summary>
-        public int result { get; set; }
+        public long userId { get; set; }
         /// <summary>
-        /// 錯誤代碼
+        /// 会员昵称
         /// </summary>
-        public int errid { get; set; }
+        public string? nickname { get; set; }
         /// <summary>
-        /// 进入游戏链接
+        /// 注册用户的类型
         /// </summary>
-        public string openurl { get; set; }
+        public string? regType { get; set; }
+
     }
 
+    private class LoginResult
+    {
+        /// <summary>
+        /// 视讯游戏链接地址，在返回的入口地址后加桌台后可以直接进入指定的游戏桌台，示例: &table=B06
+        /// </summary>
+        public string result { get; set; } = string.Empty;
+    }
+
+
+    private class JsonRpcResponse
+    {
+        public string? id { get; set; }
+        public object? result { get; set; }
+        public object? error { get; set; }
+        public string? jsonrpc { get; set; }
+        public object? request { get; set; }
+
+    }
     #endregion
 
     public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
     {
-        ApiResult oApiResult = new ApiResult();
-        oApiResult.ErrorCode = ErrorCode.Success;
-        return oApiResult;
+        string method = "open.user.create";
+        string currency = tpCustInfo.TpCurrencyId;
+        string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
+        string sn = inputs.ContainsKey("Sn") && !string.IsNullOrEmpty(inputs["Sn"]) ? inputs["Sn"] : throw new Exception("Sn");
+        string agnetLoginId = inputs.ContainsKey($"AgentLoginId_{currency}") && !string.IsNullOrEmpty(inputs[$"AgentLoginId_{currency}"]) ? inputs[$"AgentLoginId_{currency}"] : throw new Exception($"AgentLoginId_{currency}");
+        string agnetPassword = inputs.ContainsKey($"AgentPassword_{currency}") && !string.IsNullOrEmpty(inputs[$"AgentPassword_{currency}"]) ? inputs[$"AgentPassword_{currency}"] : throw new Exception($"AgentPassword_{currency}");
+
+        var id = Guid.NewGuid();
+
+        var parameters = ToJson(new
+        {
+            id = id,
+            method = method,
+            @params = new
+            {
+                random = id,
+                digest = ToMD5(id + sn + SHA1(agnetPassword)),
+                sn = sn,
+                loginId = tpCustInfo.TpUserName,
+                nickname = tpCustInfo.TpUserName,
+                agentLoginId = agnetLoginId
+            },
+            jsonrpc = "2.0"
+        });
+
+        var response = HttpPostClient(ApiUrl, parameters, "application/json");
+
+        if (!IsJSON(response))
+            return new ApiResult()
+            {
+                ErrorCode = ErrorCode.Fail,
+                RawErrorCode = "1",
+                RawMessage = "No Result"
+            };
+
+        var jsonResponse = JsonConvert.DeserializeObject<JsonRpcResponse>(response);
+
+        if (jsonResponse == null)
+            return new ApiResult()
+            {
+                ErrorCode = ErrorCode.Fail,
+                RawErrorCode = "1",
+                RawMessage = "No Result"
+            };
+
+        if (jsonResponse.error != null)
+        {
+            var errorJson = JsonConvert.SerializeObject(jsonResponse.error);
+            if (errorJson != null)
+            {
+                var errorDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(errorJson);
+
+                return new ApiResult()
+                {
+                    ErrorCode = ErrorCode.Fail,
+                    RawErrorCode = errorDic != null && errorDic.ContainsKey("code") && !string.IsNullOrEmpty(errorDic["code"]) ? errorDic["code"] : "",
+                    RawMessage = $"{(errorDic != null && errorDic.ContainsKey("message") && !string.IsNullOrEmpty(errorDic["message"]) ? errorDic["message"] : "")}" + " | "
+                                      + $"{(errorDic != null && errorDic.ContainsKey("reason") && !string.IsNullOrEmpty(errorDic["reason"]) ? errorDic["reason"] : "")}"
+                };
+            }
+        }
+
+        var result = JsonConvert.DeserializeObject<CreateMemberResult>(JsonConvert.SerializeObject(jsonResponse.result));
+
+        if (result != null && result.nickname == tpCustInfo.TpUserName)
+        {
+            tpCustInfo.TpCustId = result.userId.ToString();
+            return new ApiResult()
+            {
+                ErrorCode = ErrorCode.Success
+            };
+        }
+        else
+            return new ApiResult()
+            {
+                ErrorCode = ErrorCode.Fail,
+                RawErrorCode = "1",
+                RawMessage = "No Result"
+            };
     }
 
     public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
     {
-        string word = $"{tpCustInfo.SiteId}_{tpCustInfo.TpCurrencyId}";
+        string method = "open.video.game.url";
         string currency = tpCustInfo.TpCurrencyId;
-        string apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-        string apiAppId = inputs.ContainsKey($"ApiAppId_{word}") && !string.IsNullOrEmpty(inputs[$"ApiAppId_{word}"]) ? inputs[$"ApiAppId_{word}"] : throw new Exception($"ApiAppId_{word}");
-        string secretKey = inputs.ContainsKey($"ApiSecretKey_{word}") && !string.IsNullOrEmpty(inputs[$"ApiSecretKey_{word}"]) ? inputs[$"ApiSecretKey_{word}"] : throw new Exception($"ApiSecretKey_{word}");
-        var homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
-        apiUrl = $"{apiUrl}/api/login";
+        string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
+        string sn = inputs.ContainsKey("Sn") && !string.IsNullOrEmpty(inputs["Sn"]) ? inputs["Sn"] : throw new Exception("Sn");
+        string agnetPassword = inputs.ContainsKey($"AgentPassword_{currency}") && !string.IsNullOrEmpty(inputs[$"AgentPassword_{currency}"]) ? inputs[$"AgentPassword_{currency}"] : throw new Exception($"AgentPassword_{currency}");
+        string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
 
-        //var lang = 2; //default en
-        //if (_langList.ContainsKey(TpLangId))
-        //    lang = _langList[TpLangId];
+        var id = Guid.NewGuid();
 
-        var loginRequest = new
+        var parameters = ToJson(new
         {
-            appid = apiAppId,
-            clienttype = (int)AppType.Desktop,
-            currency = currency,
-            iscreate = 1,
-            language = int.Parse(TpLangId),
-            nickname = tpCustInfo.TpUserName,
-            username = tpCustInfo.TpUserName
-        };
+            id = id,
+            method = method,
+            @params = new
+            {
+                random = id,
+                digest = ToMD5(id + sn + tpCustInfo.TpUserName + SHA1(agnetPassword)),
+                sn = sn,
+                loginId = tpCustInfo.TpUserName,
+                locale = TpLangId,
+                isMobileUrl = appType == AppType.Mobile ? 1 : 0,
+                returnUrl = homeUrl,
+            },
+            jsonrpc = "2.0"
+        });
 
-        var dicP = FromJson<Dictionary<string, string>>(ToJson(loginRequest));
-        string sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-
-        var sign = BuildMD5(sParam + $"&key={secretKey}");
-
-        var result = HttpPostClient(apiUrl, sParam + $"&sign={sign}", "application/x-www-form-urlencoded");
+        var result = HttpPostClient(ApiUrl, parameters, "application/json");
 
         if (!IsJSON(result))
             return new ApiResult()
@@ -102,20 +195,37 @@ public class TpHelper : ThirdPartyHelperBase
                 RawMessage = "No Result"
             };
 
-        var json = JsonConvert.DeserializeObject<LoginResponse>(result);
+        var json = JsonConvert.DeserializeObject<JsonRpcResponse>(result);
 
-        if (json == null || json.result < 0)
+        if (json == null)
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Fail,
-                RawErrorCode = json == null ? "-1" : json.errid.ToString(),
-                RawMessage = json == null ? "No Result" : json.desc,
+                RawErrorCode = "-1",
+                RawMessage = "No Result"
             };
+
+        if (json.error != null)
+        {
+            var errorJson = JsonConvert.SerializeObject(json.error);
+            if (errorJson != null)
+            {
+                var errorDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(errorJson);
+
+                return new ApiResult()
+                {
+                    ErrorCode = ErrorCode.Fail,
+                    RawErrorCode = errorDic != null && errorDic.ContainsKey("code") && !string.IsNullOrEmpty(errorDic["code"]) ? errorDic["code"] : "",
+                    RawMessage = $"{(errorDic != null && errorDic.ContainsKey("message") && !string.IsNullOrEmpty(errorDic["message"]) ? errorDic["message"] : "")}" + " | "
+                                      + $"{(errorDic != null && errorDic.ContainsKey("reason") && !string.IsNullOrEmpty(errorDic["reason"]) ? errorDic["reason"] : "")}"
+                };
+            }
+        }
 
         return new ApiResult()
         {
             ErrorCode = ErrorCode.Success,
-            Message = json.openurl
+            Message = json.result.ToString()
         };
     }
 
@@ -206,17 +316,6 @@ public class TpHelper : ThirdPartyHelperBase
     }
 
     #region Private Method
-
-    private static string BuildMD5(string inString)
-    {
-        byte[] hashed = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(inString));
-        StringBuilder sb = new StringBuilder(hashed.Length * 2);
-        for (int i = 0; i < hashed.Length; i++)
-        {
-            sb.Append(hashed[i].ToString("x2"));
-        }
-        return sb.ToString().ToLower();
-    }
 
     /// <summary>
     /// 參考tp文件 3.3 Game Type
