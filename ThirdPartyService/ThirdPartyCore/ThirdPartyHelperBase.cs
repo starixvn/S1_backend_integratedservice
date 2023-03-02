@@ -13,6 +13,7 @@ using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpMerchantBalance.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 using Microsoft.Extensions.Logging;
+using Serilog.Context;
 
 namespace ThirdPartyCore
 {
@@ -243,7 +244,11 @@ namespace ThirdPartyCore
 
         protected string HttpPostWithX509(string url, Dictionary<string, string> parameters, string contentType, Dictionary<string, string> headers = null, X509Certificate2 certificate = null)
         {
-            InsertLog?.Invoke(url, JsonConvert.SerializeObject(parameters), "1");
+            LogContext.PushProperty("url", url);
+            LogContext.PushProperty("contentType", contentType);
+            logger.LogInformation($"headers: {JsonConvert.SerializeObject(headers)} " +
+                $"| parameters: {JsonConvert.SerializeObject(parameters)}" +
+                $"| certificate: {JsonConvert.SerializeObject(certificate)} ");
 
             using var handler = new HttpClientHandler();
             if (!string.IsNullOrEmpty(proxyHost))
@@ -251,7 +256,11 @@ namespace ThirdPartyCore
                 handler.UseProxy = true;
                 handler.Proxy = new WebProxy(proxyHost, proxyPort);
             }
-            handler.ClientCertificates.Add(certificate);
+            if (certificate != null)
+            {
+                handler.ClientCertificates.Add(certificate);
+            }
+           
             //ignore Certificate
             handler.ServerCertificateCustomValidationCallback = delegate { return true; };
 
@@ -262,13 +271,13 @@ namespace ThirdPartyCore
                 {
                     foreach (var item in headers)
                     {
-                        client.DefaultRequestHeaders.Add(item.Key, item.Value);
+                        client.DefaultRequestHeaders.Add(item.Key, item.Value ?? string.Empty);
                     }
                 }
                 var formData = new FormUrlEncodedContent(parameters);
                 var response = client.PostAsync(url, formData).Result;
-                var sb = response.Content.ReadAsStringAsync().Result;
-                InsertLog?.Invoke(url, JsonConvert.SerializeObject(parameters), sb);
+                var sb = response.Content.ReadAsStringAsync().Result;                
+                logger.LogInformation($"response: {sb}");
                 return sb;
             }
             catch (AggregateException ae)
@@ -289,8 +298,7 @@ namespace ThirdPartyCore
             }
             catch (Exception e)
             {
-                logger.LogError(e, e.Message);
-                InsertLog?.Invoke(url, JsonConvert.SerializeObject(parameters), e.Message);
+                logger.LogError(e, e.Message);                
                 return e.Message;
             }
         }
