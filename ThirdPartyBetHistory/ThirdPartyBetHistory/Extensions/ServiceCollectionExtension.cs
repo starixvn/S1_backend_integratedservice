@@ -20,7 +20,7 @@ namespace ThirdPartyBetHistory.Extensions
 
         public static IServiceCollection RegisterSabaSiteHelper(this IServiceCollection services)
         {
-            var tp = Tp.Saba;
+            var tp = Tp.SBSW;
             var provider = services.BuildServiceProvider();
             var sabaSiteList = provider.GetRequiredService<ThirdPartyBLL>().GetTpList().Where(item => item.Id == (int)tp);
             var type = Type.GetType($"ThirdPartyBetHistory.Service.TpBetHistory.SabaBetHelper");
