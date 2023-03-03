@@ -52,7 +52,6 @@ namespace ThirdPartyBetHistory.Service.Model.enums
 
     public enum Tp
     {
-        Saba = 1,
         SBSW = 41
     }
 

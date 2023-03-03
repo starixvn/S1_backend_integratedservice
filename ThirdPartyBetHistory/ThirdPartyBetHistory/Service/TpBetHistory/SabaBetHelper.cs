@@ -35,7 +35,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 switch (workerType)
                 {
                     case WorkerType.ByTransIdUnSettleWager:
-                        tickets = _thirdPartyService.GetTpBetRecordReSettleTicket(Tp.Saba, SiteId,
+                        tickets = _thirdPartyService.GetTpBetRecordReSettleTicket(Tp.SBSW, SiteId,
                             JsonConvert.SerializeObject(new List<int> { (int)SettlementType.UnSettled }),
                             today.AddDays(-7), today.AddDays(-1).AddSeconds(-1));
                         break;
@@ -49,7 +49,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                             (int)SettlementType.SettledForInvalid,
                             (int)SettlementType.SettledForValidNotRollover
                         });
-                        tickets = _thirdPartyService.GetTpBetRecordReSettleTicket(Tp.Saba, SiteId, settlementTypeList, startTime, endTime);
+                        tickets = _thirdPartyService.GetTpBetRecordReSettleTicket(Tp.SBSW, SiteId, settlementTypeList, startTime, endTime);
                         break;
                     
                     case WorkerType.MainWager:
