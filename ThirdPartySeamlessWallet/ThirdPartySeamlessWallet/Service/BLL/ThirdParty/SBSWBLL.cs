@@ -60,6 +60,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 { SBSWTransType.Resettle, Settle},
                 { SBSWTransType.Unsettle, Settle},
                 { SBSWTransType.HealthCheck, HealthCheck},
+                { SBSWTransType.PlaceBetEnt, PlaceBetEnt},
+                { SBSWTransType.SettleEnt, SettleEnt},
+                { SBSWTransType.CancelBetEnt, CancelBetEnt},
+                { SBSWTransType.GetTicketInfo, GetTicketInfo},
+                { SBSWTransType.AdjustBalance, AdjustBalance},
             };
             _logger = provider.GetRequiredService<ILogger<SBSWBLL>>();
             _sportTypeConfig = provider.GetRequiredService<IEnumerable<SabaSportTypeOption>>()
@@ -154,6 +159,31 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 balance = GetTpCustBalance(request.message.userId).Balance,
                 txns = resultList.Select(i => new BetObj()
+                {
+                    refId = i.refId,
+                    licenseeTxId = i.licenseeTxId.ToString(),
+                }).ToList()
+            };
+        }
+
+        private async Task<ReturnObj> PlaceBetEnt(SBSWTransType transType, string merchant, string bodyText)
+        {
+            var request = JsonConvert.DeserializeObject<BaseReq<PlaceBetEnt>>(bodyText);
+            CheckKey(merchant, request.key);
+            var Tasks = request.message.ticketList.Select(ticket => Task.Run(()
+                => ExecuteBet(transType, new Bet(request.message, ticket)))).ToArray();
+            var resultList = await Task.WhenAll(Tasks);
+            var error = resultList.FirstOrDefault(result => result.ReturnCode != ReturnCode.Success);
+            if (error != null)
+            {
+                return new ReturnObj(error);
+            }
+
+            return new PlaceBetEntObj(ReturnCode.Success)
+            {
+                userId = request.message.userId,
+                balance = GetTpCustBalance(request.message.userId).Balance,
+                ticketList = resultList.Select(i => new BetObj()
                 {
                     refId = i.refId,
                     licenseeTxId = i.licenseeTxId.ToString(),
@@ -341,6 +371,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
         }
 
+        private async Task<ReturnObj> CancelBetEnt(SBSWTransType transType, string merchant, string bodyText)
+        {
+            return new ReturnObj(ReturnCode.Success);
+        }
+
         private async Task<ExecuteResult> ExecuteCancelBet(ConfirmBet confirmBet, ConfirmDetail detail)
         {
             try
@@ -430,6 +465,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return new ReturnObj(ReturnCode.Success);
         }
 
+        private async Task<ReturnObj> SettleEnt(SBSWTransType transType, string merchant, string bodyText)
+        {
+            return new ReturnObj(ReturnCode.Success);
+        }
+
         private async Task<ExecuteResult> ExecuteSettle(SBSWTransType transType, Settle settle, SettleDetail detail)
         {
             try
@@ -512,6 +552,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         }
 
         private async Task<ReturnObj> HealthCheck(SBSWTransType transType, string merchant, string bodyText)
+        {
+            return new ReturnObj(ReturnCode.Success);
+        }
+
+        private async Task<ReturnObj> GetTicketInfo(SBSWTransType transType, string merchant, string bodyText)
+        {
+            return new ReturnObj(ReturnCode.Success);
+        }
+
+        private async Task<ReturnObj> AdjustBalance(SBSWTransType transType, string merchant, string bodyText)
         {
             return new ReturnObj(ReturnCode.Success);
         }
