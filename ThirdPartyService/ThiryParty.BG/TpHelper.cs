@@ -108,7 +108,7 @@ public class TpHelper : ThirdPartyHelperBase
             {
                 ErrorCode = ErrorCode.Fail,
                 RawErrorCode = "1",
-                RawMessage = "No Result"
+                RawMessage = "No Result. Response is not json."
             };
 
         var jsonResponse = JsonConvert.DeserializeObject<JsonRpcResponse>(response);
@@ -118,7 +118,7 @@ public class TpHelper : ThirdPartyHelperBase
             {
                 ErrorCode = ErrorCode.Fail,
                 RawErrorCode = "1",
-                RawMessage = "No Result"
+                RawMessage = "No Result.Response is null."
             };
 
         if (jsonResponse.error != null)
@@ -192,7 +192,7 @@ public class TpHelper : ThirdPartyHelperBase
             {
                 ErrorCode = ErrorCode.Fail,
                 RawErrorCode = "1",
-                RawMessage = "No Result"
+                RawMessage = "No Result. Response is not json."
             };
 
         var json = JsonConvert.DeserializeObject<JsonRpcResponse>(result);
@@ -202,7 +202,7 @@ public class TpHelper : ThirdPartyHelperBase
             {
                 ErrorCode = ErrorCode.Fail,
                 RawErrorCode = "-1",
-                RawMessage = "No Result"
+                RawMessage = "No Result. Response is null."
             };
 
         if (json.error != null)
@@ -225,7 +225,7 @@ public class TpHelper : ThirdPartyHelperBase
         return new ApiResult()
         {
             ErrorCode = ErrorCode.Success,
-            Message = json.result.ToString()
+            Message = json.result?.ToString()
         };
     }
 
