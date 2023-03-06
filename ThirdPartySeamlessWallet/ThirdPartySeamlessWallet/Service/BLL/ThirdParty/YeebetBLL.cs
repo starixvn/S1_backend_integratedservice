@@ -102,7 +102,7 @@ public class YeebetBLL : IYeebetBLL
         if (!GetBalanceByHalfSecCache(tpCustInfo.TpUserName, out balance, out message))
             return new DeductResponse_Yeebet(YeebetErrorCode.SystemError, request.serialnumber, "", message);
 
-        if (balance + data.amount < 0) //餘額不足
+        if (balance + (data.amount / tpCurrency.ExchangeRate) < 0) //餘額不足
             return new DeductResponse_Yeebet(YeebetErrorCode.InsufficientBalance, request.serialnumber, "", "Insufficient balance.");
 
         if (!GetExistData(partitionTime, data, out IEnumerable<BettingDataLC_Yeebet> existDatas, out message))
