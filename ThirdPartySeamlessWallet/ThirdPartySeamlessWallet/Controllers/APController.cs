@@ -995,39 +995,35 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return errResponse;
                 }
 
+                PlaceBetMiniResp response = new PlaceBetMiniResp();
+                var result = bettingBLL.PlaceBet_AdvantPlayMini(getReq, out decimal tpAffterAmount);
+                if (result > 0)
+                {
+                    Response.StatusCode = (int)HttpStatusCode.OK;
+                    response.transactionReferenceId = getReq.TransId;
+                    response.balance = tpAffterAmount;
+                    response.timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                    return response;
+                }
+                else if (result == -1)
+                {
+                    Response.StatusCode = (int)HttpStatusCode.OK;
+                    response.transactionReferenceId = getReq.TransId;
+                    response.balance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.UserReferenceId, gameType).Balance;
+                    response.timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                    return response;
+                }
+                else if (tpAffterAmount < 0)
+                {
+                    Response.StatusCode = (int)HttpStatusCode.INSUFFICIENT_FUNDS;
+                    errResponse.errorMessage = "Insufficient funds";
+                    log2File.Error($"insufficient amount {tpAffterAmount}", logName);
+                }
                 else
                 {
-                    PlaceBetMiniResp response = new PlaceBetMiniResp();
-                    Response.StatusCode = (int)HttpStatusCode.OK;
-                    var result = bettingBLL.PlaceBet_AdvantPlayMini(getReq, out decimal tpAffterAmount);
-                    if (result > 0)
-                    {
-                        Response.StatusCode = (int)HttpStatusCode.OK;
-                        response.transactionReferenceId = getReq.TransId;
-                        response.balance = tpAffterAmount;
-                        response.timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                        return response;
-                    }
-                    else if (result == -1)
-                    {
-                        Response.StatusCode = (int)HttpStatusCode.OK;
-                        response.transactionReferenceId = getReq.TransId;
-                        response.balance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.UserReferenceId, gameType).Balance;
-                        response.timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                        return response;
-                    }
-                    else if (tpAffterAmount < 0)
-                    {
-                        Response.StatusCode = (int)HttpStatusCode.INSUFFICIENT_FUNDS;
-                        errResponse.errorMessage = "Insufficient funds";
-                        log2File.Error($"insufficient amount {tpAffterAmount}", logName);
-                    }
-                    else
-                    {
-                        Response.StatusCode = (int)HttpStatusCode.UNPROCESSABLE;
-                        errResponse.errorMessage = "Unknow error";
-                        log2File.Error($"Unknow error {result}", logName);
-                    }
+                    Response.StatusCode = (int)HttpStatusCode.UNPROCESSABLE;
+                    errResponse.errorMessage = "Unknow error";
+                    log2File.Error($"Unknow error {result}", logName);
                 }
             }
             catch (Exception ex)
@@ -1253,6 +1249,14 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
+                if (string.IsNullOrEmpty(game) || !CheckGameOfMini(game))
+                {
+                    Response.StatusCode = (int)HttpStatusCode.INVALID_DATA;
+                    errResponse.errorMessage = "game error";
+                    log2File.Error($"{errResponse.errorMessage} - {game}", logName);
+                    return errResponse;
+                }
+
                 RefundMiniResp response = new RefundMiniResp();
                 var getCommReq = JsonConvert.DeserializeObject<CommonMiniReq>(Content);
 
