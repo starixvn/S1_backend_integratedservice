@@ -62,6 +62,6 @@
     <value>Deposit transaction failed! Please contact our 24/7 LIVE CHAT for further assistance.</value>
   </data>
   <data name="lbl_OTP" xml:space="preserve">
-    <value>[{0}]नमस्कार, आपका सत्यापन कोड{1}है</value>
+    <value>नमस्कार, आपका सत्यापन कोड{0}है</value>
   </data>
 </root>
