@@ -97,13 +97,13 @@ public class YeebetBLL : IYeebetBLL
             TicketStatus = CheckTicketStatus(request.type)
         };
 
-        data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
-
         if (!GetBalanceByHalfSecCache(tpCustInfo.TpUserName, out balance, out message))
             return new DeductResponse_Yeebet(YeebetErrorCode.SystemError, request.serialnumber, "", message);
 
-        if (balance + data.amount < 0) //餘額不足
+        if (balance + data.amount < 0) //餘額不足，這邊會用換算過後的餘額去作比較，ex. IDR(1:1000)= main wallet / 1000 + bet amount / 1000 < 0
             return new DeductResponse_Yeebet(YeebetErrorCode.InsufficientBalance, request.serialnumber, "", "Insufficient balance.");
+
+        data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
 
         if (!GetExistData(partitionTime, data, out IEnumerable<BettingDataLC_Yeebet> existDatas, out message))
             return new DeductResponse_Yeebet(YeebetErrorCode.SystemError, request.serialnumber, "", message, 0);
