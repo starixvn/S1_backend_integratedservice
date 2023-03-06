@@ -440,34 +440,34 @@ namespace ThirdParty.SA
                 switch (input.Currency)
                 {
                     case "MYR":
-                        firstRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 1 && r.Max == 10000).Select(r => r.RuleID).FirstOrDefault();
-                        secondRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 300 && r.Max == 30000).Select(r => r.RuleID).FirstOrDefault();
+                        firstRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 10 && r.Max == 1000).Select(r => r.RuleID).FirstOrDefault();
+                        secondRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 100 && r.Max == 10000).Select(r => r.RuleID).FirstOrDefault();
                         break;
                     case "THB":
-                        firstRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 5 && r.Max == 75000).Select(r => r.RuleID).FirstOrDefault();
-                        secondRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 2000 && r.Max == 200000).Select(r => r.RuleID).FirstOrDefault();
+                        firstRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 20 && r.Max == 10000).Select(r => r.RuleID).FirstOrDefault();
+                        secondRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 1000 && r.Max == 75000).Select(r => r.RuleID).FirstOrDefault();
                         break;
                     case "IDR":
-                        firstRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 1 && r.Max == 30000).Select(r => r.RuleID).FirstOrDefault();
-                        secondRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 1000 && r.Max == 100000).Select(r => r.RuleID).FirstOrDefault();
+                        firstRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 10 && r.Max == 1000).Select(r => r.RuleID).FirstOrDefault();
+                        secondRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 100 && r.Max == 10000).Select(r => r.RuleID).FirstOrDefault();
+                        threeRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 300 && r.Max == 30000).Select(r => r.RuleID).FirstOrDefault();
                         break;
                     case "VND":
-                        firstRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 2 && r.Max == 50000).Select(r => r.RuleID).FirstOrDefault();
-                        secondRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 2000 && r.Max == 200000).Select(r => r.RuleID).FirstOrDefault();
+                        firstRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 20 && r.Max == 10000).Select(r => r.RuleID).FirstOrDefault();
+                        secondRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 300 && r.Max == 30000).Select(r => r.RuleID).FirstOrDefault();
+                        threeRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 1000 && r.Max == 50000).Select(r => r.RuleID).FirstOrDefault();
                         break;
                     case "USD":
                         firstRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 1 && r.Max == 2500).Select(r => r.RuleID).FirstOrDefault();
-                        secondRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 100 && r.Max == 10000).Select(r => r.RuleID).FirstOrDefault();
                         break;
                     case "INR":
                         firstRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 100 && r.Max == 100000).Select(r => r.RuleID).FirstOrDefault();
-                        secondRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 700 && r.Max == 200000).Select(r => r.RuleID).FirstOrDefault();
-                        threeRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 2500 && r.Max == 750000).Select(r => r.RuleID).FirstOrDefault();
+                        secondRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 1000 && r.Max == 200000).Select(r => r.RuleID).FirstOrDefault();
                         break;
                     case "BDT":
                         firstRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 100 && r.Max == 10000).Select(r => r.RuleID).FirstOrDefault();
-                        secondRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 500 && r.Max == 100000).Select(r => r.RuleID).FirstOrDefault();
-                        threeRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 2500 && r.Max == 750000).Select(r => r.RuleID).FirstOrDefault();
+                        secondRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 300 && r.Max == 30000).Select(r => r.RuleID).FirstOrDefault();
+                        threeRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 1000 && r.Max == 200000).Select(r => r.RuleID).FirstOrDefault();
                         break;
                 }
 
@@ -487,10 +487,10 @@ namespace ThirdParty.SA
             {
                 {"MYR", new List<string>() { "MYRBetLimit1", "MYRBetLimit2" }},
                 {"THB", new List<string>() { "THBBetLimit1", "THBBetLimit2" }},
-                {"IDR", new List<string>() { "IDRBetLimit1", "IDRBetLimit2" }},
-                {"VND", new List<string>() { "VNDBetLimit1", "VNDBetLimit2" }},
-                {"USD", new List<string>() { "USDBetLimit1", "USDBetLimit2" }},
-                {"INR", new List<string>() { "INRBetLimit1", "INRBetLimit2","INRBetLimit3" }},
+                {"IDR", new List<string>() { "IDRBetLimit1", "IDRBetLimit2","IDRBetLimit3" }},
+                {"VND", new List<string>() { "VNDBetLimit1", "VNDBetLimit2","VNDBetLimit3" }},
+                {"USD", new List<string>() { "USDBetLimit1"}},
+                {"INR", new List<string>() { "INRBetLimit1", "INRBetLimit2" }},
                 {"BDT", new List<string>() { "BDTBetLimit1", "BDTBetLimit2","BDTBetLimit3" }}
             };
 
@@ -527,7 +527,6 @@ namespace ThirdParty.SA
                     UserName = tpCustInfo.TpUserName,
                     Currency = tpCustInfo.TpCurrencyId
                 };
-
 
                 var queryString =
                     $"method={input.Method}&Key={input.Key}&Time={time}&Username={input.UserName}&Currency={input.Currency}&{betLimitQueryString}&Gametype=roulette,sicbo,pokdeng,others";
