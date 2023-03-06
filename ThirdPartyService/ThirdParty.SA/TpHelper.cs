@@ -570,7 +570,7 @@ namespace ThirdParty.SA
                 };
 
                 var queryString =
-                    $"method={input.Method}&Key={input.Key}&Time={time}&Username={input.UserName}&Currency={input.Currency}&{betLimitQueryString}&Gametype=roulette,sicbo,pokdeng,others";
+                    $"method={input.Method}&Key={input.Key}&Time={time}&Username={input.UserName}&Currency={input.Currency}&{betLimitQueryString}&Gametype=roulette,sicbo,pokdeng,andarbahar,others";
                 var q = HttpUtility.UrlEncode(DESEncryptSA(queryString, config.EncryptKey));
                 var s = ToMD5(queryString + config.Md5Key + time + config.SecretKey).ToLower();
                 var postData = "q=" + q + "&s=" + s;
