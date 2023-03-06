@@ -432,16 +432,23 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #region YGG
 
-        public int PayoutRNG_YGG(PayoutDataRNG_YGG payoutDataRNG_YGG, out decimal afterAmount, SettleFlag settleFlag)
+        public int PayoutRNG_YGG(PayoutDataRNG_YGG payoutDataRNG_YGG, out decimal afterAmount, out string countryCode, SettleFlag settleFlag)
         {
             var result = 0;
             afterAmount = 0;
+            countryCode = string.Empty;
 
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.YGG, payoutDataRNG_YGG.playerid);
 
             if (tpCustInfo != null)
             {
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.YGG, tpCustInfo.CurrencyId);
+                var tpCountry = tpCustInfoBLL.GetTpCurrencyCodeByCurrencyId((int)Tp.YGG, tpCustInfo.TpCurrencyId);
+
+                if (tpCountry != null)
+                {
+                    countryCode = tpCountry.CountryCode;
+                }
 
                 var insertData = new PayoutDataRNG_YGG()
                 {
