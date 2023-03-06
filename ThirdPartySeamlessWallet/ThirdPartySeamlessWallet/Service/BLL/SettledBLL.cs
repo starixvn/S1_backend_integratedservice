@@ -2221,7 +2221,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public int RewardRNG_AP(CPSettleDataRNG_AP rewardDataRNG_AP, string TpUserName)
+        public int RewardRNG_AP(CPSettleDataRNG_AP rewardDataRNG_AP, string TpUserName, out decimal afterAmount)
         {
 
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, TpUserName);
@@ -2232,7 +2232,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 rewardDataRNG_AP.cpwin *= tpCurrency.ExchangeRate;
             }
 
-            var result = settledService.RewardRNG_AP(tpCustInfo, rewardDataRNG_AP);
+            var result = settledService.RewardRNG_AP(tpCustInfo, rewardDataRNG_AP, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
             return result;
         }
 
