@@ -74,7 +74,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                     int bonusId;
 
                     /*Only count Sports*/
-                    if (betRecord.GameType != GameType.Saba_Sports && betRecord.SettlementType == SettlementType.SettledForValid)
+                    if (betRecord.GameType != GameType.SBSW_Sports && betRecord.SettlementType == SettlementType.SettledForValid)
                     {
                         betRecord.SettlementType = SettlementType.SettledForValidNotRollover;
                     }
