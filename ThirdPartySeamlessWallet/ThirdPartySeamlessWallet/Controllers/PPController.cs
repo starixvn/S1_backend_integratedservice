@@ -249,7 +249,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/bet")]
         public BetResp Bet([FromForm] Dictionary<string, string> betReqq)
         {
-            //log2File.Info(JsonConvert.SerializeObject(betReqq), $"{thisTp}_Bet");
             BetResp betResp = new BetResp();
             betResp.error = 100;
             betResp.description = "Internal server error.";
@@ -363,7 +362,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/result")]
         public PayoutResp Result([FromForm] Dictionary<string, string> resultReqq)
         {
-            //log2File.Info(JsonConvert.SerializeObject(resultReqq), $"{thisTp}_Result");
             PayoutResp resultResp = new PayoutResp();
             resultResp.error = 100;
             resultResp.description = "Internal server error.";
@@ -442,7 +440,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/bonusWin")]
         public PayoutResp BonusWin([FromForm] Dictionary<string, string> bonusWinReqq)
         {
-            //log2File.Info(JsonConvert.SerializeObject(bonusWinReqq), $"{thisTp}_BonusWin");
             PayoutResp payoutResp = new PayoutResp();
             payoutResp.error = 100;
             payoutResp.description = "Internal server error.";
@@ -721,10 +718,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 if (hashCheck(refundReqq, secureKey))
                 {
-                    //string Content = @"{""amount"":""9.0"",""gameId"":""vs7776aztec"",""hash"":""672028d15e2191c3050000f0f8a6b62a"",""ipAddress"":""218.211.34.185"",""language"":""zh"",""platform"":""WEB"",""providerId"":""PragmaticPlay"",""reference"":""5e9ed802005c8e0008a65f62"",""roundDetails"":""spin"",""roundId"":""2360710356"",""timestamp"":""1587468290666"",""userId"":""DNova88_157""}";
                     RefundReq refundReq = JsonConvert.DeserializeObject<RefundReq>(JsonConvert.SerializeObject(refundReqq));
                     refundResp.transactionId = $"{refundReq.reference}_refund";
-                    //BetReq betReq = JsonConvert.DeserializeObject<BetReq>(Content);
                     var gameType = _thirdPartyBLL.GetGameType_PP(refundReq.gameId);
                     if (_settledBLL.CancelBetRNG_PP(refundReq, (int)gameType, out decimal tpAffterAmount) > 0)
                     {
