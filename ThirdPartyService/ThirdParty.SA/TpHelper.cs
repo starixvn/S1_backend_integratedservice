@@ -511,49 +511,7 @@ namespace ThirdParty.SA
         /// <param name="config"></param>
         /// <param name="tpCustInfo"></param>
         /// <param name="inputs"></param>
-        private void SetBetLimit(SaConfig config, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {
-            // hardCode RLS Test
-            inputs.Remove("BDTBetLimit1");
-            inputs.Remove("BDTBetLimit2");
-            inputs.Remove("BDTBetLimit3");
-            inputs.Remove("IDRBetLimit1");
-            inputs.Remove("IDRBetLimit2");
-            inputs.Remove("IDRBetLimit3");
-            inputs.Remove("INRBetLimit1");
-            inputs.Remove("INRBetLimit2");
-            inputs.Remove("INRBetLimit3");
-            inputs.Remove("MYRBetLimit1");
-            inputs.Remove("MYRBetLimit2");
-            inputs.Remove("MYRBetLimit3");
-            inputs.Remove("THBBetLimit1");
-            inputs.Remove("THBBetLimit2");
-            inputs.Remove("THBBetLimit3");
-            inputs.Remove("USDBetLimit1");
-            inputs.Remove("USDBetLimit2");
-            inputs.Remove("USDBetLimit3");
-            inputs.Remove("VNDBetLimit1");
-            inputs.Remove("VNDBetLimit2");
-            inputs.Remove("VNDBetLimit3");
-
-
-            inputs.Add("BDTBetLimit1", "4");
-            inputs.Add("BDTBetLimit2", "32");
-            inputs.Add("BDTBetLimit3", "65536");
-            inputs.Add("IDRBetLimit1", "16");
-            inputs.Add("IDRBetLimit2", "2048");
-            inputs.Add("IDRBetLimit3", "524288");
-            inputs.Add("INRBetLimit1", "2199023255552");
-            inputs.Add("INRBetLimit2", "32768");
-            inputs.Add("MYRBetLimit1", "16");
-            inputs.Add("MYRBetLimit2", "2048");
-            inputs.Add("THBBetLimit1", "4398046511104");
-            inputs.Add("THBBetLimit2", "274877906944");
-            inputs.Add("USDBetLimit1", "17179869184");
-            inputs.Add("VNDBetLimit1", "4294967296");
-            inputs.Add("VNDBetLimit2", "524288");
-            inputs.Add("VNDBetLimit3", "262144 ");
-
+        private void SetBetLimit(SaConfig config, TpCustInfo tpCustInfo, Dictionary<string, string> inputs) {
             try
             {
                 var betLimitQueryString = GetBetLimitQueryString(tpCustInfo.TpCurrencyId, inputs);
