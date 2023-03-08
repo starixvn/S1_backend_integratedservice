@@ -127,6 +127,7 @@ namespace ThirdPartySettleWorker.Workers
                             SettledTime = unsettled.SettleTime,
                             TransTime = DateTimeOffset.FromUnixTimeSeconds(unsettled.TransTime).AddHours(-8).ToUnixTimeSeconds(),
                             SettlementType = isClosed ? SettlementType.SettledForValid : SettlementType.UnSettled,
+                            GameID = unsettled.GameId,
                         };
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)

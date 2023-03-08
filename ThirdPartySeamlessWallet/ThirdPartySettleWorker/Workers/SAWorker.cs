@@ -106,7 +106,8 @@ namespace ThirdPartySettleWorker.Workers
                                 TpUserName = userName,
                                 SettledTime = settleData.SettleTime,
                                 TransTime = settleData.TransTime,
-                                SettlementType = SettlementType.SettledForValid
+                                SettlementType = SettlementType.SettledForValid,
+                                GameID = settleData.GameId,
                             };
                             var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                             if (result == 1)

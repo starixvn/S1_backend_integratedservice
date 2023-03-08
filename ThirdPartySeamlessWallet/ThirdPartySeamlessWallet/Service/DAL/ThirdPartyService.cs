@@ -70,5 +70,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             return conn.Query<BonusLog>("Service_BonusLog_TransactionCheck_Get", new { _RefTransId = RefTransId }, commandType: CommandType.StoredProcedure);
         }
+
+        public ServerInfo GetServerInfoBySiteName(string siteName)
+        {
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            return conn.QueryFirstOrDefault<ServerInfo>("Service_ServerInfo_SiteName_Get", new { _SiteName = siteName }, commandType: CommandType.StoredProcedure);
+        }
     }
 }

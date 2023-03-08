@@ -56,13 +56,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int PlaceBetRNG_PP(TpCustInfo tpCustInfo, BettingDataRNG_PP bettingDataRNG_PP, int gameType, out decimal afterAmount)
         {
             int bonusId = 0;
-            //int gameType = (int)GameType.PP_RNG;
-            //if (bettingDataRNG_PP.gameId.Length == 3 && int.TryParse(bettingDataRNG_PP.gameId, out int tempGameId))
-            //{
-            //    gameType = (int)GameType.PP_LiveCasino;
-            //}
-
             afterAmount = 0;
+            var bonusCode = (!string.IsNullOrEmpty(bettingDataRNG_PP.bonusCode)) ? $" ({bettingDataRNG_PP.bonusCode})" : "";
+
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
             using var trans = conn.BeginTransaction();
@@ -71,8 +67,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             bettingDataRNG_PP.TicketStatus = (int)TicketStatus.UnSettled;
             bettingDataRNG_PP.type = BettransType.Bet;
             var p = new DynamicParameters(new { reference = bettingDataRNG_PP.reference, roundId = bettingDataRNG_PP.roundId, gameId = bettingDataRNG_PP.gameId, amount = bettingDataRNG_PP.amount, userId = bettingDataRNG_PP.userId, roundDetails = bettingDataRNG_PP.roundDetails, timestamp = bettingDataRNG_PP.timestamp, bonusCode = bettingDataRNG_PP.bonusCode, jackpotId = bettingDataRNG_PP.jackpotId, jackpotContribution = bettingDataRNG_PP.jackpotContribution, type = (int)bettingDataRNG_PP.type, TicketStatus = (int)bettingDataRNG_PP.TicketStatus, promoWinAmount = (decimal?)null, promoWinReference = (string)null, promoCampaignID = (int?)null, promoCampaignType = (string)null });
-            /*p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);*/
+
             var category = TpCategory.Slots;
             if (gameType == (int)GameType.PP_RNG)
             {
@@ -86,8 +81,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             if (result > 0 && bettingDataRNG_PP.amount != 0)
             {
-                //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_PP.amount, (int)Tp.PP, TransType.Wagers, $"Stake: {Math.Abs(bettingDataRNG_PP.amount).ToString("#,##0.##")}", bettingDataRNG_PP.reference, out afterAmount, conn, trans);
-                result = PlaceBetV2(tpCustInfo, bettingDataRNG_PP.amount, (int)Tp.PP, bettingDataRNG_PP.roundId.ToString(), gameType, bettingDataRNG_PP.reference, null, category, out afterAmount, ref bonusId, conn, trans);
+                result = PlaceBetV2(
+                    tpCustInfo,
+                    bettingDataRNG_PP.amount,
+                    (int)Tp.PP,
+                    bettingDataRNG_PP.roundId.ToString(),
+                    gameType,
+                    bettingDataRNG_PP.reference,
+                    null,
+                    category,
+                    out afterAmount,
+                    ref bonusId,
+                    conn,
+                    trans,
+                    memo: $"{bonusCode}"
+
+                );
             }
 
             if (result > 0)
@@ -427,7 +436,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 var p = new DynamicParameters(bettingDataRNG_MG);
                 p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
-                result = conn.Execute("Service_BettransRng_MG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_BettransRng_MG_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
                 var extTxnId = p.Get<long>("extTxnId");
 
                 if (result > 0 && bettingDataRNG_MG.amount != 0)
@@ -1056,6 +1065,118 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         #endregion
 
+        #region AdvantPlay Mini
+        public int PlaceBet_AdvantPlayMini(TpCustInfo tpCustInfo, BettingData_AdvantPlayMini bettingData_AdvantPlayMini, out decimal afterAmount)
+        {
+            var result = 0;
+            int bonusId = 0;
+            int gameType = (int)GameType.AP_RNG;
+            afterAmount = 0;
+            try
+            {
+                // Service_BettransRng_AP_Mini_crash_Ins、Service_BettransRng_AP_Mini_cardracing_Ins
+                var spName = $"Service_BettransRng_AP_Mini_{bettingData_AdvantPlayMini.MiniGameCode.ToLower()}_Ins";
+                var partitionTime = DateTimeOffset.FromUnixTimeSeconds(bettingData_AdvantPlayMini.BetTime).DateTime;
+
+                var p = new DynamicParameters(new
+                {
+                    TransId = bettingData_AdvantPlayMini.TransId,
+                    TransactionReferenceId = "",
+                    GameId = bettingData_AdvantPlayMini.GameId,
+                    SessionId = bettingData_AdvantPlayMini.SessionId,
+                    UserReferenceId = bettingData_AdvantPlayMini.UserReferenceId,
+                    Amount = bettingData_AdvantPlayMini.Amount,
+                    BetTime = bettingData_AdvantPlayMini.BetTime,
+                    SettlementTime = 0,
+                    BuyAmount = 0,
+                    StakeAmount = 0,
+                    WonAmount = 0,
+                    Multiplier = 0,
+                    Odds = 0,
+                    Data = "[]",
+                    WinResults = "[]",
+                    LostResults = "[]",
+                    GameResult = "",
+                    RefundTime = 0,
+                    MiniGameCode = bettingData_AdvantPlayMini.MiniGameCode,
+                    TicketType = (int)BettransType.Bet,
+                    TicketStatus = (int)TicketStatus.UnSettled,
+                    SettleFlag = (int)SettleFlag.Running,
+                });
+                p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
+
+                using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                var trans = conn.BeginTransaction();
+
+                result = _partitionService.Execute(partitionTime, spName, p, trans);
+
+                if (result > 0 && bettingData_AdvantPlayMini.Amount != 0)
+                {
+                    result = PlaceBetV2(
+                        tpCustInfo,
+                        Math.Abs(bettingData_AdvantPlayMini.Amount) * -1,
+                        (int)Tp.AP,
+                        bettingData_AdvantPlayMini.TransId,
+                        gameType,
+                        bettingData_AdvantPlayMini.TransId,
+                        null,
+                        TpCategory.Slots,
+                        out afterAmount,
+                        ref bonusId,
+                        conn,
+                        trans
+                    );
+                }
+
+                if (result > 0)
+                {
+                    trans.Commit();
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                logger.LogError(mySqlEx.Message);
+                // Duplicate
+                if (mySqlEx.Number == 1062)
+                {
+                    result = -1;
+                }
+            }
+            return result;
+        }
+
+        public IEnumerable<BettransData_AdvantPlayMini_Bet> GetAdvantPlayMiniBet(string TransId, long SettlementTime, string MiniGameCode, out string TransactionReferenceId)
+        {
+            try
+            {
+                // Service_BettransRng_AP_Mini_crash_Get、Service_BettransRng_AP_Mini_cardracing_Get
+                var spName = $"Service_BettransRng_AP_Mini_{MiniGameCode.ToLower()}_Get";
+
+                TransactionReferenceId = "";
+                var partitionTime = DateTimeOffset.FromUnixTimeSeconds(SettlementTime).DateTime;
+
+                using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                var trans = conn.BeginTransaction();
+
+                var bettrans = _partitionService.Query<BettransData_AdvantPlayMini_Bet>(partitionTime, spName, new { _TransId = TransId });
+                if (!bettrans.Any())
+                {
+                    return null;
+                }
+
+                TransactionReferenceId = bettrans.First().TransId;
+                return bettrans;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.Message);
+                throw;
+            }
+        }
+        #endregion
+
         #region Habanero
 
         public int PlaceBet_HB(TpCustInfo tpCustInfo, PlaceBetRngDto_HB placeBetRngDto, out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
@@ -1435,6 +1556,5 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
         #endregion
-
     }
 }

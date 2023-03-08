@@ -70,9 +70,9 @@
         SG_Fish = 31,
         SBO_Sports = 77,
         SBO_VirtualSports = 81,
-        PT_RNG = 46,
-        PT_LiveCasino = 48,
         YGG_RNG = 14,
+ 		PT_RNG = 46,
+        PT_LiveCasino = 48,
         AMB_RNG = 76,
         Skywind_RNG = 82,
         Skywind_LiveCasino = 84,
@@ -85,8 +85,7 @@
         Yeebet_LiveCasino = 93
     }
 
-
-    public enum SettlementType
+	 public enum SettlementType
     {
         UnSettled = 0,
         SettledForValid = 1,
@@ -106,7 +105,7 @@
         Related = 5,
         FreeBetWin = 6
     }
-
+    
     public enum DataBase
     {
         Main, //ConnectionString

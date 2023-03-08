@@ -80,6 +80,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerMPService>();
             services.AddSingleton<WagerEVOService>();
             services.AddSingleton<WagerGPIService>();
+            services.AddSingleton<WagerAPService>();
             services.AddSingleton<WagerYeebetService>();
             services.AddSingleton<IWagerSBOService, WagerSBOService>();
             services.AddSingleton<TpUnsettleService>();
@@ -212,6 +213,7 @@ namespace ThirdPartyWager
             //AP
             services.AddSingleton<ApiAPBLL>();
             services.AddSingleton<FinanceAPBLL>();
+            services.AddSingleton<WagerAPBLL>();
             //Netent
             services.AddSingleton<ApiNetentBLL>();
             services.AddSingleton<FinanceNetentBLL>();
@@ -306,6 +308,8 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceEbet>();
             services.AddHostedService<FinanceJILI>();
             services.AddHostedService<FinanceAP>();
+            services.AddHostedService<WagerAP>();
+            services.AddHostedService<WagerRedoAP>();
             services.AddHostedService<FinanceNetent>();
             services.AddHostedService<FinanceRedTiger>();
             services.AddHostedService<FinanceSexy>();
@@ -313,7 +317,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerKiss918>();
             services.AddHostedService<WagerRedoKiss918>();
             services.AddHostedService<WagerSkywind>();
-            services.AddHostedService<WagerUnsettleCheckSkywind>();
+            //services.AddHostedService<WagerUnsettleCheckSkywind>();
             services.AddHostedService<WagerGPI>();
             services.AddHostedService<WagerRedoGPI>();
             services.AddHostedService<FinanceGPI>();
