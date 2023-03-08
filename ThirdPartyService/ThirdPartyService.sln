@@ -6,6 +6,7 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdPartyService", "ThirdPartyService\ThirdPartyService.csproj", "{61D09DC4-D7F6-4E3F-B36B-F5A61643E3A0}"
 	ProjectSection(ProjectDependencies) = postProject
 		{5631C337-2051-4A0D-ADFE-FB3DEF90F1A9} = {5631C337-2051-4A0D-ADFE-FB3DEF90F1A9}
+		{FB70712E-F4CE-4CBF-B03F-8610E8CAC334} = {FB70712E-F4CE-4CBF-B03F-8610E8CAC334}
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.Saba", "ThirdParty.Saba\ThirdParty.Saba.csproj", "{C703CCC4-143D-4387-9784-DE0752186597}"
@@ -103,6 +104,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.SimplePlay", "ThirdParty.SimplePlay\ThirdParty.SimplePlay.csproj", "{36AE4DD7-C7B8-4EDD-BFDB-3F0E26BF4302}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.Yeebet", "ThirdParty.Yeebet\ThirdParty.Yeebet.csproj", "{FB9339C8-C4FC-44E3-ABC1-1F7924ECE3E0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.TFG", "ThirdParty.TF\ThirdParty.TFG.csproj", "{FB70712E-F4CE-4CBF-B03F-8610E8CAC334}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -302,6 +305,10 @@ Global
 		{FB9339C8-C4FC-44E3-ABC1-1F7924ECE3E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FB9339C8-C4FC-44E3-ABC1-1F7924ECE3E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FB9339C8-C4FC-44E3-ABC1-1F7924ECE3E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB70712E-F4CE-4CBF-B03F-8610E8CAC334}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB70712E-F4CE-4CBF-B03F-8610E8CAC334}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB70712E-F4CE-4CBF-B03F-8610E8CAC334}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB70712E-F4CE-4CBF-B03F-8610E8CAC334}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -352,6 +359,7 @@ Global
 		{10F42EAD-A2F0-4AF8-B12A-5CCA5197E5E1} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{36AE4DD7-C7B8-4EDD-BFDB-3F0E26BF4302} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{FB9339C8-C4FC-44E3-ABC1-1F7924ECE3E0} = {54887B85-B528-486C-A102-3E5FF55C1282}
+		{FB70712E-F4CE-4CBF-B03F-8610E8CAC334} = {54887B85-B528-486C-A102-3E5FF55C1282}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {88130080-DA6F-45D5-BA4E-3A91181A0592}
