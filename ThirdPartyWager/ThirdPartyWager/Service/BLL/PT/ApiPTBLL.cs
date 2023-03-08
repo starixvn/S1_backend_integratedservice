@@ -101,12 +101,12 @@ namespace ThirdPartyWager.Service.BLL
             request.Headers.Add("X_ENTITY_KEY", entityKey);
 
             using var handler = new HttpClientHandler();
-            if (!string.IsNullOrEmpty(_configuration.GetValue<string>("ProxyHost")))
-            {
-                handler.Proxy = new WebProxy(_configuration.GetValue<string>("ProxyHost"),
-                    _configuration.GetValue<int>("ProxyPort"));
-                handler.UseProxy = true;
-            }
+            //if (!string.IsNullOrEmpty(_configuration.GetValue<string>("ProxyHost")))
+            //{
+            //    handler.Proxy = new WebProxy(_configuration.GetValue<string>("ProxyHost"),
+            //        _configuration.GetValue<int>("ProxyPort"));
+            //    handler.UseProxy = true;
+            //}
 
             handler.ClientCertificates.Add(new X509Certificate2(certificate["path"], certificate["password"],
                 X509KeyStorageFlags.MachineKeySet));
