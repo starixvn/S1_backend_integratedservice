@@ -249,6 +249,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
             productId = placeBetEnt.productId;
             gameId = placeBetEnt.gameId;
             IP = placeBetEnt.IP;
+            sportTypeName = placeBetEnt.productName_en;
+            leagueName = placeBetEnt.gameName_en;
             productName_en = placeBetEnt.productName_en;
             gameName_en = placeBetEnt.gameName_en;
             betFrom = placeBetEnt.betFrom;
