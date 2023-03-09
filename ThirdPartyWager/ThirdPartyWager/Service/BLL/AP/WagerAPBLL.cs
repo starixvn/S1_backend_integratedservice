@@ -80,7 +80,6 @@ namespace ThirdPartyWager.Service.BLL
             string msg;
             try
             {
-                var siteList = _commonBLL.GetSiteList();
                 // get api info
                 var setting = _thirdPartyBLL.GetThirdPartyBySite(_tpId, siteId);
 
