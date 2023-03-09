@@ -540,6 +540,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var memoHead = transType switch
                 {
                     SBSWTransType.Settle => "Payout",
+                    SBSWTransType.SettleEnt => "Payout",
                     SBSWTransType.Unsettle => "Unsettle",
                     SBSWTransType.Resettle => "Resettle",
                 };
