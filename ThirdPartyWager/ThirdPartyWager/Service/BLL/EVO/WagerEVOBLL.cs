@@ -35,7 +35,7 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> ExecWagerWorker(int type, int timeRange)
         {
-            var wokerTime = GetWorkerTime(type, -180);
+            var wokerTime = GetWorkerTime(type, -480);
             var quick = CheckQuick(wokerTime, 5);
             var time = _dateTimeHelper.GetTimeByMinute(timeRange, _timeZone, _timeFormat, wokerTime);
 
