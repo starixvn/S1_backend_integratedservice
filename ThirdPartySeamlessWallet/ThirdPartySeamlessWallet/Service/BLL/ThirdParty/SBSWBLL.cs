@@ -623,7 +623,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
           
             var actualStake = betList.Sum(i => i.actualAmount);
-            var winlostAmount = settleList.Sum(i => i.creditAmount) - settleList.Sum(i => i.debitAmount) - actualStake;
+            var winlostAmount = ticketStatus == "running" ? 0 
+                : settleList.Sum(i => i.creditAmount) - settleList.Sum(i => i.debitAmount) - actualStake;
 
             //將平台匯率轉回第三方匯率
             return new GetTicketInfoObj(ReturnCode.Success)
