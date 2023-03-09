@@ -554,7 +554,18 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
     }
 
 
+    public class BetInfo
+    {
+        public decimal actualAmount { get; set; }
+        public int TicketType { get; set; }
+    }
 
-
+    public class SettleInfo
+    {
+        public long SQ { get; set; }
+        public decimal creditAmount { get; set; }
+        public decimal debitAmount { get; set; }
+        public string status { get; set; }
+    }
     #endregion
 }
