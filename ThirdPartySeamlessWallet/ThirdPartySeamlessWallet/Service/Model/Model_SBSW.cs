@@ -227,6 +227,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
             betTime = placeBet3rd.betTime;
             IP = placeBet3rd.IP;
             tsId = placeBet3rd.tsId ?? string.Empty;
+            sportTypeName = placeBet3rd.productName_en;
+            leagueName = placeBet3rd.gameName_en;
             productName_en = placeBet3rd.productName_en;
             gameName_en = placeBet3rd.gameName_en;
             betFrom = placeBet3rd.betFrom;
