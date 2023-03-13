@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
-using System.Security.Cryptography;
-using System.Text;
+using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -180,7 +179,7 @@ public class TpHelper : ThirdPartyHelperBase
                 loginId = tpCustInfo.TpUserName,
                 locale = TpLangId,
                 isMobileUrl = appType == AppType.Mobile ? 1 : 0,
-                returnUrl = homeUrl,
+                returnUrl = HttpUtility.UrlEncode(homeUrl),
             },
             jsonrpc = "2.0"
         });

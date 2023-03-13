@@ -31,3 +31,9 @@ public enum BGErrorCode
     InternalError = -32603,
     ServerError = -32000
 }
+
+public enum BettransLC_BGTypeEnum
+{
+    OrderTransfer = 1,
+    CalcTransfer = 2
+}
