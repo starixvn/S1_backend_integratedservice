@@ -910,5 +910,51 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region BG
+
+        public IEnumerable<BettingDataLC_BG> IsExist_BG(DateTime partitionTime, IEnumerable<long> orderIds)
+        {
+            var query = new { orderIds = JsonConvert.SerializeObject(orderIds) };
+            return _partitionService.Query<BettingDataLC_BG>(partitionTime, "Service_BettransLC_BG_Check", query);
+        }
+
+        public bool PlaceBet_BG(DateTime partitionTime, BettingDataLC_BG data, MySqlTransaction trans, out int SQ)
+        {
+            SQ = 0;
+            var insertSQ = _partitionService.Execute(partitionTime, "Service_BettransLC_BG_Ins", data, trans);
+
+            if (insertSQ == 0)
+                return false;
+
+            SQ = insertSQ;
+            return true;
+        }
+
+        public bool SetBalance_BG(TpCustInfo tpCustInfo, BettingDataLC_BG data, string memo,
+            out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var result = PlaceBetV2(tpCustInfo,
+                                data.amount,
+                                (int)Tp.Yeebet,
+                                data.random,  //TpTransId
+                                (int)GameType.BG_LiveCasino,
+                                data.random,  //RefId
+                                null,
+                                TpCategory.LiveCasino,
+                                out afterAmount,
+                                ref bonusId,
+                                conn,
+                                trans,
+                                memo: $" - {memo}_{data.random} ");
+
+            if (result <= 0)
+                return false;
+
+            return true;
+        }
+
+
+        #endregion
     }
 }

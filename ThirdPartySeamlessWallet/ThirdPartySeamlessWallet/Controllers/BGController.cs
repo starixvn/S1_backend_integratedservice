@@ -55,6 +55,7 @@ public class BGController : ControllerBase
         var Content = await reader.ReadToEndAsync();
         var requestContent = Content.TrimStart("json=".ToArray());
         var request = JsonConvert.DeserializeObject<SeamlessWalletRequest>(requestContent);
+        var message = string.Empty;
 
         switch (request.method)
         {
@@ -64,21 +65,54 @@ public class BGController : ControllerBase
 
             //Balance
             case "open.operator.user.balance":
-                if (!ConvertToAssignObject(request.@params, out BalanceParameters_BG balanceRequest, out string rawMessage))
-                    return new ResponseModel_BG(request, BGErrorCode.InvalidParams, "Convert parameter fail.", reason: rawMessage);
+                if (!ConvertToAssignObject(request.@params, out UserBalanceParameters_BG userBalanceParameters, out message))
+                    return new ResponseModel_BG(request, BGErrorCode.InvalidParams, "Convert parameter fail.", reason: message);
 
-                var signParameters = new SignParameters
+                if (!CheckAppidAndSign(new SignParameters
                 {
-                    sign = balanceRequest.sign,
-                    random = balanceRequest.random,
-                    sn = balanceRequest.sn,
-                    loginId = balanceRequest.loginId,
-                };
+                    sign = userBalanceParameters.sign,
+                    random = userBalanceParameters.random,
+                    sn = userBalanceParameters.sn,
+                    loginId = userBalanceParameters.loginId,
+                }, out message))
+                    return new ResponseModel_BG(request, BGErrorCode.InvalidParams, message, userBalanceParameters.sn);
 
-                if (!CheckAppidAndSign(signParameters, out string message))
-                    return new ResponseModel_BG(request, BGErrorCode.InvalidParams, message, balanceRequest.sn);
+                return await _bGBLL.UserBalance(request, userBalanceParameters);
 
-                return await _bGBLL.Balance(request, balanceRequest);
+            //Bet
+            case "open.operator.order.transfer":
+                if (!ConvertToAssignObject(request.@params, out OrderTransferParameters_BG orderTransferParameters, out message))
+                    return new ResponseModel_BG(request, BGErrorCode.InvalidParams, "Convert parameter fail.", reason: message);
+
+                if (!CheckAppidAndSign(new SignParameters
+                {
+                    sign = orderTransferParameters.sign,
+                    random = orderTransferParameters.random,
+                    sn = orderTransferParameters.sn,
+                    loginId = orderTransferParameters.loginId,
+                    amount = orderTransferParameters.amount,
+                }, out message))
+                    return new ResponseModel_BG(request, BGErrorCode.InvalidParams, message, orderTransferParameters.sn);
+
+                return await _bGBLL.OrderTransfer(request, orderTransferParameters);
+
+            //Payout (ReSettle)
+            case "open.operator.calc.transfer":
+                if (!ConvertToAssignObject(request.@params, out CalcTransferParameters_BG calcTransferParameters, out message))
+                    return new ResponseModel_BG(request, BGErrorCode.InvalidParams, "Convert parameter fail.", reason: message);
+
+                if (!CheckAppidAndSign(new SignParameters
+                {
+                    sign = calcTransferParameters.sign,
+                    random = calcTransferParameters.random,
+                    sn = calcTransferParameters.sn,
+                    loginId = calcTransferParameters.loginId,
+                    amount = calcTransferParameters.amount
+                }, out message))
+                    return new ResponseModel_BG(request, BGErrorCode.InvalidParams, message, calcTransferParameters.sn);
+
+                return await _bGBLL.CalcTransfer(request, calcTransferParameters);
+
             default:
                 return new ResponseModel_BG(request, BGErrorCode.MethodNotFound, "Method not found.");
         }
@@ -119,13 +153,19 @@ public class BGController : ControllerBase
 
         if (string.IsNullOrWhiteSpace(parameters.sign))
         {
-            message = "sign is invaild.";
+            message = "CheckRequest Fail: sign is invaild.";
             return false;
         }
 
-        if (parameters.loginId == null)
+        if (string.IsNullOrWhiteSpace(parameters.sn))
         {
-            message = "loginId not found.";
+            message = "CheckRequest Fail: sn is invaild.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(parameters.loginId))
+        {
+            message = "CheckRequest Fail: loginId is invaild.";
             return false;
         }
 
