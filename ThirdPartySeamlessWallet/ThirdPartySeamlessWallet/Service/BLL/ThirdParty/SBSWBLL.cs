@@ -209,7 +209,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Service_Bettrans_SBSW_Bet", trans, p);
                 if (result.SPResult == -4)
                 {
-                    throw new SBSWException(ReturnCode.TransactionDuplicated);
+                    throw new SBSWException(ReturnCode.TransactionDuplicated,$"refId: {bet.refId} Duplicated.");
                 }
 
                 if (result.licenseeTxId < 1)
@@ -541,7 +541,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 });
                 if (result.SPResult == -4)
                 {
-                    throw new SBSWException(ReturnCode.TransactionDuplicated);
+                    throw new SBSWException(ReturnCode.TransactionDuplicated, $"refId: {detail.refId} Duplicated.");
                 }
 
                 var amount = detail.creditAmount - detail.debitAmount;
@@ -669,7 +669,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 });
                 if (result.SPResult == -4)
                 {
-                    throw new SBSWException(ReturnCode.TransactionDuplicated);
+                    throw new SBSWException(ReturnCode.TransactionDuplicated, $"refId: {adjust.refId} Duplicated.");
                 }
 
                 if (result.licenseeTxId < 1)//新增Adjust失敗
