@@ -408,7 +408,8 @@ namespace ThirdParty.SBSW
 
         private DateTime GetUTCTime(DateTime? target, DateTime defaultTime)
         {
-            return new DateTimeOffset(target ?? defaultTime, new TimeSpan(-4, 0, 0)).DateTime;
+            return new DateTimeOffset(target ?? defaultTime, new TimeSpan(-4, 0, 0))
+                .ToOffset(new TimeSpan(4, 0, 0)).DateTime;
         }
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
