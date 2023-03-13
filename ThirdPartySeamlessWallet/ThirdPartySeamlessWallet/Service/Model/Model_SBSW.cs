@@ -346,7 +346,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public Ticket[] ticketList { get; set; }
         public DateTime betTime { get; set; }
         public string IP { get; set; }
-        public string tsId { get; set; }
+        public string tsId { get; set; } = string.Empty;
         public string productName_en { get; set; }
         public string gameName_en { get; set; }
         public string betFrom { get; set; }
@@ -402,7 +402,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public DateTime betTime { get; set; }
         public DateTime updateTime { get; set; }
         public string IP { get; set; }
-        public string tsId { get; set; }
+        public string tsId { get; set; } = string.Empty;
         public string betFrom { get; set; }
         public ParlayDetail[] txns { get; set; }
     }
