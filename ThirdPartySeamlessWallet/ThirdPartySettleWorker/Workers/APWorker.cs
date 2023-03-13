@@ -228,7 +228,7 @@ namespace ThirdPartySettleWorker.Workers
                             SettledTime = wager.SettleTime,
                             TransTime = wager.TransTime,
                             SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType(thisTp, bettransData.MiniGameCode.ToLower()),
-                            GameID = bettransData.MiniGameCode,
+                            //GameID = bettransData.MiniGameCode,
                         };
 
                         if (wager.status.ToLower() == "refund")
@@ -369,7 +369,7 @@ namespace ThirdPartySettleWorker.Workers
                             SettledTime = wager.SettleTime,
                             TransTime = wager.TransTime,
                             SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType(thisTp, bettransData.MiniGameCode.ToLower()),
-                            GameID = bettransData.MiniGameCode,
+                            //GameID = bettransData.MiniGameCode,
                         };
 
                         if (wager.status.ToLower() == "refund")
