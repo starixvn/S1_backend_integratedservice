@@ -561,7 +561,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             gameType: (int)gameType,
                             tpCategory: tpCategory,
                             refId: detail.refId,
-                            TransType.Payout,
+                            transType == SBSWTransType.Unsettle ? TransType.Undo : TransType.Payout,
                             betData: null,
                             out decimal afterAmount,
                             memoHead,
