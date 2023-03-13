@@ -501,13 +501,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public int PayoutRNG_PP(TpCustInfo tpCustInfo, BettingDataRNG_PP bettingDataRNG_PP, int gameType, out decimal afterAmount)
         {
-            //int gameType = (int)GameType.PP_RNG;
-
-            //if (bettingDataRNG_PP.gameId?.Length == 3 && int.TryParse(bettingDataRNG_PP.gameId, out int tempGameId))
-            //{
-            //    gameType = (int)GameType.PP_LiveCasino;
-            //}
-
             int bonusId = 0;
             afterAmount = 0;
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
@@ -518,6 +511,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int result = 0;
             try
             {
+                var bonusCode = (!string.IsNullOrEmpty(bettingDataRNG_PP.bonusCode)) ? $" ({bettingDataRNG_PP.bonusCode})" : "";
                 var category = TpCategory.Slots;
                 if (gameType == (int)GameType.PP_RNG)
                 {
@@ -533,14 +527,42 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     if (bettingDataRNG_PP.amount > 0)
                     {
-                        //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_PP.amount, (int)Tp.PP, TransType.Settled, $"{bettingDataRNG_PP.type}: {Math.Abs(bettingDataRNG_PP.amount).ToString("#,##0.##")}", bettingDataRNG_PP.reference, out afterAmount, conn, trans);
-                        result = PayoutV2(tpCustInfo, bettingDataRNG_PP.amount, (int)Tp.PP, bettingDataRNG_PP.roundId.ToString(), gameType, category, bettingDataRNG_PP.reference, TransType.Payout, null, out afterAmount, "Payout", out bonusId, conn, trans);
+                        result = PayoutV2(
+                            tpCustInfo,
+                            bettingDataRNG_PP.amount,
+                            (int)Tp.PP,
+                            bettingDataRNG_PP.roundId.ToString(),
+                            gameType,
+                            category,
+                            bettingDataRNG_PP.reference,
+                            TransType.Payout,
+                            null,
+                            out afterAmount,
+                            $"Payout{bonusCode}",
+                            out bonusId,
+                            conn,
+                            trans
+                        );
                     }
 
                     if (bettingDataRNG_PP.promoWinAmount > 0)
                     {
-                        //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataRNG_PP.promoWinAmount, (int)Tp.PP, TransType.Settled, $"{"promoWin"}: {Math.Abs(bettingDataRNG_PP.promoWinAmount).ToString("#,##0.##")}", bettingDataRNG_PP.reference, out afterAmount, conn, trans);
-                        result = PayoutV2(tpCustInfo, bettingDataRNG_PP.promoWinAmount, (int)Tp.PP, bettingDataRNG_PP.roundId.ToString(), gameType, category, bettingDataRNG_PP.reference, TransType.Prize, null, out afterAmount, "Bonus", out bonusId, conn, trans);
+                        result = PayoutV2(
+                            tpCustInfo,
+                            bettingDataRNG_PP.promoWinAmount,
+                            (int)Tp.PP,
+                            bettingDataRNG_PP.roundId.ToString(),
+                            gameType,
+                            category,
+                            bettingDataRNG_PP.reference,
+                            TransType.Prize,
+                            null,
+                            out afterAmount,
+                            $"Bonus{bonusCode}",
+                            out bonusId,
+                            conn,
+                            trans
+                        );
                     }
 
                     if (result > 0)
@@ -604,6 +626,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             int bonusId = 0;
             afterAmount = 0;
+            var bonusCode = (!string.IsNullOrEmpty(bettingDataRNG_PP.bonusCode)) ? $" ({bettingDataRNG_PP.bonusCode})" : "";
+
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             conn.Open();
             using var trans = conn.BeginTransaction();
@@ -634,7 +658,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (cancelStake != 0)
                 {
-                    result = PayoutV2(tpCustInfo, cancelStake, (int)Tp.PP, bettingDataRNG_PP.roundId.ToString(), (int)gameType, category, bettingDataRNG_PP.reference, TransType.Refunds, null, out afterAmount, "Refund", out bonusId, conn, trans);
+                    result = PayoutV2(
+                        tpCustInfo,
+                        cancelStake,
+                        (int)Tp.PP,
+                        bettingDataRNG_PP.roundId.ToString(),
+                        (int)gameType,
+                        category,
+                        bettingDataRNG_PP.reference,
+                        TransType.Refunds,
+                        null,
+                        out afterAmount,
+                        $"Refund{bonusCode}",
+                        out bonusId,
+                        conn,
+                        trans
+                    );
                 }
 
                 if (result > 0)

@@ -17,7 +17,7 @@ namespace ThirdPartyWager.Workers
 
         private Timer timer;
         private readonly int tpType = (int)WagerTimerType.Wager;
-        private readonly int timeRange = 20; //in minutes 
+        private readonly int timeRange = 25; //in minutes
         private readonly int quickTime = 45; // in seconds
         private readonly int runTime = 180; // in seconds
         private readonly string _tpName = Tp.EVO.ToString();
