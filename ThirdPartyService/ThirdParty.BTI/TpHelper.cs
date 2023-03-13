@@ -64,10 +64,13 @@ namespace ThirdParty.BTI
             var homeUrl = inputs.ContainsKey($"homeUrl") && !string.IsNullOrEmpty(inputs[$"homeUrl"])
                ? inputs[$"homeUrl"] : "";
             var api = HttpUtility.UrlEncode($"{host}/btisport.js");
+            //桌機亞洲版 後面加/vi/asian-view/ 桌機歐洲版 後面加/vi/sports
+            var view = (appType == AppType.Desktop) ? "/asian-view" : "";
+
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Success,
-                Message = $"{GameUrl}/{TpLangId}/?operatorToken={sessionKey}&api={api}&home_url={homeUrl}",
+                Message = $"{GameUrl}/{TpLangId}{view}?operatorToken={sessionKey}&api={api}&home_url={homeUrl}",
                 RawMessage = sessionKey
             };
         }
