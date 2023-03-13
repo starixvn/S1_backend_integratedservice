@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ThirdParty.SBSW
+﻿namespace ThirdParty.SBSW
 {
     public class DetailModel
     {
@@ -50,6 +48,8 @@ namespace ThirdParty.SBSW
         public Leaguename[] leaguename { get; set; }
         public double percentage { get; set; }
         public string sport_type { get; set; }
+        public Sportname[] sportname { get; set; }
+        public Bettypename[] bettypename { get; set; }
         public string tokenmoney { get; set; }
         public Cashoutdata[] CashOutData { get; set; }
         public string customInfo1 { get; set; }
@@ -116,7 +116,7 @@ namespace ThirdParty.SBSW
     public class Cashoutdata
     {
         public decimal stake { get; set; }
-        public int bet_type { get; set; }
+        public int? bet_type { get; set; }
         public DateTime? transdate { get; set; }
         public string cashout_id { get; set; }
         public decimal real_stake { get; set; }
@@ -265,5 +265,20 @@ namespace ThirdParty.SBSW
         public DateTime? match_datetime { get; set; }
         public DateTime? winlost_datetime { get; set; }
     }
+
+
+
+    public class Sportname
+    {
+        public string lang { get; set; }
+        public string name { get; set; }
+    }
+
+    public class Bettypename
+    {
+        public string lang { get; set; }
+        public string name { get; set; }
+    }
+
 
 }
