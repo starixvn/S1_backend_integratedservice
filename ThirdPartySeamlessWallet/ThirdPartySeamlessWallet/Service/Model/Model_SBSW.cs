@@ -203,7 +203,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
             betTime = placeBetParlay.betTime;
             updateTime = placeBetParlay.updateTime;
             IP = placeBetParlay.IP;
-            tsId = placeBetParlay.tsId;
+            tsId = placeBetParlay.tsId ?? string.Empty;
             betFrom = placeBetParlay.betFrom;
 
             refId = parlayDetail.refId;
@@ -226,7 +226,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
             gameId = placeBet3rd.gameId;
             betTime = placeBet3rd.betTime;
             IP = placeBet3rd.IP;
-            tsId = placeBet3rd.tsId;
+            tsId = placeBet3rd.tsId ?? string.Empty;
             productName_en = placeBet3rd.productName_en;
             gameName_en = placeBet3rd.gameName_en;
             betFrom = placeBet3rd.betFrom;
