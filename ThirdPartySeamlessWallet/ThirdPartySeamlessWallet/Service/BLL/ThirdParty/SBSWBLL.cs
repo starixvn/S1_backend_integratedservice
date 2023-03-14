@@ -65,7 +65,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 .ToDictionary(item => item.SportType, item => item);
         }
 
-        public async Task<ReturnObj> SeamlessWallet(SBSWTransType transType, string merchant, string bodyText)
+        public async Task<ReturnObj> SeamlessWallet(string merchant, SBSWTransType transType, string bodyText)
         {
             try
             {
