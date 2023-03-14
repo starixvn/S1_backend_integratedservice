@@ -104,36 +104,6 @@ namespace ThirdParty.Sexy
                 Cert = inputs.ContainsKey("cert2") && !string.IsNullOrEmpty(inputs["cert2"]) ? inputs["cert2"] : throw new Exception("cert2");
                 AgentId = inputs.ContainsKey("AgentId") && !string.IsNullOrEmpty(inputs["AgentId"]) ? inputs["AgentId"] : throw new Exception("AgentId");
 
-                if (!IsDevelopment)
-                {
-                    // RLS Test
-                    inputs.Remove("BetLimitId2BDT");
-                    inputs.Remove("BetLimitId2CNY");
-                    inputs.Remove("BetLimitId2IDR");
-                    inputs.Remove("BetLimitId2INR");
-                    inputs.Remove("BetLimitId2MYR");
-                    inputs.Remove("BetLimitId2THB");
-                    inputs.Remove("BetLimitId2USD");
-                    inputs.Remove("BetLimitId2VND");
-
-                    inputs.Add("BetLimitIdMYR", "580110");
-                    inputs.Add("BetLimitIdTHB", "580909");
-                    inputs.Add("BetLimitIdIDR", "580613");
-                    inputs.Add("BetLimitIdVND", "581104");
-                    inputs.Add("BetLimitIdCNY", "580310");
-                    inputs.Add("BetLimitIdUSD", "580709");
-                    inputs.Add("BetLimitIdINR", "581503");
-                    inputs.Add("BetLimitIdBDT", "583803");
-                    inputs.Add("BetLimitId2MYR", "580111");
-                    inputs.Add("BetLimitId2THB", "580910");
-                    inputs.Add("BetLimitId2IDR", "580614");
-                    inputs.Add("BetLimitId2VND", "581105");
-                    inputs.Add("BetLimitId2CNY", "580311");
-                    inputs.Add("BetLimitId2USD", "580710");
-                    inputs.Add("BetLimitId2INR", "581504");
-                    inputs.Add("BetLimitId2BDT", "583804");
-                }
-
                 if (string.IsNullOrEmpty(tpCurrencyId)) return;
                 BetLimitId = inputs.ContainsKey($"BetLimitId{tpCurrencyId}") ? inputs[$"BetLimitId{tpCurrencyId}"] : string.Empty;
                 BetLimitId2 = inputs.ContainsKey($"BetLimitId2{tpCurrencyId}") ? inputs[$"BetLimitId2{tpCurrencyId}"] : string.Empty;
