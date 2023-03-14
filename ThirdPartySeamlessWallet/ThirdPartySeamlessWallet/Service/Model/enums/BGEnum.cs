@@ -40,13 +40,13 @@ public enum BettransLC_BGTypeEnum
 
 public enum BGOrderStatusEnum
 {
-    NotExist = 0,
+    NotExist = 0, 
     UnSettle = 1,
     SettledWin = 2,
     SettledDraw = 3,
     SettledLose = 4,
-    Cancel = 5,
-    Expired = 6,
+    Cancel = 5,  //NoUse
+    Expired = 6, //NoUse
     SystemCancel = 7
 }
 

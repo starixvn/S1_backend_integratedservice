@@ -3371,8 +3371,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<BettingDataLC_BG> IsExistBet_BG(DateTime partitionTime, BettingDataLC_BG data)
         {
-            var query = new { serialnumber = data.random };
-            return _partitionService.Query<BettingDataLC_BG>(partitionTime, "Service_BettransLC_Yeebet_Cancel_Check", query);
+            var query = new { orderId = data.orderId };
+            return _partitionService.Query<BettingDataLC_BG>(partitionTime, "Service_BettransLC_BG_Cancel_Check", query);
         }
 
         public bool Payout_BG(DateTime partitionTime, BettingDataLC_BG data, MySqlTransaction trans, out int SQ)
