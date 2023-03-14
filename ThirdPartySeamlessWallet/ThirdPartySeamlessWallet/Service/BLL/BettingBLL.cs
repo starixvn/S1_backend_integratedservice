@@ -650,6 +650,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return result;
         }
+=======
+>>>>>>> PRD
         #endregion
 
         #region JILI
