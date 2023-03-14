@@ -912,9 +912,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region BG
 
-        public IEnumerable<BettingDataLC_BG> IsExist_BG(DateTime partitionTime, IEnumerable<long> orderIds)
+        public IEnumerable<BettingDataLC_BG> IsExist_BG(DateTime partitionTime, string random, IEnumerable<long> orderIds)
         {
-            var query = new { orderIds = JsonConvert.SerializeObject(orderIds) };
+            var query = new { random = random, orderIds = JsonConvert.SerializeObject(orderIds) };
             return _partitionService.Query<BettingDataLC_BG>(partitionTime, "Service_BettransLC_BG_Check", query);
         }
 
@@ -934,25 +934,24 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
             var result = PlaceBetV2(tpCustInfo,
-                                data.amount,
-                                (int)Tp.Yeebet,
-                                data.random,  //TpTransId
+                                data.orderAmount,
+                                (int)Tp.BG,
+                                data.orderId,  //TpTransId
                                 (int)GameType.BG_LiveCasino,
-                                data.random,  //RefId
+                                data.orderId,  //RefId
                                 null,
                                 TpCategory.LiveCasino,
                                 out afterAmount,
                                 ref bonusId,
                                 conn,
                                 trans,
-                                memo: $" - {memo}_{data.random} ");
+                                memo: $" - {memo}_{data.random}_{data.orderId} ");
 
             if (result <= 0)
                 return false;
 
             return true;
         }
-
 
         #endregion
     }

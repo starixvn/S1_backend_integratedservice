@@ -7,14 +7,13 @@ public class BettingDataLC_BG
 {
     public int SQ { get; set; }
     public string random { get; set; } = "";
-    public string sign { get; set; } = "";
     public string sn { get; set; } = "";
     public string userId { get; set; } = "";
     public string loginId { get; set; } = "";
     public decimal amount { get; set; } = 0;
     public int moduleId { get; set; } = 0;
     public string tranId { get; set; } = "";
-    public string serverTime { get; set; } = "";
+    public string serverTime { get; set; } = null;
     public string gameResult { get; set; } = "";
     public int recalc { get; set; } = 0;
     public string orderId { get; set; } = "";
@@ -22,11 +21,14 @@ public class BettingDataLC_BG
     public decimal orderAmount { get; set; } = 0;
     public string issueId { get; set; } = "";
     public string playId { get; set; } = "";
-    public int orderFrom { get; set; } = 0;
+    public BGOrderFromEnum orderFrom { get; set; } = BGOrderFromEnum.None;
     public string fromIp { get; set; } = "";
-    public string orderTime { get; set; } = "";
+    public string orderTime { get; set; } = null;
     public int? noComm { get; set; } = 0;
     public string betContent { get; set; } = "";
+    public decimal calcAmount { get; set; } = 0;
+    public decimal validAmount { get; set; } = 0;
+    public BGOrderStatusEnum orderStatus { get; set; } = BGOrderStatusEnum.UnSettle;
     public BettransLC_BGTypeEnum FromAPIType { get; set; }
     public BettransType TicketType { get; set; }
     public TicketStatus TicketStatus { get; set; }
@@ -208,6 +210,10 @@ public class CalcTransferParameters_BG
     /// </summary>
     public string tranId { get; set; }
     /// <summary>
+    /// 我们(BG)服务器收到的时间
+    /// </summary>
+    public string serverTime { get; set; }
+    /// <summary>
     /// 游戏结果
     /// </summary>
     public string gameResult { get; set; }
@@ -218,7 +224,7 @@ public class CalcTransferParameters_BG
     /// <summary>
     /// 下注单列表
     /// </summary>
-    public IEnumerable<OrderTransferOrders_BG> orders { get; set; }
+    public IEnumerable<CalcTransferOrders_BG> orders { get; set; }
 }
 
 public class CalcTransferOrders_BG
@@ -246,11 +252,14 @@ public class CalcTransferOrders_BG
     /// <summary>
     /// 打码量(有效投注额)
     /// </summary>
-    public decimal vaildAmount { get; set; }
+    public decimal validAmount { get; set; }
+    /// <summary>
+    /// 最近更新時間
+    /// </summary>
+    public string lastUpdateTime { get; set; }
 }
 
 #endregion
-
 
 #region Response Model
 
