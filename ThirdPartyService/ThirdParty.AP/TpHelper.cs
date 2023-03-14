@@ -76,7 +76,7 @@ namespace ThirdParty.AP
                 if (FunPlay)
                 {
                     tpCustInfo.TpUserName = "";
-                    tpCustInfo.TpCurrencyId = "IDR";
+                    tpCustInfo.TpCurrencyId = (tpCustInfo.SiteId == 1) ? "IDR" : "VND";
                 }
                 string URL = GetLoginOfMiniGame(tpCustInfo, TpLangId, inputs, gameId, SiteCode);
                 oApiResult.ErrorCode = ErrorCode.Success;
