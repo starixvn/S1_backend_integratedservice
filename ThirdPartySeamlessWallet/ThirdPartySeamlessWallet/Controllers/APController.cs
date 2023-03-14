@@ -89,6 +89,10 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             public decimal Balance { get; set; } = 0;
         }
+        public class CPSettleResp : Resp
+        {
+            public decimal Balance { get; set; } = 0;
+        }
         public class GetBalanceResp : Resp
         {
             public decimal Balance { get; set; } = 0;
@@ -177,6 +181,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string CPId { get; set; }
             public string CPTransId { get; set; }
             public decimal CPWin { get; set; }
+            public string BrandCode { get; set; } = "";
+            public string CPType { get; set; } = "";
         }
         public class GetBalanceMiniReq
         {
@@ -817,10 +823,10 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/CPSettle")]
-        public async Task<Resp> CPSettleAsync()
+        public async Task<CPSettleResp> CPSettleAsync()
         {
             #region InitResult
-            Resp result = new Resp();
+            CPSettleResp result = new CPSettleResp();
             #endregion
 
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
@@ -859,19 +865,26 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     timestamp = DateTime.Parse(getReq.Timestamp),
                     seq = getReq.Seq,
+                    brandcode = getReq.BrandCode,
                     sitecode = getReq.SiteCode,
                     playerid = getReq.PlayerId,
                     cpid = getReq.CPId,
+                    cptype = getReq.CPType,
                     cptransid = getReq.CPTransId,
                     cpwin = getReq.CPWin
                 };
 
-                int SettleResult = settledBLL.RewardRNG_AP(settleData, getReq.PlayerId);
+                int SettleResult = settledBLL.RewardRNG_AP(settleData, getReq.PlayerId, out decimal tpAffterAmount);
 
                 if (SettleResult > 0 || SettleResult == -1)
                 {
+                    if(tpAffterAmount == 0)
+                    {
+                        tpAffterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.PlayerId, gameType).Balance;
+                    }
                     result.ErrorCode = (int)ErrorCode.Success;
                     result.ErrorDescription = "";
+                    result.Balance = tpAffterAmount;
                     logger.LogInformation($"{Content}\r\n{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}");
                 }
                 else
@@ -903,9 +916,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             Response.StatusCode = (int)HttpStatusCode.INVALID_DATA;
             ErrorResponse errResponse = new ErrorResponse();
             errResponse.errorMessage = "Server error";
-
-            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-            string Content = await reader.ReadToEndAsync();
 
             try
             {
@@ -995,39 +1005,35 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return errResponse;
                 }
 
+                PlaceBetMiniResp response = new PlaceBetMiniResp();
+                var result = bettingBLL.PlaceBet_AdvantPlayMini(getReq, out decimal tpAffterAmount);
+                if (result > 0)
+                {
+                    Response.StatusCode = (int)HttpStatusCode.OK;
+                    response.transactionReferenceId = getReq.TransId;
+                    response.balance = tpAffterAmount;
+                    response.timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                    return response;
+                }
+                else if (result == -1)
+                {
+                    Response.StatusCode = (int)HttpStatusCode.OK;
+                    response.transactionReferenceId = getReq.TransId;
+                    response.balance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.UserReferenceId, gameType).Balance;
+                    response.timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                    return response;
+                }
+                else if (tpAffterAmount < 0)
+                {
+                    Response.StatusCode = (int)HttpStatusCode.INSUFFICIENT_FUNDS;
+                    errResponse.errorMessage = "Insufficient funds";
+                    log2File.Error($"insufficient amount {tpAffterAmount}", logName);
+                }
                 else
                 {
-                    PlaceBetMiniResp response = new PlaceBetMiniResp();
-                    Response.StatusCode = (int)HttpStatusCode.OK;
-                    var result = bettingBLL.PlaceBet_AdvantPlayMini(getReq, out decimal tpAffterAmount);
-                    if (result > 0)
-                    {
-                        Response.StatusCode = (int)HttpStatusCode.OK;
-                        response.transactionReferenceId = getReq.TransId;
-                        response.balance = tpAffterAmount;
-                        response.timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                        return response;
-                    }
-                    else if (result == -1)
-                    {
-                        Response.StatusCode = (int)HttpStatusCode.OK;
-                        response.transactionReferenceId = getReq.TransId;
-                        response.balance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.UserReferenceId, gameType).Balance;
-                        response.timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                        return response;
-                    }
-                    else if (tpAffterAmount < 0)
-                    {
-                        Response.StatusCode = (int)HttpStatusCode.INSUFFICIENT_FUNDS;
-                        errResponse.errorMessage = "Insufficient funds";
-                        log2File.Error($"insufficient amount {tpAffterAmount}", logName);
-                    }
-                    else
-                    {
-                        Response.StatusCode = (int)HttpStatusCode.UNPROCESSABLE;
-                        errResponse.errorMessage = "Unknow error";
-                        log2File.Error($"Unknow error {result}", logName);
-                    }
+                    Response.StatusCode = (int)HttpStatusCode.UNPROCESSABLE;
+                    errResponse.errorMessage = "Unknow error";
+                    log2File.Error($"Unknow error {result}", logName);
                 }
             }
             catch (Exception ex)
@@ -1253,6 +1259,14 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
+                if (string.IsNullOrEmpty(game) || !CheckGameOfMini(game))
+                {
+                    Response.StatusCode = (int)HttpStatusCode.INVALID_DATA;
+                    errResponse.errorMessage = "game error";
+                    log2File.Error($"{errResponse.errorMessage} - {game}", logName);
+                    return errResponse;
+                }
+
                 RefundMiniResp response = new RefundMiniResp();
                 var getCommReq = JsonConvert.DeserializeObject<CommonMiniReq>(Content);
 
@@ -1296,11 +1310,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         private bool CheckGameOfMini(string game)
         {
-            if (_gameOfMiniList.Contains(game, StringComparer.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-            return false;
+            return _gameOfMiniList.Contains(game, StringComparer.OrdinalIgnoreCase);
         }
 
         private string DecrypeRequest(string payload, string sitename)

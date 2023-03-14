@@ -74,7 +74,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                     int bonusId;
 
                     /*Only count Sports*/
-                    if (betRecord.GameType != GameType.Saba_Sports && betRecord.SettlementType == SettlementType.SettledForValid)
+                    if (betRecord.GameType != GameType.SBSW_Sports && betRecord.SettlementType == SettlementType.SettledForValid)
                     {
                         betRecord.SettlementType = SettlementType.SettledForValidNotRollover;
                     }
@@ -96,7 +96,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                     }
                     else
                     {
-                        hasJoinBonus = _settledService.GetBonusIdByTpId((int)Tp.Saba, tpCustInfo.CustId, out bonusId);
+                        hasJoinBonus = _settledService.GetBonusIdByTpId((int)Tp.SBSW, tpCustInfo.CustId, out bonusId);
                         if (hasJoinBonus && (RefBetRecord == null || betRecord.TicketStatus == TicketStatus.UnSettled))
                         {
                             betRecord.BonusId = bonusId;
