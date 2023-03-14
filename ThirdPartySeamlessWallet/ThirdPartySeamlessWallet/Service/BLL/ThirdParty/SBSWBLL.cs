@@ -65,11 +65,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 .ToDictionary(item => item.SportType, item => item);
         }
 
-        public async Task<ReturnObj> SeamlessWallet(SBSWTransType transType, string merchant, string bodyText)
+        public async Task<ReturnObj> SeamlessWallet(string merchant, SBSWTransType transType, string bodyText)
         {
             try
             {
-                _logger.LogInformation($"{transType} || {bodyText}");
+                LogContext.PushProperty("Merchant", merchant);
+                LogContext.PushProperty("Action", transType.ToString());                
+                _logger.LogInformation(bodyText);
+
                 return await _requestHandler[transType].Invoke(transType, merchant, bodyText);
             }
             catch (SBSWException ex)
@@ -652,7 +655,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var creditAmount = adjust.balanceInfo.creditAmount * tpCurrency.ExchangeRate;
                 var debitAmount = adjust.balanceInfo.debitAmount * tpCurrency.ExchangeRate;
 
-                var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Bettrans_SBSW_Adjust", trans, new
+                var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Service_Bettrans_SBSW_Adjust", trans, new
                 {
                     adjust.action,
                     adjust.time,
