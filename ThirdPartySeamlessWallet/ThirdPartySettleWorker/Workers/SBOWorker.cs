@@ -107,6 +107,7 @@ namespace ThirdPartySettleWorker.Workers
                             TransTime = settleData.TransTime,
                             SettlementType = settlementType, 
                             TicketStatus = (TicketStatus)settleData.TicketStatus,
+                            GameID = tpWagerData.GameId,
                         };
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)

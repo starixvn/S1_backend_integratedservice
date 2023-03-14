@@ -109,10 +109,11 @@ namespace ThirdPartySettleWorker.Workers
                         if (betData.Sum(x => x.amount) == wager.debit || betData.Sum(x => x.amount) == wager.Stake)
                         {
                             var stake = wager.Stake;
-                            var winLostAmount = wager.WinLostAmount - stake;
+                            var winLostAmount = wager.WinLostAmount + wager.ProgressiveWin - stake;
                             var settledTime = wager.SettleTime;
                             var betTime = wager.TransTime;
-                            var result = _settledBLL.Settled(tpCustInfo, new BetRecordInfo
+                            var gameCode = settleData.FirstOrDefault().gamecode;
+                            var betRecordInfo = new BetRecordInfo
                             {
                                 TpId = (int)Tp,
                                 Stake = stake,
@@ -123,9 +124,11 @@ namespace ThirdPartySettleWorker.Workers
                                 TpUserName = tpUserName,
                                 SettledTime = settledTime,
                                 TransTime = betTime,
-                                SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, settleData.FirstOrDefault().gamecode),
-                                TicketStatus = winLostAmount > 0 ? TicketStatus.Win : winLostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost
-                            }, TpCategory.Slots);
+                                SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, gameCode),
+                                TicketStatus = winLostAmount > 0 ? TicketStatus.Win : winLostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost,
+                                GameID = gameCode,
+                            };
+                            var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Slots);
 
                             if (result == 1)
                             {
@@ -221,10 +224,11 @@ namespace ThirdPartySettleWorker.Workers
                         if (betData.Sum(x => x.amount) == wager.debit || betData.Sum(x => x.amount) == wager.Stake)
                         {
                             var stake = wager.Stake;
-                            var winLostAmount = wager.WinLostAmount - stake;
+                            var winLostAmount = wager.WinLostAmount + wager.ProgressiveWin - stake;
                             var settledTime = wager.SettleTime;
                             var betTime = wager.TransTime;
-                            var result = _settledBLL.Settled(tpCustInfo, new BetRecordInfo
+                            var gameCode = settleData.FirstOrDefault().gamecode;
+                            var betRecordInfo = new BetRecordInfo
                             {
                                 TpId = (int)Tp,
                                 Stake = stake,
@@ -235,9 +239,11 @@ namespace ThirdPartySettleWorker.Workers
                                 TpUserName = tpUserName,
                                 SettledTime = settledTime,
                                 TransTime = betTime,
-                                SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, settleData.FirstOrDefault().gamecode),
-                                TicketStatus = winLostAmount > 0 ? TicketStatus.Win : winLostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost
-                            }, TpCategory.LiveCasino);
+                                SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, gameCode),
+                                TicketStatus = winLostAmount > 0 ? TicketStatus.Win : winLostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost,
+                                GameID = gameCode,
+                            };
+                            var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
 
                             if (result == 1)
                             {
@@ -333,10 +339,11 @@ namespace ThirdPartySettleWorker.Workers
                         if (betData.Sum(x => x.amount) == wager.debit || betData.Sum(x => x.amount) == wager.Stake)
                         {
                             var stake = wager.Stake;
-                            var winLostAmount = wager.WinLostAmount - stake;
+                            var winLostAmount = wager.WinLostAmount + wager.ProgressiveWin - stake;
                             var settledTime = wager.SettleTime;
                             var betTime = wager.TransTime;
-                            var result = _settledBLL.Settled(tpCustInfo, new BetRecordInfo
+                            var gameCode = settleData.FirstOrDefault().gamecode;
+                            var betRecordInfo = new BetRecordInfo
                             {
                                 TpId = (int)Tp,
                                 Stake = stake,
@@ -347,9 +354,11 @@ namespace ThirdPartySettleWorker.Workers
                                 TpUserName = tpUserName,
                                 SettledTime = settledTime,
                                 TransTime = betTime,
-                                SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, settleData.FirstOrDefault().gamecode),
-                                TicketStatus = winLostAmount > 0 ? TicketStatus.Win : winLostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost
-                            }, TpCategory.Fish);
+                                SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, gameCode),
+                                TicketStatus = winLostAmount > 0 ? TicketStatus.Win : winLostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost,
+                                GameID = gameCode,
+                            };
+                            var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Fish);
 
                             if (result == 1)
                             {

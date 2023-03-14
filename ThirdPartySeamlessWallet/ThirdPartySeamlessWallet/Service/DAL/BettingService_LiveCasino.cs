@@ -705,8 +705,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
             try
             {
-                long unixTimestamp = tools.GetUnixTimestampByTicks(bettingDataRNG_MG.creationTime);
-                var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(unixTimestamp).DateTime;
+                var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataRNG_MG.creationTimeMs).DateTime;
 
                 // 檢查該局是否已經結算
                 var checkBetId = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLC_MG_Check", new { bettingDataRNG_MG.betId });
@@ -732,7 +731,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 var p = new DynamicParameters(bettingDataRNG_MG);
                 p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
-                result = _partitionService.Execute(partitionTime, "Service_BettransLC_MG_Ins", p, trans);
+                result = _partitionService.Execute(partitionTime, "Service_BettransLC_MG_Ins_V2", p, trans);
                 var extTxnId = p.Get<long>("extTxnId");
 
                 if (result > 0 && bettingDataRNG_MG.amount != 0)
@@ -908,6 +907,52 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return true;
         }
+
+        #endregion
+
+        #region BG
+
+        public IEnumerable<BettingDataLC_BG> IsExist_BG(DateTime partitionTime, IEnumerable<long> orderIds)
+        {
+            var query = new { orderIds = JsonConvert.SerializeObject(orderIds) };
+            return _partitionService.Query<BettingDataLC_BG>(partitionTime, "Service_BettransLC_BG_Check", query);
+        }
+
+        public bool PlaceBet_BG(DateTime partitionTime, BettingDataLC_BG data, MySqlTransaction trans, out int SQ)
+        {
+            SQ = 0;
+            var insertSQ = _partitionService.Execute(partitionTime, "Service_BettransLC_BG_Ins", data, trans);
+
+            if (insertSQ == 0)
+                return false;
+
+            SQ = insertSQ;
+            return true;
+        }
+
+        public bool SetBalance_BG(TpCustInfo tpCustInfo, BettingDataLC_BG data, string memo,
+            out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+            var result = PlaceBetV2(tpCustInfo,
+                                data.amount,
+                                (int)Tp.Yeebet,
+                                data.random,  //TpTransId
+                                (int)GameType.BG_LiveCasino,
+                                data.random,  //RefId
+                                null,
+                                TpCategory.LiveCasino,
+                                out afterAmount,
+                                ref bonusId,
+                                conn,
+                                trans,
+                                memo: $" - {memo}_{data.random} ");
+
+            if (result <= 0)
+                return false;
+
+            return true;
+        }
+
 
         #endregion
     }

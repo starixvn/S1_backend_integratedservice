@@ -76,11 +76,11 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
                     if (tpCustInfo == null)
                         throw new UnsettleNotFoundException($"{unsettleData.FirstOrDefault().Account} TpCustInfo not found.");
 
-                    var wager = _settledBLL.GetSettle_TpWagerLC_Yeebet(unsettleData.FirstOrDefault().TransId); //serialnumber
+                    var wager = _settledBLL.GetSettle_TpWagerLC_Yeebet(unsettleData.FirstOrDefault().TransId).FirstOrDefault(); //serialnumber
 
-                    if (wager == null || !wager.Any()) continue;
+                    if (wager == null ) continue;
 
-                    if (!CanSettle(unsettleData, wager.First(), tpCustInfo,
+                    if (!CanSettle(unsettleData, wager, tpCustInfo,
                         out decimal stake, out decimal validbet, out decimal winlost)) continue;
 
                     var betRecordInfo = new BetRecordInfo
@@ -92,10 +92,11 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
                         TransId = tpUnsettle.TransId, //serialnumber
                         GameType = gametype,
                         TpUserName = tpCustInfo.TpUserName,
-                        SettledTime = wager.First().SettleTime,
-                        TransTime = wager.First().TransTime,
-                        SettlementType = SetSettlementType(wager.First().Status, unsettleData.FirstOrDefault().GameId),
-                        TicketStatus = SetTicketStatus(wager.First().Status, winlost)
+                        SettledTime = wager.SettleTime,
+                        TransTime = wager.TransTime,
+                        SettlementType = SetSettlementType(wager.Status, wager.GameId),
+                        TicketStatus = SetTicketStatus(wager.Status, winlost),
+                        GameID = wager.GameId,
                     };
 
                     var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);

@@ -96,4 +96,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string RefTransId { set; get; }
         public DateTime CreateTime { set; get; }
     }
+
+    public class ServerInfo
+    {
+        public int SiteId { set; get; }
+        public string SiteName { set; get; }
+    }
 }

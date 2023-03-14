@@ -94,7 +94,8 @@ namespace ThirdPartySettleWorker.Workers
                             SettledTime = settleData.SettleTime,
                             TransTime = settleData.TransTime,
                             SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, settleData.GameId),
-                            TicketStatus = settleData.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
+                            TicketStatus = settleData.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
+                            GameID = settleData.GameId,
                         };                      
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Slots);
                         
@@ -183,7 +184,8 @@ namespace ThirdPartySettleWorker.Workers
                             SettledTime = settleData.timestamp / 1000,
                             TransTime = settleData.timestamp / 1000,
                             SettlementType = SettlementType.SettledForValid,
-                            TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost
+                            TicketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
+                            GameID = settleData.gamecode,
                         },  TpCategory.Fish);
 
                         if (result == 1)

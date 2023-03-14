@@ -63,10 +63,10 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            if (!environment.IsProduction())
-            {
-                return;
-            }
+            //if (!environment.IsProduction())
+            //{
+            //    return;
+            //}
             var quick = 0;
             var currency = "THB";
             var siteId = 1;
@@ -136,10 +136,10 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            if (!environment.IsProduction())
-            {
-                return;
-            }
+            //if (!environment.IsProduction())
+            //{
+            //    return;
+            //}
             var quick = 0;
             var currency = "MYR";
             var siteId = 1;
@@ -209,10 +209,10 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            if (!environment.IsProduction())
-            {
-                return;
-            }
+            //if (!environment.IsProduction())
+            //{
+            //    return;
+            //}
             var quick = 0;
             var currency = "IDR";
             var siteId = 1;
