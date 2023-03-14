@@ -75,8 +75,9 @@ namespace ThirdParty.AP
                 // mini game
                 if (FunPlay)
                 {
+                    var DefaultTpCurrencyId = ServerInfoProvider.GetDefaultTpCurrencyIdByTpId(tpCustInfo.SiteId, (int)TpEnum.AP);
                     tpCustInfo.TpUserName = "";
-                    tpCustInfo.TpCurrencyId = (tpCustInfo.SiteId == 1) ? "IDR" : "VND";
+                    tpCustInfo.TpCurrencyId = (DefaultTpCurrencyId != null) ? DefaultTpCurrencyId.TpCurrencyId : "";
                 }
                 string URL = GetLoginOfMiniGame(tpCustInfo, TpLangId, inputs, gameId, SiteCode);
                 oApiResult.ErrorCode = ErrorCode.Success;
