@@ -69,7 +69,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             try
             {
-                _logger.LogInformation($"{transType} || {bodyText}");
+                LogContext.PushProperty("Merchant", merchant);
+                LogContext.PushProperty("Action", transType.ToString());                
+                _logger.LogInformation(bodyText);
+
                 return await _requestHandler[transType].Invoke(transType, merchant, bodyText);
             }
             catch (SBSWException ex)

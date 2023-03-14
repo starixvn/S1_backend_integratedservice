@@ -47,7 +47,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     bodyText = await reader.ReadToEndAsync();
                 }
 
-                return await _sbswBLL.SeamlessWallet(transType, merchant, bodyText);
+                return await _sbswBLL.SeamlessWallet(merchant, transType, bodyText);
             }
             catch (Exception ex)
             {
