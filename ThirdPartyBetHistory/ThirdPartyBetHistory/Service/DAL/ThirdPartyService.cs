@@ -410,35 +410,6 @@ namespace ThirdPartyBetHistory.Service.DAL
             return afterAmount >= 0 ? 1 : 0;
         }
 
-        private int AutoCancelSeamlessBonus(TpCustInfo tpCustInfo, int bonusId, GameType gameType, IDbTransaction trans)
-        {
-            var p = new DynamicParameters(tpCustInfo);
-            p.AddDynamicParams(new { BonusId = bonusId, GameType = (int)gameType });
-            p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-
-            var result = _mainDbClient.Execute("Service_AutoCancelSeamlessBonusV2_Set", p, trans);
-            var bonus = p.Get<decimal?>("Bonus") ?? 0;
-
-            if (bonus > 0)
-            {
-                result = RefundCancelBonus(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bonus, $"Bonus: {Math.Abs(bonus).ToString("#,##0.##")}", bonusId.ToString(), out _, trans);
-            }
-
-            return result;
-        }
-        private int RefundCancelBonus(int custId, int siteId, string userName, decimal Amount, string Memo, string RefTransId, out decimal afterAmount, IDbTransaction trans)
-        {
-            var p = new DynamicParameters(new { CustId = custId, SiteId = siteId, UserName = userName, Amount, Type = 5, Memo = Memo, RefTransId });
-            p.Add("Is1stDepoist", dbType: DbType.Boolean, direction: ParameterDirection.Output);
-            p.Add("AfterAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-
-            _ = _mainDbClient.Execute("Wallet_Set_V2", p, trans);
-            _ = p.Get<byte?>("Is1stDepoist") ?? 0;
-            afterAmount = p.Get<decimal>("AfterAmount");
-            return afterAmount >= 0 ? 1 : 0;
-        }
-
-
         public IEnumerable<UnSettle> GetTpBetRecordReSettleTicket(Tp tp, SiteId siteId, string settlementTypeList,
             DateTime startTime, DateTime endTime)
         {
