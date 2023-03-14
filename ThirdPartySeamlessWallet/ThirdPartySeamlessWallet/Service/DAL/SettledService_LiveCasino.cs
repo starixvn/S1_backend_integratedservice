@@ -3376,7 +3376,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public bool Payout_BG(DateTime partitionTime, BettingDataLC_BG data, MySqlTransaction trans, out int SQ)
         {
             SQ = 0;
-            var insertSQ = _partitionService.Execute(partitionTime, "Service_BettransLC_Yeebet_Ins", data, trans);
+            var insertSQ = _partitionService.Execute(partitionTime, "Service_BettransLC_BG_Ins", data, trans);
 
             if (insertSQ == 0)
                 return false;
@@ -3391,16 +3391,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             var result = PayoutV2(
                 tpCustInfo,
-                data.amount,
+                data.calcAmount,
                 (int)Tp.BG,
-                data.random,
+                data.orderId,
                 (int)GameType.BG_LiveCasino,
                 TpCategory.LiveCasino,
-                data.random,
+                data.orderId,
                 transType,
                 null,
                 out afterAmount,
-                $"{memo} - {data.random} ",
+                $"{memo}_{data.random}_{data.orderId} ",
                 out bonusId,
                 conn,
                 trans
