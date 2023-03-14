@@ -917,9 +917,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             ErrorResponse errResponse = new ErrorResponse();
             errResponse.errorMessage = "Server error";
 
-            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-            string Content = await reader.ReadToEndAsync();
-
             try
             {
                 if (string.IsNullOrEmpty(game) || !CheckGameOfMini(game))
@@ -1313,11 +1310,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         private bool CheckGameOfMini(string game)
         {
-            if (_gameOfMiniList.Contains(game, StringComparer.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-            return false;
+            return _gameOfMiniList.Contains(game, StringComparer.OrdinalIgnoreCase);
         }
 
         private string DecrypeRequest(string payload, string sitename)
