@@ -109,7 +109,6 @@ public class BGBLL : IBGBLL
             var data = new BettingDataLC_BG()
             {
                 random = parameters.random,
-                sign = parameters.sign,
                 sn = parameters.sn,
                 userId = parameters.userId,
                 loginId = parameters.loginId,
@@ -122,10 +121,10 @@ public class BGBLL : IBGBLL
                 orderAmount = order.amount,
                 issueId = order.issueId,
                 playId = order.playId,
-                orderFrom = order.orderFrom,
+                orderFrom = (BGOrderFromEnum)order.orderFrom,
                 fromIp = order.fromIp,
                 orderTime = order.orderTime,
-                noComm = order.noComm ?? 0,
+                noComm = order.noComm ?? -9, //-9=null
                 betContent = order.betContent ?? "",
                 FromAPIType = BettransLC_BGTypeEnum.OrderTransfer,
                 TicketType = BettransType.Bet,
@@ -159,7 +158,7 @@ public class BGBLL : IBGBLL
         var message = string.Empty;
         decimal balance = 0;
 
-        if (!CheckRequestForCalcTransfer(parameters, out decimal amount, out message))
+        if (!CheckRequestForCalcTransfer(parameters, out decimal amount, out int recalc, out message))
             return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
 
         if (!GetTpInfoByUserName(parameters.loginId, out TpCustInfo tpCustInfo, out message))
@@ -200,7 +199,6 @@ public class BGBLL : IBGBLL
             var data = new BettingDataLC_BG()
             {
                 random = parameters.random,
-                sign = parameters.sign,
                 sn = parameters.sn,
                 userId = parameters.userId,
                 loginId = parameters.loginId,
@@ -208,13 +206,13 @@ public class BGBLL : IBGBLL
                 moduleId = parameters.moduleId,
                 tranId = parameters.tranId ?? "",
                 gameResult = parameters.gameResult ?? "",
-                //recalc = int.TryParse(parameters.recalc, out int result) ?? 0,
+                recalc = recalc,
                 orderId = order.orderId.ToString(),
                 gameId = order.gameId,
                 orderAmount = order.amount,
                 issueId = order.issueId,
                 playId = order.playId,
-                orderFrom = order.orderFrom,
+                orderFrom = (BGOrderFromEnum)order.orderFrom,
                 fromIp = order.fromIp,
                 orderTime = order.orderTime,
                 noComm = order.noComm ?? 0,
@@ -253,6 +251,7 @@ public class BGBLL : IBGBLL
                 return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
             }
         }
+
         trans.Commit();
         return new ResponseModel_BG(request, new TransferModel_BG(parameters.sn, parameters.userId, parameters.tranId, balance));
     }
@@ -378,11 +377,11 @@ public class BGBLL : IBGBLL
 
         return true;
     }
-
-    private bool CheckRequestForCalcTransfer(CalcTransferParameters_BG parameters, out decimal amount, out string message)
+    private bool CheckRequestForCalcTransfer(CalcTransferParameters_BG parameters, out decimal amount, out int recalc, out string message)
     {
         message = string.Empty;
         amount = 0;
+        recalc = 0;
 
         if (parameters == null)
         {
@@ -432,6 +431,13 @@ public class BGBLL : IBGBLL
         if (parameters.moduleId != 2)  //目前只有串接视讯模块(2)
         {
             message = "request.moduleId is Invalid. moduleId is not live casino.";
+            _logger.LogError($"CheckRequest Fail:{message}");
+            return false;
+        }
+
+        if (!int.TryParse(parameters.recalc, out recalc))
+        {
+            message = "request.recalc is Invalid. this value is not int type.";
             _logger.LogError($"CheckRequest Fail:{message}");
             return false;
         }

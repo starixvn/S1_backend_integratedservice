@@ -954,7 +954,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return true;
         }
 
-
         #endregion
     }
 }

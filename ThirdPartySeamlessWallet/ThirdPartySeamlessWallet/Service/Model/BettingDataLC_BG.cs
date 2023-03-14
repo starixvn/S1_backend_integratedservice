@@ -7,7 +7,6 @@ public class BettingDataLC_BG
 {
     public int SQ { get; set; }
     public string random { get; set; } = "";
-    public string sign { get; set; } = "";
     public string sn { get; set; } = "";
     public string userId { get; set; } = "";
     public string loginId { get; set; } = "";
@@ -22,11 +21,14 @@ public class BettingDataLC_BG
     public decimal orderAmount { get; set; } = 0;
     public string issueId { get; set; } = "";
     public string playId { get; set; } = "";
-    public int orderFrom { get; set; } = 0;
+    public BGOrderFromEnum orderFrom { get; set; } = BGOrderFromEnum.None;
     public string fromIp { get; set; } = "";
     public string orderTime { get; set; } = "";
     public int? noComm { get; set; } = 0;
     public string betContent { get; set; } = "";
+    public decimal calcAmount { get; set; } = 0;
+    public decimal validAmount { get; set; } = 0;
+    public BGOrderStatusEnum orderStatus { get; set; } = BGOrderStatusEnum.UnSettle;
     public BettransLC_BGTypeEnum FromAPIType { get; set; }
     public BettransType TicketType { get; set; }
     public TicketStatus TicketStatus { get; set; }
