@@ -1,4 +1,5 @@
-﻿using MySql.Data.MySqlClient;
+﻿using Microsoft.VisualBasic;
+using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using System.Linq;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
@@ -87,10 +88,11 @@ public class BGBLL : IBGBLL
 
         var partitionTime = DateTime.UtcNow;
 
-        if (!GetExistData(partitionTime, parameters.orders.Select(x => x.orderId), out IEnumerable<BettingDataLC_BG> existDatas, out message))
+        if (!GetExistData(partitionTime, parameters.random, parameters.orders.Select(x => x.orderId),
+            out IEnumerable<BettingDataLC_BG> existDatas, out message))
             return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
 
-        if (existDatas.Any() && existDatas.Count() == parameters.orders.Count()) //已存在有效投注
+        if (existDatas.Any()) //已存在有效投注
             if (existDatas.Count() == parameters.orders.Count())
                 return new ResponseModel_BG(request, new TransferModel_BG(parameters.sn, parameters.userId, parameters.tranId, balance));
             else
@@ -115,7 +117,7 @@ public class BGBLL : IBGBLL
                 amount = amount,
                 moduleId = parameters.moduleId,
                 tranId = parameters.tranId ?? "",
-                serverTime = parameters.serverTime,
+                serverTime = parameters.serverTime ?? null,
                 orderId = order.orderId.ToString(),
                 gameId = order.gameId,
                 orderAmount = order.amount,
@@ -123,7 +125,7 @@ public class BGBLL : IBGBLL
                 playId = order.playId,
                 orderFrom = (BGOrderFromEnum)order.orderFrom,
                 fromIp = order.fromIp,
-                orderTime = order.orderTime,
+                orderTime = order.orderTime ?? null,
                 noComm = order.noComm ?? -9, //-9=null
                 betContent = order.betContent ?? "",
                 FromAPIType = BettransLC_BGTypeEnum.OrderTransfer,
@@ -132,6 +134,7 @@ public class BGBLL : IBGBLL
             };
 
             data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
+            data.orderAmount = (tpCurrency.ExchangeRate > 0) ? data.orderAmount * tpCurrency.ExchangeRate : data.orderAmount;
 
             if (!PlaceData(partitionTime, data, trans, out int SQ, out message))
             {
@@ -139,7 +142,7 @@ public class BGBLL : IBGBLL
                 return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
             }
 
-            if (data.amount != 0)
+            if (data.orderAmount != 0)
             {
                 if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
                 {
@@ -169,10 +172,11 @@ public class BGBLL : IBGBLL
 
         var partitionTime = DateTime.UtcNow;
 
-        if (!GetExistData(partitionTime, parameters.orders.Select(x => x.orderId), out IEnumerable<BettingDataLC_BG> existDatas, out message))
+        if (!GetExistData(partitionTime, parameters.random, parameters.orders.Select(x => x.orderId),
+            out IEnumerable<BettingDataLC_BG> existDatas, out message))
             return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
 
-        if (existDatas.Any() && existDatas.Count() == parameters.orders.Count()) //已存在有效投注
+        if (existDatas.Any()) //已存在有效投注
             if (existDatas.Count() == parameters.orders.Count())
             {
                 //已存在指定有效投注
@@ -207,22 +211,23 @@ public class BGBLL : IBGBLL
                 tranId = parameters.tranId ?? "",
                 gameResult = parameters.gameResult ?? "",
                 recalc = recalc,
+                serverTime = parameters.serverTime ?? null,
                 orderId = order.orderId.ToString(),
                 gameId = order.gameId,
-                orderAmount = order.amount,
-                issueId = order.issueId,
-                playId = order.playId,
-                orderFrom = (BGOrderFromEnum)order.orderFrom,
-                fromIp = order.fromIp,
-                orderTime = order.orderTime,
-                noComm = order.noComm ?? 0,
-                betContent = order.betContent ?? "",
+                orderAmount = order.orderAmount,
+                calcAmount = order.amount,
+                validAmount = order.validAmount,
+                orderTime = order.lastUpdateTime ?? null,
+                orderStatus = (BGOrderStatusEnum)order.orderStatus,
                 FromAPIType = BettransLC_BGTypeEnum.CalcTransfer,
-                TicketType = BettransType.Payout,
-                TicketStatus = TicketStatus.UnSettled
+                TicketType = ConvertToBettransType((BGOrderStatusEnum)order.orderStatus),
+                TicketStatus = ConvertToTicketStatus((BGOrderStatusEnum)order.orderStatus)
             };
 
             data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
+            data.orderAmount = (tpCurrency.ExchangeRate > 0) ? data.orderAmount * tpCurrency.ExchangeRate : data.orderAmount;
+            data.calcAmount = (tpCurrency.ExchangeRate > 0) ? data.calcAmount * tpCurrency.ExchangeRate : data.calcAmount;
+            data.validAmount = (tpCurrency.ExchangeRate > 0) ? data.validAmount * tpCurrency.ExchangeRate : data.validAmount;
 
             if (!PlaceData(partitionTime, data, trans, out int SQ, out message))
             {
@@ -230,7 +235,7 @@ public class BGBLL : IBGBLL
                 return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
             }
 
-            if (data.amount != 0)
+            if (data.calcAmount != 0)
             {
                 if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
                 {
@@ -242,13 +247,24 @@ public class BGBLL : IBGBLL
             {
                 //lost => 沒有派彩，balance取db資料
                 if (!GetBalance(tpCustInfo.TpUserName, out balance, out message))
+                {
+                    trans.Rollback();
                     return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
+                }
             }
 
-            if (!InsertUnsettleData(partitionTime, data.orderId, out message, trans))
+            switch (data.orderStatus)
             {
-                trans.Rollback();
-                return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
+                case BGOrderStatusEnum.SettledWin:
+                case BGOrderStatusEnum.SettledDraw:
+                case BGOrderStatusEnum.SettledLose:
+                case BGOrderStatusEnum.Expired:
+                    if (!InsertUnsettleData(partitionTime, data.orderId, out message, trans))
+                    {
+                        trans.Rollback();
+                        return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
+                    }
+                    break;
             }
         }
 
@@ -419,9 +435,9 @@ public class BGBLL : IBGBLL
         }
         else
         {
-            if (amount > 0)
+            if (amount < 0)
             {
-                message = "request.amount is Invalid. amount > 0.";
+                message = "request.amount is Invalid. amount < 0.";
                 _logger.LogError($"CheckRequest Fail:{message}");
                 return false;
             }
@@ -572,14 +588,14 @@ public class BGBLL : IBGBLL
         }
     }
 
-    private bool GetExistData(DateTime partitionTime, IEnumerable<long> orderIds,
+    private bool GetExistData(DateTime partitionTime, string random, IEnumerable<long> orderIds,
         out IEnumerable<BettingDataLC_BG> existDatas, out string message)
     {
         message = string.Empty;
         existDatas = null;
         try
         {
-            existDatas = _bettingService.IsExist_BG(partitionTime, orderIds);
+            existDatas = _bettingService.IsExist_BG(partitionTime, random, orderIds);
             return true;
         }
         catch (Exception ex)
@@ -685,6 +701,52 @@ public class BGBLL : IBGBLL
             message = "exception happen.";
             _logger.LogError(ex, $"InsertUnsettle Exception:{ex.Message}");
             return false;
+        }
+    }
+
+    private BettransType ConvertToBettransType(BGOrderStatusEnum orderStatus)
+    {
+        switch (orderStatus)
+        {
+            case BGOrderStatusEnum.NotExist:
+            case BGOrderStatusEnum.UnSettle:
+            default:
+                return BettransType.Reserve;
+
+            case BGOrderStatusEnum.SettledWin:
+            case BGOrderStatusEnum.SettledDraw:
+            case BGOrderStatusEnum.SettledLose:
+                return BettransType.Payout;
+
+            case BGOrderStatusEnum.Cancel:
+            case BGOrderStatusEnum.Expired:
+            case BGOrderStatusEnum.SystemCancel:
+                return BettransType.CancelBet;
+        }
+    }
+
+    private TicketStatus ConvertToTicketStatus(BGOrderStatusEnum orderStatus)
+    {
+        switch (orderStatus)
+        {
+            case BGOrderStatusEnum.NotExist:
+            case BGOrderStatusEnum.UnSettle:
+            default:
+                return TicketStatus.UnSettled;
+
+            case BGOrderStatusEnum.SettledWin:
+                return TicketStatus.Win;
+
+            case BGOrderStatusEnum.SettledDraw:
+                return TicketStatus.Draw;
+
+            case BGOrderStatusEnum.SettledLose:
+                return TicketStatus.Lost;
+
+            case BGOrderStatusEnum.Cancel:
+            case BGOrderStatusEnum.Expired:
+            case BGOrderStatusEnum.SystemCancel:
+                return TicketStatus.Refund;
         }
     }
 
