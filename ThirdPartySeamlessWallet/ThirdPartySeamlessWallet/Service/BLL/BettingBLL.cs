@@ -58,7 +58,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     .DeserializeObject<BettingDataLC_SA_BetDetail>(bettingDataLC_SA.Betdetails).details
                     .Sum(i => i.amount);
             }
-            
+
             if (tpCurrency.ExchangeRate > 0)
             {
                 bettingDataLC_SA.amount *= tpCurrency.ExchangeRate; /*bettingDataLC_SA.Betdetails has not fixed*/
@@ -609,6 +609,28 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 afterAmount /= tpCurrency.ExchangeRate;
             }
             return result;
+        }
+
+        public int PlaceBet_AdvantPlayMini(BettingData_AdvantPlayMini bettingData_AdvantPlayMini, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, bettingData_AdvantPlayMini.UserReferenceId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                bettingData_AdvantPlayMini.Amount *= tpCurrency.ExchangeRate;
+            }
+            var result = bettingService.PlaceBet_AdvantPlayMini(tpCustInfo, bettingData_AdvantPlayMini, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        public IEnumerable<BettransData_AdvantPlayMini_Bet> GetAdvantPlayMiniBet(string TransId, long SettlementTime, string MiniGameCode, out string TransactionReferenceId)
+        {
+            return bettingService.GetAdvantPlayMiniBet(TransId, SettlementTime, MiniGameCode, out TransactionReferenceId);
         }
         #endregion
 

@@ -1,9 +1,5 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -15,13 +11,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         private readonly ThirdPartyService thirdPartyService;
         private readonly IMemoryCache cache;
         private ConcurrentDictionary<string, TpCurrency> TpCurrencyList;
+        private ConcurrentDictionary<string, ServerInfo> ServerInfoData;
         private static ConcurrentDictionary<int, ThirdPartySetting> ThirdPartySettingContainer = new ConcurrentDictionary<int, ThirdPartySetting>();
         private static ConcurrentDictionary<string, ThirdPartySetting> ThirdPartyModelContainer = new ConcurrentDictionary<string, ThirdPartySetting>();
+
         public ThirdPartyBLL(IMemoryCache cache, ThirdPartyService thirdPartyService)
         {
             this.thirdPartyService = thirdPartyService;
             this.cache = cache;
             TpCurrencyList = new ConcurrentDictionary<string, TpCurrency>();
+            ServerInfoData = new ConcurrentDictionary<string, ServerInfo>();
         }
         public ThirdPartySetting GetThirdPartySetting(int tpId)
         {
@@ -77,6 +76,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var tpCurrency = TpCurrencyList[key];
             return tpCurrency;
         }
+
         private Dictionary<int, int> GetBonusCategoryList()
         {
             string key = $"GetBonusCategoryList";
@@ -351,6 +351,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public IEnumerable<BonusLog> GetBonusLogTransactionCheck(string RefTransId)
         {
             return thirdPartyService.GetBonusLogTransactionCheck(RefTransId);
+        }
+
+        public ServerInfo GetServerInfoBySiteName(string siteName)
+        {
+            string key = $"ServerInfo_{siteName}";
+            if (!ServerInfoData.ContainsKey(key))
+            {
+                var ServerInfoModel = thirdPartyService.GetServerInfoBySiteName(siteName);
+                if (ServerInfoModel != null)
+                {
+                    ServerInfoData.TryAdd(key, ServerInfoModel);
+                }
+            }
+            return ServerInfoData.ContainsKey(key) ? ServerInfoData[key] : null;
         }
     }
 }
