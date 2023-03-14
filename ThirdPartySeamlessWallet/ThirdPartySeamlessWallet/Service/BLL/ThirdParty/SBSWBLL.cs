@@ -652,7 +652,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var creditAmount = adjust.balanceInfo.creditAmount * tpCurrency.ExchangeRate;
                 var debitAmount = adjust.balanceInfo.debitAmount * tpCurrency.ExchangeRate;
 
-                var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Bettrans_SBSW_Adjust", trans, new
+                var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Service_Bettrans_SBSW_Adjust", trans, new
                 {
                     adjust.action,
                     adjust.time,
