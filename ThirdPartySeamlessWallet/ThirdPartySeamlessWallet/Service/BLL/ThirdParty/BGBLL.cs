@@ -66,6 +66,12 @@ public class BGBLL : IBGBLL
 
     public async Task<ResponseModel_BG> OrderTransfer(SeamlessWalletRequest request, OrderTransferParameters_BG parameters)
     {
+        #region Test recalc
+
+        Thread.Sleep(5 * 60 * 1000); //Sleep 5 mins
+
+        #endregion
+
         var message = string.Empty;
         decimal balance = 0;
 
@@ -154,11 +160,24 @@ public class BGBLL : IBGBLL
         }
 
         trans.Commit();
+
+        #region Test recalc
+
+        //Thread.Sleep(5 * 60 * 1000); //Sleep 5 mins
+
+        #endregion
+
         return new ResponseModel_BG(request, new TransferModel_BG(parameters.sn, parameters.userId, parameters.tranId, balance));
     }
 
     public async Task<ResponseModel_BG> CalcTransfer(SeamlessWalletRequest request, CalcTransferParameters_BG parameters)
     {
+        #region Test recalc
+
+        //Thread.Sleep(5 * 60 * 1000); //Sleep 5 mins
+
+        #endregion
+
         var message = string.Empty;
         decimal balance = 0;
 
@@ -275,6 +294,13 @@ public class BGBLL : IBGBLL
         }
 
         trans.Commit();
+
+        #region Test recalc
+
+        //Thread.Sleep(5 * 60 * 1000); //Sleep 5 mins
+
+        #endregion
+
         return new ResponseModel_BG(request, new TransferModel_BG(parameters.sn, parameters.userId, parameters.tranId, balance));
     }
 
