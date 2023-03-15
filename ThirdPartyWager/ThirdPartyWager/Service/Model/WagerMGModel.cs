@@ -24,6 +24,7 @@ namespace ThirdPartyWager.Service.Model
         public string currency { get; set; }
         public string txnId { get; set; }
         public long creationTime { get; set; }
+        public long creationTimeMs { get; set; }
         public string contentCode { get; set; }
         public string betId { get; set; }
         public bool completed { get; set; }
