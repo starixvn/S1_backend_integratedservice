@@ -90,7 +90,8 @@ namespace ThirdPartySettleWorker.Workers
                                 TpUserName = unsettled.cust_id,
                                 SettledTime = unsettled.SettleTime,
                                 TransTime = unsettled.TransTime,
-                                SettlementType = _settledBLL.GetSettlementType(GameType.GPI_RNG, unsettled.game_id)
+                                SettlementType = _settledBLL.GetSettlementType(GameType.GPI_RNG, unsettled.game_id),
+                                GameID = unsettled.game_id,                                
                             };
 
                             var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Slots);
@@ -218,7 +219,7 @@ namespace ThirdPartySettleWorker.Workers
                         decimal validBet = bettrans.ValidBet;
                         decimal winLostAmount = bettrans.WinLostAmount;
 
-                        BetRecordInfo betRecordInfo = new BetRecordInfo
+                        var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
                             Stake = stake,
@@ -229,7 +230,8 @@ namespace ThirdPartySettleWorker.Workers
                             TpUserName = bettrans.Account,
                             SettledTime = settledTime,
                             TransTime = transTime,
-                            SettlementType = (settled) ? SettlementType.SettledForValid : SettlementType.UnSettled
+                            SettlementType = (settled) ? SettlementType.SettledForValid : SettlementType.UnSettled,
+                            GameID = wager?.game_id ?? string.Empty,
                         };
 
                         if (settled && cancel)
@@ -257,6 +259,10 @@ namespace ThirdPartySettleWorker.Workers
                         _logger.LogError(ex1, $"exMessage:{ex1.Message} || TransId : {unsettled.TransId}");
                     }
                 }
+            }
+            catch (UnsettleNotFoundException ex)
+            {
+                _logger.LogInformation(ex, ex.Message);
             }
             catch (Exception ex)
             {

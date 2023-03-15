@@ -324,9 +324,10 @@ namespace ThirdPartyBetHistory.Service.DAL
                 TicketStatus = (int)betRecordInfo.TicketStatus,
                 betRecordInfo.OriginalState,
                 betRecordInfo.TicketKey,
-                betRecordInfo.BonusId
+                betRecordInfo.BonusId,
+                betRecordInfo.GameID
             });
-            return _mainDbClient.Execute("Service_TpBetRecord_Set", parameters, trans);
+            return _mainDbClient.Execute("Service_TpBetRecord_Set_V2", parameters, trans);
         }
 
         private int SetWithdrawalLimitTurnOver(int TpId, int CustId, string UserName, int SiteId, decimal TurnOver, string Memo, string RefTransId, IDbTransaction trans)
@@ -404,7 +405,6 @@ namespace ThirdPartyBetHistory.Service.DAL
 
             return result;
         }
-
         private int RefundCancelBonus(int custId, int siteId, string userName, decimal Amount, string Memo, string RefTransId, out decimal afterAmount, IDbTransaction trans)
         {
             var p = new DynamicParameters(new { CustId = custId, SiteId = siteId, UserName = userName, Amount, Type = 5, Memo = Memo, RefTransId });
@@ -416,6 +416,7 @@ namespace ThirdPartyBetHistory.Service.DAL
             afterAmount = p.Get<decimal>("AfterAmount");
             return afterAmount >= 0 ? 1 : 0;
         }
+
 
         public IEnumerable<UnSettle> GetTpBetRecordReSettleTicket(Tp tp, SiteId siteId, string settlementTypeList,
             DateTime startTime, DateTime endTime)

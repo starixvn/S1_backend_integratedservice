@@ -178,6 +178,7 @@ namespace ThirdPartySettleWorker.Workers
                 TpUserName = unsettled.Account,
                 SettledTime = unsettled.SettleTime,
                 TransTime = unsettled.SettleTime,
+                GameID = unsettled.GameId
             };
             return betRecordInfo;
         }
