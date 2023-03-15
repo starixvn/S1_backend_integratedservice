@@ -259,6 +259,54 @@ public class CalcTransferOrders_BG
     public string lastUpdateTime { get; set; }
 }
 
+public class OrderStatusParameters_BG
+{
+    /// <summary>
+    /// 随机字符串，建议使用UUID
+    /// </summary>
+    public string random { get; set; }
+    /// <summary>
+    /// 签名摘要sign=md5(random+sn+secretKey)
+    /// </summary>
+    public string sign { get; set; }
+    /// <summary>
+    /// 厅代码
+    /// </summary>
+    public string sn { get; set; }
+    /// <summary>
+    /// 模块ID，调用方需提供模块基础资料
+    /// </summary>
+    public int moduleId { get; set; }
+    /// <summary>
+    /// 业务批次ID
+    /// </summary>
+    public string tranId { get; set; }
+    /// <summary>
+    /// 注单ID列表
+    /// </summary>
+    public IEnumerable<long> orderIds { get; set; }
+    /// <summary>
+    /// 注单ID与会员的关系
+    /// </summary>
+    public IEnumerable<OrderStatusOrderMap_BG> orderMap { get; set; }
+}
+
+public class OrderStatusOrderMap_BG
+{
+    /// <summary>
+    /// 注单ID
+    /// </summary>
+    public long orderId { get; set; }
+    /// <summary>
+    /// 用户ID[uid]
+    /// </summary>
+    public long userId { get; set; }
+    /// <summary>
+    /// 会员登录ID
+    /// </summary>
+    public string loginId { get; set; }
+}
+
 #endregion
 
 #region Response Model
@@ -291,6 +339,14 @@ public class ResponseModel_BG
 
     //Bet & Payout(ReSettle) Response-Success
     public ResponseModel_BG(SeamlessWalletRequest request, TransferModel_BG result)
+    {
+        id = request.id;
+        this.result = result;
+        jsonrpc = request.jsonrpc;
+    }
+
+    //OrderStatus Response-Success
+    public ResponseModel_BG(SeamlessWalletRequest request, IEnumerable<OrderStatusModel_BG> result)
     {
         id = request.id;
         this.result = result;
@@ -337,6 +393,24 @@ public class TransferModel_BG
         this.userId = long.Parse(userId);
         this.transId = transId;
         this.availableAmount = availableAmount;
+    }
+}
+
+public class OrderStatusModel_BG
+{
+    /// <summary>
+    /// 注单ID
+    /// </summary>
+    public long orderId { get; set; }
+    /// <summary>
+    /// 注单状态
+    /// </summary>
+    public int status { get; set; }
+
+    public OrderStatusModel_BG(long orderId, int status)
+    {
+        this.orderId = orderId;
+        this.status = status;
     }
 }
 

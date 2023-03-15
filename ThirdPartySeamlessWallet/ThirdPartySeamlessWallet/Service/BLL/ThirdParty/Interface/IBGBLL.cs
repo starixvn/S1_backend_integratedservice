@@ -9,4 +9,6 @@ public interface IBGBLL
     Task<ResponseModel_BG> OrderTransfer(SeamlessWalletRequest request, OrderTransferParameters_BG parameters);
 
     Task<ResponseModel_BG> CalcTransfer(SeamlessWalletRequest request, CalcTransferParameters_BG parameters);
+
+    Task<ResponseModel_BG> OrderStatus(SeamlessWalletRequest request, OrderStatusParameters_BG parameters);
 }
