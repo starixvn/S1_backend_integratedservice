@@ -113,6 +113,21 @@ public class BGController : ControllerBase
 
                 return await _bGBLL.CalcTransfer(request, calcTransferParameters);
 
+            //Bettrans Check (BG重新結算機制，會先跟確認注單於我方的目前狀況)
+            case "open.operator.order.status":
+                if (!ConvertToAssignObject(request.@params, out OrderStatusParameters_BG orderStatusParameters, out message))
+                    return new ResponseModel_BG(request, BGErrorCode.InvalidParams, "Convert parameter fail.", reason: message);
+
+                if (!CheckAppidAndSign(new SignParameters
+                {
+                    sign = orderStatusParameters.sign,
+                    random = orderStatusParameters.random,
+                    sn = orderStatusParameters.sn,
+                    loginId = orderStatusParameters.orderMap.First().loginId
+                }, out message, false))
+                    return new ResponseModel_BG(request, BGErrorCode.InvalidParams, message, orderStatusParameters.sn);
+
+                return await _bGBLL.OrderStatus(request, orderStatusParameters);
             default:
                 return new ResponseModel_BG(request, BGErrorCode.MethodNotFound, "Method not found.");
         }
@@ -147,7 +162,7 @@ public class BGController : ControllerBase
         }
     }
 
-    private bool CheckAppidAndSign(SignParameters parameters, out string message)
+    private bool CheckAppidAndSign(SignParameters parameters, out string message, bool isSignNeedLoginId = true)
     {
         message = string.Empty;
 
@@ -194,7 +209,7 @@ public class BGController : ControllerBase
         }
 
         //Check Sign
-        var result = _tools.ToMD5(parameters.random + sn + parameters.loginId + parameters.amount + secretKey);
+        var result = _tools.ToMD5(parameters.random + sn + (isSignNeedLoginId ? parameters.loginId : "") + parameters.amount + secretKey);
         if (result != parameters.sign)
         {
             message = $"sign is invaild. request.sign={parameters.sign}. correct sign={result}.";

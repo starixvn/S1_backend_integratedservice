@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualBasic;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
+using Org.BouncyCastle.Bcpg;
 using System.Linq;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
@@ -65,6 +66,12 @@ public class BGBLL : IBGBLL
 
     public async Task<ResponseModel_BG> OrderTransfer(SeamlessWalletRequest request, OrderTransferParameters_BG parameters)
     {
+        #region Test recalc
+
+        Thread.Sleep(5 * 60 * 1000); //Sleep 5 mins
+
+        #endregion
+
         var message = string.Empty;
         decimal balance = 0;
 
@@ -153,11 +160,24 @@ public class BGBLL : IBGBLL
         }
 
         trans.Commit();
+
+        #region Test recalc
+
+        //Thread.Sleep(5 * 60 * 1000); //Sleep 5 mins
+
+        #endregion
+
         return new ResponseModel_BG(request, new TransferModel_BG(parameters.sn, parameters.userId, parameters.tranId, balance));
     }
 
     public async Task<ResponseModel_BG> CalcTransfer(SeamlessWalletRequest request, CalcTransferParameters_BG parameters)
     {
+        #region Test recalc
+
+        //Thread.Sleep(5 * 60 * 1000); //Sleep 5 mins
+
+        #endregion
+
         var message = string.Empty;
         decimal balance = 0;
 
@@ -229,6 +249,11 @@ public class BGBLL : IBGBLL
             data.calcAmount = (tpCurrency.ExchangeRate > 0) ? data.calcAmount * tpCurrency.ExchangeRate : data.calcAmount;
             data.validAmount = (tpCurrency.ExchangeRate > 0) ? data.validAmount * tpCurrency.ExchangeRate : data.validAmount;
 
+            //Cancel Bet要檢查是否有有效投注
+            if (data.TicketStatus == TicketStatus.Refund)
+                if (!IsExistBetData(partitionTime, data, out IEnumerable<BettingDataLC_BG> existBetDatas, out message))
+                    return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
+
             if (!PlaceData(partitionTime, data, trans, out int SQ, out message))
             {
                 trans.Rollback();
@@ -269,7 +294,50 @@ public class BGBLL : IBGBLL
         }
 
         trans.Commit();
+
+        #region Test recalc
+
+        //Thread.Sleep(5 * 60 * 1000); //Sleep 5 mins
+
+        #endregion
+
         return new ResponseModel_BG(request, new TransferModel_BG(parameters.sn, parameters.userId, parameters.tranId, balance));
+    }
+
+    public async Task<ResponseModel_BG> OrderStatus(SeamlessWalletRequest request, OrderStatusParameters_BG parameters)
+    {
+        var message = string.Empty;
+        var resultList = new List<OrderStatusModel_BG>();
+
+        if (parameters.moduleId != 2)  //目前只有串接视讯模块(2)
+        {
+            message = "request.moduleId is Invalid. moduleId is not live casino.";
+            _logger.LogError($"CheckRequest Fail:{message}");
+            return new ResponseModel_BG(request, BGErrorCode.InvalidParams, message, parameters.sn);
+        }
+
+        if (parameters.orderIds == null || !parameters.orderIds.Any())
+        {
+            message = "request.orderIds is Invalid. orderIds is null or empty.";
+            _logger.LogError($"CheckRequest Fail:{message}");
+            return new ResponseModel_BG(request, BGErrorCode.InvalidParams, message, parameters.sn);
+        }
+
+        var partitionTime = DateTime.UtcNow;
+
+        if (!GetExistData(partitionTime, parameters.random, parameters.orderIds,
+                out IEnumerable<BettingDataLC_BG> existDatas, out message))
+            return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
+
+        foreach (var orderId in parameters.orderIds)
+        {
+            var data = existDatas.Where(x => x.orderId == orderId.ToString());
+            if (!data.Any())
+                resultList.Add(new OrderStatusModel_BG(orderId, (int)BGOrderStatusEnum.NotExist));
+            else
+                resultList.Add(new OrderStatusModel_BG(orderId, (int)data.MaxBy(x => x.SQ).orderStatus));
+        }
+        return new ResponseModel_BG(request, resultList);
     }
 
     #region Private Method
@@ -468,7 +536,6 @@ public class BGBLL : IBGBLL
         return true;
     }
 
-
     private bool CheckThirdParty(string username, out string message)
     {
         message = string.Empty;
@@ -566,14 +633,14 @@ public class BGBLL : IBGBLL
             if (existDatas.Count() != 1)
             {
                 //不存在指定有效投注
-                message = "not exist valid bet by serialnumber.";
+                message = "not exist valid bet by orderId.";
                 _logger.LogError($"IsExistBetData Fail:{message}");
                 return false;
             }
-            if (existDatas.First().amount != (data.amount * -1))
+            if (existDatas.First().orderAmount != (data.calcAmount * -1))
             {
                 //退款金額與已存在投注不符
-                message = "amount not equal with exist valid bet by serialnumber.";
+                message = "amount not equal with exist valid bet by orderId.";
                 _logger.LogError($"IsExistBetData Fail:{message}");
                 return false;
             }
