@@ -1,4 +1,5 @@
 ﻿using Serilog.Context;
+using System.Text.Json;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -38,17 +39,17 @@ public class WagerBG : BackgroundService
             var TpCurrencyList = _commonBLL.GetTpCurrencyList((int)Tp.BG);
             foreach (var siteInfo in siteList)
             {
-                //var currencyList = JsonSerializer.Deserialize<IEnumerable<int>>(siteInfo.CurrencyList);
-                //foreach (var item in TpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
-                //{
-                //    var isSuccess = true;
-                //    var isContinue = true;
-                //    while (isSuccess && isContinue)
-                //    {
-                //        (isSuccess, isContinue) = await _wagerYeebetBLL.GetWagersAsync(tpId, siteInfo.SiteId, item.TpCurrencyId);
-                //        Thread.Sleep(3 * 1000);
-                //    }
-                //}
+                var currencyList = JsonSerializer.Deserialize<IEnumerable<int>>(siteInfo.CurrencyList);
+                foreach (var item in TpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
+                {
+                    var isSuccess = true;
+                    var isContinue = true;
+                    while (isSuccess && isContinue)
+                    {
+                        (isSuccess, isContinue) = await _wagerBGBLL.GetWagersAsync(tpId, siteInfo.SiteId, item.TpCurrencyId);
+                        Thread.Sleep(3 * 1000);
+                    }
+                }
             }
         }
         catch (Exception ex)

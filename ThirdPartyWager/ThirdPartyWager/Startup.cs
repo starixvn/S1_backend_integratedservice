@@ -319,6 +319,7 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceGPI>();
             services.AddHostedService<WagerYeebet>();
             services.AddHostedService<FinanceYeebet>();
+            services.AddHostedService<WagerBG>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
