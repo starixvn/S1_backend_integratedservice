@@ -251,11 +251,11 @@ namespace ThirdPartyCore
                 $"| certificate: {certificate.SubjectName} ");
 
             using var handler = new HttpClientHandler();
-            if (!string.IsNullOrEmpty(proxyHost))
-            {
-                handler.UseProxy = true;
-                handler.Proxy = new WebProxy(proxyHost, proxyPort);
-            }
+            //if (!string.IsNullOrEmpty(proxyHost))
+            //{
+            //    handler.UseProxy = true;
+            //    handler.Proxy = new WebProxy(proxyHost, proxyPort);
+            //}
             if (certificate != null)
             {
                 handler.ClientCertificates.Add(certificate);
