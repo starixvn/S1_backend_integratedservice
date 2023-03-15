@@ -109,7 +109,7 @@ namespace ThirdPartySettleWorker.Workers
                             TicketStatus = winLostAmount > 0 ? TicketStatus.Win : winLostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost,
                             GameID = gameId,
                         };
-                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Slots);
+                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo,  TpCategory.Slots);
 
                         if (result == 1)
                         {
@@ -232,7 +232,7 @@ namespace ThirdPartySettleWorker.Workers
                             SettledTime = wager.SettleTime,
                             TransTime = wager.TransTime,
                             SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType(thisTp, bettransData.MiniGameCode.ToLower()),
-                            //GameID = bettransData.MiniGameCode,
+                            GameID = bettransData.MiniGameCode,
                         };
 
                         if (wager.status.ToLower() == "refund")
@@ -373,7 +373,7 @@ namespace ThirdPartySettleWorker.Workers
                             SettledTime = wager.SettleTime,
                             TransTime = wager.TransTime,
                             SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType(thisTp, bettransData.MiniGameCode.ToLower()),
-                            //GameID = bettransData.MiniGameCode,
+                            GameID = bettransData.MiniGameCode,
                         };
 
                         if (wager.status.ToLower() == "refund")
