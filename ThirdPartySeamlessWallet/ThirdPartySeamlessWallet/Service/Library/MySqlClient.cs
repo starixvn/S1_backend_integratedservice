@@ -100,6 +100,25 @@ namespace ThirdPartySeamlessWallet.Service.Library
             return result;
         }
 
+        public T QueryFirst<T>(string name, IDbTransaction transaction, object parameters = null)
+        {
+            var sw = Stopwatch.StartNew();
+            T result;
+            try
+            {
+                result = transaction.Connection.QueryFirstOrDefault<T>(name, parameters, transaction, commandType: CommandType.StoredProcedure);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, name);
+                throw;
+            }
+
+            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
+            _logger.LogDebug($"{name} {sw.Elapsed:c}");
+            return result;
+        }
+
         public MySqlConnection GetMySqlConnection()
         {
             return new MySqlConnection(_connectionString);

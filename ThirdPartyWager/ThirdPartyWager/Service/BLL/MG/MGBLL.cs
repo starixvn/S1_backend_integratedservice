@@ -54,6 +54,7 @@ namespace ThirdPartyWager.Service.BLL.MG
                             currency = currency.TpCurrencyId,
                             txnId = transaction.txnId,
                             creationTime = DateTime.UtcNow.Ticks,
+                            creationTimeMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                             contentCode = transaction.contentCode,
                             betId = transaction.betId,
                             completed = transaction.completed,

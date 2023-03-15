@@ -89,6 +89,12 @@ namespace ThirdPartyWager.Service.BLL
             return dataTpTimer;
         }
 
+        public TpWagerTimerReferenceModel GetThirdPartyTimerReferenceByReference(int tpId, int type, int gameType, string reference)
+        {
+            var dataTpTimer = thirdPartyHelper.GetThirdPartyTimerReferenceByReference(tpId, type, gameType, reference);
+            return dataTpTimer;
+        }
+
         public int SetThirdPartyTimerByCurrency(int tpId, int type, long start, string currency, int gameType = 0)
         {
             return thirdPartyHelper.SetThirdPartyTimerByCurrency(tpId, type, start, currency, gameType);
@@ -98,7 +104,12 @@ namespace ThirdPartyWager.Service.BLL
         {
             return thirdPartyHelper.SetThirdPartyTimerByGameType(tpId, type, start, gameType);
         }
-        
+
+        public int SetThirdPartyTimerByReference(int tpId, int type, long start, int gameType, string reference)
+        {
+            return thirdPartyHelper.SetThirdPartyTimerByReference(tpId, type, start, gameType, reference);
+        }
+
         public TpCustInfo GetTpCustInfoWithCache(int tpId, string tpUserName)
         {
             var key = $"TpCustInfo_{tpId}_{tpUserName}";

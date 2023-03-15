@@ -19,6 +19,7 @@ namespace ThirdPartyBetHistory.Service.Model
         public string tokenmoney { get; set; }
         public long TicketKey { get; set; }
         public int BonusId { get; set; }
+        public string GameID { get; set; }
     }
     public class BonusFulfill
     {

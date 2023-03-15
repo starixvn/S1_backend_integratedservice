@@ -72,13 +72,14 @@ namespace ThirdParty.DG
 
         Dictionary<string, string> limitGroupNoMapping = new Dictionary<string, string>(comparer: StringComparer.OrdinalIgnoreCase)
         {
-            {"MYR","A"},
-            {"CNY","A"},
-            {"THB","A"},
-            {"USD","A"},
-            {"IDR2","A"},
-            {"VND2","J"},
-            {"INR","A"}
+            {"MYR","G"},
+            {"THB","N"},
+            {"IDR2","G"},
+            {"VND2","G"},
+            {"CNY","G"},
+            {"USD","F"},
+            {"INR","G"},
+            {"BDT","A"}
         };
 
         private decimal dWinLimit = 0m;
@@ -148,15 +149,9 @@ namespace ThirdParty.DG
             MD5Key = ToMD5($"{AgentName}{APIkey}{Random}").ToLower();
             SignUp.token = MD5Key;
             SignUp.random = Random;
-            if (limitGroupNoMapping.ContainsKey(tpCustInfo.TpCurrencyId))
-            {
-                SignUp.data = limitGroupNoMapping[tpCustInfo.TpCurrencyId];
-            }
-            else
-            {
-                SignUp.data = DefaultLimitGroup;
-            }
-
+            SignUp.data = limitGroupNoMapping.ContainsKey(tpCustInfo.TpCurrencyId) 
+                ? limitGroupNoMapping[tpCustInfo.TpCurrencyId] 
+                : DefaultLimitGroup;
             SignUp.member.username = tpCustInfo.TpUserName;
             SignUp.member.password = tpCustInfo.TpPwd;
             SignUp.member.currencyName = tpCustInfo.TpCurrencyId;

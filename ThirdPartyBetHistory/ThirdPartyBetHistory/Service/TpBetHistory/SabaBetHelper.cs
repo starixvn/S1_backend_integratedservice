@@ -160,7 +160,8 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                         Stake = betDetial.stake,
                         TpUserName = betDetial.vendor_member_id,
                         TicketKey = betDetial.version_key,
-                        tokenmoney = betDetial.tokenmoney
+                        tokenmoney = betDetial.tokenmoney,
+                        GameID = betDetial.sport_type.ToString()
                     };
 
                     if (betDetial.settlement_time != null)
@@ -203,7 +204,8 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                         WinlostAmount = betDetial.winlost_amount,
                         Stake = betDetial.stake,
                         TpUserName = betDetial.vendor_member_id,
-                        TicketKey = betDetial.version_key
+                        TicketKey = betDetial.version_key,
+                        GameID = betDetial.sport_type.ToString()
                     };
 
                     CalculateAvailableBet(betDetial, betRecordInfo);
@@ -227,6 +229,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                         TicketKey = betDetial.version_key,
                         TransId = betDetial.trans_id.ToString(),
                         TransTime = ConvertLocTime(betDetial.transaction_time),
+                        GameID = betDetial.sport_type.ToString()
                     };
 
 
@@ -453,6 +456,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                     TicketKey = betDetial.version_key,
                     tokenmoney = betDetial.tokenmoney,
                     GameType = gameType,
+                    GameID = betDetial.sport_type.ToString()
                 };
 
                 // 使用cashOut的ticket_status狀態跑下面的流程

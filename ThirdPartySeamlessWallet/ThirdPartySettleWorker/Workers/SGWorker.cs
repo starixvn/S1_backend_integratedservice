@@ -122,6 +122,7 @@ namespace ThirdPartySettleWorker.Workers
                                 SettlementType = SettlementType.SettledForValid,
                                 ProgressiveBet = wager.ProgressiveBet,
                                 ProgressiveWin = wager.ProgressiveWin,
+                                GameID = wager.GameId,
                             };
 
                             var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
@@ -208,7 +209,8 @@ namespace ThirdPartySettleWorker.Workers
                             TpUserName = unsettled.Account,
                             SettledTime = unsettled.SettleTime,
                             TransTime = unsettled.SettleTime,
-                            SettlementType = SettlementType.SettledForValid
+                            SettlementType = SettlementType.SettledForValid,
+                            GameID = unsettled.GameId,
                         };
 
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
