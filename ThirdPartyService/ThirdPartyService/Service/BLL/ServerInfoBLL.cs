@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using ThirdPartyCore;
+using ThirdPartyCore.Model;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Model;
 
@@ -11,6 +12,7 @@ namespace ThirdPartyService.Service.BLL
 
         private readonly ServerInfoService _serverInfoService;
         private ConcurrentDictionary<int, ServerInfo> serverInfoCache = new ConcurrentDictionary<int, ServerInfo>();
+        private ConcurrentDictionary<string, DefTpCurrencyId> tpCurrencyIdCache = new ConcurrentDictionary<string, DefTpCurrencyId>();
 
         #endregion
 
@@ -57,6 +59,21 @@ namespace ThirdPartyService.Service.BLL
         {
             var data = GetServerInfo(siteId);
             return data.SiteName;
+        }
+
+        public DefTpCurrencyId GetDefaultTpCurrencyIdByTpId(int siteId, int tpId)
+        {
+            var key = $"GetDefaultTpCurrencyIdByTpId{siteId}_{tpId}";
+            if (tpCurrencyIdCache.ContainsKey(key))
+            {
+                return tpCurrencyIdCache[key];
+            }
+            else
+            {
+                var tpCurrencyId = _serverInfoService.GetDefaultTpCurrencyIdByTpId(siteId, tpId);
+                tpCurrencyIdCache.TryAdd(key, tpCurrencyId);
+                return tpCurrencyId;
+            }
         }
 
         #endregion

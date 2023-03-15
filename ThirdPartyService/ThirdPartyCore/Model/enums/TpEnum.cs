@@ -42,6 +42,7 @@ namespace ThirdPartyCore.Model.enums
         EVO = 36,
         Netent = 37,
         RedTiger = 38,
+        AP = 39,
         HB = 40,
         SimplePlay = 44
 
