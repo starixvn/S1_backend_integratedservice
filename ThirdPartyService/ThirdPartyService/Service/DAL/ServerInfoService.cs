@@ -1,4 +1,5 @@
-﻿using ThirdPartyCore.Model.enums;
+﻿using ThirdPartyCore.Model;
+using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Service.Library;
 using ThirdPartyService.Service.Model;
 
@@ -43,6 +44,10 @@ namespace ThirdPartyService.Service.DAL
             return _mainDbClient.Query<ServerInfo>("Admin_ServerInfoList_Get");
         }
 
+        public DefTpCurrencyId GetDefaultTpCurrencyIdByTpId(int siteId, int tpId)
+        {
+            return _mainDbClient.QueryFirst<DefTpCurrencyId>("Service_ServerInfo_DefCurrency_ByTpId_Get", new { _SiteId = siteId, _TpId = tpId });
+        }
         #endregion
     }
 }
