@@ -1,10 +1,4 @@
 using System.Net;
-using System.Net.Http;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.KM;
@@ -323,6 +317,9 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceGPI>();
             services.AddHostedService<WagerYeebet>();
             services.AddHostedService<FinanceYeebet>();
+
+            // health check use
+            services.AddControllers();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -331,6 +328,17 @@ namespace ThirdPartyWager
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseRouting();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapGet("/health", async context =>
+                {
+                    await context.Response.WriteAsync($"{env.EnvironmentName}-{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}");
+                });
+
+                endpoints.MapControllers();
+            });
         }
     }
 }
