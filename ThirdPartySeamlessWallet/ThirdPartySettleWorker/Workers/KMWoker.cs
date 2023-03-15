@@ -91,6 +91,7 @@ namespace ThirdPartySettleWorker.Workers
                                 SettledTime = unsettled.SettleTime,
                                 TransTime = unsettled.TransTime,
                                 SettlementType = SettlementType.SettledForValid,
+                                GameID = unsettled.GameId,
                             };
 
                             var result = _settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);

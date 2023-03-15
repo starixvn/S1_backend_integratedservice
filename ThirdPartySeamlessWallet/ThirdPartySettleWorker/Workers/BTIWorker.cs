@@ -70,6 +70,8 @@ namespace ThirdPartySettleWorker.Workers
 
                         //先從DebitList取得第一筆BetID
                         var betID = debitList.Any() ? debitList.First().BetID : null;
+                        var gameId = debitList.Any() ? FindGameId(debitList) : string.Empty;
+
                         //使用BetID作為transId，如果DebitList是空的，使用unsettledList裡面的ReserveId
                         var transId = betID ?? unsettledList.First().TransId;
 
@@ -115,6 +117,7 @@ namespace ThirdPartySettleWorker.Workers
                             TransTime = unsettledList.Min(i => i.TransTime),
                             SettlementType = settlementType,
                             TicketStatus = ticketStatus,
+                            GameID = gameId,
                         };
 
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Sports);
@@ -183,6 +186,25 @@ namespace ThirdPartySettleWorker.Workers
             }
 
             return validBetAmount;  
+        }
+
+        private string FindGameId(IEnumerable<BTIDebitData> debitList)
+        {
+            try
+            {       
+                var bodyData = debitList.FirstOrDefault()?.BodyData;
+                if (bodyData == null)
+                {
+                    return string.Empty;
+                }
+                var xd = XDocument.Parse(bodyData);
+                var selection = xd.Descendants("Selection").FirstOrDefault();
+                return selection.Attribute("BranchID").Value;
+            }
+            catch (Exception)
+            {
+                return string.Empty;
+            }
         }
     }
 }

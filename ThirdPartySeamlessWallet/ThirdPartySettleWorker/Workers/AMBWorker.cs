@@ -93,7 +93,8 @@ namespace ThirdPartySettleWorker.Workers
                                 SettledTime = unsettleData.SettleTime,
                                 TransTime = unsettleData.TransTime,
                                 SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, unsettleData.GameId),
-                                TicketStatus = SetTicketStatus(unsettleData.WinLostAmount)
+                                TicketStatus = SetTicketStatus(unsettleData.WinLostAmount),
+                                GameID = unsettleData.GameId,
                             };
 
                             var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
@@ -189,7 +190,8 @@ namespace ThirdPartySettleWorker.Workers
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
                                 TransTime = unsettled.TransTime,
-                                SettlementType = SettlementType.SettledForValid
+                                SettlementType = SettlementType.SettledForValid,
+                                GameID = unsettled.GameId,
                             };
 
                             if (unsettled.IsRefund == 1)

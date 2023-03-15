@@ -106,6 +106,7 @@ namespace ThirdPartySettleWorker.Workers
                             TransTime = settleData.TransTime,
                             SettlementType = SetSettlementType((TicketStatus)settleData.TicketStatus), // 判斷 TicketStatus，因為可能重新結算
                             TicketStatus = (TicketStatus)settleData.TicketStatus,
+                            GameID = tpWagerData.GameId,
                         };
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)

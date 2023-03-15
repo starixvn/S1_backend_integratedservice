@@ -70,7 +70,8 @@ namespace ThirdPartySettleWorker.Workers
                                 SettledTime = unsettled.SettleTime,
                                 TransTime = unsettled.TransTime,
                                 SettlementType = unsettled.TicketStatus == (int)TicketStatus.Refund ? SettlementType.SettledForInvalid : SettlementType.SettledForValid,
-                                TicketStatus = (TicketStatus)unsettled.TicketStatus
+                                TicketStatus = (TicketStatus)unsettled.TicketStatus,
+                                GameID = unsettled.GameId,
                             };
 
                             var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, category);

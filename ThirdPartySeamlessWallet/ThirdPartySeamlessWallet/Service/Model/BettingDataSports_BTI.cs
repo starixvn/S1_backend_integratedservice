@@ -208,6 +208,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal amount { get; set; }
 
         public string BetID { get; set; }
+
+        public string BodyData { get; set; }
     }
 
 
