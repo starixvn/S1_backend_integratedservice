@@ -4146,10 +4146,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public int RewardRNG_AP(TpCustInfo tpCustInfo, CPSettleDataRNG_AP rewardDataRNG_AP)
+        public int RewardRNG_AP(TpCustInfo tpCustInfo, CPSettleDataRNG_AP rewardDataRNG_AP, out decimal afterAmount)
         {
             var bonusId = 0;
             var result = 0;
+            afterAmount = 0;
             try
             {
                 using var conn = _mainDbClient.GetMySqlConnection();
@@ -4157,7 +4158,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var trans = conn.BeginTransaction();
 
                 var p = new DynamicParameters(rewardDataRNG_AP);
-                result = conn.Execute("Service_RewardRNG_AP_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = conn.Execute("Service_RewardRNG_AP_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result > 0 && rewardDataRNG_AP.cpwin > 0)
                 {
@@ -4171,7 +4172,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         rewardDataRNG_AP.seq,
                         TransType.Prize,
                         null,
-                        out _,
+                        out afterAmount,
                         $"{rewardDataRNG_AP.cpid} Prize",
                         out bonusId,
                         conn,
