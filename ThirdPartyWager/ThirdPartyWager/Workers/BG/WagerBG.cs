@@ -12,6 +12,8 @@ public class WagerBG : BackgroundService
     private readonly CommonBLL _commonBLL;
 
     private readonly int tpId = (int)Tp.BG;
+    private readonly int tpType = (int)WagerTimerType.Wager;
+    private bool isFast = false;
     private Timer _timer;
 
     public WagerBG(ILogger<WagerBG> logger,
@@ -36,20 +38,12 @@ public class WagerBG : BackgroundService
         try
         {
             var siteList = _commonBLL.GetSiteList().Where(x => x.SiteId != 4);
-            var TpCurrencyList = _commonBLL.GetTpCurrencyList((int)Tp.BG);
+            var TpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
             foreach (var siteInfo in siteList)
             {
                 var currencyList = JsonSerializer.Deserialize<IEnumerable<int>>(siteInfo.CurrencyList);
                 foreach (var item in TpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
-                {
-                    var isSuccess = true;
-                    var isContinue = true;
-                    while (isSuccess && isContinue)
-                    {
-                        (isSuccess, isContinue) = await _wagerBGBLL.GetWagersAsync(tpId, siteInfo.SiteId, item.TpCurrencyId);
-                        Thread.Sleep(3 * 1000);
-                    }
-                }
+                    isFast = await _wagerBGBLL.ExecWagerWorker(siteInfo.SiteId, item.TpCurrencyId, tpType, 30);
             }
         }
         catch (Exception ex)
@@ -58,8 +52,7 @@ public class WagerBG : BackgroundService
         }
         finally
         {
-            var dueTimeSpan = TimeSpan.FromMinutes(1);
-
+            var dueTimeSpan = isFast ? TimeSpan.FromSeconds(15) : TimeSpan.FromSeconds(60);
             _timer.Change(dueTimeSpan, TimeSpan.Zero);
         }
     }

@@ -81,6 +81,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerEVOService>();
             services.AddSingleton<WagerGPIService>();
             services.AddSingleton<WagerYeebetService>();
+            services.AddSingleton<WagerBGService>();
             services.AddSingleton<IWagerSBOService, WagerSBOService>();
             services.AddSingleton<TpUnsettleService>();
             services.AddSingleton<ConfigService>();
@@ -235,6 +236,9 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerYeebetBLL>();
             services.AddSingleton<ApiYeebetBLL>();
             services.AddSingleton<FinanceYeebetBLL>();
+            //BG
+            services.AddSingleton<WagerBGBLL>();
+            services.AddSingleton<ApiBGBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();

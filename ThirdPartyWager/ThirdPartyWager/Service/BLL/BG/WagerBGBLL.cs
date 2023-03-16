@@ -1,85 +1,136 @@
 ﻿using Newtonsoft.Json;
-using ThirdPartyWager.Service.BLL.BG;
+using System;
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL;
 
 public class WagerBGBLL
 {
     private readonly ThirdPartyBLL _thirdPartyBLL;
-    private readonly ApiBGBLL _apiAGBLL;
-    private readonly WagerAGService _wagerAGService;
+    private readonly ApiBGBLL _apiBGBLL;
+    private readonly WagerBGService _wagerBGService;
     private readonly ILogger<WagerBGBLL> _logger;
+    private readonly DateTimeHelper _dateTimeHelper;
+    private readonly int pageSize = 500;
+
+    private readonly int _tpId = (int)Tp.BG;
+    private readonly int _timeZone = -4;  //BG Default TimeZone=-4
+    private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";//2021-09-28 23:59:59
 
     public WagerBGBLL(IServiceProvider provider)
     {
         _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-        _apiAGBLL = provider.GetRequiredService<ApiAGBLL>();
-        _wagerAGService = provider.GetRequiredService<WagerAGService>();
+        _apiBGBLL = provider.GetRequiredService<ApiBGBLL>();
+        _wagerBGService = provider.GetRequiredService<WagerBGService>();
+        _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         _logger = provider.GetRequiredService<ILogger<WagerBGBLL>>();
     }
 
-    public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime)
+    public async Task<bool> ExecWagerWorker(int siteId, string tpCurrencyId, int type, int timeRange)
     {
-        var msg = "FATAL_ERROR";
-        var guid = Guid.NewGuid().ToString();
+        var result = true;
+        var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(_tpId, type, tpCurrencyId, siteId);
+        var quick = CheckQuick(dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now, 5);
+        var time = _dateTimeHelper.GetTimeByMinute(timeRange, _timeZone, _timeFormat, dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now);
+
+        result = await GetWagersAsync(siteId, tpCurrencyId, time.startTime, time.endTime);
+        if (result)
+            _thirdPartyBLL.SetThirdPartyTimerByCurrency(_tpId, type, time.endUnix, tpCurrencyId, siteId);
+
+        return quick;
+    }
+
+    public async Task<bool> GetWagersAsync(int siteId, string tpCurrencyId, string startTime, string endTime)
+    {
+        var prefixMsg = $"{siteId}_{tpCurrencyId}";
+        var msg = prefixMsg + "FATAL_ERROR";
         try
         {
-            // get api info
-            var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
+            // get tp info for api
+            var setting = _thirdPartyBLL.GetThirdPartyBySite(_tpId, siteId);
+
+            if (!GetSnAndSecretKey(setting, tpCurrencyId, out string sn, out string secretKey))
+            {
+                msg = prefixMsg + "THIRD_PARTY_SETTING_ERROR";
+                _logger.LogError($"{msg}");
+                return false;
+            }
 
             // pagination
-            var page = 1;
+            var pageIndex = 1;
             var totalPage = 1;
-            while (page <= totalPage)
+            while (pageIndex <= totalPage)
             {
                 // get wager
-                var dataWager = await _apiAGBLL.GetBetListByTime(setting["WagerUrl"], setting["HashKey"], setting["data_cagent"], startTime, endTime, page, guid);
+                var oederQueryResult = await _apiBGBLL.OrderQuery(setting["ApiUrl"], sn, secretKey, startTime, endTime, pageIndex, pageSize);
 
-                // error condition
-                var errorCode = dataWager.result.info;
-
-                if (errorCode != 0)
+                if (oederQueryResult.error != null)
                 {
-                    msg = "THIRD_PARTY_ERROR";
-                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                    msg = prefixMsg + "THIRD_PARTY_ERROR";
+                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(oederQueryResult)}");
                     return false;
                 }
 
-                var totalNum = dataWager.result.addition.total;
-                totalPage = dataWager.result.addition.totalpage;
-                if (totalNum == 0)
+                totalPage = oederQueryResult.result.total / pageSize;
+                if (oederQueryResult.result.total == 0)
                 {
-                    msg = "NO_DATA";
-                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                    msg = prefixMsg + "NO_DATA";
+                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(oederQueryResult)}");
                     return true;
                 }
 
-                foreach (var bet in dataWager.result.row)
+                try
                 {
-                    try
-                    {
-                        _wagerAGService.InsertWager(bet);
-                    }
-                    catch (Exception ex)
-                    {
-                        msg = $"INSERT_WAGER(WAGERID: {bet.billNo} )";
-                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
-                        return false;
-                    }
+                    await _wagerBGService.InsertWager(oederQueryResult.result.items);
                 }
-                page++;
+                catch (Exception ex)
+                {
+                    msg = prefixMsg + $"INSERT_WAGER";
+                    _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(oederQueryResult.result.items)}\r\n{ex.Message}");
+                    return false;
+                }
+
+                pageIndex++;
             }
 
-            msg = "FINISH";
-            _logger.LogInformation($"GetWagersAsync {msg}\r\n{startTime} ~ {endTime}");
+            msg = prefixMsg + "FINISH";
+            _logger.LogInformation($"GetWagersAsync SiteId={siteId}. CurrencyId={tpCurrencyId}. {msg}\r\n{startTime} ~ {endTime}");
             return true;
         }
         catch (Exception ex)
         {
-            msg = "FATAL_ERROR";
-            _logger.LogError(ex, $"GetWagersAsync {msg}\r\n{ex.Message}");
+            msg = prefixMsg + "FATAL_ERROR";
+            _logger.LogError(ex, $"GetWagersAsync SiteId={siteId}. CurrencyId={tpCurrencyId}. {msg}\r\n{ex.Message}");
             return false;
         }
+    }
+
+    private bool CheckQuick(DateTime workTime, int excess)
+    {
+        var diff = DateTime.Now - workTime;
+        return DateTime.Now > workTime && diff.TotalMinutes > excess;
+    }
+
+    private bool GetSnAndSecretKey(Dictionary<string, string> setting, string tpCurrencyId, out string sn, out string secretKey)
+    {
+        sn = string.Empty;
+        secretKey = string.Empty;
+        if (!setting.ContainsKey($"Sn_{tpCurrencyId}")
+            || string.IsNullOrWhiteSpace(setting[$"Sn_{tpCurrencyId}"]))
+        {
+            _logger.LogError($"Sn_{tpCurrencyId} is invaild.");
+            return false;
+        }
+        sn = setting[$"Sn_{tpCurrencyId}"];
+        if (!setting.ContainsKey($"ApiSecretKey_{tpCurrencyId}")
+            || string.IsNullOrWhiteSpace(setting[$"ApiSecretKey_{tpCurrencyId}"]))
+        {
+            _logger.LogError($"ApiSecretKey_{tpCurrencyId} is invaild.");
+            return false;
+        }
+        secretKey = setting[$"ApiSecretKey_{tpCurrencyId}"];
+        return true;
     }
 }
