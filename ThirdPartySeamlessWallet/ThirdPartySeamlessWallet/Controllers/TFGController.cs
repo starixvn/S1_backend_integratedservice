@@ -95,6 +95,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             try
             {
+                logger.LogInformation($"loginName:{loginName}");
                 //var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.TFG, loginName);
                 var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, loginName, (int)GameType.TFG_Esports);
                 TFGWallet result = new TFGWallet() { balance = tpCustBalance.Balance };
@@ -110,7 +111,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         //        curl --location -g 'https://{{spi-url}}/api/v2/bet-transaction/?id=CAUAG14392E4357NJX8303&LoginName=&bet_type=&from_datetime=&to_datetime=&from_settlement_datetime=&to_settlement_datetime=&settlement_status=&from_modified_datetime=null&to_modified_datetime=null' \
         //--header 'Authorization: Token {{private_token}}'
 
-        public class Transfer
+        public class TransferReq
         {
             public string loginName { get; set; }
             public decimal amount { get; set; }
@@ -155,11 +156,55 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string ticket_type { get; set; }
             public TicketDetail tickets { get; set; }
         }
+
         [Route("[controller]/transfer")]
         [HttpPost]
-        public IActionResult Transfer(Transfer request)
+        public IActionResult Transfer(TransferReq req)
         {
+            try
+            {
+                logger.LogInformation($"Transfer\r\n{req}");
+                Request.Headers.TryGetValue("Authorization", out var authorization);
+                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, req.loginName);
+                var privateToken = thirdPartySetting.TpSetting[$"PrivateToken_{tpCustInfo.TpCurrencyId}"];
+                if (privateToken != authorization)
+                {
 
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"Transfer\r\n{ex.ToString()}");
+                return StatusCode(400);
+            }
+
+            return Ok();
+        }
+
+        [Route("[controller]/rollback")]
+        [HttpPost]
+        public IActionResult Rollback(TransferReq req)
+        {
+            try
+            {
+                logger.LogInformation($"Rollback\r\n{req}");
+                Request.Headers.TryGetValue("Authorization", out var authorization);
+                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, req.loginName);
+                var privateToken = thirdPartySetting.TpSetting[$"PrivateToken_{tpCustInfo.TpCurrencyId}"];
+                if (privateToken != authorization)
+                {
+
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError($"Rollback\r\n{ex.ToString()}");
+                return StatusCode(400);
+            }
+
+            return Ok();
         }
         #endregion
     }
