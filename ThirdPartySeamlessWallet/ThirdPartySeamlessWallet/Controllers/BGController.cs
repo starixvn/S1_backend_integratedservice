@@ -194,9 +194,9 @@ public class BGController : ControllerBase
 
         // Get Setting
         var setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(_thirdPartyBLL.GetThirdPartyBySite((int)thisTp, tpCustInfo.SiteId).Setting);
-        string secretKey = setting.ContainsKey("ApiSecretKey") && !string.IsNullOrEmpty(setting["ApiSecretKey"])
-            ? setting["ApiSecretKey"]
-            : throw new YeebetException(YeebetErrorCode.SystemError, "ApiSecretKey is invaild.");
+        string secretKey = setting.ContainsKey($"ApiSecretKey_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(setting[$"ApiSecretKey_{tpCustInfo.TpCurrencyId}"])
+            ? setting[$"ApiSecretKey_{tpCustInfo.TpCurrencyId}"]
+            : throw new YeebetException(YeebetErrorCode.SystemError, $"ApiSecretKey_{tpCustInfo.TpCurrencyId} is invaild.");
         string sn = setting.ContainsKey($"Sn_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(setting[$"Sn_{tpCustInfo.TpCurrencyId}"])
             ? setting[$"Sn_{tpCustInfo.TpCurrencyId}"]
             : throw new YeebetException(YeebetErrorCode.SystemError, $"Sn_{tpCustInfo.TpCurrencyId} is invaild.");
