@@ -68,7 +68,7 @@ public class BGBLL : IBGBLL
     {
         #region Test recalc
 
-        Thread.Sleep(5 * 60 * 1000); //Sleep 5 mins
+        //Thread.Sleep(5 * 60 * 1000); //Sleep 5 mins
 
         #endregion
 
@@ -174,7 +174,8 @@ public class BGBLL : IBGBLL
     {
         #region Test recalc
 
-        //Thread.Sleep(5 * 60 * 1000); //Sleep 5 mins
+        if (parameters.recalc == "0")
+            Thread.Sleep(5 * 60 * 1000); //Sleep 5 mins
 
         #endregion
 
