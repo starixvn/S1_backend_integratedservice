@@ -61,15 +61,15 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             try
             {
-                logger.LogInformation($"token\r\n{req.token}");
+                //logger.LogInformation($"token\r\n{req.token}");
                 var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(req.token)));
                 var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
                 string authToken = sessionKeyArr[0];
                 string sessionToken = sessionKeyArr[1];
                 string tpUserName = sessionKeyArr[2];
-                logger.LogInformation($"authToken\r\n{authToken}");
-                logger.LogInformation($"sessionToken\r\n{sessionToken}");
-                logger.LogInformation($"tpUserName\r\n{tpUserName}");
+                //logger.LogInformation($"authToken\r\n{authToken}");
+                //logger.LogInformation($"sessionToken\r\n{sessionToken}");
+                //logger.LogInformation($"tpUserName\r\n{tpUserName}");
                 if (!authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
                     return StatusCode(400);
                 var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, tpUserName);
@@ -95,8 +95,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             try
             {
-                logger.LogInformation($"loginName:{loginName}");
-                //var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.TFG, loginName);
                 var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, loginName, (int)GameType.TFG_Esports);
                 TFGWallet result = new TFGWallet() { balance = tpCustBalance.Balance };
                 return Ok(result);
@@ -107,9 +105,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return StatusCode(400);
             }
         }
-
-        //        curl --location -g 'https://{{spi-url}}/api/v2/bet-transaction/?id=CAUAG14392E4357NJX8303&LoginName=&bet_type=&from_datetime=&to_datetime=&from_settlement_datetime=&to_settlement_datetime=&settlement_status=&from_modified_datetime=null&to_modified_datetime=null' \
-        //--header 'Authorization: Token {{private_token}}'
 
         public class TransferReq
         {
@@ -124,37 +119,38 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             public string id { get; set; }
             public decimal odds { get; set; }
-            public decimal? malay_odds { get; set; }
-            public decimal euro_odds { get; set; }
-            public decimal member_odds { get; set; }
-            public string member_odds_style { get; set; }
-            public int game_type_id { get; set; }
-            public string game_type_name { get; set; }
-            public string game_market_name { get; set; }
-            public string market_option { get; set; }
-            public string map_num { get; set; }
-            public string bet_type_name { get; set; }
-            public string competition_name { get; set; }
-            public int event_id { get; set; }
-            public string event_name { get; set; }
-            public DateTimeOffset event_datetime { get; set; }
-            public DateTimeOffset date_created { get; set; }
-            public DateTimeOffset settlement_datetime { get; set; }
-            public DateTimeOffset modified_datetime { get; set; }
-            public string bet_selection { get; set; }
-            public string currency { get; set; }
             public decimal amount { get; set; }
-            public string settlement_status { get; set; }
-            public bool is_unsettled { get; set; }
-            public string result_status { get; set; }
             public string result { get; set; }
+            public string map_num { get; set; }
+            public string currency { get; set; }
             public decimal earnings { get; set; }
+            public int event_id { get; set; }
             public string handicap { get; set; }
-            public string member_code { get; set; }
-            public string request_source { get; set; }
             public bool is_combo { get; set; }
+            public decimal euro_odds { get; set; }
+            public int market_id { get; set; }
+            public string event_name { get; set; }
+            public decimal? malay_odds { get; set; }
+            public string member_code { get; set; }
+            public decimal member_odds { get; set; }
             public string ticket_type { get; set; }
-            public TicketDetail tickets { get; set; }
+            public DateTimeOffset date_created { get; set; }
+            public int game_type_id { get; set; }
+            public bool is_unsettled { get; set; }
+            public string bet_selection { get; set; }
+            public string bet_type_name { get; set; }
+            public string market_option { get; set; }
+            public string result_status { get; set; }
+            public DateTimeOffset event_datetime { get; set; }
+            public string game_type_name { get; set; }
+            public string request_source { get; set; }
+            public string competition_name { get; set; }
+            public string game_market_name { get; set; }
+            public string member_odds_style { get; set; }
+            public DateTimeOffset modified_datetime { get; set; }
+            public string settlement_status { get; set; }
+            public DateTimeOffset settlement_datetime { get; set; }
+            //public TicketDetail tickets { get; set; }
         }
 
         [Route("[controller]/transfer")]
@@ -170,8 +166,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var privateToken = thirdPartySetting.TpSetting[$"PrivateToken_{tpCustInfo.TpCurrencyId}"];
                 if (privateToken != authorization)
                 {
-
+                    logger.LogInformation($"privateToken\r\n{privateToken}");
+                    logger.LogInformation($"authorization\r\n{authorization}");
                 }
+                return StatusCode(400);
             }
             catch (Exception ex)
             {
@@ -179,7 +177,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return StatusCode(400);
             }
 
-            return Ok();
+            //return Ok();
         }
 
         [Route("[controller]/rollback")]
