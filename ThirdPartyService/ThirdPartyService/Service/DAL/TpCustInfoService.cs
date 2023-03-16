@@ -197,7 +197,7 @@ namespace ThirdPartyService.Service.DAL
                 if (tpId == (int)TpEnum.PT)
                 {
                     // allow test custid
-                    var _testCustId = new List<long> { 648596, 648598, 648599, 648594, 648597, 648595, 648601, 648602 };
+                    var _testCustId = new List<long> { };
                     if (_testCustId.Contains(custId))
                     {
                         return false;
