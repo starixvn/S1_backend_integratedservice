@@ -1,20 +1,8 @@
 ﻿using Dapper;
-
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
 using MySql.Data.MySqlClient;
-
 using Newtonsoft.Json;
-
 using Serilog.Context;
-
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
-
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -77,11 +65,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 .ToDictionary(item => item.SportType, item => item);
         }
 
-        public async Task<ReturnObj> SeamlessWallet(SBSWTransType transType, string merchant, string bodyText)
+        public async Task<ReturnObj> SeamlessWallet(string merchant, SBSWTransType transType, string bodyText)
         {
             try
             {
-                _logger.LogInformation($"{transType} || {bodyText}");
+                LogContext.PushProperty("Merchant", merchant);
+                LogContext.PushProperty("Action", transType.ToString());                
+                _logger.LogInformation(bodyText);
+
                 return await _requestHandler[transType].Invoke(transType, merchant, bodyText);
             }
             catch (SBSWException ex)
@@ -219,6 +210,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 using var trans = conn.BeginTransaction();
 
                 var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Service_Bettrans_SBSW_Bet", trans, p);
+                if (result.SPResult == -4)
+                {
+                    throw new SBSWException(ReturnCode.TransactionDuplicated,$"refId: {bet.refId} Duplicated.");
+                }
+
                 if (result.licenseeTxId < 1)
                 {
                     throw new SBSWException(ReturnCode.InvalidParameters);
@@ -254,8 +250,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             catch (MySqlException mySqlEx)
             {
-                return mySqlEx.Number == 1062 ? new ExecuteResult(ReturnCode.TransactionDuplicated) :
-                    new ExecuteResult(ReturnCode.DatabaseError, mySqlEx.Message);
+                _logger.LogError(mySqlEx, mySqlEx.Message);
+                return new ExecuteResult(ReturnCode.DatabaseError, mySqlEx.Message);
             }
             catch (Exception ex)
             {
@@ -546,12 +542,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     extraStatus = (detail.extraStatus ?? detail.extra_status) ?? "",
                     TicketType = (int)transType,
                 });
+                if (result.SPResult == -4)
+                {
+                    throw new SBSWException(ReturnCode.TransactionDuplicated, $"refId: {detail.refId} Duplicated.");
+                }
 
                 var amount = detail.creditAmount - detail.debitAmount;
                 var (gameType, tpCategory) = GetGameType(result.SportType);
                 var memoHead = transType switch
                 {
                     SBSWTransType.Settle => "Payout",
+                    SBSWTransType.SettleEnt => "Payout",
                     SBSWTransType.Unsettle => "Unsettle",
                     SBSWTransType.Resettle => "Resettle",
                 };
@@ -563,7 +564,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             gameType: (int)gameType,
                             tpCategory: tpCategory,
                             refId: detail.refId,
-                            TransType.Payout,
+                            transType == SBSWTransType.Unsettle ? TransType.Undo : TransType.Payout,
                             betData: null,
                             out decimal afterAmount,
                             memoHead,
@@ -587,8 +588,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             catch (MySqlException mySqlEx)
             {
-                return mySqlEx.Number == 1062 ? new ExecuteResult(ReturnCode.TransactionDuplicated) :
-                    new ExecuteResult(ReturnCode.DatabaseError, mySqlEx.Message);
+                _logger.LogError(mySqlEx, mySqlEx.Message);
+                return new ExecuteResult(ReturnCode.DatabaseError, mySqlEx.Message);
             }
             catch (Exception ex)
             {
@@ -606,30 +607,44 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var request = JsonConvert.DeserializeObject<BaseReq<GetTicketInfo>>(bodyText);
             CheckKey(merchant, request.key);
-            var (tpCustInfo, tpCurrency) = GetTPInfo(request.message.userId);
+            var (_, tpCurrency) = GetTPInfo(request.message.userId);
+            var (betList, settleList) = await GetTicketInfo(request.message.refId);
+            if (!betList.Any())
+            {
+                return new GetTicketInfoObj(ReturnCode.TransactionNotFound);
+            }
 
-            var betRecordInfo = _settledService.GetTpBetRecord(tpCustInfo.CustId, (int)ThirdParty, request.message.refId);
+            //判斷TicketInfo
+            var ticketStatus = "running";
+            if (betList.Any(i => i.TicketType == (int)SBSWTransType.CancelBet))
+            {
+                ticketStatus = "refund";
+            }           
+            if (settleList.Any())
+            {
+                ticketStatus = settleList.MaxBy(i => i.SQ).status;
+            }
+          
+            var actualStake = betList.Sum(i => i.actualAmount);
+            var winlostAmount = ticketStatus == "running" ? 0 
+                : settleList.Sum(i => i.creditAmount) - settleList.Sum(i => i.debitAmount) - actualStake;
 
             //將平台匯率轉回第三方匯率
-            betRecordInfo.ValidBet /= tpCurrency.ExchangeRate;
-            betRecordInfo.Stake /= tpCurrency.ExchangeRate;
-            betRecordInfo.WinlostAmount /= tpCurrency.ExchangeRate;
-
             return new GetTicketInfoObj(ReturnCode.Success)
             {
-                ticketStatus = betRecordInfo.OriginalState,
-                actualStake = betRecordInfo.ValidBet ?? betRecordInfo.Stake,
-                winlostAmount = betRecordInfo.WinlostAmount,
+                ticketStatus = ticketStatus,
+                actualStake = actualStake / tpCurrency.ExchangeRate,
+                winlostAmount = winlostAmount / tpCurrency.ExchangeRate,
             };
         }
 
         private async Task<ReturnObj> AdjustBalance(SBSWTransType transType, string merchant, string bodyText)
-        {     
+        {
             try
             {
                 var request = JsonConvert.DeserializeObject<BaseReq<AdjustBalance>>(bodyText);
                 CheckKey(merchant, request.key);
-                
+
                 var adjust = request.message;
                 var (tpCustInfo, tpCurrency) = GetTPInfo(adjust.userId);
 
@@ -640,7 +655,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var creditAmount = adjust.balanceInfo.creditAmount * tpCurrency.ExchangeRate;
                 var debitAmount = adjust.balanceInfo.debitAmount * tpCurrency.ExchangeRate;
 
-                var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Bettrans_SBSW_Adjust", trans, new
+                var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Service_Bettrans_SBSW_Adjust", trans, new
                 {
                     adjust.action,
                     adjust.time,
@@ -655,27 +670,29 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     creditAmount,
                     debitAmount,
                 });
-                
+                if (result.SPResult == -4)
+                {
+                    throw new SBSWException(ReturnCode.TransactionDuplicated, $"refId: {adjust.refId} Duplicated.");
+                }
+
                 if (result.licenseeTxId < 1)//新增Adjust失敗
                 {
                     throw new SBSWException(ReturnCode.InvalidParameters);
                 }
 
                 var amount = creditAmount - debitAmount;
-                var (gameType, tpCategory) = GetGameType(result.SportType);
-
                 result.SetBalanceResult = _settledService.PayoutV2(
                             tpCustInfo: tpCustInfo,
                             amount: amount,
                             tpId: (int)ThirdParty,
                             tpTransId: adjust.refId,
-                            gameType: (int)gameType,
-                            tpCategory: tpCategory,
+                            gameType: (int)GameType.SBSW_Sports,//Prize直接歸類到體育下
+                            tpCategory: TpCategory.Sports,
                             refId: adjust.refId,
-                            TransType.Payout,
+                            TransType.Prize,
                             betData: null,
                             out decimal afterAmount,
-                            "Resettle",
+                            "SBSW Prize",
                             out int bonusId,
                             conn,
                             trans,
@@ -697,9 +714,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             catch (MySqlException mySqlEx)
             {
-                return mySqlEx.Number == 1062 ? 
-                    new ReturnObj(ReturnCode.TransactionDuplicated) :
-                    new ReturnObj(ReturnCode.DatabaseError, mySqlEx.Message);
+                _logger.LogError(mySqlEx, mySqlEx.Message);
+                return new ReturnObj(ReturnCode.DatabaseError, mySqlEx.Message);
             }
             catch (Exception ex)
             {
@@ -762,6 +778,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var gameType = (int)GameType.SBSW_Sports;//SBSW使用專用的單一錢包Bonus類別，所以直接帶固定gameType
             var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, gameType);
             return tpCustBalance;
+        }
+
+        private async Task<(IEnumerable<BetInfo> betList, IEnumerable<SettleInfo> settleList)> GetTicketInfo(string refId)
+        {
+            return await _mainDbClient.QueryMultiple("Service_Bettrans_SBSW_Get",
+                (SqlMapper.GridReader reader) =>
+                {
+                    var betList = reader.Read<BetInfo>();
+                    var settleList = reader.Read<SettleInfo>();
+                    return (betList, settleList);
+                },
+                new { refId });
         }
     }
 }

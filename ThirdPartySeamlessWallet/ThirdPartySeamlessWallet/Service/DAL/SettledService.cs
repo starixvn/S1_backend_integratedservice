@@ -615,11 +615,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return conn.QueryFirstOrDefault<BetRecordInfo>("Service_TpBetRecord_Get", new { TpId = TpId, TransId = TransId, GameType = GameType }, transaction: trans, commandType: CommandType.StoredProcedure);
         }
 
-        public BetRecordInfo GetTpBetRecord(int CustId, int TpId, string TransId)
-        {
-            return _mainDbClient.QueryFirst<BetRecordInfo>("Service_TpBetRecord_GetByCustId", new { CustId, TpId, TransId });
-        }
-
         public int SetTpBetRecord(BetRecordInfo betRecordInfo, TpCustInfo tpCustInfo, MySqlConnection conn, MySqlTransaction trans)
         {
             return conn.Execute("Service_TpSettleBet_Set_V4", new 

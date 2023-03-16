@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
-using System.Security.Cryptography;
-using System.Text;
+using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -79,7 +78,7 @@ public class TpHelper : ThirdPartyHelperBase
         string method = "open.user.create";
         string currency = tpCustInfo.TpCurrencyId;
         string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-        string sn = inputs.ContainsKey("Sn") && !string.IsNullOrEmpty(inputs["Sn"]) ? inputs["Sn"] : throw new Exception("Sn");
+        string sn = inputs.ContainsKey($"Sn_{currency}") && !string.IsNullOrEmpty(inputs[$"Sn_{currency}"]) ? inputs[$"Sn_{currency}"] : throw new Exception($"Sn_{currency}");
         string agnetLoginId = inputs.ContainsKey($"AgentLoginId_{currency}") && !string.IsNullOrEmpty(inputs[$"AgentLoginId_{currency}"]) ? inputs[$"AgentLoginId_{currency}"] : throw new Exception($"AgentLoginId_{currency}");
         string agnetPassword = inputs.ContainsKey($"AgentPassword_{currency}") && !string.IsNullOrEmpty(inputs[$"AgentPassword_{currency}"]) ? inputs[$"AgentPassword_{currency}"] : throw new Exception($"AgentPassword_{currency}");
 
@@ -162,7 +161,7 @@ public class TpHelper : ThirdPartyHelperBase
         string method = "open.video.game.url";
         string currency = tpCustInfo.TpCurrencyId;
         string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-        string sn = inputs.ContainsKey("Sn") && !string.IsNullOrEmpty(inputs["Sn"]) ? inputs["Sn"] : throw new Exception("Sn");
+        string sn = inputs.ContainsKey($"Sn_{currency}") && !string.IsNullOrEmpty(inputs[$"Sn_{currency}"]) ? inputs[$"Sn_{currency}"] : throw new Exception($"Sn_{currency}");
         string agnetPassword = inputs.ContainsKey($"AgentPassword_{currency}") && !string.IsNullOrEmpty(inputs[$"AgentPassword_{currency}"]) ? inputs[$"AgentPassword_{currency}"] : throw new Exception($"AgentPassword_{currency}");
         string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
 
@@ -180,7 +179,7 @@ public class TpHelper : ThirdPartyHelperBase
                 loginId = tpCustInfo.TpUserName,
                 locale = TpLangId,
                 isMobileUrl = appType == AppType.Mobile ? 1 : 0,
-                returnUrl = homeUrl,
+                returnUrl = HttpUtility.UrlEncode(homeUrl),
             },
             jsonrpc = "2.0"
         });

@@ -126,7 +126,9 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         GPI_Fast3 = 91,
         Yeebet_LiveCasino = 93,
         BG_LiveCasino = 94,
-        TFG_Esports = 97
+        SBSW_Vgaming = 95,
+        SBSW_CardClub = 96,
+        TFG_Esports = 97,
     }
     public enum Tp
     {

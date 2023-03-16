@@ -203,7 +203,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
             betTime = placeBetParlay.betTime;
             updateTime = placeBetParlay.updateTime;
             IP = placeBetParlay.IP;
-            tsId = placeBetParlay.tsId;
+            tsId = placeBetParlay.tsId ?? string.Empty;
             betFrom = placeBetParlay.betFrom;
 
             refId = parlayDetail.refId;
@@ -226,7 +226,9 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
             gameId = placeBet3rd.gameId;
             betTime = placeBet3rd.betTime;
             IP = placeBet3rd.IP;
-            tsId = placeBet3rd.tsId;
+            tsId = placeBet3rd.tsId ?? string.Empty;
+            sportTypeName = placeBet3rd.productName_en;
+            leagueName = placeBet3rd.gameName_en;
             productName_en = placeBet3rd.productName_en;
             gameName_en = placeBet3rd.gameName_en;
             betFrom = placeBet3rd.betFrom;
@@ -249,6 +251,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
             productId = placeBetEnt.productId;
             gameId = placeBetEnt.gameId;
             IP = placeBetEnt.IP;
+            sportTypeName = placeBetEnt.productName_en;
+            leagueName = placeBetEnt.gameName_en;
             productName_en = placeBetEnt.productName_en;
             gameName_en = placeBetEnt.gameName_en;
             betFrom = placeBetEnt.betFrom;
@@ -344,7 +348,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public Ticket[] ticketList { get; set; }
         public DateTime betTime { get; set; }
         public string IP { get; set; }
-        public string tsId { get; set; }
+        public string tsId { get; set; } = string.Empty;
         public string productName_en { get; set; }
         public string gameName_en { get; set; }
         public string betFrom { get; set; }
@@ -400,7 +404,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public DateTime betTime { get; set; }
         public DateTime updateTime { get; set; }
         public string IP { get; set; }
-        public string tsId { get; set; }
+        public string tsId { get; set; } = string.Empty;
         public string betFrom { get; set; }
         public ParlayDetail[] txns { get; set; }
     }
@@ -554,7 +558,18 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
     }
 
 
+    public class BetInfo
+    {
+        public decimal actualAmount { get; set; }
+        public int TicketType { get; set; }
+    }
 
-
+    public class SettleInfo
+    {
+        public long SQ { get; set; }
+        public decimal creditAmount { get; set; }
+        public decimal debitAmount { get; set; }
+        public string status { get; set; }
+    }
     #endregion
 }

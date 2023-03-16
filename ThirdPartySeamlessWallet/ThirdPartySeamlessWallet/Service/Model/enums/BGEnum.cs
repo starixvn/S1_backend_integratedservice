@@ -31,3 +31,31 @@ public enum BGErrorCode
     InternalError = -32603,
     ServerError = -32000
 }
+
+public enum BettransLC_BGTypeEnum
+{
+    OrderTransfer = 1,
+    CalcTransfer = 2
+}
+
+public enum BGOrderStatusEnum
+{
+    NotExist = 0, 
+    UnSettle = 1,
+    SettledWin = 2,
+    SettledDraw = 3,
+    SettledLose = 4,
+    Cancel = 5,  //NoUse
+    Expired = 6, //NoUse
+    SystemCancel = 7
+}
+
+public enum BGOrderFromEnum
+{
+    None = 0,
+    PC = 1,
+    Android = 2,
+    IOS = 3,
+    Pad = 4,
+    H5 = 5,
+}

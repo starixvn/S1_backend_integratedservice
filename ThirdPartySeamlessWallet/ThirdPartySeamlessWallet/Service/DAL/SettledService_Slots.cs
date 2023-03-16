@@ -4533,6 +4533,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         #endregion
 
+
         #region HB
 
         public int PayoutRNG_HB(TpCustInfo tpCustInfo, PayoutRngDto_HB payoutRngDto, out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)

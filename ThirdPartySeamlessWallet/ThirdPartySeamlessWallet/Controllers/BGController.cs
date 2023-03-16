@@ -55,6 +55,7 @@ public class BGController : ControllerBase
         var Content = await reader.ReadToEndAsync();
         var requestContent = Content.TrimStart("json=".ToArray());
         var request = JsonConvert.DeserializeObject<SeamlessWalletRequest>(requestContent);
+        var message = string.Empty;
 
         switch (request.method)
         {
@@ -64,21 +65,69 @@ public class BGController : ControllerBase
 
             //Balance
             case "open.operator.user.balance":
-                if (!ConvertToAssignObject(request.@params, out BalanceParameters_BG balanceRequest, out string rawMessage))
-                    return new ResponseModel_BG(request, BGErrorCode.InvalidParams, "Convert parameter fail.", reason: rawMessage);
+                if (!ConvertToAssignObject(request.@params, out UserBalanceParameters_BG userBalanceParameters, out message))
+                    return new ResponseModel_BG(request, BGErrorCode.InvalidParams, "Convert parameter fail.", reason: message);
 
-                var signParameters = new SignParameters
+                if (!CheckAppidAndSign(new SignParameters
                 {
-                    sign = balanceRequest.sign,
-                    random = balanceRequest.random,
-                    sn = balanceRequest.sn,
-                    loginId = balanceRequest.loginId,
-                };
+                    sign = userBalanceParameters.sign,
+                    random = userBalanceParameters.random,
+                    sn = userBalanceParameters.sn,
+                    loginId = userBalanceParameters.loginId,
+                }, out message))
+                    return new ResponseModel_BG(request, BGErrorCode.InvalidParams, message, userBalanceParameters.sn);
 
-                if (!CheckAppidAndSign(signParameters, out string message))
-                    return new ResponseModel_BG(request, BGErrorCode.InvalidParams, message, balanceRequest.sn);
+                return await _bGBLL.UserBalance(request, userBalanceParameters);
 
-                return await _bGBLL.Balance(request, balanceRequest);
+            //Bet
+            case "open.operator.order.transfer":
+                if (!ConvertToAssignObject(request.@params, out OrderTransferParameters_BG orderTransferParameters, out message))
+                    return new ResponseModel_BG(request, BGErrorCode.InvalidParams, "Convert parameter fail.", reason: message);
+
+                if (!CheckAppidAndSign(new SignParameters
+                {
+                    sign = orderTransferParameters.sign,
+                    random = orderTransferParameters.random,
+                    sn = orderTransferParameters.sn,
+                    loginId = orderTransferParameters.loginId,
+                    amount = orderTransferParameters.amount,
+                }, out message))
+                    return new ResponseModel_BG(request, BGErrorCode.InvalidParams, message, orderTransferParameters.sn);
+
+                return await _bGBLL.OrderTransfer(request, orderTransferParameters);
+
+            //Payout (ReSettle)
+            case "open.operator.calc.transfer":
+                if (!ConvertToAssignObject(request.@params, out CalcTransferParameters_BG calcTransferParameters, out message))
+                    return new ResponseModel_BG(request, BGErrorCode.InvalidParams, "Convert parameter fail.", reason: message);
+
+                if (!CheckAppidAndSign(new SignParameters
+                {
+                    sign = calcTransferParameters.sign,
+                    random = calcTransferParameters.random,
+                    sn = calcTransferParameters.sn,
+                    loginId = calcTransferParameters.loginId,
+                    amount = calcTransferParameters.amount
+                }, out message))
+                    return new ResponseModel_BG(request, BGErrorCode.InvalidParams, message, calcTransferParameters.sn);
+
+                return await _bGBLL.CalcTransfer(request, calcTransferParameters);
+
+            //Bettrans Check (BG重新結算機制，會先跟確認注單於我方的目前狀況)
+            case "open.operator.order.status":
+                if (!ConvertToAssignObject(request.@params, out OrderStatusParameters_BG orderStatusParameters, out message))
+                    return new ResponseModel_BG(request, BGErrorCode.InvalidParams, "Convert parameter fail.", reason: message);
+
+                if (!CheckAppidAndSign(new SignParameters
+                {
+                    sign = orderStatusParameters.sign,
+                    random = orderStatusParameters.random,
+                    sn = orderStatusParameters.sn,
+                    loginId = orderStatusParameters.orderMap.First().loginId
+                }, out message, false))
+                    return new ResponseModel_BG(request, BGErrorCode.InvalidParams, message, orderStatusParameters.sn);
+
+                return await _bGBLL.OrderStatus(request, orderStatusParameters);
             default:
                 return new ResponseModel_BG(request, BGErrorCode.MethodNotFound, "Method not found.");
         }
@@ -113,19 +162,25 @@ public class BGController : ControllerBase
         }
     }
 
-    private bool CheckAppidAndSign(SignParameters parameters, out string message)
+    private bool CheckAppidAndSign(SignParameters parameters, out string message, bool isSignNeedLoginId = true)
     {
         message = string.Empty;
 
         if (string.IsNullOrWhiteSpace(parameters.sign))
         {
-            message = "sign is invaild.";
+            message = "CheckRequest Fail: sign is invaild.";
             return false;
         }
 
-        if (parameters.loginId == null)
+        if (string.IsNullOrWhiteSpace(parameters.sn))
         {
-            message = "loginId not found.";
+            message = "CheckRequest Fail: sn is invaild.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(parameters.loginId))
+        {
+            message = "CheckRequest Fail: loginId is invaild.";
             return false;
         }
 
@@ -139,12 +194,12 @@ public class BGController : ControllerBase
 
         // Get Setting
         var setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(_thirdPartyBLL.GetThirdPartyBySite((int)thisTp, tpCustInfo.SiteId).Setting);
-        string secretKey = setting.ContainsKey("ApiSecretKey") && !string.IsNullOrEmpty(setting["ApiSecretKey"])
-            ? setting["ApiSecretKey"]
-            : throw new YeebetException(YeebetErrorCode.SystemError, "ApiSecretKey is invaild.");
-        string sn = setting.ContainsKey("Sn") && !string.IsNullOrEmpty(setting["Sn"])
-            ? setting["Sn"]
-            : throw new YeebetException(YeebetErrorCode.SystemError, "Sn is invaild.");
+        string secretKey = setting.ContainsKey($"ApiSecretKey_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(setting[$"ApiSecretKey_{tpCustInfo.TpCurrencyId}"])
+            ? setting[$"ApiSecretKey_{tpCustInfo.TpCurrencyId}"]
+            : throw new YeebetException(YeebetErrorCode.SystemError, $"ApiSecretKey_{tpCustInfo.TpCurrencyId} is invaild.");
+        string sn = setting.ContainsKey($"Sn_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(setting[$"Sn_{tpCustInfo.TpCurrencyId}"])
+            ? setting[$"Sn_{tpCustInfo.TpCurrencyId}"]
+            : throw new YeebetException(YeebetErrorCode.SystemError, $"Sn_{tpCustInfo.TpCurrencyId} is invaild.");
 
         // Check sn
         if (sn != parameters.sn)
@@ -154,7 +209,7 @@ public class BGController : ControllerBase
         }
 
         //Check Sign
-        var result = _tools.ToMD5(parameters.random + sn + parameters.loginId + parameters.amount + secretKey);
+        var result = _tools.ToMD5(parameters.random + sn + (isSignNeedLoginId ? parameters.loginId : "") + parameters.amount + secretKey);
         if (result != parameters.sign)
         {
             message = $"sign is invaild. request.sign={parameters.sign}. correct sign={result}.";

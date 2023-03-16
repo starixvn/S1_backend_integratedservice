@@ -1,0 +1,59 @@
+﻿using Serilog.Context;
+using System.Text.Json;
+using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.Model.enums;
+
+namespace ThirdPartyWager.Workers;
+
+public class WagerBG : BackgroundService
+{
+    private readonly ILogger<WagerBG> _logger;
+    private readonly WagerBGBLL _wagerBGBLL;
+    private readonly CommonBLL _commonBLL;
+
+    private readonly int tpId = (int)Tp.BG;
+    private readonly int tpType = (int)WagerTimerType.Wager;
+    private bool isFast = false;
+    private Timer _timer;
+
+    public WagerBG(ILogger<WagerBG> logger,
+                       WagerBGBLL wagerBGBLL,
+                       CommonBLL commonBll)
+    {
+        _logger = logger;
+        _wagerBGBLL = wagerBGBLL;
+        _commonBLL = commonBll;
+    }
+
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        _timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
+        return Task.CompletedTask;
+    }
+
+    private async void DoTask(object state)
+    {
+        LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+        LogContext.PushProperty("Tp", Tp.BG.ToString());
+        try
+        {
+            var siteList = _commonBLL.GetSiteList().Where(x => x.SiteId != 4);
+            var TpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
+            foreach (var siteInfo in siteList)
+            {
+                var currencyList = JsonSerializer.Deserialize<IEnumerable<int>>(siteInfo.CurrencyList);
+                foreach (var item in TpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
+                    isFast = await _wagerBGBLL.ExecWagerWorker(siteInfo.SiteId, item.TpCurrencyId, tpType, 30);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+        }
+        finally
+        {
+            var dueTimeSpan = isFast ? TimeSpan.FromSeconds(15) : TimeSpan.FromSeconds(60);
+            _timer.Change(dueTimeSpan, TimeSpan.Zero);
+        }
+    }
+}
