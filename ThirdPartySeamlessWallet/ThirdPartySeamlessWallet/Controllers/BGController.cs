@@ -197,9 +197,9 @@ public class BGController : ControllerBase
         string secretKey = setting.ContainsKey("ApiSecretKey") && !string.IsNullOrEmpty(setting["ApiSecretKey"])
             ? setting["ApiSecretKey"]
             : throw new YeebetException(YeebetErrorCode.SystemError, "ApiSecretKey is invaild.");
-        string sn = setting.ContainsKey("Sn") && !string.IsNullOrEmpty(setting["Sn"])
-            ? setting["Sn"]
-            : throw new YeebetException(YeebetErrorCode.SystemError, "Sn is invaild.");
+        string sn = setting.ContainsKey($"Sn_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(setting[$"Sn_{tpCustInfo.TpCurrencyId}"])
+            ? setting[$"Sn_{tpCustInfo.TpCurrencyId}"]
+            : throw new YeebetException(YeebetErrorCode.SystemError, $"Sn_{tpCustInfo.TpCurrencyId} is invaild.");
 
         // Check sn
         if (sn != parameters.sn)
