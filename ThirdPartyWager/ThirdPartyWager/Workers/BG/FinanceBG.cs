@@ -40,10 +40,9 @@ public class FinanceBG : BackgroundService
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            //TODO
-            //var res = await ExecReportAsync();
-            //if (res)
-            //    quick = 1;
+            var res = await ExecReportAsync();
+            if (res)
+                quick = 1;
         }
         catch (Exception ex)
         {
@@ -65,70 +64,62 @@ public class FinanceBG : BackgroundService
     }
 
     //TODO
-    //private async Task<bool> ExecReportAsync()
-    //{
-    //    var quick = false;
-    //    try
-    //    {
-    //        // get setting
-    //        var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+    private async Task<bool> ExecReportAsync()
+    {
+        var quick = false;
+        try
+        {
+            // get timer
+            var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
 
-    //        // get timer
-    //        var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
+            // default time
+            var execTime = new ThirdPartyTimerModel()
+            {
+                TpId = _tpId,
+                Type = _tpType,
+                StartTime = (dataTpTimer == null) ? DateTime.Now.AddDays(-2) : dataTpTimer.StartTime.AddSeconds(1),
+            };
 
-    //        // default time
-    //        var execTime = new ThirdPartyTimerModel()
-    //        {
-    //            TpId = _tpId,
-    //            Type = _tpType,
-    //            StartTime = (dataTpTimer == null) ? DateTime.Now.AddDays(-2) : dataTpTimer.StartTime.AddSeconds(1),
-    //        };
+            // get time 
+            var day = 0;
+            TimeCast reportTime = _financeBGBLL.GetReportTime(execTime.StartTime, day);
 
-    //        // get time 
-    //        var day = 0;
-    //        TimeCast reportTime = _financeBGBLL.GetReportTime(execTime.StartTime, day);
+            // report
+            DateTime reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);
+            var reportData = await _financeBGBLL.GetReport(_tpId, null, reportTime);
+            int result;
+            if (reportData.Count > 0)
+            {
+                // process
+                var dailyData = _financeBGBLL.DealReport(_tpId, reportDate, reportData);
 
-    //        // report
-    //        DateTime reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);
-    //        var reportData = await _financeBGBLL.GetReport(_tpId, setting, reportTime);
-    //        int result;
-    //        if (reportData.Count > 0)
-    //        {
-    //            // process
-    //            var dailyData = _financeBGBLL.DealReport(_tpId, reportDate, reportData);
+                // write
+                result = _fincanceService.SetFinanceTpDailySummary(dailyData);
+            }
+            else
+                result = 1;
 
-    //            // write
-    //            result = _fincanceService.SetFinanceTpDailySummary(dailyData);
-    //        }
-    //        else
-    //        {
-    //            result = 1;
-    //        }
+            // update timer
+            if (result > 0)
+                _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, reportTime.endUnix);
 
-    //        // update timer
-    //        if (result > 0)
-    //        {
-    //            _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, reportTime.endUnix);
-    //        }
+            var diffDay = (int)(DateTime.Now.Date - reportDate.Date).TotalDays;
+            
+            if (diffDay >= _beyond)
+                quick = true;
 
-    //        var diffDay = (int)(DateTime.Now.Date - reportDate.Date).TotalDays;
-    //        if (diffDay >= _beyond)
-    //        {
-    //            quick = true;
-    //        }
+            _logger.LogInformation($"{_tpName} Get {reportDate:yyyy-MM-dd} report");
+            return quick;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            quick = true;
+        }
 
-    //        _logger.LogInformation($"{_tpName} Get {reportDate:yyyy-MM-dd} report");
-    //        return quick;
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        _logger.LogError(ex, ex.Message);
-    //        quick = true;
-    //    }
-
-    //    _logger.LogInformation($"Report Worker Execute End {_tpId}");
-    //    return quick;
-    //}
+        _logger.LogInformation($"Report Worker Execute End {_tpId}");
+        return quick;
+    }
 
     public override Task StopAsync(CancellationToken cancellationToken)
     {

@@ -13,6 +13,7 @@ public class WagerBGBLL
     private readonly WagerBGService _wagerBGService;
     private readonly ILogger<WagerBGBLL> _logger;
     private readonly DateTimeHelper _dateTimeHelper;
+    private readonly CommonBGBLL _commonBGBLL;
     private readonly int pageSize = 500;
 
     private readonly int _tpId = (int)Tp.BG;
@@ -24,6 +25,7 @@ public class WagerBGBLL
         _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         _apiBGBLL = provider.GetRequiredService<ApiBGBLL>();
         _wagerBGService = provider.GetRequiredService<WagerBGService>();
+        _commonBGBLL = provider.GetRequiredService<CommonBGBLL>();
         _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         _logger = provider.GetRequiredService<ILogger<WagerBGBLL>>();
     }
@@ -44,17 +46,17 @@ public class WagerBGBLL
 
     public async Task<bool> GetWagersAsync(int siteId, string tpCurrencyId, string startTime, string endTime)
     {
-        var prefixMsg = $"{siteId}_{tpCurrencyId}";
+        var prefixMsg = $"{siteId}_{tpCurrencyId}_";
         var msg = prefixMsg + "FATAL_ERROR";
         try
         {
             // get tp info for api
             var setting = _thirdPartyBLL.GetThirdPartyBySite(_tpId, siteId);
 
-            if (!GetSnAndSecretKey(setting, tpCurrencyId, out string sn, out string secretKey))
+            if (!_commonBGBLL.GetSnAndSecretKey(setting, tpCurrencyId, out string sn, out string secretKey,out string message))
             {
                 msg = prefixMsg + "THIRD_PARTY_SETTING_ERROR";
-                _logger.LogError($"{msg}");
+                _logger.LogError($"{msg} {message}");
                 return false;
             }
 
@@ -111,26 +113,5 @@ public class WagerBGBLL
     {
         var diff = DateTime.Now - workTime;
         return DateTime.Now > workTime && diff.TotalMinutes > excess;
-    }
-
-    private bool GetSnAndSecretKey(Dictionary<string, string> setting, string tpCurrencyId, out string sn, out string secretKey)
-    {
-        sn = string.Empty;
-        secretKey = string.Empty;
-        if (!setting.ContainsKey($"Sn_{tpCurrencyId}")
-            || string.IsNullOrWhiteSpace(setting[$"Sn_{tpCurrencyId}"]))
-        {
-            _logger.LogError($"Sn_{tpCurrencyId} is invaild.");
-            return false;
-        }
-        sn = setting[$"Sn_{tpCurrencyId}"];
-        if (!setting.ContainsKey($"ApiSecretKey_{tpCurrencyId}")
-            || string.IsNullOrWhiteSpace(setting[$"ApiSecretKey_{tpCurrencyId}"]))
-        {
-            _logger.LogError($"ApiSecretKey_{tpCurrencyId} is invaild.");
-            return false;
-        }
-        secretKey = setting[$"ApiSecretKey_{tpCurrencyId}"];
-        return true;
     }
 }
