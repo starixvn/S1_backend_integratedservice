@@ -237,8 +237,10 @@ namespace ThirdPartyWager
             services.AddSingleton<ApiYeebetBLL>();
             services.AddSingleton<FinanceYeebetBLL>();
             //BG
+            services.AddSingleton<CommonBGBLL>();
             services.AddSingleton<WagerBGBLL>();
             services.AddSingleton<ApiBGBLL>();
+            services.AddSingleton<FinanceBGBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -324,6 +326,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerYeebet>();
             services.AddHostedService<FinanceYeebet>();
             services.AddHostedService<WagerBG>();
+            services.AddHostedService<FinanceBG>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
