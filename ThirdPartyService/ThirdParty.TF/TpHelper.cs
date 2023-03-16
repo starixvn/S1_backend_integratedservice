@@ -37,10 +37,10 @@ namespace ThirdParty.TFG
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
-            string RetrieveUrl = inputs.ContainsKey("RetrieveUrl_VND") && !string.IsNullOrEmpty(inputs["RetrieveUrl_VND"]) ? inputs["RetrieveUrl_VND"] : throw new Exception();
-            string PublicToken = inputs.ContainsKey("PublicToken_VND") && !string.IsNullOrEmpty(inputs["PublicToken_VND"]) ? inputs["PublicToken_VND"] : throw new Exception();
-            string PartnerId = inputs.ContainsKey("PartnerId_VND") && !string.IsNullOrEmpty(inputs["PartnerId_VND"]) ? inputs["PartnerId_VND"] : throw new Exception();
-            string PrivateToken = inputs.ContainsKey("PrivateToken_VND") && !string.IsNullOrEmpty(inputs["PrivateToken_VND"]) ? inputs["PrivateToken_VND"] : throw new Exception();
+            string RetrieveUrl = inputs.ContainsKey($"RetrieveUrl_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"RetrieveUrl_{tpCustInfo.TpCurrencyId}"]) ? inputs[$"RetrieveUrl_{tpCustInfo.TpCurrencyId}"] : throw new Exception();
+            string PublicToken = inputs.ContainsKey($"PublicToken_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"PublicToken_{tpCustInfo.TpCurrencyId}"]) ? inputs[$"PublicToken_{tpCustInfo.TpCurrencyId}"] : throw new Exception();
+            string PartnerId = inputs.ContainsKey($"PartnerId_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"PartnerId_{tpCustInfo.TpCurrencyId}"]) ? inputs[$"PartnerId_{tpCustInfo.TpCurrencyId}"] : throw new Exception();
+            string PrivateToken = inputs.ContainsKey($"PrivateToken_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"PrivateToken_{tpCustInfo.TpCurrencyId}"]) ? inputs[$"PrivateToken_{tpCustInfo.TpCurrencyId}"] : throw new Exception();
 
             #region token
             var key = ApplyToken(tpCustInfo);
