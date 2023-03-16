@@ -1,23 +1,48 @@
 ﻿namespace ThirdPartyWager.Service.Model;
 
-public class WagerBG_OrderQueryResponseModel
+public class WagerBG_ApiResponseModel<T>
 {
     public string id { get; set; }
-    public WagerBG_OrderQueryResultResponseModel result { get; set; }
+    public T result { get; set; }
     public object error { get; set; }
     public string jsonrpc { get; set; }
-    public IEnumerable<WagerBGModel> array { get; set; }
 }
 
 public class WagerBG_OrderQueryResultResponseModel
 {
     public int total { get; set; }
     public object stats { get; set; }
-    public IEnumerable<WagerBGModel> items { get; set; }
+    public IEnumerable<WagerBG_OrderQueryItemsModel> items { get; set; }
     public int pageIndex { get; set; }
     public int pageSize { get; set; }
     public string etag { get; set; }
     public string page { get; set; }
+}
+
+
+public class WagerBG_OrderQueryItemsModel : WagerBGModel
+{
+}
+
+public class WagerBG_OrderSumResultResponseModel
+{
+    public int total { get; set; }
+    public WagerBG_OrderSumStatsModel stats { get; set; }
+    public IEnumerable<object> items { get; set; }
+    public int pageIndex { get; set; }
+    public int pageSize { get; set; }
+    public string etag { get; set; }
+    public string page { get; set; }
+}
+
+public class WagerBG_OrderSumStatsModel
+{
+    public decimal paymentamount { get; set; }
+    public decimal orderamount { get; set; }
+    public int usercount { get; set; }
+    public decimal validorderamount { get; set; }
+    public decimal validbetamount { get; set; }
+    public int ordercount { get; set; }
 }
 
 
