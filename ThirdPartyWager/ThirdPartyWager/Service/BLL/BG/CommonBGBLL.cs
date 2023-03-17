@@ -76,7 +76,7 @@ public class CommonBGBLL
                     TotalCount = oederQueryResult.result.total,
                     Stake = oederQueryResult.result.items.Sum(x => x.bAmount),
                     ValidBet = oederQueryResult.result.items.Sum(x => x.validBet),
-                    Payment = oederQueryResult.result.items.Sum(x => x.aAmount),
+                    Payment = oederQueryResult.result.items.Sum(x => x.aAmount ?? 0),
                     WinLostAmount = oederQueryResult.result.items.Sum(x => x.payment),
                 };
                 if (oederQueryResult.result.total == wagerSummary.TotalCount)
