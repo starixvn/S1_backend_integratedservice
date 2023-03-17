@@ -61,7 +61,7 @@ public class WagerBGModel
     public string gameNameEn { get; set; } = "";
     public int orderStatus { get; set; }
     public decimal bAmount { get; set; }
-    public decimal aAmount { get; set; }
+    public decimal? aAmount { get; set; } = 0;
     public int orderFrom { get; set; }
     public string orderTime { get; set; } = "";
     public string lastUpdateTime { get; set; } = "";
