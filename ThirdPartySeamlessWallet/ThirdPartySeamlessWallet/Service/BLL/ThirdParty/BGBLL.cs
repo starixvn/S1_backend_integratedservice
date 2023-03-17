@@ -326,7 +326,7 @@ public class BGBLL : IBGBLL
 
         var partitionTime = DateTime.UtcNow;
 
-        if (!GetExistData(partitionTime, parameters.random, parameters.orderIds,
+        if (!GetExistData(partitionTime, null, parameters.orderIds,
                 out IEnumerable<BettingDataLC_BG> existDatas, out message))
             return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
 

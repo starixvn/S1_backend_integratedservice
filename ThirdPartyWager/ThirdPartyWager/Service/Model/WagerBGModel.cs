@@ -77,3 +77,12 @@ public class WagerBGModel
     public string betContent { get; set; }
 }
 
+public class WagerBGTotalModel
+{
+    public int TotalCount { get; set; }
+    public decimal Stake { get; set; }
+    public decimal ValidBet { get; set; }
+    public decimal Payment { get; set; }
+
+    public decimal WinLostAmount { get; set; }
+}
