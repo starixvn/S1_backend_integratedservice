@@ -14,6 +14,10 @@ public class WagerBG : BackgroundService
     private readonly int tpId = (int)Tp.BG;
     private readonly int tpType = (int)WagerTimerType.Wager;
     private bool isFast = false;
+    private readonly int timeRange = 30; //in minutes 
+    private readonly int quickTime = 30; // in seconds
+    private readonly int runTime = 60; // in seconds
+    private readonly int needQuickTime = 5; // in minutes
     private Timer _timer;
 
     public WagerBG(ILogger<WagerBG> logger,
@@ -43,7 +47,7 @@ public class WagerBG : BackgroundService
             {
                 var currencyList = JsonSerializer.Deserialize<IEnumerable<int>>(siteInfo.CurrencyList);
                 foreach (var item in TpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
-                    isFast = await _wagerBGBLL.ExecWagerWorker(siteInfo.SiteId, item.TpCurrencyId, tpType, 30);
+                    isFast = await _wagerBGBLL.ExecWagerWorker(siteInfo.SiteId, item.TpCurrencyId, tpType, timeRange, needQuickTime);
             }
         }
         catch (Exception ex)
@@ -52,7 +56,7 @@ public class WagerBG : BackgroundService
         }
         finally
         {
-            var dueTimeSpan = isFast ? TimeSpan.FromSeconds(15) : TimeSpan.FromSeconds(60);
+            var dueTimeSpan = isFast ? TimeSpan.FromSeconds(quickTime) : TimeSpan.FromSeconds(runTime);
             _timer.Change(dueTimeSpan, TimeSpan.Zero);
         }
     }
