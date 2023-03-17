@@ -148,7 +148,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             public DateTimeOffset modified_datetime { get; set; }
             public string settlement_status { get; set; }
             public DateTimeOffset settlement_datetime { get; set; }
-            //public TicketDetail tickets { get; set; }
+            public TicketDetail tickets { get; set; }
         }
 
         [Route("[controller]/transfer")]
