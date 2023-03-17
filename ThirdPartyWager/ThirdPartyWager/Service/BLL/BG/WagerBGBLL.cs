@@ -103,6 +103,6 @@ public class WagerBGBLL
     private bool CheckQuick(DateTime workTime, int needQuickTime)
     {
         var diff = DateTime.Now - workTime;
-        return DateTime.Now > workTime && diff.TotalMinutes > excess;
+        return DateTime.Now > workTime && diff.TotalMinutes > needQuickTime;
     }
 }
