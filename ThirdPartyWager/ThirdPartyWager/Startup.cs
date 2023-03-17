@@ -330,6 +330,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerYeebet>();
             services.AddHostedService<FinanceYeebet>();
             services.AddHostedService<WagerBG>();
+            services.AddHostedService<WagerRedoBG>();
             services.AddHostedService<FinanceBG>();
         }
 
