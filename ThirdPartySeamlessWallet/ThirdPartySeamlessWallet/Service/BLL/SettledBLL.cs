@@ -2382,7 +2382,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             if (afterAmount == 0)
             {
-                afterAmount = tpCustInfoBLL.GetBalance((int)Tp.Skywind, TpUserName).Balance;
+                afterAmount = tpCustInfoBLL.GetBalance((int)Tp.Skywind, TpUserName, gameType).Balance;
             }
 
             return result;
