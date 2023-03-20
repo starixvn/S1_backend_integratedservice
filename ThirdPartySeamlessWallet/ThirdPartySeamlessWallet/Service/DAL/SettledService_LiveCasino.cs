@@ -3412,9 +3412,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return true;
         }
 
-        public bool InsertUnsettle_BG(DateTime partitionTime, string serialnumber, MySqlTransaction trans)
+        public bool InsertUnsettle_BG(DateTime partitionTime, string orderId, MySqlTransaction trans)
         {
-            var result = _tpUnsettleService.InsertTpUnsettle(Tp.BG, GameType.BG_LiveCasino, serialnumber, trans, partitionTime);
+            var result = _tpUnsettleService.InsertTpUnsettle(Tp.BG, GameType.BG_LiveCasino, orderId, trans, partitionTime);
 
             if (result == 0)
                 return false;
@@ -3422,8 +3422,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return true;
         }
 
-        public IEnumerable<SettleData_BG> GetSettle_TpWagerLC_BG(string serialnumber)
-        => _wagerDbClient.Query<SettleData_BG>("Service_TpWagerLC_Yeebet_Get", parameters: new DynamicParameters(new { _serialnumber = serialnumber }));
+        public IEnumerable<SettleData_BG> GetSettle_TpWagerLC_BG(string orderId)
+        => _wagerDbClient.Query<SettleData_BG>("Service_TpWagerLC_BG_Get", parameters: new DynamicParameters(new { _orderId = orderId }));
 
 
         #endregion

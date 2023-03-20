@@ -1,0 +1,212 @@
+﻿using Serilog.Context;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.DAL;
+using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySettleWorker.Model.Exceptions;
+using ThirdPartySettleWorker.Model.Interfaces;
+using System.Collections;
+
+namespace ThirdPartySettleWorker.Workers;
+
+internal class BGWorker : BackgroundService, ISettleWorker
+{
+    public Tp Tp => Tp.BG;
+
+    private Timer _timer;
+
+    private readonly SettledBLL _settledBLL;
+    private readonly TpUnSettledBLL _tpUnSettledBLL;
+    private readonly ThirdPartyBLL _thirdPartyBLL;
+    private readonly TpCustInfoBLL _tpCustInfoBLL;
+    private readonly ILogger<BGWorker> _logger;
+    private readonly string _tpName;
+    private readonly PartitionService _partitionService;
+
+    public BGWorker(IServiceProvider provider)
+    {
+        _settledBLL = provider.GetRequiredService<SettledBLL>();
+        _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
+        _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+        _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+        _logger = provider.GetRequiredService<ILogger<BGWorker>>();
+        _partitionService = provider.GetRequiredService<PartitionService>();
+        _tpName = Enum.GetName(typeof(Tp), Tp);
+    }
+
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        _timer = new Timer(DoSettle, null, TimeSpan.Zero, TimeSpan.Zero);
+        return Task.CompletedTask;
+    }
+
+    public override Task StopAsync(CancellationToken cancellationToken)
+    {
+        _timer?.Change(Timeout.Infinite, 0);
+        return Task.CompletedTask;
+    }
+
+    private void DoSettle(object state)
+    {
+        LogContext.PushProperty("TP", _tpName);
+        LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+
+        var forContinue = false;
+        var isError = false;
+        var gametype = GameType.BG_LiveCasino;
+        var tpCategory = TpCategory.LiveCasino;
+        try
+        {
+            var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype);
+            var unsettleList = tpUnsettleList.ToList();
+            if (!unsettleList.Any())
+            {
+                throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
+            }
+
+            forContinue = unsettleList.Count() == 200;
+            foreach (var tpUnsettle in unsettleList)
+            {
+                try
+                {
+                    var unsettleData = _partitionService.GetUnsettleDataList<SettleData>("Service_BettransLC_BG_Unsettle_Get", tpUnsettle);
+
+                    if (!unsettleData.Any()) continue;
+
+                    var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettleData.FirstOrDefault().Account);
+                    if (tpCustInfo == null)
+                        throw new UnsettleNotFoundException($"{unsettleData.FirstOrDefault().Account} TpCustInfo not found.");
+
+                    var wager = _settledBLL.GetSettle_TpWagerLC_BG(unsettleData.FirstOrDefault().TransId); //orderId
+
+                    if (wager == null || !wager.Any()) continue;
+
+                    if (!IsBettransSameAsTpWager(unsettleData.First(), wager.First(), tpCustInfo))
+                    {
+
+                        continue;
+                    }
+
+                        var betRecordInfo = new BetRecordInfo
+                    {
+                            TpId = (int)Tp,
+                        Stake = wager.First().Stake,
+                        ValidBet = wager.First().ValidBet,
+                        WinlostAmount = wager.First().WinLostAmount,
+                        TransId = tpUnsettle.TransId, //orderId
+                        GameType = gametype,
+                        TpUserName = tpCustInfo.TpUserName,
+                        SettledTime = wager.First().SettleTime,
+                        TransTime = wager.First().TransTime,
+                        SettlementType = SetSettlementType(wager.First().Status, unsettleData.FirstOrDefault().GameId),
+                        TicketStatus = SetTicketStatus(wager.First().Status)
+                    };
+
+                    var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
+                    if (result == 1)
+                        Task.Run(() =>
+                        {
+                            _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, tpUnsettle.TransId, true);
+                        });
+
+                }
+                catch (Exception ex)
+                {
+                    Task.Run(() =>
+                    {
+                        _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, tpUnsettle.TransId, false);
+                    });
+                    isError = true;
+                    _logger.LogError(ex, $"TransId:{tpUnsettle.TransId} settle failed, exMessage:{ex.Message}");
+                }
+            }
+        }
+        catch (UnsettleNotFoundException ex)
+        {
+            _logger.LogInformation(ex, ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            isError = true;
+        }
+        finally
+        {
+            TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+            if (forContinue)
+            {
+                dueTimeSpan = TimeSpan.FromSeconds(5);
+            }
+            else if (isError)
+            {
+                dueTimeSpan = TimeSpan.FromMinutes(1);
+            }
+
+            _timer?.Change(dueTimeSpan, TimeSpan.Zero);
+        }
+    }
+
+    private SettlementType SetSettlementType(int status, string gameId)
+    {
+        switch (status)
+        {
+            case (int)stateEnum.Settle:
+                return _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, gameId);
+            case (int)stateEnum.Bet:
+                return SettlementType.UnSettled;
+            case (int)stateEnum.Fail:
+            case (int)stateEnum.Cancel:
+            case (int)stateEnum.Abandoned:
+            default:
+                return SettlementType.SettledForInvalid;
+        }
+    }
+
+    private TicketStatus SetTicketStatus(int status)
+    {
+        switch (status)
+        {
+            case (int)BGOrderStatusEnum.NotExist:
+            case (int)BGOrderStatusEnum.UnSettle:
+                return TicketStatus.UnSettled;
+            case (int)BGOrderStatusEnum.SettledLose:
+                return TicketStatus.Lost;
+            case (int)BGOrderStatusEnum.SettledDraw:
+                return TicketStatus.Draw;
+            case (int)BGOrderStatusEnum.SettledWin:
+                return TicketStatus.Win;
+            case (int)BGOrderStatusEnum.Cancel:
+            case (int)BGOrderStatusEnum.Expired:
+            case (int)BGOrderStatusEnum.SystemCancel:
+            default:
+                return TicketStatus.Refund;
+        }
+    }
+
+    private bool IsBettransSameAsTpWager(SettleData bettrans, SettleData_BG wager, TpCustInfo tpCustInfo)
+    {
+
+        var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
+        if (tpCurrency.ExchangeRate <= 0) return false;
+
+        // 加入幣別匯率轉換，tpWager 是原始資料
+        decimal wagerStake = wager.Stake * tpCurrency.ExchangeRate;
+        decimal wagerValidBet = wager.ValidBet * tpCurrency.ExchangeRate;
+        decimal? wagerWinLostAmount = wager.WinLostAmount * tpCurrency.ExchangeRate;
+
+        // 如果投注player或banker，但結果為tie，Yeebet後台的有效投注資料為0
+        //if (wager.Stake != 0 && wager.ValidBet == 0 && wager.WinLostAmount == 0)
+        //    vaildbet = wagerValidBet;
+
+        return wager.Account == bettrans.Account
+               && wagerStake == bettrans.Stake
+               && wagerValidBet == bettrans.ValidBet
+               && wagerWinLostAmount == bettrans.WinLostAmount;
+    }
+
+}
