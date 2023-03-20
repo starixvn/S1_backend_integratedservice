@@ -3,6 +3,7 @@ using System.Security.Policy;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using Ubiety.Dns.Core;
 
 namespace ThirdPartyWager.Service.BLL;
 
@@ -79,18 +80,18 @@ public class FinanceBGBLL : ITpReportBLL
                 if (getSummaryResult.error != null)
                 {
                     _logger.LogError($"{prefixMsg}THIRD_PARTY_ERROR\r\n{JsonConvert.SerializeObject(getSummaryResult)}");
-                    SystemException systemException = new SystemException($"{prefixMsg}THIRD_PARTY_ERROR - GetReport({tpId})");
-                    throw systemException;
-
+                    throw new SystemException($"{prefixMsg}THIRD_PARTY_ERROR - GetReport({tpId})");
                 }
 
-                if (getSummaryResult.result.total == 0)
+                var itemsResult = JsonConvert.DeserializeObject<WagerBG_OrderSumResultResponseModel>(getSummaryResult.result);
+
+                if (itemsResult.total == 0)
                 {
-                    _logger.LogInformation($"{prefixMsg}NO_DATA\r\n{JsonConvert.SerializeObject(getSummaryResult)}");
+                    _logger.LogInformation($"{prefixMsg}NO_DATA\r\n{JsonConvert.SerializeObject(itemsResult)}");
                     continue;
                 }
 
-                reportData.Add(new { siteId = siteInfo.SiteId, currencyId = item.CurrencyId, dataResult = getSummaryResult.result.stats });
+                reportData.Add(new { siteId = siteInfo.SiteId, currencyId = item.CurrencyId, dataResult = itemsResult.stats });
             }
         }
 
