@@ -63,8 +63,8 @@ builder.Services
     .AddHostedService<BTIWorker>()
     .AddHostedService<NineWWorker>()
     .AddHostedService<One789Worker>()
-    .AddHostedService<YeebetWorker>();
-    //.AddHostedService<BGWorker>();
+    .AddHostedService<YeebetWorker>()
+    .AddHostedService<BGWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);

@@ -11,6 +11,8 @@ using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 using System.Collections;
+using Newtonsoft.Json;
+using static ThirdPartySeamlessWallet.Controllers.YGGController;
 
 namespace ThirdPartySettleWorker.Workers;
 
@@ -88,13 +90,15 @@ internal class BGWorker : BackgroundService, ISettleWorker
 
                     if (!IsBettransSameAsTpWager(unsettleData.First(), wager.First(), tpCustInfo))
                     {
-
+                        _logger.LogError($"transId: {tpUnsettle.TransId} is not equal " +
+                        $"settle: {JsonConvert.SerializeObject(unsettleData.First())} " +
+                        $"wager: {JsonConvert.SerializeObject(wager.First())}");
                         continue;
                     }
 
-                        var betRecordInfo = new BetRecordInfo
+                    var betRecordInfo = new BetRecordInfo
                     {
-                            TpId = (int)Tp,
+                        TpId = (int)Tp,
                         Stake = wager.First().Stake,
                         ValidBet = wager.First().ValidBet,
                         WinlostAmount = wager.First().WinLostAmount,
