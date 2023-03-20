@@ -749,12 +749,12 @@ public class BGBLL : IBGBLL
         }
     }
 
-    private bool InsertUnsettleData(DateTime partitionTime, string serialnumber, out string message, MySqlTransaction trans)
+    private bool InsertUnsettleData(DateTime partitionTime, string orderId, out string message, MySqlTransaction trans)
     {
         message = string.Empty;
         try
         {
-            var result = _settledService.InsertUnsettle_BG(partitionTime, serialnumber, trans);
+            var result = _settledService.InsertUnsettle_BG(partitionTime, orderId, trans);
 
             if (!result)
             {

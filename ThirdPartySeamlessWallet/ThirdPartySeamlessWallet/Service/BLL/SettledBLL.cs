@@ -2353,5 +2353,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         #endregion
+
+        #region BG
+
+        public IEnumerable<SettleData_BG> GetSettle_TpWagerLC_BG(string orderId)
+        {
+            return settledService.GetSettle_TpWagerLC_BG(orderId);
+        }
+
+        #endregion
     }
 }
