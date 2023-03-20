@@ -5,6 +5,7 @@ using Org.BouncyCastle.Cms;
 using System.Text;
 using System.Web;
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -104,56 +105,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
         }
 
-        public class TransferReq
-        {
-            public string loginName { get; set; }
-            public decimal amount { get; set; }
-            public bool placeBet { get; set; }
-            public string ticketNum { get; set; }
-            public string description { get; set; }
-            public TicketDetail ticketDetail { get; set; }
-        }
-        public class TicketDetail
-        {
-            public string id { get; set; }
-            public decimal odds { get; set; }
-            public decimal amount { get; set; }
-            public string result { get; set; }
-            public string map_num { get; set; }
-            public string currency { get; set; }
-            public decimal earnings { get; set; }
-            public int event_id { get; set; }
-            public string handicap { get; set; }
-            public bool is_combo { get; set; }
-            public decimal euro_odds { get; set; }
-            public int market_id { get; set; }
-            public string event_name { get; set; }
-            public decimal? malay_odds { get; set; }
-            public string member_code { get; set; }
-            public decimal member_odds { get; set; }
-            public string ticket_type { get; set; }
-            public DateTimeOffset date_created { get; set; }
-            public int game_type_id { get; set; }
-            public bool is_unsettled { get; set; }
-            public string bet_selection { get; set; }
-            public string bet_type_name { get; set; }
-            public string market_option { get; set; }
-            public string result_status { get; set; }
-            public DateTimeOffset event_datetime { get; set; }
-            public string game_type_name { get; set; }
-            public string request_source { get; set; }
-            public string competition_name { get; set; }
-            public string game_market_name { get; set; }
-            public string member_odds_style { get; set; }
-            public DateTimeOffset modified_datetime { get; set; }
-            public string settlement_status { get; set; }
-            public DateTimeOffset settlement_datetime { get; set; }
-            public TicketDetail tickets { get; set; }
-        }
+        
 
         [Route("[controller]/transfer")]
         [HttpPost]
-        public IActionResult Transfer(TransferReq req)
+        public async Task<IActionResult> TransferAsync(TFGTransferReq req)
         {
             try
             {
@@ -166,8 +122,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     logger.LogInformation($"privateToken\r\n{privateToken}");
                     logger.LogInformation($"authorization\r\n{authorization}");
+                    return StatusCode(400);
                 }
-                return StatusCode(400);
+
+                var result = await _tfgbLL.Transfer(req);
+                return Ok();
             }
             catch (Exception ex)
             {
@@ -180,7 +139,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [Route("[controller]/rollback")]
         [HttpPost]
-        public IActionResult Rollback(TransferReq req)
+        public IActionResult Rollback(TFGTransferReq req)
         {
             try
             {
