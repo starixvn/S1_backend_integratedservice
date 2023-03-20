@@ -36,16 +36,16 @@ public class BettingDataLC_BG
 
 public class SettleData_BG
 {
-    //public string Account { get; set; }
-    ///// <summary>
-    ///// 對應藍位state:-2=撤銷,-1=廢棄，0=投注，1=结算
-    ///// </summary>
-    //public int Status { get; set; }
-    //public decimal Stake { get; set; }
-    //public decimal ValidBet { get; set; }
-    //public decimal WinLostAmount { get; set; }
-    //public long TransTime { get; set; }
-    //public long SettleTime { get; set; }
+    public string Account { get; set; }
+    /// <summary>
+    /// 對應藍位orderStatus:0=注單不存在,1=未結算,2=結算贏,3=結算和,4=結算輸,5=取消(未使用),6=過期(未使用),7=系統取消
+    /// </summary>
+    public int Status { get; set; }
+    public decimal Stake { get; set; }
+    public decimal ValidBet { get; set; }
+    public decimal WinLostAmount { get; set; }
+    public long TransTime { get; set; }
+    public long SettleTime { get; set; }
 }
 
 #region Request Model
