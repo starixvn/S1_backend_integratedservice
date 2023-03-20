@@ -3,6 +3,7 @@ using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using Ubiety.Dns.Core;
 
 namespace ThirdPartyWager.Service.BLL;
 
@@ -68,18 +69,20 @@ public class CommonBGBLL
                 return null;
             }
 
+            var itemsResult = JsonConvert.DeserializeObject<WagerBG_OrderQueryResultResponseModel>(oederQueryResult.result);
+
             if (isCheckTotal)  //RedoWager Flow
             {
                 // db wager count equals api bet count do nothing
                 var apiTotal = new WagerBGTotalModel
                 {
-                    TotalCount = oederQueryResult.result.total,
-                    Stake = oederQueryResult.result.items.Sum(x => x.bAmount),
-                    ValidBet = oederQueryResult.result.items.Sum(x => x.validBet),
-                    Payment = oederQueryResult.result.items.Sum(x => x.aAmount ?? 0),
-                    WinLostAmount = oederQueryResult.result.items.Sum(x => x.payment),
+                    TotalCount = itemsResult.total,
+                    Stake = itemsResult.items.Sum(x => x.bAmount),
+                    ValidBet = itemsResult.items.Sum(x => x.validBet),
+                    Payment = itemsResult.items.Sum(x => x.aAmount ?? 0),
+                    WinLostAmount = itemsResult.items.Sum(x => x.payment),
                 };
-                if (oederQueryResult.result.total == wagerSummary.TotalCount)
+                if (itemsResult.total == wagerSummary.TotalCount)
                 {
                     msg = prefixMsg + "MATCH";
                     _logger.LogInformation($"{msg}\r\nApi Summary={JsonConvert.SerializeObject(apiTotal)}\r\nWager Summary={JsonConvert.SerializeObject(wagerSummary)}");
@@ -89,21 +92,21 @@ public class CommonBGBLL
                 else
                 {
                     msg = prefixMsg + "NOT_MATCH";
-                    _logger.LogError($"{msg}\r\nApi Summary={JsonConvert.SerializeObject(apiTotal)}\r\nWager Summary={JsonConvert.SerializeObject(wagerSummary)}\r\nApi Data={JsonConvert.SerializeObject(oederQueryResult.result.items)}");
+                    _logger.LogError($"{msg}\r\nApi Summary={JsonConvert.SerializeObject(apiTotal)}\r\nWager Summary={JsonConvert.SerializeObject(wagerSummary)}\r\nApi Data={JsonConvert.SerializeObject(itemsResult.items)}");
                 }
 
                 isCheckTotal = false;
             }
 
-            totalPage = oederQueryResult.result.total / pageSize;
-            if (oederQueryResult.result.total == 0)
+            totalPage = itemsResult.total / pageSize;
+            if (itemsResult.total == 0)
             {
                 msg = prefixMsg + "NO_DATA";
                 _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(oederQueryResult)}");
                 return null;
             }
 
-            data.AddRange(oederQueryResult.result.items);
+            data.AddRange(itemsResult.items);
 
             pageIndex ++;
         }
