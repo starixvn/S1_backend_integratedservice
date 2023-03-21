@@ -33,6 +33,7 @@ namespace ThirdParty.AG
             {"id", 11},
             {"th", 6},
             {"vi", 8},
+            {"khm", 9},
         };
         public class result
         {
