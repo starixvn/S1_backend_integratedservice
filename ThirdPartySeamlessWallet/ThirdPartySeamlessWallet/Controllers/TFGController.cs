@@ -1,11 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using Org.BouncyCastle.Cms;
 using System.Text;
 using System.Web;
 using ThirdPartySeamlessWallet.Service.BLL;
-using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -14,7 +11,7 @@ using ThirdPartySeamlessWallet.Service.Model.enums;
 namespace ThirdPartySeamlessWallet.Controllers
 {
     [ApiController]
-    public class TFGController : ControllerBase
+    public class TfgController : ControllerBase
     {
         #region Fields
 
@@ -23,21 +20,19 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly TpCustInfoBLL tpCustInfoBLL;
         private readonly Tp thisTp;
         private readonly Tools tools;
-        private readonly ILogger<TFGController> logger;
-        private readonly IHostEnvironment environment;
+        private readonly ILogger<TfgController> logger;
         private readonly ITFGBLL _tfgbLL;
         #endregion
 
         #region Constructors
-        public TFGController(IServiceProvider provider, ITFGBLL tfgbll)
+        public TfgController(IServiceProvider provider, ITFGBLL tfgbll)
         {
             authBLL = provider.GetRequiredService<AuthBLL>();
             thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             tools = provider.GetRequiredService<Tools>();
-            logger = provider.GetRequiredService<ILogger<TFGController>>();
+            logger = provider.GetRequiredService<ILogger<TfgController>>();
             thisTp = Tp.TFG;
-            environment = provider.GetRequiredService<IHostEnvironment>();
             _tfgbLL = tfgbll;
         }
         #endregion
@@ -105,7 +100,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
         }
 
-        
+
 
         [Route("[controller]/transfer")]
         [HttpPost]
@@ -139,7 +134,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [Route("[controller]/rollback")]
         [HttpPost]
-        public IActionResult Rollback(TFGTransferReq req)
+        public async Task<IActionResult> RollbackAsync(TFGRallBackReq req)
         {
             try
             {
@@ -150,8 +145,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var privateToken = thirdPartySetting.TpSetting[$"PrivateToken_{tpCustInfo.TpCurrencyId}"];
                 if (privateToken != authorization)
                 {
-
+                    logger.LogInformation($"privateToken\r\n{privateToken}");
+                    logger.LogInformation($"authorization\r\n{authorization}");
+                    return StatusCode(400);
                 }
+
+                var result = await _tfgbLL.Rollback(req);
+                return Ok();
             }
             catch (Exception ex)
             {
