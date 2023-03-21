@@ -113,62 +113,65 @@ namespace ThirdPartySeamlessWallet.Controllers
             string logName = $"{thisTp}_{getLoginReq.method}";
             if (string.Equals(getLoginReq.method, "open.operator.user.login", StringComparison.OrdinalIgnoreCase))
             {
-                if (_environment.IsDevelopment())
-                {
-                    resp.error = "Not allowed environment";
-                    _log2File.Error($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
-                    return resp;
-                }
+                //if (_environment.IsDevelopment())
+                //{
+                //    resp.error = "Not allowed environment";
+                //    _log2File.Error($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                //    return resp;
+                //}
 
-                var tpCustInfo = _tpCustInfoBLL.GetTpCustInfo((int)thisTp, getLoginReq.Params.loginId);
-                if (tpCustInfo == null)
-                {
-                    resp.error = "Invalid user Id";
-                    _log2File.Error($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
-                    return resp;
-                }
+                //var tpCustInfo = _tpCustInfoBLL.GetTpCustInfo((int)thisTp, getLoginReq.Params.loginId);
+                //if (tpCustInfo == null)
+                //{
+                //    resp.error = "Invalid user Id";
+                //    _log2File.Error($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                //    return resp;
+                //}
 
-                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getLoginReq.Params.loginId);
-                if (tpCheck == null)
-                {
-                    _tpCustInfoBLL.AddLoginRecord(tpCustInfo.CustId, tpCustInfo.SiteId, "", out _);
-                    tpCheck = _thirdPartyBLL.ThirdPartyCheck((int)thisTp, getLoginReq.Params.loginId);
-                }
+                //var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getLoginReq.Params.loginId);
+                //if (tpCheck == null)
+                //{
+                //    _tpCustInfoBLL.AddLoginRecord(tpCustInfo.CustId, tpCustInfo.SiteId, "", out _);
+                //    tpCheck = _thirdPartyBLL.ThirdPartyCheck((int)thisTp, getLoginReq.Params.loginId);
+                //}
 
-                if (tpCheck == null)
-                {
-                    resp.error = "Check invalid user id";
-                    _log2File.Error($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
-                    return resp;
-                }
+                //if (tpCheck == null)
+                //{
+                //    resp.error = "Check invalid user id";
+                //    _log2File.Error($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                //    return resp;
+                //}
 
-                if (tpCheck.Locked)
-                {
-                    resp.error = "Account is Lock";
-                    _log2File.Error($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
-                    return resp;
-                }
+                //if (tpCheck.Locked)
+                //{
+                //    resp.error = "Account is Lock";
+                //    _log2File.Error($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                //    return resp;
+                //}
 
-                if (string.IsNullOrEmpty(getLoginReq.Params.password))
-                {
-                    resp.error = "Invalid password";
-                    _log2File.Error($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
-                    return resp;
-                }
+                //if (string.IsNullOrEmpty(getLoginReq.Params.password))
+                //{
+                //    resp.error = "Invalid password";
+                //    _log2File.Error($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                //    return resp;
+                //}
 
-                if (tpCustInfo.TpPwd == getLoginReq.Params.password)
-                {
-                    _tpCustInfoBLL.AddUserLoginLog(tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, "", $"App - {_tpName}", $"App - {_tpName}");
-                    resp.result.success = "1";
-                    resp.result.sessionId = tpCheck.Token;
-                    resp.result.msg = "login success";
-                    _log2File.Info($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
-                }
-                else
-                {
-                    resp.error = "Password failed";
-                    _log2File.Error($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
-                }
+                //if (tpCustInfo.TpPwd == getLoginReq.Params.password)
+                //{
+                //    _tpCustInfoBLL.AddUserLoginLog(tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, "", $"App - {_tpName}", $"App - {_tpName}");
+                //    resp.result.success = "1";
+                //    resp.result.sessionId = tpCheck.Token;
+                //    resp.result.msg = "login success";
+                //    _log2File.Info($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                //}
+                //else
+                //{
+                //    resp.error = "Password failed";
+                //    _log2File.Error($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                //}
+                resp.error = "No Support";
+                _log2File.Error($"{JsonConvert.SerializeObject(getLoginReq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+
                 return resp;
             }
 
