@@ -76,7 +76,7 @@ internal class BGWorker : BackgroundService, ISettleWorker
                 {
                     var settleData = _partitionService.GetUnsettleDataList<SettleData>(getBettransSp, tpUnsettle).FirstOrDefault();
                     if (settleData == null) continue;
-                    var tpWagerData = _tpUnSettledBLL.GetTpUnsettleData<SettleData_BG>(getWagerSp, new { TransId = tpUnsettle.TransId }, DataBase.Wager).FirstOrDefault();
+                    var tpWagerData = _tpUnSettledBLL.GetTpUnsettleData<SettleData_BG>(getWagerSp, new { _orderId = tpUnsettle.TransId }, DataBase.Wager).FirstOrDefault();
                     if (tpWagerData == null) continue;
 
                     var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
