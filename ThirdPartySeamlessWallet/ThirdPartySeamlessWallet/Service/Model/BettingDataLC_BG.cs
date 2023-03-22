@@ -44,6 +44,7 @@ public class SettleData_BG
     public decimal Stake { get; set; }
     public decimal ValidBet { get; set; }
     public decimal WinLostAmount { get; set; }
+    public string GameId { get; set; }
     public long TransTime { get; set; }
     public long SettleTime { get; set; }
 }

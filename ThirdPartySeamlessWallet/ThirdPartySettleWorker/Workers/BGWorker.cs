@@ -104,15 +104,15 @@ internal class BGWorker : BackgroundService, ISettleWorker
                     var betRecordInfo = new BetRecordInfo
                     {
                         TpId = (int)Tp,
-                        Stake = tpWagerData.Stake,
-                        ValidBet = tpWagerData.ValidBet,
-                        WinlostAmount = tpWagerData.WinLostAmount,
+                        Stake = settleData.Stake,
+                        ValidBet = settleData.ValidBet,
+                        WinlostAmount = settleData.WinLostAmount,
                         TransId = tpUnsettle.TransId, //orderId
                         GameType = gameType,
                         TpUserName = tpCustInfo.TpUserName,
                         SettledTime = tpWagerData.SettleTime,
                         TransTime = tpWagerData.TransTime,
-                        SettlementType = SetSettlementType(tpWagerData.Status, settleData.GameId),
+                        SettlementType = SetSettlementType(tpWagerData.Status, tpWagerData.GameId),
                         TicketStatus = SetTicketStatus(tpWagerData.Status)
                     };
 
@@ -202,7 +202,7 @@ internal class BGWorker : BackgroundService, ISettleWorker
         if (tpCurrency.ExchangeRate <= 0) return false;
 
         // 加入幣別匯率轉換，tpWager 是原始資料
-        decimal wagerStake = wager.Stake * tpCurrency.ExchangeRate;
+        decimal wagerStake = (wager.Stake * -1) * tpCurrency.ExchangeRate;
         decimal wagerValidBet = wager.ValidBet * tpCurrency.ExchangeRate;
         decimal? wagerWinLostAmount = wager.WinLostAmount * tpCurrency.ExchangeRate;
 
