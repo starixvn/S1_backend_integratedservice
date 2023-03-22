@@ -60,11 +60,16 @@ internal class BGWorker : BackgroundService, ISettleWorker
 
         var forContinue = false;
         var isError = false;
-        var gametype = GameType.BG_LiveCasino;
-        var tpCategory = TpCategory.LiveCasino;
+        var gameType = GameType.BG_LiveCasino;
+        var tpCategory = TpCategory.Sports;
+
+        const string logName = "SettleBG";
+        const string getBettransSp = "Service_BettransLC_BG_Unsettle_Get"; // 取得未結算的注單-Bettrans
+        const string getWagerSp = "Service_TpWagerLC_BG_Get";              // 取得未結算的注單-Wager
+
         try
         {
-            var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype);
+            var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
             var unsettleList = tpUnsettleList.ToList();
             if (!unsettleList.Any())
             {
@@ -76,46 +81,53 @@ internal class BGWorker : BackgroundService, ISettleWorker
             {
                 try
                 {
-                    var unsettleData = _partitionService.GetUnsettleDataList<SettleData>("Service_BettransLC_BG_Unsettle_Get", tpUnsettle);
+                    var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getBettransSp, new { TransId = tpUnsettle.TransId }, DataBase.Main).FirstOrDefault();
+                    if (settleData == null) continue;
+                    var tpWagerData = _tpUnSettledBLL.GetTpUnsettleData<SettleData_BG>(getWagerSp, new { TransId = tpUnsettle.TransId }, DataBase.Wager).FirstOrDefault();
+                    if (tpWagerData == null) continue;
 
-                    if (!unsettleData.Any()) continue;
-
-                    var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettleData.FirstOrDefault().Account);
+                    var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
                     if (tpCustInfo == null)
-                        throw new UnsettleNotFoundException($"{unsettleData.FirstOrDefault().Account} TpCustInfo not found.");
+                    {
+                        _logger.LogError($"{logName} {settleData.Account} TpCustInfo not found.");
+                        continue;
+                    }
 
-                    var wager = _settledBLL.GetSettle_TpWagerLC_BG(unsettleData.FirstOrDefault().TransId); //orderId
+                    var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
+                    if (tpCurrency == null)
+                    {
+                        _logger.LogError($"{logName} {settleData.Account} TpCurrency not found.");
+                        continue;
+                    }
 
-                    if (wager == null || !wager.Any()) continue;
-
-                    if (!IsBettransSameAsTpWager(unsettleData.First(), wager.First(), tpCustInfo))
+                    if (!IsBettransSameAsTpWager(settleData, tpWagerData, tpCurrency))
                     {
                         _logger.LogError($"transId: {tpUnsettle.TransId} is not equal " +
-                        $"settle: {JsonConvert.SerializeObject(unsettleData.First())} " +
-                        $"wager: {JsonConvert.SerializeObject(wager.First())}");
+                        $"settle: {JsonConvert.SerializeObject(settleData)} " +
+                        $"wager: {JsonConvert.SerializeObject(tpWagerData)}");
                         continue;
                     }
 
                     var betRecordInfo = new BetRecordInfo
                     {
                         TpId = (int)Tp,
-                        Stake = wager.First().Stake,
-                        ValidBet = wager.First().ValidBet,
-                        WinlostAmount = wager.First().WinLostAmount,
+                        Stake = tpWagerData.Stake,
+                        ValidBet = tpWagerData.ValidBet,
+                        WinlostAmount = tpWagerData.WinLostAmount,
                         TransId = tpUnsettle.TransId, //orderId
-                        GameType = gametype,
+                        GameType = gameType,
                         TpUserName = tpCustInfo.TpUserName,
-                        SettledTime = wager.First().SettleTime,
-                        TransTime = wager.First().TransTime,
-                        SettlementType = SetSettlementType(wager.First().Status, unsettleData.FirstOrDefault().GameId),
-                        TicketStatus = SetTicketStatus(wager.First().Status)
+                        SettledTime = tpWagerData.SettleTime,
+                        TransTime = tpWagerData.TransTime,
+                        SettlementType = SetSettlementType(tpWagerData.Status, settleData.GameId),
+                        TicketStatus = SetTicketStatus(tpWagerData.Status)
                     };
 
                     var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                     if (result == 1)
                         Task.Run(() =>
                         {
-                            _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, tpUnsettle.TransId, true);
+                            _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, true);
                         });
 
                 }
@@ -123,10 +135,10 @@ internal class BGWorker : BackgroundService, ISettleWorker
                 {
                     Task.Run(() =>
                     {
-                        _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, tpUnsettle.TransId, false);
+                        _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, false);
                     });
                     isError = true;
-                    _logger.LogError(ex, $"TransId:{tpUnsettle.TransId} settle failed, exMessage:{ex.Message}");
+                    _logger.LogError(ex, $"{logName} TransId:{tpUnsettle.TransId} settle failed, exMessage:{ex.Message}");
                 }
             }
         }
@@ -136,7 +148,7 @@ internal class BGWorker : BackgroundService, ISettleWorker
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, ex.Message);
+            _logger.LogError(ex, $"{logName} exMessage:{ex.Message}");
             isError = true;
         }
         finally
@@ -192,10 +204,8 @@ internal class BGWorker : BackgroundService, ISettleWorker
         }
     }
 
-    private bool IsBettransSameAsTpWager(SettleData bettrans, SettleData_BG wager, TpCustInfo tpCustInfo)
+    private bool IsBettransSameAsTpWager(SettleData bettrans, SettleData_BG wager, TpCurrency tpCurrency)
     {
-
-        var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
         if (tpCurrency.ExchangeRate <= 0) return false;
 
         // 加入幣別匯率轉換，tpWager 是原始資料
