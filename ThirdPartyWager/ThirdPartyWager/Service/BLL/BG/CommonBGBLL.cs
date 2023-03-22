@@ -69,7 +69,7 @@ public class CommonBGBLL
                 return null;
             }
 
-            var itemsResult = JsonConvert.DeserializeObject<WagerBG_OrderQueryResultResponseModel>(oederQueryResult.result);
+            var itemsResult = JsonConvert.DeserializeObject<WagerBG_OrderQueryResultResponseModel>(oederQueryResult.result.ToString());
 
             if (isCheckTotal)  //RedoWager Flow
             {
