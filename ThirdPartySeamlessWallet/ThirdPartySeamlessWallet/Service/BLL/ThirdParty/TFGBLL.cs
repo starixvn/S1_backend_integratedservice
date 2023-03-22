@@ -102,7 +102,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     modified_datetime = req.ticketDetail.modified_datetime == null ? DateTime.MinValue : req.ticketDetail.modified_datetime?.DateTime,
                     settlement_status = req.ticketDetail.settlement_status,
                     settlement_datetime = req.ticketDetail.settlement_datetime == null ? DateTime.MinValue : req.ticketDetail.settlement_datetime?.DateTime,
-                    tickets = req.ticketDetail.is_combo ? JsonConvert.SerializeObject(req.ticketDetail.tickets) : String.Empty,
+                    tickets = req.ticketDetail.is_combo ? JsonConvert.SerializeObject(req.ticketDetail.tickets) : "{}",
                     TpGameType = GameType
                 };
                 result = await Bet(tpCustInfo, placeBetTFG);
@@ -147,7 +147,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     modified_datetime = req.ticketDetail.modified_datetime == null ? DateTimeOffset.MinValue : req.ticketDetail.modified_datetime,
                     settlement_status = req.ticketDetail.settlement_status,
                     settlement_datetime = req.ticketDetail.settlement_datetime == null ? DateTimeOffset.MinValue : req.ticketDetail.settlement_datetime,
-                    tickets = req.ticketDetail.is_combo ? JsonConvert.SerializeObject(req.ticketDetail.tickets) : String.Empty,
+                    tickets = req.ticketDetail.is_combo ? JsonConvert.SerializeObject(req.ticketDetail.tickets) : "{}",
                     TpGameType = GameType
                 };
                 result = await Settle(tpCustInfo, settleTFG);
@@ -374,7 +374,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return new Result { Code = ResultCode.DatabaseError };
                 }
 
-                await trans.CommitAsync();
                 trans.Commit();
                 return new Result { Code = ResultCode.Success };
             }
