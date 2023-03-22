@@ -227,4 +227,10 @@ namespace ThirdPartyCore.Model.enums
         Main = 1,
         ThirdParty = 2
     }
+    
+    public enum WithdrawalLimitLogCreateFromEnum 
+    {
+        Default = 0,
+        Bonus = 4
+    }
 }
