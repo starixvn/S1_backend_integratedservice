@@ -315,8 +315,8 @@ namespace ThirdParty.Mega
                 ErrorCode = ErrorCode.Success,
                 Message = JsonConvert.SerializeObject(new
                 {
-                    account = tpCustInfo.TpUserName,
-                    password = tpCustInfo.TpPwd
+                    account = "",
+                    password = ""
                 })
             };
 
