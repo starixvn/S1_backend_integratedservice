@@ -174,8 +174,8 @@ public class BGBLL : IBGBLL
     {
         #region Test recalc
 
-        if (parameters.recalc == "0")
-            Thread.Sleep(5 * 60 * 1000); //Sleep 5 mins
+        //if (parameters.recalc == "0")
+        //    Thread.Sleep(5 * 60 * 1000); //Sleep 5 mins
 
         #endregion
 
@@ -326,7 +326,7 @@ public class BGBLL : IBGBLL
 
         var partitionTime = DateTime.UtcNow;
 
-        if (!GetExistData(partitionTime, parameters.random, parameters.orderIds,
+        if (!GetExistData(partitionTime, null, parameters.orderIds,
                 out IEnumerable<BettingDataLC_BG> existDatas, out message))
             return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
 
@@ -749,12 +749,12 @@ public class BGBLL : IBGBLL
         }
     }
 
-    private bool InsertUnsettleData(DateTime partitionTime, string serialnumber, out string message, MySqlTransaction trans)
+    private bool InsertUnsettleData(DateTime partitionTime, string orderId, out string message, MySqlTransaction trans)
     {
         message = string.Empty;
         try
         {
-            var result = _settledService.InsertUnsettle_BG(partitionTime, serialnumber, trans);
+            var result = _settledService.InsertUnsettle_BG(partitionTime, orderId, trans);
 
             if (!result)
             {

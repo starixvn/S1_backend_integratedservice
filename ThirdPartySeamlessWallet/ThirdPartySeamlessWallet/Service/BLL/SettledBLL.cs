@@ -2383,7 +2383,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             if (afterAmount == 0)
             {
-                afterAmount = tpCustInfoBLL.GetBalance((int)Tp.Skywind, TpUserName).Balance;
+                afterAmount = tpCustInfoBLL.GetBalance((int)Tp.Skywind, TpUserName, gameType).Balance;
             }
 
             return result;
@@ -2416,6 +2416,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public IEnumerable<SettleData_Yeebet> GetSettle_TpWagerLC_Yeebet(string serialnumber)
         {
             return settledService.GetSettle_TpWagerLC_Yeebet(serialnumber);
+        }
+
+        #endregion
+
+        #region BG
+
+        public IEnumerable<SettleData_BG> GetSettle_TpWagerLC_BG(string orderId)
+        {
+            return settledService.GetSettle_TpWagerLC_BG(orderId);
         }
 
         #endregion

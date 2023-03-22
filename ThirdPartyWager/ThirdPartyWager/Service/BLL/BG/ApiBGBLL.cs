@@ -20,7 +20,7 @@ public class ApiBGBLL
         _log2File = provider.GetRequiredService<Log2File>();
     }
 
-    public async Task<WagerBG_OrderQueryResponseModel> OrderQuery(string apiUrl, string sn, string secrectKey, string startTime, string endTime, int pageIndex, int pageSize)
+    public async Task<WagerBG_ApiResponseModel<string>> OrderQuery(string apiUrl, string sn, string secrectKey, string startTime, string endTime, int pageIndex, int pageSize)
     {
         // param
         var guid = Guid.NewGuid().ToString();
@@ -44,9 +44,36 @@ public class ApiBGBLL
 
         // request
         var response = await DoHttpClientAsync(apiUrl, parameters, "application/json");
-        var result = JsonConvert.DeserializeObject<WagerBG_OrderQueryResponseModel>(response);
+        var result = JsonConvert.DeserializeObject<WagerBG_ApiResponseModel<string>>(response);
         return result;
     }
+
+    public async Task<WagerBG_ApiResponseModel<string>> OrderSum(string apiUrl, string sn, string secrectKey, string startTime, string endTime)
+    {
+        // param
+        var guid = Guid.NewGuid().ToString();
+
+        var parameters = JsonConvert.SerializeObject(new
+        {
+            id = guid,
+            method = "open.user.order.sum",
+            @params = new
+            {
+                random = guid,
+                sign = _common.ToMD5(guid + sn + secrectKey),
+                sn = sn,
+                startTime = startTime,
+                endTime = endTime
+            },
+            jsonrpc = "2.0"
+        });
+
+        // request
+        var response = await DoHttpClientAsync(apiUrl, parameters, "application/json");
+        var result = JsonConvert.DeserializeObject<WagerBG_ApiResponseModel<string>>(response);
+        return result;
+    }
+
 
     private async Task<string> DoHttpClientAsync(string url, string param, string contentType)
     {

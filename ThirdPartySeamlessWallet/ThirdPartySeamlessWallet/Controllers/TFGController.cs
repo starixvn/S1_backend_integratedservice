@@ -5,6 +5,7 @@ using Org.BouncyCastle.Cms;
 using System.Text;
 using System.Web;
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -19,27 +20,24 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly AuthBLL authBLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly TpCustInfoBLL tpCustInfoBLL;
-        private readonly BettingBLL bettingBLL;
-        private readonly SettledBLL settledBLL;
         private readonly Tp thisTp;
-        //private readonly int gameType = 0;
         private readonly Tools tools;
         private readonly ILogger<TFGController> logger;
         private readonly IHostEnvironment environment;
+        private readonly ITFGBLL _tfgbLL;
         #endregion
 
         #region Constructors
-        public TFGController(IServiceProvider provider)
+        public TFGController(IServiceProvider provider, ITFGBLL tfgbll)
         {
             authBLL = provider.GetRequiredService<AuthBLL>();
             thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
-            bettingBLL = provider.GetRequiredService<BettingBLL>();
-            settledBLL = provider.GetRequiredService<SettledBLL>();
             tools = provider.GetRequiredService<Tools>();
             logger = provider.GetRequiredService<ILogger<TFGController>>();
             thisTp = Tp.TFG;
             environment = provider.GetRequiredService<IHostEnvironment>();
+            _tfgbLL = tfgbll;
         }
         #endregion
 
@@ -150,7 +148,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             public DateTimeOffset modified_datetime { get; set; }
             public string settlement_status { get; set; }
             public DateTimeOffset settlement_datetime { get; set; }
-            //public TicketDetail tickets { get; set; }
+            public TicketDetail tickets { get; set; }
         }
 
         [Route("[controller]/transfer")]

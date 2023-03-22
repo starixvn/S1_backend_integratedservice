@@ -1,5 +1,125 @@
-﻿namespace ThirdPartyWager.Service.BLL;
+﻿using Newtonsoft.Json;
+using System.Security.Policy;
+using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
+using Ubiety.Dns.Core;
 
-public class FinanceBGBLL
+namespace ThirdPartyWager.Service.BLL;
+
+public class FinanceBGBLL : ITpReportBLL
 {
+    private readonly ILogger<FinanceEVOBLL> _logger;
+    private readonly ThirdPartyBLL _thirdPartyBLL;
+    private readonly CommonBLL _commonBLL;
+    private readonly ApiBGBLL _apiBGBLL;
+    private readonly CommonBGBLL _commonBGBLL;
+    private readonly DateTimeHelper _dateTimeHelper;
+    private readonly int _timeZone = -4;
+
+    public FinanceBGBLL(IServiceProvider provider)
+    {
+        _logger = provider.GetRequiredService<ILogger<FinanceEVOBLL>>();
+        _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+        _commonBLL = provider.GetRequiredService<CommonBLL>();
+        _apiBGBLL = provider.GetRequiredService<ApiBGBLL>();
+        _commonBGBLL = provider.GetRequiredService<CommonBGBLL>();
+        _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+    }
+
+    public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
+    {
+        var dailyData = new List<FincanceDailySummary>();
+        if (!reportData.Any())
+            return dailyData;
+
+        var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
+
+        foreach (var item in tpCurrencyList)
+        {
+            var sumData = Sum(JsonConvert.SerializeObject(reportData.Where(x => x.currencyId == item.CurrencyId).Select(x=>x.dataResult)));
+
+            dailyData.Add(new FincanceDailySummary()
+            {
+                SummaryType = SummaryType.TpBetRecord,
+                SummaryDate = reportDate,
+                TpId = tpId,
+                CurrencyId = item.CurrencyId,
+                Stake = sumData.orderamount,
+                ValidBet = sumData.validbetamount,
+                Payout = sumData.paymentamount,
+                WinlostAmount = sumData.paymentamount - sumData.validbetamount
+
+            });
+        }
+        return dailyData;
+    }
+
+    public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
+    {
+        var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
+        var siteList = _commonBLL.GetSiteList().Where(x => x.SiteId != 4);
+        var reportData = new List<dynamic>();
+
+        foreach (var siteInfo in siteList)
+        {
+            var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(siteInfo.CurrencyList);
+            foreach (var item in tpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
+            {
+                var prefixMsg = $"{siteInfo.SiteId}_{item.TpCurrencyId}_";
+                setting = _thirdPartyBLL.GetThirdPartyBySite(tpId, siteInfo.SiteId);
+
+                if (!_commonBGBLL.GetSnAndSecretKey(setting, item.TpCurrencyId, out string sn, out string secretKey, out string message))
+                {
+                    _logger.LogError($"{prefixMsg}THIRD_PARTY_SETTING_ERROR {message}");
+                    SystemException systemException = new SystemException($"{prefixMsg}THIRD_PARTY_ERROR - GetReport({tpId})");
+                    throw systemException;
+                }
+
+                var getSummaryResult = await _apiBGBLL.OrderSum(setting["ApiUrl"], sn, secretKey, reportTime.startTime, reportTime.endTime);
+                if (getSummaryResult.error != null)
+                {
+                    _logger.LogError($"{prefixMsg}THIRD_PARTY_ERROR\r\n{JsonConvert.SerializeObject(getSummaryResult)}");
+                    throw new SystemException($"{prefixMsg}THIRD_PARTY_ERROR - GetReport({tpId})");
+                }
+
+                var itemsResult = JsonConvert.DeserializeObject<WagerBG_OrderSumResultResponseModel>(getSummaryResult.result);
+
+                if (itemsResult.total == 0)
+                {
+                    _logger.LogInformation($"{prefixMsg}NO_DATA\r\n{JsonConvert.SerializeObject(itemsResult)}");
+                    continue;
+                }
+
+                reportData.Add(new { siteId = siteInfo.SiteId, currencyId = item.CurrencyId, dataResult = itemsResult.stats });
+            }
+        }
+
+        return reportData;
+    }
+
+    public TimeCast GetReportTime(DateTime startTime, int day)
+    {
+        var reportTime = _dateTimeHelper.GetTimeByDay(1440, _timeZone, "yyyy-MM-dd HH:mm:ss", startTime);
+        var cvTime = DateTimeOffset.Now.AddDays(day).ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
+        if (reportTime.endUnix > cvTime)
+        {
+            reportTime = _dateTimeHelper.GetTimeByDay(1440, _timeZone, "yyyy-MM-dd HH:mm:ss", startTime.AddDays(-1));
+        }
+        return reportTime;
+    }
+
+    private WagerBG_OrderSumStatsModel Sum(string reportData)
+    {
+        var sourceTypeDatas = JsonConvert.DeserializeObject<IEnumerable<WagerBG_OrderSumStatsModel>>(reportData);
+        return new WagerBG_OrderSumStatsModel
+        {
+            orderamount = sourceTypeDatas.Sum(x => x.orderamount),
+            paymentamount = sourceTypeDatas.Sum(x => x.paymentamount),
+            usercount = sourceTypeDatas.Sum(x => x.usercount),
+            validorderamount = sourceTypeDatas.Sum(x => x.validorderamount),
+            validbetamount = sourceTypeDatas.Sum(x => x.validbetamount),
+            ordercount = sourceTypeDatas.Sum(x => x.ordercount),
+        };
+    }
 }

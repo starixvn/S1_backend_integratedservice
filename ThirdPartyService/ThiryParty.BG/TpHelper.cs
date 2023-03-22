@@ -1,9 +1,11 @@
 ﻿using Newtonsoft.Json;
+using System.Security.AccessControl;
 using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
@@ -160,7 +162,7 @@ public class TpHelper : ThirdPartyHelperBase
     {
         string method = "open.video.game.url";
         string currency = tpCustInfo.TpCurrencyId;
-        string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
+        string apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
         string sn = inputs.ContainsKey($"Sn_{currency}") && !string.IsNullOrEmpty(inputs[$"Sn_{currency}"]) ? inputs[$"Sn_{currency}"] : throw new Exception($"Sn_{currency}");
         string agnetPassword = inputs.ContainsKey($"AgentPassword_{currency}") && !string.IsNullOrEmpty(inputs[$"AgentPassword_{currency}"]) ? inputs[$"AgentPassword_{currency}"] : throw new Exception($"AgentPassword_{currency}");
         string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
@@ -184,7 +186,7 @@ public class TpHelper : ThirdPartyHelperBase
             jsonrpc = "2.0"
         });
 
-        var result = HttpPostClient(ApiUrl, parameters, "application/json");
+        var result = HttpPostClient(apiUrl, parameters, "application/json");
 
         if (!IsJSON(result))
             return new ApiResult()
@@ -258,35 +260,55 @@ public class TpHelper : ThirdPartyHelperBase
 
     public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
     {
-        var tpCurrency = new TpCurrency()
+        string method = "open.video.game.url";
+        string currency = tpCustInfo.TpCurrencyId;
+        string apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
+        string sn = inputs.ContainsKey($"Sn_{currency}") && !string.IsNullOrEmpty(inputs[$"Sn_{currency}"]) ? inputs[$"Sn_{currency}"] : throw new Exception($"Sn_{currency}");
+        string apiSecretKey = inputs.ContainsKey($"ApiSecretKey_{currency}") && !string.IsNullOrEmpty(inputs[$"ApiSecretKey_{currency}"]) ? inputs[$"ApiSecretKey_{currency}"] : throw new Exception($"ApiSecretKey_{currency}");
+
+        var id = Guid.NewGuid();
+
+        var parameters = ToJson(new
         {
-            ExchangeRate = tpCustInfo.ExchangeRate,
-            TpCurrencyId = tpCustInfo.TpCurrencyId,
-        };
-        var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerLC_Yeebet_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
-        var detail = ToJson(wagerDetail);
-        return getBetDetail.TpGameTypeOption.CategoryId switch
-        {
-            TpCategory.LiveCasino => new LiveCasinoDetail(getBetDetail.TpGameTypeOption)
+            id = id,
+            method = method,
+            @params = new
             {
-                TransId = getBetDetail.TransId,
-                Detail = detail,
-                TpCurrency = tpCurrency,
-                RefTransId = wagerDetail.GetValueOrDefault("serialnumber")?.ToString(),
-                TpUserName = wagerDetail.GetValueOrDefault("username")?.ToString(),
-                UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("createtimeConvert", DateTime.MinValue),
-                UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("settletimeConvert", DateTime.MinValue),
-                Stake = (decimal)wagerDetail.GetValueOrDefault("commamount") * tpCurrency.ExchangeRate,
-                WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("winlost") * tpCurrency.ExchangeRate,
-                GameCode = wagerDetail.GetValueOrDefault("gameid")?.ToString(),
-                GameName = ConvertGameName(wagerDetail.GetValueOrDefault("gametype")?.ToString()),
+                random = id,
+                sign = ToMD5(id + sn + getBetDetail.TransId + SHA1(apiSecretKey)),
+                sn = sn,
+                orderId = getBetDetail.TransId,
+                locale = "en"
             },
-            _ => new BaseDetail(getBetDetail.TpGameTypeOption)
+            jsonrpc = "2.0"
+        });
+
+        var result = HttpPostClient(apiUrl, parameters, "application/json");
+
+        if (!IsJSON(result))
+            throw new BetDetailNotFoundException($"{getBetDetail.TransId} BG Ressponse is not json.\r\n Response={result}");
+
+        var json = JsonConvert.DeserializeObject<JsonRpcResponse>(result);
+
+        if (json == null)
+            throw new BetDetailNotFoundException($"{getBetDetail.TransId} BG Ressponse to json is null.\r\n Response={result}");
+
+        if (json.error != null)
+        {
+            var errorJson = JsonConvert.SerializeObject(json.error);
+            if (errorJson != null)
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} BG Ressponse return error.\r\n Ressponse={result}.");
+        }
+
+        return new BaseDetail(getBetDetail.TpGameTypeOption)
+        {
+            TransId = getBetDetail.TransId,
+            DetailUrl = json.result?.ToString(),
+            TpCurrency = new TpCurrency()
             {
-                TransId = getBetDetail.TransId,
-                Detail = detail,
-                TpCurrency = tpCurrency,
-            }
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            },
         };
     }
 
