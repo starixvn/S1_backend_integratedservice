@@ -81,7 +81,7 @@ internal class BGWorker : BackgroundService, ISettleWorker
             {
                 try
                 {
-                    var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getBettransSp, new { TransId = tpUnsettle.TransId }, DataBase.Main).FirstOrDefault();
+                    var settleData = _partitionService.GetUnsettleDataList<SettleData>(getBettransSp, tpUnsettle).FirstOrDefault();
                     if (settleData == null) continue;
                     var tpWagerData = _tpUnSettledBLL.GetTpUnsettleData<SettleData_BG>(getWagerSp, new { TransId = tpUnsettle.TransId }, DataBase.Wager).FirstOrDefault();
                     if (tpWagerData == null) continue;
