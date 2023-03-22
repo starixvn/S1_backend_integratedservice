@@ -1,18 +1,11 @@
 ﻿using Serilog.Context;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
-using System.Collections;
 using Newtonsoft.Json;
-using static ThirdPartySeamlessWallet.Controllers.YGGController;
 
 namespace ThirdPartySettleWorker.Workers;
 
@@ -61,7 +54,7 @@ internal class BGWorker : BackgroundService, ISettleWorker
         var forContinue = false;
         var isError = false;
         var gameType = GameType.BG_LiveCasino;
-        var tpCategory = TpCategory.Sports;
+        var tpCategory = TpCategory.LiveCasino;
 
         const string logName = "SettleBG";
         const string getBettransSp = "Service_BettransLC_BG_Unsettle_Get"; // 取得未結算的注單-Bettrans
