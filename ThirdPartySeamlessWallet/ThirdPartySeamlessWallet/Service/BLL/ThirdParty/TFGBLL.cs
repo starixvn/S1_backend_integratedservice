@@ -61,7 +61,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, req.loginName);
                 if (tpCheck == null || tpCheck.Locked)
                 {
-                    _logger.LogError($"tpcheck fail:{JsonConvert.SerializeObject(tpCheck)}");
+                    _logger.LogError($"UserLockedOrNotFound");
                     return new Result(){ Code = ResultCode.UserLockedOrNotFound };
                 }
 
@@ -207,7 +207,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var check = conn.Query<Check_TFG>("Service_BettransSports_TFG_Check", new { id = bet.id }, commandType: CommandType.StoredProcedure);
                 if (check.Any())
                 {
-                    Log.Error($"loginName:{bet.loginName}\r\nticketNum:{bet.ticketNum}\r\nService_BettransSports_TFG_Bet");
+                    Log.Error($"Service_BettransSports_TFG_Check");
                     return new Result { Code = ResultCode.TransactionDuplicated };
                 }
 
@@ -215,7 +215,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 if (result < 1)
                 {
-                    Log.Error($"loginName:{bet.loginName}\r\nticketNum:{bet.ticketNum}\r\nService_BettransSports_TFG_Bet");
+                    Log.Error("Service_BettransSports_TFG_Bet");
                     return new Result { Code = ResultCode.DatabaseError };
                 }
                 result = _bettingService.PlaceBetV2(
@@ -234,7 +234,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 );
                 if (result != 1)
                 {
-                    Log.Error($"loginName:{bet.loginName}\r\nticketNum:{bet.ticketNum}\r\nPlaceBetV2");
+                    Log.Error("PlaceBetV2");
                     return new Result { Code = ResultCode.DatabaseError };
                 }
                 
@@ -243,7 +243,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             catch (Exception ex)
             {
-                Log.Error($"loginName:{bet.loginName}\r\nticketNum:{bet.ticketNum}\r\nBet\r\n{ex.ToString()}");
+                Log.Error($"Bet\r\n{ex.ToString()}");
                 return new Result { Code = ResultCode.UnknownError };
             }
         }
@@ -260,7 +260,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var check = conn.Query<Check_TFG>("Service_BettransSports_TFG_Check", new { id = settle.id }, commandType: CommandType.StoredProcedure);
                 if (!check.Any())
                 {
-                    _logger.LogError($"loginName:{settle.loginName}\r\nticketNum:{settle.ticketNum}\r\nService_BettransSports_TFG_Check");
+                    _logger.LogError("Service_BettransSports_TFG_Check");
                     return new Result { Code = ResultCode.TransactionNotFound };
                 }
 
@@ -270,7 +270,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 if (result < 1)
                 {
-                    _logger.LogError($"loginName:{settle.loginName}\r\nticketNum:{settle.ticketNum}\r\nService_BettransSports_TFG_Settle");
+                    _logger.LogError("Service_BettransSports_TFG_Settle");
                     return new Result { Code = ResultCode.DatabaseError };
                 }
                 //var betAmount = check.Sum(x => x.amount);
@@ -303,7 +303,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                     if (result < 1)
                     {
-                        _logger.LogError($"loginName:{settle.loginName}\r\nticketNum:{settle.ticketNum}\r\nPayoutV2");
+                        _logger.LogError("PayoutV2");
                         return new Result { Code = ResultCode.DatabaseError };
                     }
                 }
@@ -312,7 +312,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 if (result < 1)
                 {
-                    _logger.LogError($"loginName:{settle.loginName}\r\nticketNum:{settle.ticketNum}\r\nInsertTpUnsettle");
+                    _logger.LogError("InsertTpUnsettle");
                     return new Result { Code = ResultCode.DatabaseError };
                 }
 
@@ -321,7 +321,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             catch (Exception ex)
             {
-                Log.Error($"loginName:{settle.loginName}\r\nticketNum:{settle.ticketNum}\r\nSettle\r\n{ex.ToString()}");
+                Log.Error($"Settle\r\n{ex.ToString()}");
                 return new Result { Code = ResultCode.UnknownError };
             }
         }
@@ -338,7 +338,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var check = conn.Query<Check_TFG>("Service_BettransSports_TFG_Check", new { id = bet.id }, commandType: CommandType.StoredProcedure)?.FirstOrDefault(x => x.TicketStatus == (int)TicketStatus.UnSettled);
                 if (check == null)
                 {
-                    _logger.LogError($"loginName:{bet.loginName}\r\nticketNum:{bet.ticketNum}\r\nService_BettransSports_TFG_Cancel");
+                    _logger.LogError("Service_BettransSports_TFG_Check");
                     return new Result { Code = ResultCode.TransactionDuplicated };
                 }
 
@@ -346,7 +346,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 if (result < 1)
                 {
-                    _logger.LogError($"loginName:{bet.loginName}\r\nticketNum:{bet.ticketNum}\r\nService_BettransSports_TFG_Cancel");
+                    _logger.LogError("Service_BettransSports_TFG_Cancel");
                     return new Result { Code = ResultCode.DatabaseError };
                 }
 
@@ -370,7 +370,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 if (result != 1)
                 {
-                    _logger.LogError($"loginName:{bet.loginName}\r\nticketNum:{bet.ticketNum}\r\nPayoutV2");
+                    _logger.LogError("PayoutV2");
                     return new Result { Code = ResultCode.DatabaseError };
                 }
 
@@ -379,7 +379,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             catch (Exception ex)
             {
-                Log.Error($"loginName:{bet.loginName}\r\nticketNum:{bet.ticketNum}\r\nRollBack\r\n{ex.ToString()}");
+                Log.Error($"RollBack\r\n{ex.ToString()}");
                 return new Result { Code = ResultCode.UnknownError };
             }
         }
