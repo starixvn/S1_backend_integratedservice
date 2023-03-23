@@ -69,14 +69,15 @@ public class FinanceBGBLL : ITpReportBLL
                 var prefixMsg = $"{siteInfo.SiteId}_{item.TpCurrencyId}_";
                 setting = _thirdPartyBLL.GetThirdPartyBySite(tpId, siteInfo.SiteId);
 
-                if (!_commonBGBLL.GetSnAndSecretKey(setting, item.TpCurrencyId, out string sn, out string secretKey, out string message))
+                if (!_commonBGBLL.GetSnAndSecretKey(setting, item.TpCurrencyId, 
+                    out string sn, out string secrectKey, out string agentLoginId, out string secrectCode, out string message))
                 {
                     _logger.LogError($"{prefixMsg}THIRD_PARTY_SETTING_ERROR {message}");
                     SystemException systemException = new SystemException($"{prefixMsg}THIRD_PARTY_ERROR - GetReport({tpId})");
                     throw systemException;
                 }
 
-                var getSummaryResult = await _apiBGBLL.OrderSum(setting["ApiUrl"], sn, secretKey, reportTime.startTime, reportTime.endTime);
+                var getSummaryResult = await _apiBGBLL.OrderSum(setting["ApiUrl"], sn, secrectKey, agentLoginId, reportTime.startTime, reportTime.endTime);
                 if (getSummaryResult.error != null)
                 {
                     _logger.LogError($"{prefixMsg}THIRD_PARTY_ERROR\r\n{JsonConvert.SerializeObject(getSummaryResult)}");
