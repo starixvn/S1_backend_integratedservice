@@ -164,13 +164,16 @@ internal class BGWorker : BackgroundService, ISettleWorker
     {
         switch (status)
         {
-            case (int)stateEnum.Settle:
+            case (int)BGOrderStatusEnum.SettledLose:
+            case (int)BGOrderStatusEnum.SettledDraw:
+            case (int)BGOrderStatusEnum.SettledWin:
                 return _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, gameId);
-            case (int)stateEnum.Bet:
+            case (int)BGOrderStatusEnum.NotExist:
+            case (int)BGOrderStatusEnum.UnSettle:
                 return SettlementType.UnSettled;
-            case (int)stateEnum.Fail:
-            case (int)stateEnum.Cancel:
-            case (int)stateEnum.Abandoned:
+            case (int)BGOrderStatusEnum.Cancel:
+            case (int)BGOrderStatusEnum.Expired:
+            case (int)BGOrderStatusEnum.SystemCancel:
             default:
                 return SettlementType.SettledForInvalid;
         }

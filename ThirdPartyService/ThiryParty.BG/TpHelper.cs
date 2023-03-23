@@ -13,25 +13,6 @@ namespace ThirdParty.BG;
 
 public class TpHelper : ThirdPartyHelperBase
 {
-    private readonly Dictionary<string, string> _gameNameList = new()
-        { { "4", "Baccarat" }, { "5", "Roulette" }, { "10", "Dragon Tiger" } };
-    private readonly Dictionary<int, string> _PokerDic = new()
-        { {  0, "NoCard" },
-          {  1, "[D A]" }, {  2, "[C A]" },{  3, "[H A]" },{  4, "[S A]" },
-          {  5, "[D 2]" }, {  6, "[C 2]" },{  7, "[H 2]" },{  8, "[S 2]" },
-          {  9, "[D 3]" }, { 10, "[C 3]" },{ 11, "[H 3]" },{ 12, "[S 3]" },
-          { 13, "[D 4]" }, { 14, "[C 4]" },{ 15, "[H 4]" },{ 16, "[S 4]" },
-          { 17, "[D 5]" }, { 18, "[C 5]" },{ 19, "[H 5]" },{ 20, "[S 5]" },
-          { 21, "[D 6]" }, { 22, "[C 6]" },{ 23, "[H 6]" },{ 24, "[S 6]" },
-          { 25, "[D 7]" }, { 26, "[C 7]" },{ 27, "[H 7]" },{ 28, "[S 7]" },
-          { 29, "[D 8]" }, { 30, "[C 8]" },{ 31, "[H 8]" },{ 32, "[S 8]" },
-          { 33, "[D 9]" }, { 34, "[C 9]" },{ 35, "[H 9]" },{ 36, "[S 9]" },
-          { 37, "[D10]" }, { 38, "[C10]" },{ 39, "[H10]" },{ 40, "[S10]" },
-          { 41, "[D J]" }, { 42, "[C J]" },{ 43, "[H J]" },{ 44, "[S J]" },
-          { 45, "[D Q]" }, { 46, "[C Q]" },{ 47, "[H Q]" },{ 48, "[S Q]" },
-          { 49, "[D K]" }, { 50, "[C K]" },{ 51, "[H K]" },{ 52, "[S K]" }
-        };
-
     #region Model
 
     private class CreateMemberResult
@@ -52,7 +33,6 @@ public class TpHelper : ThirdPartyHelperBase
         /// 注册用户的类型
         /// </summary>
         public string? regType { get; set; }
-
     }
 
     private class LoginResult
@@ -63,7 +43,6 @@ public class TpHelper : ThirdPartyHelperBase
         public string result { get; set; } = string.Empty;
     }
 
-
     private class JsonRpcResponse
     {
         public string? id { get; set; }
@@ -71,8 +50,8 @@ public class TpHelper : ThirdPartyHelperBase
         public object? error { get; set; }
         public string? jsonrpc { get; set; }
         public object? request { get; set; }
-
     }
+
     #endregion
 
     public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -260,7 +239,7 @@ public class TpHelper : ThirdPartyHelperBase
 
     public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
     {
-        string method = "open.video.game.url";
+        string method = "open.sn.video.order.detail.url.get";
         string currency = tpCustInfo.TpCurrencyId;
         string apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
         string sn = inputs.ContainsKey($"Sn_{currency}") && !string.IsNullOrEmpty(inputs[$"Sn_{currency}"]) ? inputs[$"Sn_{currency}"] : throw new Exception($"Sn_{currency}");
@@ -314,92 +293,21 @@ public class TpHelper : ThirdPartyHelperBase
 
     public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
     {
-        var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerLC_Yeebet_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
-
-        var gametype = detail.GetStringValue("gametype");
-
+        var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerLC_BG_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
+        
         return tpGameType.CategoryId switch
         {
             TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
-                GameID = detail.GetStringValue("gameid"),
-                Game = ConvertGameName(gametype),
-                RefNo = detail.GetStringValue("id"),
+                GameID = detail.GetStringValue("gameId"),
+                Game = detail.GetStringValue("gameNameEn"),
+                RefNo = detail.GetStringValue("orderId"),
                 Title = tpGameType.TypeName,
-                MatchID = $"{detail.GetStringValue("gameno")}_{detail.GetStringValue("gameroundid")}",
-                BetType = ConvertBetType(gametype, detail.GetStringValue("bettype")),
-                BetChoice = detail.GetStringValue("betpoint"),
-                Result = ConvertResult(gametype, detail.GetStringValue("gameresult")),
-                Odds = decimal.TryParse(detail.GetStringValue("betodds"), out var odds) ? odds : 0
+                MatchID = $"{detail.GetStringValue("tableId")}_{detail.GetStringValue("issueId")}",
+                BetChoice = $"{detail.GetStringValue("playNameEn")} {detail.GetStringValue("betContent")}",
+                IP = detail.GetStringValue("fromIp")
             },
             _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
         };
     }
-
-    #region Private Method
-
-    /// <summary>
-    /// 參考tp文件 3.3 Game Type
-    /// </summary>
-    /// <param name="gameid"></param>
-    /// <returns></returns>
-    private string ConvertGameName(string gametype)
-    {
-        if (!_gameNameList.TryGetValue(gametype, out var name))
-            return string.Empty;
-        return name;
-    }
-
-    /// <summary>
-    /// 參考tp文件 3.4 Game Play Description
-    /// </summary>
-    /// <param name="gameid"></param>
-    /// <param name="bettype"></param>
-    /// <returns></returns>
-    private string ConvertBetType(string gametype, string bettype)
-    {
-        if (gametype != "5")
-            return "Default";
-
-        switch (bettype)
-        {
-            case "1": return "Bet on Number";
-            case "2": return "Bet on Big Small / Odd Even / Red Black";
-            case "3": return "Bet Low,Middle,High";
-            case "4": return "Bet Line1,Line2,Line3";
-            case "5": return "Bet Split";
-            case "6": return "Bet 3 Number";
-            case "7": return "Bet 4 Number";
-            case "8": return "Bet 6 Number";
-            default: return "Default";
-        }
-    }
-    /// <summary>
-    /// 參考tp文件 3.5 Game Result Code
-    /// </summary>
-    /// <param name="gameid"></param>
-    /// <param name="result"></param>
-    /// <returns></returns>
-    private string ConvertResult(string gametype, string result)
-    {
-        switch (gametype)
-        {
-            case "4":
-                {
-                    var resultList = result?.Split(";")?.Select(Int32.Parse)?.ToList();
-                    return $"PLAYER = {_PokerDic[resultList[0]]}_{_PokerDic[resultList[2]]}_{_PokerDic[resultList[4]]} " +
-                        $"/ BANKER = {_PokerDic[resultList[1]]}_{_PokerDic[resultList[3]]}_{_PokerDic[resultList[5]]}";
-                }
-            case "10":
-                {
-                    var resultList = result?.Split(";")?.Select(Int32.Parse)?.ToList();
-                    return $"Dragon = {_PokerDic[resultList[0]]} / Tiger = {_PokerDic[resultList[1]]}";
-                }
-            case "5":
-            default: return result;
-        }
-    }
-
-    #endregion
-
 }
