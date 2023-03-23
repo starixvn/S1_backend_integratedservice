@@ -6,6 +6,7 @@ using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace ThirdPartySettleWorker.Workers;
 
@@ -113,7 +114,8 @@ internal class BGWorker : BackgroundService, ISettleWorker
                         SettledTime = tpWagerData.SettleTime,
                         TransTime = tpWagerData.TransTime,
                         SettlementType = SetSettlementType(tpWagerData.Status, tpWagerData.GameId),
-                        TicketStatus = SetTicketStatus(tpWagerData.Status)
+                        TicketStatus = SetTicketStatus(tpWagerData.Status),
+                        GameID = tpWagerData.GameId
                     };
 
                     var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
@@ -164,13 +166,13 @@ internal class BGWorker : BackgroundService, ISettleWorker
     {
         switch (status)
         {
-            case (int)BGOrderStatusEnum.SettledLose:
-            case (int)BGOrderStatusEnum.SettledDraw:
-            case (int)BGOrderStatusEnum.SettledWin:
-                return _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, gameId);
             case (int)BGOrderStatusEnum.NotExist:
             case (int)BGOrderStatusEnum.UnSettle:
                 return SettlementType.UnSettled;
+            case (int)BGOrderStatusEnum.SettledLose:
+            case (int)BGOrderStatusEnum.SettledDraw:
+            case (int)BGOrderStatusEnum.SettledWin:
+                return SettlementType.SettledForValid;
             case (int)BGOrderStatusEnum.Cancel:
             case (int)BGOrderStatusEnum.Expired:
             case (int)BGOrderStatusEnum.SystemCancel:
