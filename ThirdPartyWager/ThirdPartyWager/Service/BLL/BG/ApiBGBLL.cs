@@ -3,6 +3,8 @@ using System.Text;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model;
+using System.Runtime.Intrinsics.Arm;
+using System.Security.Cryptography;
 
 namespace ThirdPartyWager.Service.BLL;
 
@@ -20,7 +22,7 @@ public class ApiBGBLL
         _log2File = provider.GetRequiredService<Log2File>();
     }
 
-    public async Task<WagerBG_ApiResponseModel<object>> OrderQuery(string apiUrl, string sn, string secrectKey, string startTime, string endTime, int pageIndex, int pageSize)
+    public async Task<WagerBG_ApiResponseModel<object>> OrderQuery(string apiUrl, string sn, string secretCode, string agnetLoginId, string startTime, string endTime, int pageIndex, int pageSize)
     {
         // param
         var guid = Guid.NewGuid().ToString();
@@ -28,12 +30,13 @@ public class ApiBGBLL
         var parameters = JsonConvert.SerializeObject(new
         {
             id = guid,
-            method = "open.order.query",
+            method = "open.order.agent.query",
             @params = new
             {
                 random = guid,
-                sign = _common.ToMD5(guid + sn + secrectKey),
+                digest = _common.ToMD5(guid + sn + SHA1(secretCode)),
                 sn = sn,
+                agentLoginId = agnetLoginId,
                 startTime = startTime,
                 endTime = endTime,
                 pageIndex = pageIndex,
@@ -48,7 +51,8 @@ public class ApiBGBLL
         return result;
     }
 
-    public async Task<WagerBG_ApiResponseModel<object>> OrderSum(string apiUrl, string sn, string secrectKey, string startTime, string endTime)
+    public async Task<WagerBG_ApiResponseModel<object>> OrderSum(string apiUrl, 
+        string sn, string secrectKey, string agentLoginId, string startTime, string endTime)
     {
         // param
         var guid = Guid.NewGuid().ToString();
@@ -62,6 +66,7 @@ public class ApiBGBLL
                 random = guid,
                 sign = _common.ToMD5(guid + sn + secrectKey),
                 sn = sn,
+                agentLoginId = agentLoginId,
                 startTime = startTime,
                 endTime = endTime
             },
@@ -73,7 +78,14 @@ public class ApiBGBLL
         var result = JsonConvert.DeserializeObject<WagerBG_ApiResponseModel<object>>(response);
         return result;
     }
-
+    private string SHA1(string dataToSign)
+    {
+        SHA1 sha1 = new SHA1CryptoServiceProvider();//建立一個SHA1
+        byte[] source = Encoding.Default.GetBytes(dataToSign);//將字串轉為Byte[]
+        byte[] crypto = sha1.ComputeHash(source);//進行SHA1加密
+        string result = Convert.ToBase64String(crypto);//把加密後的字串從Byte[]轉為字串
+        return result;
+    }
 
     private async Task<string> DoHttpClientAsync(string url, string param, string contentType)
     {

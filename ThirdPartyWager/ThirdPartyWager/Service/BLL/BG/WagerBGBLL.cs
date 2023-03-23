@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1.Cms;
 using System;
+using System.Collections.Generic;
 using System.Security.Policy;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
@@ -50,6 +51,7 @@ public class WagerBGBLL
             }
         }
 
+        time = _dateTimeHelper.GetTimeByMinute(timeRange, 0, _timeFormat, dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now);
         if (result)
             _thirdPartyBLL.SetThirdPartyTimerByCurrency(_tpId, type, time.endUnix, tpCurrencyId, siteId);
 
@@ -65,14 +67,15 @@ public class WagerBGBLL
             // get tp info for api
             var setting = _thirdPartyBLL.GetThirdPartyBySite(_tpId, siteId);
 
-            if (!_commonBGBLL.GetSnAndSecretKey(setting, tpCurrencyId, out string sn, out string secretKey, out string message))
+            if (!_commonBGBLL.GetSnAndSecretKey(setting, tpCurrencyId,
+                out string sn, out string secretKey, out string secretCode, out string agentLoginId, out string message))
             {
                 msg = prefixMsg + "THIRD_PARTY_SETTING_ERROR";
                 _logger.LogError($"{msg} {message}");
                 return false;
             }
 
-            var data = await _commonBGBLL.DoOrderQuery(setting["ApiUrl"], sn, secretKey, startTime, endTime, prefixMsg, wagerSummary);
+            var data = await _commonBGBLL.DoOrderQuery(setting["ApiUrl"], sn, secretCode, agentLoginId, startTime, endTime, prefixMsg, wagerSummary);
 
             if (data != null && data.Any())
             {

@@ -23,10 +23,13 @@ public class CommonBGBLL
         _logger = provider.GetRequiredService<ILogger<WagerBGBLL>>();
     }
 
-    internal bool GetSnAndSecretKey(Dictionary<string, string> setting, string tpCurrencyId, out string sn, out string secretKey, out string message)
+    internal bool GetSnAndSecretKey(Dictionary<string, string> setting, string tpCurrencyId,
+        out string sn, out string secretKey,out string secretCode, out string agentId, out string message)
     {
         sn = string.Empty;
         secretKey = string.Empty;
+        secretCode = string.Empty;
+        agentId = string.Empty;
         message = string.Empty;
 
         if (!setting.ContainsKey($"Sn_{tpCurrencyId}")
@@ -45,11 +48,27 @@ public class CommonBGBLL
         }
         secretKey = setting[$"ApiSecretKey_{tpCurrencyId}"];
 
+        if (!setting.ContainsKey($"AgentLoginId_{tpCurrencyId}")
+            || string.IsNullOrWhiteSpace(setting[$"AgentLoginId_{tpCurrencyId}"]))
+        {
+            message = $"AgentLoginId_{tpCurrencyId} is invaild.";
+            return false;
+        }
+        agentId = setting[$"AgentLoginId_{tpCurrencyId}"];
+
+        if (!setting.ContainsKey($"AgentPassword_{tpCurrencyId}")
+            || string.IsNullOrWhiteSpace(setting[$"AgentPassword_{tpCurrencyId}"]))
+        {
+            message = $"AgentPassword_{tpCurrencyId} is invaild.";
+            return false;
+        }
+        secretCode = setting[$"AgentPassword_{tpCurrencyId}"];
+
         return true;
     }
 
-    internal async Task<IEnumerable<WagerBG_OrderQueryItemsModel>> DoOrderQuery(string apiUrl, string sn, string secrectKey,
-        string startTime, string endTime, string prefixMsg, WagerBGTotalModel wagerSummary = null)
+    internal async Task<IEnumerable<WagerBG_OrderQueryItemsModel>> DoOrderQuery(string apiUrl, string sn, string secretCode,
+        string agentLoginId, string startTime, string endTime, string prefixMsg, WagerBGTotalModel wagerSummary = null)
     {
         var msg = "FATAL_ERROR";
         // pagination
@@ -60,7 +79,7 @@ public class CommonBGBLL
         while (pageIndex <= totalPage || isCheckTotal)
         {
             // get wager
-            var oederQueryResult = await _apiBGBLL.OrderQuery(apiUrl, sn, secrectKey, startTime, endTime, pageIndex, pageSize);
+            var oederQueryResult = await _apiBGBLL.OrderQuery(apiUrl, sn, secretCode, agentLoginId, startTime, endTime, pageIndex, pageSize);
 
             if (oederQueryResult.error != null)
             {
@@ -108,7 +127,7 @@ public class CommonBGBLL
 
             data.AddRange(itemsResult.items);
 
-            pageIndex ++;
+            pageIndex++;
         }
         return data;
     }
