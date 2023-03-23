@@ -121,7 +121,7 @@ public class BGBLL : IBGBLL
 
         foreach (var order in parameters.orders)
         {
-            var (balanceAmount, bettransAmount) = CheckOrderAmount(order.gameId, order.playId, order.amount);
+            var balanceAmount = CheckOrderAmount(order.gameId, order.playId, order.amount);
 
             var data = new BettingDataLC_BG()
             {
@@ -135,7 +135,7 @@ public class BGBLL : IBGBLL
                 serverTime = parameters.serverTime ?? null,
                 orderId = order.orderId.ToString(),
                 gameId = order.gameId,
-                orderAmount = bettransAmount, //BullBull double
+                orderAmount = order.amount, //BullBull double
                 issueId = order.issueId,
                 playId = order.playId,
                 orderFrom = (BGOrderFromEnum)order.orderFrom,
@@ -829,11 +829,11 @@ public class BGBLL : IBGBLL
         }
     }
 
-    private (decimal balanceAmount, decimal bettransAmount) CheckOrderAmount(int gameId, string playId, decimal orderAmount)
+    private decimal CheckOrderAmount(int gameId, string playId, decimal orderAmount)
     {
         if (gameId == 13 && _bullbullDoublePlayIds.Contains(playId)) //牛牛翻倍 BullBull Double
-            return (balanceAmount: orderAmount * 5, bettransAmount: orderAmount * 2);
-        return (balanceAmount: orderAmount, bettransAmount: orderAmount);
+            return orderAmount * 5;
+        return orderAmount;
     }
 
     #endregion
