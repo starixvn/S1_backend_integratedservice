@@ -2221,7 +2221,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public int RewardRNG_AP(CPSettleDataRNG_AP rewardDataRNG_AP, string TpUserName)
+        public int RewardRNG_AP(CPSettleDataRNG_AP rewardDataRNG_AP, string TpUserName, out decimal afterAmount)
         {
 
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, TpUserName);
@@ -2232,9 +2232,74 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 rewardDataRNG_AP.cpwin *= tpCurrency.ExchangeRate;
             }
 
-            var result = settledService.RewardRNG_AP(tpCustInfo, rewardDataRNG_AP);
+            var result = settledService.RewardRNG_AP(tpCustInfo, rewardDataRNG_AP, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
             return result;
         }
+
+        public int Payout_AdvantPlayMini(PayoutData_AdvantPlayMini payoutData_AdvantPlayMini, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, payoutData_AdvantPlayMini.UserReferenceId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                payoutData_AdvantPlayMini.StakeAmount *= tpCurrency.ExchangeRate;
+                payoutData_AdvantPlayMini.WonAmount *= tpCurrency.ExchangeRate;
+
+                if (payoutData_AdvantPlayMini.WinResults.Any())
+                {
+                    foreach (var item in payoutData_AdvantPlayMini.WinResults)
+                    {
+                        item.BuyAmount *= tpCurrency.ExchangeRate;
+                        item.WonAmount *= tpCurrency.ExchangeRate;
+                    }
+                }
+            }
+
+            var result = settledService.Payout_AdvantPlayMini(tpCustInfo, payoutData_AdvantPlayMini, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public int Result_AdvantPlayMini(ResultData_AdvantPlayMini resultData_AdvantPlayMini, out long SQ)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, resultData_AdvantPlayMini.UserReferenceId);
+            var result = settledService.Result_AdvantPlayMini(tpCustInfo, resultData_AdvantPlayMini, out SQ);
+            return result;
+        }
+
+        public int CancelBet_AdvantPlayMini(CancelBetData_AdvantPlayMini cancelBetData_AdvantPlayMini)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, cancelBetData_AdvantPlayMini.UserReferenceId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                foreach (var item in cancelBetData_AdvantPlayMini.Data)
+                {
+                    item.Amount *= tpCurrency.ExchangeRate;
+                }
+            }
+
+            var result = settledService.CancelBet_AdvantPlayMini(tpCustInfo, cancelBetData_AdvantPlayMini);
+            return result;
+        }
+
+        public int SetSettleFlag_BettransRng_AP_Mini(string spName, string transId, long settleTime)
+        {
+            return settledService.SetSettleFlag_BettransRng_AP_Mini(spName, transId, settleTime);
+        }
+
         #endregion
 
         #region YGG
@@ -2317,7 +2382,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             if (afterAmount == 0)
             {
-                afterAmount = tpCustInfoBLL.GetBalance((int)Tp.Skywind, TpUserName).Balance;
+                afterAmount = tpCustInfoBLL.GetBalance((int)Tp.Skywind, TpUserName, gameType).Balance;
             }
 
             return result;

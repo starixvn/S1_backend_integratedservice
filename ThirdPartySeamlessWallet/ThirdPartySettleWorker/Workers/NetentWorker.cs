@@ -80,6 +80,7 @@ namespace ThirdPartySettleWorker.Workers
                                 SettledTime = unsettled.SettleTime,
                                 TransTime = unsettled.SettleTime,
                                 SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType(thisTp, unsettled.GameId.ToString()),
+                                GameID = unsettled.GameId,
                             };
 
                             _settledBLL.Settled(tpCustInfo, betRecordInfo, category);

@@ -31,6 +31,7 @@ public class SettleData_Yeebet
     public decimal WinLostAmount { get; set; }
     public long TransTime { get; set; }
     public long SettleTime { get; set; }
+    public string GameId { get; set; }
 }
 
 #region Request Model

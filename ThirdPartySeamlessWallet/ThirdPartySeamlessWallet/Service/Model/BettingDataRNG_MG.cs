@@ -11,6 +11,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string currency { get; set; }
         public string txnId { get; set; }
         public long creationTime { get; set; }
+        public long creationTimeMs { get; set; }
         public string contentCode { get; set; }
         public string betId { get; set; }
         public string roundId { get; set; }
@@ -32,6 +33,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string txnId { get; set; }
         public string betId { get; set; }
         public long creationTime { get; set; }
+        public long creationTimeMs { get; set; }
     }
 
     public class MGLoginRequest
@@ -65,6 +67,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string currency { get; set; }
         public string txnId { get; set; }
         public long creationTime { get; set; }
+        public long creationTimeMs { get; set; }
         public string contentCode { get; set; }
         public string betId { get; set; }
         public string roundId { get; set; }
@@ -93,6 +96,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string contentCode { get; set; }
         public string channel { get; set; }
         public long creationTime { get; set; }
+        public long creationTimeMs { get; set; }
     }
 
     public class MGRollbackResponse
@@ -150,5 +154,11 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public long ExtTxnId { get; set; }
 
         public decimal AfterAmount { get; set; }
+    }
+
+    public class SettleData_MG : SettleData
+    {
+        public long SettleTimeNew { get; set; }
+        public long TransTimeNew { get; set; }
     }
 }

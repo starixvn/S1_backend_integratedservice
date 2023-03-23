@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Linq;
+﻿using System.ComponentModel;
 using System.Text;
 using System.Web;
 using Newtonsoft.Json;
@@ -30,14 +27,26 @@ namespace ThirdParty.YGG
             var config = new YggConfig(inputs);
             var channel = (appType == AppType.Desktop ? "pc" : "mobile");
             var sessionKey = GetSessionKey(tpCustInfo, inputs);
-
-            // YGG 試玩遊戲，Fun = 1 是試玩 ，不用打Api，自組登入 Url。
-            if (config.Fun.Equals("1", StringComparison.OrdinalIgnoreCase)) return GetPlayForFunLaunchUrl(TpLangId, config, channel);
-
-            // YGG 正式遊戲
+            
             var apiUrl = config.GameUrl;
-            var sParam = $"loginname={tpCustInfo.TpUserName}&key={HttpUtility.UrlEncode(sessionKey)}&currency={tpCustInfo.TpCurrencyId}" +
+            string sParam;
+            var fun = false;
+
+            // 試玩
+            if (config.Fun.Equals("1", StringComparison.OrdinalIgnoreCase))
+            {
+                fun = true;
+                var DefaultTpCurrencyId = ServerInfoProvider.GetDefaultTpCurrencyIdByTpId(tpCustInfo.SiteId, (int)TpEnum.YGG);
+                tpCustInfo.TpCurrencyId = (DefaultTpCurrencyId != null) ? DefaultTpCurrencyId.TpCurrencyId : "";
+                apiUrl = config.FunGameUrl;
+                sParam = $"org={config.Org}&currency={tpCustInfo.TpCurrencyId}&lang={TpLangId}&gameid={config.GameId}&channel={channel}&home={config.HomeUrl}&fullscreen=yes";
+            }
+            else
+            {
+                // 正式
+                sParam = $"loginname={tpCustInfo.TpUserName}&key={HttpUtility.UrlEncode(sessionKey)}&currency={tpCustInfo.TpCurrencyId}" +
                $"&lang={TpLangId}&gameid={config.GameId}&org={config.Org}&channel={channel}&home={config.HomeUrl}&fullscreen=yes";
+            }
 
             var responseJson = HttpPost(apiUrl, sParam, config.ContentType);
             var responseResult = FromJson<LoginResponse>(responseJson);
@@ -56,7 +65,7 @@ namespace ThirdParty.YGG
             return new ApiResult
             {
                 ErrorCode = ErrorCode.Success,
-                Message = responseResult.Data.LaunchUrl
+                Message = fun ? responseResult.Data.pfflaunchurl : responseResult.Data.LaunchUrl
             };
         }
 
@@ -114,7 +123,7 @@ namespace ThirdParty.YGG
             {
                 TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
-                    GameID = detailList.GetFirstStringValue("cat3"),
+                    GameID = detailList.GetFirstStringValue("cat5"),
                     Game = detailList.GetFirstStringValue("cat4"),
                     RefNo = detailList.GetFirstStringValue("reference"),
                     Title = detailList.GetFirstStringValue("tag1"),
@@ -248,6 +257,10 @@ namespace ThirdParty.YGG
         {
             [JsonProperty("launchurl")]
             public string LaunchUrl { get; set; }
+
+            [Description("試玩")]
+            [JsonProperty("pfflaunchurl")]
+            public string pfflaunchurl { get; set; }
         }
 
         public class LoginResponse

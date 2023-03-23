@@ -100,6 +100,7 @@ namespace ThirdPartySettleWorker.Workers
                             TransTime = UnsettleData.TransTime,
                             SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, UnsettleData.GameId),
                             TicketStatus = UnsettleData.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
+                            GameID = UnsettleData.GameId,
                         };
 
                         if (betRecordInfo.WinlostAmount == 0)
