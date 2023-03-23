@@ -10,6 +10,7 @@ using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.BLL.MG;
 using ThirdPartyWager.Service.BLL.SBO;
+using ThirdPartyWager.Service.BLL.TFG;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -85,6 +86,7 @@ namespace ThirdPartyWager
             services.AddSingleton<TpUnsettleService>();
             services.AddSingleton<ConfigService>();
             services.AddSingleton<FincanceService>();
+            services.AddSingleton<WagerTFGService>();
 
             services.AddOptionListByDB<ServerInfo>("Admin_ServerInfoList_Get");
             services.AddOptionListByDB<dynamic>("Service_TpWagerTimer_Get", new { TpId = 1, Type = 1 }, DataBase.Wager);
@@ -235,6 +237,9 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerYeebetBLL>();
             services.AddSingleton<ApiYeebetBLL>();
             services.AddSingleton<FinanceYeebetBLL>();
+            //TFG
+            services.AddSingleton<ApiTFGBLL>();
+            services.AddSingleton<WagerTFGBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -319,6 +324,8 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceGPI>();
             services.AddHostedService<WagerYeebet>();
             services.AddHostedService<FinanceYeebet>();
+            services.AddHostedService<WagerTFG>();
+            services.AddHostedService<WagerUnsettleCheckTFG>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

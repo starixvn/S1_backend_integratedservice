@@ -49,7 +49,8 @@
         SBO = 42,
         Skywind = 43,
         SimplePlay = 44,
-        Yeebet = 46
+        Yeebet = 46,
+        TFG = 48
     }
 
     public enum GameType
@@ -82,7 +83,8 @@
         GPI_Sode = 89,
         GPI_Thai_Lottery = 90,
         GPI_Fast3 = 91,
-        Yeebet_LiveCasino = 93
+        Yeebet_LiveCasino = 93,
+        TFG_Esports = 97
     }
 
 
