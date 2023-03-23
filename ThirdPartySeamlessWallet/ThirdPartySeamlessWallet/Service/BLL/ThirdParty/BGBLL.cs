@@ -8,8 +8,6 @@ using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-using ThirdPartySeamlessWallet.Service.Model.Exceptions;
-using static ThirdPartySeamlessWallet.Controllers.IconicController;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 
@@ -18,6 +16,14 @@ public class BGBLL : IBGBLL
     public Tp ThirdParty { get; set; }
     public GameType GameType { get; set; }
     public TpCategory TpCategory { get; set; }
+
+    //下注闲1平倍 playId:3489660929
+    //下注闲2平倍 playId:3489660932
+    //下注闲3平倍 playId:3489660944
+    //下注闲1翻倍 playId:3489660930
+    //下注闲2翻倍 playId:3489660936
+    //下注闲3翻倍 playId:3489660960
+    private readonly string[] _bullbullDoublePlayIds = new string[] { "3489660930", "3489660936", "3489660960" };
 
     private readonly ThirdPartyBLL _thirdPartyBLL;
     private readonly TpCustInfoBLL _tpCustInfoBLL;
@@ -127,7 +133,7 @@ public class BGBLL : IBGBLL
                 serverTime = parameters.serverTime ?? null,
                 orderId = order.orderId.ToString(),
                 gameId = order.gameId,
-                orderAmount = order.amount,
+                orderAmount = CheckOrderAmount(order.gameId, order.playId, order.amount), //BullBull double
                 issueId = order.issueId,
                 playId = order.playId,
                 orderFrom = (BGOrderFromEnum)order.orderFrom,
@@ -816,6 +822,13 @@ public class BGBLL : IBGBLL
             case BGOrderStatusEnum.SystemCancel:
                 return TicketStatus.Refund;
         }
+    }
+
+    private decimal CheckOrderAmount(int gameId, string playId, decimal orderAmount)
+    {
+        if (gameId == 13 && _bullbullDoublePlayIds.Contains(playId)) //牛牛翻倍 BullBull Double
+            return orderAmount * 5;
+        return orderAmount;
     }
 
     #endregion

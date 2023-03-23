@@ -79,6 +79,7 @@ public class WagerBGBLL
 
             if (data != null && data.Any())
             {
+                data = data.OrderBy(x => x.orderId).ThenBy(x => x.lastUpdateTime);
                 try
                 {
                     await _wagerBGService.InsertWager(data);
