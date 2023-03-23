@@ -290,7 +290,7 @@ namespace ThirdPartyWager
             services.AddHostedService<FinancePT>();
             //services.AddHostedService<WagerReSettlePT>();
             services.AddHostedService<LiveStreaming>();
-            // services.AddHostedService<LatestHighlightVideo>();
+            services.AddHostedService<LatestHighlightVideo>();
             services.AddHostedService<SabaOdds>();
             services.AddHostedService<WagerKM>();
             services.AddHostedService<FinanceKM>();
