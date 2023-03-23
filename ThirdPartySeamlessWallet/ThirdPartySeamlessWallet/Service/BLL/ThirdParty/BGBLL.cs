@@ -121,6 +121,8 @@ public class BGBLL : IBGBLL
 
         foreach (var order in parameters.orders)
         {
+            var (balanceAmount, bettransAmount) = CheckOrderAmount(order.gameId, order.playId, order.amount);
+
             var data = new BettingDataLC_BG()
             {
                 random = parameters.random,
@@ -133,7 +135,7 @@ public class BGBLL : IBGBLL
                 serverTime = parameters.serverTime ?? null,
                 orderId = order.orderId.ToString(),
                 gameId = order.gameId,
-                orderAmount = CheckOrderAmount(order.gameId, order.playId, order.amount), //BullBull double
+                orderAmount = bettransAmount, //BullBull double
                 issueId = order.issueId,
                 playId = order.playId,
                 orderFrom = (BGOrderFromEnum)order.orderFrom,
@@ -148,12 +150,15 @@ public class BGBLL : IBGBLL
 
             data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
             data.orderAmount = (tpCurrency.ExchangeRate > 0) ? data.orderAmount * tpCurrency.ExchangeRate : data.orderAmount;
+            balanceAmount = (tpCurrency.ExchangeRate > 0) ? balanceAmount * tpCurrency.ExchangeRate : balanceAmount;
 
             if (!PlaceData(partitionTime, data, trans, out int SQ, out message))
             {
                 trans.Rollback();
                 return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
             }
+
+            data.orderAmount = balanceAmount;
 
             if (data.orderAmount != 0)
             {
@@ -824,11 +829,11 @@ public class BGBLL : IBGBLL
         }
     }
 
-    private decimal CheckOrderAmount(int gameId, string playId, decimal orderAmount)
+    private (decimal balanceAmount, decimal bettransAmount) CheckOrderAmount(int gameId, string playId, decimal orderAmount)
     {
         if (gameId == 13 && _bullbullDoublePlayIds.Contains(playId)) //牛牛翻倍 BullBull Double
-            return orderAmount * 5;
-        return orderAmount;
+            return (balanceAmount: orderAmount * 5, bettransAmount: orderAmount * 2);
+        return (balanceAmount: orderAmount, bettransAmount: orderAmount);
     }
 
     #endregion
