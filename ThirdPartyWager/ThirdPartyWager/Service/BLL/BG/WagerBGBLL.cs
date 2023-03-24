@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1.Cms;
+using Org.BouncyCastle.Asn1.X509;
 using System;
 using System.Collections.Generic;
 using System.Security.Policy;
@@ -44,11 +45,8 @@ public class WagerBGBLL
         {
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
-            {
-                // count interval wagers
-                var wagerSummary = _wagerBGService.GetWagerBGTotal(time.startTime, time.endTime);
-                result = await GetWagersAsync(siteId, tpCurrencyId, time.startTime, time.endTime, wagerSummary);
-            }
+                result = await GetWagersAsync(siteId, tpCurrencyId, time.startTime, time.endTime, true);
+
         }
 
         time = _dateTimeHelper.GetTimeByMinute(timeRange, 0, _timeFormat, dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now);
@@ -58,7 +56,7 @@ public class WagerBGBLL
         return quick;
     }
 
-    public async Task<bool> GetWagersAsync(int siteId, string tpCurrencyId, string startTime, string endTime, WagerBGTotalModel wagerSummary = null)
+    public async Task<bool> GetWagersAsync(int siteId, string tpCurrencyId, string startTime, string endTime, bool isRedo = false)
     {
         var prefixMsg = $"{siteId}_{tpCurrencyId}_";
         var msg = prefixMsg + "FATAL_ERROR";
@@ -75,6 +73,11 @@ public class WagerBGBLL
                 return false;
             }
 
+            // count interval wagers
+            WagerBGTotalModel wagerSummary = new();
+            if (isRedo)
+                wagerSummary = _wagerBGService.GetWagerBGTotal(siteId, tpCurrencyId, startTime, endTime);
+
             var data = await _commonBGBLL.DoOrderQuery(setting["ApiUrl"], sn, secretCode, agentLoginId, startTime, endTime, prefixMsg, wagerSummary);
 
             if (data != null && data.Any())
@@ -82,7 +85,7 @@ public class WagerBGBLL
                 data = data.OrderBy(x => x.orderId).ThenBy(x => x.lastUpdateTime);
                 try
                 {
-                    await _wagerBGService.InsertWager(data);
+                    await _wagerBGService.InsertWager(siteId, tpCurrencyId, data);
                 }
                 catch (Exception ex)
                 {
