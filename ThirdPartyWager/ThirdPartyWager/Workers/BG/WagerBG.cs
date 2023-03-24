@@ -43,11 +43,15 @@ public class WagerBG : BackgroundService
         {
             var siteList = _commonBLL.GetSiteList().Where(x => x.SiteId != 4);
             var TpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
+            var quick = false;
             foreach (var siteInfo in siteList)
             {
                 var currencyList = JsonSerializer.Deserialize<IEnumerable<int>>(siteInfo.CurrencyList);
                 foreach (var item in TpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
-                    isFast = await _wagerBGBLL.ExecWagerWorker(siteInfo.SiteId, item.TpCurrencyId, tpType, timeRange, needQuickTime);
+                {
+                    quick = await _wagerBGBLL.ExecWagerWorker(siteInfo.SiteId, item.TpCurrencyId, tpType, timeRange, needQuickTime);
+                    if (!isFast && quick) isFast = true;
+                }
             }
         }
         catch (Exception ex)
