@@ -58,7 +58,7 @@ public class WagerBGBLL
 
     public async Task<bool> GetWagersAsync(int siteId, string tpCurrencyId, string startTime, string endTime,WagerTimerType type, bool isRedo = false)
     {
-        var prefixMsg = $"{type}_{siteId}_{tpCurrencyId}_";
+        var prefixMsg = $"{type} {siteId} {tpCurrencyId}_";
         var msg = prefixMsg + "FATAL_ERROR";
         try
         {
@@ -96,13 +96,13 @@ public class WagerBGBLL
             }
 
             msg = prefixMsg + "FINISH";
-            _logger.LogInformation($"GetWagersAsync SiteId={siteId}. CurrencyId={tpCurrencyId}. {msg}\r\n{startTime} ~ {endTime}");
+            _logger.LogInformation($"{type} GetWagersAsync SiteId={siteId}. CurrencyId={tpCurrencyId}. {msg}\r\n{startTime} ~ {endTime}");
             return true;
         }
         catch (Exception ex)
         {
             msg = prefixMsg + "FATAL_ERROR";
-            _logger.LogError(ex, $"GetWagersAsync SiteId={siteId}. CurrencyId={tpCurrencyId}. {msg}\r\n{ex.Message}");
+            _logger.LogError(ex, $"{type} GetWagersAsync SiteId={siteId}. CurrencyId={tpCurrencyId}. {msg}\r\n{ex.Message}");
             return false;
         }
     }
