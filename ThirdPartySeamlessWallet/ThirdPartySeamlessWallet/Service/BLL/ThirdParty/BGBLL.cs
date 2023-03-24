@@ -141,7 +141,7 @@ public class BGBLL : IBGBLL
                 orderFrom = (BGOrderFromEnum)order.orderFrom,
                 fromIp = order.fromIp,
                 orderTime = order.orderTime ?? null,
-                noComm = order.noComm ?? -9, //-9=null
+                noComm = order.noComm != null ? order.noComm.ToString() : "",
                 betContent = order.betContent ?? "",
                 FromAPIType = BettransLC_BGTypeEnum.OrderTransfer,
                 TicketType = BettransType.Bet,
