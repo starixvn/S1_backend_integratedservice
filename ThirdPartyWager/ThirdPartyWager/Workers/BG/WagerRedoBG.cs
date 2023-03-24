@@ -15,7 +15,7 @@ public class WagerRedoBG : BackgroundService
     private bool isFast = false;
     private Timer _timer;
 
-    private readonly int tpType = (int)WagerTimerType.RedoWager;
+    private readonly WagerTimerType tpType = WagerTimerType.RedoWager;
     private readonly int timeRange = 60; //in minutes 
     private readonly int quickTime = 30; // in seconds
     private readonly int runTime = 30; // in minutes

@@ -66,7 +66,7 @@ public class FinanceBGBLL : ITpReportBLL
             var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(siteInfo.CurrencyList);
             foreach (var item in tpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
             {
-                var prefixMsg = $"{siteInfo.SiteId}_{item.TpCurrencyId}_";
+                var prefixMsg = $"FinanceBG_{siteInfo.SiteId}_{item.TpCurrencyId}_";
                 setting = _thirdPartyBLL.GetThirdPartyBySite(tpId, siteInfo.SiteId);
 
                 if (!_commonBGBLL.GetSnAndSecretKey(setting, item.TpCurrencyId, 
@@ -84,7 +84,7 @@ public class FinanceBGBLL : ITpReportBLL
                     throw new SystemException($"{prefixMsg}THIRD_PARTY_ERROR - GetReport({tpId})");
                 }
 
-                var itemsResult = JsonConvert.DeserializeObject<WagerBG_OrderSumResultResponseModel>(getSummaryResult.result);
+                var itemsResult = JsonConvert.DeserializeObject<WagerBG_OrderSumResultResponseModel>(getSummaryResult.result.ToString());
 
                 if (itemsResult.total == 0)
                 {

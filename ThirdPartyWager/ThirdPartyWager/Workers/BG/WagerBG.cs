@@ -12,7 +12,7 @@ public class WagerBG : BackgroundService
     private readonly CommonBLL _commonBLL;
 
     private readonly int tpId = (int)Tp.BG;
-    private readonly int tpType = (int)WagerTimerType.Wager;
+    private readonly WagerTimerType tpType = WagerTimerType.Wager;
     private bool isFast = false;
     private readonly int timeRange = 30; //in minutes 
     private readonly int quickTime = 15; // in seconds
