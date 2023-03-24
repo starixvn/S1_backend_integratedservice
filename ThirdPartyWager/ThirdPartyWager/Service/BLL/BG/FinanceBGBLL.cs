@@ -66,7 +66,7 @@ public class FinanceBGBLL : ITpReportBLL
             var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(siteInfo.CurrencyList);
             foreach (var item in tpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
             {
-                var prefixMsg = $"FinanceBG_{siteInfo.SiteId}_{item.TpCurrencyId}_";
+                var prefixMsg = $"Finance {siteInfo.SiteId}_{item.TpCurrencyId}_";
                 setting = _thirdPartyBLL.GetThirdPartyBySite(tpId, siteInfo.SiteId);
 
                 if (!_commonBGBLL.GetSnAndSecretKey(setting, item.TpCurrencyId, 
