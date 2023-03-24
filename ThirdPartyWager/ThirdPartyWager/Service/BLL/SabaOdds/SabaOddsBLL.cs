@@ -44,7 +44,7 @@ namespace ThirdPartyWager.Service.BLL
 
                     var oddsList = hotEventOddsResponse.Data.Markets
                         .GroupBy(x => x.EventID)
-                        .Select(x => x.MaxBy(r => r.Sort)).ToList()
+                        .Select(x => x.MinBy(r => r.Sort)).ToList()
                         .Where(r => r.Selections.Any() && r.MarketStatus == "running")
                         .Select(r => new UpdateOdd
                         {
