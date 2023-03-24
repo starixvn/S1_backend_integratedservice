@@ -74,7 +74,7 @@ public class WagerBGBLL
             }
 
             // count interval wagers
-            WagerBGTotalModel wagerSummary = new();
+            WagerBGTotalModel wagerSummary = null;
             if (isRedo)
                 wagerSummary = _wagerBGService.GetWagerBGTotal(siteId, tpCurrencyId, startTime, endTime);
 
