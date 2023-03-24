@@ -32,33 +32,33 @@ public class WagerBGBLL
         _logger = provider.GetRequiredService<ILogger<WagerBGBLL>>();
     }
 
-    public async Task<bool> ExecWagerWorker(int siteId, string tpCurrencyId, int type, int timeRange, int needQuickTime)
+    public async Task<bool> ExecWagerWorker(int siteId, string tpCurrencyId, WagerTimerType type, int timeRange, int needQuickTime)
     {
         var result = true;
-        var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(_tpId, type, tpCurrencyId, siteId);
+        var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(_tpId, (int)type, tpCurrencyId, siteId);
         var quick = CheckQuick(dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now, needQuickTime);
         var time = _dateTimeHelper.GetTimeByMinute(timeRange, _timeZone, _timeFormat, dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now);
 
-        if (type == (int)WagerTimerType.Wager)
-            result = await GetWagersAsync(siteId, tpCurrencyId, time.startTime, time.endTime);
-        else if (type == (int)WagerTimerType.RedoWager)
+        if (type == WagerTimerType.Wager)
+            result = await GetWagersAsync(siteId, tpCurrencyId, time.startTime, time.endTime, type);
+        else if (type == WagerTimerType.RedoWager)
         {
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
-                result = await GetWagersAsync(siteId, tpCurrencyId, time.startTime, time.endTime, true);
+                result = await GetWagersAsync(siteId, tpCurrencyId, time.startTime, time.endTime, type, true);
 
         }
 
         time = _dateTimeHelper.GetTimeByMinute(timeRange, 0, _timeFormat, dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now);
         if (result)
-            _thirdPartyBLL.SetThirdPartyTimerByCurrency(_tpId, type, time.endUnix, tpCurrencyId, siteId);
+            _thirdPartyBLL.SetThirdPartyTimerByCurrency(_tpId, (int)type, time.endUnix, tpCurrencyId, siteId);
 
         return quick;
     }
 
-    public async Task<bool> GetWagersAsync(int siteId, string tpCurrencyId, string startTime, string endTime, bool isRedo = false)
+    public async Task<bool> GetWagersAsync(int siteId, string tpCurrencyId, string startTime, string endTime,WagerTimerType type, bool isRedo = false)
     {
-        var prefixMsg = $"{siteId}_{tpCurrencyId}_";
+        var prefixMsg = $"{type}_{siteId}_{tpCurrencyId}_";
         var msg = prefixMsg + "FATAL_ERROR";
         try
         {
