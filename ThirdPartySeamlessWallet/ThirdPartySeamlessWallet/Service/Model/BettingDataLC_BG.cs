@@ -24,7 +24,7 @@ public class BettingDataLC_BG
     public BGOrderFromEnum orderFrom { get; set; } = BGOrderFromEnum.None;
     public string fromIp { get; set; } = "";
     public string orderTime { get; set; } = null;
-    public int? noComm { get; set; } = 0;
+    public string noComm { get; set; } = "";
     public string betContent { get; set; } = "";
     public decimal calcAmount { get; set; } = 0;
     public decimal validAmount { get; set; } = 0;

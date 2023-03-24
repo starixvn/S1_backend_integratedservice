@@ -73,8 +73,8 @@ public class WagerBGModel
     public string playNameEn { get; set; } = "";
     public decimal validBet { get; set; }
     public decimal payment { get; set; }
-    public int? noComm { get; set; }
-    public string betContent { get; set; }
+    public string noComm { get; set; } = "";
+    public string betContent { get; set; } = "";
 }
 
 public class WagerBGTotalModel
