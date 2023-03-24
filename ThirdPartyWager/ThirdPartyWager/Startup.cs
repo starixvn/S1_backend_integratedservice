@@ -67,9 +67,9 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerWMService>();
             services.AddSingleton<WagerKiss918Service>();
             services.AddSingleton<WagerOne789Service>();
-            services.AddSingleton<WagerMegaService>();
+            //services.AddSingleton<WagerMegaService>();
             services.AddSingleton<WagerIconicService>();
-            services.AddSingleton<WagerOneGamingService>();
+            //services.AddSingleton<WagerOneGamingService>();
             services.AddSingleton<WagerV8Service>();
             services.AddSingleton<WagerN2LiveService>();
             services.AddSingleton<WagerPTService>();
@@ -149,16 +149,16 @@ namespace ThirdPartyWager
             services.AddSingleton<ApiOne789BLL>();
             services.AddSingleton<FinanceOne789BLL>();
             // Mega
-            services.AddSingleton<WagerMegaBLL>();
-            services.AddSingleton<ApiMegaBLL>();
+            //services.AddSingleton<WagerMegaBLL>();
+            //services.AddSingleton<ApiMegaBLL>();
             // Iconic(AT)
             services.AddSingleton<WagerIconicBLL>();
             services.AddSingleton<ApiIconicBLL>();
             services.AddSingleton<FinanceATBLL>();
             // OneGaming
-            services.AddSingleton<WagerOneGamingBLL>();
-            services.AddSingleton<ApiOneGamingBLL>();
-            services.AddSingleton<FinanceOneGamingBLL>();
+            //services.AddSingleton<WagerOneGamingBLL>();
+            //services.AddSingleton<ApiOneGamingBLL>();
+            //services.AddSingleton<FinanceOneGamingBLL>();
             // V8
             services.AddSingleton<WagerV8BLL>();
             services.AddSingleton<ApiV8BLL>();
@@ -276,9 +276,6 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerAT>();
             services.AddHostedService<WagerRedoAT>();
             services.AddHostedService<FinanceAT>();
-            services.AddHostedService<WagerOneGaming>();
-            services.AddHostedService<WagerRedoOneGaming>();
-            services.AddHostedService<FinanceOneGaming>();
             services.AddHostedService<WagerV8>();
             services.AddHostedService<WagerRedoV8>();
             services.AddHostedService<FinanceV8>();
@@ -306,8 +303,6 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerRedoEVO>();
             services.AddHostedService<FinanceEVO>();
             services.AddHostedService<TpRefundWorker>();
-            services.AddHostedService<ReportMega>();
-            services.AddHostedService<ReportRedoMega>();
             services.AddHostedService<FinanceMG>();
             services.AddHostedService<WagerYGG>();
             services.AddHostedService<FinanceYGG>();
@@ -332,6 +327,13 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerBG>();
             services.AddHostedService<WagerRedoBG>();
             services.AddHostedService<FinanceBG>();
+
+            /*******************closed tp*************************/
+            //services.AddHostedService<WagerOneGaming>();
+            //services.AddHostedService<WagerRedoOneGaming>();
+            //services.AddHostedService<FinanceOneGaming>();
+            //services.AddHostedService<ReportMega>();
+            //services.AddHostedService<ReportRedoMega>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
