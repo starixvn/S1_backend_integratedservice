@@ -63,7 +63,6 @@ public class FinanceBG : BackgroundService
         }
     }
 
-    //TODO
     private async Task<bool> ExecReportAsync()
     {
         var quick = false;
