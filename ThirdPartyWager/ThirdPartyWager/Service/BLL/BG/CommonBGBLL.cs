@@ -12,11 +12,6 @@ public class CommonBGBLL
     private readonly ApiBGBLL _apiBGBLL;
     private readonly ILogger<WagerBGBLL> _logger;
     private readonly int pageSize = 500;
-
-    private readonly int _tpId = (int)Tp.BG;
-    private readonly int _timeZone = -4;  //BG Default TimeZone=-4
-    private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";//2021-09-28 23:59:59
-
     public CommonBGBLL(IServiceProvider provider)
     {
         _apiBGBLL = provider.GetRequiredService<ApiBGBLL>();
@@ -24,12 +19,12 @@ public class CommonBGBLL
     }
 
     internal bool GetSnAndSecretKey(Dictionary<string, string> setting, string tpCurrencyId,
-        out string sn, out string secretKey,out string secretCode, out string agentId, out string message)
+        out string sn, out string secretKey,out string secretCode, out string agentLoginId, out string message)
     {
         sn = string.Empty;
         secretKey = string.Empty;
         secretCode = string.Empty;
-        agentId = string.Empty;
+        agentLoginId = string.Empty;
         message = string.Empty;
 
         if (!setting.ContainsKey($"Sn_{tpCurrencyId}")
@@ -54,7 +49,7 @@ public class CommonBGBLL
             message = $"AgentLoginId_{tpCurrencyId} is invaild.";
             return false;
         }
-        agentId = setting[$"AgentLoginId_{tpCurrencyId}"];
+        agentLoginId = setting[$"AgentLoginId_{tpCurrencyId}"];
 
         if (!setting.ContainsKey($"AgentPassword_{tpCurrencyId}")
             || string.IsNullOrWhiteSpace(setting[$"AgentPassword_{tpCurrencyId}"]))

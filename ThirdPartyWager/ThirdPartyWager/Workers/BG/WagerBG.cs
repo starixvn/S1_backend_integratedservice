@@ -17,7 +17,7 @@ public class WagerBG : BackgroundService
     private readonly int timeRange = 30; //in minutes 
     private readonly int quickTime = 15; // in seconds
     private readonly int runTime = 60; // in seconds
-    private readonly int needQuickTime = 5; // in minutes
+    private readonly int needQuickTime = 20; // in minutes
     private Timer _timer;
 
     public WagerBG(ILogger<WagerBG> logger,

@@ -37,7 +37,7 @@ public class FinanceBGBLL : ITpReportBLL
 
         foreach (var item in tpCurrencyList)
         {
-            var sumData = Sum(JsonConvert.SerializeObject(reportData.Where(x => x.currencyId == item.CurrencyId).Select(x=>x.dataResult)));
+            var sumData = Sum(JsonConvert.SerializeObject(reportData.Where(x => x.currencyId == item.CurrencyId).Select(x => x.dataResult)));
 
             dailyData.Add(new FincanceDailySummary()
             {
@@ -69,8 +69,8 @@ public class FinanceBGBLL : ITpReportBLL
                 var prefixMsg = $"Finance {siteInfo.SiteId}_{item.TpCurrencyId}_";
                 setting = _thirdPartyBLL.GetThirdPartyBySite(tpId, siteInfo.SiteId);
 
-                if (!_commonBGBLL.GetSnAndSecretKey(setting, item.TpCurrencyId, 
-                    out string sn, out string secrectKey, out string agentLoginId, out string secrectCode, out string message))
+                if (!_commonBGBLL.GetSnAndSecretKey(setting, item.TpCurrencyId,
+                    out string sn, out string secrectKey, out string secrectCode, out string agentLoginId, out string message))
                 {
                     _logger.LogError($"{prefixMsg}THIRD_PARTY_SETTING_ERROR {message}");
                     SystemException systemException = new SystemException($"{prefixMsg}THIRD_PARTY_ERROR - GetReport({tpId})");
