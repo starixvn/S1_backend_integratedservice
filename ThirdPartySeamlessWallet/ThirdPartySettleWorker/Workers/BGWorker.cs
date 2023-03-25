@@ -64,7 +64,7 @@ internal class BGWorker : BackgroundService, ISettleWorker
         try
         {
             var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
-            var unsettleList = tpUnsettleList.ToList();
+            var unsettleList = tpUnsettleList.ToList().OrderBy(x => x.TransId);
             if (!unsettleList.Any())
             {
                 throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
