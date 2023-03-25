@@ -112,7 +112,7 @@ public class BGBLL : IBGBLL
             {
                 var alreadyExistOrders = existDatas.Select(x => x.orderId).ToList();
                 _logger.LogInformation($"Check Exist Data: already exist orderIds={string.Join(",", alreadyExistOrders)}");
-                parameters.orders = parameters.orders.Where(x => !alreadyExistOrders.Contains(x.orderId.ToString())); //remove exist orderIds
+                parameters.orders = parameters.orders.Where(x => !alreadyExistOrders.Contains(x.orderId.ToString())).OrderBy(x => x.orderId); //remove exist orderIds
             }
 
         await using var conn = _mainDbClient.GetMySqlConnection();
@@ -223,7 +223,7 @@ public class BGBLL : IBGBLL
             {
                 var alreadyExistOrders = existDatas.Select(x => x.orderId).ToList();
                 _logger.LogInformation($"Check Exist Data: already exist orderIds={string.Join(",", alreadyExistOrders)}");
-                parameters.orders = parameters.orders.Where(x => !alreadyExistOrders.Contains(x.orderId.ToString())); //remove exist orderIds
+                parameters.orders = parameters.orders.Where(x => !alreadyExistOrders.Contains(x.orderId.ToString())).OrderBy(x => x.orderId); //remove exist orderIds
             }
 
         await using var conn = _mainDbClient.GetMySqlConnection();
