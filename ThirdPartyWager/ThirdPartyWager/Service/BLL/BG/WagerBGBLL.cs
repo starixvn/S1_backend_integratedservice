@@ -48,7 +48,7 @@ public class WagerBGBLL
 
         }
 
-        time = GetTime(timeRange, 0, _timeFormat, dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now, 5);
+        //time = GetTime(timeRange, 0, _timeFormat, dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now, 5);
         if (result)
             _thirdPartyBLL.SetThirdPartyTimerByCurrency(_tpId, (int)type, time.endUnix, tpCurrencyId, siteId);
 
