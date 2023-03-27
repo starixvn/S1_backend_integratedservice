@@ -36,7 +36,7 @@ public class WagerBGBLL
         var result = true;
         var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(_tpId, (int)type, tpCurrencyId, siteId);
         var quick = CheckQuick(dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now.AddMinutes(-10), needQuickTime);
-        var time = GetTime(timeRange, _timeZone, _timeFormat, dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now.AddMinutes(-10),5);
+        var time = GetTime(timeRange, _timeZone, _timeFormat, dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now.AddMinutes(-10), 5);
 
         if (type == WagerTimerType.Wager)
             result = await GetWagersAsync(siteId, tpCurrencyId, time.startTime, time.endTime, type);
@@ -48,7 +48,7 @@ public class WagerBGBLL
 
         }
 
-        time = GetTime(timeRange, 0, _timeFormat, dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now,5);
+        time = GetTime(timeRange, 0, _timeFormat, dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now, 5);
         if (result)
             _thirdPartyBLL.SetThirdPartyTimerByCurrency(_tpId, (int)type, time.endUnix, tpCurrencyId, siteId);
 
@@ -137,7 +137,12 @@ public class WagerBGBLL
             current.Minute,
             0
         );
-        timeBase = timeBase.AddMinutes(-1 * beforeMin);
+
+        var diff = DateTime.Now - timeBase;
+
+        if (diff.TotalMinutes <= beforeMin)
+            timeBase = timeBase.AddMinutes(-1 * beforeMin);
+
         var dStartTime = timeBase.AddMinutes(-1 * period);
 
         var beginAt = new DateTimeOffset(dStartTime);
