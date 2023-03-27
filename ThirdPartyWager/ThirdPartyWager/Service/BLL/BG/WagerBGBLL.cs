@@ -45,10 +45,8 @@ public class WagerBGBLL
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
                 result = await GetWagersAsync(siteId, tpCurrencyId, time.startTime, time.endTime, type, true);
-
         }
 
-        //time = GetTime(timeRange, 0, _timeFormat, dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now, 5);
         if (result)
             _thirdPartyBLL.SetThirdPartyTimerByCurrency(_tpId, (int)type, time.endUnix, tpCurrencyId, siteId);
 
@@ -57,7 +55,7 @@ public class WagerBGBLL
 
     public async Task<bool> GetWagersAsync(int siteId, string tpCurrencyId, string startTime, string endTime, WagerTimerType type, bool isRedo = false)
     {
-        var prefixMsg = $"{type} {siteId} {tpCurrencyId}_";
+        var prefixMsg = $"{type} {siteId} {tpCurrencyId} ";
         var msg = prefixMsg + "FATAL_ERROR";
         try
         {

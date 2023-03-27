@@ -47,8 +47,8 @@ public class FinanceBGBLL : ITpReportBLL
                 CurrencyId = item.CurrencyId,
                 Stake = sumData.orderamount,
                 ValidBet = sumData.validbetamount,
-                Payout = sumData.paymentamount,
-                WinlostAmount = sumData.paymentamount - sumData.validbetamount
+                Payout = sumData.paymentamount + sumData.validbetamount,
+                WinlostAmount = sumData.paymentamount
 
             });
         }
