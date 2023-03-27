@@ -116,7 +116,7 @@ public class CommonBGBLL
             if (itemsResult.total == 0)
             {
                 msg = prefixMsg + "NO_DATA";
-                _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(oederQueryResult)}");
+                _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(itemsResult.items)}");
                 return null;
             }
 
