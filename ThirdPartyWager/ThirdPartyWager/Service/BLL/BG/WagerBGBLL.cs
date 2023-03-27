@@ -138,15 +138,29 @@ public class WagerBGBLL
             0
         );
 
-        var diff = DateTime.Now - timeBase;
+        var dEndTime = timeBase.AddMinutes(period + 1).AddMilliseconds(-1);
+
+        if (dEndTime > DateTime.Now)
+        {
+            dEndTime = new DateTime(
+               DateTime.Now.Year,
+               DateTime.Now.Month,
+               DateTime.Now.Day,
+               DateTime.Now.Hour,
+               DateTime.Now.Minute,
+               0
+            );
+
+            dEndTime.AddMilliseconds(-1);
+        }
+
+        var diff = DateTime.Now - dEndTime;
 
         if (diff.TotalMinutes <= beforeMin)
-            timeBase = timeBase.AddMinutes(-1 * beforeMin);
-
-        var dStartTime = timeBase.AddMinutes(-1 * period);
-
-        var beginAt = new DateTimeOffset(dStartTime);
-        var endAt = new DateTimeOffset(timeBase);
+            dEndTime = dEndTime.AddMinutes(-1 * beforeMin);
+   
+        var beginAt = new DateTimeOffset(timeBase);
+        var endAt = new DateTimeOffset(dEndTime);
         var startTime = beginAt.ToOffset(new TimeSpan(timezone, utcMinute, 0)).ToString(format);
         var endTime = endAt.ToOffset(new TimeSpan(timezone, utcMinute, 0)).ToString(format);
         var startUnix = beginAt.ToUnixTimeSeconds();
