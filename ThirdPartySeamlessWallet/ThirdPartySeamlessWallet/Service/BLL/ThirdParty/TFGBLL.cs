@@ -25,6 +25,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly TpUnsettleService _tpUnsettleService;
         private readonly ILogger<TFGBLL> _logger;
         private readonly MySqlClient _mainDbClient;
+        private readonly MySqlClient _wagerDbClient;
         public Tp ThirdParty { get; set; }
         public GameType GameType { get; set; }
 
@@ -39,6 +40,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
             _logger = logger;
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
         }
 
         public async Task<Result> Transfer(TFGTransferReq req)
@@ -154,10 +156,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             return result;
-            //if (result.Code != ResultCode.Success)
-            //{
-            //    throw new TFGException(400);
-            //}
         }
 
         public async Task<Result> Rollback(TFGRallBackReq req)
@@ -185,12 +183,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var result = await RollBack(tpCustInfo, placeBetTFG);
 
             return result;
-            //if (result.Code != ResultCode.Success)
-            //{
-            //    throw new TFGException(400);
-            //}
         }
 
+        public Check_TFG GetBetData(string id)
+        {
+            return _mainDbClient.QueryFirst<Check_TFG>("Service_BettransSports_TFG_Check", new DynamicParameters(new { id = id }));
+        }
+        public IEnumerable<TFGSettle> GetSettleData(string id)
+        {
+            return _mainDbClient.Query<TFGSettle>("Service_BettransSports_TFG_Settle_Get", CommandType.StoredProcedure, new DynamicParameters(new { id = id }));
+        }
+        public WagerTFG GetWagerData(string id)
+        {
+            return _wagerDbClient.QueryFirst<WagerTFG>("Service_TpWagerTFG_Get", new DynamicParameters(new { id = id }));
+        }
         private async Task<Result> Bet(TpCustInfo tpCustInfo, PlaceBet_TFG bet)
         {
             try
@@ -237,7 +243,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     Log.Error("PlaceBetV2");
                     return new Result { Code = ResultCode.DatabaseError };
                 }
-                
+
+                result = _tpUnsettleService.InsertTpUnsettle(Tp.TFG, GameType, bet.id, trans);
+
+                if (result < 1)
+                {
+                    _logger.LogError("InsertTpUnsettle");
+                    return new Result { Code = ResultCode.DatabaseError };
+                }
+
+
                 await trans.CommitAsync();
                 return new Result { Code = ResultCode.Success };
             }
@@ -287,10 +302,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             tpCustInfo: tpCustInfo,
                             amount: settle.amount,
                             tpId: (int)ThirdParty,
-                            tpTransId: settle.ticketNum,
+                            tpTransId: settle.id,
                             gameType: (int)GameType,
                             tpCategory: TpCategory.VirtualSports,
-                            refId: settle.ticketNum,
+                            refId: settle.id,
                             transType,
                             betData: null,
                             out decimal afterAmount,
@@ -308,7 +323,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     }
                 }
 
-                result = _tpUnsettleService.InsertTpUnsettle(Tp.SBO, GameType, settle.ticketNum, trans);
+                result = _tpUnsettleService.InsertTpUnsettle(Tp.TFG, GameType, settle.ticketNum, trans);
 
                 if (result < 1)
                 {
@@ -344,6 +359,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 var result = await conn.ExecuteAsync("Service_BettransSports_TFG_Cancel", new { id = bet.id }, transaction: trans, commandType: CommandType.StoredProcedure);
 
+
                 if (result < 1)
                 {
                     _logger.LogError("Service_BettransSports_TFG_Cancel");
@@ -354,10 +370,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             tpCustInfo: tpCustInfo,
                             amount: bet.amount * -1,
                             tpId: (int)ThirdParty,
-                            tpTransId: bet.ticketNum,
+                            tpTransId: bet.id,
                             gameType: (int)GameType,
                             tpCategory: TpCategory.VirtualSports,
-                            refId: bet.ticketNum,
+                            refId: bet.id,
                             TransType.Refunds,
                             betData: null,
                             out decimal afterAmount,
@@ -371,6 +387,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 if (result != 1)
                 {
                     _logger.LogError("PayoutV2");
+                    return new Result { Code = ResultCode.DatabaseError };
+                }
+
+                result = _tpUnsettleService.InsertTpUnsettle(Tp.TFG, GameType, bet.id, trans);
+
+                if (result < 1)
+                {
+                    _logger.LogError("InsertTpUnsettle");
                     return new Result { Code = ResultCode.DatabaseError };
                 }
 

@@ -10,6 +10,7 @@ using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.BLL.MG;
 using ThirdPartyWager.Service.BLL.SBO;
+using ThirdPartyWager.Service.BLL.TFG;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -87,6 +88,7 @@ namespace ThirdPartyWager
             services.AddSingleton<TpUnsettleService>();
             services.AddSingleton<ConfigService>();
             services.AddSingleton<FincanceService>();
+            services.AddSingleton<WagerTFGService>();
 
             services.AddOptionListByDB<ServerInfo>("Admin_ServerInfoList_Get");
             services.AddOptionListByDB<dynamic>("Service_TpWagerTimer_Get", new { TpId = 1, Type = 1 }, DataBase.Wager);
@@ -243,6 +245,9 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerBGBLL>();
             services.AddSingleton<ApiBGBLL>();
             services.AddSingleton<FinanceBGBLL>();
+            //TFG
+            services.AddSingleton<ApiTFGBLL>();
+            services.AddSingleton<WagerTFGBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -327,6 +332,8 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerBG>();
             services.AddHostedService<WagerRedoBG>();
             services.AddHostedService<FinanceBG>();
+            services.AddHostedService<WagerTFG>();
+            services.AddHostedService<WagerUnsettleCheckTFG>();
 
             /*******************closed tp*************************/
             //services.AddHostedService<WagerOneGaming>();

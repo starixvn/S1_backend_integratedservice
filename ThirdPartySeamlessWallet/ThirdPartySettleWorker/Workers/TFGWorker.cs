@@ -1,0 +1,187 @@
+﻿using Microsoft.AspNetCore.Mvc.RazorPages;
+using Serilog.Context;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
+using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySettleWorker.Model.Exceptions;
+using ThirdPartySettleWorker.Model.Interfaces;
+using static ThirdPartySeamlessWallet.Controllers.APController;
+
+namespace ThirdPartySettleWorker.Workers
+{
+    internal class TFGWorker : BackgroundService, ISettleWorker
+    {
+        public Tp Tp { get => Tp.TFG; }
+        private Timer timer;
+        private readonly string _tpName;
+        private readonly TpUnSettledBLL _tpUnSettledBLL;
+        private readonly ITFGBLL _tfgbLL;
+        private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly SettledBLL _settledBLL;
+        private readonly ILogger<TFGWorker> _logger;
+        public TFGWorker(IServiceProvider provider, ITFGBLL tfgbll)
+        {
+            _tpName = Enum.GetName(typeof(Tp), Tp);
+            _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
+            _tfgbLL = tfgbll;
+            _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _settledBLL = provider.GetRequiredService<SettledBLL>();
+            _logger = provider.GetRequiredService<ILogger<TFGWorker>>();
+        }
+
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            timer = new Timer(SettleEsports, GameType.TFG_Esports, TimeSpan.Zero, TimeSpan.Zero);
+
+            return Task.CompletedTask;
+        }
+        public override Task StopAsync(CancellationToken cancellationToken)
+        {
+            timer?.Change(Timeout.Infinite, 0);
+            return Task.CompletedTask;
+        }
+        private void SettleEsports(object state)
+        {
+            LogContext.PushProperty("TP", _tpName);
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+
+            var forContinue = false;
+            var isError = false;
+
+            try
+            {
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, GameType.TFG_Esports);
+                if (!tpUnsettleList.Any())
+                {
+                    throw new UnsettleNotFoundException($"{_tpName} {GameType.TFG_Esports} no unsettle data.");
+                }
+
+                forContinue = tpUnsettleList.Count() == 200;
+
+                foreach (var tpUnsettle in tpUnsettleList)
+                {
+                    try
+                    {
+                        var betData = _tfgbLL.GetBetData(tpUnsettle.TransId);
+                        var settleData = _tfgbLL.GetSettleData(tpUnsettle.TransId);
+                        var wagerData = _tfgbLL.GetWagerData(tpUnsettle.TransId);
+                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, betData.loginName);
+                        var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
+
+                        //未結算預設值
+                        var winlostAmount = 0m;
+                        var settlementType = SettlementType.UnSettled;
+                        var ticketStatus = TicketStatus.UnSettled;
+                        var transTime = betData.unix_date_created;
+                        var settledTime = betData.unix_settlement_datetime;
+
+                        //設定結算值
+                        if (settleData.Any())
+                        {
+                            if (wagerData == null)
+                                continue;
+
+                            #region 匯率轉換
+                            wagerData.amount *= tpCurrency.ExchangeRate;
+                            wagerData.earnings *= tpCurrency.ExchangeRate;
+                            #endregion
+
+                            winlostAmount = betData.amount - settleData.Sum(x => x.amount);
+                            settlementType = SettlementType.SettledForValid;
+                            ticketStatus = GetTicketStatus(wagerData.result_status);
+                            transTime = wagerData.unix_date_created;
+                            settledTime = wagerData.unix_settlement_datetime;
+                            if (!(betData.amount == wagerData.amount && winlostAmount == wagerData.earnings))
+                                continue;
+
+                        }
+
+                        //Reserve.TicketStatus = 3就是下注失敗退款
+                        if (betData.TicketStatus == (int)TicketStatus.Refund)
+                        {
+                            settlementType = SettlementType.SettledForInvalid;
+                            ticketStatus = TicketStatus.Refund;
+                        }
+
+                        var betRecordInfo = new BetRecordInfo
+                        {
+                            TpId = (int)Tp,
+                            Stake = betData.amount,
+                            ValidBet = betData.amount,
+                            WinlostAmount = winlostAmount,
+                            TransId = tpUnsettle.TransId,
+                            GameType = GameType.TFG_Esports,
+                            TpUserName = betData.loginName,
+                            SettledTime = transTime,
+                            TransTime = settledTime,
+                            SettlementType = settlementType,
+                            TicketStatus = ticketStatus,
+                        };
+
+                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Esport);
+                        if (result == 1)
+                        {
+                            Task.Run(() =>
+                            {
+                                _tpUnSettledBLL.SetTpUnsettle(Tp, GameType.TFG_Esports, tpUnsettle.TransId, true);
+                            });
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Task.Run(() =>
+                        {
+                            _tpUnSettledBLL.SetTpUnsettle(Tp, GameType.TFG_Esports, tpUnsettle.TransId, false);
+                        });
+                        LogContext.PushProperty("TP", _tpName);
+                        _logger.LogError(ex, $"TFG Settle exception. {ex.Message} || TransId : {tpUnsettle.TransId}");
+                    }
+                }
+            }
+            catch (UnsettleNotFoundException ex)
+            {
+                _logger.LogInformation(ex, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                LogContext.PushProperty("TP", _tpName);
+                _logger.LogError(ex, $"TFG Settle exception. {ex.Message}");
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromSeconds(30);
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(5);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                }
+
+                timer.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
+
+        private TicketStatus GetTicketStatus(string resultStatus)
+        {
+            return resultStatus switch
+            {
+                "WIN" => TicketStatus.Win,
+                "LOSS" => TicketStatus.Lost,
+                "DRAW" => TicketStatus.Draw,
+                "CANCELLED" => TicketStatus.Refund
+            };
+        }
+    }
+}
