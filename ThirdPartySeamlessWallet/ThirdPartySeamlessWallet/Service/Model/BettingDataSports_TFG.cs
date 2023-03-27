@@ -219,6 +219,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public long SQ { get; set; }
         public int TicketStatus { get; set; }
         public Decimal amount { get; set; }
+        public string loginName { get; set; }
+        public long unix_date_created { get; set; }
+        public long unix_settlement_datetime { get; set; }
     }
     public class TFGRallBackReq : TFGTransferReq
     {
@@ -227,5 +230,45 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class TFGRallBackResp : TFGTransferResp
     {
 
+    }
+
+    public class TFGSettle
+    {
+        public long SQ { get; set; }
+        public int TicketType { get; set; }
+        public Decimal amount { get; set; }
+        public string currency { get; set; }
+    }
+
+    public class WagerTFG
+    {
+        public string id { get; set; }
+        public decimal odds { get; set; }
+        public string currency { get; set; }
+        public decimal amount { get; set; }
+        public string game_market_name { get; set; }
+        public string market_option { get; set; }
+        public string map_num { get; set; }
+        public string bet_type_name { get; set; }
+        public int event_id { get; set; }
+        public DateTime? event_datetime { get; set; }
+        public DateTime? date_created { get; set; }
+        public DateTime? settlement_datetime { get; set; }
+        public DateTime? modified_datetime { get; set; }
+        public string settlement_status { get; set; }
+        public string result_status { get; set; }
+        public decimal? earnings { get; set; }
+        public bool is_combo { get; set; }
+        public string member_code { get; set; }
+        public bool is_unsettled { get; set; }
+        public decimal? malay_odds { get; set; }
+        public decimal? euro_odds { get; set; }
+        public decimal member_odds { get; set; }
+        public string member_odds_style { get; set; }
+        public string request_source { get; set; }
+        public string tickets { get; set; }
+        public long unix_date_created { get; set; }
+        public long unix_settlement_datetime { get; set; }
+        public long unix_modified_datetime { get; set; }
     }
 }

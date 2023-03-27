@@ -40,7 +40,7 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Skywind.SettleCheck.Exception");
+                _logger.LogError(ex, $"TFG.SettleCheck.Exception");
                 nextTimeSpan = TimeSpan.FromMinutes(1);
             }
             finally
