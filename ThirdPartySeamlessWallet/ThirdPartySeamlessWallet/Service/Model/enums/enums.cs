@@ -217,7 +217,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Lottery = 6,
         VirtualSports = 7,
         P2P = 8,
-        Games = 10
+        Games = 10,
+        Esport = 11
     }
 
     public enum PromotionCategory
