@@ -36,7 +36,7 @@ public class WagerBGBLL
         var result = true;
         var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(_tpId, (int)type, tpCurrencyId, siteId);
         var quick = CheckQuick(dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now.AddMinutes(-10), needQuickTime);
-        var time = GetTime(timeRange, _timeZone, _timeFormat, dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now.AddMinutes(-10), 3);
+        var time = GetTime(timeRange, _timeZone, _timeFormat, dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now.AddMinutes(-10), 5);
 
         if (type == WagerTimerType.Wager)
             result = await GetWagersAsync(siteId, tpCurrencyId, time.startTime, time.endTime, type);
