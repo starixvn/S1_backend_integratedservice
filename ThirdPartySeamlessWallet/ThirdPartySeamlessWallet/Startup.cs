@@ -26,7 +26,7 @@ namespace ThirdPartySeamlessWallet
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors(options => 
+            services.AddCors(options =>
             {
                 options.AddPolicy("BTIPolicy", builder =>
                 {
@@ -34,7 +34,7 @@ namespace ThirdPartySeamlessWallet
                             .AllowAnyHeader()
                             .WithMethods("GET")
                             .SetIsOriginAllowedToAllowWildcardSubdomains();
-                });                                 
+                });
             });
 
             services.AddMemoryCache();
@@ -95,6 +95,7 @@ namespace ThirdPartySeamlessWallet
             services.AddTransient<IJokerBLL, JokerBLL>();
             services.AddTransient<IKiss918BLL, Kiss918BLL>();
             services.AddTransient<IYeebetBLL, YeebetBLL>();
+            services.AddTransient<IBGBLL, BGBLL>();
             services.AddSingleton<TpUnSettledBLL>();
             services.AddSingleton<TpBetRecordExtendBLL>();
             services.AddSingleton<TpRequestFailBLL>();
