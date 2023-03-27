@@ -327,7 +327,6 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerBG>();
             services.AddHostedService<WagerRedoBG>();
             services.AddHostedService<FinanceBG>();
-
             /*******************closed tp*************************/
             //services.AddHostedService<WagerOneGaming>();
             //services.AddHostedService<WagerRedoOneGaming>();
