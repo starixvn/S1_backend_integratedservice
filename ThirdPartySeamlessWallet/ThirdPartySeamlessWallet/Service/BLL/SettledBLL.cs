@@ -42,9 +42,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetSettlementType(gameType, gameId);
         }
 
-        public int DoTpRewardTicket(TpCustInfo tpCustInfo, TpRewardRecordInfo tpRewardRecordInfo, TpCategory tpCategory)
+        public int DoTpRewardTicket(TpCustInfo tpCustInfo, TpRewardRecordInfo tpRewardRecordInfo, TpCategory tpCategory, bool checkBonus = true)
         {
-            var result = settledService.DoTpRewardTicket(tpCustInfo, tpRewardRecordInfo, tpCategory);
+            var result = settledService.DoTpRewardTicket(tpCustInfo, tpRewardRecordInfo, tpCategory, checkBonus);
             return result;
         }
 
