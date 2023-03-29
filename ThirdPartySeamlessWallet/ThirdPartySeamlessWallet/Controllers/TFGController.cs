@@ -44,15 +44,11 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             try
             {
-                //_logger.LogInformation($"token\r\n{req.token}");
                 var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(req.token)));
                 var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
                 string authToken = sessionKeyArr[0];
                 string sessionToken = sessionKeyArr[1];
                 string tpUserName = sessionKeyArr[2];
-                //_logger.LogInformation($"authToken\r\n{authToken}");
-                //_logger.LogInformation($"sessionToken\r\n{sessionToken}");
-                //_logger.LogInformation($"tpUserName\r\n{tpUserName}");
                 if (!_authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
                     return BadRequest();
                 var tpCheck = _thirdPartyBLL.ThirdPartyCheck((int)_thisTp, tpUserName);

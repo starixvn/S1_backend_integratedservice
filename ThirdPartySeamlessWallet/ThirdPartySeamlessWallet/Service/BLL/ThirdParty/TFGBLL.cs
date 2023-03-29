@@ -70,7 +70,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var placeBetTFG = new PlaceBet_TFG()
                 {
                     loginName = req.loginName,
-                    amount = req.amount,
+                    amount = Math.Abs(req.amount),
                     placeBet = req.placeBet,
                     ticketNum = req.ticketNum,
                     description = req.description,
@@ -82,7 +82,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     event_id = req.ticketDetail.event_id,
                     handicap = req.ticketDetail.handicap,
                     is_combo = req.ticketDetail.is_combo,
-                    euro_odds = req.ticketDetail.euro_odds,
+                    euro_odds = req.ticketDetail.euro_odds == null ? 0 : req.ticketDetail.euro_odds,
                     market_id = req.ticketDetail.market_id,
                     event_name = req.ticketDetail.event_name,
                     malay_odds = req.ticketDetail.malay_odds == null ? 0 : req.ticketDetail.malay_odds,
@@ -121,36 +121,37 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     id = req.ticketDetail.id,
                     odds = req.ticketDetail.odds,
                     result = req.ticketDetail.result,
-                    map_num = req.ticketDetail.map_num,
+                    map_num = string.IsNullOrWhiteSpace(req.ticketDetail.map_num) ? String.Empty : req.ticketDetail.map_num,
                     currency = req.ticketDetail.currency,
-                    earnings = req.ticketDetail.earnings,
+                    earnings = req.ticketDetail.earnings == null ? 0 : req.ticketDetail.earnings,
                     event_id = req.ticketDetail.event_id,
                     handicap = req.ticketDetail.handicap,
                     is_combo = req.ticketDetail.is_combo,
-                    euro_odds = req.ticketDetail.euro_odds,
+                    euro_odds = req.ticketDetail.euro_odds == null ? 0 : req.ticketDetail.euro_odds,
                     market_id = req.ticketDetail.market_id,
                     event_name = req.ticketDetail.event_name,
-                    malay_odds = req.ticketDetail.malay_odds,
+                    malay_odds = req.ticketDetail.malay_odds == null ? 0 : req.ticketDetail.malay_odds,
                     member_code = req.ticketDetail.member_code,
                     member_odds = req.ticketDetail.member_odds,
                     ticket_type = req.ticketDetail.ticket_type,
-                    date_created = req.ticketDetail.date_created == null ? DateTimeOffset.MinValue : req.ticketDetail.date_created,
+                    date_created = req.ticketDetail.date_created == null ? DateTime.MinValue : req.ticketDetail.date_created?.DateTime,
                     game_type_id = req.ticketDetail.game_type_id,
                     is_unsettled = req.ticketDetail.is_unsettled,
                     bet_selection = req.ticketDetail.bet_selection,
-                    bet_type_name = req.ticketDetail.bet_type_name,
-                    market_option = req.ticketDetail.market_option,
+                    bet_type_name = string.IsNullOrWhiteSpace(req.ticketDetail.bet_type_name) ? String.Empty : req.ticketDetail.bet_type_name,
+                    market_option = string.IsNullOrWhiteSpace(req.ticketDetail.market_option) ? String.Empty : req.ticketDetail.market_option,
                     request_source = req.ticketDetail.request_source,
-                    event_datetime = req.ticketDetail.event_datetime == null ? DateTimeOffset.MinValue : req.ticketDetail.event_datetime,
+                    event_datetime = req.ticketDetail.event_datetime == null ? DateTime.MinValue : req.ticketDetail.event_datetime?.DateTime,
                     game_type_name = req.ticketDetail.game_type_name,
                     competition_name = req.ticketDetail.competition_name,
-                    game_market_name = req.ticketDetail.game_market_name,
+                    game_market_name = string.IsNullOrWhiteSpace(req.ticketDetail.game_market_name) ? String.Empty : req.ticketDetail.game_market_name,
                     member_odds_style = req.ticketDetail.member_odds_style,
-                    modified_datetime = req.ticketDetail.modified_datetime == null ? DateTimeOffset.MinValue : req.ticketDetail.modified_datetime,
+                    modified_datetime = req.ticketDetail.modified_datetime == null ? DateTime.MinValue : req.ticketDetail.modified_datetime?.DateTime,
                     settlement_status = req.ticketDetail.settlement_status,
-                    settlement_datetime = req.ticketDetail.settlement_datetime == null ? DateTimeOffset.MinValue : req.ticketDetail.settlement_datetime,
+                    settlement_datetime = req.ticketDetail.settlement_datetime == null ? DateTime.MinValue : req.ticketDetail.settlement_datetime?.DateTime,
                     tickets = req.ticketDetail.is_combo ? JsonConvert.SerializeObject(req.ticketDetail.tickets) : "{}",
-                    TpGameType = GameType
+                    TpGameType = GameType,
+                    result_status = string.IsNullOrWhiteSpace(req.ticketDetail.result_status) ? String.Empty : req.ticketDetail.result_status,
                 };
                 result = await Settle(tpCustInfo, settleTFG);
             }
@@ -185,18 +186,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return result;
         }
 
-        public Check_TFG GetBetData(string id)
-        {
-            return _mainDbClient.QueryFirst<Check_TFG>("Service_BettransSports_TFG_Check", new DynamicParameters(new { id = id }));
-        }
-        public IEnumerable<TFGSettle> GetSettleData(string id)
-        {
-            return _mainDbClient.Query<TFGSettle>("Service_BettransSports_TFG_Settle_Get", CommandType.StoredProcedure, new DynamicParameters(new { id = id }));
-        }
-        public WagerTFG GetWagerData(string id)
-        {
-            return _wagerDbClient.QueryFirst<WagerTFG>("Service_TpWagerTFG_Get", new DynamicParameters(new { id = id }));
-        }
+        //public Check_TFG GetBetData(string id)
+        //{
+        //    return _mainDbClient.QueryFirst<Check_TFG>("Service_BettransSports_TFG_Check", new DynamicParameters(new { id = id }));
+        //}
+        //public IEnumerable<TFGSettle> GetSettleData(string id)
+        //{
+        //    return _mainDbClient.Query<TFGSettle>("Service_BettransSports_TFG_Settle_Get", CommandType.StoredProcedure, new DynamicParameters(new { id = id }));
+        //}
+        //public WagerTFG GetWagerData(string id)
+        //{
+        //    return _wagerDbClient.QueryFirst<WagerTFG>("Service_TpWagerTFG_Get", new DynamicParameters(new { id = id }));
+        //}
         private async Task<Result> Bet(TpCustInfo tpCustInfo, PlaceBet_TFG bet)
         {
             try
@@ -323,7 +324,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     }
                 }
 
-                result = _tpUnsettleService.InsertTpUnsettle(Tp.TFG, GameType, settle.ticketNum, trans);
+                result = _tpUnsettleService.InsertTpUnsettle(Tp.TFG, GameType, settle.id, trans);
 
                 if (result < 1)
                 {
