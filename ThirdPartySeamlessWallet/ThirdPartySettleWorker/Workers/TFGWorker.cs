@@ -23,16 +23,14 @@ namespace ThirdPartySettleWorker.Workers
         private Timer timer;
         private readonly string _tpName;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
-        private readonly ITFGBLL _tfgbLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly SettledBLL _settledBLL;
         private readonly ILogger<TFGWorker> _logger;
-        public TFGWorker(IServiceProvider provider, ITFGBLL tfgbll)
+        public TFGWorker(IServiceProvider provider)
         {
             _tpName = Enum.GetName(typeof(Tp), Tp);
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
-            _tfgbLL = tfgbll;
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _settledBLL = provider.GetRequiredService<SettledBLL>();
@@ -57,6 +55,9 @@ namespace ThirdPartySettleWorker.Workers
 
             var forContinue = false;
             var isError = false;
+            const string getBettransSp = "Service_BettransSports_TFG_Check"; // 取得下注紀錄
+            const string getSettleSp = "Service_BettransSports_TFG_Settle_Get"; // 取得未結算的注單
+            const string getWagerSp = "Service_TpWagerTFG_Get"; // 取得Wager資料
 
             try
             {
@@ -72,9 +73,9 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var betData = _tfgbLL.GetBetData(tpUnsettle.TransId);
-                        var settleData = _tfgbLL.GetSettleData(tpUnsettle.TransId);
-                        var wagerData = _tfgbLL.GetWagerData(tpUnsettle.TransId);
+                        var betData = _tpUnSettledBLL.GetTpUnsettleData<Check_TFG>(getBettransSp, new { id = tpUnsettle.TransId }, DataBase.Main).FirstOrDefault();
+                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<TFGSettle>(getSettleSp, new { id = tpUnsettle.TransId }, DataBase.Main);
+                        var wagerData = _tpUnSettledBLL.GetTpUnsettleData<WagerTFG>(getWagerSp, new { id = tpUnsettle.TransId }, DataBase.Wager).FirstOrDefault();
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, betData.loginName);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
 
@@ -84,6 +85,7 @@ namespace ThirdPartySettleWorker.Workers
                         var ticketStatus = TicketStatus.UnSettled;
                         var transTime = betData.unix_date_created;
                         var settledTime = betData.unix_settlement_datetime;
+
 
                         //設定結算值
                         if (settleData.Any())
@@ -96,17 +98,26 @@ namespace ThirdPartySettleWorker.Workers
                             wagerData.earnings *= tpCurrency.ExchangeRate;
                             #endregion
 
-                            winlostAmount = betData.amount - settleData.Sum(x => x.amount);
+                            decimal? earnings = null;
+                            earnings = wagerData.result_status switch
+                            {
+                                "WIN" => settleData.Sum(x => x.amount) + betData.amount,
+                                "LOSS" => -betData.amount,
+                                "DRAW" => betData.amount,
+                                "CANCELLED" => null,
+                                "PENDING " => null
+                            };
+
+                            winlostAmount = settleData.Sum(x => x.amount) - betData.amount;
                             settlementType = SettlementType.SettledForValid;
                             ticketStatus = GetTicketStatus(wagerData.result_status);
                             transTime = wagerData.unix_date_created;
                             settledTime = wagerData.unix_settlement_datetime;
-                            if (!(betData.amount == wagerData.amount && winlostAmount == wagerData.earnings))
+                            if (!(betData.amount == wagerData.amount && (wagerData.earnings == null || wagerData.earnings == earnings)))
                                 continue;
 
                         }
 
-                        //Reserve.TicketStatus = 3就是下注失敗退款
                         if (betData.TicketStatus == (int)TicketStatus.Refund)
                         {
                             settlementType = SettlementType.SettledForInvalid;
