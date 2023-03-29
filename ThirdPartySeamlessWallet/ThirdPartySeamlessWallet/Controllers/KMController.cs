@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Extensions.ActionFilters;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
@@ -27,7 +21,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             _logger = logger;
             _kmService = provider.GetService<IKMService>();
         }
-        
+
         [HttpGet]
         [Route("Ping")]
         public string Ping() => "Pong";
@@ -65,7 +59,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 };
             }
         }
-        
+
         /// <summary>
         /// 加錢
         /// </summary>
@@ -78,7 +72,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 var content = await reader.ReadToEndAsync();
                 var request = JsonConvert.DeserializeObject<KMCreditRequest>(content);
-                
+
                 return await _kmService.Credit(request);
             }
             catch (KmException ke)
@@ -90,7 +84,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     errdesc = ke.ErrorMessage
                 };
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 _logger.LogError(e, "km credit failed");
                 return new ErrorResult()
@@ -124,6 +118,41 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception e)
             {
                 _logger.LogError(e, "km balance failed");
+                return new ErrorResult()
+                {
+                    err = 900,
+                    errdesc = "system error"
+                };
+            }
+        }
+
+        /// <summary>
+        /// 奖励
+        /// </summary>
+        [HttpPost]
+        [Route("reward")]
+        public async Task<BaseResult> Reward()
+        {
+            try
+            {
+                using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+                var content = await reader.ReadToEndAsync();
+                var request = JsonConvert.DeserializeObject<KMRewardRequest>(content);
+
+                return await _kmService.Reward(request);
+            }
+            catch (KmException ke)
+            {
+                _logger.LogError(ke.ErrorMessage);
+                return new ErrorResult()
+                {
+                    err = (int)ke.KMErrorCode,
+                    errdesc = ke.ErrorMessage
+                };
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "km reward failed");
                 return new ErrorResult()
                 {
                     err = 900,
