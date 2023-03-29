@@ -766,12 +766,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int bonusId = 0;
             int gameType = (int)tpRewardRecordInfo.GameType;
 
-            GetTpBonus(tpRewardRecordInfo.TpId, tpRewardRecordInfo.TransId, gameType, tpCategory, out int custId, out bonusId);
+            if (checkBonus)
+            {
+                GetTpBonus(tpRewardRecordInfo.TpId, tpRewardRecordInfo.TransId, gameType, tpCategory, out int custId, out bonusId);
+            }
+
             tpRewardRecordInfo.BonusId = bonusId;
 
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
+
             int result = SetTpRewardTicket(tpCustInfo, tpRewardRecordInfo, conn, trans);
 
             if (result > 0)

@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Security.Cryptography;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class BaseResult
     {
-        
+
     }
     public class ErrorResult : BaseResult
     {
@@ -94,6 +91,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal bal { get; set; }
         public string cur { get; set; }
         public bool dup { get; set; }
+
+        public int err { get; set; }
+        public string errdesc { get; set; }
     }
     #endregion
 
@@ -103,7 +103,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public List<KMCreditRequestTransaction> transactions { get; set; }
     }
-    
+
     public class KMCreditRequestTransaction
     {
         public string userid { get; set; }
@@ -136,20 +136,20 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string walletcode { get; set; }
         public string commission { get; set; }
     }
-    
-    public class KMCreditResponse: BaseResult
+
+    public class KMCreditResponse : BaseResult
     {
         public List<KMCreditResponseTransaction> transactions { get; set; }
     }
     public class KMCreditResponseTransaction
     {
-        
+
         public string txid { get; set; }
         public string ptxid { get; set; }
         public decimal bal { get; set; }
         public string cur { get; set; }
         public bool dup { get; set; }
-        
+
         public int err { get; set; }
         public string errdesc { get; set; }
     }
@@ -162,24 +162,24 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string testmode { get; set; }
         public List<KMBalanceRequestUser> users { get; set; }
     }
-    
+
     public class KMBalanceRequestUser
     {
         [JsonProperty("authtoken")]
         public string AuthToken { get; set; }
-        
+
         [JsonProperty("userid")]
         public string UserId { get; set; }
-        
+
         [JsonProperty("lang")]
         public string Lang { get; set; }
-        
+
         [JsonProperty("brandcode")]
         public string BrandCode { get; set; }
-        
+
         [JsonProperty("cur")]
         public string Cur { get; set; }
-        
+
         [JsonProperty("walletcode")]
         public object WalletCode { get; set; }
     }
@@ -202,7 +202,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string cur { get; set; }
     }
     #endregion
-    
+
     public class KmDbResult
     {
         public int SPResult { get; set; }
@@ -212,5 +212,46 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal AfterAmount { get; set; }
 
         public decimal ReturnAmount { get; set; }
+    }
+
+    #region reward
+
+    public class KMRewardRequest
+    {
+        public string brandcode { get; set; }
+        public List<KMRewardRequestTransaction> transactions { get; set; }
+    }
+
+    public class KMRewardRequestTransaction
+    {
+        public string userid { get; set; }
+        public decimal amt { get; set; }
+        public string cur { get; set; }
+        public string ptxid { get; set; }
+        public string desc { get; set; } = "";
+    }
+
+    public class KMRewardResponse : BaseResult
+    {
+        public List<KMRewardResponseTransaction> transactions { get; set; }
+    }
+
+    public class KMRewardResponseTransaction
+    {
+        public string txid { get; set; }
+        public string ptxid { get; set; }
+        public decimal bal { get; set; }
+        public string cur { get; set; }
+        public bool dup { get; set; }
+        public int err { get; set; }
+        public string errdesc { get; set; }
+    }
+
+    #endregion
+
+    public class CheckTpInfoKM
+    {
+        public int err { get; set; } = 0;
+        public string errdesc { get; set; } = "";
     }
 }
