@@ -8,10 +8,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface
 
         Task<Result> Rollback(TFGRallBackReq req);
 
-        Check_TFG GetBetData(string id);
+        //Check_TFG GetBetData(string id);
 
-        IEnumerable<TFGSettle> GetSettleData(string id);
+        //IEnumerable<TFGSettle> GetSettleData(string id);
 
-        WagerTFG GetWagerData(string id);
+        //WagerTFG GetWagerData(string id);
     }
 }
