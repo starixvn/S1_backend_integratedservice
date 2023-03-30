@@ -4,9 +4,9 @@ using ThirdPartyCore;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.TpBetRecordExtend;
-using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Web;
+using ThirdPartyCore.Extensions;
 
 namespace ThirdParty.TFG
 {
@@ -36,11 +36,8 @@ namespace ThirdParty.TFG
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
             string RetrieveUrl = inputs.ContainsKey($"RetrieveUrl_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"RetrieveUrl_{tpCustInfo.TpCurrencyId}"]) ? inputs[$"RetrieveUrl_{tpCustInfo.TpCurrencyId}"] : throw new Exception();
             string PublicToken = inputs.ContainsKey($"PublicToken_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"PublicToken_{tpCustInfo.TpCurrencyId}"]) ? inputs[$"PublicToken_{tpCustInfo.TpCurrencyId}"] : throw new Exception();
-            string PartnerId = inputs.ContainsKey($"PartnerId_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"PartnerId_{tpCustInfo.TpCurrencyId}"]) ? inputs[$"PartnerId_{tpCustInfo.TpCurrencyId}"] : throw new Exception();
-            string PrivateToken = inputs.ContainsKey($"PrivateToken_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"PrivateToken_{tpCustInfo.TpCurrencyId}"]) ? inputs[$"PrivateToken_{tpCustInfo.TpCurrencyId}"] : throw new Exception();
 
             #region token
             var key = ApplyToken(tpCustInfo);
@@ -75,11 +72,46 @@ namespace ThirdParty.TFG
         }
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            string PrivateToken = inputs.ContainsKey($"PrivateToken_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"PrivateToken_{tpCustInfo.TpCurrencyId}"]) ? inputs[$"PrivateToken_{tpCustInfo.TpCurrencyId}"] : throw new Exception();
+
+            string url = $"https://{ApiUrl}/api/v2/bet-transaction/";
+            string getParams = $"id={getBetDetail.TransId}";
+            Dictionary<string, string> header = new Dictionary<string, string>();
+            header.Add("Authorization", PrivateToken);
+            string json = HttpGet(url, getParams, "application/json", header);
+            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                Detail = json,
+                TpCurrency = new TpCurrency()
+                {
+                    ExchangeRate = tpCustInfo.ExchangeRate,
+                    TpCurrencyId = tpCustInfo.TpCurrencyId,
+                },
+            };
         }
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerTFG_Get", new { id = betRecordInfo.TransId }, DataBase.Wager);
+            if (detail == null)
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = detail.GetStringValue("event_id"),
+                Game = tpGameType.TypeName,
+                RefNo = string.Empty,
+                Title = tpGameType.TypeName,
+                MatchID = betRecordInfo.TransId,
+                BetType = detail.GetStringValue("member_odds_style"),
+                BetChoice = string.Empty,
+                Result = string.Empty,
+                DeviceType = GetDeviceType(detail.GetStringValue("request_source")),
+                IP = string.Empty,
+            };
         }
         public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
@@ -92,6 +124,16 @@ namespace ThirdParty.TFG
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
+        }
+        private DeviceType GetDeviceType(string device)
+        {
+            return device switch
+            {
+                "desktop-browser"=> DeviceType.Desktop,
+                "mobile-browser"=> DeviceType.Mobile,
+                "mobile-app"=> DeviceType.Mobile,
+                _=> DeviceType.None
+            };
         }
     }
 }
