@@ -22,6 +22,8 @@ using Microsoft.Extensions.Configuration;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
 using ThirdParty.TFG;
+using static ThirdParty.TCG.TpHelper;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.TFG.Tests
 {
@@ -67,6 +69,7 @@ namespace ThirdParty.TFG.Tests
             var provider = services.BuildServiceProvider();
             ThirdPartyHelperBase.AuthProvider = provider.GetRequiredService<AuthBLL>();
             ThirdPartyHelperBase.TpCustInfoProvider = provider.GetRequiredService<TpCustInfoBLL>();
+            ThirdPartyHelperBase.TpBetRecordProvider = provider.GetRequiredService<TpBetRecordService>();
         }
         [SetUp]
         public void Setup()
@@ -113,6 +116,48 @@ namespace ThirdParty.TFG.Tests
 
             //Assert
             actual.ErrorCode.Should().Be(ErrorCode.Success);
+        }
+
+        [Test()]
+        public void GetBetDetailTest()
+        {
+            //Arrange
+            var appType = AppType.Desktop;
+            var tpLangId = "en";
+            GetBetDetailRequest request = new GetBetDetailRequest()
+            {
+                CustId = 644440,
+                TransId = "CDPCC198430I5340SZCA7CB",
+                GameType = 97,
+                SettledTime = DateTime.Now
+            };
+            TpGameTypeOption tpGameTypeOption = new TpGameTypeOption();
+            GetBetDetail getBetDetail = new GetBetDetail(request, tpGameTypeOption);
+            //Act
+            var actual = _tpHelper.GetBetDetail(getBetDetail, _tpCustInfo, _inputs);
+        }
+
+        [Test()]
+        public void GetTpBetRecordExtendTest()
+        {
+            //Arrange
+            var appType = AppType.Desktop;
+            var tpLangId = "en";
+            GetBetDetailRequest request = new GetBetDetailRequest()
+            {
+                CustId = 644440,
+                TransId = "CDPCC198430I5340SZCA7CB",
+                GameType = 97,
+                SettledTime = DateTime.Now
+            };
+            TpGameTypeOption tpGameTypeOption = new TpGameTypeOption();
+            GetBetDetail getBetDetail = new GetBetDetail(request, tpGameTypeOption);
+            BetRecordInfo betRecordInfo = new BetRecordInfo()
+            {
+                TransId = "CDPCC198430I5340SZCA7CB"
+            };
+            //Act
+            var actual = _tpHelper.GetTpBetRecordExtend(betRecordInfo, tpGameTypeOption, _tpCustInfo, _inputs);
         }
     }
 }
