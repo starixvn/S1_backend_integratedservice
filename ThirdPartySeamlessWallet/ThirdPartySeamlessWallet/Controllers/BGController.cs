@@ -7,11 +7,7 @@ using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
-using System;
-using Microsoft.DotNet.MSIdentity.Shared;
-using Microsoft.AspNetCore.SignalR;
-using NuGet.Packaging.Signing;
-using Google.Protobuf.WellKnownTypes;
+using Serilog.Context;
 
 namespace ThirdPartySeamlessWallet.Controllers;
 
@@ -52,9 +48,9 @@ public class BGController : ControllerBase
     public async Task<ResponseModel_BG> SeamlessWalletAsync()
     {
         using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-        var Content = await reader.ReadToEndAsync();
-        var requestContent = Content.TrimStart("json=".ToArray());
-        var request = JsonConvert.DeserializeObject<SeamlessWalletRequest>(requestContent);
+        var content = await reader.ReadToEndAsync();
+        var request = JsonConvert.DeserializeObject<SeamlessWalletRequest>(content);
+        LogContext.PushProperty("Method", request.method);
         var message = string.Empty;
 
         switch (request.method)
