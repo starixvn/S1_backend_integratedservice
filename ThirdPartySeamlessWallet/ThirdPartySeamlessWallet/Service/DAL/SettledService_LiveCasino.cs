@@ -3373,15 +3373,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _partitionService.Query<BettingDataLC_BG>(partitionTime, "Service_BettransLC_BG_Cancel_Check", query);
         }
 
-        public bool Payout_BG(DateTime partitionTime, BettingDataLC_BG data, MySqlTransaction trans, out int SQ)
+        public bool Payout_BG(DateTime partitionTime, BettingDataLC_BG data, MySqlTransaction trans)
         {
-            SQ = 0;
-            var insertSQ = _partitionService.Execute(partitionTime, "Service_BettransLC_BG_Ins", data, trans);
+            var result = _partitionService.Execute(partitionTime, "Service_BettransLC_BG_Ins", data, trans);
 
-            if (insertSQ == 0)
+            if (result == 0)
                 return false;
-
-            SQ = insertSQ;
             return true;
         }
 

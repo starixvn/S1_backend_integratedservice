@@ -7,15 +7,12 @@ using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
-using System;
-using Microsoft.DotNet.MSIdentity.Shared;
-using Microsoft.AspNetCore.SignalR;
-using NuGet.Packaging.Signing;
-using Google.Protobuf.WellKnownTypes;
+using Serilog.Context;
 
 namespace ThirdPartySeamlessWallet.Controllers;
 
 [ApiController]
+[Route("[controller]")]
 public class BGController : ControllerBase
 {
     #region Fields
@@ -26,7 +23,6 @@ public class BGController : ControllerBase
     private readonly TpCustInfoBLL _tpCustInfoBll;
     private readonly IBGBLL _bGBLL;
     private readonly Tools _tools;
-    private readonly ILogger<BGController> _logger;
 
     #endregion
 
@@ -39,7 +35,6 @@ public class BGController : ControllerBase
         _thirdPartyBLL = provider.GetService<ThirdPartyBLL>();
         _tpCustInfoBll = provider.GetService<TpCustInfoBLL>();
         _tools = provider.GetService<Tools>();
-        _logger = provider.GetService<ILogger<BGController>>();
         _bGBLL = provider.GetService<IBGBLL>();
     }
 
@@ -47,14 +42,13 @@ public class BGController : ControllerBase
 
     #region Action
 
-    [Route("[controller]")]
     [HttpPost]
     public async Task<ResponseModel_BG> SeamlessWalletAsync()
     {
         using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-        var Content = await reader.ReadToEndAsync();
-        var requestContent = Content.TrimStart("json=".ToArray());
-        var request = JsonConvert.DeserializeObject<SeamlessWalletRequest>(requestContent);
+        var content = await reader.ReadToEndAsync();
+        var request = JsonConvert.DeserializeObject<SeamlessWalletRequest>(content);
+        LogContext.PushProperty("Method", request.method);
         var message = string.Empty;
 
         switch (request.method)
@@ -77,7 +71,7 @@ public class BGController : ControllerBase
                 }, out message))
                     return new ResponseModel_BG(request, BGErrorCode.InvalidParams, message, userBalanceParameters.sn);
 
-                return await _bGBLL.UserBalance(request, userBalanceParameters);
+                return _bGBLL.UserBalance(request, userBalanceParameters);
 
             //Bet
             case "open.operator.order.transfer":
@@ -127,7 +121,7 @@ public class BGController : ControllerBase
                 }, out message, false))
                     return new ResponseModel_BG(request, BGErrorCode.InvalidParams, message, orderStatusParameters.sn);
 
-                return await _bGBLL.OrderStatus(request, orderStatusParameters);
+                return _bGBLL.OrderStatus(request, orderStatusParameters);
             default:
                 return new ResponseModel_BG(request, BGErrorCode.MethodNotFound, "Method not found.");
         }
@@ -172,12 +166,6 @@ public class BGController : ControllerBase
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(parameters.sn))
-        {
-            message = "CheckRequest Fail: sn is invaild.";
-            return false;
-        }
-
         if (string.IsNullOrWhiteSpace(parameters.loginId))
         {
             message = "CheckRequest Fail: loginId is invaild.";
@@ -196,20 +184,10 @@ public class BGController : ControllerBase
         var setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(_thirdPartyBLL.GetThirdPartyBySite((int)thisTp, tpCustInfo.SiteId).Setting);
         string secretKey = setting.ContainsKey($"ApiSecretKey_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(setting[$"ApiSecretKey_{tpCustInfo.TpCurrencyId}"])
             ? setting[$"ApiSecretKey_{tpCustInfo.TpCurrencyId}"]
-            : throw new YeebetException(YeebetErrorCode.SystemError, $"ApiSecretKey_{tpCustInfo.TpCurrencyId} is invaild.");
-        string sn = setting.ContainsKey($"Sn_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(setting[$"Sn_{tpCustInfo.TpCurrencyId}"])
-            ? setting[$"Sn_{tpCustInfo.TpCurrencyId}"]
-            : throw new YeebetException(YeebetErrorCode.SystemError, $"Sn_{tpCustInfo.TpCurrencyId} is invaild.");
-
-        // Check sn
-        if (sn != parameters.sn)
-        {
-            message = "request.sn is invaild.";
-            return false;
-        }
+            : throw new BGException(BGErrorCode.InternalError, $"ApiSecretKey_{tpCustInfo.TpCurrencyId} is invaild.");
 
         //Check Sign
-        var result = _tools.ToMD5(parameters.random + sn + (isSignNeedLoginId ? parameters.loginId : "") + parameters.amount + secretKey);
+        var result = _tools.ToMD5(parameters.random + parameters.sn + (isSignNeedLoginId ? parameters.loginId : "") + parameters.amount + secretKey);
         if (result != parameters.sign)
         {
             message = $"sign is invaild. request.sign={parameters.sign}. correct sign={result}.";
