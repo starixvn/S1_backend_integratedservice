@@ -51,6 +51,15 @@ public class SettleData_BG
 
 #region Request Model
 
+public class SignParameters_BG
+{
+    public string? sign { get; set; }
+    public string? random { get; set; }
+    public string? sn { get; set; }
+    public string? loginId { get; set; }
+    public string? amount { get; set; }
+}
+
 /// <summary>
 /// Common Request Model
 /// </summary>
