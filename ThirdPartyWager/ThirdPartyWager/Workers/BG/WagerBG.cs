@@ -41,6 +41,7 @@ public class WagerBG : BackgroundService
         LogContext.PushProperty("Tp", Tp.BG.ToString());
         try
         {
+            isFast = false;
             var siteList = _commonBLL.GetSiteList().Where(x => x.SiteId != 4);
             var TpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
             var quick = false;
