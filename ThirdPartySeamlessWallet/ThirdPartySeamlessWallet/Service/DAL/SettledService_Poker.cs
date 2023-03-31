@@ -725,6 +725,92 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
+        public async Task<KmDbResult> RewardPK_KM(TpCustInfo tpCustInfo, KMRewardRequestTransaction rewardTransaction)
+        {
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            await using var trans = conn.BeginTransaction();
+
+            var p = new DynamicParameters(new
+            {
+                userid = rewardTransaction.userid,
+                amt = rewardTransaction.amt,
+                cur = rewardTransaction.cur,
+                ptxid = rewardTransaction.ptxid,
+                desc = string.IsNullOrEmpty(rewardTransaction.desc) ? "" : rewardTransaction.desc,
+                SettleFlag = (int)SettleFlag.EndGame
+            });
+            p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
+            p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
+
+            try
+            {
+                await conn.ExecuteAsync("Service_RewardPK_KM_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                int result = p.Get<short>("SPResult");
+                var sq = p.Get<long>("SQ");
+                if (result != 1)
+                {
+                    if (result == -2)
+                    {
+                        logger.LogInformation($"訂單已存在, txid:{sq}");
+                        return new KmDbResult() { SPResult = result, Trx_id = sq };
+                    }
+
+                    logger.LogError("exec Service_RewardPK_KM_Ins error");
+                    throw new KmException(KMErrorCode.SystemError);
+                }
+
+                var afterAmount = 0M;
+                if (rewardTransaction.amt != 0)
+                {
+                    result = walletService.SetBalance(
+                        tpCustInfo.CustId,
+                        tpCustInfo.SiteId,
+                        tpCustInfo.UserName,
+                        Math.Abs(rewardTransaction.amt),
+                        (int)Tp.KM,
+                        TransType.Prize,
+                        $"Prize",
+                        rewardTransaction.ptxid,
+                        out afterAmount,
+                        conn,
+                        trans
+                    );
+
+                    if (result != 1)
+                    {
+                        logger.LogError("Prize error");
+                        throw new KmException(KMErrorCode.SystemError);
+                    }
+                }
+
+                if (result > 0)
+                {
+                    result = _tpUnRewardService.InsertTpUnReward(Tp.KM, GameType.KM_Poker, rewardTransaction.ptxid, rewardTransaction.userid, trans);
+                    trans.Commit();
+                }
+
+                return new KmDbResult()
+                {
+                    SPResult = result,
+                    Trx_id = sq,
+                    AfterAmount = afterAmount
+                };
+            }
+            catch (KmException ex)
+            {
+                await trans.RollbackAsync();
+                throw;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, $"exec RewardPK_KM failed: {e.Message}");
+                await trans.RollbackAsync();
+                throw new KmException(KMErrorCode.SystemError);
+            }
+        }
+
         public IEnumerable<SettleData> GetUnsettledList_KM(string spName)
         {
             return _wagerDbClient.Query<SettleData>(spName);
