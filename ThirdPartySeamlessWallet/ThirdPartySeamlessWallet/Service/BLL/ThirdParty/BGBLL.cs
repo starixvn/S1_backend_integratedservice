@@ -1,9 +1,11 @@
 ﻿using MySql.Data.MySqlClient;
+using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 using static ThirdPartySeamlessWallet.Controllers.IconicController;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
@@ -45,6 +47,34 @@ public class BGBLL : IBGBLL
         _settledService = provider.GetRequiredService<SettledService>();
 
         _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+    }
+
+    public bool GetSecretKeyForCheckSign(string loginId, out string secretKey, out string message)
+    {
+        secretKey = string.Empty;
+        message = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(loginId))
+        {
+            message = "CheckRequest Fail: loginId is invaild.";
+            return false;
+        }
+
+        // Get Cust.SiteId By request.loginId
+        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, loginId);
+        if (tpCustInfo == null)
+        {
+            message = "CheckRequest Fail: TpCustInfo not found.";
+            return false;
+        }
+
+        // Get Setting
+        var setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(_thirdPartyBLL.GetThirdPartyBySite((int)ThirdParty, tpCustInfo.SiteId).Setting);
+        secretKey = setting.ContainsKey($"ApiSecretKey_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(setting[$"ApiSecretKey_{tpCustInfo.TpCurrencyId}"])
+            ? setting[$"ApiSecretKey_{tpCustInfo.TpCurrencyId}"]
+            : throw new BGException(BGErrorCode.InternalError, $"ApiSecretKey_{tpCustInfo.TpCurrencyId} is invaild.");
+
+        return true;
     }
 
     public ResponseModel_BG UserBalance(SeamlessWalletRequest request, UserBalanceParameters_BG parameters)

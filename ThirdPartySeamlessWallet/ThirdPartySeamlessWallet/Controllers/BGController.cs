@@ -17,10 +17,6 @@ public class BGController : ControllerBase
 {
     #region Fields
 
-    private readonly Tp thisTp;
-
-    private readonly ThirdPartyBLL _thirdPartyBLL;
-    private readonly TpCustInfoBLL _tpCustInfoBll;
     private readonly IBGBLL _bGBLL;
     private readonly Tools _tools;
 
@@ -30,10 +26,6 @@ public class BGController : ControllerBase
 
     public BGController(IServiceProvider provider)
     {
-        thisTp = Tp.BG;
-
-        _thirdPartyBLL = provider.GetService<ThirdPartyBLL>();
-        _tpCustInfoBll = provider.GetService<TpCustInfoBLL>();
         _tools = provider.GetService<Tools>();
         _bGBLL = provider.GetService<IBGBLL>();
     }
@@ -166,31 +158,14 @@ public class BGController : ControllerBase
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(parameters.loginId))
-        {
-            message = "CheckRequest Fail: loginId is invaild.";
+        if (_bGBLL.GetSecretKeyForCheckSign(parameters.loginId, out string secrectKey, out message))
             return false;
-        }
-
-        // Get Cust.SiteId By request.loginId
-        var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)thisTp, parameters.loginId);
-        if (tpCustInfo == null)
-        {
-            message = "TpCustInfo not found.";
-            return false;
-        }
-
-        // Get Setting
-        var setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(_thirdPartyBLL.GetThirdPartyBySite((int)thisTp, tpCustInfo.SiteId).Setting);
-        string secretKey = setting.ContainsKey($"ApiSecretKey_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(setting[$"ApiSecretKey_{tpCustInfo.TpCurrencyId}"])
-            ? setting[$"ApiSecretKey_{tpCustInfo.TpCurrencyId}"]
-            : throw new BGException(BGErrorCode.InternalError, $"ApiSecretKey_{tpCustInfo.TpCurrencyId} is invaild.");
 
         //Check Sign
-        var result = _tools.ToMD5(parameters.random + parameters.sn + (isSignNeedLoginId ? parameters.loginId : "") + parameters.amount + secretKey);
-        if (result != parameters.sign)
+        var sinResult = _tools.ToMD5(parameters.random + parameters.sn + (isSignNeedLoginId ? parameters.loginId : "") + parameters.amount + secrectKey);
+        if (sinResult != parameters.sign)
         {
-            message = $"sign is invaild. request.sign={parameters.sign}. correct sign={result}.";
+            message = $"sign is invaild. request.sign={parameters.sign}. correct sign={sinResult}.";
             return false;
         }
         return true;
