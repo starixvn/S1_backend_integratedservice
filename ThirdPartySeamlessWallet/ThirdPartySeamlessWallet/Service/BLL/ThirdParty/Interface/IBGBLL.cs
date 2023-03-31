@@ -4,7 +4,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 
 public interface IBGBLL
 {
-    bool GetSecretKeyForCheckSign(string loginId, out string secretKey, out string message);
+    string GetSign(SignParameters_BG signParameters, bool isSignNeedLoginId);
 
     ResponseModel_BG UserBalance(SeamlessWalletRequest request, UserBalanceParameters_BG parameters);
 

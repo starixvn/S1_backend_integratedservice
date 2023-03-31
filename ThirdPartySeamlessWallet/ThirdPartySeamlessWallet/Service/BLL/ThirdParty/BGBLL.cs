@@ -6,7 +6,6 @@ using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
-using static ThirdPartySeamlessWallet.Controllers.IconicController;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 
@@ -24,6 +23,7 @@ public class BGBLL : IBGBLL
     //下注闲3翻倍 playId:3489660960
     private readonly string[] _bullbullDoublePlayIds = new string[] { "3489660930", "3489660936", "3489660960" };
 
+    private readonly Tools _tools;
     private readonly ThirdPartyBLL _thirdPartyBLL;
     private readonly TpCustInfoBLL _tpCustInfoBLL;
     private readonly ILogger<BGBLL> _logger;
@@ -33,12 +33,14 @@ public class BGBLL : IBGBLL
 
     private readonly MySqlClient _mainDbClient;
 
+
     public BGBLL(IServiceProvider provider)
     {
         ThirdParty = Tp.BG;
         GameType = GameType.BG_LiveCasino;
         TpCategory = TpCategory.LiveCasino;
 
+        _tools = provider.GetService<Tools>();
         _tpCustInfoBLL = provider.GetService<TpCustInfoBLL>();
         _thirdPartyBLL = provider.GetService<ThirdPartyBLL>();
         _logger = provider.GetService<ILogger<BGBLL>>();
@@ -49,32 +51,23 @@ public class BGBLL : IBGBLL
         _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
     }
 
-    public bool GetSecretKeyForCheckSign(string loginId, out string secretKey, out string message)
+    public string GetSign(SignParameters_BG signParameters, bool isSignNeedLoginId = true)
     {
-        secretKey = string.Empty;
-        message = string.Empty;
-
-        if (string.IsNullOrWhiteSpace(loginId))
-        {
-            message = "CheckRequest Fail: loginId is invaild.";
-            return false;
-        }
+        if (string.IsNullOrWhiteSpace(signParameters.loginId))
+            throw new BGException(BGErrorCode.InternalError, $"CheckRequest Fail: loginId is invaild.");
 
         // Get Cust.SiteId By request.loginId
-        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, loginId);
+        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, signParameters.loginId);
         if (tpCustInfo == null)
-        {
-            message = "CheckRequest Fail: TpCustInfo not found.";
-            return false;
-        }
+            throw new BGException(BGErrorCode.InternalError, $"CheckRequest Fail: TpCustInfo not found.");
 
         // Get Setting
         var setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(_thirdPartyBLL.GetThirdPartyBySite((int)ThirdParty, tpCustInfo.SiteId).Setting);
-        secretKey = setting.ContainsKey($"ApiSecretKey_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(setting[$"ApiSecretKey_{tpCustInfo.TpCurrencyId}"])
+        var secretKey = setting.ContainsKey($"ApiSecretKey_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(setting[$"ApiSecretKey_{tpCustInfo.TpCurrencyId}"])
             ? setting[$"ApiSecretKey_{tpCustInfo.TpCurrencyId}"]
             : throw new BGException(BGErrorCode.InternalError, $"ApiSecretKey_{tpCustInfo.TpCurrencyId} is invaild.");
 
-        return true;
+        return _tools.ToMD5(signParameters.random + signParameters.sn + (isSignNeedLoginId ? signParameters.loginId : "") + signParameters.amount + secretKey);
     }
 
     public ResponseModel_BG UserBalance(SeamlessWalletRequest request, UserBalanceParameters_BG parameters)
