@@ -185,7 +185,8 @@ public class BGBLL : IBGBLL
 
             if (data.orderAmount != 0)
             {
-                if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
+                if (!SetBalance(tpCustInfo, data, 0,
+                    tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
                 {
                     await trans.RollbackAsync();
                     return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
@@ -286,10 +287,15 @@ public class BGBLL : IBGBLL
             data.orderAmount = (tpCurrency.ExchangeRate > 0) ? data.orderAmount * tpCurrency.ExchangeRate : data.orderAmount;
             data.calcAmount = (tpCurrency.ExchangeRate > 0) ? data.calcAmount * tpCurrency.ExchangeRate : data.calcAmount;
             data.validAmount = (tpCurrency.ExchangeRate > 0) ? data.validAmount * tpCurrency.ExchangeRate : data.validAmount;
+            decimal payoutAmount = data.calcAmount;
 
             //Cancel Bet要檢查是否有有效投注
             if (data.TicketStatus == TicketStatus.Refund)
                 if (!IsExistBetData(partitionTime, data, out IEnumerable<BettingDataLC_BG> existBetDatas, out message))
+                    return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
+
+            if (data.recalc == 1) //如果該注單已有結算成功的紀錄，又重新結算，派彩金額會需要經過計算後得知是扣款(-)還是多派(+)
+                if (!IsExistPayoutData(partitionTime, data, out payoutAmount, out message))
                     return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
 
             if (!PlaceData(partitionTime, data, trans, out message))
@@ -298,9 +304,10 @@ public class BGBLL : IBGBLL
                 return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
             }
 
-            if (data.calcAmount != 0)
+            if (payoutAmount != 0)
             {
-                if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
+                if (!SetBalance(tpCustInfo, data, payoutAmount, tpCurrency.ExchangeRate,
+                    out message, out balance, out int bonusId, conn, trans))
                 {
                     await trans.RollbackAsync();
                     return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
@@ -645,6 +652,28 @@ public class BGBLL : IBGBLL
         }
     }
 
+    private bool IsExistPayoutData(DateTime partitionTime, BettingDataLC_BG data, out decimal payoutAmount, out string message)
+    {
+        message = string.Empty;
+        payoutAmount = data.calcAmount; //default：注單派彩失敗後，重新派彩，派彩金額=結算金額
+        try
+        {
+            var existDatas = _settledService.IsExistLastPayout_BG(partitionTime, data);
+
+            if (existDatas.Count() == 1) //此狀況為該注單派彩成功，因結果改變，必須重新派彩(扣款-/多派+)
+                payoutAmount = data.calcAmount - existDatas.First().calcAmount;
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            message = "exception happen.";
+            _logger.LogError(ex, $"IsExistPayoutData Exception:{ex.Message}");
+            return false;
+        }
+    }
+
+
     private bool GetExistData(DateTime partitionTime, string random, IEnumerable<long> orderIds,
         out IEnumerable<BettingDataLC_BG> existDatas, out string message)
     {
@@ -696,7 +725,7 @@ public class BGBLL : IBGBLL
         }
     }
 
-    private bool SetBalance(TpCustInfo tpCustInfo, BettingDataLC_BG data, decimal rate,
+    private bool SetBalance(TpCustInfo tpCustInfo, BettingDataLC_BG data, decimal payoutAmount, decimal rate,
                             out string message, out decimal afterAmount, out int bonusId,
                             MySqlConnection conn, MySqlTransaction trans)
     {
@@ -713,7 +742,7 @@ public class BGBLL : IBGBLL
                          out afterAmount, ref bonusId, conn, trans);
                     break;
                 case BettransLC_BGTypeEnum.CalcTransfer: //Payout、ReSettle
-                    result = _settledService.SetBalance_BG(tpCustInfo, data,
+                    result = _settledService.SetBalance_BG(tpCustInfo, data, payoutAmount,
                              TransType.Payout, data.recalc == 0 ? "Payout" : "ReSettle", out afterAmount, ref bonusId, conn, trans);
                     break;
             }

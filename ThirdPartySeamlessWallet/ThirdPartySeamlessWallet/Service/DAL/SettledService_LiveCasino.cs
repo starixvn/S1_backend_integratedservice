@@ -3373,6 +3373,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _partitionService.Query<BettingDataLC_BG>(partitionTime, "Service_BettransLC_BG_Cancel_Check", query);
         }
 
+        public IEnumerable<BettingDataLC_BG> IsExistLastPayout_BG(DateTime partitionTime, BettingDataLC_BG data)
+        {
+            var query = new { orderId = data.orderId };
+            return _partitionService.Query<BettingDataLC_BG>(partitionTime, "Service_BettransLC_BG_ReSettle_Check", query);
+        }
+
         public bool Payout_BG(DateTime partitionTime, BettingDataLC_BG data, MySqlTransaction trans)
         {
             var result = _partitionService.Execute(partitionTime, "Service_BettransLC_BG_Ins", data, trans);
@@ -3382,13 +3388,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return true;
         }
 
-        public bool SetBalance_BG(TpCustInfo tpCustInfo, BettingDataLC_BG data, TransType transType, string memo,
+        public bool SetBalance_BG(TpCustInfo tpCustInfo, BettingDataLC_BG data, decimal payoutAmount, TransType transType, string memo,
                                        out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
 
             var result = PayoutV2(
                 tpCustInfo,
-                data.calcAmount,
+                payoutAmount,
                 (int)Tp.BG,
                 data.orderId,
                 (int)GameType.BG_LiveCasino,
