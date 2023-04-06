@@ -54,7 +54,6 @@ namespace ThirdPartySettleWorker.Workers
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
 
             var forContinue = false;
-            var isError = false;
             const string getBettransSp = "Service_BettransSports_TFG_Check"; // 取得下注紀錄
             const string getSettleSp = "Service_BettransSports_TFG_Settle_Get"; // 取得未結算的注單
             const string getWagerSp = "Service_TpWagerTFG_Get"; // 取得Wager資料
@@ -114,8 +113,13 @@ namespace ThirdPartySettleWorker.Workers
                             transTime = wagerData.unix_date_created;
                             settledTime = wagerData.unix_settlement_datetime;
                             if (!(betData.amount == wagerData.amount && (wagerData.earnings == null || wagerData.earnings == earnings)))
+                            {
+                                Task.Run(() =>
+                                {
+                                    _tpUnSettledBLL.SetTpUnsettle(Tp, GameType.TFG_Esports, tpUnsettle.TransId, false);
+                                });
                                 continue;
-
+                            }
                         }
 
                         if (betData.TicketStatus == (int)TicketStatus.Refund)
@@ -170,14 +174,10 @@ namespace ThirdPartySettleWorker.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromSeconds(30);
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(3);
                 if (forContinue)
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(5);
-                }
-                else if (isError)
-                {
-                    dueTimeSpan = TimeSpan.FromMinutes(1);
                 }
 
                 timer.Change(dueTimeSpan, TimeSpan.Zero);

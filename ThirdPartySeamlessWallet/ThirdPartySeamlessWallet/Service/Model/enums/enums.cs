@@ -218,7 +218,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         VirtualSports = 7,
         P2P = 8,
         Games = 10,
-        Esport = 11
+        Esports = 11
     }
 
     public enum PromotionCategory
@@ -232,7 +232,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         PTSlotsGame = 7,
         PTLiveCasino = 8,
         SBSW = 9,
-        Mega888SlotRNGFishing = 10
+        Mega888SlotRNGFishing = 10,
+        Esports = 11
     }
 
     public enum Direction
