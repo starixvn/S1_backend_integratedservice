@@ -143,7 +143,7 @@ namespace ThirdPartySettleWorker.Workers
                             TicketStatus = ticketStatus,
                         };
 
-                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Esport);
+                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Esports);
                         if (result == 1)
                         {
                             Task.Run(() =>
