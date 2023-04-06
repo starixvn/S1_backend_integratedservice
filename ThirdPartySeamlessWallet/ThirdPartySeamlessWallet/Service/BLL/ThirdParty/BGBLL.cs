@@ -287,12 +287,11 @@ public class BGBLL : IBGBLL
             data.orderAmount = (tpCurrency.ExchangeRate > 0) ? data.orderAmount * tpCurrency.ExchangeRate : data.orderAmount;
             data.calcAmount = (tpCurrency.ExchangeRate > 0) ? data.calcAmount * tpCurrency.ExchangeRate : data.calcAmount;
             data.validAmount = (tpCurrency.ExchangeRate > 0) ? data.validAmount * tpCurrency.ExchangeRate : data.validAmount;
-            decimal payoutAmount = 0;
-            decimal cancelAmount = 0;
+            decimal payoutAmount = data.calcAmount;
 
             //Cancel Bet要檢查是否有有效投注
             if (data.TicketStatus == TicketStatus.Refund)
-                if (!IsExistBetData(partitionTime, data, out IEnumerable<BettingDataLC_BG> existBetDatas, out cancelAmount, out message))
+                if (!IsExistBetData(partitionTime, data, out IEnumerable<BettingDataLC_BG> existBetDatas, out payoutAmount, out message))
                     return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
 
             //如果該注單已有結算成功的紀錄，又重新結算，派彩金額會需要經過計算後得知是扣款(-)還是多派(+)
@@ -306,9 +305,9 @@ public class BGBLL : IBGBLL
                 return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
             }
 
-            if (payoutAmount != 0 || cancelAmount != 0)
+            if (payoutAmount != 0)
             {
-                if (!SetBalance(tpCustInfo, data, payoutAmount + cancelAmount, tpCurrency.ExchangeRate,
+                if (!SetBalance(tpCustInfo, data, payoutAmount, tpCurrency.ExchangeRate,
                     out message, out balance, out int bonusId, conn, trans))
                 {
                     await trans.RollbackAsync();
@@ -626,7 +625,7 @@ public class BGBLL : IBGBLL
     {
         message = string.Empty;
         existDatas = null;
-        cancelAmount = data.orderAmount * -1;
+        cancelAmount = 0;
         try
         {
             existDatas = _settledService.IsExistBet_BG(partitionTime, data);
@@ -644,7 +643,7 @@ public class BGBLL : IBGBLL
                 _logger.LogError($"IsExistBetData Fail:{message}");
                 return false;
             }
-
+            cancelAmount = data.orderAmount * -1;
             return true;
         }
         catch (Exception ex)
