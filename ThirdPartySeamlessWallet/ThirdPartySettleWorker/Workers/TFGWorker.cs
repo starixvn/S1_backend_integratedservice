@@ -100,7 +100,7 @@ namespace ThirdPartySettleWorker.Workers
                             decimal? earnings = null;
                             earnings = wagerData.result_status switch
                             {
-                                "WIN" => settleData.Sum(x => x.amount) + betData.amount,
+                                "WIN" => settleData.Sum(x => x.amount),
                                 "LOSS" => -betData.amount,
                                 "DRAW" => betData.amount,
                                 "CANCELLED" => null,
