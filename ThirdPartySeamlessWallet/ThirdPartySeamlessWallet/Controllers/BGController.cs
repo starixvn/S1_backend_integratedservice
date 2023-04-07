@@ -12,38 +12,24 @@ using Serilog.Context;
 namespace ThirdPartySeamlessWallet.Controllers;
 
 [ApiController]
+[Route("[controller]")]
 public class BGController : ControllerBase
 {
     #region Fields
 
-    private readonly Tp thisTp;
-
-    private readonly ThirdPartyBLL _thirdPartyBLL;
-    private readonly TpCustInfoBLL _tpCustInfoBll;
     private readonly IBGBLL _bGBLL;
-    private readonly Tools _tools;
-    private readonly ILogger<BGController> _logger;
 
     #endregion
 
     #region Constructors
 
     public BGController(IServiceProvider provider)
-    {
-        thisTp = Tp.BG;
-
-        _thirdPartyBLL = provider.GetService<ThirdPartyBLL>();
-        _tpCustInfoBll = provider.GetService<TpCustInfoBLL>();
-        _tools = provider.GetService<Tools>();
-        _logger = provider.GetService<ILogger<BGController>>();
-        _bGBLL = provider.GetService<IBGBLL>();
-    }
+        => _bGBLL = provider.GetService<IBGBLL>();
 
     #endregion
 
     #region Action
 
-    [Route("[controller]")]
     [HttpPost]
     public async Task<ResponseModel_BG> SeamlessWalletAsync()
     {
@@ -64,7 +50,7 @@ public class BGController : ControllerBase
                 if (!ConvertToAssignObject(request.@params, out UserBalanceParameters_BG userBalanceParameters, out message))
                     return new ResponseModel_BG(request, BGErrorCode.InvalidParams, "Convert parameter fail.", reason: message);
 
-                if (!CheckAppidAndSign(new SignParameters
+                if (!CheckAppidAndSign(new SignParameters_BG
                 {
                     sign = userBalanceParameters.sign,
                     random = userBalanceParameters.random,
@@ -73,14 +59,14 @@ public class BGController : ControllerBase
                 }, out message))
                     return new ResponseModel_BG(request, BGErrorCode.InvalidParams, message, userBalanceParameters.sn);
 
-                return await _bGBLL.UserBalance(request, userBalanceParameters);
+                return _bGBLL.UserBalance(request, userBalanceParameters);
 
             //Bet
             case "open.operator.order.transfer":
                 if (!ConvertToAssignObject(request.@params, out OrderTransferParameters_BG orderTransferParameters, out message))
                     return new ResponseModel_BG(request, BGErrorCode.InvalidParams, "Convert parameter fail.", reason: message);
 
-                if (!CheckAppidAndSign(new SignParameters
+                if (!CheckAppidAndSign(new SignParameters_BG
                 {
                     sign = orderTransferParameters.sign,
                     random = orderTransferParameters.random,
@@ -97,7 +83,7 @@ public class BGController : ControllerBase
                 if (!ConvertToAssignObject(request.@params, out CalcTransferParameters_BG calcTransferParameters, out message))
                     return new ResponseModel_BG(request, BGErrorCode.InvalidParams, "Convert parameter fail.", reason: message);
 
-                if (!CheckAppidAndSign(new SignParameters
+                if (!CheckAppidAndSign(new SignParameters_BG
                 {
                     sign = calcTransferParameters.sign,
                     random = calcTransferParameters.random,
@@ -114,7 +100,7 @@ public class BGController : ControllerBase
                 if (!ConvertToAssignObject(request.@params, out OrderStatusParameters_BG orderStatusParameters, out message))
                     return new ResponseModel_BG(request, BGErrorCode.InvalidParams, "Convert parameter fail.", reason: message);
 
-                if (!CheckAppidAndSign(new SignParameters
+                if (!CheckAppidAndSign(new SignParameters_BG
                 {
                     sign = orderStatusParameters.sign,
                     random = orderStatusParameters.random,
@@ -123,7 +109,7 @@ public class BGController : ControllerBase
                 }, out message, false))
                     return new ResponseModel_BG(request, BGErrorCode.InvalidParams, message, orderStatusParameters.sn);
 
-                return await _bGBLL.OrderStatus(request, orderStatusParameters);
+                return _bGBLL.OrderStatus(request, orderStatusParameters);
             default:
                 return new ResponseModel_BG(request, BGErrorCode.MethodNotFound, "Method not found.");
         }
@@ -132,15 +118,6 @@ public class BGController : ControllerBase
     #endregion
 
     #region Private Methods
-
-    private class SignParameters
-    {
-        public string? sign { get; set; }
-        public string? random { get; set; }
-        public string? sn { get; set; }
-        public string? loginId { get; set; }
-        public string? amount { get; set; }
-    }
 
     private bool ConvertToAssignObject<T>(object parameters, out T request, out string message)
     {
@@ -158,7 +135,7 @@ public class BGController : ControllerBase
         }
     }
 
-    private bool CheckAppidAndSign(SignParameters parameters, out string message, bool isSignNeedLoginId = true)
+    private bool CheckAppidAndSign(SignParameters_BG parameters, out string message, bool isSignNeedLoginId = true)
     {
         message = string.Empty;
 
@@ -168,47 +145,11 @@ public class BGController : ControllerBase
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(parameters.sn))
-        {
-            message = "CheckRequest Fail: sn is invaild.";
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(parameters.loginId))
-        {
-            message = "CheckRequest Fail: loginId is invaild.";
-            return false;
-        }
-
-        // Get Cust.SiteId By request.loginId
-        var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)thisTp, parameters.loginId);
-        if (tpCustInfo == null)
-        {
-            message = "TpCustInfo not found.";
-            return false;
-        }
-
-        // Get Setting
-        var setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(_thirdPartyBLL.GetThirdPartyBySite((int)thisTp, tpCustInfo.SiteId).Setting);
-        string secretKey = setting.ContainsKey($"ApiSecretKey_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(setting[$"ApiSecretKey_{tpCustInfo.TpCurrencyId}"])
-            ? setting[$"ApiSecretKey_{tpCustInfo.TpCurrencyId}"]
-            : throw new YeebetException(YeebetErrorCode.SystemError, $"ApiSecretKey_{tpCustInfo.TpCurrencyId} is invaild.");
-        string sn = setting.ContainsKey($"Sn_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(setting[$"Sn_{tpCustInfo.TpCurrencyId}"])
-            ? setting[$"Sn_{tpCustInfo.TpCurrencyId}"]
-            : throw new YeebetException(YeebetErrorCode.SystemError, $"Sn_{tpCustInfo.TpCurrencyId} is invaild.");
-
-        // Check sn
-        if (sn != parameters.sn)
-        {
-            message = "request.sn is invaild.";
-            return false;
-        }
-
         //Check Sign
-        var result = _tools.ToMD5(parameters.random + sn + (isSignNeedLoginId ? parameters.loginId : "") + parameters.amount + secretKey);
-        if (result != parameters.sign)
+        var sinResult = _bGBLL.GetSign(parameters, isSignNeedLoginId);
+        if (sinResult != parameters.sign)
         {
-            message = $"sign is invaild. request.sign={parameters.sign}. correct sign={result}.";
+            message = $"sign is invaild. request.sign={parameters.sign}. correct sign={sinResult}.";
             return false;
         }
         return true;

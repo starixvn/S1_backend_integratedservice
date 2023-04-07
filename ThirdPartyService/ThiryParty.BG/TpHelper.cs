@@ -41,13 +41,22 @@ public class TpHelper : ThirdPartyHelperBase
         public string result { get; set; } = string.Empty;
     }
 
-    private class JsonRpcResponse
+    private class JsonRpcResponse<T>
     {
         public string? id { get; set; }
-        public object? result { get; set; }
-        public object? error { get; set; }
+        public T? result { get; set; }
+        public JsonRpcErrorResponse? error { get; set; }
         public string? jsonrpc { get; set; }
         public object? request { get; set; }
+    }
+
+    private class JsonRpcErrorResponse
+    {
+        public string? code { get; set; }
+        public string? sn { get; set; }
+        public string? message { get; set; }
+        public string? reason { get; set; }
+        public string? action { get; set; }
     }
 
     #endregion
@@ -89,7 +98,7 @@ public class TpHelper : ThirdPartyHelperBase
                 RawMessage = "No Result. Response is not json."
             };
 
-        var jsonResponse = JsonConvert.DeserializeObject<JsonRpcResponse>(response);
+        var jsonResponse = JsonConvert.DeserializeObject<JsonRpcResponse<CreateMemberResult>>(response);
 
         if (jsonResponse == null)
             return new ApiResult()
@@ -100,27 +109,17 @@ public class TpHelper : ThirdPartyHelperBase
             };
 
         if (jsonResponse.error != null)
-        {
-            var errorJson = JsonConvert.SerializeObject(jsonResponse.error);
-            if (errorJson != null)
+            return new ApiResult()
             {
-                var errorDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(errorJson);
+                ErrorCode = ErrorCode.Fail,
+                RawErrorCode = jsonResponse.error.code ?? "",
+                RawMessage = $"{jsonResponse.error.message ?? ""}" + " | " + $"{jsonResponse.error.reason ?? ""}"
+            };
 
-                return new ApiResult()
-                {
-                    ErrorCode = ErrorCode.Fail,
-                    RawErrorCode = errorDic != null && errorDic.ContainsKey("code") && !string.IsNullOrEmpty(errorDic["code"]) ? errorDic["code"] : "",
-                    RawMessage = $"{(errorDic != null && errorDic.ContainsKey("message") && !string.IsNullOrEmpty(errorDic["message"]) ? errorDic["message"] : "")}" + " | "
-                                      + $"{(errorDic != null && errorDic.ContainsKey("reason") && !string.IsNullOrEmpty(errorDic["reason"]) ? errorDic["reason"] : "")}"
-                };
-            }
-        }
-
-        var result = JsonConvert.DeserializeObject<CreateMemberResult>(JsonConvert.SerializeObject(jsonResponse.result));
-
-        if (result != null && result.nickname == tpCustInfo.TpUserName)
+        if (jsonResponse.result != null
+            && jsonResponse.result.nickname == tpCustInfo.TpUserName)
         {
-            tpCustInfo.TpCustId = result.userId.ToString();
+            tpCustInfo.TpCustId = jsonResponse.result.userId.ToString();
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Success
@@ -163,9 +162,9 @@ public class TpHelper : ThirdPartyHelperBase
             jsonrpc = "2.0"
         });
 
-        var result = HttpPostClient(apiUrl, parameters, "application/json");
+        var response = HttpPostClient(apiUrl, parameters, "application/json");
 
-        if (!IsJSON(result))
+        if (!IsJSON(response))
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Fail,
@@ -173,9 +172,9 @@ public class TpHelper : ThirdPartyHelperBase
                 RawMessage = "No Result. Response is not json."
             };
 
-        var json = JsonConvert.DeserializeObject<JsonRpcResponse>(result);
+        var jsonResponse = JsonConvert.DeserializeObject<JsonRpcResponse<string>>(response);
 
-        if (json == null)
+        if (jsonResponse == null)
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Fail,
@@ -183,27 +182,18 @@ public class TpHelper : ThirdPartyHelperBase
                 RawMessage = "No Result. Response is null."
             };
 
-        if (json.error != null)
-        {
-            var errorJson = JsonConvert.SerializeObject(json.error);
-            if (errorJson != null)
+        if (jsonResponse.error != null)
+            return new ApiResult()
             {
-                var errorDic = JsonConvert.DeserializeObject<Dictionary<string, string>>(errorJson);
-
-                return new ApiResult()
-                {
-                    ErrorCode = ErrorCode.Fail,
-                    RawErrorCode = errorDic != null && errorDic.ContainsKey("code") && !string.IsNullOrEmpty(errorDic["code"]) ? errorDic["code"] : "",
-                    RawMessage = $"{(errorDic != null && errorDic.ContainsKey("message") && !string.IsNullOrEmpty(errorDic["message"]) ? errorDic["message"] : "")}" + " | "
-                                      + $"{(errorDic != null && errorDic.ContainsKey("reason") && !string.IsNullOrEmpty(errorDic["reason"]) ? errorDic["reason"] : "")}"
-                };
-            }
-        }
+                ErrorCode = ErrorCode.Fail,
+                RawErrorCode = jsonResponse.error.code ?? "",
+                RawMessage = $"{jsonResponse.error.message ?? ""}" + " | " + $"{jsonResponse.error.reason ?? ""}"
+            };
 
         return new ApiResult()
         {
             ErrorCode = ErrorCode.Success,
-            Message = json.result?.ToString()
+            Message = jsonResponse.result
         };
     }
 
@@ -252,7 +242,7 @@ public class TpHelper : ThirdPartyHelperBase
             @params = new
             {
                 random = id,
-                sign = ToMD5(id + sn + getBetDetail.TransId + SHA1(apiSecretKey)),
+                sign = ToMD5(id + sn + getBetDetail.TransId + apiSecretKey),
                 sn = sn,
                 orderId = getBetDetail.TransId,
                 locale = "en"
@@ -260,27 +250,23 @@ public class TpHelper : ThirdPartyHelperBase
             jsonrpc = "2.0"
         });
 
-        var result = HttpPostClient(apiUrl, parameters, "application/json");
+        var response = HttpPostClient(apiUrl, parameters, "application/json");
 
-        if (!IsJSON(result))
-            throw new BetDetailNotFoundException($"{getBetDetail.TransId} BG Ressponse is not json.\r\n Response={result}");
+        if (!IsJSON(response))
+            throw new BetDetailNotFoundException($"{getBetDetail.TransId} BG Ressponse is not json.\r\n Response={response}");
 
-        var json = JsonConvert.DeserializeObject<JsonRpcResponse>(result);
+        var jsonResponse = JsonConvert.DeserializeObject<JsonRpcResponse<string>>(response);
 
-        if (json == null)
-            throw new BetDetailNotFoundException($"{getBetDetail.TransId} BG Ressponse to json is null.\r\n Response={result}");
+        if (jsonResponse == null)
+            throw new BetDetailNotFoundException($"{getBetDetail.TransId} BG Ressponse to json is null.\r\n Response={response}");
 
-        if (json.error != null)
-        {
-            var errorJson = JsonConvert.SerializeObject(json.error);
-            if (errorJson != null)
-                throw new BetDetailNotFoundException($"{getBetDetail.TransId} BG Ressponse return error.\r\n Ressponse={result}.");
-        }
+        if (jsonResponse.error != null)
+            throw new BetDetailNotFoundException($"{getBetDetail.TransId} BG Ressponse return error.\r\n Ressponse={JsonConvert.SerializeObject(jsonResponse.error)}.");
 
         return new BaseDetail(getBetDetail.TpGameTypeOption)
         {
             TransId = getBetDetail.TransId,
-            DetailUrl = json.result?.ToString(),
+            DetailUrl = jsonResponse.result,
             TpCurrency = new TpCurrency()
             {
                 ExchangeRate = tpCustInfo.ExchangeRate,
@@ -292,7 +278,7 @@ public class TpHelper : ThirdPartyHelperBase
     public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
     {
         var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerLC_BG_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
-        
+
         return tpGameType.CategoryId switch
         {
             TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
