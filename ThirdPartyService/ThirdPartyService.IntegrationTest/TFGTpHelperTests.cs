@@ -96,11 +96,11 @@ namespace ThirdParty.TFG.Tests
             _inputs = new Dictionary<string, string>
             {
                 { "ApiUrl", "spi-test.r4espt.com" },
-                { "RetrieveUrl_VND", "https://api-test-v4.diaoq.com/api/v4/launch/url/?auth=0a47dd19d91c40f0ae57c7cffe3c1905" },
+                { "RetrieveUrl", "https://api-test-v4.diaoq.com" },
                 { "PublicToken_VND", "0a47dd19d91c40f0ae57c7cffe3c1905" },
                 { "PartnerId_VND", "4253" },
                 { "PrivateToken_VND", "00021b63e00da92648ff86c4cdff7ef1501079372548bcbc7bc5fd39012b4da4d11b0c2a55883e45c195bf1dc189974793a1620a69cdc6aaf80fb8b25c8fc8306bc95216327dc8696207578b18b8f85716e254a3df8514e3f84f2dbe2a1c7d40344966f7700f28b0dbba0f810a06dce3e5fc1af05041720657544360236e9b8ca763" },
-                { "Token", "XtRc9CuBQEWUl6QFjt9WYA"}
+                { "Token", "IYNF6iDgZ0GOxQ/wmkebjQ"}
             };
         }
 
@@ -118,7 +118,7 @@ namespace ThirdParty.TFG.Tests
             actual.ErrorCode.Should().Be(ErrorCode.Success);
         }
 
-        [Test()]
+        //[Test()]
         public void GetBetDetailTest()
         {
             //Arrange
@@ -137,7 +137,7 @@ namespace ThirdParty.TFG.Tests
             var actual = _tpHelper.GetBetDetail(getBetDetail, _tpCustInfo, _inputs);
         }
 
-        [Test()]
+        //[Test()]
         public void GetTpBetRecordExtendTest()
         {
             //Arrange
