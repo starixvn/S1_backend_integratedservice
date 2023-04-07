@@ -36,7 +36,7 @@ namespace ThirdParty.TFG
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string RetrieveUrl = inputs.ContainsKey($"RetrieveUrl_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"RetrieveUrl_{tpCustInfo.TpCurrencyId}"]) ? inputs[$"RetrieveUrl_{tpCustInfo.TpCurrencyId}"] : throw new Exception();
+            string RetrieveUrl = inputs.ContainsKey("RetrieveUrl") && !string.IsNullOrEmpty(inputs["RetrieveUrl"]) ? inputs["RetrieveUrl"] : throw new Exception();
             string PublicToken = inputs.ContainsKey($"PublicToken_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"PublicToken_{tpCustInfo.TpCurrencyId}"]) ? inputs[$"PublicToken_{tpCustInfo.TpCurrencyId}"] : throw new Exception();
 
             #region token
