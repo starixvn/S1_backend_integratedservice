@@ -3363,6 +3363,71 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public IEnumerable<SettleData_Yeebet> GetSettle_TpWagerLC_Yeebet(string serialnumber)
         => _wagerDbClient.Query<SettleData_Yeebet>("Service_TpWagerLC_Yeebet_Get", parameters: new DynamicParameters(new { _serialnumber = serialnumber }));
 
+        #endregion
+
+        #region BG
+
+        public IEnumerable<BettingDataLC_BG> IsExistBet_BG(DateTime partitionTime, BettingDataLC_BG data)
+        {
+            var query = new { orderId = data.orderId };
+            return _partitionService.Query<BettingDataLC_BG>(partitionTime, "Service_BettransLC_BG_Cancel_Check", query);
+        }
+
+        public IEnumerable<BettingDataLC_BG> IsExistLastPayout_BG(DateTime partitionTime, BettingDataLC_BG data)
+        {
+            var query = new { orderId = data.orderId };
+            return _partitionService.Query<BettingDataLC_BG>(partitionTime, "Service_BettransLC_BG_ReSettle_Check", query);
+        }
+
+        public bool Payout_BG(DateTime partitionTime, BettingDataLC_BG data, MySqlTransaction trans)
+        {
+            var result = _partitionService.Execute(partitionTime, "Service_BettransLC_BG_Ins", data, trans);
+
+            if (result == 0)
+                return false;
+            return true;
+        }
+
+        public bool SetBalance_BG(TpCustInfo tpCustInfo, BettingDataLC_BG data, decimal payoutAmount, TransType transType, string memo,
+                                       out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        {
+
+            var result = PayoutV2(
+                tpCustInfo,
+                payoutAmount,
+                (int)Tp.BG,
+                data.orderId,
+                (int)GameType.BG_LiveCasino,
+                TpCategory.LiveCasino,
+                data.orderId,
+                transType,
+                null,
+                out afterAmount,
+                $"{memo}_{data.random}_{data.orderId} ",
+                out bonusId,
+                conn,
+                trans
+            );
+
+            if (result == 0)
+                return false;
+
+            return true;
+        }
+
+        public bool InsertUnsettle_BG(DateTime partitionTime, string orderId, MySqlTransaction trans)
+        {
+            var result = _tpUnsettleService.InsertTpUnsettle(Tp.BG, GameType.BG_LiveCasino, orderId, trans, partitionTime);
+
+            if (result == 0)
+                return false;
+
+            return true;
+        }
+
+        public IEnumerable<SettleData_BG> GetSettle_TpWagerLC_BG(string orderId)
+        => _wagerDbClient.Query<SettleData_BG>("Service_TpWagerLC_BG_Get", parameters: new DynamicParameters(new { _orderId = orderId }));
+
 
         #endregion
     }
