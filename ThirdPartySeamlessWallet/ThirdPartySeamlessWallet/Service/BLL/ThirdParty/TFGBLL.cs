@@ -216,7 +216,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         gameType: (int)bet.TpGameType,
                         refId: bet.id,
                         betData: null,
-                        tpCategory: TpCategory.VirtualSports,
+                        tpCategory: TpCategory.Esports,
                         afterAmount: out var afterAmount,
                         bonusId: ref bonusId,
                         conn: conn,
@@ -281,7 +281,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             tpId: (int)ThirdParty,
                             tpTransId: settle.id,
                             gameType: (int)GameType,
-                            tpCategory: TpCategory.VirtualSports,
+                            tpCategory: TpCategory.Esports,
                             refId: settle.id,
                             transType,
                             betData: null,
@@ -290,8 +290,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             out int bonusId,
                             conn,
                             trans,
-                            AllowNegative.Allow,
-                            SeamlessBonusType.TpId);
+                            AllowNegative.Allow);
 
                     if (result < 1)
                     {
@@ -344,7 +343,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             tpId: (int)ThirdParty,
                             tpTransId: bet.id,
                             gameType: (int)GameType,
-                            tpCategory: TpCategory.VirtualSports,
+                            tpCategory: TpCategory.Esports,
                             refId: bet.id,
                             TransType.Refunds,
                             betData: null,
@@ -353,8 +352,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             out int bonusId,
                             conn,
                             trans,
-                            AllowNegative.Allow,
-                            SeamlessBonusType.TpId);
+                            AllowNegative.Allow);
 
                 if (result != 1)
                 {
