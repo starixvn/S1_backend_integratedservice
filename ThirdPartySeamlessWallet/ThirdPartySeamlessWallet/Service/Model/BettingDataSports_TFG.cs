@@ -159,6 +159,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class Result
     {
         public ResultCode Code { get; set; }
+        public string Message { get; set; }
     }
     public enum ResultCode
     {
@@ -168,7 +169,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         DatabaseError = 3,
         TransactionDuplicated = 4,
         UserLockedOrNotFound = 5,
-        CurrencyError = 6
+        CurrencyError = 6,
+        PlaceBetError = 7,
+        InsertTpUnsettleError = 8,
+        PayoutError = 9
     }
     public class Settle_TFG
     {
