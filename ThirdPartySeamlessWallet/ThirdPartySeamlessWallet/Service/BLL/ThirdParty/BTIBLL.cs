@@ -1,9 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
+﻿using Newtonsoft.Json;
 using System.Text;
-using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -14,7 +10,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
     public class BTIBLL : IThirdPartyBLL
     {
-        private readonly AuthBLL authBLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly TpCustInfoBLL tpCustInfoBLL;
         private readonly BettingService bettingService;
@@ -26,7 +21,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             ThirdParty = Tp.BTI;
             GameType = GameType.BTI_Sports;
-            authBLL = provider.GetRequiredService<AuthBLL>();
             thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             bettingService = provider.GetRequiredService<BettingService>();

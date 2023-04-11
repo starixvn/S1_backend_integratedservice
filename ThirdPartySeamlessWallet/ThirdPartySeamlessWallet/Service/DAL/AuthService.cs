@@ -29,12 +29,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             
             _mainDbClient.Execute("Common_AuthToken_Sel", trans , p);
-            trans.Commit();
-            
             var permissionData = p.Get<string>("PermissionData");
+            _mainDbClient.CommitAndDisposeConnection(conn,trans);
             
-            conn.CloseAsync();
-            conn.Dispose();
             return permissionData;
         }
     }

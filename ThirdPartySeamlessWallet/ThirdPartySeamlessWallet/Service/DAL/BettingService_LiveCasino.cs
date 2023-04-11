@@ -501,7 +501,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
-            result = _mainDbClient.Execute("Service_BettransLC_WM_Ins_V2", p,conn, trans);
+            result = _mainDbClient.Execute("Service_BettransLC_WM_Ins_V2", p, conn, trans);
 
             if (result > 0)
             {

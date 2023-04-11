@@ -1,13 +1,6 @@
-﻿using System;
-using System.Dynamic;
-using System.Globalization;
-using System.Linq;
+﻿using System.Dynamic;
 using System.Text;
-using System.Threading.Tasks;
 using System.Web;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
@@ -163,7 +156,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        public async Task<dynamic> DebitAndCredit(dynamic request, TpCustInfo tpCustInfo, TpCurrency tpCurrency)
+        private async Task<dynamic> DebitAndCredit(dynamic request, TpCustInfo tpCustInfo, TpCurrency tpCurrency)
         {
             var transactionResult = 0;
             dynamic response = new ExpandoObject();
@@ -172,7 +165,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var transId = "";
             
             await using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
+            await conn.OpenAsync();
             await using var trans = await conn.BeginTransactionAsync();
             foreach (var fundInfo in request.funds.fundinfo)
             {
@@ -259,7 +252,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         afterAmount /= tpCurrency.ExchangeRate;
                 }
                 
-                trans.Commit();
+                _mainDbClient.CommitAndDisposeConnection(conn,trans);
                 if (bonusId > 0)
                 {
                     _logger.LogInformation($"user {tpCustInfo.TpUserName} has bonus wallet bonusId:{bonusId} transId:{transId}");
@@ -283,7 +276,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return response;
         }
 
-        public async Task<dynamic> Refund(dynamic request, TpCustInfo tpCustInfo, TpCurrency tpCurrency)
+        private async Task<dynamic> Refund(dynamic request, TpCustInfo tpCustInfo, TpCurrency tpCurrency)
         {
             dynamic response = new ExpandoObject();
             await using var conn = _mainDbClient.GetMySqlConnection();
@@ -301,7 +294,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (transactionResult.result > 0)
             {
-                trans.Commit();
+                _mainDbClient.CommitAndDisposeConnection(conn,trans);
                 response.status = new ExpandoObject();
                 response.status.success = true;
                 response.status.refundstatus = 1;

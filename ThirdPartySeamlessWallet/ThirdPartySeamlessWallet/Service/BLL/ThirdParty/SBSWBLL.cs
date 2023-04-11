@@ -1,14 +1,7 @@
 ﻿using Dapper;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using Serilog.Context;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -178,9 +171,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var p = new DynamicParameters(bet);
                 p.AddDynamicParams(new { TicketType = (int)transType });
 
-                using var conn = _mainDbClient.GetMySqlConnection();
-                conn.Open();
-                using var trans = conn.BeginTransaction();
+                await using var conn = _mainDbClient.GetMySqlConnection();
+                await conn.OpenAsync();
+                await using var trans = await conn.BeginTransactionAsync();
 
                 var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Service_Bettrans_SBSW_Bet", trans, p);
                 if (result.licenseeTxId < 1)
@@ -209,7 +202,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     throw new SBSWException(ReturnCode.InsufficientBalance);
                 }
 
-                trans.Commit();
+                _mainDbClient.CommitAndDisposeConnection(conn,trans);
                 return result;
             }
             catch (SBSWException ex)
@@ -259,9 +252,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var p = new DynamicParameters(confirm);
                 p.AddDynamicParams(new { TicketType = (int)transType });
 
-                using var conn = _mainDbClient.GetMySqlConnection();
-                conn.Open();
-                using var trans = conn.BeginTransaction();
+                await using var conn = _mainDbClient.GetMySqlConnection();
+                await conn.OpenAsync();
+                await using var trans = await conn.BeginTransactionAsync();
                 var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Service_Bettrans_SBSW_ConfirmBet", trans, p);
 
                 if (result.SPResult == -1)
@@ -308,7 +301,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     }
                 }
 
-                trans.Commit();
+                _mainDbClient.CommitAndDisposeConnection(conn,trans);
                 return result;
             }
             catch (SBSWException ex)
@@ -350,9 +343,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 detail.debitAmount *= tpCurrency.ExchangeRate;
                 detail.creditAmount *= tpCurrency.ExchangeRate;
 
-                using var conn = _mainDbClient.GetMySqlConnection();
-                conn.Open();
-                using var trans = conn.BeginTransaction();
+                await using var conn = _mainDbClient.GetMySqlConnection();
+                await conn.OpenAsync();
+                await using var trans = await conn.BeginTransactionAsync();
                 var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Service_Bettrans_SBSW_CancelBet", trans, new
                 {
                     confirmBet.action,
@@ -399,7 +392,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return new ExecuteResult(ReturnCode.InvalidAmount);
                 }
 
-                trans.Commit();
+                _mainDbClient.CommitAndDisposeConnection(conn,trans);
                 return result;
             }
             catch (SBSWException ex)
@@ -440,9 +433,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 detail.debitAmount *= tpCurrency.ExchangeRate;
                 detail.creditAmount *= tpCurrency.ExchangeRate;
 
-                using var conn = _mainDbClient.GetMySqlConnection();
-                conn.Open();
-                using var trans = conn.BeginTransaction();
+                await using var conn = _mainDbClient.GetMySqlConnection();
+                await conn.OpenAsync();
+                await using var trans = await conn.BeginTransactionAsync();
 
                 var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Service_Bettrans_SBSW_Settle", trans, new
                 {
@@ -492,7 +485,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return new ExecuteResult(ReturnCode.InvalidAmount);
                 }
 
-                trans.Commit();
+                _mainDbClient.CommitAndDisposeConnection(conn,trans);
                 return result;
             }
             catch (SBSWException ex)
