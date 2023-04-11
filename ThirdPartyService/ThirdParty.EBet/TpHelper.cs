@@ -123,8 +123,8 @@ namespace ThirdParty.EBet
             var apiUrl = inputs.GetValueOrDefault($"ApiUrl_{currency}") ?? throw new Exception();
             var channelId = inputs.GetValueOrDefault($"ChannelId_{currency}") ?? throw new Exception();
             var privateKey = inputs.GetValueOrDefault($"PrivateKey_{currency}") ?? throw new Exception();
-
             var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransLC_EBet_Detail_Get", new { getBetDetail.TransId }, DataBase.Report);
+
             var roundCode = detail.GetValueOrDefault("roundCode").ToString();
             var username = detail.GetValueOrDefault("username").ToString();
             var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
@@ -142,11 +142,13 @@ namespace ThirdParty.EBet
             };
 
             var url = $"{apiUrl}/api/userBetTracer";
-            var content = new StringContent(ToJson(sParam), Encoding.UTF8, "application/json");
-            using var client = new HttpClient();
-            var json = client.PostAsync(url, content).Result.Content.ReadAsStringAsync().Result;
-            var result = FromJson<DetailResult>(json);
+            var json = HttpPost(url, ToJson(sParam), "application/json");
+            if (!IsJSON(json))
+            {
+                throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail error. {json}");
+            }
 
+            var result = FromJson<DetailResult>(json);
             if (result.status != 200)
             {
                 throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {result.status}");
@@ -266,8 +268,8 @@ namespace ThirdParty.EBet
         {
             public string tableCode { get; set; }
             public int tableType { get; set; }
-            public string roundCode { get; set; }   
-            public IList<BetListEbet> betList { get; set; }           
+            public string roundCode { get; set; }
+            public IList<BetListEbet> betList { get; set; }
         }
 
         public class BetListEbet

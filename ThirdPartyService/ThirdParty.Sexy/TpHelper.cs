@@ -72,31 +72,42 @@ namespace ThirdParty.Sexy
             public string url { get; set; }
         }
 
-        public class GetKeyReq
+        private class SexyConfig
         {
-            public string cert { get; set; }
-            public string user { get; set; }
-            public string betLimitIds { get; set; }
-            public int currency { get; set; }
-        }
+            public string ApiUrl { get; set; }
 
-        public class GetKeyResp
-        {
-            public int Status { get; set; }
-            public string Key { get; set; }
-            public string Url { get; set; }
-        }
+            public string Cert { get; set; }
 
-        public class LoginReq
-        {
-            public string user { get; set; }
-            public string userName { get; set; }
-            public string key { get; set; }
-            public string language { get; set; }
-            public string mb { get; set; }
-            public string extension1 { get; set; }
-            public string extension2 { get; set; }
-            public string lobbyURL { get; set; }
+            public string AgentId { get; set; }
+
+            public List<string> BetLimitIds
+            {
+                get
+                {
+                    return new List<string>()
+                  {
+                      BetLimitId,
+                      BetLimitId2
+                  }.Where(r => !string.IsNullOrEmpty(r)).ToList();
+                }
+                set { BetLimitIds = value; }
+            }
+
+            private string BetLimitId { get; }
+
+            private string BetLimitId2 { get; }
+
+
+            public SexyConfig(Dictionary<string, string> inputs, string tpCurrencyId = "")
+            {
+                ApiUrl = inputs.ContainsKey("ApiUrl2") && !string.IsNullOrEmpty(inputs["ApiUrl2"]) ? inputs["ApiUrl2"] : throw new Exception("ApiUrl2");
+                Cert = inputs.ContainsKey("cert2") && !string.IsNullOrEmpty(inputs["cert2"]) ? inputs["cert2"] : throw new Exception("cert2");
+                AgentId = inputs.ContainsKey("AgentId") && !string.IsNullOrEmpty(inputs["AgentId"]) ? inputs["AgentId"] : throw new Exception("AgentId");
+
+                if (string.IsNullOrEmpty(tpCurrencyId)) return;
+                BetLimitId = inputs.ContainsKey($"BetLimitId{tpCurrencyId}") ? inputs[$"BetLimitId{tpCurrencyId}"] : string.Empty;
+                BetLimitId2 = inputs.ContainsKey($"BetLimitId2{tpCurrencyId}") ? inputs[$"BetLimitId2{tpCurrencyId}"] : string.Empty;
+            }
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -106,18 +117,14 @@ namespace ThirdParty.Sexy
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl2") && !string.IsNullOrEmpty(inputs["ApiUrl2"]) ? inputs["ApiUrl2"] : throw new Exception("ApiUrl2");
-            string cert = inputs.ContainsKey("cert2") && !string.IsNullOrEmpty(inputs["cert2"]) ? inputs["cert2"] : throw new Exception("cert2");
-            string agentId = inputs.ContainsKey("AgentId") && !string.IsNullOrEmpty(inputs["AgentId"]) ? inputs["AgentId"] : throw new Exception("AgentId");
-            string betLimitId = inputs.ContainsKey($"BetLimitId2{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"BetLimitId2{tpCustInfo.TpCurrencyId}"]) ? inputs[$"BetLimitId2{tpCustInfo.TpCurrencyId}"] : throw new Exception($"BetLimitId2{tpCustInfo.TpCurrencyId}");
-            ApiUrl = $"{ApiUrl}/wallet/createMember";
-
+            var config = new SexyConfig(inputs, tpCustInfo.TpCurrencyId);
+            var apiUrl = $"{config.ApiUrl}/wallet/createMember";
             tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x").ToLower();
 
-            var SignUp = new
+            var signUp = new
             {
-                cert = cert,
-                agentId = agentId,
+                cert = config.Cert,
+                agentId = config.AgentId,
                 userId = tpCustInfo.TpUserName,
                 currency = tpCustInfo.TpCurrencyId,
                 betLimit = JsonConvert.SerializeObject(new
@@ -126,19 +133,16 @@ namespace ThirdParty.Sexy
                     {
                         LIVE = new
                         {
-                            limitId = new List<string>()
-                                    {
-                                       betLimitId
-                                    }
+                            limitId = config.BetLimitIds
                         }
                     }
                 }),
             };
 
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(SignUp));
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(signUp));
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
             var result = HttpPost(
-                ApiUrl,
+                apiUrl,
                 sParam,
                 "application/x-www-form-urlencoded"
             );
@@ -165,7 +169,6 @@ namespace ThirdParty.Sexy
                 oApiResult.RawErrorCode = json.status;
             }
 
-
             return oApiResult;
         }
 
@@ -183,27 +186,22 @@ namespace ThirdParty.Sexy
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl2") && !string.IsNullOrEmpty(inputs["ApiUrl2"]) ? inputs["ApiUrl2"] : throw new Exception("ApiUrl2");
-            string cert = inputs.ContainsKey("cert2") && !string.IsNullOrEmpty(inputs["cert2"]) ? inputs["cert2"] : throw new Exception("cert2");
-            string agentId = inputs.ContainsKey("AgentId") && !string.IsNullOrEmpty(inputs["AgentId"]) ? inputs["AgentId"] : throw new Exception("AgentId");
-            string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "LobbyUrl";
-            string betLimitId = inputs.ContainsKey($"BetLimitId2{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"BetLimitId2{tpCustInfo.TpCurrencyId}"]) ? inputs[$"BetLimitId2{tpCustInfo.TpCurrencyId}"] : throw new Exception($"BetLimitId2{tpCustInfo.TpCurrencyId}");
+            var lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "LobbyUrl";
             var platform = inputs.GetValueOrDefault("Platform") ?? throw new Exception("Platform");
             var gameType = inputs.GetValueOrDefault("GameType") ?? throw new Exception("GameType");
-            ApiUrl = $"{ApiUrl}/wallet/doLoginAndLaunchGame";
+
+            var config = new SexyConfig(inputs, tpCustInfo.TpCurrencyId);
+            var apiUrl = $"{config.ApiUrl}/wallet/doLoginAndLaunchGame";
 
             if (!IsDevelopment && tpCustInfo.CustId == 61920)
             {
-                /* 
-                 Nova88_61920  IDR member can change his bet limit to 5-500
-                */
-                betLimitId = "580601";
+                config.BetLimitIds = new List<string>() { "580601" }; /* Nova88_61920  IDR member can change his bet limit to 5-500 */
             }
 
-            var Login = new
+            var login = new
             {
-                cert = cert,
-                agentId = agentId,
+                cert = config.Cert,
+                agentId = config.AgentId,
                 userId = tpCustInfo.TpUserName,
                 isMobileLogin = (appType == AppType.Desktop) ? "false" : "true",
                 externalURL = lobbyUrl,
@@ -218,19 +216,16 @@ namespace ThirdParty.Sexy
                     {
                         LIVE = new
                         {
-                            limitId = new List<string>()
-                        {
-                            betLimitId
-                        }
+                            limitId = config.BetLimitIds
                         }
                     }
                 }),
             };
 
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(Login));
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(login));
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
             var result = HttpPost(
-                ApiUrl,
+                apiUrl,
                 sParam,
                 "application/x-www-form-urlencoded"
             );
@@ -270,9 +265,10 @@ namespace ThirdParty.Sexy
         {
             try
             {
-                var apiUrl = inputs.GetValueOrDefault("ApiUrl2") ?? throw new Exception();
-                var cert = inputs.GetValueOrDefault("cert2") ?? throw new Exception();
-                var agentId = inputs.GetValueOrDefault("AgentId") ?? throw new Exception();
+                var config = new SexyConfig(inputs);
+                var apiUrl = config.ApiUrl;
+                var cert = config.Cert;
+                var agentId = config.AgentId;
                 var platform = inputs.GetValueOrDefault("Platform") ?? throw new Exception();
 
                 var url = $"{apiUrl}/wallet/getTransactionHistoryResult";
@@ -315,8 +311,8 @@ namespace ThirdParty.Sexy
                     RefNo = detail.GetStringValue("refPlatformTxId"),
                     Title = detail.GetStringValue("gameType"),
                     MatchID = detail.GetStringValue("roundId"),
-                    BetType = detail.GetStringValue("betType"),
-                    BetChoice = string.Empty,
+                    BetType = string.Empty,
+                    BetChoice = detail.GetStringValue("betType"),
                     Result = JsonConvert.SerializeObject(bet.result),
                     Odds = decimal.TryParse(bet.odds, out var odds) ? odds : 0,
                     DeviceType = DeviceType.None,
@@ -325,6 +321,7 @@ namespace ThirdParty.Sexy
                 _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             };
         }
+
         public class DetailResult
         {
             public string url { get; set; }
@@ -344,6 +341,5 @@ namespace ThirdParty.Sexy
             [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public string? odds { get; set; }
         }
-
     }
 }

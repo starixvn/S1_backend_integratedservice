@@ -39,7 +39,7 @@ builder.Services
     .AddHostedService<YGGWorker>()
     .AddHostedService<TCGWorker>()
     .AddHostedService<HBWorker>()
-    .AddHostedService<MegaWorker>()
+    //.AddHostedService<MegaWorker>()
     .AddHostedService<AMBWorker>()
     .AddHostedService<SAWorker>()
     .AddHostedService<SimplePlayWorker>()
@@ -50,7 +50,7 @@ builder.Services
     .AddHostedService<JILIWorker>()
     .AddHostedService<ATWorker>()
     .AddHostedService<KMWoker>()
-    .AddHostedService<OneGamingWorker>()
+    //.AddHostedService<OneGamingWorker>()
     .AddHostedService<V8Worker>()
     .AddHostedService<MPWorker>()
     .AddHostedService<CQ9Worker>()
@@ -64,6 +64,7 @@ builder.Services
     .AddHostedService<NineWWorker>()
     .AddHostedService<One789Worker>()
     .AddHostedService<YeebetWorker>()
+    .AddHostedService<BGWorker>()
     .AddHostedService<TFGWorker>();
 
 var app = builder.Build();

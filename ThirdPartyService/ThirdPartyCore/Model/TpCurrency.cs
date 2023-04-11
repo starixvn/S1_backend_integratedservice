@@ -16,4 +16,10 @@ namespace ThirdPartyCore.Model
         public int CurrencyId { set; get; }
         public string TpCurrencyId { set; get; }
     }
+
+    public class DefTpCurrencyId
+    {
+        public int DefCurrency { set; get; }
+        public string TpCurrencyId { set; get; }
+    }
 }

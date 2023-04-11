@@ -1,8 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -67,18 +63,13 @@ namespace ThirdPartyWager.Service.BLL
                         try
                         {
                             var result = 0;
-                            var gameType = GameType.SG_Fish;
-                            if (!bet.gameCode.StartsWith("F-", StringComparison.OrdinalIgnoreCase))
+                            if (!string.IsNullOrEmpty(bet.categoryId) && bet.categoryId.Equals("BN", StringComparison.OrdinalIgnoreCase))
                             {
-                                // slot
-                                result = _wagerSGService.InsertWagerRng(bet);
-                                gameType = GameType.SG_RNG;
+                                continue;
                             }
-                            else
-                            {
-                                // fish
-                                result = _wagerSGService.InsertWager(bet);
-                            }
+
+                            var gameType = GetGameType(bet.gameCode);
+                            result = (gameType == GameType.SG_RNG) ? _wagerSGService.InsertWagerRng(bet) : _wagerSGService.InsertWager(bet);
 
                             if (result > 0)
                             {
@@ -105,6 +96,18 @@ namespace ThirdPartyWager.Service.BLL
                 _logger.LogError(ex, $"GetWagersAsync {msg}\r\n{ex.Message}");
                 return false;
             }
+
+        }
+
+        private GameType GetGameType(string gameCode)
+        {
+            if (!gameCode.StartsWith("F-", StringComparison.OrdinalIgnoreCase))
+            {
+                // slot
+                return GameType.SG_RNG;
+            }
+
+            return GameType.SG_Fish;
         }
     }
 }

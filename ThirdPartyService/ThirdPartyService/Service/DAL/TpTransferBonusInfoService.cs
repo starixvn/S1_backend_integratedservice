@@ -304,8 +304,11 @@ namespace ThirdPartyService.Service.DAL
                             tpBonusCancelTransfer.UserName,
                             tpBonusCancelTransfer.SiteId, 
                             tpBonusCancelTransfer.RefundAmount, 
+                            0,
                             memo,
                             tpBonusCancelTransfer.BonusId.ToString(),
+                            (int)WithdrawalLimitLogCreateFromEnum.Bonus,
+                            "System",
                             out _,trans);
                     }
                 }

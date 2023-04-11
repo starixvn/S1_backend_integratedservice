@@ -129,6 +129,7 @@ namespace ThirdPartySettleWorker.Workers
                                 SettledTime = wager.SettleTime,
                                 TransTime = wager.TransTime,
                                 SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType(thisTp, bettrans.GameId.ToString()),
+                                GameID = bettrans.GameId,
                             };
 
                             var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, category);
@@ -226,6 +227,7 @@ namespace ThirdPartySettleWorker.Workers
                                 SettledTime = wager.SettleTime,
                                 TransTime = wager.TransTime,
                                 SettlementType = SettlementType.SettledForValid,
+                                GameID = wager.GameId,
                             };
 
                             var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, category);
