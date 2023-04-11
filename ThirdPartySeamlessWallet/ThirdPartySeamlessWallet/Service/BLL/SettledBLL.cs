@@ -1,8 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -2416,6 +2412,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public IEnumerable<SettleData_Yeebet> GetSettle_TpWagerLC_Yeebet(string serialnumber)
         {
             return settledService.GetSettle_TpWagerLC_Yeebet(serialnumber);
+        }
+
+        #endregion
+
+        #region BG
+
+        public IEnumerable<SettleData_BG> GetSettle_TpWagerLC_BG(string orderId)
+        {
+            return settledService.GetSettle_TpWagerLC_BG(orderId);
         }
 
         #endregion

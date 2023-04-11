@@ -1,4 +1,5 @@
 ﻿using Serilog.Context;
+using System.Text.Json;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -11,6 +12,12 @@ public class WagerBG : BackgroundService
     private readonly CommonBLL _commonBLL;
 
     private readonly int tpId = (int)Tp.BG;
+    private readonly WagerTimerType tpType = WagerTimerType.Wager;
+    private bool isFast = false;
+    private readonly int timeRange = 30; //in minutes 
+    private readonly int quickTime = 15; // in seconds
+    private readonly int runTime = 60; // in seconds
+    private readonly int needQuickTime = 20; // in minutes
     private Timer _timer;
 
     public WagerBG(ILogger<WagerBG> logger,
@@ -34,21 +41,18 @@ public class WagerBG : BackgroundService
         LogContext.PushProperty("Tp", Tp.BG.ToString());
         try
         {
+            isFast = false;
             var siteList = _commonBLL.GetSiteList().Where(x => x.SiteId != 4);
-            var TpCurrencyList = _commonBLL.GetTpCurrencyList((int)Tp.BG);
+            var TpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
+            var quick = false;
             foreach (var siteInfo in siteList)
             {
-                //var currencyList = JsonSerializer.Deserialize<IEnumerable<int>>(siteInfo.CurrencyList);
-                //foreach (var item in TpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
-                //{
-                //    var isSuccess = true;
-                //    var isContinue = true;
-                //    while (isSuccess && isContinue)
-                //    {
-                //        (isSuccess, isContinue) = await _wagerYeebetBLL.GetWagersAsync(tpId, siteInfo.SiteId, item.TpCurrencyId);
-                //        Thread.Sleep(3 * 1000);
-                //    }
-                //}
+                var currencyList = JsonSerializer.Deserialize<IEnumerable<int>>(siteInfo.CurrencyList);
+                foreach (var item in TpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
+                {
+                    quick = await _wagerBGBLL.ExecWagerWorker(siteInfo.SiteId, item.TpCurrencyId, tpType, timeRange, needQuickTime);
+                    if (!isFast && quick) isFast = true;
+                }
             }
         }
         catch (Exception ex)
@@ -57,8 +61,7 @@ public class WagerBG : BackgroundService
         }
         finally
         {
-            var dueTimeSpan = TimeSpan.FromMinutes(1);
-
+            var dueTimeSpan = isFast ? TimeSpan.FromSeconds(quickTime) : TimeSpan.FromSeconds(runTime);
             _timer.Change(dueTimeSpan, TimeSpan.Zero);
         }
     }

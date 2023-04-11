@@ -2,13 +2,6 @@
 
 namespace ThirdPartySeamlessWallet.Service.Model.enums;
 
-public enum MethodType
-{
-    Ping = 1, //NoUse
-    UserBalance = 2,
-    OrderTransfer = 3,
-    CalcTransfer = 4
-}
 
 /// <summary>
 /// ErrorCode, Reference From Offical Spec.
