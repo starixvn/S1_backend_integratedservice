@@ -7,11 +7,5 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface
         Task<Result> Transfer(TFGTransferReq req);
 
         Task<Result> Rollback(TFGRallBackReq req);
-
-        //Check_TFG GetBetData(string id);
-
-        //IEnumerable<TFGSettle> GetSettleData(string id);
-
-        //WagerTFG GetWagerData(string id);
     }
 }

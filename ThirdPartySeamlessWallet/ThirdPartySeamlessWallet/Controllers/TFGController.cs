@@ -1,14 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.BLL;
-using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model;
-using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using Newtonsoft.Json;
 using System.Text;
 using System.Web;
-using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Controllers
 {
@@ -87,15 +84,13 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             try
             {
-                _logger.LogInformation($"Transfer\r\n{req}");
                 Request.Headers.TryGetValue("Authorization", out var authorization);
                 var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)_thisTp);
                 var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, req.loginName);
                 var privateToken = thirdPartySetting.TpSetting[$"PrivateToken_{tpCustInfo.TpCurrencyId}"];
                 if (privateToken != authorization)
                 {
-                    _logger.LogInformation($"privateToken\r\n{privateToken}");
-                    _logger.LogInformation($"authorization\r\n{authorization}");
+                    _logger.LogError($"privateToken:{privateToken}\r\nauthorization{authorization}");
                     return BadRequest();
                 }
 
@@ -107,6 +102,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else
                 {
+                    _logger.LogError(retult.Message);
                     return BadRequest();
                 }
             }
@@ -123,15 +119,13 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             try
             {
-                _logger.LogInformation($"Rollback\r\n{req}");
                 Request.Headers.TryGetValue("Authorization", out var authorization);
                 var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)_thisTp);
                 var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, req.loginName);
                 var privateToken = thirdPartySetting.TpSetting[$"PrivateToken_{tpCustInfo.TpCurrencyId}"];
                 if (privateToken != authorization)
                 {
-                    _logger.LogInformation($"privateToken\r\n{privateToken}");
-                    _logger.LogInformation($"authorization\r\n{authorization}");
+                    _logger.LogError($"privateToken:{privateToken}\r\nauthorization{authorization}");
                     return BadRequest();
                 }
 
@@ -143,6 +137,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else
                 {
+                    _logger.LogError(retult.Message);
                     return BadRequest();
                 }
             }
