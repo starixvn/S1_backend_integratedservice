@@ -128,5 +128,7 @@ namespace ThirdPartyCore.Model.enums
         SBSW_Vgaming = 95,
         SBSW_CardClub = 96,
         Nextspin_RNG = 99,
+        PlayTech_RNG = 100,
+        PlayTech_LiveCasino = 101,
     }
 }

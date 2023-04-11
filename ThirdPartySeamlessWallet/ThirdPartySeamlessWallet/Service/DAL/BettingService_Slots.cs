@@ -1,13 +1,7 @@
 ﻿using Dapper;
-using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using System.Globalization;
@@ -1650,6 +1644,194 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+        #endregion
+
+        #region PlayTech
+
+        public int PlaceBet_PlayTech(TpCustInfo tpCustInfo, BettingData_PlayTech bettingData_PlayTech, GameType gameType, int partitionCheckDay, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            afterAmount = 0;
+            var result = 0;
+
+            var tpCategory = (gameType == GameType.PlayTech_RNG) ? TpCategory.Slots : TpCategory.LiveCasino;
+            var tableName = (gameType == GameType.PlayTech_RNG) ? "Rng" : "LC";
+            // Service_BettransRng_PlayTech_roundId_Get、Service_BettransLC_PlayTech_roundId_Get
+            var GetSpName = $"Service_Bettrans{tableName}_PlayTech_roundId_Get";
+            // Service_BettransRng_PlayTech_Ins、Service_BettransLC_PlayTech_Ins
+            var InsSpName = $"Service_Bettrans{tableName}_PlayTech_Ins";
+
+            int cntTrans = bettingData_PlayTech.trans.Count;
+            int cntExet = 0;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            foreach (var data in bettingData_PlayTech.trans)
+            {
+                try
+                {
+                    var partitionTime = data.transTime;
+
+                    // 檢查是否已派彩
+                    var bettrans = _partitionService.Query<BettransData_PlayTech>(partitionTime, GetSpName, new { roundId = data.roundId, playerId = bettingData_PlayTech.playerId }, partitionCheckDay);
+                    if (bettrans != null && bettrans.Any(i => i.TicketType == BettransType.Payout))
+                    {
+                        result = -3;
+                        cntExet++;
+                        continue;
+                    }
+                    // 檢查是否有網路延遲cancel比bet早收到
+                    if (bettrans != null && bettrans.Any(i => i.referenceId == data.transId && i.TicketType == BettransType.CancelBet))
+                    {
+                        result = 0;
+                        return result;
+                    }
+
+                    var p = new DynamicParameters(new
+                    {
+                        requestId = bettingData_PlayTech.requestId,
+                        brandId = bettingData_PlayTech.brandId,
+                        playerId = bettingData_PlayTech.playerId,
+                        playerSessionId = bettingData_PlayTech.playerSessionId,
+                        gameCode = bettingData_PlayTech.gameCode,
+                        endSession = bettingData_PlayTech.endSession,
+                        detailUrl = bettingData_PlayTech.detailUrl,
+                        trans = JsonConvert.SerializeObject(bettingData_PlayTech.trans),
+                        seq = data.seq,
+                        transId = data.transId,
+                        referenceId = data.referenceId,
+                        amount = data.amount,
+                        transType = data.transType,
+                        transTime = data.transTime,
+                        roundId = data.roundId,
+                        roundType = data.roundType,
+                        endRound = data.endRound,
+                        desc = data.desc,
+                        jpc = data.jpc,
+                        jpw = data.jpw,
+                        jpDetails = data.jpDetails != null && data.jpDetails.Any() ? JsonConvert.SerializeObject(data.jpDetails) : "[]",
+                        validBet = data.validBet,
+                        validWin = data.validWin,
+                        additionalData = data.additionalData != null ? JsonConvert.SerializeObject(data.additionalData) : "[]",
+                        transTimeUnix = data.transTimeUnix,
+                        TicketType = (int)TransferType.PlaceBet,
+                        TicketStatus = (int)TicketStatus.UnSettled,
+                        SettleFlag = (int)SettleFlag.Running
+
+                    });
+
+                    result = 0;
+                    result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
+
+                    if (result > 0)
+                    {
+                        result = PlaceBetV2(
+                            tpCustInfo,
+                            Math.Abs(data.amount) * -1,
+                            (int)Tp.PlayTech,
+                            data.roundId,
+                            (int)gameType,
+                            data.roundId,
+                            null,
+                            tpCategory,
+                            out afterAmount,
+                            ref bonusId,
+                            conn,
+                            trans,
+                            memo: $" - {data.transId} "
+                        );
+
+                        if (bonusId > 0)
+                        {
+                            AddTpBonus((int)Tp.PlayTech, data.transId, (int)gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, data.amount, bonusId, tpCategory, conn, trans);
+                        }
+                    }
+
+                    if (result > 0)
+                    {
+                        cntExet++;
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                        return result;
+                    }
+                }
+                catch (MySqlException mySqlEx)
+                {
+                    result = 0;
+                    logger.LogError(mySqlEx.Message);
+                    if (mySqlEx.Number == 1062)
+                    {
+                        /*Duplicate for key 'PRIMARY'*/
+                        result = -1;
+                        cntExet++;
+                        continue;
+                    }
+                    throw;
+                }
+            }
+
+            if (cntExet == cntTrans)
+            {
+                _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                return result;
+            }
+            else if (cntExet != cntTrans && result > 0)
+            {
+                result = 0;
+            }
+           
+            _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+            return result;
+        }
+
+        public TpBetFailureRecord GetTpBetFailureParam_PlayTech(TpCustInfo tpCustInfo, TpCustBalance custBalance, TpCurrency tpCurrency, BettingData_PlayTech bettingData_PlayTech, int gameType, TpCheckRecordCode Code, decimal AfterAmount)
+        {
+            // BLL會經過匯率換算 下列還原為原始資料
+            var InfoData = new List<TpBetFailureRecordInfo_PlayTech>();
+            // 單筆
+            foreach (var data in bettingData_PlayTech.trans)
+            {
+                var transData = new TpBetFailureRecordInfo_PlayTech
+                {
+                    transId = data.transId,
+                    roundId = data.roundId,
+                    amount = data.amount / tpCurrency.ExchangeRate,
+                    jpc = data.jpc / tpCurrency.ExchangeRate,
+                };
+                InfoData.Add(transData);
+            }
+
+            var betList = bettingData_PlayTech.trans.Where(i => string.Equals(i.transType, "bet", StringComparison.OrdinalIgnoreCase)).ToList();
+            // 總計
+            var summaryData = new TpBetFailureRecordInfo_PlayTech
+            {
+                CurrentBalance = custBalance.Balance / tpCurrency.ExchangeRate,
+                amount = betList.Sum(i => i.amount),
+                jpc = betList.Sum(i => i.jpc),
+                InsufficientBalance = AfterAmount,
+                ExchangeRate = tpCurrency.ExchangeRate,
+            };
+            InfoData.Add(summaryData);
+
+            var anyBetData = betList.First();
+            return new TpBetFailureRecord
+            {
+                TransId = anyBetData.transId,
+                TpId = (int)Tp.PlayTech,
+                TpGameType = gameType,
+                SiteId = tpCustInfo.SiteId,
+                CustId = tpCustInfo.CustId,
+                UserName = tpCustInfo.UserName,
+                Code = (int)Code,
+                TransTime = anyBetData.transTimeUnix,
+                Info = JsonConvert.SerializeObject(InfoData),
+            };
+        }
+        
         #endregion
 
         #region Nextspin
