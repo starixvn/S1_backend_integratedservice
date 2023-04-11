@@ -1,26 +1,18 @@
 ﻿using Dapper;
-using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
-using System;
 using System.Data;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-using System.Linq;
-using System.Collections.Generic;
 using Serilog.Context;
 using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.BLL;
-using System.Threading.Tasks;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
     public partial class SettledService
     {
-        private readonly IConfiguration configuration;
         private readonly WalletService walletService;
         private readonly Tools tools;
         private readonly Log2File log2File;
@@ -37,7 +29,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public SettledService(IServiceProvider provider)
         {
             _bettingService = provider.GetRequiredService<BettingService>();
-            configuration = provider.GetRequiredService<IConfiguration>();
             walletService = provider.GetRequiredService<WalletService>();
             tools = provider.GetRequiredService<Tools>();
             log2File = provider.GetRequiredService<Log2File>();
@@ -220,7 +211,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             CustId = 0;
             BonusId = 0;
             var spName = bonusType == SeamlessBonusType.TpCategory ? $"Service_Tp{tpCategory}Bonus_Get" : $"Service_Tp_Bonus_Get";
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             var p = new DynamicParameters(new { TpId = tpId, TransId = tpTransId, GameType = gameType });
             p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
             p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);
@@ -279,14 +270,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             betRecordInfo.BonusId = bonusId;
 
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             int result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
 
             if (result > 0)
             {
-                trans.Commit();
+                _mainDbClient.CommitAndDisposeConnection(conn,trans);
+            }
+            else
+            {
+                _mainDbClient.RollbackAndDisposeConnection(conn,trans);
             }
 
             return result;
@@ -294,16 +289,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public int Settle(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             int result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
 
             if (result > 0)
             {
-                trans.Commit();
+                _mainDbClient.CommitAndDisposeConnection(conn,trans);
             }
-
+            else
+            {
+                _mainDbClient.RollbackAndDisposeConnection(conn,trans);
+            }
             return result;
         }
 
@@ -781,9 +779,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             if (result > 0)
             {
-                trans.Commit();
+                _mainDbClient.CommitAndDisposeConnection(conn,trans);
             }
-
+            else
+            {
+                _mainDbClient.RollbackAndDisposeConnection(conn,trans);
+            }
             return result;
         }
 

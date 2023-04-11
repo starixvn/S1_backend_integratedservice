@@ -26,7 +26,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             afterAmount = 0;
             Transid = bettingDataRNG_GPI.trx_id;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
@@ -45,7 +45,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             if (result > 0)
             {
-                trans.Commit();
+                _mainDbClient.CommitAndDisposeConnection(conn,trans);
+            }
+            else
+            {
+                _mainDbClient.RollbackAndDisposeConnection(conn,trans);
             }
 
             return result;
@@ -59,7 +63,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             afterAmount = 0;
             var bonusCode = (!string.IsNullOrEmpty(bettingDataRNG_PP.bonusCode)) ? $" ({bettingDataRNG_PP.bonusCode})" : "";
 
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
@@ -101,7 +105,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             if (result > 0)
             {
-                trans.Commit();
+                _mainDbClient.CommitAndDisposeConnection(conn,trans);
+            }
+            else
+            {
+                _mainDbClient.RollbackAndDisposeConnection(conn,trans);
             }
 
             return result;
@@ -115,34 +123,32 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
+                using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
+                
+                var p = new DynamicParameters(insertData);
+                p.Add("tickets", (int?)null);
+                p.Add("bonusprize", (decimal?)null);
+                p.Add("type", (int)BettransType.Bet);
+
+                using (var trans = conn.BeginTransaction())
                 {
-                    conn.Open();
-                    var p = new DynamicParameters(insertData);
-                    p.Add("tickets", (int?)null);
-                    p.Add("bonusprize", (decimal?)null);
-                    p.Add("type", (int)BettransType.Bet);
+                    result = conn.Execute("Service_BettransRngV2_YGG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
-                    using (var trans = conn.BeginTransaction())
+                    if (result > 0 && insertData.amount < 0)
                     {
-                        result = conn.Execute("Service_BettransRngV2_YGG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
-                        if (result > 0 && insertData.amount < 0)
-                        {
-                            result = PlaceBetV2(tpCustInfo, insertData.amount, (int)Tp.YGG, insertData.reference, gameType, insertData.subreference, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
-                        }
-
-                        if (result > 0)
-                        {
-                            trans.Commit();
-                        }
-                        else
-                        {
-                            result = -1;
-                            trans.Rollback();
-                        }
+                        result = PlaceBetV2(tpCustInfo, insertData.amount, (int)Tp.YGG, insertData.reference, gameType, insertData.subreference, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
                     }
-                    conn.Close();
+                    
+                    if (result > 0)
+                    {
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    }
+                    else
+                    {
+                        result = -1;
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
+                    }
                 }
             }
             catch (MySqlException mySqlEx)
@@ -165,7 +171,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int bonusId = 0;
 
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
@@ -225,7 +231,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             if (result > 0)
             {
-                trans.Commit();
+                _mainDbClient.CommitAndDisposeConnection(conn,trans);
+            }
+            else
+            {
+                _mainDbClient.RollbackAndDisposeConnection(conn,trans);
             }
 
             return result;
@@ -237,7 +247,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int gameType = (int)GameType.PG_RNG;
 
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
@@ -259,7 +269,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
             catch (MySqlException mySqlEx)
@@ -284,7 +298,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int gameType = (int)GameType.Joker_RNG;
 
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
@@ -303,7 +317,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             if (result > 0)
             {
-                trans.Commit();
+                _mainDbClient.CommitAndDisposeConnection(conn,trans);
+            }
+            else
+            {
+                _mainDbClient.RollbackAndDisposeConnection(conn,trans);
             }
 
             return result;
@@ -351,7 +369,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
             catch (Exception ex)
@@ -411,7 +433,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var bonusId = 0;
             var afterAmount = 0M;
             var result = 0;
-            await using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            await using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             await using var trans = await conn.BeginTransactionAsync();
             bettingDataRNG_MG.amount *= -1;
@@ -458,7 +480,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
 
                 return new MGPlaceBetResult()
@@ -496,7 +522,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int gameType = (int)GameType.CQ9_RNG;
 
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
@@ -542,7 +568,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         result = conn.Execute("Service_BettransRng_CQ9_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
                         if (result > 0)
                         {
-                            trans.Commit();
+                            _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                        }
+                        else
+                        {
+                            _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                         }
                     }
                 }
@@ -551,7 +581,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
                 {
-                    trans.Rollback();
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     result = -1;
                 }
                 else
@@ -566,7 +596,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int RolloutFish_CQ9(TpCustInfo tpCustInfo, BettingDataRNG_CQ9 bettingDataRNG_CQ9, int gameType, out decimal afterAmount)
         {
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
@@ -613,7 +643,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (result > 0)
                         {
-                            trans.Commit();
+                            _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                        }
+                        else
+                        {
+                            _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                         }
                     }
                 }
@@ -622,7 +656,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
                 {
-                    trans.Rollback();
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     result = -1;
                 }
                 else
@@ -637,7 +671,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int TakeAllFish_CQ9(TpCustInfo tpCustInfo, BettingDataRNG_CQ9 bettingDataRNG_CQ9, int gameType, out decimal afterAmount)
         {
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
@@ -684,7 +718,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         result = conn.Execute("Service_BettransFish_CQ9_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
                         if (result > 0)
                         {
-                            trans.Commit();
+                            _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                        }
+                        else
+                        {
+                            _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                         }
                     }
                 }
@@ -693,7 +731,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
                 {
-                    trans.Rollback();
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     result = -1;
                 }
                 else
@@ -714,7 +752,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int bonusId = 0;
 
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
@@ -761,7 +799,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
             catch (MySqlException mySqlEx)
@@ -782,7 +824,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int PlaceBetFish_Iconic(TpCustInfo tpCustInfo, BettingDataFish_Iconic bettingDataFish_Iconic, out decimal afterAmount)
         {
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
@@ -820,7 +862,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
             catch (MySqlException mySqlEx)
@@ -847,7 +893,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int bonusId = 0;
 
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
@@ -900,7 +946,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
             catch (MySqlException mySqlEx)
@@ -927,7 +977,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int bonusId = 0;
 
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
@@ -980,7 +1030,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
             catch (MySqlException mySqlEx)
@@ -1054,11 +1108,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 result = PlaceBetV2(tpCustInfo, Math.Abs(bettingDataRNG_AP.stake) * -1, (int)Tp.AP, bettingDataRNG_AP.gameroundid, gameType, bettingDataRNG_AP.seq, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
             }
-
+            
             if (result > 0)
             {
                 sq = p.Get<long>("SQ");
-                trans.Commit();
+                _mainDbClient.CommitAndDisposeConnection(conn,trans);
+            }
+            else
+            {
+                _mainDbClient.RollbackAndDisposeConnection(conn,trans);
             }
 
             return result;
@@ -1131,7 +1189,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
             catch (MySqlException mySqlEx)
@@ -1155,10 +1217,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 TransactionReferenceId = "";
                 var partitionTime = DateTimeOffset.FromUnixTimeSeconds(SettlementTime).DateTime;
-
-                using var conn = _mainDbClient.GetMySqlConnection();
-                conn.Open();
-                var trans = conn.BeginTransaction();
 
                 var bettrans = _partitionService.Query<BettransData_AdvantPlayMini_Bet>(partitionTime, spName, new { _TransId = TransId });
                 if (!bettrans.Any())
@@ -1411,7 +1469,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
             catch (MySqlException mySqlEx)
@@ -1499,7 +1561,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     }
                 }
             }
@@ -1550,7 +1616,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             if (result > 0)
             {
-                trans.Commit();
+                _mainDbClient.CommitAndDisposeConnection(conn,trans);
+            }
+            else
+            {
+                _mainDbClient.RollbackAndDisposeConnection(conn,trans);
             }
 
             return result;

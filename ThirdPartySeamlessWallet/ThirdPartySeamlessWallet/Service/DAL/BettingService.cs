@@ -1,14 +1,7 @@
-﻿using Dapper;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using MySql.Data.MySqlClient;
+﻿using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using Serilog.Context;
-using System;
-using System.Data;
-using System.Linq;
 using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -17,24 +10,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 {
     public partial class BettingService
     {
-        private readonly IConfiguration configuration;
         private readonly WalletService walletService;
-        private readonly RiskInspection _riskInspection;
         private readonly Tools tools;
         private readonly ILogger<BettingService> logger;
         private readonly Log2File log2File;
         private readonly MySqlClient _mainDbClient;
+        private readonly MySqlClient _reportDbClient;
         private readonly PartitionService _partitionService;
         private readonly TpUnsettleService _tpUnsettleService;
 
         public BettingService(IServiceProvider provider)
         {
-            configuration = provider.GetRequiredService<IConfiguration>();
             walletService = provider.GetRequiredService<WalletService>();
             tools = provider.GetRequiredService<Tools>();
             logger = provider.GetRequiredService<ILogger<BettingService>>();
             log2File = provider.GetRequiredService<Log2File>();
-            _riskInspection = provider.GetRequiredService<RiskInspection>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _partitionService = provider.GetRequiredService<PartitionService>();
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
@@ -46,15 +36,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 return 0;
 
             var spName = bonusType == SeamlessBonusType.TpCategory ? $"Service_Tp{tpCategory}Bonus_Ins" : $"Service_Tp_Bonus_Ins";
-            int result = conn.Execute(spName, new { TpId = tpId, TransId = transId, GameType = gameType, CustId = custId, UserName = userName, CurrencyId = currencyId, SiteId = siteId, Stake = stake, BonusId = bonusId }, transaction: trans, commandType: CommandType.StoredProcedure);
+            var result = _mainDbClient.Execute(spName, new { TpId = tpId, TransId = transId, GameType = gameType, CustId = custId, UserName = userName, CurrencyId = currencyId, SiteId = siteId, Stake = stake, BonusId = bonusId }, conn, trans);
 
             return result;
         }
+        
         public int PlaceBetV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, string refId, string betData, TpCategory tpCategory, out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans, SeamlessBonusType bonusType = SeamlessBonusType.TpCategory, string memo = "")
         {
             afterAmount = 0;
-            int result = 0;
-            bool bHasBonusWallet = true;
+            var result = 0;
+            var bHasBonusWallet = true;
 
             try
             {

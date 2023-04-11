@@ -1,11 +1,6 @@
-﻿using System;
-using Dapper;
-using Microsoft.Extensions.Configuration;
+﻿using Dapper;
 using MySql.Data.MySqlClient;
-using System.Collections.Generic;
 using System.Data;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
@@ -19,9 +14,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             try
             {
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-                conn.Open();
-                using var trans = conn.BeginTransaction();
+                await using var conn = _mainDbClient.GetMySqlConnection();
+                await conn.OpenAsync();
+                await using var trans = await conn.BeginTransactionAsync();
 
                 var p = new DynamicParameters(new
                 {
@@ -67,7 +62,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (btiResult.SetBalanceResult == 1)
                 {
                     btiResult.AfterAmount = afterAmount;
-                    trans.Commit();
+                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+                }
+                else
+                {
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                 }
 
                 return btiResult;
@@ -90,9 +89,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             try
             {
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-                conn.Open();
-                using var trans = conn.BeginTransaction();
+                await using var conn = _mainDbClient.GetMySqlConnection();
+                await conn.OpenAsync();
+                await using var trans = await conn.BeginTransactionAsync();
 
                 var p = new DynamicParameters(new
                 {
@@ -122,7 +121,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 btiResult.SPResult = _tpUnsettleService.InsertTpUnsettle(Tp.BTI, GameType.BTI_Sports, request.reserve_id, trans);
                 if (btiResult.SPResult == 1 && btiResult.ReturnAmount <= 0)
                 {
-                    trans.Commit();
+                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
                     return btiResult;
                 }
 
@@ -147,7 +146,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 btiResult.AfterAmount = afterAmount;
                 if (btiResult.SetBalanceResult == 1)
                 {
-                    trans.Commit();
+                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+                }
+                else
+                {
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                 }
                 return btiResult;
             }
@@ -169,9 +172,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             try
             {
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-                conn.Open();
-                using var trans = conn.BeginTransaction();
+                await using var conn = _mainDbClient.GetMySqlConnection();
+                await conn.OpenAsync();
+                await using var trans = await conn.BeginTransactionAsync();
 
                 var p = new DynamicParameters(credit);
                 p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
@@ -222,7 +225,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         _tpUnsettleService.InsertTpUnsettle(Tp.BTI, GameType.BTI_Sports, credit.reserve_id, trans);
                     }
 
-                    trans.Commit();
+                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
                 }
                 return btiResult;
             }
@@ -244,7 +247,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         
         public IEnumerable<BTISettleData> GetUnsettledList_BTI()
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             return conn.Query<BTISettleData>("Service_BettransSports_BTI_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
 
@@ -259,7 +262,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 await using var conn = _mainDbClient.GetMySqlConnection();
-                conn.Open();
+                await conn.OpenAsync();
                 await using var trans = await conn.BeginTransactionAsync();
 
                 dto.TicketType = (int)BettransType.Payout;
@@ -315,7 +318,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     Result = 1,
                     AfterAmount = afterAmount
                 };
-                await trans.CommitAsync();
+                await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
                 return sboResult;
             }
             catch (Exception ex)
@@ -333,7 +336,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 await using var conn = _mainDbClient.GetMySqlConnection();
-                conn.Open();
+                await conn.OpenAsync();
                 await using var trans = await conn.BeginTransactionAsync();
                 
                 var p = new DynamicParameters(new
@@ -385,7 +388,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     AfterAmount = afterAmount,
                     Result = 1
                 };
-                trans.Commit();
+                await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
                 return sboResult;
             }
             catch (Exception ex)
@@ -404,7 +407,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 var bonusId = 0;
                 await using var conn = _mainDbClient.GetMySqlConnection();
-                conn.Open();
+                await conn.OpenAsync();
                 await using var trans = await conn.BeginTransactionAsync();
                 
                 var p = new DynamicParameters(dto);
@@ -455,7 +458,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     AfterAmount = afterAmount,
                     Result = 1
                 };
-                trans.Commit();
+                await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
                 return sboResult;
             }
             catch (Exception ex)
