@@ -285,6 +285,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
     {
         TpCategory,
         TpId,
+        ALL,
     }
 
     public enum WalletType

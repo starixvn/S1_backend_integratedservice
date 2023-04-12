@@ -75,4 +75,13 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string Aff { get; set; }
         public string AffCode { get; set; }
     }
+
+    public class CustBonus
+    {
+        public int BonusId { get; set; } 
+        public decimal Bonus { get; set; }
+        public int PromoCategoryId { get; set; }
+        public int GameType { get; set; }
+        public int TpId { get; set; }      
+    }
 }

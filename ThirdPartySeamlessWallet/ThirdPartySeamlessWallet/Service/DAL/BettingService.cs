@@ -1,14 +1,9 @@
 ﻿using Dapper;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using Serilog.Context;
-using System;
 using System.Data;
-using System.Linq;
 using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -54,33 +49,34 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             afterAmount = 0;
             int result = 0;
-            bool bHasBonusWallet = true;
 
             try
             {
-                if (bHasBonusWallet)
+                //傳進來的bonusId = 0，先找到用戶還在Running的CustBonus
+                if (bonusId == 0)
                 {
-                    result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, ref bonusId, conn, trans);
-                    if (bonusId > 0)
+                    var custBonus = walletService.GetBonus(tpCustInfo.CustId)?.FirstOrDefault(i => i.GameType == gameType || i.PromoCategoryId == 0);
+                    bonusId = custBonus != null ? custBonus.BonusId : 0;
+                }
+                
+                if (bonusId > 0)
+                {
+                    //todo:直接用BonusId扣除CustBonus餘額
+                    result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount):#,##0.##}", refId, out afterAmount, ref bonusId, custBonus.PromoCategoryId, conn, trans);
+                    
+                    if (tpTransId != null)
                     {
-                        if (tpTransId != null)
-                        {
-                            AddTpBonus(tpId, tpTransId, gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, amount, bonusId, tpCategory, conn, trans, bonusType);
-                        }
-
-                        if (afterAmount < 0)
-                        {
-                            amount = afterAmount;
-                            result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
-                        }
-                        else
-                        {
-                            afterAmount += walletService.GetBalance(tpCustInfo.CustId);
-                        }
+                        AddTpBonus(tpId, tpTransId, gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, amount, bonusId, tpCategory, conn, trans, bonusType);
                     }
-                    else if (bonusId == 0)
+
+                    if (afterAmount < 0)
                     {
+                        amount = afterAmount;
                         result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
+                    }
+                    else
+                    {
+                        afterAmount += walletService.GetBalance(tpCustInfo.CustId);
                     }
                 }
                 else
