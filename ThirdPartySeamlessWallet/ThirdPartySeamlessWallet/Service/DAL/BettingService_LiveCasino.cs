@@ -24,7 +24,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                result = conn.Execute("Service_BettransLC_SA_Ins_V3",
+                result = _mainDbClient.Execute("Service_BettransLC_SA_Ins_V3",
                     new
                     {
                         Txnid = bettingDataLC_SA.txnid,
@@ -36,7 +36,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         bettingDataLC_SA.BetAmount,
                         bettingDataLC_SA.Betdetails,
                         Gameid = bettingDataLC_SA.gameid
-                    }, trans, commandType: CommandType.StoredProcedure);
+                    }, conn ,trans);
 
                 if (result > 0)
                 {

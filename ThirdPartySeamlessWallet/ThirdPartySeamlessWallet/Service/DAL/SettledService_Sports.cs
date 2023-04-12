@@ -29,7 +29,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("returnAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
                 p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
 
-                _ = await conn.ExecuteAsync("Service_BettransSports_BTI_CancelReserve_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                _ = await _mainDbClient.ExecuteAsync("Service_BettransSports_BTI_CancelReserve_Set", trans ,p);
 
                 var btiResult = new BTIResult()
                 {
@@ -105,7 +105,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("returnAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
                 p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
 
-                _ = await conn.ExecuteAsync("Service_BettransSports_BTI_CommitReserve_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                _ = await _mainDbClient.ExecuteAsync("Service_BettransSports_BTI_CommitReserve_Set", trans ,p);
                 var btiResult = new BTIResult()
                 {
                     SPResult = p.Get<short>("SPResult"),
@@ -180,7 +180,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
                 p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
 
-                _ = await conn.ExecuteAsync("Service_BettransSports_BTI_Credit_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                _ = await _mainDbClient.ExecuteAsync("Service_BettransSports_BTI_Credit_Ins_V2",trans ,p);
                 var btiResult = new BTIResult()
                 {
                     SPResult = p.Get<short>("SPResult"),
@@ -247,8 +247,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         
         public IEnumerable<BTISettleData> GetUnsettledList_BTI()
         {
-            using var conn = _mainDbClient.GetMySqlConnection();
-            return conn.Query<BTISettleData>("Service_BettransSports_BTI_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Query<BTISettleData>("Service_BettransSports_BTI_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_BTI(string account, string transId, bool isSuccess)
@@ -268,7 +267,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 dto.TicketType = (int)BettransType.Payout;
                 dto.TicketStatus = (int)GetSboTicketStatus(dto.ResultType);
                 var p = new DynamicParameters(dto);
-                var result = await conn.ExecuteAsync("Service_BettransSports_SBO_Settle_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var result = await _mainDbClient.ExecuteAsync("Service_BettransSports_SBO_Settle_Set", trans ,p);
 
                 if (result < 1)
                 {
@@ -344,7 +343,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     dto.TransferCode
                 });
 
-                var result = await conn.ExecuteAsync("Service_BettransSports_SBO_Cancel_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var result = await _mainDbClient.ExecuteAsync("Service_BettransSports_SBO_Cancel_Set", trans ,p);
                 if (result != 1)
                 {
                     logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode} " +
@@ -411,7 +410,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 await using var trans = await conn.BeginTransactionAsync();
                 
                 var p = new DynamicParameters(dto);
-                var result = await conn.ExecuteAsync("Service_BettransSports_SBO_Rollback_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var result = await _mainDbClient.ExecuteAsync("Service_BettransSports_SBO_Rollback_Set", trans ,p);
                 if (result < 1)
                 {
                     logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode}" +

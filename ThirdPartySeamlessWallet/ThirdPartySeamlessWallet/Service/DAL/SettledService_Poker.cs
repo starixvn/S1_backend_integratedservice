@@ -39,7 +39,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                result = conn.Execute("Service_BettransPK_OneGaming_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransPK_OneGaming_Ins", trans , p);
 
                 if (result > 0)
                 {
@@ -116,7 +116,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             using var trans = conn.BeginTransaction();
 
-            conn.Execute("Service_BettransPK_OneGaming_Rollback_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            _mainDbClient.Execute("Service_BettransPK_OneGaming_Rollback_Set",  trans , p);
 
             if (amount != 0 && p.Get<int>("result") == 1)
             {
@@ -141,14 +141,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<SettleDataPK_OneGaming> GetUnsettledListPK_OneGaming()
         {
-            using var conn = _wagerDbClient.GetMySqlConnection();
-            return conn.Query<SettleDataPK_OneGaming>("Service_TpWagerPK_OneGaming_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.Query<SettleDataPK_OneGaming>("Service_TpWagerPK_OneGaming_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_TpWagerPK_OneGaming(string ticket)
         {
-            using var conn = _wagerDbClient.GetMySqlConnection();
-            return conn.Execute("Service_TpWagerPK_OneGaming_Settle_Set", new { ticket = ticket }, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.Execute("Service_TpWagerPK_OneGaming_Settle_Set", commandType: CommandType.StoredProcedure , new { ticket = ticket });
         }
 
         public int Settled_OneGaming(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo)
@@ -186,14 +184,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<SettleDataPK_V8> GetUnsettledListPK_V8()
         {
-            using var conn = _wagerDbClient.GetMySqlConnection();
-            return conn.Query<SettleDataPK_V8>("Service_TpWagerPK_V8_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.Query<SettleDataPK_V8>("Service_TpWagerPK_V8_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_TpWagerPK_V8(string gameId)
         {
-            using var conn = _wagerDbClient.GetMySqlConnection();
-            return conn.Execute("Service_TpWagerPK_V8_Settle_Set", new { GameID = gameId }, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.Execute("Service_TpWagerPK_V8_Settle_Set", commandType: CommandType.StoredProcedure ,new { GameID = gameId });
         }
 
         #endregion
@@ -223,14 +219,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 // check cancel
-                var check = conn.QueryFirstOrDefault<BettransDataPK_AMB>("Service_BettransPK_AMB_Get", new { TransId = TransId, TicketType = (int)BettransType.CancelBet, TicketStatus = (int)TicketStatus.Refund }, transaction: trans, commandType: CommandType.StoredProcedure);
+                var check = _mainDbClient.QueryFirst<BettransDataPK_AMB>("Service_BettransPK_AMB_Get", trans ,new { TransId = TransId, TicketType = (int)BettransType.CancelBet, TicketStatus = (int)TicketStatus.Refund });
                 if (check != null)
                 {
                     // cancel
                     return -1;
                 }
 
-                result = conn.Execute("Service_BettransPK_AMB_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransPK_AMB_CancelBet_Set", trans , p);
                 if (result > 0)
                 {
                     result = walletService.SetBalance(
@@ -316,7 +312,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                result = conn.Execute("Service_BettransPK_AMB_Payout_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransPK_AMB_Payout_Ins", trans , p);
 
                 if (result > 0)
                 {
@@ -393,14 +389,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 // check void
-                var check = conn.QueryFirstOrDefault<BettransDataPK_AMB>("Service_BettransPK_AMB_Get", new { TransId = TransId, TicketType = (int)BettransType.Payout, TicketStatus = (int)TicketStatus.Refund }, transaction: trans, commandType: CommandType.StoredProcedure);
+                var check = _mainDbClient.QueryFirst<BettransDataPK_AMB>("Service_BettransPK_AMB_Get", trans ,new { TransId = TransId, TicketType = (int)BettransType.Payout, TicketStatus = (int)TicketStatus.Refund });
                 if (check != null)
                 {
                     // voided
                     return -1;
                 }
 
-                result = conn.Execute("Service_BettransPK_AMB_Resettle_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransPK_AMB_Resettle_Ins", trans , p);
 
                 if (result > 0)
                 {
@@ -442,14 +438,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<SettleData_AMB> GetUnsettledListPK_AMB()
         {
-            using var conn = _mainDbClient.GetMySqlConnection();
-            return conn.Query<SettleData_AMB>("Service_BettransPK_AMB_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Query<SettleData_AMB>("Service_BettransPK_AMB_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_BettransPK_AMB(string TransId)
         {
-            using var conn = _mainDbClient.GetMySqlConnection();
-            return conn.Execute("Service_BettransPK_AMB_Settle_Set", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Execute("Service_BettransPK_AMB_Settle_Set", commandType: CommandType.StoredProcedure , new { TransId = TransId });
         }
 
         #endregion
@@ -495,8 +489,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                await conn.ExecuteAsync("Service_BettransPK_KM_Credit_Ins", p, transaction: trans,
-                    commandType: CommandType.StoredProcedure);
+                await _mainDbClient.ExecuteAsync("Service_BettransPK_KM_Credit_Ins", trans , p);
 
                 int result = p.Get<short>("SPResult");
                 var trxId = p.Get<long>("trx_id");
@@ -601,7 +594,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                await conn.ExecuteAsync("Service_BettransPK_KM_Credit_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                await _mainDbClient.ExecuteAsync("Service_BettransPK_KM_Credit_Ins", trans , p);
 
                 int result = p.Get<short>("SPResult");
                 var trxId = p.Get<long>("trx_id");
@@ -705,7 +698,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                await conn.ExecuteAsync("Service_BettransPK_KM_Credit_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                await _mainDbClient.ExecuteAsync("Service_BettransPK_KM_Credit_Ins", trans , p);
 
                 result = p.Get<short>("SPResult");
                 var trxId = p.Get<long>("trx_id");
@@ -760,7 +753,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                await conn.ExecuteAsync("Service_RewardPK_KM_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                await _mainDbClient.ExecuteAsync("Service_RewardPK_KM_Ins", trans , p);
 
                 int result = p.Get<short>("SPResult");
                 var sq = p.Get<long>("SQ");
@@ -873,7 +866,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                result = conn.Execute("Service_BettransPK_MP_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransPK_MP_Ins_V2", trans ,p);
 
                 if (result > 0 && amount != 0)
                 {
@@ -939,7 +932,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
 
             p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            result = conn.Execute("Service_BettransPK_MP_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            result = _mainDbClient.Execute("Service_BettransPK_MP_CancelBet_Set", trans ,p);
 
             if (result > 0)
             {
@@ -973,7 +966,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             else
             {
                 p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
-                conn.Execute("Service_BettransPK_MP_CancelBet_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                _mainDbClient.Execute("Service_BettransPK_MP_CancelBet_Ins_V2", trans ,p);
                 var refBettransLC = p.Get<int>("out_result");
 
                 if (refBettransLC == 2)

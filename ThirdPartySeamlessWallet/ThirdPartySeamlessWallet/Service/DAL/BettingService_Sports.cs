@@ -34,7 +34,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 });
                 p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
                 p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
-                _ = await conn.ExecuteAsync("Service_BettransSports_BTI_Reserve_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                _ = await _mainDbClient.ExecuteAsync("Service_BettransSports_BTI_Reserve_Ins", trans ,p);
                 
                 var btiResult = new BTIResult()
                 {
@@ -97,7 +97,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 
                 var p = new DynamicParameters(debitReserve);
                 p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
-                _ = await conn.ExecuteAsync("Service_BettransSports_BTI_DebitReserve_Ins", p , transaction: trans, commandType: CommandType.StoredProcedure);
+                _ = await _mainDbClient.ExecuteAsync("Service_BettransSports_BTI_DebitReserve_Ins",trans ,p);
 
                 var btiResult = new BTIResult()
                 {
@@ -144,7 +144,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 dto.TicketType = (int)BettransType.Bet;
                 dto.TicketStatus = (int)TicketStatus.UnSettled;
                 var p = new DynamicParameters(dto);
-                var result = await conn.ExecuteAsync("Service_BettransSports_SBO_Deduct_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var result = await _mainDbClient.ExecuteAsync("Service_BettransSports_SBO_Deduct_Ins", trans , p );
                 
                 if (result < 1)
                 {

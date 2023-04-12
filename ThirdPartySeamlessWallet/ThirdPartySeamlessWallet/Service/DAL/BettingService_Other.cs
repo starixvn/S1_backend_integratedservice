@@ -35,7 +35,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             });
             try
             {
-                result = conn.Execute("Service_Bettrans_CF_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_Bettrans_CF_Ins", p, conn, trans);
 
                 if (result > 0 && bettingData_CF.stake != 0)
                 {
@@ -56,7 +56,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
             catch (MySqlException mySqlEx)
@@ -87,7 +91,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("out_stake_money", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
-            result = conn.Execute("Service_Bettrans_CF_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            result = _mainDbClient.Execute("Service_Bettrans_CF_CancelBet_Set", p, conn, trans);
 
             if (result > 0)
             {
@@ -158,7 +162,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 try
                 {
-                    result = conn.Execute("Service_BettransCF_AWC_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    result = _mainDbClient.Execute("Service_BettransCF_AWC_Ins", p, conn, trans);
 
                     if (result > 0)
                     {
@@ -216,7 +220,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var p = new DynamicParameters(new { platformTxId = item.platformTxId });
                 p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
-                result = conn.Execute("Service_BettransCF_AWC_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransCF_AWC_CancelBet_Set", p, conn, trans);
 
                 if (result > 0)
                 {
@@ -276,7 +280,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 });
                 try
                 {
-                    result = conn.Execute("Service_BettransCF_AWC_AdjustBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    result = _mainDbClient.Execute("Service_BettransCF_AWC_AdjustBet_Set", p, conn, trans);
 
                     if (result > 0)
                     {
@@ -339,7 +343,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 using var trans = conn.BeginTransaction();
                 try
                 {
-                    result = conn.Execute("Service_BettransCF_AWC_VoidBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    result = _mainDbClient.Execute("Service_BettransCF_AWC_VoidBet_Set", p, conn, trans);
                     if (result > 0)
                     {
                         decimal stake = Math.Abs(item.betAmount);
@@ -398,7 +402,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 using var trans = conn.BeginTransaction();
                 try
                 {
-                    result = conn.Execute("Service_BettransCF_AWC_UnvoidBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    result = _mainDbClient.Execute("Service_BettransCF_AWC_UnvoidBet_Set", p, conn, trans);
                     if (result > 0)
                     {
                         decimal stake = p.Get<decimal>("out_stake");
@@ -475,20 +479,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     mixUniqueId = $"{gameParseTmp[1]}_{gameParseTmp[2]}_{bettingDataLT_One789.Username}";
                     p.Add("TransId", mixUniqueId);
-                    result = conn.Execute("Service_BettransLT_One789_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    result = _mainDbClient.Execute("Service_BettransLT_One789_Ins", p, conn, trans);
                 }
                 else if (gameType == (int)GameType.One789_Lottery_789)
                 {
                     mixUniqueId = $"{gameParseTmp[1]}_{gameParseTmp[2]}_{bettingDataLT_One789.Username}";
                     p.Add("TransId", mixUniqueId);
-                    result = conn.Execute("Service_BettransLT_One789_789_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    result = _mainDbClient.Execute("Service_BettransLT_One789_789_Ins", p, conn, trans);
                 }
                 else
                 {
                     mixUniqueId = $"{gameParseTmp[2]}_{gameParseTmp[3]}_{gameParseTmp[4]}_{bettingDataLT_One789.Username}";
                     p.Add("TransId", mixUniqueId);
                     category = TpCategory.LiveCasino;
-                    result = conn.Execute("Service_BettransLC_One789_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    result = _mainDbClient.Execute("Service_BettransLC_One789_Ins", p, conn, trans);
                 }
 
                 if (result > 0)
@@ -602,7 +606,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     SettleFlag = (int)SettleFlag.Running
                 });
 
-                var bettransTCG = await conn.QueryFirstOrDefaultAsync<TCGBettransLottery>("Service_BettransLottery_TCG_Get", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var bettransTCG = await _mainDbClient.QueryFirstAsync<TCGBettransLottery>("Service_BettransLottery_TCG_Get", p);
                 if (bettransTCG != null)
                 {
                     return new TCGResult()
@@ -611,7 +615,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     };
                 }
                 
-                var result = conn.Execute("Service_BettransLottery_TCG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var result = _mainDbClient.Execute("Service_BettransLottery_TCG_Ins", p, conn, trans);
                 
                 if (result > 0 && data.amount != 0)
                 {
@@ -678,7 +682,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     SettleFlag = (int)SettleFlag.Running
                 });
 
-                var bettransTCG = await conn.QueryFirstOrDefaultAsync<TCGBettransLottery>("Service_BettransLottery_TCG_Get", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var bettransTCG = await _mainDbClient.QueryFirstAsync<TCGBettransLottery>("Service_BettransLottery_TCG_Get", p);
                 if (bettransTCG != null)
                 {
                     return new TCGResult()
@@ -687,7 +691,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     };
                 }
 
-                var result = conn.Execute("Service_BettransLottery_TCG_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var result = _mainDbClient.Execute("Service_BettransLottery_TCG_Ins", p, conn ,trans);
 
                 if (result > 0 && data.amount != 0)
                 {
@@ -741,7 +745,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 dto.TicketStatus = (int)TicketStatus.Win;
                 var p = new DynamicParameters(dto);
                 var sboResult = new SBOResult();
-                var result = conn.Execute("Service_BettransLiveCoin_SBO_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var result = _mainDbClient.Execute("Service_BettransLiveCoin_SBO_Ins", p, conn, trans);
 
                 if (result > 0 && dto.Amount != 0)
                 {
@@ -801,7 +805,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var p = new DynamicParameters(bettingDataRNG_GPI);
                 p.Add("TicketType", (int)BettransType.Bet);
                 p.Add("TicketStatus", (int)TicketStatus.UnSettled);
-                result = conn.Execute("Service_BettransLT_GPI_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransLT_GPI_Ins", p, conn, trans);
 
                 if (result > 0 && bettingDataRNG_GPI.amount != 0)
                 {

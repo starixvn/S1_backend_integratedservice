@@ -39,7 +39,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                result = conn.Execute("Service_BettransPK_OneGaming_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransPK_OneGaming_Ins", p, conn, trans);
 
                 if (p.Get<int>("result") == 1)
                 {
@@ -111,7 +111,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                result = conn.Execute("Service_BettransPK_AMB_Bet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransPK_AMB_Bet_Ins", p, conn, trans);
 
                 if (result > 0)
                 {
@@ -201,8 +201,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                await conn.ExecuteAsync("Service_BettransPK_KM_Debit_Ins", p, transaction: trans,
-                    commandType: CommandType.StoredProcedure);
+                await _mainDbClient.ExecuteAsync("Service_BettransPK_KM_Debit_Ins", trans , p);
                 result = p.Get<short>("SPResult");
                 var trxId = p.Get<long>("trx_id");
                 if (result != 1)
@@ -307,8 +306,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                await conn.ExecuteAsync("Service_BettransPK_KM_Debit_Ins", p, transaction: trans,
-                    commandType: CommandType.StoredProcedure);
+                await _mainDbClient.ExecuteAsync("Service_BettransPK_KM_Debit_Ins", trans ,p);
                 result = p.Get<short>("SPResult");
                 var trxId = p.Get<long>("trx_id");
                 if (result != 1)
@@ -375,7 +373,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                result = conn.Execute("Service_BettransPK_MP_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransPK_MP_Ins_V2", p, conn , trans);
 
                 if (result > 0 && amount != 0)
                 {
