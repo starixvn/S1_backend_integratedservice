@@ -1,20 +1,13 @@
 ﻿using Dapper;
-using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
-using System;
 using System.Data;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-using System.Linq;
-using System.Collections.Generic;
 using Serilog.Context;
 using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.BLL;
-using System.Threading.Tasks;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -214,15 +207,39 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         private int GetTpBonus(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId, SeamlessBonusType bonusType = SeamlessBonusType.TpCategory)
         {
-            CustId = 0;
-            BonusId = 0;
+            // 先走新流程取得Bonus
+            var result = GetTpSeamlessBonus(tpId, tpTransId, gameType, out CustId, out BonusId);
+            if (CustId > 0 && BonusId > 0)
+            {
+                return result;
+            }
+
+            // 找不到再走舊流程，上線過轉換期後下面可以移除
             var spName = bonusType == SeamlessBonusType.TpCategory ? $"Service_Tp{tpCategory}Bonus_Get" : $"Service_Tp_Bonus_Get";
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var p = new DynamicParameters(new { TpId = tpId, TransId = tpTransId, GameType = gameType });
             p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
             p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);
-            var result = conn.Execute(spName, p, commandType: CommandType.StoredProcedure);
+            result = conn.Execute(spName, p, commandType: CommandType.StoredProcedure);
 
+            if (result > 0)
+            {
+                CustId = p.Get<int>("CustId");
+                BonusId = p.Get<int>("BonusId");
+            }
+
+            return result;
+        }
+
+        private int GetTpSeamlessBonus(int TpId, string TransId, int GameType, out int CustId, out int BonusId)
+        {
+            CustId = 0;
+            BonusId = 0;
+
+            var p = new DynamicParameters(new { TpId, TransId, GameType });
+            p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);          
+            var result = _mainDbClient.Execute("Service_TpSeamlessBonus_Get", parameters: p);
             if (result > 0)
             {
                 CustId = p.Get<int>("CustId");
@@ -727,7 +744,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     AfterBonus = afterBonus,
                     OutResult = outResult
                 };
-                log2File.Info($"{JsonConvert.SerializeObject(parameter)}", MethodBase.GetCurrentMethod().Name);
+                logger.LogInformation($"{JsonConvert.SerializeObject(parameter)}");
 
                 if (runningAfterBonus > 0) //將退回主帳戶的餘額重新扣掉
                 {

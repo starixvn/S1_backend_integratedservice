@@ -41,7 +41,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             
             //用GameType取回PromoCategoryId，在新增到TpSeamlessBonus
-            var tpGameType = conn.QueryFirst<TpGameType>("Service_TpGameType_GetByType", new { GameType = gameType }, commandType: CommandType.StoredProcedure);
+            var tpGameType = _mainDbClient.QueryFirst<TpGameType>("Service_TpGameType_GetByType", new { GameType = gameType });
             var tpSeamlessBonus = new TpSeamlessBonus
             {
                 PromotionCategoryId = (int)tpGameType.PromoCategoryId,
@@ -60,7 +60,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public int AddTpSeamlessBonus(TpSeamlessBonus tpSeamlessBonus, MySqlConnection conn, MySqlTransaction trans)
         {
-            return conn.Execute("Service_TpSeamlessBonus_Ins", tpSeamlessBonus, transaction: trans, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Execute("Service_TpSeamlessBonus_Ins", trans, tpSeamlessBonus);
         }
 
         public int PlaceBetV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, string refId, string betData, TpCategory tpCategory, out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans, SeamlessBonusType bonusType = SeamlessBonusType.TpCategory, string memo = "")
