@@ -94,15 +94,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return BadRequest();
                 }
 
-                var retult = await _tfgbLL.Transfer(req);
+                var result = await _tfgbLL.Transfer(req);
 
-                if(retult.Code == ResultCode.Success)
+                if(result.Code == ResultCode.Success)
                 {
                     return Ok();
                 }
                 else
                 {
-                    _logger.LogError(retult.Message);
+                    _logger.LogError(result.Message);
                     return BadRequest();
                 }
             }
@@ -129,15 +129,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return BadRequest();
                 }
 
-                var retult = await _tfgbLL.Rollback(req);
+                var result = await _tfgbLL.Rollback(req);
 
-                if (retult.Code == ResultCode.Success)
+                if (result.Code == ResultCode.Success)
                 {
                     return Ok();
                 }
                 else
                 {
-                    _logger.LogError(retult.Message);
+                    _logger.LogError(result.Message);
                     return BadRequest();
                 }
             }
