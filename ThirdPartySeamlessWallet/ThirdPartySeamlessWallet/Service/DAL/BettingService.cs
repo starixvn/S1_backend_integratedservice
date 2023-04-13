@@ -17,7 +17,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly RiskInspection _riskInspection;
         private readonly Tools tools;
         private readonly ILogger<BettingService> logger;
-        private readonly Log2File log2File;
         private readonly MySqlClient _mainDbClient;
         private readonly PartitionService _partitionService;
         private readonly TpUnsettleService _tpUnsettleService;
@@ -28,7 +27,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             walletService = provider.GetRequiredService<WalletService>();
             tools = provider.GetRequiredService<Tools>();
             logger = provider.GetRequiredService<ILogger<BettingService>>();
-            log2File = provider.GetRequiredService<Log2File>();
             _riskInspection = provider.GetRequiredService<RiskInspection>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _partitionService = provider.GetRequiredService<PartitionService>();
@@ -45,34 +43,54 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return result;
         }
+
+        public int AddTpSeamlessBonus(TpSeamlessBonus tpSeamlessBonus, MySqlConnection conn, MySqlTransaction trans)
+        {
+            return conn.Execute("Service_TpSeamlessBonus_Ins", tpSeamlessBonus, transaction: trans, commandType: CommandType.StoredProcedure);
+        }
+
         public int PlaceBetV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, string refId, string betData, TpCategory tpCategory, out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans, SeamlessBonusType bonusType = SeamlessBonusType.TpCategory, string memo = "")
         {
             afterAmount = 0;
             int result = 0;
-
+            CustBonus custBonus = default;
             try
             {
-                //傳進來的bonusId = 0，先找到用戶還在Running的CustBonus
+                // 傳進來的bonusId = 0 時，先查詢用戶是否有還在Running的CustBonus
                 if (bonusId == 0)
                 {
-                    var custBonus = walletService.GetBonus(tpCustInfo.CustId)?.FirstOrDefault(i => i.GameType == gameType || i.PromoCategoryId == 0);
+                    custBonus = walletService.GetBonus(tpCustInfo.CustId)?.FirstOrDefault(i => i.GameType == gameType || i.PromoCategoryId == (int)PromotionCategory.ALL);
                     bonusId = custBonus != null ? custBonus.BonusId : 0;
                 }
                 
                 if (bonusId > 0)
                 {
-                    //todo:直接用BonusId扣除CustBonus餘額
-                    result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount):#,##0.##}", refId, out afterAmount, ref bonusId, custBonus.PromoCategoryId, conn, trans);
-                    
-                    if (tpTransId != null)
+                    // 用BonusId扣除CustBonus餘額
+                    result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount):#,##0.##}", refId, out afterAmount, ref bonusId, conn, trans);
+
+                    //新增tpSeamlessBonus紀錄
+                    if (tpTransId != null && custBonus != null)
                     {
-                        AddTpBonus(tpId, tpTransId, gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, amount, bonusId, tpCategory, conn, trans, bonusType);
+                        var tpSeamlessBonus = new TpSeamlessBonus
+                        {
+                            PromotionCategoryId = (int)custBonus.PromoCategoryId,
+                            TpId = tpId,
+                            TransId = tpTransId,
+                            GameType = gameType,
+                            CustId = tpCustInfo.CustId,
+                            UserName = tpCustInfo.UserName,
+                            CurrencyId = tpCustInfo.CurrencyId,
+                            SiteId = tpCustInfo.SiteId,
+                            Stake = amount,
+                            BonusId = bonusId,
+                        };
+                        AddTpSeamlessBonus(tpSeamlessBonus, conn, trans);
                     }
 
                     if (afterAmount < 0)
                     {
                         amount = afterAmount;
-                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
+                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount):#,##0.##}", refId, out afterAmount, conn, trans);
                     }
                     else
                     {
@@ -81,7 +99,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
-                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans);
+                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount):#,##0.##}", refId, out afterAmount, conn, trans);
                 }
             }
             catch (Exception ex)
@@ -90,16 +108,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var parameter = new
                 {
                     tpCustInfo = JsonConvert.SerializeObject(tpCustInfo),
-                    amount = amount,
-                    tpId = tpId,
-                    tpTransId = tpTransId,
-                    gameType = gameType,
-                    refId = refId,
-                    tpCategory = tpCategory,
-                    afterAmount = afterAmount,
-                    bonusId = bonusId,
+                    amount,
+                    tpId,
+                    tpTransId,
+                    gameType,
+                    refId,
+                    tpCategory,
+                    afterAmount,
+                    bonusId,
                 };
-                log2File.Error($"{JsonConvert.SerializeObject(parameter)}\r\n{ex.Message}", MethodBase.GetCurrentMethod().Name, ex);
+                logger.LogError(ex, $"{JsonConvert.SerializeObject(parameter)}\r\n{ex.Message}");
             }
 
             return result;

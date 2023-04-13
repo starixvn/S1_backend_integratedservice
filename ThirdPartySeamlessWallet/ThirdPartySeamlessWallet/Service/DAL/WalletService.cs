@@ -54,19 +54,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 return afterAmount >= 0 ? 1 : 0;
             }
         }
+
         public decimal GetBalance(int CustId)
         {
             return _mainDbClient.QueryFirst<decimal>("Balance_Get", new { CustId });
         }
 
-        public int SetBonus(int GameType, int CustId, int SiteId, string UserName, decimal Amount, int tpId, TransType transType, string Memo, string RefTransId, out decimal afterBonus, ref int bonusId, int PromoCategoryId, MySqlConnection conn, MySqlTransaction trans)
+        public int SetBonus(int GameType, int CustId, int SiteId, string UserName, decimal Amount, int tpId, TransType transType, string Memo, string RefTransId, out decimal afterBonus, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
             int result = 0;
             Tp tp = Tp.None;
 
             int Type = typePosition + ((int)transType * 1000) + tpId;
             Enum.TryParse(tpId.ToString(), out tp);
-            var p = new DynamicParameters(new { GameType, CustId, SiteId, UserName, Amount, Type, Memo = $"{tp} {Memo}", RefTransId, PromoCategoryId });
+            var p = new DynamicParameters(new { GameType, CustId, SiteId, UserName, Amount, Type, Memo = $"{tp} {Memo}", RefTransId });
             p.Add("AfterBonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("BonusId", value: bonusId, dbType: DbType.Int32, direction: ParameterDirection.InputOutput);
            
