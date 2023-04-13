@@ -41,12 +41,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var balance = walletService.GetBalance(tpCustInfo.CustId);
             var bonusCategoryId = thirdPartyBLL.GetBonusCategoryId(gameType);
 
-            if (bonusCategoryId > 0)
+            //找到用戶還在Running的CustBonus
+            var custBonus = walletService.GetCustBonus(tpCustInfo.CustId);
+            //找出符合條件的找到用戶還在Running的CustBonus加到Balance，PromoCategoryId = 0 為不分類皆可使用
+            if ((int)custBonus.PromoCategoryId == bonusCategoryId || custBonus.PromoCategoryId == PromotionCategory.ALL)
             {
-                var bonusAmount = walletService.GetBonus(tpCustInfo.CustId, bonusCategoryId);
-                balance += bonusAmount;
-            }
-
+                balance += custBonus.Bonus;
+            }            
+                      
             tpCustBalance.Balance = balance / tpCurrency.ExchangeRate;
             tpCustBalance.Balance = tools.Floor(tpCustBalance.Balance, 4);
             tpCustBalance.ExchangeRate = tpCurrency.ExchangeRate;

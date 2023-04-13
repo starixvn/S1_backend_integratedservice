@@ -1,11 +1,8 @@
 ﻿using Dapper;
-using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
+
+using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
@@ -13,12 +10,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 {
     public class WalletService
     {
-        private readonly IConfiguration configuration;
         private const int typePosition = 10000;
-        public WalletService(IConfiguration configuration)
+        private readonly MySqlClient _mainDbClient;
+
+        public WalletService(IServiceProvider provider)
         {
-            this.configuration = configuration;
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
+
         public int SetBalance(int custId, int siteId, string userName, decimal Amount, int tpId, TransType transType, string Memo, string RefTransId, out decimal afterAmount, MySqlConnection conn, MySqlTransaction trans, AllowNegative allowNegative = AllowNegative.NotAllow)
         {
             Tp tp = Tp.None;
@@ -55,41 +54,45 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 return afterAmount >= 0 ? 1 : 0;
             }
         }
-        public decimal GetBalance(int custId)
+
+        public decimal GetBalance(int CustId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.ExecuteScalar<decimal>("Balance_Get", new { CustId = custId }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.QueryFirst<decimal>("Balance_Get", new { CustId });
         }
-        public int SetBonus(int gameType, int custId, int siteId, string userName, decimal Amount, int tpId, TransType transType, string Memo, string RefTransId, out decimal afterBonus, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+
+        public int SetBonus(int GameType, int CustId, int SiteId, string UserName, decimal Amount, int tpId, TransType transType, string Memo, string RefTransId, out decimal afterBonus, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
             int result = 0;
             Tp tp = Tp.None;
 
-            int type = typePosition + ((int)transType * 1000) + tpId;
+            int Type = typePosition + ((int)transType * 1000) + tpId;
             Enum.TryParse(tpId.ToString(), out tp);
-            var p = new DynamicParameters(new { gameType = gameType, CustId = custId, SiteId = siteId, UserName = userName, Amount = Amount, Type = type, Memo = $"{tp} {Memo}", RefTransId = RefTransId });
-            p.Add("BonusId", value: bonusId, dbType: DbType.Int32, direction: ParameterDirection.InputOutput);
+            var p = new DynamicParameters(new { GameType, CustId, SiteId, UserName, Amount, Type, Memo = $"{tp} {Memo}", RefTransId });
             p.Add("AfterBonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            result = conn.Execute("Service_BonusWallet_Set_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
-
-            bonusId = p.Get<int?>("BonusId") ?? 0;
+            p.Add("BonusId", value: bonusId, dbType: DbType.Int32, direction: ParameterDirection.InputOutput);
+           
+            result = conn.Execute("Service_BonusWallet_Set_V3", p, transaction: trans, commandType: CommandType.StoredProcedure);
             afterBonus = p.Get<decimal>("AfterBonus");
-
+            bonusId = p.Get<int?>("BonusId") ?? 0;           
             return result;
         }
-        public decimal GetBonus(int custId, int promoCategoryId)
+
+        /// <summary>
+        /// 找到用戶還在Running的CustBonus
+        /// </summary>
+        public CustBonus GetCustBonus(int CustId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.QueryFirstOrDefault<decimal>("Service_Bonus_Get", new { CustId = custId, PromoCategoryId = promoCategoryId }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.QueryFirst<CustBonus>("Service_Bonus_Get_V2", new { CustId });
         }
+
         public IEnumerable<BonusFulfill> GetBonusFulfill()
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<BonusFulfill>("Service_BonusFulfillSeamless_Get", commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Query<BonusFulfill>("Service_BonusFulfillSeamless_Get", commandType: CommandType.StoredProcedure);
         }
+
         public int BonusSettle(BonusFulfill bonusFulfill)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
 
