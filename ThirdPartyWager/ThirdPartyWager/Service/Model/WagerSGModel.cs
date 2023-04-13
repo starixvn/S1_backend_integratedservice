@@ -25,7 +25,7 @@ namespace ThirdPartyWager.Service.Model
         public decimal betAmount { get; set; }
         public decimal winLoss { get; set; }
         public decimal jackpotAmount { get; set; }
-        public string result { get; set; }
+        public string result { get; set; } = "";
         public bool completed { get; set; }
         public long luckyDrawId { get; set; }
         public int roundId { get; set; }
