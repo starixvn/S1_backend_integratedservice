@@ -98,6 +98,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 if(result.Code == ResultCode.Success)
                 {
+                    _logger.LogInformation(ResultCode.Success.ToString());
                     return Ok();
                 }
                 else
@@ -133,6 +134,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 if (result.Code == ResultCode.Success)
                 {
+                    _logger.LogInformation(ResultCode.Success.ToString());
                     return Ok();
                 }
                 else
