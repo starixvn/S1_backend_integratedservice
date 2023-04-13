@@ -36,12 +36,26 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int AddTpBonus(int tpId, string transId, int gameType, int custId, string userName, int currencyId, int siteId, decimal stake, int bonusId, TpCategory tpCategory, MySqlConnection conn, MySqlTransaction trans, SeamlessBonusType bonusType = SeamlessBonusType.TpCategory)
         {
             if (bonusId == 0)
+            {
                 return 0;
-
-            var spName = bonusType == SeamlessBonusType.TpCategory ? $"Service_Tp{tpCategory}Bonus_Ins" : $"Service_Tp_Bonus_Ins";
-            int result = conn.Execute(spName, new { TpId = tpId, TransId = transId, GameType = gameType, CustId = custId, UserName = userName, CurrencyId = currencyId, SiteId = siteId, Stake = stake, BonusId = bonusId }, transaction: trans, commandType: CommandType.StoredProcedure);
-
-            return result;
+            }
+            
+            //用GameType取回PromoCategoryId，在新增到TpSeamlessBonus
+            var tpGameType = conn.QueryFirst<TpGameType>("Service_TpGameType_GetByType", new { GameType = gameType }, commandType: CommandType.StoredProcedure);
+            var tpSeamlessBonus = new TpSeamlessBonus
+            {
+                PromotionCategoryId = (int)tpGameType.PromoCategoryId,
+                TpId = tpId,
+                TransId = transId,
+                GameType = gameType,
+                CustId = custId,
+                UserName = userName,
+                CurrencyId = currencyId,
+                SiteId = siteId,
+                Stake = stake,
+                BonusId = bonusId,
+            };
+            return AddTpSeamlessBonus(tpSeamlessBonus, conn, trans);
         }
 
         public int AddTpSeamlessBonus(TpSeamlessBonus tpSeamlessBonus, MySqlConnection conn, MySqlTransaction trans)
@@ -59,8 +73,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 // 傳進來的bonusId = 0 時，先查詢用戶是否有還在Running的CustBonus
                 if (bonusId == 0)
                 {
-                    custBonus = walletService.GetBonus(tpCustInfo.CustId)?.FirstOrDefault(i => i.GameType == gameType || i.PromoCategoryId == (int)PromotionCategory.ALL);
-                    bonusId = custBonus != null ? custBonus.BonusId : 0;
+                    custBonus = walletService.GetCustBonus(tpCustInfo.CustId);
+                    // 符合條件的Bonus才可以使用
+                    if (custBonus != null && (custBonus.GameType == gameType || custBonus.PromoCategoryId == (int)PromotionCategory.ALL))
+                    {
+                        bonusId = custBonus.BonusId;
+                    }                  
                 }
                 
                 if (bonusId > 0)
