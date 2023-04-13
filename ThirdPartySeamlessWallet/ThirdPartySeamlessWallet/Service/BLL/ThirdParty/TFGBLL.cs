@@ -202,11 +202,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return new Result { Code = ResultCode.TransactionDuplicated, Message = ResultCode.TransactionDuplicated.ToString() };
                 }
 
-                var result = await conn.ExecuteAsync("Service_BettransSports_TFG_Bet", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var result = await conn.ExecuteAsync("Service_BettransSports_TFG_Bet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result < 1)
                 {
-                    return new Result { Code = ResultCode.DatabaseError, Message = "Service_BettransSports_TFG_Bet" };
+                    return new Result { Code = ResultCode.DatabaseError, Message = "Service_BettransSports_TFG_Bet_Ins" };
                 }
                 result = _bettingService.PlaceBetV2(
                         tpCustInfo: tpCustInfo,
@@ -260,11 +260,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 //寫入Settle資料
                 var p = new DynamicParameters(settle);
-                var result = await conn.ExecuteAsync("Service_BettransSports_TFG_Settle", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var result = await conn.ExecuteAsync("Service_BettransSports_TFG_Settle_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                 if (result < 1)
                 {
-                    return new Result { Code = ResultCode.DatabaseError, Message = "Service_BettransSports_TFG_Settle" };
+                    return new Result { Code = ResultCode.DatabaseError, Message = "Service_BettransSports_TFG_Settle_Ins" };
                 }
 
                 TransType transType = settle.description switch
@@ -329,12 +329,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return new Result { Code = ResultCode.TransactionDuplicated, Message = ResultCode.TransactionDuplicated.ToString()};
                 }
 
-                var result = await conn.ExecuteAsync("Service_BettransSports_TFG_Cancel", new { id = bet.id }, transaction: trans, commandType: CommandType.StoredProcedure);
+                var result = await conn.ExecuteAsync("Service_BettransSports_TFG_Cancel_Set", new { id = bet.id }, transaction: trans, commandType: CommandType.StoredProcedure);
 
 
                 if (result < 1)
                 {
-                    return new Result { Code = ResultCode.DatabaseError, Message = "Service_BettransSports_TFG_Cancel"};
+                    return new Result { Code = ResultCode.DatabaseError, Message = "Service_BettransSports_TFG_Cancel_Set" };
                 }
 
                 result = _settledService.PayoutV2(
