@@ -62,7 +62,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerKiss918Service>();
             services.AddSingleton<WagerOne789Service>();
             //services.AddSingleton<WagerMegaService>();
-            services.AddSingleton<WagerIconicService>();
+            //services.AddSingleton<WagerIconicService>();
             //services.AddSingleton<WagerOneGamingService>();
             services.AddSingleton<WagerV8Service>();
             services.AddSingleton<WagerN2LiveService>();
@@ -146,9 +146,9 @@ namespace ThirdPartyWager
             //services.AddSingleton<WagerMegaBLL>();
             //services.AddSingleton<ApiMegaBLL>();
             // Iconic(AT)
-            services.AddSingleton<WagerIconicBLL>();
-            services.AddSingleton<ApiIconicBLL>();
-            services.AddSingleton<FinanceATBLL>();
+            //services.AddSingleton<WagerIconicBLL>();
+            //services.AddSingleton<ApiIconicBLL>();
+            //services.AddSingleton<FinanceATBLL>();
             // OneGaming
             //services.AddSingleton<WagerOneGamingBLL>();
             //services.AddSingleton<ApiOneGamingBLL>();
@@ -266,10 +266,6 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceWM>();
             services.AddHostedService<WagerOne789>();
             services.AddHostedService<FinanceOne789>();
-            services.AddHostedService<JwtIconic>();
-            services.AddHostedService<WagerAT>();
-            services.AddHostedService<WagerRedoAT>();
-            services.AddHostedService<FinanceAT>();
             services.AddHostedService<WagerV8>();
             services.AddHostedService<WagerRedoV8>();
             services.AddHostedService<FinanceV8>();
@@ -332,6 +328,10 @@ namespace ThirdPartyWager
             //services.AddHostedService<FinanceOneGaming>();
             //services.AddHostedService<ReportMega>();
             //services.AddHostedService<ReportRedoMega>();
+            //services.AddHostedService<JwtIconic>();
+            //services.AddHostedService<WagerAT>();
+            //services.AddHostedService<WagerRedoAT>();
+            //services.AddHostedService<FinanceAT>();
 
         }
 

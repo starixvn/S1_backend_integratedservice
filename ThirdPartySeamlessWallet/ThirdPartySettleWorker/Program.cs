@@ -48,7 +48,7 @@ builder.Services
     .AddHostedService<PTWorker>()
     .AddHostedService<SBOWorker>()
     .AddHostedService<JILIWorker>()
-    .AddHostedService<ATWorker>()
+    //.AddHostedService<ATWorker>()
     .AddHostedService<KMWoker>()
     //.AddHostedService<OneGamingWorker>()
     .AddHostedService<V8Worker>()
