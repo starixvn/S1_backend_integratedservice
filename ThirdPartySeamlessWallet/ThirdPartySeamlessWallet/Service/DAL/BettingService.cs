@@ -73,9 +73,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 // 傳進來的bonusId = 0 時，先查詢用戶是否有還在Running的CustBonus
                 if (bonusId == 0)
                 {
-                    custBonus = walletService.GetCustBonus(tpCustInfo.CustId);
-                    // 符合條件的Bonus才可以使用
-                    if (custBonus != null && (custBonus.GameType == gameType || custBonus.PromoCategoryId == (int)PromotionCategory.ALL))
+                    // 1.先找到用戶還在Running的CustBonusList
+                    // 2.找出符合條件的Bonus才可以使用
+                    custBonus = walletService.GetCustBonusList(tpCustInfo.CustId)
+                        .FirstOrDefault(i => i.GameType == gameType || i.PromoCategoryId == PromotionCategory.ALL);
+                    if (custBonus != null)
                     {
                         bonusId = custBonus.BonusId;
                     }                  
