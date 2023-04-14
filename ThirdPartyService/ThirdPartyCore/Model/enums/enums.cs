@@ -235,6 +235,12 @@ namespace ThirdPartyCore.Model.enums
         Bonus = 4
     }
 
+    public enum RecentlyViewedTypeEnum
+    {
+        LobbyName = 1, // saba sport
+        GameName = 2, // Fishing War
+    }
+
     public enum CustomerMemberTypeEnum
     {
         Normal = 1,
