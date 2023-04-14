@@ -82,7 +82,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         /// </summary>
         public IEnumerable<CustBonus> GetCustBonusList(int CustId)
         {
-            return _mainDbClient.Query<CustBonus>("Service_Bonus_Get_V2", new { CustId });
+            return _mainDbClient.Query<CustBonus>("Service_Bonus_Get_V2", parameters: new { CustId });
         }
 
         public IEnumerable<BonusFulfill> GetBonusFulfill()
