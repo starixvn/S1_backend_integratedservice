@@ -80,9 +80,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         /// <summary>
         /// 找到用戶還在Running的CustBonus
         /// </summary>
-        public CustBonus GetCustBonus(int CustId)
+        public IEnumerable<CustBonus> GetCustBonusList(int CustId)
         {
-            return _mainDbClient.QueryFirst<CustBonus>("Service_Bonus_Get_V2", new { CustId });
+            return _mainDbClient.Query<CustBonus>("Service_Bonus_Get_V2", new { CustId });
         }
 
         public IEnumerable<BonusFulfill> GetBonusFulfill()
