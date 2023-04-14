@@ -68,6 +68,14 @@ namespace ThirdPartyService.Service.DAL
 
                     var tpHelper = _thirdPartyHelper.GetThirdPartyHelper(tpId, customer.SiteId);
                     var serverInfo = _serverInfoBll.GetServerInfo(customer.SiteId);
+                    
+                    // 特殊幣別TpUserName前綴
+                    var currencyPrefixCode = "";
+                    var currencyPrefix = _mainDbClient.QueryFirst<CurrencyPrefix>("Service_CurrencyPrefix_ByCurrencyId_Get", new { _CurrencyId = customer.CurrencyId });
+                    if (currencyPrefix != null)
+                    {
+                        currencyPrefixCode = $"_{currencyPrefix.PrefixCode}";
+                    }
 
                     var regTpCustInfo = new TpCustInfo
                     {
@@ -75,12 +83,12 @@ namespace ThirdPartyService.Service.DAL
                         CustId = customer.CustId,
                         UserName = customer.UserName,
                         SiteId = customer.SiteId,
-                        TpUserName = $"{serverInfo.SiteName}_{customer.CustId}"
+                        TpUserName = $"{serverInfo.SiteName}{currencyPrefixCode}_{customer.CustId}"
                     };
 
                     if (_environment.EnvironmentName != "Production")
                     {
-                        regTpCustInfo.TpUserName = $"{_common.GetEnv()}{serverInfo.SiteName}_{customer.CustId}";
+                        regTpCustInfo.TpUserName = $"{_common.GetEnv()}{serverInfo.SiteName}{currencyPrefixCode}_{customer.CustId}";
                     }
 
                     regTpCustInfo.TpPwd = _tools.GetRandomString(7);
