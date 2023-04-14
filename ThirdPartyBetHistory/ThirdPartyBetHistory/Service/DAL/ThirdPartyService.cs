@@ -70,8 +70,8 @@ namespace ThirdPartyBetHistory.Service.DAL
                     conn.Open();
                     using var trans = conn.BeginTransaction();
                     
-                    bool hasJoinBonus;
-                    int bonusId;
+                    var hasJoinBonus = false;
+                    var bonusId = 0;
 
                     /*Only count Sports*/
                     if (betRecord.GameType != GameType.SBSW_Sports && betRecord.SettlementType == SettlementType.SettledForValid)
@@ -96,7 +96,16 @@ namespace ThirdPartyBetHistory.Service.DAL
                     }
                     else
                     {
-                        hasJoinBonus = _settledService.GetBonusIdByTpId((int)Tp.SBSW, tpCustInfo.CustId, out bonusId);
+                        // 1.先找到用戶還在Running的CustBonusList
+                        // 2.找出符合條件的Bonus才可以使用
+                        var custBonus = _settledService.GetCustBonusList(tpCustInfo.CustId)
+                            .FirstOrDefault(i => i.TpId == (int)Tp.SBSW || i.PromoCategoryId == 0);
+                        if (custBonus != null)
+                        {
+                            hasJoinBonus = true;
+                            bonusId = custBonus.BonusId;
+                        }
+
                         if (hasJoinBonus && (RefBetRecord == null || betRecord.TicketStatus == TicketStatus.UnSettled))
                         {
                             betRecord.BonusId = bonusId;
