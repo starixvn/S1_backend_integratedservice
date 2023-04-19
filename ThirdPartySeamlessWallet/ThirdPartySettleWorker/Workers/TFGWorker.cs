@@ -137,8 +137,8 @@ namespace ThirdPartySettleWorker.Workers
                             TransId = tpUnsettle.TransId,
                             GameType = GameType.TFG_Esports,
                             TpUserName = betData.loginName,
-                            SettledTime = transTime,
-                            TransTime = settledTime,
+                            SettledTime = settledTime,
+                            TransTime = transTime,
                             SettlementType = settlementType,
                             TicketStatus = ticketStatus,
                         };
