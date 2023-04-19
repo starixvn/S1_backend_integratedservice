@@ -50,7 +50,7 @@ namespace ThirdPartyBetHistory.Service.Worker
                     
                     for (var hour = 0; hour < 24; hour++)
                     {
-                        tpBetHelp.UpdateBetRecordByTransId(WorkerType, today, hour);
+                        tpBetHelp.UpdateBetRecordByTransId(WorkerType, today, hour, 0);
                     }
                 }
             }

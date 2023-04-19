@@ -15,19 +15,13 @@ namespace ThirdPartyBetHistory.Service.DAL
         {
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
-        
-        public bool GetBonusIdByTpId(int tpId, int custId, out int bonusId)
-        {
-            bonusId = 0;
-            var p = new DynamicParameters(new { TpId = tpId, CustId = custId });
-            p.Add("BonusId", direction: ParameterDirection.Output);
-            var result = _mainDbClient.Execute($"Service_BonusIdByTpId_Get", p);
-            if (result > 0)
-            {
-                bonusId = p.Get<int?>("BonusId") ?? 0;
-            }
 
-            return result > 0 && bonusId != 0;
+        /// <summary>
+        /// 找到用戶還在Running的CustBonus
+        /// </summary>
+        public IEnumerable<CustBonus> GetCustBonusList(int CustId)
+        {
+            return _mainDbClient.Query<CustBonus>("Service_Bonus_Get_V2", parameters: new { CustId });
         }
 
         public IEnumerable<BonusFulfill> GetBonusFulfill()

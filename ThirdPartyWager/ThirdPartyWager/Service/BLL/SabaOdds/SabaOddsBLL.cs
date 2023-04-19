@@ -19,6 +19,7 @@ namespace ThirdPartyWager.Service.BLL
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _configModel = configuration.GetSection("HotEventOddsConfig").Get<HotEventOddsConfigModel>();
             _common = provider.GetRequiredService<Common>();
+            _logger = provider.GetRequiredService<ILogger<SabaOddsBLL>>();
         }
 
         /// <summary>
@@ -35,7 +36,7 @@ namespace ThirdPartyWager.Service.BLL
                     var apiUrl = $"{_configModel.ApiUrl}/api/GetMarkets";
                     var httpContent = CreateFormData(marketType, matchIds);
 
-                    var response = await _httpHelper.GetClient().PostAsync(apiUrl, httpContent);
+                    var response = await _httpHelper.GetClientWithHandler(new HttpClientHandler()).PostAsync(apiUrl, httpContent);
                     var responseResult = await response.Content.ReadAsStringAsync();
                     var hotEventOddsResponse = _common.FromJson<HotEventOddsResponseModel>(responseResult);
 
