@@ -19,6 +19,7 @@ namespace ThirdPartyWager.Service.BLL
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _configModel = configuration.GetSection("HotEventOddsConfig").Get<HotEventOddsConfigModel>();
             _common = provider.GetRequiredService<Common>();
+            _logger = provider.GetRequiredService<ILogger<SabaOddsBLL>>();
         }
 
         /// <summary>
