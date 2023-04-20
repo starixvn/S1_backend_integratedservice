@@ -1,80 +1,64 @@
-﻿using Dapper;
-using Microsoft.Extensions.Configuration;
-using MySql.Data.MySqlClient;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Data;
+using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
     public class ThirdPartyService
     {
-        private readonly IConfiguration configuration;
-        public ThirdPartyService(IConfiguration configuration)
+        private readonly MySqlClient _mainDbClient;
+        public ThirdPartyService(IServiceProvider provider)
         {
-            this.configuration = configuration;
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
+        
         public TpCheck ThirdPartyCheck(int tpId, string tpUserName)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.QueryFirstOrDefault<TpCheck>("Service_TpCheck_Get", new { TpId = tpId, TpUserName = tpUserName }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.QueryFirst<TpCheck>("Service_TpCheck_Get", new { TpId = tpId, TpUserName = tpUserName });
         }
 
         public ThirdPartySetting GetThirdPartySetting(int tpId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.QueryFirstOrDefault<ThirdPartySetting>("Tp_Get", new { TpId = tpId }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.QueryFirst<ThirdPartySetting>("Tp_Get", new { TpId = tpId });
         }
         public ThirdPartySetting GetThirdPartyBySite(int tpId, int siteId)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.QueryFirstOrDefault<ThirdPartySetting>("Common_Tp_Get", new { TpId = tpId, SiteId = siteId }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.QueryFirst<ThirdPartySetting>("Common_Tp_Get", new { TpId = tpId, SiteId = siteId });
         }
         public TpCurrency GetTpCurrency(int tpId, int currencyId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.QueryFirstOrDefault<TpCurrency>("TpCurrency_Get", new { TpId = tpId, CurrencyId = currencyId }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.QueryFirst<TpCurrency>("TpCurrency_Get", new { TpId = tpId, CurrencyId = currencyId });
         }
         public IEnumerable<BonusCategory> GetBonusCategoryList()
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<BonusCategory>("Service_BonusCategory_Get", commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Query<BonusCategory>("Service_BonusCategory_Get");
         }
         public IEnumerable<BonusMinBet> GetBonusMinBetList()
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<BonusMinBet>("Service_BonusMinBet_Get", commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Query<BonusMinBet>("Service_BonusMinBet_Get");
         }
         public IEnumerable<TpGameCasino> GetGameCasino(int tpId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<TpGameCasino>("Service_GameCasino_Get_V2", new { TpId = tpId }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Query<TpGameCasino>("Service_GameCasino_Get_V2", commandType: CommandType.StoredProcedure , new { TpId = tpId });
         }
         public int AddTpBetFailureRecord(TpBetFailureRecord tpBetFailureRecord)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_TpBetFailureRecord_Ins", tpBetFailureRecord, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Execute("Service_TpBetFailureRecord_Ins", commandType: CommandType.StoredProcedure ,tpBetFailureRecord);
         }
         public IEnumerable<FinancialLog> GetFinancialLogTransactionCheck(string RefTransId, string YYYYMM)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<FinancialLog>("Service_FinancialLog_TransactionCheck_Get", new { _RefTransId = RefTransId, _YYYYMM = YYYYMM }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Query<FinancialLog>("Service_FinancialLog_TransactionCheck_Get", commandType: CommandType.StoredProcedure ,new { _RefTransId = RefTransId, _YYYYMM = YYYYMM });
         }
 
         public IEnumerable<BonusLog> GetBonusLogTransactionCheck(string RefTransId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<BonusLog>("Service_BonusLog_TransactionCheck_Get", new { _RefTransId = RefTransId }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Query<BonusLog>("Service_BonusLog_TransactionCheck_Get", commandType: CommandType.StoredProcedure , new { _RefTransId = RefTransId });
         }
 
         public ServerInfo GetServerInfoBySiteName(string siteName)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.QueryFirstOrDefault<ServerInfo>("Service_ServerInfo_SiteName_Get", new { _SiteName = siteName }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.QueryFirst<ServerInfo>("Service_ServerInfo_SiteName_Get", new { _SiteName = siteName });
         }
     }
 }

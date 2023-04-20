@@ -1,14 +1,8 @@
 ﻿using Dapper;
 using MySql.Data.MySqlClient;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
@@ -25,11 +19,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             afterAmount = 0;
             int result = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
 
-            var refBettransLC = conn.Execute("Service_CancelBetLC_SA_Set", new { Txnid = bettingDataLC_SA.txn_reverse_id }, transaction: trans, commandType: CommandType.StoredProcedure);
+            var refBettransLC = _mainDbClient.Execute("Service_CancelBetLC_SA_Set", new { Txnid = bettingDataLC_SA.txn_reverse_id }, conn , trans);
 
             if (refBettransLC > 0)
             {
@@ -52,7 +46,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
             else
@@ -75,12 +73,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 });
 
                 p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
-                conn.Execute("Service_BettransLC_SA_CancelBet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                _mainDbClient.Execute("Service_BettransLC_SA_CancelBet_Ins", p, conn , trans);
                 var refLC = p.Get<int>("out_result");
                 if (refLC == 2)
                 {
                     // insert cancel record
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
                 return -1;
             }
@@ -93,7 +95,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int gameType = (int)GameType.SA_LiveCasino;
 
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
@@ -127,7 +129,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                result = conn.Execute("Service_BettransLC_SA_Payout_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransLC_SA_Payout_Ins", p, conn , trans);
 
                 if (result > 0)
                 {
@@ -139,8 +141,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        conn.Execute("Service_BettransLC_SAV2_Set", new { Username = payoutDataLC_SA.username, Gameid = payoutDataLC_SA.gameid, SettleFlag = 2 }, transaction: trans, commandType: CommandType.StoredProcedure);
-                        trans.Commit();
+                        _mainDbClient.Execute("Service_BettransLC_SAV2_Set", new { Username = payoutDataLC_SA.username, Gameid = payoutDataLC_SA.gameid, SettleFlag = 2 }, conn , trans);
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     }
                 }
             }
@@ -166,6 +172,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
 
         #endregion
+        
         #region DG
         public int CancelBetLC_DG(TpCustInfo tpCustInfo, BettingDataLC_DG bettingDataLC_DG, out decimal afterAmount)
         {
@@ -174,10 +181,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             afterAmount = 0;
             int result = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
-            result = conn.Execute("Service_CancelBettransLC_DG_Set", new { data = bettingDataLC_DG.data }, transaction: trans, commandType: CommandType.StoredProcedure);
+            result = _mainDbClient.Execute("Service_CancelBettransLC_DG_Set", new { data = bettingDataLC_DG.data }, conn , trans);
             if (result == 0)
             {
                 return -1;
@@ -188,7 +195,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 result = PayoutV2(tpCustInfo, Math.Abs(bettingDataLC_DG.Amount), (int)Tp.DG, bettingDataLC_DG.TransId, gameType, TpCategory.LiveCasino, bettingDataLC_DG.TransId, TransType.Refunds, null, out afterAmount, "CancelBet", out bonusId, conn, trans);
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
 
@@ -201,7 +212,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             afterAmount = 0;
             TransferType transferType = TransferType.Payout;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
@@ -209,7 +220,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                result = conn.Execute("Service_BettransLC_DGV2_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransLC_DGV2_Ins", p, conn , trans);
 
                 if (result > 0)
                 {
@@ -221,8 +232,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        conn.Execute("Service_BettransLC_DGV2_Set", new { TransId = bettingDataLC_DG.TransId, SettleFlag = 2 }, transaction: trans, commandType: CommandType.StoredProcedure);
-                        trans.Commit();
+                        _mainDbClient.Execute("Service_BettransLC_DGV2_Set", new { TransId = bettingDataLC_DG.TransId, SettleFlag = 2 }, conn , trans);
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     }
                 }
             }
@@ -246,7 +261,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             validBet = 0;
             winLostAmount = 0;
             settleTime = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             var p = new DynamicParameters(new { TransId = TransId });
             p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("ValidBet", dbType: DbType.Decimal, direction: ParameterDirection.Output);
@@ -254,7 +268,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             p.Add("SettleTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
             p.Add("GameType", dbType: DbType.Int32, direction: ParameterDirection.Output);
             p.Add("GameId", dbType: DbType.Int32, direction: ParameterDirection.Output);
-            int result = conn.Execute("Service_TpWagerDG_Settle_Get", p, commandType: CommandType.StoredProcedure);
+            int result = _wagerDbClient.Execute("Service_TpWagerDG_Settle_Get", commandType: CommandType.StoredProcedure , p );
 
             if (p.Get<decimal?>("Stake") != null)
             {
@@ -287,19 +301,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         public IEnumerable<BettingDataLC_DG> GetUnsettledListLC_DG()
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<BettingDataLC_DG>("Service_BettransLC_DG_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Query<BettingDataLC_DG>("Service_BettransLC_DG_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
         public int SetSettleFlag_TpWagerDG(string transId)
         {
             long.TryParse(transId, out long lTransId);
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpWagerDG_Settle_Set", new { TransId = lTransId }, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.Execute("Service_TpWagerDG_Settle_Set", CommandType.StoredProcedure, new { TransId = lTransId });
         }
         public int SetSettleFlag_DG(string TransId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_BettransLC_DGV2_Set", new { TransId = TransId, SettleFlag = 1 }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Execute("Service_BettransLC_DGV2_Set", CommandType.StoredProcedure ,new { TransId = TransId, SettleFlag = 1 });
         }
 
         public SettleData_DG GetSettle_TpWagerDG(string TransId)
@@ -317,7 +328,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             afterAmount = 0;
             var result = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             string username = payoutDataLC_AG.Playname.Substring(payoutDataLC_AG.AgentCode.Length);
@@ -347,7 +358,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
                 p.Add("CanPayout", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-                result = conn.Execute("Service_BettransLC_AGV2_Payout_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransLC_AGV2_Payout_Ins", p, conn , trans);
 
                 if (p.Get<int>("CanPayout") == 1)
                 {
@@ -362,7 +373,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
             catch (MySqlException mySqlEx)
@@ -381,8 +396,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         public IEnumerable<DataLC_AG> GetUnsettledListLC_AG()
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<DataLC_AG>("Service_BettransLC_AGV2_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Query<DataLC_AG>("Service_BettransLC_AGV2_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
         public int RefundLC_AG(TpCustInfo tpCustInfo, BettingDataLC_AG_Refund bettingDataLC_AG_Refund, out decimal afterAmount)
         {
@@ -391,7 +405,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             afterAmount = 0;
             var result = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             string username = bettingDataLC_AG_Refund.Playname.Substring(bettingDataLC_AG_Refund.AgentCode.Length);
@@ -403,7 +417,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             });
 
             p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            result = conn.Execute("Service_CancelBetLC_AGV2_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            result = _mainDbClient.Execute("Service_CancelBetLC_AGV2_Set", p, conn , trans);
 
             if (result > 0)
             {
@@ -419,13 +433,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     }
                 }
             }
             else
             {
-                trans.Rollback();
+                _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 return -1;
             }
 
@@ -433,23 +451,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         public IEnumerable<SettleDataLC_AG> Get_PayoutList_AG(string transactionID)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleDataLC_AG>("Service_BettransLC_AGV2_Payout_Get", new { transactionID = transactionID }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Query<SettleDataLC_AG>("Service_BettransLC_AGV2_Payout_Get", commandType: CommandType.StoredProcedure, new { transactionID = transactionID });
         }
         public IEnumerable<BettingDataLC_AG> Get_BetList_AG(string transactionIDs)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<BettingDataLC_AG>("Service_BettransLC_AGV2_Bet_Get", new { transactionIDs = transactionIDs }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Query<BettingDataLC_AG>("Service_BettransLC_AGV2_Bet_Get", commandType: CommandType.StoredProcedure,new { transactionIDs = transactionIDs });
         }
         public int SetSettleFlag_AG(string transactionID, string transactionIDs)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_BettransLC_AGV2_SettleFlag_Set", new { transactionID = transactionID, transactionIDs = transactionIDs }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Execute("Service_BettransLC_AGV2_SettleFlag_Set", commandType: CommandType.StoredProcedure,new { transactionID = transactionID, transactionIDs = transactionIDs });
         }
         public int SetSettleFlag_TpWagerAG(string billNoList)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpWagerAG_Settle_Set", new { billNoList = billNoList }, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.Execute("Service_TpWagerAG_Settle_Set",  commandType: CommandType.StoredProcedure ,new { billNoList = billNoList });
         }
         public int Get_TpWagerAG_Settle(string billNoList, out decimal stake, out decimal validBet, out decimal winLostAmount, out long settleTime)
         {
@@ -457,13 +471,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             validBet = 0;
             winLostAmount = 0;
             settleTime = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             var p = new DynamicParameters(new { billNoList = billNoList });
             p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("ValidBet", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("SettleTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
-            int result = conn.Execute("Service_TpWagerAG_Settle_Get", p, commandType: CommandType.StoredProcedure);
+            int result = _wagerDbClient.Execute("Service_TpWagerAG_Settle_Get", commandType: CommandType.StoredProcedure , p );
 
             if (p.Get<decimal?>("Stake") != null)
             {
@@ -494,7 +507,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int gameType = (int)GameType.Sexy_LiveCasino;
 
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
@@ -505,7 +518,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 var p = new DynamicParameters(new { txId = txn.txId, userId = cancelBetTxn.userId, updateTime = updateTime.ToUnixTimeSeconds() });
                 p.Add("betAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-                result = conn.Execute("Service_CancelBetLC_Sexy_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_CancelBetLC_Sexy_Set", p, conn , trans);
 
                 if (result > 0)
                 {
@@ -524,7 +537,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
             }
 
-            trans.Commit();
+            _mainDbClient.CommitAndDisposeConnection(conn,trans);
             return result;
         }
         public int SettledLC_Sexy(BettingDataLC_Sexy_Settle bettingDataLC_Sexy_Settle, out decimal afterAmount)
@@ -535,15 +548,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             afterAmount = 0;
             int result = 0;
             bool haveNoBetting = false;
-            using var connSettled = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             DateTime.TryParse(bettingDataLC_Sexy_Settle.RoundStartTime, out DateTime dtTransTime);
             long roundStartTime = tools.ConvertLocTime(dtTransTime, 8);
 
-            connSettled.Execute("Service_BettransLC_Sexy_Settle_Ins", new { roundId = bettingDataLC_Sexy_Settle.RoundId, dealerDomain = bettingDataLC_Sexy_Settle.DealerDomain, roundStartTime = roundStartTime, validBetTime = bettingDataLC_Sexy_Settle.ValidBetTime / 1000, winner = bettingDataLC_Sexy_Settle.Winner, result = bettingDataLC_Sexy_Settle.Result }, commandType: CommandType.StoredProcedure);
+            _mainDbClient.Execute("Service_BettransLC_Sexy_Settle_Ins", commandType: CommandType.StoredProcedure ,new { roundId = bettingDataLC_Sexy_Settle.RoundId, dealerDomain = bettingDataLC_Sexy_Settle.DealerDomain, roundStartTime = roundStartTime, validBetTime = bettingDataLC_Sexy_Settle.ValidBetTime / 1000, winner = bettingDataLC_Sexy_Settle.Winner, result = bettingDataLC_Sexy_Settle.Result });
 
             foreach (var txn in bettingDataLC_Sexy_Settle.Txns)
             {
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
                 DateTime.TryParse(txn.BetTime, out dtTransTime);
@@ -552,7 +564,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 long updateTime = tools.ConvertLocTime(dtTransTime, 8);
                 try
                 {
-                    result = conn.Execute("Service_BettransmLC_Sexy_Settle_Ins", new { txId = txn.TxId, roundId = bettingDataLC_Sexy_Settle.RoundId, userId = txn.UserId, category = txn.Category, gameType = txn.GameType, betAmount = txn.BetAmount, betTime = betTime, updateTime = updateTime, winLoss = txn.WinLoss, odds = txn.Odds, settleWinLoss = txn.SettleWinLoss, validBet = txn.ValidBet, status = txn.Status }, transaction: trans, commandType: CommandType.StoredProcedure);
+                    result = _mainDbClient.Execute("Service_BettransmLC_Sexy_Settle_Ins", new { txId = txn.TxId, roundId = bettingDataLC_Sexy_Settle.RoundId, userId = txn.UserId, category = txn.Category, gameType = txn.GameType, betAmount = txn.BetAmount, betTime = betTime, updateTime = updateTime, winLoss = txn.WinLoss, odds = txn.Odds, settleWinLoss = txn.SettleWinLoss, validBet = txn.ValidBet, status = txn.Status }, conn , trans);
                 }
                 catch (MySqlException mySqlEx)
                 {
@@ -598,7 +610,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (result > 0)
                         {
-                            trans.Commit();
+                            _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                        }
+                        else
+                        {
+                            _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                         }
                     }
                 }
@@ -606,7 +622,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     log2File.Error($"{JsonConvert.SerializeObject(txn)}", $"Sexy_haveNoBetting");/*need add check in SP*/
                     haveNoBetting = true;
-                    trans.Rollback();
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
 
@@ -616,10 +632,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             else
             {
-                connSettled.Execute("Service_BettransLC_Sexy_Settle_Set", new
+                _mainDbClient.Execute("Service_BettransLC_Sexy_Settle_Set",
+                    commandType: CommandType.StoredProcedure , new
                 {
                     roundId = bettingDataLC_Sexy_Settle.RoundId
-                }, commandType: CommandType.StoredProcedure);
+                });
 
                 result = result == -1 ? 1 : result;
                 return result;
@@ -639,15 +656,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 DateTime.TryParse(txn.updateTime, out DateTime uT);
                 DateTimeOffset updateTime = new DateTimeOffset(uT, new TimeSpan(8, 0, 0));
 
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-                conn.Open();
+                using var conn = _mainDbClient.GetMySqlConnection();conn.Open();
                 using var trans = conn.BeginTransaction();
                 var p = new DynamicParameters(new { txId = txn.txId });
                 p.Add("betAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
                 p.Add("winLoss", dbType: DbType.Decimal, direction: ParameterDirection.Output);
                 p.Add("settleWinLoss", dbType: DbType.Decimal, direction: ParameterDirection.Output);
                 p.Add("validBet", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-                result = conn.Execute("Service_BettransmLC_Sexy_Unsettle_Del", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransmLC_Sexy_Unsettle_Del", p, conn , trans);
 
                 if (result > 0)
                 {
@@ -684,23 +700,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (result > 0)
                         {
-                            trans.Commit();
+                            _mainDbClient.CommitAndDisposeConnection(conn,trans);
                         }
                         else
                         {
                             cantUnsettle = true;
-                            trans.Rollback();
+                            _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                         }
                     }
                     else
                     {
                         cantUnsettle = true;
-                        trans.Rollback();
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     }
                 }
                 else
                 {
-                    trans.Rollback();
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
 
@@ -709,12 +725,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 return -99;
             }
             else
-            {
-                using var connSettled = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-                connSettled.Execute("Service_BettransLC_Sexy_Unsettle_Del", new
-                {
-                    roundId = unsettle.roundId
-                }, commandType: CommandType.StoredProcedure);
+            { 
+                _mainDbClient.Execute("Service_BettransLC_Sexy_Unsettle_Del", 
+                    commandType: CommandType.StoredProcedure, new 
+                    {
+                        roundId = unsettle.roundId
+                    });
 
                 return 1;
             }
@@ -728,8 +744,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             afterAmount = 0;
             int result = 0;
 
-            using var connSettled = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var checkUnsettled = connSettled.QueryFirstOrDefault<int>("Service_BettransLC_Sexy_CheckUnsettled_Get", new { roundId = voidRound.roundId }, commandType: CommandType.StoredProcedure) > 0;
+            var checkUnsettled = _mainDbClient.QueryFirst<int>("Service_BettransLC_Sexy_CheckUnsettled_Get", new { roundId = voidRound.roundId }) > 0;
             if (checkUnsettled)
             {
                 return 0;
@@ -741,12 +756,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     DateTime.TryParse(txn.updateTime, out DateTime uT);
                     DateTimeOffset updateTime = new DateTimeOffset(uT, new TimeSpan(8, 0, 0));
 
-                    using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                    using var conn = _mainDbClient.GetMySqlConnection();
                     conn.Open();
                     using var trans = conn.BeginTransaction();
                     var p = new DynamicParameters(new { txId = txn.txId, userId = txn.userId, updateTime = updateTime.ToUnixTimeSeconds() });
                     p.Add("betAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-                    result = conn.Execute("Service_CancelBetLC_Sexy_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    result = _mainDbClient.Execute("Service_CancelBetLC_Sexy_Set", p, conn , trans);
 
                     if (result > 0)
                     {
@@ -781,13 +796,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                             if (result > 0)
                             {
-                                trans.Commit();
+                                _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                            }
+                            else
+                            {
+                                _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                             }
                         }
                     }
                     else
                     {
-                        trans.Rollback();
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                         result = 1;
                     }
                 }
@@ -809,7 +828,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 DateTime.TryParse(txn.updateTime, out DateTime uT);
                 DateTimeOffset updateTime = new DateTimeOffset(uT, new TimeSpan(8, 0, 0));
 
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
                 var p = new DynamicParameters(new { txId = txn.txId, userId = txn.userId, updateTime = updateTime.ToUnixTimeSeconds() });
@@ -817,7 +836,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("winLoss", dbType: DbType.Decimal, direction: ParameterDirection.Output);
                 p.Add("settleWinLoss", dbType: DbType.Decimal, direction: ParameterDirection.Output);
                 p.Add("validBet", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-                result = conn.Execute("Service_BettransmLC_Sexy_VoidTxn_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransmLC_Sexy_VoidTxn_Set", p, conn , trans);
 
                 if (result > 0)
                 {
@@ -854,7 +873,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (result > 0)
                         {
-                            trans.Commit();
+                            _mainDbClient.CommitAndDisposeConnection(conn,trans);
                         }
                         else
                         {
@@ -868,7 +887,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
-                    trans.Rollback();
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
 
@@ -889,7 +908,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             foreach (var sexy_Treat in sexy_Treats)
             {
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
 
@@ -898,7 +917,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 try
                 {
-                    result = conn.Execute("Service_BettransLC_Sexy_Prize_Ins", new { txId = sexy_Treat.txId, treatId = sexy_Treat.treatId, userId = sexy_Treat.userId, amount = sexy_Treat.amount, transferTime = transferTime }, transaction: trans, commandType: CommandType.StoredProcedure);
+                    result = _mainDbClient.Execute("Service_BettransLC_Sexy_Prize_Ins", new { txId = sexy_Treat.txId, treatId = sexy_Treat.treatId, userId = sexy_Treat.userId, amount = sexy_Treat.amount, transferTime = transferTime }, conn , trans);
 
                     if (result > 0)
                     {
@@ -910,7 +929,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (result > 0)
                         {
-                            trans.Commit();
+                            _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                        }
+                        else
+                        {
+                            _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                         }
                     }
                 }
@@ -942,7 +965,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
             foreach (var item in cancelLC_Sexy.txns)
             {
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
 
@@ -964,7 +987,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     SettleFlag = (int)SettleFlag.Settled
                 });
                 p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-                result = conn.Execute("Service_BettransLC_AWC_Sexy_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransLC_AWC_Sexy_CancelBet_Set", p, conn , trans);
 
                 if (result > 0)
                 {
@@ -991,19 +1014,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     }
                     if (result > 0)
                     {
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     }
                 }
                 else
                 {
                     p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
-                    conn.Execute("Service_BettransLC_AWC_Sexy_CancelBet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    _mainDbClient.Execute("Service_BettransLC_AWC_Sexy_CancelBet_Ins", p, conn , trans);
                     var refBettransLC = p.Get<int>("out_result");
 
                     if (refBettransLC == 2)
                     {
                         // insert cancel record
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
                     }
                     result = -1;
                 }
@@ -1018,7 +1045,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
             foreach (var item in cancelTipLC_Sexy.txns)
             {
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
 
@@ -1041,7 +1068,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     SettleFlag = (int)SettleFlag.Settled
                 });
                 p.Add("out_tip", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-                result = conn.Execute("Service_BettransLC_AWC_Sexy_CancelTip_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransLC_AWC_Sexy_CancelTip_Set", p, conn , trans);
 
                 if (result > 0)
                 {
@@ -1066,19 +1093,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     }
                     if (result > 0)
                     {
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     }
                 }
                 else
                 {
                     p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
-                    conn.Execute("Service_BettransLC_AWC_Sexy_CancelTip_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    _mainDbClient.Execute("Service_BettransLC_AWC_Sexy_CancelTip_Ins", p, conn , trans);
                     var refBettransLC = p.Get<int>("out_result");
 
                     if (refBettransLC == 2)
                     {
                         // insert cancel record
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
                     }
                     result = -1;
                 }
@@ -1092,7 +1123,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
             foreach (var item in voidBetLC_Sexy.txns)
             {
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
 
@@ -1109,7 +1140,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         SettleFlag = (int)SettleFlag.EndGame
                     });
 
-                    result = conn.Execute("Service_BettransLC_AWC_Sexy_VoidBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    result = _mainDbClient.Execute("Service_BettransLC_AWC_Sexy_VoidBet_Set", p, conn , trans);
                     if (result > 0)
                     {
                         decimal stake = Math.Abs(item.betAmount);
@@ -1138,7 +1169,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     }
                     if (result > 0)
                     {
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     }
                 }
                 catch (MySqlException mySqlEx)
@@ -1158,7 +1193,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             foreach (var txn in payoutLC_Sexy.txns)
             {
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
                 int ticketStatus;
@@ -1195,7 +1230,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         SettleFlag = (int)SettleFlag.EndGame
                     });
 
-                    result = conn.Execute("Service_BettransLC_AWC_Sexy_Payout_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    result = _mainDbClient.Execute("Service_BettransLC_AWC_Sexy_Payout_Set", p, conn , trans);
                     decimal payout = txn.winAmount;
                     if (result > 0)
                     {
@@ -1222,7 +1257,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (result > 0)
                         {
-                            trans.Commit();
+                            _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                        }
+                        else
+                        {
+                            _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                         }
                     }
                     else
@@ -1256,12 +1295,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 });
                 p.Add("out_payout", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
                 try
                 {
-                    result = conn.Execute("Service_BettransLC_AWC_Sexy_UnPayout_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    result = _mainDbClient.Execute("Service_BettransLC_AWC_Sexy_UnPayout_Set", p, conn , trans);
                     if (result > 0)
                     {
                         decimal payout = p.Get<decimal>("out_payout");
@@ -1289,7 +1328,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (result > 0)
                         {
-                            trans.Commit();
+                            _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                        }
+                        else
+                        {
+                            _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                         }
                     }
                     else
@@ -1324,13 +1367,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 });
                 p.Add("out_payout", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-
+                using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
                 try
                 {
-                    result = conn.Execute("Service_BettransLC_AWC_Sexy_VoidSettle_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    result = _mainDbClient.Execute("Service_BettransLC_AWC_Sexy_VoidSettle_Set", p, conn , trans);
 
                     if (result > 0)
                     {
@@ -1360,7 +1402,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (result > 0)
                         {
-                            trans.Commit();
+                            _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                        }
+                        else
+                        {
+                            _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                         }
                     }
                     else
@@ -1386,7 +1432,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
             foreach (var item in rewardLC_Sexy.txns)
             {
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
 
@@ -1402,7 +1448,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         amount = item.amount,
                         txUnix = new DateTimeOffset(item.txTime).ToUnixTimeSeconds()
                     });
-                    result = conn.Execute("Service_RewardLC_AWC_Sexy_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    result = _mainDbClient.Execute("Service_RewardLC_AWC_Sexy_Ins", p, conn , trans);
                     decimal amount = item.amount;
                     if (result > 0)
                     {
@@ -1429,7 +1475,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (result > 0)
                         {
-                            trans.Commit();
+                            _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                        }
+                        else
+                        {
+                            _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                         }
                     }
                 }
@@ -1458,10 +1508,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 try
                 {
-                    using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+                    using var conn = _mainDbClient.GetMySqlConnection();
                     conn.Open();
                     using var trans = conn.BeginTransaction();
-                    var check = conn.QueryFirstOrDefault<BettransDataLC_Sexy>("Service_BettransLC_AWC_Sexy_Get", new { platformTxId = item.platformTxId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                    var check = _mainDbClient.QueryFirst<BettransDataLC_Sexy>("Service_BettransLC_AWC_Sexy_Get", trans , new { platformTxId = item.platformTxId });
                     if (check == null)
                     {
                         // no data
@@ -1502,7 +1552,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         SettleFlag = (int)SettleFlag.EndGame
                     });
 
-                    result = conn.Execute("Service_BettransLC_AWC_Sexy_Resettle_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                    result = _mainDbClient.Execute("Service_BettransLC_AWC_Sexy_Resettle_Set", p, conn , trans);
                     if (result > 0)
                     {
                         if (payout != 0)
@@ -1528,7 +1578,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (result > 0)
                         {
-                            trans.Commit();
+                            _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                        }
+                        else
+                        {
+                            _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                         }
                     }
                     else
@@ -1565,7 +1619,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int gameType = (int)GameType.EBet_LiveCasino;
 
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             var result = 0;
 
             int ticketStatus = (int)TicketStatus.Win;
@@ -1622,7 +1676,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                result = conn.Execute("Service_BettransLC_EBet_Payout_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransLC_EBet_Payout_Ins", p, conn , trans);
 
                 if (result > 0)
                 {
@@ -1648,7 +1702,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     }
                 }
             }
@@ -1673,7 +1731,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int gameType = (int)GameType.EBet_LiveCasino;
 
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             var result = 0;
             conn.Open();
             using var trans = conn.BeginTransaction();
@@ -1705,7 +1763,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     TicketType = (int)BettransType.Reserve
                 });
 
-                result = conn.Execute("Service_BettransLC_EBet_Bet_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransLC_EBet_Bet_Ins_V2", p, conn , trans);
 
                 if (result > 0)
                 {
@@ -1731,7 +1789,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     }
                 }
             }
@@ -1759,7 +1821,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int result = 0;
             string mixUniqueId = $"{bettingData_EBet.detail.roundCode}_{bettingData_EBet.username}";
 
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
 
@@ -1767,13 +1829,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 ? bettingData_EBet.seqNo
                 : bettingData_EBet.detail.withHoldingSeqNo;
 
-            var refBettransLC = conn.Execute("Service_BettransLC_Ebet_CancelBet_Set", new
+            var refBettransLC = _mainDbClient.Execute("Service_BettransLC_Ebet_CancelBet_Set", new
             {
                 seqNo = seqNo
-            },
-            transaction: trans,
-            commandType: CommandType.StoredProcedure
-            );
+            }, conn, trans);
             if (refBettransLC > 0)
             {
                 result = PayoutV2(
@@ -1794,7 +1853,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
             else
@@ -1814,13 +1877,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int result = 0;
             string mixUniqueId = $"{refundListEbet.roundCode}_{refundListEbet.username}";
 
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             var p = new DynamicParameters(new { seqNo = refundListEbet.refundSeqNo });
             p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
             var refBettransLC = -99;
-            conn.Execute("Service_BettransLC_Ebet_Refund_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            _mainDbClient.Execute("Service_BettransLC_Ebet_Refund_Set", p, conn , trans);
             refBettransLC = p.Get<int>("out_result");
 
             if (refBettransLC == 0)
@@ -1843,8 +1906,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    conn.Execute("Service_BettransLC_EBet_ReSettle_Set", new { TransId = mixUniqueId }, transaction: trans, commandType: CommandType.StoredProcedure);
-                    trans.Commit();
+                    _mainDbClient.Execute("Service_BettransLC_EBet_ReSettle_Set", new { TransId = mixUniqueId }, conn , trans);
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
             else
@@ -1864,16 +1931,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int result = 0;
             string mixUniqueId = $"{batchRefundList.roundCode}_{batchRefundList.username}";
 
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
-            var refBettransLC = conn.Execute("Service_BettransLC_Ebet_RefundBatch_Set", new
+            var refBettransLC = _mainDbClient.Execute("Service_BettransLC_Ebet_RefundBatch_Set", new
             {
                 seqNo = batchRefundList.seqNo
-            },
-            transaction: trans,
-            commandType: CommandType.StoredProcedure
-            );
+            },conn, trans);
 
             if (refBettransLC > 0)
             {
@@ -1895,8 +1959,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    conn.Execute("Service_BettransLC_EBet_ReSettle_Set", new { TransId = mixUniqueId }, transaction: trans, commandType: CommandType.StoredProcedure);
-                    trans.Commit();
+                    _mainDbClient.Execute("Service_BettransLC_EBet_ReSettle_Set", new { TransId = mixUniqueId }, conn , trans);
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
             else
@@ -1911,7 +1979,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             int bonusId = 0;
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             var result = 0;
 
             var p = new DynamicParameters(new
@@ -1935,7 +2003,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                result = conn.Execute("Service_RewardLC_EBet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_RewardLC_EBet_Ins", p, conn , trans);
 
                 if (result > 0)
                 {
@@ -1961,7 +2029,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     }
                 }
             }
@@ -1983,10 +2055,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<CreditRecord_EBet> GetCreditRecordLC_EBet(string[] seqNo)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var jsonSeqNo = JsonConvert.SerializeObject(seqNo);
-            var bet = conn.Query<CreditRecord_EBet>("Service_BettransLC_EBet_Bets_Get", new { seqNos = jsonSeqNo }, commandType: CommandType.StoredProcedure);
-            var payout = conn.Query<CreditRecord_EBet>("Service_BettransLC_EBet_Payouts_Get", new { seqNos = jsonSeqNo }, commandType: CommandType.StoredProcedure);
+            var bet = _mainDbClient.Query<CreditRecord_EBet>("Service_BettransLC_EBet_Bets_Get", commandType: CommandType.StoredProcedure, new { seqNos = jsonSeqNo });
+            var payout = _mainDbClient.Query<CreditRecord_EBet>("Service_BettransLC_EBet_Payouts_Get", commandType: CommandType.StoredProcedure ,new { seqNos = jsonSeqNo });
             var list = bet.Union(payout);
             if (list?.Count() > 0)
             {
@@ -2008,14 +2079,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<SettleData> GetUnsettledListLC_EBet()
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData>("Service_BettransLC_EBet_Unsettle_Get_V4", commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Query<SettleData>("Service_BettransLC_EBet_Unsettle_Get_V4", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_EBet(string TransId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_BettransLC_EBet_Settle_Set", new { TransId = TransId, SettleFlag = 1 }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Execute("Service_BettransLC_EBet_Settle_Set", commandType: CommandType.StoredProcedure ,new { TransId = TransId, SettleFlag = 1 });
         }
         #endregion
 
@@ -2027,7 +2096,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int gameType = (int)GameType.WM_LiveCasino;
 
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             var result = 0;
 
             string mixUniqueId = $"{bettingDataLC_WM.gameno}_{bettingDataLC_WM.user}";
@@ -2059,7 +2128,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                result = conn.Execute("Service_BettransLC_WM_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransLC_WM_Ins_V2", p, conn , trans);
 
                 if (result > 0)
                 {
@@ -2086,7 +2155,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     }
                 }
             }
@@ -2114,11 +2187,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int result = 0;
             string mixUniqueId = $"{bettingDataLC_WM.gameno}_{bettingDataLC_WM.user}";
 
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
 
-            result = conn.Execute("Service_BettransLC_WM_CancelBet_Set", new { dealid = bettingDataLC_WM.dealid }, transaction: trans, commandType: CommandType.StoredProcedure);
+            result = _mainDbClient.Execute("Service_BettransLC_WM_CancelBet_Set", new { dealid = bettingDataLC_WM.dealid }, conn , trans);
 
             if (result > 0)
             {
@@ -2163,7 +2236,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
             else
@@ -2188,13 +2265,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 });
 
                 p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
-                conn.Execute("Service_BettransLC_WM_CancelBet_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                _mainDbClient.Execute("Service_BettransLC_WM_CancelBet_Ins_V2", p, conn , trans);
                 var refBettransLC = p.Get<int>("out_result");
 
                 if (refBettransLC == 2)
                 {
                     // insert cancel record
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
                 }
                 result = -1;
             }
@@ -2208,7 +2285,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int gameType = (int)GameType.WM_LiveCasino;
 
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             var result = 0;
 
             string mixUniqueId = $"{bettingDataLC_WM.gameno}_{bettingDataLC_WM.user}";
@@ -2237,7 +2314,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                result = conn.Execute("Service_BettransLC_WM_Resettle_Set_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransLC_WM_Resettle_Set_V2", p, conn , trans);
 
                 if (result > 0)
                 {
@@ -2264,7 +2341,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     }
                 }
             }
@@ -2284,26 +2365,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<SettleData_WM> GetUnsettledList_WM()
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData_WM>("Service_BettransLC_WM_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Query<SettleData_WM>("Service_BettransLC_WM_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
         }
 
         public SettleData GetSettle_TpWagerWM(string TransId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.QueryFirstOrDefault<SettleData>("Service_TpWagerWM_Settle_Get", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.QueryFirst<SettleData>("Service_TpWagerWM_Settle_Get", new { TransId = TransId });
         }
 
         public int SetSettleFlag_TpWagerWM(string TransId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpWagerWM_Settle_Set", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.Execute("Service_TpWagerWM_Settle_Set", commandType: CommandType.StoredProcedure ,new { TransId = TransId });
         }
 
         public int SetSettleFlag_BettransLC_WM(string TransId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_BettransLC_WM_Settle_Set", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Execute("Service_BettransLC_WM_Settle_Set", commandType: CommandType.StoredProcedure, new { TransId = TransId });
         }
 
         #endregion
@@ -2324,10 +2401,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             });
             //p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
-            var check = conn.QueryFirstOrDefault<BettransData_N2Live>("Service_BettransLC_N2Live_Get", new { tradeid = cancelBetDataLC_N2Live.request.tradeid }, transaction: trans, commandType: CommandType.StoredProcedure);
+            var check = _mainDbClient.QueryFirst<BettransData_N2Live>("Service_BettransLC_N2Live_Get", trans ,new { tradeid = cancelBetDataLC_N2Live.request.tradeid } );
             if (check == null)
             {
                 // no record
@@ -2339,7 +2416,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 return -1;
             }
 
-            result = conn.Execute("Service_BettransLC_N2Live_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            result = _mainDbClient.Execute("Service_BettransLC_N2Live_CancelBet_Set", p, conn , trans);
 
             if (result > 0)
             {
@@ -2364,7 +2441,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
 
@@ -2377,7 +2458,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int gameType = (int)GameType.N2Live_LiveCasino;
 
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             var result = 0;
             string TransId = $"{payoutDataLC_N2Live.request.gameid}_{payoutDataLC_N2Live.request.userid}";
 
@@ -2411,14 +2492,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                var check = conn.QueryFirstOrDefault<BettransData_N2Live>("Service_BettransLC_N2Live_Get", new { tradeid = payoutDataLC_N2Live.request.tradeid }, transaction: trans, commandType: CommandType.StoredProcedure);
+                var check = _mainDbClient.QueryFirst<BettransData_N2Live>("Service_BettransLC_N2Live_Get", trans , new { tradeid = payoutDataLC_N2Live.request.tradeid });
                 if (check != null && check.TicketType == 4)
                 {
                     // already payout 
                     return -1;
                 }
 
-                result = conn.Execute("Service_BettransLC_N2Live_Payout_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransLC_N2Live_Payout_Set", p, conn , trans);
 
                 if (result > 0)
                 {
@@ -2445,7 +2526,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     }
                 }
             }
@@ -2471,10 +2556,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             });
             //p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
-            var check = conn.QueryFirstOrDefault<BettransData_N2Live>("Service_SmartBettransLC_N2Live_Get", new { schemeid = smartCancelBetDataLC_N2Live.request.schemeid }, transaction: trans, commandType: CommandType.StoredProcedure);
+            var check = _mainDbClient.QueryFirst<BettransData_N2Live>("Service_SmartBettransLC_N2Live_Get", trans ,new { schemeid = smartCancelBetDataLC_N2Live.request.schemeid });
             if (check == null)
             {
                 // no record
@@ -2486,7 +2571,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 return -1;
             }
 
-            result = conn.Execute("Service_SmartBettransLC_N2Live_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            result = _mainDbClient.Execute("Service_SmartBettransLC_N2Live_CancelBet_Set", p, conn , trans);
 
             if (result > 0)
             {
@@ -2511,7 +2596,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
 
@@ -2524,7 +2613,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int gameType = (int)GameType.N2Live_LiveCasino;
 
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             var result = 0;
 
             var p = new DynamicParameters(new
@@ -2544,14 +2633,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                var check = conn.QueryFirstOrDefault<BettransData_N2Live>("Service_SmartBettransLC_N2Live_Get", new { schemeid = smartPayoutDataLC_N2Live.request.schemeid }, transaction: trans, commandType: CommandType.StoredProcedure);
+                var check = _mainDbClient.QueryFirst<BettransData_N2Live>("Service_SmartBettransLC_N2Live_Get", trans , new { schemeid = smartPayoutDataLC_N2Live.request.schemeid });
                 if (check == null && check.TicketType == 4)
                 {
                     // already payout 
                     return -1;
                 }
 
-                result = conn.Execute("Service_SmartBettransLC_N2Live_Payout_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_SmartBettransLC_N2Live_Payout_Set", p, conn , trans);
 
                 if (result > 0)
                 {
@@ -2578,7 +2667,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     }
                 }
             }
@@ -2596,7 +2689,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int gameType = (int)GameType.N2Live_LiveCasino;
 
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             var result = 0;
 
             var p = new DynamicParameters(new
@@ -2615,7 +2708,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                result = conn.Execute("Service_BonusLC_N2Live_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BonusLC_N2Live_Ins", p, conn , trans);
 
                 if (result > 0)
                 {
@@ -2642,7 +2735,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     }
                 }
             }
@@ -2664,7 +2761,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int EventLC_N2Live(TpCustInfo tpCustInfo, EventDataLC_N2Live eventDataLC_N2Live, out decimal afterAmount)
         {
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             var result = 0;
             decimal amount = 0;
             var ticketStatus = (int)TicketStatus.Refund;
@@ -2709,7 +2806,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                result = conn.Execute("Service_RewardLC_N2Live_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_RewardLC_N2Live_Ins", p, conn , trans);
 
                 if (result > 0)
                 {
@@ -2732,7 +2829,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     }
                 }
             }
@@ -2753,44 +2854,37 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public SettleData_N2Live GetSettle_TpWagerLC_N2Live(string TransId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.QueryFirstOrDefault<SettleData_N2Live>("Service_TpWagerLC_N2Live_Get_V2", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+           return _wagerDbClient.QueryFirst<SettleData_N2Live>("Service_TpWagerLC_N2Live_Get_V2", new { TransId = TransId });
         }
 
         public SettleData GetSettle_TpSmartWagerLC_N2Live(string TransId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.QueryFirstOrDefault<SettleData>("Service_TpSmartWagerLC_N2Live_Get", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.QueryFirst<SettleData>("Service_TpSmartWagerLC_N2Live_Get", new { TransId = TransId });
         }
 
         public IEnumerable<SettleData> GetUnsettledList_BettransLC_N2Live()
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<SettleData>("Service_BettransLC_N2Live_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Query<SettleData>("Service_BettransLC_N2Live_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
 
         public IEnumerable<SettleData_N2Live_Smart> GetUnsettledList_TpSmartWagerLC_N2Live()
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Query<SettleData_N2Live_Smart>("Service_TpSmartWagerLC_N2Live_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.Query<SettleData_N2Live_Smart>("Service_TpSmartWagerLC_N2Live_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_BettransLC_N2Live(string TransId, int SettleFlag)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_BettransLC_N2Live_Settle_Set", new { TransId = TransId, SettleFlag = SettleFlag }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Execute("Service_BettransLC_N2Live_Settle_Set",  commandType: CommandType.StoredProcedure ,new { TransId = TransId, SettleFlag = SettleFlag });
         }
 
         public int SetSettleFlag_TpWagerLC_N2Live(string TransId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpWagerLC_N2Live_Settle_Set", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.Execute("Service_TpWagerLC_N2Live_Settle_Set", commandType: CommandType.StoredProcedure , new { TransId = TransId });
         }
 
         public int SetSettleFlag_TpSmartWagerLC_N2Live(string TransId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpSmartWagerLC_N2Live_Settle_Set", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.Execute("Service_TpSmartWagerLC_N2Live_Settle_Set", commandType: CommandType.StoredProcedure ,new { TransId = TransId });
         }
 
         #endregion
@@ -2799,14 +2893,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<SettleData> GetUnsettledListLC_PT()
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Query<SettleData>("Service_TpWagerLC_PT_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.Query<SettleData>("Service_TpWagerLC_PT_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_TpWagerLC_PT(long TransId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpWagerLC_PT_Settle_Set", new { TransId = TransId }, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.Execute("Service_TpWagerLC_PT_Settle_Set", commandType: CommandType.StoredProcedure, new { TransId = TransId });
         }
 
         #endregion
@@ -2889,9 +2981,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         _tpUnsettleService.InsertTpUnsettle(Tp.MG, GameType.MG_LiveCasino, bettingDataRNG_MG.betId, trans, partitionTime);
                     }
-
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
                 }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
+                }
+                
                 return new MGPayoutResult()
                 {
                     Result = result,
@@ -2923,8 +3019,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int bonusId = 0;
             var afterAmount = 0M;
 
-            await using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Open();
+            await using var conn = _mainDbClient.GetMySqlConnection();
+            await conn.OpenAsync();
             await using var trans = await conn.BeginTransactionAsync();
 
             try
@@ -2997,7 +3093,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+                }
+                else
+                {
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                 }
                 return new MGCancelResult()
                 {
@@ -3017,13 +3117,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             var result = 0;
             var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(transTime).DateTime;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             var trans = conn.BeginTransaction();
             result = _partitionService.Execute(partitionTime, "Service_BettransLC_MG_Settle_Set", new DynamicParameters(new { TransId = transId }), trans);
             if (result > 0)
             {
-                trans.Commit();
+                _mainDbClient.CommitAndDisposeConnection(conn,trans);
+            }
+            else
+            {
+                _mainDbClient.RollbackAndDisposeConnection(conn,trans);
             }
             return result;
         }
@@ -3037,7 +3141,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int bonusId = 0;
             var result = 0;
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
 
@@ -3062,7 +3166,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 SettleFlag = (int)SettleFlag.Settled
             });
 
-            result = conn.Execute("Service_BettransLC_EVO_CancelBet_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            result = _mainDbClient.Execute("Service_BettransLC_EVO_CancelBet_Set", p, conn , trans);
 
             if (result > 0)
             {
@@ -3087,12 +3191,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
             else
             {
-                var check = conn.Query<BettransData_EVO>("Service_BettransLC_EVO_Get", new { TransactionRefId = bettingData_EVO.transaction.refId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                var check = _mainDbClient.Query<BettransData_EVO>("Service_BettransLC_EVO_Get", commandType: CommandType.StoredProcedure ,new { TransactionRefId = bettingData_EVO.transaction.refId });
                 if (!check.Any())
                 {
                     // no bet data
@@ -3104,6 +3212,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     // had cancel
                     return -1;
                 }
+                _mainDbClient.CommitAndDisposeConnection(conn,trans);
             }
             return result;
         }
@@ -3112,15 +3221,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             var result = 0;
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             try
             {
-                var check = conn.Query<BettransData_EVO>("Service_BettransLC_EVO_Get", new { TransactionRefId = bettingData_EVO.transaction.refId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                var check = _mainDbClient.Query<BettransData_EVO>("Service_BettransLC_EVO_Get" , commandType: CommandType.StoredProcedure ,new { TransactionRefId = bettingData_EVO.transaction.refId });
                 if (!check.Any())
                 {
                     // no bet or cancel data
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
                     return -2;
                 }
 
@@ -3145,7 +3255,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     SettleFlag = (int)SettleFlag.EndGame
                 });
 
-                result = conn.Execute("Service_BettransLC_EVO_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransLC_EVO_Ins", p, conn , trans);
 
                 if (result > 0)
                 {
@@ -3173,7 +3283,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     }
                 }
             }
@@ -3196,7 +3310,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             var result = 0;
             afterAmount = 0;
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             try
@@ -3229,7 +3343,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     }
                 }
             }
