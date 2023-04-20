@@ -656,7 +656,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 DateTime.TryParse(txn.updateTime, out DateTime uT);
                 DateTimeOffset updateTime = new DateTimeOffset(uT, new TimeSpan(8, 0, 0));
 
-                using var conn = _mainDbClient.GetMySqlConnection();conn.Open();
+                using var conn = _mainDbClient.GetMySqlConnection();
+                conn.Open();
                 using var trans = conn.BeginTransaction();
                 var p = new DynamicParameters(new { txId = txn.txId });
                 p.Add("betAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
