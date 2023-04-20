@@ -15,6 +15,7 @@
         public int CurrencyId { set; get; }
         public string TpCurrencyId { set; get; }
         public decimal ExchangeRate { set; get; }
+        public int IsSubCurrency { set; get; }
     }
 
     public class CurrencyOption
