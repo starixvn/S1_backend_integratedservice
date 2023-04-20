@@ -280,7 +280,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             dynamic response = new ExpandoObject();
             await using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
+            await conn.OpenAsync();
             await using var trans = await conn.BeginTransactionAsync();
             var cancelBet = new CancelBetRngDto_HB()
             {

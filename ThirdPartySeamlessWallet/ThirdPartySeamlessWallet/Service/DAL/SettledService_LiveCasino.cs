@@ -195,7 +195,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 result = PayoutV2(tpCustInfo, Math.Abs(bettingDataLC_DG.Amount), (int)Tp.DG, bettingDataLC_DG.TransId, gameType, TpCategory.LiveCasino, bettingDataLC_DG.TransId, TransType.Refunds, null, out afterAmount, "CancelBet", out bonusId, conn, trans);
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
 
@@ -257,7 +261,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             validBet = 0;
             winLostAmount = 0;
             settleTime = 0;
-            using var conn = _wagerDbClient.GetMySqlConnection();
             var p = new DynamicParameters(new { TransId = TransId });
             p.Add("Stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("ValidBet", dbType: DbType.Decimal, direction: ParameterDirection.Output);
@@ -545,11 +548,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             afterAmount = 0;
             int result = 0;
             bool haveNoBetting = false;
-            using var connSettled = _mainDbClient.GetMySqlConnection();
             DateTime.TryParse(bettingDataLC_Sexy_Settle.RoundStartTime, out DateTime dtTransTime);
             long roundStartTime = tools.ConvertLocTime(dtTransTime, 8);
 
-            connSettled.Execute("Service_BettransLC_Sexy_Settle_Ins", new { roundId = bettingDataLC_Sexy_Settle.RoundId, dealerDomain = bettingDataLC_Sexy_Settle.DealerDomain, roundStartTime = roundStartTime, validBetTime = bettingDataLC_Sexy_Settle.ValidBetTime / 1000, winner = bettingDataLC_Sexy_Settle.Winner, result = bettingDataLC_Sexy_Settle.Result }, commandType: CommandType.StoredProcedure);
+            _mainDbClient.Execute("Service_BettransLC_Sexy_Settle_Ins", commandType: CommandType.StoredProcedure ,new { roundId = bettingDataLC_Sexy_Settle.RoundId, dealerDomain = bettingDataLC_Sexy_Settle.DealerDomain, roundStartTime = roundStartTime, validBetTime = bettingDataLC_Sexy_Settle.ValidBetTime / 1000, winner = bettingDataLC_Sexy_Settle.Winner, result = bettingDataLC_Sexy_Settle.Result });
 
             foreach (var txn in bettingDataLC_Sexy_Settle.Txns)
             {
@@ -630,10 +632,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             else
             {
-                connSettled.Execute("Service_BettransLC_Sexy_Settle_Set", new
+                _mainDbClient.Execute("Service_BettransLC_Sexy_Settle_Set",
+                    commandType: CommandType.StoredProcedure , new
                 {
                     roundId = bettingDataLC_Sexy_Settle.RoundId
-                }, commandType: CommandType.StoredProcedure);
+                });
 
                 result = result == -1 ? 1 : result;
                 return result;
@@ -723,7 +726,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             else
             { 
-                _mainDbClient.Execute("Service_BettransLC_Sexy_Unsettle_Del",
+                _mainDbClient.Execute("Service_BettransLC_Sexy_Unsettle_Del", 
                     commandType: CommandType.StoredProcedure, new 
                     {
                         roundId = unsettle.roundId
@@ -2052,7 +2055,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<CreditRecord_EBet> GetCreditRecordLC_EBet(string[] seqNo)
         {
-            using var conn = _mainDbClient.GetMySqlConnection();
             var jsonSeqNo = JsonConvert.SerializeObject(seqNo);
             var bet = _mainDbClient.Query<CreditRecord_EBet>("Service_BettransLC_EBet_Bets_Get", commandType: CommandType.StoredProcedure, new { seqNos = jsonSeqNo });
             var payout = _mainDbClient.Query<CreditRecord_EBet>("Service_BettransLC_EBet_Payouts_Get", commandType: CommandType.StoredProcedure ,new { seqNos = jsonSeqNo });
@@ -2363,7 +2365,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<SettleData_WM> GetUnsettledList_WM()
         {
-            using var conn = _mainDbClient.GetMySqlConnection();
             return _mainDbClient.Query<SettleData_WM>("Service_BettransLC_WM_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
         }
 
@@ -2863,7 +2864,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<SettleData> GetUnsettledList_BettransLC_N2Live()
         {
-            using var conn = _mainDbClient.GetMySqlConnection();
             return _mainDbClient.Query<SettleData>("Service_BettransLC_N2Live_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
 

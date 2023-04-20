@@ -28,7 +28,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
 
         #region Query
 
-         public IEnumerable<T> Query<T>(string spName, CommandType commandType = CommandType.StoredProcedure, object parameters = null, int? commandTimeout = null)
+        public IEnumerable<T> Query<T>(string spName, CommandType commandType = CommandType.StoredProcedure, object parameters = null, int? commandTimeout = null)
         {
             IEnumerable<T> result;
             var sw = Stopwatch.StartNew();
@@ -37,8 +37,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
                 using var connection = new MySqlConnection(_connectionString);
                 var command = new CommandDefinition(spName, parameters, 
                     commandTimeout: commandTimeout,
-                    commandType: commandType,
-                    flags: CommandFlags.NoCache);
+                    commandType: commandType);
                 result = connection.Query<T>(command);
                 connection.Close();
                 connection.Dispose();
@@ -62,8 +61,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             {
                 using var connection = new MySqlConnection(_connectionString);
                 var command = new CommandDefinition(name, parameters,
-                    commandType: CommandType.StoredProcedure,
-                    flags: CommandFlags.NoCache);
+                    commandType: CommandType.StoredProcedure);
                 result = connection.QueryFirstOrDefault<T>(command);
                 connection.Close();
                 connection.Dispose();

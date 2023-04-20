@@ -549,7 +549,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             catch (Exception e)
             {
                 logger.LogError(e, $"exec PayoutPK_KM failed: {e.Message}");
-                await trans.RollbackAsync();
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                 throw new KmException(KMErrorCode.SystemError);
             }
         }
@@ -735,9 +735,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public async Task<KmDbResult> RewardPK_KM(TpCustInfo tpCustInfo, KMRewardRequestTransaction rewardTransaction)
         {
-            using var conn = _mainDbClient.GetMySqlConnection();
+            await using var conn = _mainDbClient.GetMySqlConnection();
             await conn.OpenAsync();
-            await using var trans = conn.BeginTransaction();
+            await using var trans = await conn.BeginTransactionAsync();
 
             var p = new DynamicParameters(new
             {

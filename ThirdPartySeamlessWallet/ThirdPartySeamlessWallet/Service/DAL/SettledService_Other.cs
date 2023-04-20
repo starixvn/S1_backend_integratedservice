@@ -122,12 +122,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 
                 if (result > 0)
                 {
-                    _mainDbClient.CommitAndDisposeConnection(connWager,wagerTrans);
+                    _wagerDbClient.CommitAndDisposeConnection(connWager,wagerTrans);
                     _mainDbClient.CommitAndDisposeConnection(conn,trans);
                 }
                 else
                 {
-                    _mainDbClient.RollbackAndDisposeConnection(connWager,wagerTrans);
+                    _wagerDbClient.RollbackAndDisposeConnection(connWager,wagerTrans);
                     _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
@@ -195,12 +195,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 _mainDbClient.RollbackAndDisposeConnection(conn,trans);
             }
-
-            using var conn_wag = _wagerDbClient.GetMySqlConnection();
-            conn_wag.Execute("Service_TpWagerCF_Settle_Set", new { ticket_id = settleData_CF.ticket_id }, commandType: CommandType.StoredProcedure);
-
-            using var conn_sec = _mainDbClient.GetMySqlConnection();
-            conn_sec.Execute("Service_Bettrans_CF_Settle_Set", new { ticket_id = settleData_CF.ticket_id, TicketStatus = betRes }, commandType: CommandType.StoredProcedure);
+            
+            _wagerDbClient.Execute("Service_TpWagerCF_Settle_Set", commandType: CommandType.StoredProcedure, new { ticket_id = settleData_CF.ticket_id });
+            
+            _mainDbClient.Execute("Service_Bettrans_CF_Settle_Set", commandType: CommandType.StoredProcedure , new { ticket_id = settleData_CF.ticket_id, TicketStatus = betRes });
 
             return result;
         }

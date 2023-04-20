@@ -243,7 +243,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
-                var trans = conn.BeginTransaction();
+                using var trans = conn.BeginTransaction();
 
                 bettingDataFish_Joker.TicketType = (int)BettransType.Payout;
                 result = _partitionService.Execute(partitionTime, "Service_BettransFish_Joker_Ins", bettingDataFish_Joker, trans);
@@ -300,7 +300,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
-                var trans = conn.BeginTransaction();
+                using var trans = conn.BeginTransaction();
 
                 bettingDataFish_Joker.TicketType = (int)BettransType.EndRound;
                 result = _partitionService.Execute(partitionTime, "Service_BettransFish_Joker_Ins", bettingDataFish_Joker, trans);
@@ -616,7 +616,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 result = _mainDbClient.Execute("Service_BettransRng_PP_BonusWin_Ins", trans , new { reference = bettingDataRNG_PP.reference, amount = bettingDataRNG_PP.amount, userId = bettingDataRNG_PP.userId, timestamp = bettingDataRNG_PP.timestamp, bonusCode = bettingDataRNG_PP.bonusCode });
-                trans.Commit();
+                _mainDbClient.CommitAndDisposeConnection(conn,trans);
             }
             catch (MySqlException mySqlEx)
             {
@@ -2117,7 +2117,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = _mainDbClient.Execute("Service_BettransRng_CQ9_Settle_Set", trans , new { roundid = roundid, SettleFlag = SettleFlag });
-            trans.Commit();
+            _mainDbClient.CommitAndDisposeConnection(conn,trans);
             return result;
         }
 
@@ -2671,7 +2671,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var bonusId = 0;
             var afterAmount = 0M;
             await using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
+            await conn.OpenAsync();
             await using var trans = await conn.BeginTransactionAsync();
 
             bettingDataRNG_MG.TransType = "C";
@@ -2906,9 +2906,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 betId = betId
             });
-
-            using var conn = _mainDbClient.GetMySqlConnection();
-
+            
             var slot = _mainDbClient.QueryFirst<BettransRng_MG>("Service_BettransRngByBet_MG_Get_V3", p);
 
             if (slot != null)

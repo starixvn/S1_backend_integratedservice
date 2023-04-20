@@ -38,7 +38,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public void AddLoginRecord(int custId, int siteId, string ip, out string token)
         {
             token = GetToken();
-            _mainDbClient.Execute("LoginRecord_Set",  commandType: CommandType.StoredProcedure ,new { CustId = custId, SiteId = siteId, IP = ip, Token = token });
+            
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            
+            _mainDbClient.Execute("LoginRecord_Set", trans ,new { CustId = custId, SiteId = siteId, IP = ip, Token = token });
+            _mainDbClient.CommitAndDisposeConnection(conn,trans);
         }
         public void AddUserLoginLog(int custId, string userName, int siteId, string loginIp, string fromUrl, string userAgent)
         {

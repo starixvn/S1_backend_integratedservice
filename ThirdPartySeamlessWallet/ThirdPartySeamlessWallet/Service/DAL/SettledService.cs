@@ -211,7 +211,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             CustId = 0;
             BonusId = 0;
             var spName = bonusType == SeamlessBonusType.TpCategory ? $"Service_Tp{tpCategory}Bonus_Get" : $"Service_Tp_Bonus_Get";
-            using var conn = _mainDbClient.GetMySqlConnection();
             var p = new DynamicParameters(new { TpId = tpId, TransId = tpTransId, GameType = gameType });
             p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
             p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);

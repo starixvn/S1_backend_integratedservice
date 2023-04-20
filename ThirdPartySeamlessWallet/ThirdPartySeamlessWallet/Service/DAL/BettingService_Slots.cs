@@ -342,7 +342,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
-                var trans = conn.BeginTransaction();
+                using var trans = conn.BeginTransaction();
 
 
 
@@ -1092,7 +1092,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
-            var trans = conn.BeginTransaction();
+            using var trans = conn.BeginTransaction();
 
             var bettransAP = _partitionService.Query<BettransRNG_AP>(partitionTime, "Service_BettransRng_AP_Get_V2", new { bettingDataRNG_AP.gameroundid, bettingDataRNG_AP.TicketType });
             if (bettransAP.Any())
@@ -1165,7 +1165,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
-                var trans = conn.BeginTransaction();
+                using var trans = conn.BeginTransaction();
 
                 result = _partitionService.Execute(partitionTime, spName, p, trans);
 
@@ -1407,7 +1407,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
-            var trans = conn.BeginTransaction();
+            using var trans = conn.BeginTransaction();
 
             var debit = (bettingData_JILI.betAmount != 0) ? Math.Abs(bettingData_JILI.betAmount) * -1 : Math.Abs(bettingData_JILI.preserve) * -1;
             var p = new DynamicParameters(new
@@ -1604,7 +1604,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
-            var trans = conn.BeginTransaction();
+            using var trans = conn.BeginTransaction();
             var result = 0;
             result = _partitionService.Execute(partitionTime, "Service_Bettrans_Skywind_Ins", bettingData_Skywind, trans);
 

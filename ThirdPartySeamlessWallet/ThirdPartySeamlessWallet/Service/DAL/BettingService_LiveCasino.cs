@@ -756,7 +756,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
-                var trans = conn.BeginTransaction();
+                using var trans = conn.BeginTransaction();
 
                 bettingDataRNG_MG.amount *= -1;
                 bettingDataRNG_MG.TransType = "D";
@@ -833,7 +833,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             afterAmount = 0;
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
-            var trans = conn.BeginTransaction();
+            using var trans = conn.BeginTransaction();
             var result = 0;
 
             bettingData_EVO.transaction.amount *= -1;
