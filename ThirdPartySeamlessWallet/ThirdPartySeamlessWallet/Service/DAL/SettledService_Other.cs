@@ -1126,11 +1126,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 }
                 else
                 {
-                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 }
 
                 return new TCGResult()
@@ -1204,11 +1204,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 }
                 else
                 {
-                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 }
 
                 return new TCGResult()
@@ -1284,11 +1284,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
                 }
                 else
                 {
-                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                 }
 
                 return new TCGResult()
@@ -1343,11 +1343,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     sboResult.AfterAmount = afterAmount;
                     sboResult.Result = 1;
-                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 }
                 else
                 {
-                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 }
 
                 return sboResult;

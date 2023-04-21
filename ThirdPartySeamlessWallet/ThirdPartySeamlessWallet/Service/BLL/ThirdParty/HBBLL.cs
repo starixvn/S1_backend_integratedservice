@@ -251,8 +251,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     if (tpCurrency.ExchangeRate > 0) 
                         afterAmount /= tpCurrency.ExchangeRate;
                 }
-                
-                _mainDbClient.CommitAndDisposeConnection(conn,trans);
+
+                await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 if (bonusId > 0)
                 {
                     _logger.LogInformation($"user {tpCustInfo.TpUserName} has bonus wallet bonusId:{bonusId} transId:{transId}");
@@ -294,10 +294,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (transactionResult.result > 0)
             {
-                _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 response.status = new ExpandoObject();
                 response.status.success = true;
                 response.status.refundstatus = 1;
+            }
+            else
+            {
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
             }
 
             if (transactionResult.result == -2)

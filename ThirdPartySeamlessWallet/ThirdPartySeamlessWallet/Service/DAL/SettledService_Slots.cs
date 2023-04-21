@@ -2706,11 +2706,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         var r = _tpUnsettleService.InsertTpUnsettle(Tp.MG, GameType.MG_RNG, bettingDataRNG_MG.betId, trans);
                         if (r > 0)
                         {
-                            _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                            await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                         }
                         else
                         {
-                            _mainDbClient.RollbackAndDisposeConnection(conn,trans);
+                            await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                         }
                     }
 
@@ -2763,11 +2763,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 }
                 else
                 {
-                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 }
 
                 return new MGPayoutResult()

@@ -241,7 +241,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     throw new SBSWException(ReturnCode.InsufficientBalance);
                 }
 
-                _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 return result;
             }
             catch (SBSWException ex)
@@ -340,7 +340,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     }
                 }
 
-                _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 return result;
             }
             catch (SBSWException ex)
@@ -456,7 +456,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return new ExecuteResult(ReturnCode.InvalidAmount);
                 }
 
-                _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 return result;
             }
             catch (SBSWException ex)
@@ -579,7 +579,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return new ExecuteResult(ReturnCode.InvalidAmount);
                 }
 
-                _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 return result;
             }
             catch (SBSWException ex)

@@ -796,7 +796,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (result > 0)
                 {
                     result = _tpUnRewardService.InsertTpUnReward(Tp.KM, GameType.KM_Poker, rewardTransaction.ptxid, rewardTransaction.userid, trans);
-                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 }
 
                 return new KmDbResult()
@@ -808,13 +808,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             catch (KmException ex)
             {
-                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 throw;
             }
             catch (Exception e)
             {
                 logger.LogError(e, $"exec RewardPK_KM failed: {e.Message}");
-                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 throw new KmException(KMErrorCode.SystemError);
             }
         }
