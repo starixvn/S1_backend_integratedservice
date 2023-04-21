@@ -177,14 +177,15 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                     }
 
                     CalculateAvailableBet(betDetial, betRecordInfo);
-                    var tpBetRecordExtend = new TpBetRecordExtend(_tpGameTypeConfig[(int)gameType], betDetial);
-                    settleDataList.Add(new SabaSettleData(betRecordInfo, tpBetRecordExtend));
 
                     // 處理CashOut的注單
-                    if (TryGetCashOut(betDetial, out var cashout))
+                    if (betDetial.ticket_extra_status.Equals("cashout",  StringComparison.OrdinalIgnoreCase))
                     {
-                        settleDataList.AddRange(cashout);
+                        betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
                     }
+
+                    var tpBetRecordExtend = new TpBetRecordExtend(_tpGameTypeConfig[(int)gameType], betDetial);
+                    settleDataList.Add(new SabaSettleData(betRecordInfo, tpBetRecordExtend));
                 }
             }
 
@@ -429,49 +430,6 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             syncParams.timeOfFrequency = 3;
             //syncParams.DoneTime=DateT
             return syncParams;
-        }
-
-        private bool TryGetCashOut(BetDetail betDetial, out List<SabaSettleData> settleDataList)
-        {
-            settleDataList = default;
-            if (betDetial.CashOutData == null || !betDetial.CashOutData.Any())
-            {
-                return false;
-            }
-
-            settleDataList = new List<SabaSettleData>();
-            foreach (var cashOut in betDetial.CashOutData)
-            {
-                var gameType = GetBetDetailGameType(betDetial.sport_type);
-                var betRecordInfo = new BetRecordInfo
-                {
-                    TpId = (int)Tp,
-                    TransId = cashOut.cashout_id.ToString(),
-                    TransTime = ConvertLocTime(betDetial.transaction_time),
-                    SettledTime = ConvertLocTime(cashOut.transdate),
-                    Stake = cashOut.stake,
-                    WinlostAmount = cashOut.buyback_amount - cashOut.real_stake,
-                    OriginalState = cashOut.ticket_status,
-                    TpUserName = betDetial.vendor_member_id,
-                    TicketKey = betDetial.version_key,
-                    tokenmoney = betDetial.tokenmoney,
-                    GameType = gameType,
-                    GameID = betDetial.sport_type.ToString()
-                };
-
-                // 使用cashOut的ticket_status狀態跑下面的流程
-                betDetial.ticket_status = cashOut.ticket_status;
-
-                // 計算 CashOut的 ValidBet 與設定 SettlementType
-                CalculateAvailableBet(betDetial, betRecordInfo);
-                
-                // Cashout的SettlementType改成SettledForValidNotRollover
-                betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;             
-                
-                var tpBetRecordExtend = new TpBetRecordExtend(_tpGameTypeConfig[(int)gameType], betDetial);
-                settleDataList.Add(new SabaSettleData(betRecordInfo, tpBetRecordExtend));
-            }
-            return true;
         }
 
         private GameType GetBetDetailGameType(int? sport_type)
