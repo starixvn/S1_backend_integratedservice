@@ -464,7 +464,10 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 
                 // 計算 CashOut的 ValidBet 與設定 SettlementType
                 CalculateAvailableBet(betDetial, betRecordInfo);
-
+                
+                // Cashout的SettlementType改成SettledForValidNotRollover
+                betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;             
+                
                 var tpBetRecordExtend = new TpBetRecordExtend(_tpGameTypeConfig[(int)gameType], betDetial);
                 settleDataList.Add(new SabaSettleData(betRecordInfo, tpBetRecordExtend));
             }
