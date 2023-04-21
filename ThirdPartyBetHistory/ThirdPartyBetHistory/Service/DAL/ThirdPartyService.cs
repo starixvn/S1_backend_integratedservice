@@ -36,7 +36,7 @@ namespace ThirdPartyBetHistory.Service.DAL
 
         public IEnumerable<ThirdPartyModel> GetSiteTpList()
         {
-            return _mainDbClient.Query<ThirdPartyModel>("Common_SiteTpList_Get");
+            return _mainDbClient.Query<ThirdPartyModel>("Service_SiteTpList_Get");
         }
 
         public void DoSettleTicket(IEnumerable<SabaSettleData> settleDataList, WorkerType workerType)
