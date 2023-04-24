@@ -187,7 +187,7 @@ namespace ThirdParty.TFG
             var winlostAmount = wager.result_status switch
             {
                 "WIN" => wager.earnings - wager.amount,
-                "LOSS" => -wager.earnings,
+                "LOSS" => wager.earnings,
                 "DRAW" => wager.earnings - wager.amount,
                 _ => 0,
             };
