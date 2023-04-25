@@ -205,7 +205,8 @@ namespace ThirdParty.TFG
                 UTCSettledTime = wager.settlement_datetime == null ? DateTime.MinValue : wager.settlement_datetime.Value.DateTime,
                 Stake = wager.amount,
                 WinlostAmount = winlostAmount.Value,
-                Odds = wager.member_odds.ToString()
+                Odds = wager.member_odds.ToString(),
+                RefTransId = getBetDetail.TransId
             };
         }
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
