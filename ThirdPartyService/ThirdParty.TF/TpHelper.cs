@@ -160,7 +160,7 @@ namespace ThirdParty.TFG
                     if (!string.IsNullOrWhiteSpace(result.launch_url))
                     {
                         oApiResult.ErrorCode = ErrorCode.Success;
-                        oApiResult.Message = $"{result.launch_url}?auth={PublicToken}&token={sessionKey}";
+                        oApiResult.Message = $"{result.launch_url}?auth={PublicToken}&token={sessionKey}&lang={TpLangId}";
                     }
                     else
                     {
