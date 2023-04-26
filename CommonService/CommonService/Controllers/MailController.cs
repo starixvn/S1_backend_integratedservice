@@ -55,7 +55,6 @@ namespace CommonService.Controllers
         [HttpPost]
         public async Task<ApiResult> RestPasswordAsync(Req2 req2)
         {
-            _logger.LogInformation(Newtonsoft.Json.JsonConvert.SerializeObject(req2));
             var apiResult = new ApiResult();
             var custInfo = _custInfoBll.GetCustInfoProfile(req2.custId);
             if (custInfo != null)

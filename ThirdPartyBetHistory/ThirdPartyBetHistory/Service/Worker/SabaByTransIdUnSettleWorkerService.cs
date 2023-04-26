@@ -32,7 +32,7 @@ namespace ThirdPartyBetHistory.Service.Worker
             return Task.CompletedTask;
         }
 
-        private void DoTask(object state)
+        private async void DoTask(object state)
         {
             var taskProperty = "";
 
@@ -48,7 +48,10 @@ namespace ThirdPartyBetHistory.Service.Worker
                     LogContext.PushProperty("SiteId", tpBetHelp.SiteId);
                     taskProperty = $"{tpBetHelp.thirdPartyModel.TpName}:{WorkerType} | SiteId:{tpBetHelp.SiteId}";
                     
-                    tpBetHelp.UpdateBetRecordByTransId(WorkerType, today, 0);
+                    for (var day = -7; day < -1; day++)
+                    {
+                        await tpBetHelp.UpdateBetRecordByTransId(WorkerType, today, 0, day);
+                    }
                 }
             }
             catch (Exception ex)

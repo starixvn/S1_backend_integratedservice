@@ -39,7 +39,7 @@ builder.Services
     .AddHostedService<YGGWorker>()
     .AddHostedService<TCGWorker>()
     .AddHostedService<HBWorker>()
-    .AddHostedService<MegaWorker>()
+    //.AddHostedService<MegaWorker>()
     .AddHostedService<AMBWorker>()
     .AddHostedService<SAWorker>()
     .AddHostedService<SimplePlayWorker>()
@@ -48,9 +48,9 @@ builder.Services
     .AddHostedService<PTWorker>()
     .AddHostedService<SBOWorker>()
     .AddHostedService<JILIWorker>()
-    .AddHostedService<ATWorker>()
+    //.AddHostedService<ATWorker>()
     .AddHostedService<KMWoker>()
-    .AddHostedService<OneGamingWorker>()
+    //.AddHostedService<OneGamingWorker>()
     .AddHostedService<V8Worker>()
     .AddHostedService<MPWorker>()
     .AddHostedService<CQ9Worker>()
@@ -63,7 +63,8 @@ builder.Services
     .AddHostedService<BTIWorker>()
     .AddHostedService<NineWWorker>()
     .AddHostedService<One789Worker>()
-    .AddHostedService<YeebetWorker>();
+    .AddHostedService<YeebetWorker>()
+    .AddHostedService<BGWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);

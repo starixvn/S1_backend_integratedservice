@@ -125,6 +125,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         GPI_Thai_Lottery = 90,
         GPI_Fast3 = 91,
         Yeebet_LiveCasino = 93,
+        BG_LiveCasino = 94
         SBSW_Vgaming = 95,
         SBSW_CardClub = 96,
     }
@@ -174,7 +175,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         SBO = 42,
         Skywind = 43,
         SimplePlay = 44,
-        Yeebet = 46
+        Yeebet = 46,
+        BG = 47
     }
     public enum TransferType : int
     {

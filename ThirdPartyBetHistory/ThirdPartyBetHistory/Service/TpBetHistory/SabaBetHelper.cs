@@ -27,7 +27,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             _tpGameTypeConfig = tpGameTypeOptions.ToDictionary(i => i.Type, i => i);
         }
 
-        public override async Task UpdateBetRecordByTransId(WorkerType workerType, DateTime today, int hour)
+        public override async Task UpdateBetRecordByTransId(WorkerType workerType, DateTime today, int hour, int day)
         {
             try
             {
@@ -35,9 +35,11 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 switch (workerType)
                 {
                     case WorkerType.ByTransIdUnSettleWager:
+                        var startDay = today.AddDays(day);
+                        var endDay = startDay.AddDays(1).AddSeconds(-1);
                         tickets = _thirdPartyService.GetTpBetRecordReSettleTicket(Tp.SBSW, SiteId,
                             JsonConvert.SerializeObject(new List<int> { (int)SettlementType.UnSettled }),
-                            today.AddDays(-7), today.AddDays(-1).AddSeconds(-1));
+                            startDay, endDay);
                         break;
                     
                     case WorkerType.ByTransIdSettleWager:

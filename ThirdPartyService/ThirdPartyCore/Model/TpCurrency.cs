@@ -22,4 +22,10 @@ namespace ThirdPartyCore.Model
         public int DefCurrency { set; get; }
         public string TpCurrencyId { set; get; }
     }
+
+    public class CurrencyPrefix
+    {
+        public int CurrencyId { set; get; }
+        public string PrefixCode { set; get; }
+    }
 }

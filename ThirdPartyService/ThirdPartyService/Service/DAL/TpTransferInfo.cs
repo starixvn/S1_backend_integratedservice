@@ -126,12 +126,15 @@ namespace ThirdPartyService.Service.DAL
                             tpCustInfo.UserName,
                             tpCustInfo.SiteId,
                             Memo = memo,
-                            RefTransId = transId
+                            ReasonId = 0,
+                            RefTransId = transId,
+                            CreateFrom = (int)WithdrawalLimitLogCreateFromEnum.Bonus, 
+                            Creator = "System"
                         });
 
                         p.Add("AfterWithdrawalLimit", dbType: DbType.Decimal, direction: ParameterDirection.Output);
                         p.Add("WithdrawalLimit", withdrawalLimit, dbType: DbType.Decimal, direction: ParameterDirection.InputOutput);
-                        var res = _mainDbClient.Execute("Service_WithdrawalLimit_Set", trans, p);
+                        var res = _mainDbClient.Execute("Service_WithdrawalLimit_Set_V2", trans, p);
                     }
                 }
 

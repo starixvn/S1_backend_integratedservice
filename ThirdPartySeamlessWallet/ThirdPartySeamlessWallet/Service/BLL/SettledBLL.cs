@@ -1,8 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -42,9 +38,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetSettlementType(gameType, gameId);
         }
 
-        public int DoTpRewardTicket(TpCustInfo tpCustInfo, TpRewardRecordInfo tpRewardRecordInfo, TpCategory tpCategory)
+        public int DoTpRewardTicket(TpCustInfo tpCustInfo, TpRewardRecordInfo tpRewardRecordInfo, TpCategory tpCategory, bool checkBonus = true)
         {
-            var result = settledService.DoTpRewardTicket(tpCustInfo, tpRewardRecordInfo, tpCategory);
+            var result = settledService.DoTpRewardTicket(tpCustInfo, tpRewardRecordInfo, tpCategory, checkBonus);
             return result;
         }
 
@@ -2382,7 +2378,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             if (afterAmount == 0)
             {
-                afterAmount = tpCustInfoBLL.GetBalance((int)Tp.Skywind, TpUserName).Balance;
+                afterAmount = tpCustInfoBLL.GetBalance((int)Tp.Skywind, TpUserName, gameType).Balance;
             }
 
             return result;
@@ -2415,6 +2411,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public IEnumerable<SettleData_Yeebet> GetSettle_TpWagerLC_Yeebet(string serialnumber)
         {
             return settledService.GetSettle_TpWagerLC_Yeebet(serialnumber);
+        }
+
+        #endregion
+
+        #region BG
+
+        public IEnumerable<SettleData_BG> GetSettle_TpWagerLC_BG(string orderId)
+        {
+            return settledService.GetSettle_TpWagerLC_BG(orderId);
         }
 
         #endregion
