@@ -25,7 +25,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public TpCustInfo GetTpCustInfo(int TpId, string TpUserName,string tpCustId)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.QueryFirstOrDefault<TpCustInfo>("Common_TpCustInfoByTpUserName_Get_V3", new { _TpId = TpId, _TpUserName = TpUserName, _TpCustId= tpCustId }, commandType: CommandType.StoredProcedure);
+            return conn.QueryFirstOrDefault<TpCustInfo>("Common_TpCustInfoByTpUserName_Get_V4", new { _TpId = TpId, _TpUserName = TpUserName, _TpCustId= tpCustId }, commandType: CommandType.StoredProcedure);
         }
 
         public int SetCustGotoGame(int custId, int tpId, int gameType)
