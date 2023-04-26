@@ -59,7 +59,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="lbl_DepositReject" xml:space="preserve">
-    <value>Deposit transaction failed! Please contact our 24/7 LIVE CHAT for further assistance.</value>
+    <value>ប្រតិបត្តិការដាក់ប្រាក់បានបរាជ័យ! សូមទាក់ទងផ្នែកជជែកបន្តផ្ទាល់ ២៤ ម៉/៧ ថ្ងៃរបស់យើងសម្រាប់ជំនួយបន្ថែម។</value>
   </data>
   <data name="lbl_OTP" xml:space="preserve">
     <value>សួស្តី លេខកូដបញ្ជាក់របស់អ្នកគឺ {0}</value>
