@@ -49,7 +49,7 @@ namespace ThirdPartyService.Service.DAL
                     return apiResult;
                 }
                 
-                tpCustInfo = _mainDbClient.QueryFirst<TpCustInfo>("TpCustInfo_Get", new { CustId = custId, TpId = tpId });
+                tpCustInfo = _mainDbClient.QueryFirst<TpCustInfo>("TpCustInfo_Get_V2", new { CustId = custId, TpId = tpId });
 
                 if (tpCustInfo == null)
                 {
