@@ -39,6 +39,8 @@ public class FinanceBGBLL : ITpReportBLL
         {
             var sumData = Sum(JsonConvert.SerializeObject(reportData.Where(x => x.currencyId == item.CurrencyId).Select(x => x.dataResult)));
 
+            if (sumData.orderamount == 0 && sumData.validbetamount == 0 && sumData.paymentamount == 0) continue;
+
             dailyData.Add(new FincanceDailySummary()
             {
                 SummaryType = SummaryType.TpBetRecord,
