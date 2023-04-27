@@ -30,46 +30,37 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
         public override async Task UpdateBetRecordByTransId(WorkerType workerType, DateTime startTime, DateTime endTime, IEnumerable<SettlementType> settlementTypeList)
         {
             var tpSetting = thirdPartyModel.TpSetting;
-
-            try
+            var tickets = _thirdPartyService.GetTpBetRecordReSettleTicket(Tp.Saba, SiteId, settlementTypeList, startTime, endTime);               
+            foreach (var ticket in tickets.OrderBy(i => i.SettledTime).ThenBy(i => i.TransId))
             {
-                
-                var tickets = _thirdPartyService.GetTpBetRecordReSettleTicket(Tp.Saba, SiteId, settlementTypeList, startTime, endTime);               
-                foreach (var ticket in tickets.OrderBy(i => i.SettledTime).ThenBy(i => i.TransId))
+                try
                 {
-                    try
+                    var api = ticket.GameType == (int)GameType.Saba_Keno ? "GetKenoDetailByTransID" : "GetBetDetailByTransID";
+                    var url = $"{tpSetting["ApiUrl"]}/{api}";
+                    var parameters = new Dictionary<string, string>
                     {
-                        var api = ticket.GameType == (int)GameType.Saba_Keno ? "GetKenoDetailByTransID" : "GetBetDetailByTransID";
-                        var url = $"{tpSetting["ApiUrl"]}/{api}";
-                        var parameters = new Dictionary<string, string>
-                        {
-                            { "vendor_id", tpSetting["VendorId"] },
-                            { "trans_id", ticket.TransId}
-                        };
-                        var p = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
+                        { "vendor_id", tpSetting["VendorId"] },
+                        { "trans_id", ticket.TransId}
+                    };
+                    var p = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
 
-                        var result = await HttpPostAsync(url, p, "application/x-www-form-urlencoded");
-                        var getBetDetail = FromJson<GetBetDetail>(result);
-                        if (getBetDetail.error_code != 0)
-                        {
-                            throw new Exception(getBetDetail.message);
-                        }
-
-                        if (!DataNotExists(getBetDetail))
-                        {
-                            var settleDataList = ProcessData(getBetDetail);
-                            _thirdPartyBLL.DoSettleTicket(settleDataList, workerType);
-                        }
+                    var result = await HttpPostAsync(url, p, "application/x-www-form-urlencoded");
+                    var getBetDetail = FromJson<GetBetDetail>(result);
+                    if (getBetDetail.error_code != 0)
+                    {
+                        throw new Exception(getBetDetail.message);
                     }
-                    catch (Exception e)
+
+                    if (!DataNotExists(getBetDetail))
                     {
-                        _logger.LogError(e, $"UpdateBetRecordByTransId, TransId={ticket.TransId}");
+                        var settleDataList = ProcessData(getBetDetail);
+                        _thirdPartyBLL.DoSettleTicket(settleDataList, workerType);
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "UpdateBetRecordByTransId");
+                catch (Exception e)
+                {
+                    _logger.LogError(e, $"UpdateBetRecordByTransId, TransId={ticket.TransId}");
+                }
             }
         }
 

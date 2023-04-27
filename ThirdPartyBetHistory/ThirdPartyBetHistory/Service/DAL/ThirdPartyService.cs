@@ -431,7 +431,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                     settlementTypeList,
                     StartTime = startTime, 
                     EndTime = endTime
-                });
+                }, 120);
         }
 
         public long GetSiteTicketKey(SiteId SiteId, int TpId, WorkerType workerType)
