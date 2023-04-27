@@ -7,26 +7,36 @@ namespace ThirdPartyBetHistory.Service.Worker
     {
         private readonly ILogger<SabaByTransIdSettleWorkerService> _logger;
         private readonly IEnumerable<IThirdPartyBetHelper> _sabaSiteList;
-        private readonly Dictionary<int, Timer> _timerWorkerList;
-        private const WorkerType WorkerType = Model.enums.WorkerType.ByTransIdSettleWager;
+        private readonly Dictionary<SiteId, Timer> _timerWorkerList;
+        private readonly WorkerType workerType = WorkerType.ByTransIdSettleWager;
+        private const int SubtractDays = -3;// 檢查幾天前的資料
+        private readonly IEnumerable<SettlementType> _settlementTypeList = new List<SettlementType> //檢查類型
+        { 
+            SettlementType.SettledForValid,
+            SettlementType.SettledForInvalid,
+            SettlementType.SettledForValidNotRollover,
+        }; 
 
         public SabaByTransIdSettleWorkerService(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<SabaByTransIdSettleWorkerService>>();
             _sabaSiteList = provider.GetServices<IThirdPartyBetHelper>();
-            _timerWorkerList = new Dictionary<int, Timer>();
+            _timerWorkerList = new Dictionary<SiteId, Timer>();
         }
         
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            try
+            foreach (var siteTpBetHelper in _sabaSiteList)
             {
-                var timer = new Timer(DoTask, _sabaSiteList, TimeSpan.Zero, TimeSpan.Zero);
-                _timerWorkerList.Add(1, timer);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error: SabaByTransIdSettleWorkerService");
+                try
+                {
+                    var timer = new Timer(DoTask, siteTpBetHelper, TimeSpan.Zero, TimeSpan.Zero);
+                    _timerWorkerList.Add(siteTpBetHelper.SiteId, timer);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error: SabaByTransIdSettleWorkerService");
+                }
             }
 
             return Task.CompletedTask;
@@ -34,25 +44,20 @@ namespace ThirdPartyBetHistory.Service.Worker
         
         private void DoTask(object state)
         {
-            var taskProperty = "";
+            var tpBetHelp = (IThirdPartyBetHelper)state;
+            LogContext.PushProperty("RequestId", Guid.NewGuid());
+            LogContext.PushProperty("TpName", tpBetHelp.thirdPartyModel.TpName);
+            LogContext.PushProperty("WorkerType", workerType);
+            LogContext.PushProperty("SiteId", tpBetHelp.SiteId);
 
+            var taskProperty = $"{tpBetHelp.thirdPartyModel.TpName}:{workerType} | SiteId:{tpBetHelp.SiteId} |";
+            
             try
             {
-                var tpBetHelps = (IEnumerable<IThirdPartyBetHelper>)state;
-                var today = Convert.ToDateTime(DateTime.UtcNow.ToString("yyyy-MM-dd"));
-                foreach (var tpBetHelp in tpBetHelps)
-                {
-                    LogContext.PushProperty("RequestId", Guid.NewGuid());
-                    LogContext.PushProperty("TpName", tpBetHelp.thirdPartyModel.TpName);
-                    LogContext.PushProperty("WorkerType", WorkerType);
-                    LogContext.PushProperty("SiteId", tpBetHelp.SiteId);
-                    taskProperty = $"{tpBetHelp.thirdPartyModel.TpName}:{WorkerType} | SiteId:{tpBetHelp.SiteId}";
-                    
-                    for (var hour = 0; hour < 24; hour++)
-                    {
-                        tpBetHelp.UpdateBetRecordByTransId(WorkerType, today, hour, 0);
-                    }
-                }
+                var startTime = DateTime.UtcNow.Date.AddDays(SubtractDays);
+                var endTime = DateTime.UtcNow.AddHours(-1);
+                tpBetHelp.UpdateBetRecordByTransId(workerType, startTime, endTime, _settlementTypeList);
+                _logger.LogInformation($"Success: {taskProperty} : {startTime:yyyy-MM-dd HH:mm} ~ {endTime:yyyy-MM-dd HH:mm}");
             }
             catch (Exception ex)
             {
@@ -60,7 +65,7 @@ namespace ThirdPartyBetHistory.Service.Worker
             }
             finally
             {
-                _timerWorkerList[1].Change(TimeSpan.FromHours(8), TimeSpan.Zero);
+                _timerWorkerList[tpBetHelp.SiteId].Change(TimeSpan.FromHours(8), TimeSpan.Zero);
             }
         }
     }

@@ -27,41 +27,14 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             _tpGameTypeConfig = tpGameTypeOptions.ToDictionary(i => i.Type, i => i);
         }
 
-        public override async Task UpdateBetRecordByTransId(WorkerType workerType, DateTime today, int hour, int day)
+        public override async Task UpdateBetRecordByTransId(WorkerType workerType, DateTime startTime, DateTime endTime, IEnumerable<SettlementType> settlementTypeList)
         {
+            var tpSetting = thirdPartyModel.TpSetting;
+
             try
             {
-                IEnumerable<UnSettle> tickets;
-                switch (workerType)
-                {
-                    case WorkerType.ByTransIdUnSettleWager:
-                        var startDay = today.AddDays(day);
-                        var endDay = startDay.AddDays(1).AddSeconds(-1);
-                        tickets = _thirdPartyService.GetTpBetRecordReSettleTicket(Tp.Saba, SiteId,
-                            JsonConvert.SerializeObject(new List<int> { (int)SettlementType.UnSettled }),
-                            startDay, endDay);
-                        break;
-                    
-                    case WorkerType.ByTransIdSettleWager:
-                        var startTime = today.AddDays(-1).AddHours(hour);
-                        var endTime = startTime.AddHours(1).AddSeconds(-1);
-                        var settlementTypeList = JsonConvert.SerializeObject(new List<int>
-                        {
-                            (int)SettlementType.SettledForValid ,
-                            (int)SettlementType.SettledForInvalid,
-                            (int)SettlementType.SettledForValidNotRollover
-                        });
-                        tickets = _thirdPartyService.GetTpBetRecordReSettleTicket(Tp.Saba, SiteId, settlementTypeList, startTime, endTime);
-                        break;
-                    
-                    case WorkerType.MainWager:
-                    case WorkerType.LGVirtualSportsWager:
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(workerType), workerType, null);
-                }
-
-                var tpSetting = thirdPartyModel.TpSetting;
-
+                
+                var tickets = _thirdPartyService.GetTpBetRecordReSettleTicket(Tp.Saba, SiteId, settlementTypeList, startTime, endTime);               
                 foreach (var ticket in tickets.OrderBy(i => i.SettledTime).ThenBy(i => i.TransId))
                 {
                     try
