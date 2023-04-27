@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
+
 using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
@@ -38,7 +37,12 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         ConfirmBetParlay,
         PlaceBet3rd,
         ConfirmBet3rd,
-        HealthCheck
+        HealthCheck,
+        PlaceBetEnt,
+        SettleEnt,
+        CancelBetEnt,
+        GetTicketInfo,
+        AdjustBalance,
     }
 
     public class Config
@@ -168,6 +172,21 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public string licenseeTxId { get; set; }
     }
 
+    public class PlaceBetEntObj : ReturnObj
+    {
+        public string userId { get; set; }
+        public decimal balance { get; set; }
+        public List<BetObj> ticketList { get; set; }
+        public PlaceBetEntObj(ReturnCode returnCode) : base(returnCode) { }
+    }
+
+    public class GetTicketInfoObj : ReturnObj
+    {
+        public string ticketStatus { get; set; }
+        public decimal actualStake { get; set; }
+        public decimal winlostAmount { get; set; }
+        public GetTicketInfoObj(ReturnCode returnCode) : base(returnCode) { }
+    }
 
     public class Bet
     {
@@ -184,7 +203,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
             betTime = placeBetParlay.betTime;
             updateTime = placeBetParlay.updateTime;
             IP = placeBetParlay.IP;
-            tsId = placeBetParlay.tsId;
+            tsId = placeBetParlay.tsId ?? string.Empty;
             betFrom = placeBetParlay.betFrom;
 
             refId = parlayDetail.refId;
@@ -202,11 +221,14 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
             operationId = placeBet3rd.operationId;
             userId = placeBet3rd.userId;
             currency = placeBet3rd.currency;
+            sportType = placeBet3rd.productId;
             productId = placeBet3rd.productId;
             gameId = placeBet3rd.gameId;
             betTime = placeBet3rd.betTime;
             IP = placeBet3rd.IP;
-            tsId = placeBet3rd.tsId;
+            tsId = placeBet3rd.tsId ?? string.Empty;
+            sportTypeName = placeBet3rd.productName_en;
+            leagueName = placeBet3rd.gameName_en;
             productName_en = placeBet3rd.productName_en;
             gameName_en = placeBet3rd.gameName_en;
             betFrom = placeBet3rd.betFrom;
@@ -220,52 +242,75 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
             creditAmount = ticket.creditAmount;
             debitAmount = ticket.debitAmount;
         }
-
-        public string action { get; set; } = "";
-        public string operationId { get; set; } = "";
-        public string userId { get; set; } = "";
+        public Bet(PlaceBetEnt placeBetEnt, Ticketlist ticket)
+        {
+            action = placeBetEnt.action;
+            userId = placeBetEnt.userId;
+            currency = placeBetEnt.currency;
+            sportType = placeBetEnt.productId;
+            productId = placeBetEnt.productId;
+            gameId = placeBetEnt.gameId;
+            IP = placeBetEnt.IP;
+            sportTypeName = placeBetEnt.productName_en;
+            leagueName = placeBetEnt.gameName_en;
+            productName_en = placeBetEnt.productName_en;
+            gameName_en = placeBetEnt.gameName_en;
+            betFrom = placeBetEnt.betFrom;
+            roundId = placeBetEnt.roundId;
+            betTime = placeBetEnt.betTime;
+            refId = ticket.refId;
+            betChoice_en = ticket.betChoice_en;
+            betAmount = ticket.stake;
+            actualAmount = ticket.actualStake;
+            extra = ticket.extra != null ? JsonConvert.SerializeObject(ticket.extra) : "{}";
+            creditAmount = placeBetEnt.creditAmount;
+            debitAmount = placeBetEnt.debitAmount;
+        }
+        public string action { get; set; } = string.Empty;
+        public string operationId { get; set; } = string.Empty;
+        public string userId { get; set; } = string.Empty;
         public int currency { get; set; }
         public int matchId { get; set; }
         public int homeId { get; set; }
         public int awayId { get; set; }
-        public string homeName { get; set; } = "";
-        public string awayName { get; set; } = "";
+        public string homeName { get; set; } = string.Empty;
+        public string awayName { get; set; } = string.Empty;
         public DateTime kickOffTime { get; set; } = DateTime.MinValue;
         public DateTime betTime { get; set; } = DateTime.MinValue;
         public decimal betAmount { get; set; }
         public decimal actualAmount { get; set; }
         public int sportType { get; set; }
-        public string sportTypeName { get; set; } = "";
+        public string sportTypeName { get; set; } = string.Empty;
         public int betType { get; set; }
-        public string betTypeName { get; set; } = "";
+        public string betTypeName { get; set; } = string.Empty;
         public int oddsType { get; set; }
         public int oddsId { get; set; }
         public decimal odds { get; set; }
-        public string betChoice { get; set; } = "";
-        public string betChoice_en { get; set; } = "";
-        public DateTime updateTime { get; set; } = DateTime.MinValue;      
+        public string betChoice { get; set; } = string.Empty;
+        public string betChoice_en { get; set; } = string.Empty;
+        public DateTime updateTime { get; set; } = DateTime.MinValue;
         public int leagueId { get; set; }
-        public string leagueName { get; set; } = "";
-        public string leagueName_en { get; set; } = "";
-        public string sportTypeName_en { get; set; } = "";
-        public string betTypeName_en { get; set; } = "";
-        public string homeName_en { get; set; } = "";
-        public string awayName_en { get; set; } = "";
-        public string IP { get; set; } = "";
+        public string leagueName { get; set; } = string.Empty;
+        public string leagueName_en { get; set; } = string.Empty;
+        public string sportTypeName_en { get; set; } = string.Empty;
+        public string betTypeName_en { get; set; } = string.Empty;
+        public string homeName_en { get; set; } = string.Empty;
+        public string awayName_en { get; set; } = string.Empty;
+        public string IP { get; set; } = string.Empty;
         public bool isLive { get; set; }
-        public string refId { get; set; } = ""; 
-        public string tsId { get; set; } = "";
-        public string point { get; set; } = "";
-        public string point2 { get; set; } = "";
-        public string betTeam { get; set; } = "";
+        public string refId { get; set; } = string.Empty;
+        public string tsId { get; set; } = string.Empty;
+        public string point { get; set; } = string.Empty;
+        public string point2 { get; set; } = string.Empty;
+        public string betTeam { get; set; } = string.Empty;
         public int homeScore { get; set; }
         public int awayScore { get; set; }
         public bool baStatus { get; set; }
-        public string excluding { get; set; } = "";
-        public string betFrom { get; set; }
+        public string excluding { get; set; } = string.Empty;
+        public string betFrom { get; set; } = string.Empty;
         public decimal creditAmount { get; set; }
         public decimal debitAmount { get; set; }
-        public string oddsInfo { get; set; } = "";
+        public string oddsInfo { get; set; } = string.Empty;
         public DateTime matchDateTime { get; set; } = DateTime.MinValue;
 
 
@@ -279,14 +324,17 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         //3rd
         public int productId { get; set; }
         public int gameId { get; set; }
-        public string productName_en { get; set; } = "";
-        public string gameName_en { get; set; } = "";
+        public string productName_en { get; set; } = string.Empty;
+        public string gameName_en { get; set; } = string.Empty;
         public string extra { get; set; } = "{}";
 
         //parlay
 
-        public string parlayType { get; set; } = "";
+        public string parlayType { get; set; } = string.Empty;
         public string detail { get; set; } = "{}";
+
+        //PlaceBetEnt
+        public string roundId { get; set; } = string.Empty;
     }
 
     public class PlaceBet3rd
@@ -300,7 +348,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public Ticket[] ticketList { get; set; }
         public DateTime betTime { get; set; }
         public string IP { get; set; }
-        public string tsId { get; set; }
+        public string tsId { get; set; } = string.Empty;
         public string productName_en { get; set; }
         public string gameName_en { get; set; }
         public string betFrom { get; set; }
@@ -308,7 +356,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
     public class Ticket
     {
         public string refId { get; set; }
-        public string betChoice_en { get; set; }
+        public string betChoice_en { get; set; } = string.Empty;
         public decimal odds { get; set; }
         public int oddsType { get; set; }
         public decimal betAmount { get; set; }
@@ -317,6 +365,35 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public decimal creditAmount { get; set; }
         public decimal debitAmount { get; set; }
     }
+
+
+    public class PlaceBetEnt
+    {
+        public string action { get; set; }
+        public DateTime betTime { get; set; }
+        public string userId { get; set; }
+        public Ticketlist[] ticketList { get; set; }
+        public int currency { get; set; }
+        public int productId { get; set; }
+        public string productName_en { get; set; }
+        public int gameId { get; set; }
+        public string gameName_en { get; set; }
+        public string roundId { get; set; }
+        public string IP { get; set; }
+        public string betFrom { get; set; }
+        public decimal creditAmount { get; set; }
+        public decimal debitAmount { get; set; }
+    }
+
+    public class Ticketlist
+    {
+        public string refId { get; set; }
+        public string betChoice_en { get; set; } = string.Empty;
+        public decimal stake { get; set; }
+        public decimal actualStake { get; set; }
+        public dynamic extra { get; set; }
+    }
+
 
     public class PlaceBetParlay
     {
@@ -327,7 +404,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public DateTime betTime { get; set; }
         public DateTime updateTime { get; set; }
         public string IP { get; set; }
-        public string tsId { get; set; }
+        public string tsId { get; set; } = string.Empty;
         public string betFrom { get; set; }
         public ParlayDetail[] txns { get; set; }
     }
@@ -363,7 +440,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
     {
         public string refId { get; set; }
         public long txId { get; set; }
-        public string licenseeTxId { get; set; }
+        public string licenseeTxId { get; set; } = string.Empty;
         public decimal odds { get; set; }
         public int oddsType { get; set; }
         public decimal actualAmount { get; set; }
@@ -417,7 +494,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
     public class Settle
     {
         public string action { get; set; }
-        public string operationId { get; set; }
+        public string operationId { get; set; } = string.Empty;
         public SettleDetail[] txns { get; set; }
     }
     public class SettleDetail
@@ -427,14 +504,72 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public long txId { get; set; }
         public DateTime updateTime { get; set; }
         public DateTime winlostDate { get; set; }
-        public string status { get; set; } = "";
+        public string status { get; set; } = string.Empty;
         public decimal payout { get; set; }
         public decimal creditAmount { get; set; }
         public decimal debitAmount { get; set; }
         public string extraStatus { get; set; }
         public string extra_status { get; set; }
-
     }
 
+
+    public class SettleEnt
+    {
+        public string action { get; set; }
+        public string userId { get; set; }
+        public string refId { get; set; }
+        public string status { get; set; }
+        public decimal actualStake { get; set; }
+        public decimal stake { get; set; }
+        public decimal netStake { get; set; }
+        public DateTime winLostDate { get; set; }
+        public decimal creditAmount { get; set; }
+        public decimal debitAmount { get; set; }
+        public decimal winlostAmount { get; set; }
+        public long[] txIds { get; set; }
+    }
+
+    public class GetTicketInfo
+    {
+        public string action { get; set; }
+        public string userId { get; set; }
+        public string refId { get; set; }
+    }
+
+    public class AdjustBalance
+    {
+        public string action { get; set; }
+        public DateTime time { get; set; }
+        public string userId { get; set; }
+        public int currency { get; set; }
+        public long txId { get; set; }
+        public string refId { get; set; }
+        public string operationId { get; set; }
+        public int betType { get; set; }
+        public string betTypeName { get; set; }
+        public DateTime winlostDate { get; set; }
+        public Balanceinfo balanceInfo { get; set; }
+    }
+
+    public class Balanceinfo
+    {
+        public decimal creditAmount { get; set; }
+        public decimal debitAmount { get; set; }
+    }
+
+
+    public class BetInfo
+    {
+        public decimal actualAmount { get; set; }
+        public int TicketType { get; set; }
+    }
+
+    public class SettleInfo
+    {
+        public long SQ { get; set; }
+        public decimal creditAmount { get; set; }
+        public decimal debitAmount { get; set; }
+        public string status { get; set; }
+    }
     #endregion
 }

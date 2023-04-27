@@ -17,6 +17,7 @@ namespace ThirdPartyBetHistory.Service.DAL
         private readonly SettledService _settledService;
         private readonly ILogger<ThirdPartyService> _logger;
         private readonly MySqlClient _mainDbClient;
+        private readonly MySqlClient _reportDbClient;
         private readonly TpBetRecordExtendBLL _tpBetRecordExtendBLL;
 
         public ThirdPartyService(IServiceProvider serviceProvider)
@@ -26,6 +27,7 @@ namespace ThirdPartyBetHistory.Service.DAL
             _settledService = serviceProvider.GetRequiredService<SettledService>();
             TpCurrencyList = new ConcurrentDictionary<string, TpCurrency>();
             _mainDbClient = serviceProvider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+            _reportDbClient = serviceProvider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
             _tpBetRecordExtendBLL = serviceProvider.GetRequiredService<TpBetRecordExtendBLL>();
         }
 
@@ -36,7 +38,7 @@ namespace ThirdPartyBetHistory.Service.DAL
 
         public IEnumerable<ThirdPartyModel> GetSiteTpList()
         {
-            return _mainDbClient.Query<ThirdPartyModel>("Common_SiteTpList_Get");
+            return _mainDbClient.Query<ThirdPartyModel>("Service_SiteTpList_Get");
         }
 
         public void DoSettleTicket(IEnumerable<SabaSettleData> settleDataList, WorkerType workerType)
@@ -74,7 +76,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                     var bonusId = 0;
 
                     /*Only count Sports*/
-                    if (betRecord.GameType != GameType.Saba_Sports && betRecord.SettlementType == SettlementType.SettledForValid)
+                    if (betRecord.GameType != GameType.SBSW_Sports && betRecord.SettlementType == SettlementType.SettledForValid)
                     {
                         betRecord.SettlementType = SettlementType.SettledForValidNotRollover;
                     }
@@ -130,9 +132,8 @@ namespace ThirdPartyBetHistory.Service.DAL
                         }
 
                         if (bonusId > 0)
-                        {
-                            AutoCancelBonus(bonusId, betRecord.TransId, trans);
-                            //AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, conn, trans);
+                        { 
+                            AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, trans);
                         }
                     }
                     else if (RefBetRecord != null && (RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win)
@@ -153,8 +154,7 @@ namespace ThirdPartyBetHistory.Service.DAL
 
                             if (bonusId > 0)
                             {
-                                AutoCancelBonus(bonusId, betRecord.TransId, trans);
-                                //AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, conn, trans);
+                                AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, trans);
                             }
                         }
                     }
@@ -392,12 +392,6 @@ namespace ThirdPartyBetHistory.Service.DAL
             return _mainDbClient.Execute("Service_BonusWinLost_Set", parameters, trans);
         }
 
-        private int AutoCancelBonus(int bonusId, string transId, IDbTransaction trans)
-        {
-            var parameters = new DynamicParameters(new { BonusId = bonusId, TransId = transId });
-            return _mainDbClient.Execute("Service_AutoCancelBonus_Set_V3", parameters,  trans);
-        }
-
         private int AutoCancelSeamlessBonus(TpCustInfo tpCustInfo, int bonusId, GameType gameType, IDbTransaction trans)
         {
             var p = new DynamicParameters(tpCustInfo);
@@ -427,15 +421,18 @@ namespace ThirdPartyBetHistory.Service.DAL
         }
 
 
-        public IEnumerable<UnSettle> GetTpBetRecordReSettleTicket(Tp tp, SiteId siteId, string settlementTypeList,
-            DateTime startTime, DateTime endTime)
+        public IEnumerable<UnSettle> GetTpBetRecordReSettleTicket(Tp tp, SiteId siteId, IEnumerable<SettlementType> settlementTypeList, DateTime startTime, DateTime endTime)
         {
-            return _mainDbClient.Query<UnSettle>("Service_TpBetRecord_ReSettle_Get",
+            return _reportDbClient.Query<UnSettle>("Service_TpBetRecord_ReSettle_Get",
                 new
                 {
-                    _TpId = (int)tp, _SiteId = (int)siteId, SettlementTypeList = settlementTypeList,
-                    StartTime = startTime, EndTime = endTime
-                });
+                    _TpId = (int)tp, 
+                    _SiteId = (int)siteId, 
+                    SettlementTypeList = JsonConvert.SerializeObject(settlementTypeList.Select(i => (int)i)),
+                    settlementTypeList,
+                    StartTime = startTime, 
+                    EndTime = endTime
+                }, 120);
         }
 
         public long GetSiteTicketKey(SiteId SiteId, int TpId, WorkerType workerType)
