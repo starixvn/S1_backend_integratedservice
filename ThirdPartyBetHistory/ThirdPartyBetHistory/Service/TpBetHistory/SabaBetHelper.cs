@@ -11,7 +11,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
     {
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly Dictionary<int, TpGameTypeOption> _tpGameTypeConfig;
-        private readonly IReadOnlyDictionary<int, TpListOption> _TpList;
+        private readonly List<int> _kenoGameTypeList;
 
         public SabaBetHelper(IServiceProvider provider)
         {
@@ -19,12 +19,18 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             _thirdPartyService = provider.GetRequiredService<ThirdPartyService>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             var tpGameTypeOptions = provider.GetRequiredService<IEnumerable<TpGameTypeOption>>(); 
-            _TpList = provider.GetRequiredService<IEnumerable<TpListOption>>().ToDictionary(d => d.Id, d => d);
+            var tpList = provider.GetRequiredService<IEnumerable<TpListOption>>().ToDictionary(d => d.Id, d => d);
             foreach (var tpGameType in tpGameTypeOptions)
             {
-                tpGameType.TpName =  _TpList.TryGetValue(tpGameType.TpId, out var result) ? result.TpName : string.Empty;
+                tpGameType.TpName = tpList.TryGetValue(tpGameType.TpId, out var result) ? result.TpName : string.Empty;
             }
             _tpGameTypeConfig = tpGameTypeOptions.ToDictionary(i => i.Type, i => i);
+            _kenoGameTypeList = new List<int>
+            {
+                (int)GameType.Saba_Keno,  // 202 OW Keno
+                (int)GameType.Saba_Lottery, // 220 OW Lottery
+                (int)GameType.Saba_TableGame, // 223 OW Togel 4D
+            };
         }
 
         public override async Task UpdateBetRecordByTransId(WorkerType workerType, DateTime startTime, DateTime endTime, IEnumerable<SettlementType> settlementTypeList)
@@ -35,15 +41,15 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             {
                 try
                 {
-                    var api = ticket.GameType == (int)GameType.Saba_Keno ? "GetKenoDetailByTransID" : "GetBetDetailByTransID";
+                    var api = _kenoGameTypeList.Contains(ticket.GameType)? "GetKenoDetailByTransID" : "GetBetDetailByTransID";
                     var url = $"{tpSetting["ApiUrl"]}/{api}";
                     var parameters = new Dictionary<string, string>
                     {
                         { "vendor_id", tpSetting["VendorId"] },
                         { "trans_id", ticket.TransId}
                     };
-                    var p = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
 
+                    var p = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
                     var result = await HttpPostAsync(url, p, "application/x-www-form-urlencoded");
                     var getBetDetail = FromJson<GetBetDetail>(result);
                     if (getBetDetail.error_code != 0)

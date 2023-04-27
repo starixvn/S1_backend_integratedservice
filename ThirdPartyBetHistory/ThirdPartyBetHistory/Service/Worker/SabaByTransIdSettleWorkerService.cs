@@ -56,8 +56,8 @@ namespace ThirdPartyBetHistory.Service.Worker
             {
                 var startTime = DateTime.UtcNow.Date.AddDays(SubtractDays);
                 var endTime = DateTime.UtcNow.AddHours(-1);
-                tpBetHelp.UpdateBetRecordByTransId(workerType, startTime, endTime, _settlementTypeList);
-                _logger.LogInformation($"Success: {taskProperty} : {startTime:yyyy-MM-dd HH:mm} ~ {endTime:yyyy-MM-dd HH:mm}");
+                _logger.LogInformation($"{taskProperty} : {startTime:yyyy-MM-dd HH:mm} ~ {endTime:yyyy-MM-dd HH:mm}");
+                tpBetHelp.UpdateBetRecordByTransId(workerType, startTime, endTime, _settlementTypeList);                
             }
             catch (Exception ex)
             {

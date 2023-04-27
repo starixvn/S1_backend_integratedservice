@@ -1,5 +1,4 @@
 ﻿using Serilog.Context;
-
 using ThirdPartyBetHistory.Service.Model.enums;
 
 namespace ThirdPartyBetHistory.Service.Worker
@@ -10,7 +9,7 @@ namespace ThirdPartyBetHistory.Service.Worker
         private readonly IEnumerable<IThirdPartyBetHelper> _sabaSiteList;
         private readonly Dictionary<SiteId, Timer> _timerWorkerList;
         private readonly WorkerType workerType = WorkerType.ByTransIdUnSettleWager;
-        private const int SubtractDays = -180;// 檢查幾天前的資料
+        private const int SubtractDays = -14;// 檢查幾天前的資料
         private readonly IEnumerable<SettlementType> _settlementTypeList = new List<SettlementType> //檢查類型
         {
             SettlementType.UnSettled,
@@ -53,8 +52,8 @@ namespace ThirdPartyBetHistory.Service.Worker
             {
                 var startTime = DateTime.UtcNow.Date.AddDays(SubtractDays);
                 var endTime = DateTime.UtcNow.AddHours(-1);
-                tpBetHelp.UpdateBetRecordByTransId(workerType, startTime, endTime, _settlementTypeList);         
-                _logger.LogInformation($"Success: {taskProperty} : {startTime:yyyy-MM-dd HH:mm} ~ {endTime:yyyy-MM-dd HH:mm}");
+                _logger.LogInformation($"{taskProperty} : {startTime:yyyy-MM-dd HH:mm} ~ {endTime:yyyy-MM-dd HH:mm}");
+                tpBetHelp.UpdateBetRecordByTransId(workerType, startTime, endTime, _settlementTypeList);                         
             }
             catch (Exception ex)
             {
