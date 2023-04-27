@@ -28,7 +28,7 @@ namespace ThirdPartyBetHistory.Service
         public bool IsRunning { get; set; }
         public SyncParams syncParams { set; get; }
         public ThirdPartyModel thirdPartyModel { set; get; }
-        public abstract Task<long> AddBetRecord(WorkerType workerType, long siteTicketKey);      
+        public abstract Task<long> AddBetRecord(WorkerType workerType, long siteTicketKey);
         public abstract Task UpdateBetRecordByTransId(WorkerType workerType, DateTime today, int hour, int day);
         public abstract SyncParams InitialSyncParams();
         protected ILogger<ThirdPartyBetHelperBase> _logger;
