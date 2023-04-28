@@ -335,9 +335,8 @@ namespace ThirdParty.DG
             var custBetLimit = BetLimitProvider.GetCustBetLimit(custId);
             if (custBetLimit != null)
             {
-                var limitGroup = JsonConvert.DeserializeObject<List<BetSetting>>(custBetLimit.BetSetting);
-                var dg = limitGroup?.SingleOrDefault(a => a.TpCategory == (int)TpCategory.LiveCasino)?.TpBetSetting
-                    .SingleOrDefault(b => b.GameTypeId == (int)TpGameType.DG_LiveCasino);
+                var betSetting = JsonConvert.DeserializeObject<List<BetSetting>>(custBetLimit.BetSetting);
+                var dg = betSetting?.SingleOrDefault(a => a.GameTypeId == (int)TpGameType.DG_LiveCasino);
                 if (dg != null)
                     return dg.LimitGroup;
             }
@@ -366,8 +365,8 @@ namespace ThirdParty.DG
 
         public class BetSetting
         {
-            public int TpCategory { get; set; }
-            public IList<TpBetSetting> TpBetSetting { get; set; }
+            public int GameTypeId { get; set; }
+            public string LimitGroup { get; set; }
         }
     }
 }
