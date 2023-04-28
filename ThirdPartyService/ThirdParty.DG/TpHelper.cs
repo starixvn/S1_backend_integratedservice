@@ -357,13 +357,7 @@ namespace ThirdParty.DG
                 return DefaultLimitGroup;
             }
         }
-        public class TpBetSetting
-        {
-            public int GameTypeId { get; set; }
-            public string LimitGroup { get; set; }
-        }
-
-        public class BetSetting
+        private class BetSetting
         {
             public int GameTypeId { get; set; }
             public string LimitGroup { get; set; }
