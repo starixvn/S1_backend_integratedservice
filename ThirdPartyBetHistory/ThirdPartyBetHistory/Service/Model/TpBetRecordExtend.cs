@@ -20,7 +20,7 @@ namespace ThirdPartyBetHistory.Service.Model
             Title = betDetail.leaguename?.FirstOrDefault(i => i.lang == "en")?.name ?? string.Empty;
             MatchID = betDetail.match_id.ToString();
             BetType = betDetail.bettypename?.FirstOrDefault(i => i.lang == "en")?.name ?? string.Empty;
-            BetChoice = betDetail.bet_team;
+            BetChoice = betDetail.bet_team ?? string.Empty;
             Result = betDetail.ticket_status;
             DeviceType = GetDeviceType(betDetail.betfrom);
             IP = string.Empty;
@@ -45,7 +45,7 @@ namespace ThirdPartyBetHistory.Service.Model
             Title = tpGameType.TypeName;
             MatchID = betDetail.match_id.ToString();
             BetType = betDetail.bet_type.ToString();
-            BetChoice = betDetail.bet_team;
+            BetChoice = betDetail.bet_team ?? string.Empty;
             Result = betDetail.ticket_status;
             DeviceType = GetDeviceType(betDetail.betfrom);
             IP = string.Empty;
@@ -70,7 +70,7 @@ namespace ThirdPartyBetHistory.Service.Model
             Title = tpGameType.TypeName;
             MatchID = betDetail.match_id.ToString();
             BetType = betDetail.bet_type.ToString();
-            BetChoice = betDetail.bet_team;
+            BetChoice = betDetail.bet_team ?? string.Empty;
             Result = betDetail.ticket_status;
             DeviceType = GetDeviceType(betDetail.betfrom);
             IP = string.Empty;
