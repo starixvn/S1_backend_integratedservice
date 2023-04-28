@@ -1022,7 +1022,7 @@ namespace ThirdPartyService.Service.BLL
 
         public ApiResult SetBetLimit(SetBetLimit setBetLimit)
         {
-            var apiResult = new ApiResult<TransferResult>();
+            var apiResult = new ApiResult();
             var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(setBetLimit.CustId, setBetLimit.TpId);
             if (tpCustInfoResult.Data == null)
             {
