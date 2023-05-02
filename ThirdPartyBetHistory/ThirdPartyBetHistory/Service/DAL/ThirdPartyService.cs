@@ -38,7 +38,7 @@ namespace ThirdPartyBetHistory.Service.DAL
 
         public IEnumerable<ThirdPartyModel> GetSiteTpList()
         {
-            return _mainDbClient.Query<ThirdPartyModel>("Common_SiteTpList_Get");
+            return _mainDbClient.Query<ThirdPartyModel>("Service_SiteTpList_Get");
         }
 
         public void DoSettleTicket(IEnumerable<SabaSettleData> settleDataList, WorkerType workerType)
@@ -76,7 +76,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                     int bonusId;
 
                     /*Only count Sports*/
-                    if (betRecord.GameType != GameType.Saba_Sports && betRecord.SettlementType == SettlementType.SettledForValid)
+                    if (betRecord.GameType != GameType.SBSW_Sports && betRecord.SettlementType == SettlementType.SettledForValid)
                     {
                         betRecord.SettlementType = SettlementType.SettledForValidNotRollover;
                     }
@@ -98,7 +98,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                     }
                     else
                     {
-                        hasJoinBonus = _settledService.GetBonusIdByTpId((int)Tp.Saba, tpCustInfo.CustId, out bonusId);
+                        hasJoinBonus = _settledService.GetBonusIdByTpId((int)Tp.SBSW, tpCustInfo.CustId, out bonusId);
                         if (hasJoinBonus && (RefBetRecord == null || betRecord.TicketStatus == TicketStatus.UnSettled))
                         {
                             betRecord.BonusId = bonusId;
@@ -123,9 +123,8 @@ namespace ThirdPartyBetHistory.Service.DAL
                         }
 
                         if (bonusId > 0)
-                        {
-                            AutoCancelBonus(bonusId, betRecord.TransId, trans);
-                            //AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, conn, trans);
+                        { 
+                            AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, trans);
                         }
                     }
                     else if (RefBetRecord != null && (RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win)
@@ -146,8 +145,7 @@ namespace ThirdPartyBetHistory.Service.DAL
 
                             if (bonusId > 0)
                             {
-                                AutoCancelBonus(bonusId, betRecord.TransId, trans);
-                                //AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, conn, trans);
+                                AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, trans);
                             }
                         }
                     }
@@ -383,12 +381,6 @@ namespace ThirdPartyBetHistory.Service.DAL
                 return 0;
             var parameters = new DynamicParameters(new { TpId, GameType, CustId, UserName, SiteId, Winnings, Losses, Memo, BonusId, RefTransId });
             return _mainDbClient.Execute("Service_BonusWinLost_Set", parameters, trans);
-        }
-
-        private int AutoCancelBonus(int bonusId, string transId, IDbTransaction trans)
-        {
-            var parameters = new DynamicParameters(new { BonusId = bonusId, TransId = transId });
-            return _mainDbClient.Execute("Service_AutoCancelBonus_Set_V3", parameters,  trans);
         }
 
         private int AutoCancelSeamlessBonus(TpCustInfo tpCustInfo, int bonusId, GameType gameType, IDbTransaction trans)

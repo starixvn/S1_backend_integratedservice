@@ -27,7 +27,6 @@ startup.ConfigureServices(builder.Services);
 builder.Services
     .AddHostedService<WorkerService>()
     .AddHostedService<BonusWorker>()
-    .AddHostedService<SabaLGWorkerService>()
     .AddHostedService<SabaByTransIdUnSettleWorkerService>()
     .AddHostedService<SabaByTransIdSettleWorkerService>();
 

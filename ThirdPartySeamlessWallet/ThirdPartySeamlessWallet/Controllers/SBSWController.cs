@@ -1,11 +1,6 @@
-﻿using System;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
+﻿using System.IO.Compression;
 using System.Text;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
@@ -28,7 +23,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             _sbswBLL = new SBSWBLL(provider);
         }
 
-
         [HttpPost]
         [Route("{method}")]
         public async Task<dynamic> SeamlessWallet([FromRoute] string merchant, [FromRoute] string method)
@@ -39,9 +33,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     return new ReturnObj(ReturnCode.InvalidParameters);
                 }
-              
-                _logger.LogInformation($"header || {string.Join("&", Request.Headers.Select(i => $"{i.Key}={i.Value}"))}");
-                
+         
                 var bodyText = string.Empty;               
                 if (GetHeaderValueAs<string>("Content-Encoding")?.Contains("gzip") ?? false)
                 {
@@ -55,7 +47,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     bodyText = await reader.ReadToEndAsync();
                 }
 
-                return await _sbswBLL.SeamlessWallet(transType, merchant, bodyText);
+                return await _sbswBLL.SeamlessWallet(merchant, transType, bodyText);
             }
             catch (Exception ex)
             {

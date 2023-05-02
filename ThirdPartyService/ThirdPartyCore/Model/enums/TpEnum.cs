@@ -104,6 +104,13 @@ namespace ThirdPartyCore.Model.enums
         Netent_RNG = 64,
         RedTiger_RNG = 65,
         HB_RNG = 68,
+        SBSW_Sports = 69,
+        SBSW_NumberGame = 70,
+        SBSW_VirtualSports = 71,
+        SBSW_VirtualSports2 = 72,
+        SBSW_Keno = 73,
+        SBSW_Lottery = 74,
+        SBSW_TableGame = 75,
         AMB_RNG = 76,
         SBO_Sports = 77,
         SBO_Games = 78,
@@ -117,5 +124,7 @@ namespace ThirdPartyCore.Model.enums
         GPI_Sode = 89,
         GPI_Thai_Lottery = 90,
         GPI_Fast3 = 91,
+        SBSW_Vgaming = 95,
+        SBSW_CardClub = 96,
     }
 }
