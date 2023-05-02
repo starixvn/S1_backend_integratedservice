@@ -9,18 +9,6 @@ namespace ThirdPartyBetHistory.Service.Model
         public GetBetDetailData Data { get; set; }
     }
 
-    public class CashOutData
-    {
-        public long cashout_id { get; set; }
-        public DateTime transdate { get; set; }
-        public decimal stake { get; set; }
-        public decimal winlost_amount { get; set; }
-        public decimal buyback_amount { get; set; }
-        public decimal real_stake { get; set; }
-        public int bet_type { get; set; }
-        public string ticket_status { get; set; }
-        public DateTime winlost_datetime { get; set; }
-    }
     public class BetDetail : ISabaBet
     {
         public long trans_id { get; set; }
@@ -64,11 +52,11 @@ namespace ThirdPartyBetHistory.Service.Model
         public int version_key { get; set; }
         public object ParlayData { get; set; }
         public decimal? original_stake { get; set; }
-        public IEnumerable<CashOutData> CashOutData { get; set; }
         public IEnumerable<Leaguename> leaguename { get; set; }
         public IEnumerable<Sportname> sportname { get; set; }
         public IEnumerable<Bettypename> bettypename { get; set; }
         public string betchoice { get; set; } = string.Empty;
+        public string ticket_extra_status { get; set; } = string.Empty;
     }
     public class BetNumberDetail : ISabaBet
     {
