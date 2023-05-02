@@ -120,9 +120,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var request = JsonConvert.DeserializeObject<BaseReq<PlaceBetParlay>>(bodyText);
             CheckKey(merchant, request.key);
-            var Tasks = request.message.txns.Select(ticket => Task.Run(()
-                => ExecuteBet(transType, new Bet(request.message, ticket)))).ToArray();
-            var resultList = await Task.WhenAll(Tasks);
+            var resultList = new List<ExecuteResult>();
+            foreach (var ticket in request.message.txns)
+            {
+                resultList.Add(await ExecuteBet(transType, new Bet(request.message, ticket)));
+            }
+
             var error = resultList.FirstOrDefault(result => result.ReturnCode != ReturnCode.Success);
             if (error != null)
             {
@@ -143,9 +146,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var request = JsonConvert.DeserializeObject<BaseReq<PlaceBet3rd>>(bodyText);
             CheckKey(merchant, request.key);
-            var Tasks = request.message.ticketList.Select(ticket => Task.Run(()
-                => ExecuteBet(transType, new Bet(request.message, ticket)))).ToArray();
-            var resultList = await Task.WhenAll(Tasks);
+
+            var resultList = new List<ExecuteResult>();
+            foreach (var ticket in request.message.ticketList)
+            {
+                resultList.Add(await ExecuteBet(transType, new Bet(request.message, ticket)));
+            }
+
             var error = resultList.FirstOrDefault(result => result.ReturnCode != ReturnCode.Success);
             if (error != null)
             {
@@ -167,9 +174,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var request = JsonConvert.DeserializeObject<BaseReq<PlaceBetEnt>>(bodyText);
             CheckKey(merchant, request.key);
-            var Tasks = request.message.ticketList.Select(ticket => Task.Run(()
-                => ExecuteBet(transType, new Bet(request.message, ticket)))).ToArray();
-            var resultList = await Task.WhenAll(Tasks);
+            var resultList = new List<ExecuteResult>();
+            foreach (var ticket in request.message.ticketList)
+            {
+                resultList.Add(await ExecuteBet(transType, new Bet(request.message, ticket)));
+            }
             var error = resultList.FirstOrDefault(result => result.ReturnCode != ReturnCode.Success);
             if (error != null)
             {
@@ -264,9 +273,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var request = JsonConvert.DeserializeObject<BaseReq<ConfirmBet>>(bodyText);
             CheckKey(merchant, request.key);
-            var Tasks = request.message.txns.Select(txn => Task.Run(()
-                => ExecuteConfirmBet(transType, new Confirm(request.message, txn)))).ToArray();
-            var resultList = await Task.WhenAll(Tasks);
+
+            var resultList = new List<ExecuteResult>();
+            foreach (var txn in request.message.txns)
+            {
+                resultList.Add(await ExecuteConfirmBet(transType, new Confirm(request.message, txn)));
+            }
+
             var error = resultList.FirstOrDefault(result => result.ReturnCode != ReturnCode.Success);
             if (error != null)
             {
@@ -358,9 +371,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var request = JsonConvert.DeserializeObject<BaseReq<ConfirmBet>>(bodyText);
             CheckKey(merchant, request.key);
-
-            var Tasks = request.message.txns.Select(txn => Task.Run(() => ExecuteCancelBet(request.message, txn))).ToArray();
-            var resultList = await Task.WhenAll(Tasks);
+            var resultList = new List<ExecuteResult>();
+            foreach (var txn in request.message.txns)
+            {
+                resultList.Add(await ExecuteCancelBet(request.message, txn));
+            }
             var error = resultList.FirstOrDefault(result => result.ReturnCode != ReturnCode.Success);
             if (error != null)
             {
@@ -474,10 +489,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var request = JsonConvert.DeserializeObject<BaseReq<Settle>>(bodyText);
             CheckKey(merchant, request.key);
-
-            var Tasks = request.message.txns.Select(txn
-                => Task.Run(() => ExecuteSettle(transType, request.message, txn))).ToArray();
-            var resultList = await Task.WhenAll(Tasks);
+            var resultList = new List<ExecuteResult>();
+            foreach (var txn in request.message.txns)
+            {
+                resultList.Add(await ExecuteSettle(transType, request.message, txn));
+            }
             var error = resultList.FirstOrDefault(result => result.ReturnCode != ReturnCode.Success);
             if (error != null)
             {
