@@ -223,7 +223,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var bonusId = 0;
                 result.SetBalanceResult = _bettingService.PlaceBetV2(
                     tpCustInfo,
-                    Math.Abs(bet.actualAmount) * -1,
+                    Math.Abs(bet.debitAmount) * -1,
                     (int)ThirdParty,
                     bet.refId,
                     (int)gameType,
