@@ -119,11 +119,11 @@ namespace ThirdPartyBetHistory.Service.DAL
                             SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId,
                                 tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", bonusId,
                                 betRecord.TransId, trans);
-                        }
 
-                        if (bonusId > 0)
-                        { 
-                            AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, trans);
+                            if (Losses != 0)
+                            {
+                                AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, trans);
+                            }
                         }
                     }
                     else if (RefBetRecord != null && (RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win)
@@ -140,11 +140,11 @@ namespace ThirdPartyBetHistory.Service.DAL
                                 SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId,
                                     tpCustInfo.UserName, tpCustInfo.SiteId, Winnings - RefWinnings, Losses - RefLosses,
                                     "Settled", bonusId, betRecord.TransId, trans);
-                            }
-
-                            if (bonusId > 0)
-                            {
-                                AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, trans);
+                                
+                                if (Losses != 0)
+                                {
+                                    AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, trans);
+                                }
                             }
                         }
                     }
@@ -399,25 +399,36 @@ namespace ThirdPartyBetHistory.Service.DAL
                 AfterBonus = bonus,
                 OutResult = result
             };
-            _logger.LogInformation ($"{JsonConvert.SerializeObject(parameter)}");
 
+            _logger.LogInformation($"SBSW AutoCancelSeamlessBonus:{JsonConvert.SerializeObject(parameter)} | result:{result} | bonus:{bonus}");
             if (bonus > 0)
             {
-                result = RefundCancelBonus(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bonus, $"Bonus: {Math.Abs(bonus).ToString("#,##0.##")}", bonusId.ToString(), out _, trans);
+                result = RefundCancelBonus(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bonus, $"{Tp.SBSW} Bonus: {Math.Abs(bonus):#,##0.##}", bonusId.ToString(), out _, trans);
             }
 
             return result;
         }
-        private int RefundCancelBonus(int custId, int siteId, string userName, decimal Amount, string Memo, string RefTransId, out decimal afterAmount, IDbTransaction trans)
-        {
-            var p = new DynamicParameters(new { CustId = custId, SiteId = siteId, UserName = userName, Amount, Type = 5, Memo = Memo, RefTransId });
-            p.Add("Is1stDepoist", dbType: DbType.Boolean, direction: ParameterDirection.Output);
-            p.Add("AfterAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
-            _ = _mainDbClient.Execute("Wallet_Set_V2", p, trans);
-            _ = p.Get<byte?>("Is1stDepoist") ?? 0;
+        private int RefundCancelBonus(int custId, int siteId, string userName, decimal Amount, string Memo, string RefTransId, out decimal afterAmount, IDbTransaction trans)
+        {          
+            var p = new DynamicParameters(new { 
+                CustId = custId,
+                UserName = userName,
+                SiteId = siteId,               
+                Amount, 
+                Type = 5, 
+                Memo = Memo, 
+                RefTransId
+            });
+
+            var allowNegative = 1;
+            p.Add("AllowNegative", allowNegative, dbType: DbType.Decimal, direction: ParameterDirection.Input);
+            p.Add("AfterAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+       
+            var result = _mainDbClient.Execute("Service_SeamlessWallet_Set_V2", p, trans);
             afterAmount = p.Get<decimal>("AfterAmount");
-            return afterAmount >= 0 ? 1 : 0;
+            _logger.LogInformation($"SBSW RefundCancelBonus:{JsonConvert.SerializeObject(p)} | result:{result} | afterAmount:{afterAmount}");
+            return result >= 0 ? 1 : 0;
         }
 
 
