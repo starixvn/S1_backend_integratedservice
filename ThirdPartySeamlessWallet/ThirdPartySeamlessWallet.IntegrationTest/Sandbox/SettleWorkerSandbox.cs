@@ -42,9 +42,8 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             });
             builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
             var app = builder.Build();
-            _configuration = app.Configuration;
             _serviceCollection.AddSingleton(_configuration);
-            
+            _configuration = app.Configuration;
 
             _serviceCollection.AddTransient(p => Substitute.For<ILogger<SettledService>>());
             _serviceCollection.AddTransient(p => Substitute.For<ILogger<BettingService>>());
@@ -99,26 +98,10 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             return this;
         }
 
-        public SettleWorkerSandbox SettleFlagShouldBeEndGame(string sqlScript)
-        {
-            var actual = _mySqlClient.Query<TpUnsettle>(sqlScript, CommandType.Text).First();
-            actual.SettleFlag.Should().Be((int)SettleFlag.EndGame);
-            return this;
-        }
 
         public SettleWorkerSandbox ShouldBeHaveTpBetRecord(Tp tp, string transId, string TpUserName, decimal Stake, decimal WinlostAmount)
         {
             var expected = CreateTpBetRecord(tp, transId, TpUserName, Stake, WinlostAmount);
-            var sqlScript = @$"SELECT * FROM Siebog.TpBetRecord WHERE tpid='{(int)tp}' and TransId='{transId}'";
-            var actual = _mySqlClient.Query<TpBetRecord>(sqlScript, CommandType.Text).First();
-            actual.Should().BeEquivalentTo(expected);
-            ActualWinlostAmount = actual.WinlostAmount;
-            return this;
-        }
-
-        public SettleWorkerSandbox ShouldBeHaveUnsettleTpBetRecord(Tp tp, string transId, string TpUserName, decimal Stake, decimal WinlostAmount)
-        {
-            var expected = CreateUnsettleTpBetRecord(tp, transId, TpUserName, Stake, WinlostAmount);
             var sqlScript = @$"SELECT * FROM Siebog.TpBetRecord WHERE tpid='{(int)tp}' and TransId='{transId}'";
             var actual = _mySqlClient.Query<TpBetRecord>(sqlScript, CommandType.Text).First();
             actual.Should().BeEquivalentTo(expected);
@@ -138,21 +121,6 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
                 WinlostAmount = WinlostAmount,
                 SettlementType = SettlementType.SettledForValid,
                 TicketStatus = WinlostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
-            };
-        }
-
-        private TpBetRecord CreateUnsettleTpBetRecord(Tp tp, string transId, string TpUserName, decimal Stake, decimal WinlostAmount)
-        {
-            return new TpBetRecord()
-            {
-                TpId = (int)tp,
-                TransId = transId,
-                TpUserName = TpUserName,
-                Stake = Stake,
-                ValidBet = Stake,
-                WinlostAmount = WinlostAmount,
-                SettlementType = SettlementType.UnSettled,
-                TicketStatus = TicketStatus.UnSettled,
             };
         }
     }

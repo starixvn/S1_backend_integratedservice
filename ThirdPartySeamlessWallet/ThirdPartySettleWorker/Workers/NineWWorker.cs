@@ -106,7 +106,7 @@ namespace ThirdPartySettleWorker.Workers
                                 _tpUnSettledBLL.SetSettleFlag(spName, unsettled.TransId, dataBase: DataBase.Wager);
                             });
                         }
-                    }             
+                    }
                     catch (Exception ex)
                     {
                         Task.Run(() =>
