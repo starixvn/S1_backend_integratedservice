@@ -119,7 +119,6 @@ namespace ThirdPartyBetHistory.Service.DAL
                             SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId,
                                 tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", bonusId,
                                 betRecord.TransId, trans);
-
                         }
 
                         if (bonusId > 0)
@@ -391,6 +390,16 @@ namespace ThirdPartyBetHistory.Service.DAL
 
             var result = _mainDbClient.Execute("Service_AutoCancelSeamlessBonusV2_Set", p, trans);
             var bonus = p.Get<decimal?>("Bonus") ?? 0;
+
+            var parameter = new
+            {
+                BonusId = bonusId,
+                GameType = gameType,
+                CustId = tpCustInfo.CustId,
+                AfterBonus = bonus,
+                OutResult = result
+            };
+            _logger.LogInformation ($"{JsonConvert.SerializeObject(parameter)}");
 
             if (bonus > 0)
             {
