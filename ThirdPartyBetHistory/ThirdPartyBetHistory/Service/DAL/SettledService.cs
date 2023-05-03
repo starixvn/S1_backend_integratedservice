@@ -72,7 +72,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                     p.Add("AllowNegative", allowNegative, dbType: DbType.Decimal, direction: ParameterDirection.Input);
                     p.Add("AfterAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
-                    result = _mainDbClient.Execute("Service_SeamlessWallet_Set_V2", p, trans);   
+                    result = _mainDbClient.Execute("Service_SeamlessWallet_Set_V2", parameters, trans);   
                     _logger.LogInformation($"SBSW Bonus Bonus Fulfill Transfer to Cash:{JsonConvert.SerializeObject(parameters)} | result:{result} | bonus:{bonus}");                    
                 }
 
