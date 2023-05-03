@@ -564,37 +564,40 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 }
 
                 var amount = detail.creditAmount - detail.debitAmount;
-                var (gameType, tpCategory) = GetGameType(result.SportType);
-                var memoHead = transType switch
+                if (amount != 0)
                 {
-                    SBSWTransType.Settle => "Payout",
-                    SBSWTransType.SettleEnt => "Payout",
-                    SBSWTransType.Unsettle => "Unsettle",
-                    SBSWTransType.Resettle => "Resettle",
-                };
-                result.SetBalanceResult = _settledService.PayoutV2(
-                            tpCustInfo: tpCustInfo,
-                            amount: amount,
-                            tpId: (int)ThirdParty,
-                            tpTransId: detail.refId,
-                            gameType: (int)gameType,
-                            tpCategory: tpCategory,
-                            refId: detail.refId,
-                            transType == SBSWTransType.Unsettle ? TransType.Undo : TransType.Payout,
-                            betData: null,
-                            out decimal afterAmount,
-                            memoHead,
-                            out int bonusId,
-                            conn,
-                            trans,
-                            AllowNegative.Allow,
-                            SeamlessBonusType.TpId);
+                    var (gameType, tpCategory) = GetGameType(result.SportType);
+                    var memoHead = transType switch
+                    {
+                        SBSWTransType.Settle => "Payout",
+                        SBSWTransType.SettleEnt => "Payout",
+                        SBSWTransType.Unsettle => "Unsettle",
+                        SBSWTransType.Resettle => "Resettle",
+                    };
+                    result.SetBalanceResult = _settledService.PayoutV2(
+                                tpCustInfo: tpCustInfo,
+                                amount: amount,
+                                tpId: (int)ThirdParty,
+                                tpTransId: detail.refId,
+                                gameType: (int)gameType,
+                                tpCategory: tpCategory,
+                                refId: detail.refId,
+                                transType == SBSWTransType.Unsettle ? TransType.Undo : TransType.Payout,
+                                betData: null,
+                                out decimal afterAmount,
+                                memoHead,
+                                out int bonusId,
+                                conn,
+                                trans,
+                                AllowNegative.Allow,
+                                SeamlessBonusType.TpId);
 
-                if (result.SetBalanceResult < 1)
-                {
-                    return new ExecuteResult(ReturnCode.InvalidAmount);
+                    if (result.SetBalanceResult < 1)
+                    {
+                        return new ExecuteResult(ReturnCode.InvalidAmount);
+                    }
                 }
-
+                
                 trans.Commit();
                 return result;
             }
