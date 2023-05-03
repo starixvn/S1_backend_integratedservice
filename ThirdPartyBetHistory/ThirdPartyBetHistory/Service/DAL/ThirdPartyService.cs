@@ -399,8 +399,8 @@ namespace ThirdPartyBetHistory.Service.DAL
                 AfterBonus = bonus,
                 OutResult = result
             };
-            _logger.LogInformation ($"{JsonConvert.SerializeObject(parameter)}");
 
+            _logger.LogInformation($"SBSW AutoCancelSeamlessBonus:{JsonConvert.SerializeObject(parameter)} | result:{result} | bonus:{bonus}");
             if (bonus > 0)
             {
                 result = RefundCancelBonus(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bonus, $"{Tp.SBSW} Bonus: {Math.Abs(bonus):#,##0.##}", bonusId.ToString(), out _, trans);
@@ -427,6 +427,7 @@ namespace ThirdPartyBetHistory.Service.DAL
        
             var result = _mainDbClient.Execute("Service_SeamlessWallet_Set_V2", p, trans);
             afterAmount = p.Get<decimal>("AfterAmount");
+            _logger.LogInformation($"SBSW RefundCancelBonus:{JsonConvert.SerializeObject(p)} | result:{result} | afterAmount:{afterAmount}");
             return result >= 0 ? 1 : 0;
         }
 
