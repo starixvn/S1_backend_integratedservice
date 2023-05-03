@@ -57,23 +57,24 @@ namespace ThirdPartyBetHistory.Service.DAL
                 
                 if (bonus > 0 && tpId == (int)Tp.SBSW)
                 {
-                    var parameters = new DynamicParameters(new
+                    var input = new
                     {
                         CustId = bonusFulfill.CustId,
                         UserName = bonusFulfill.UserName,
                         SiteId = bonusFulfill.SiteId,
                         Amount = bonus,
-                        Type = 4,
+                        Type = 5,
                         Memo = $"Bonus Transfer to Cash: {Math.Abs(bonus):#,##0.##}",
                         RefTransId = bonusFulfill.BonusId
-                    });
+                    };
 
                     var allowNegative = 1;
+                    var parameters = new DynamicParameters(input);
                     parameters.Add("AllowNegative", allowNegative, dbType: DbType.Decimal, direction: ParameterDirection.Input);
                     parameters.Add("AfterAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
                     result = _mainDbClient.Execute("Service_SeamlessWallet_Set_V2", parameters, trans);   
-                    _logger.LogInformation($"SBSW Bonus Bonus Fulfill Transfer to Cash:{JsonConvert.SerializeObject(parameters)} | result:{result} | bonus:{bonus}");                    
+                    _logger.LogInformation($"SBSW Bonus Bonus Fulfill Transfer to Cash:{JsonConvert.SerializeObject(input)} | result:{result} | bonus:{bonus}");                    
                 }
 
                 if (result >= 0)
