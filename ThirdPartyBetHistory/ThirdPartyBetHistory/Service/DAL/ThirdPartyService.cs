@@ -119,11 +119,11 @@ namespace ThirdPartyBetHistory.Service.DAL
                             SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId,
                                 tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", bonusId,
                                 betRecord.TransId, trans);
-                        }
 
-                        if (bonusId > 0)
-                        { 
-                            AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, trans);
+                            if (Losses != 0)
+                            {
+                                AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, trans);
+                            }
                         }
                     }
                     else if (RefBetRecord != null && (RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win)
@@ -140,11 +140,11 @@ namespace ThirdPartyBetHistory.Service.DAL
                                 SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId,
                                     tpCustInfo.UserName, tpCustInfo.SiteId, Winnings - RefWinnings, Losses - RefLosses,
                                     "Settled", bonusId, betRecord.TransId, trans);
-                            }
-
-                            if (bonusId > 0)
-                            {
-                                AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, trans);
+                                
+                                if (Losses != 0)
+                                {
+                                    AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, trans);
+                                }
                             }
                         }
                     }
