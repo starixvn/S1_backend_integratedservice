@@ -125,7 +125,10 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         GPI_Thai_Lottery = 90,
         GPI_Fast3 = 91,
         Yeebet_LiveCasino = 93,
-        BG_LiveCasino = 94
+        BG_LiveCasino = 94,
+        SBSW_Vgaming = 95,
+        SBSW_CardClub = 96,
+        TFG_Esports = 97
     }
     public enum Tp
     {
@@ -174,7 +177,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Skywind = 43,
         SimplePlay = 44,
         Yeebet = 46,
-        BG = 47
+        BG = 47,
+        TFG = 48
     }
     public enum TransferType : int
     {
@@ -213,11 +217,13 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Lottery = 6,
         VirtualSports = 7,
         P2P = 8,
-        Games = 10
+        Games = 10,
+        Esports = 11
     }
 
     public enum PromotionCategory
     {
+        ALL = 0,
         SlotsGame = 1,
         LiveCasino = 2,
         Fish = 3,
@@ -227,7 +233,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         PTSlotsGame = 7,
         PTLiveCasino = 8,
         SBSW = 9,
-        Mega888SlotRNGFishing = 10
+        Mega888SlotRNGFishing = 10,
+        ESports = 11,
     }
 
     public enum Direction
@@ -285,6 +292,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
     {
         TpCategory,
         TpId,
+        ALL,
     }
 
     public enum WalletType
@@ -292,4 +300,5 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         TransferWallet = 0,
         SeamlessWallet = 1
     }
+
 }

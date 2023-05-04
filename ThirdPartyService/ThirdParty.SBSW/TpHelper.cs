@@ -1,8 +1,5 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Newtonsoft.Json.Linq;
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -61,15 +58,6 @@ namespace ThirdParty.SBSW
             public string message { get; set; }
         }
 
-        public class Datum
-        {
-            public string vendor_member_id { get; set; }
-            public decimal? balance { get; set; }
-            public decimal? bonus_balance { get; set; }
-            public decimal? outstanding { get; set; }
-            public int? currency { get; set; }
-            public int error_code { get; set; }
-        }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -124,18 +112,12 @@ namespace ThirdParty.SBSW
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            return new ApiResult<UserBalance>()
-            {
-                ErrorCode = ErrorCode.Fail,
-            };
+            throw new NotImplementedException();
         }
 
         public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            return new TransIdModel
-            {
-                Implemented = false
-            };
+            throw new NotImplementedException();
         }
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
@@ -162,7 +144,7 @@ namespace ThirdParty.SBSW
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Success,
-                Message = new SabaDeepLinkHelper(loginResult.Data, tpCustInfo, appType, TpLangId, inputs).GameUrl,
+                Message = new SabaDeepLinkHelper(loginResult.Data, tpCustInfo, appType, TpLangId, inputs).GameUrl
             };
         }
 
@@ -205,6 +187,16 @@ namespace ThirdParty.SBSW
             }
 
             return apiResult;
+        }
+
+        public ApiResult<TransferResult> BonusTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal bonus, decimal lockedAmount, decimal rolloverAmount, long expiredDate, string transID, string thirdPartyTransID)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ApiResult<List<ReceiveTpUserBalanceModel>> GetBalance(Dictionary<string, string> inputs, string tpUserNameString, string tpCurrencyId)
+        {
+            throw new NotImplementedException();
         }
 
         public ApiResult SetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, string betSetting)
@@ -283,7 +275,7 @@ namespace ThirdParty.SBSW
             {
                 throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found.");
             }
-
+            var detail = ChangeTransIdToString(tpBetRecordDetail.Detail);
             var model = JsonConvert.DeserializeObject<DetailModel>(tpBetRecordDetail.Detail);
             var betDetail = model?.BetDetails?.First();
             var betNumberDetail = model?.BetNumberDetails?.First();
@@ -294,7 +286,7 @@ namespace ThirdParty.SBSW
                 return new BaseDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
-                    Detail = tpBetRecordDetail.Detail,
+                    Detail = detail,
                     TpCurrency = tpCurrency,
                 };
             }
@@ -304,7 +296,7 @@ namespace ThirdParty.SBSW
                 TpCategory.Sports => new SportsDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
-                    Detail = tpBetRecordDetail.Detail,
+                    Detail = detail,
                     TpCurrency = tpCurrency,
                     TpUserName = betDetail?.vendor_member_id,
                     UTCBetTime = GetUTCTime(betDetail?.transaction_time, DateTime.MinValue),
@@ -326,7 +318,7 @@ namespace ThirdParty.SBSW
                 TpCategory.Casino => new CasinoDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
-                    Detail = tpBetRecordDetail.Detail,
+                    Detail = detail,
                     TpCurrency = tpCurrency,
                     RefTransId = betDetail?.trans_id,
                     TpUserName = betDetail?.vendor_member_id,
@@ -340,21 +332,21 @@ namespace ThirdParty.SBSW
                 TpCategory.Lottery => new LotteryDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
-                    Detail = tpBetRecordDetail.Detail,
+                    Detail = detail,
                     TpCurrency = tpCurrency,
-                    RefTransId = gameType == 70 ? betNumberDetail?.trans_id : betDetail?.trans_id,
-                    TpUserName = gameType == 70 ? betNumberDetail?.vendor_member_id : betDetail?.vendor_member_id,
-                    UTCBetTime = gameType == 70 ? GetUTCTime(betNumberDetail?.transaction_time, DateTime.MinValue) :
+                    RefTransId = gameType == (int)TpGameType.SBSW_NumberGame ? betNumberDetail?.trans_id : betDetail?.trans_id,
+                    TpUserName = gameType == (int)TpGameType.SBSW_NumberGame ? betNumberDetail?.vendor_member_id : betDetail?.vendor_member_id,
+                    UTCBetTime = gameType == (int)TpGameType.SBSW_NumberGame ? GetUTCTime(betNumberDetail?.transaction_time, DateTime.MinValue) :
                             GetUTCTime(betDetail?.transaction_time, DateTime.MinValue),
-                    UTCSettledTime = gameType == 70 ? GetUTCTime(betNumberDetail?.transaction_time, DateTime.MinValue) :
+                    UTCSettledTime = gameType == (int)TpGameType.SBSW_NumberGame ? GetUTCTime(betNumberDetail?.transaction_time, DateTime.MinValue) :
                             GetUTCTime(betDetail?.transaction_time, (DateTime)betDetail.transaction_time),
-                    Stake = gameType == 70 ? betNumberDetail.stake * tpCurrency.ExchangeRate : betDetail.stake * tpCurrency.ExchangeRate,
-                    WinlostAmount = gameType == 70 ? betNumberDetail.winlost_amount * tpCurrency.ExchangeRate : betDetail.winlost_amount * tpCurrency.ExchangeRate,
+                    Stake = gameType == (int)TpGameType.SBSW_NumberGame ? betNumberDetail.stake * tpCurrency.ExchangeRate : betDetail.stake * tpCurrency.ExchangeRate,
+                    WinlostAmount = gameType == (int)TpGameType.SBSW_NumberGame ? betNumberDetail.winlost_amount * tpCurrency.ExchangeRate : betDetail.winlost_amount * tpCurrency.ExchangeRate,
                 },
                 TpCategory.VirtualSports => new VirtualSportsDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
-                    Detail = tpBetRecordDetail.Detail,
+                    Detail = detail,
                     TpCurrency = tpCurrency,
                     RefTransId = betVirtualSportDetail?.trans_id,
                     TpUserName = betVirtualSportDetail?.vendor_member_id,
@@ -362,11 +354,12 @@ namespace ThirdParty.SBSW
                     UTCSettledTime = GetUTCTime(betVirtualSportDetail?.match_datetime, (DateTime)betVirtualSportDetail?.transaction_time),
                     Stake = betVirtualSportDetail.stake * tpCurrency.ExchangeRate,
                     WinlostAmount = betVirtualSportDetail.winlost_amount * tpCurrency.ExchangeRate,
+                    Odds = betVirtualSportDetail.odds,
                 },
                 _ => new BaseDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
-                    Detail = tpBetRecordDetail.Detail,
+                    Detail = detail,
                     TpCurrency = tpCurrency,
                 }
             };
@@ -374,12 +367,33 @@ namespace ThirdParty.SBSW
 
         private DateTime GetUTCTime(DateTime? target, DateTime defaultTime)
         {
-            return new DateTimeOffset(target ?? defaultTime, new TimeSpan(-4, 0, 0)).DateTime;
+            return new DateTimeOffset(target ?? defaultTime, new TimeSpan(-4, 0, 0))
+                .ToOffset(new TimeSpan(0, 0, 0)).DateTime;
         }
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
+        }
+
+        private string ChangeTransIdToString(string json)
+        {
+            var jObject = JObject.Parse(json);
+            if (jObject["BetDetails"] != null)
+            {
+                jObject["BetDetails"][0]["trans_id"] = jObject["BetDetails"][0]["trans_id"].ToString();
+            }
+
+            if (jObject["BetNumberDetails"] != null)
+            {
+                jObject["BetNumberDetails"][0]["trans_id"] = jObject["BetNumberDetails"][0]["trans_id"].ToString();
+            }
+
+            if (jObject["BetVirtualSportDetails"] != null)
+            {
+                jObject["BetVirtualSportDetails"][0]["trans_id"] = jObject["BetVirtualSportDetails"][0]["trans_id"].ToString();
+            }
+            return jObject.ToString();
         }
     }
 }
