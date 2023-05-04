@@ -11,7 +11,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
     {
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly Dictionary<int, TpGameTypeOption> _tpGameTypeConfig;
-        private readonly IReadOnlyDictionary<int, TpListOption> _TpList;
+        private readonly List<int> _kenoGameTypeList;
 
         public SabaBetHelper(IServiceProvider provider)
         {
@@ -19,81 +19,54 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             _thirdPartyService = provider.GetRequiredService<ThirdPartyService>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             var tpGameTypeOptions = provider.GetRequiredService<IEnumerable<TpGameTypeOption>>(); 
-            _TpList = provider.GetRequiredService<IEnumerable<TpListOption>>().ToDictionary(d => d.Id, d => d);
+            var tpList = provider.GetRequiredService<IEnumerable<TpListOption>>().ToDictionary(d => d.Id, d => d);
             foreach (var tpGameType in tpGameTypeOptions)
             {
-                tpGameType.TpName =  _TpList.TryGetValue(tpGameType.TpId, out var result) ? result.TpName : string.Empty;
+                tpGameType.TpName = tpList.TryGetValue(tpGameType.TpId, out var result) ? result.TpName : string.Empty;
             }
             _tpGameTypeConfig = tpGameTypeOptions.ToDictionary(i => i.Type, i => i);
+            _kenoGameTypeList = new List<int>
+            {
+                (int)GameType.SBSW_Keno,  // 202 OW Keno
+                (int)GameType.SBSW_Lottery, // 220 OW Lottery
+                (int)GameType.SBSW_TableGame, // 222 OW TableGame
+            };
         }
 
-        public override async Task UpdateBetRecordByTransId(WorkerType workerType, DateTime today, int hour)
+        public override async Task UpdateBetRecordByTransId(WorkerType workerType, DateTime startTime, DateTime endTime, IEnumerable<SettlementType> settlementTypeList)
         {
-            try
+            var tpSetting = thirdPartyModel.TpSetting;
+            var tickets = _thirdPartyService.GetTpBetRecordReSettleTicket(Tp.SBSW, SiteId, settlementTypeList, startTime, endTime);               
+            foreach (var ticket in tickets.OrderBy(i => i.SettledTime).ThenBy(i => i.TransId))
             {
-                IEnumerable<UnSettle> tickets;
-                switch (workerType)
+                try
                 {
-                    case WorkerType.ByTransIdUnSettleWager:
-                        tickets = _thirdPartyService.GetTpBetRecordReSettleTicket(Tp.SBSW, SiteId,
-                            JsonConvert.SerializeObject(new List<int> { (int)SettlementType.UnSettled }),
-                            today.AddDays(-7), today.AddDays(-1).AddSeconds(-1));
-                        break;
-                    
-                    case WorkerType.ByTransIdSettleWager:
-                        var startTime = today.AddDays(-1).AddHours(hour);
-                        var endTime = startTime.AddHours(1).AddSeconds(-1);
-                        var settlementTypeList = JsonConvert.SerializeObject(new List<int>
-                        {
-                            (int)SettlementType.SettledForValid ,
-                            (int)SettlementType.SettledForInvalid,
-                            (int)SettlementType.SettledForValidNotRollover
-                        });
-                        tickets = _thirdPartyService.GetTpBetRecordReSettleTicket(Tp.SBSW, SiteId, settlementTypeList, startTime, endTime);
-                        break;
-                    
-                    case WorkerType.MainWager:
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(workerType), workerType, null);
-                }
-
-                var tpSetting = thirdPartyModel.TpSetting;
-
-                foreach (var ticket in tickets.OrderBy(i => i.SettledTime).ThenBy(i => i.TransId))
-                {
-                    try
+                    var api = _kenoGameTypeList.Contains(ticket.GameType)? "GetKenoDetailByTransID" : "GetBetDetailByTransID";
+                    var url = $"{tpSetting["ApiUrl"]}/{api}";
+                    var parameters = new Dictionary<string, string>
                     {
-                        var api = ticket.GameType == (int)GameType.SBSW_Keno ? "GetKenoDetailByTransID" : "GetBetDetailByTransID";
-                        var url = $"{tpSetting["ApiUrl"]}/{api}";
-                        var parameters = new Dictionary<string, string>
-                        {
-                            { "vendor_id", tpSetting["VendorId"] },
-                            { "trans_id", ticket.TransId}
-                        };
-                        var p = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
+                        { "vendor_id", tpSetting["VendorId"] },
+                        { "trans_id", ticket.TransId}
+                    };
 
-                        var result = await HttpPostAsync(url, p, "application/x-www-form-urlencoded");
-                        var getBetDetail = FromJson<GetBetDetail>(result);
-                        if (getBetDetail.error_code != 0)
-                        {
-                            throw new Exception(getBetDetail.message);
-                        }
-
-                        if (!DataNotExists(getBetDetail))
-                        {
-                            var settleDataList = ProcessData(getBetDetail);
-                            _thirdPartyBLL.DoSettleTicket(settleDataList, workerType);
-                        }
+                    var p = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
+                    var result = await HttpPostAsync(url, p, "application/x-www-form-urlencoded");
+                    var getBetDetail = FromJson<GetBetDetail>(result);
+                    if (getBetDetail.error_code != 0)
+                    {
+                        throw new Exception(getBetDetail.message);
                     }
-                    catch (Exception e)
+
+                    if (!DataNotExists(getBetDetail))
                     {
-                        _logger.LogError(e, $"UpdateBetRecordByTransId, TransId={ticket.TransId}");
+                        var settleDataList = ProcessData(getBetDetail);
+                        _thirdPartyBLL.DoSettleTicket(settleDataList, workerType);
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "UpdateBetRecordByTransId");
+                catch (Exception e)
+                {
+                    _logger.LogError(e, $"UpdateBetRecordByTransId, TransId={ticket.TransId}");
+                }
             }
         }
 
@@ -177,14 +150,15 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                     }
 
                     CalculateAvailableBet(betDetial, betRecordInfo);
-                    var tpBetRecordExtend = new TpBetRecordExtend(_tpGameTypeConfig[(int)gameType], betDetial);
-                    settleDataList.Add(new SabaSettleData(betRecordInfo, tpBetRecordExtend));
 
                     // 處理CashOut的注單
-                    if (TryGetCashOut(betDetial, out var cashout))
+                    if (betDetial.ticket_extra_status.Equals("cashout",  StringComparison.OrdinalIgnoreCase))
                     {
-                        settleDataList.AddRange(cashout);
+                        betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
                     }
+
+                    var tpBetRecordExtend = new TpBetRecordExtend(_tpGameTypeConfig[(int)gameType], betDetial);
+                    settleDataList.Add(new SabaSettleData(betRecordInfo, tpBetRecordExtend));
                 }
             }
 
@@ -429,46 +403,6 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             syncParams.timeOfFrequency = 3;
             //syncParams.DoneTime=DateT
             return syncParams;
-        }
-
-        private bool TryGetCashOut(BetDetail betDetial, out List<SabaSettleData> settleDataList)
-        {
-            settleDataList = default;
-            if (betDetial.CashOutData == null || !betDetial.CashOutData.Any())
-            {
-                return false;
-            }
-
-            settleDataList = new List<SabaSettleData>();
-            foreach (var cashOut in betDetial.CashOutData)
-            {
-                var gameType = GetBetDetailGameType(betDetial.sport_type);
-                var betRecordInfo = new BetRecordInfo
-                {
-                    TpId = (int)Tp,
-                    TransId = cashOut.cashout_id.ToString(),
-                    TransTime = ConvertLocTime(betDetial.transaction_time),
-                    SettledTime = ConvertLocTime(cashOut.transdate),
-                    Stake = cashOut.stake,
-                    WinlostAmount = cashOut.buyback_amount - cashOut.real_stake,
-                    OriginalState = cashOut.ticket_status,
-                    TpUserName = betDetial.vendor_member_id,
-                    TicketKey = betDetial.version_key,
-                    tokenmoney = betDetial.tokenmoney,
-                    GameType = gameType,
-                    GameID = betDetial.sport_type.ToString()
-                };
-
-                // 使用cashOut的ticket_status狀態跑下面的流程
-                betDetial.ticket_status = cashOut.ticket_status;
-
-                // 計算 CashOut的 ValidBet 與設定 SettlementType
-                CalculateAvailableBet(betDetial, betRecordInfo);
-
-                var tpBetRecordExtend = new TpBetRecordExtend(_tpGameTypeConfig[(int)gameType], betDetial);
-                settleDataList.Add(new SabaSettleData(betRecordInfo, tpBetRecordExtend));
-            }
-            return true;
         }
 
         private GameType GetBetDetailGameType(int? sport_type)

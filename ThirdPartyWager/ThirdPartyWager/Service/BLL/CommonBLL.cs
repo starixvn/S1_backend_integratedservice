@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using ThirdPartyWager.Service.DAL;
+﻿using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 
 namespace ThirdPartyWager.Service.BLL
@@ -16,9 +15,10 @@ namespace ThirdPartyWager.Service.BLL
         {
             return commonService.GetSiteList();
         }
+
         public IEnumerable<TpCurrency> GetTpCurrencyList(int tpId)
         {
-            return commonService.GetTpCurrencyList(tpId);
+            return commonService.GetTpCurrencyList(tpId).Where(x => x.IsSubCurrency == 0);
         }
 
         public Task<IEnumerable<FincanceDailySummary>> GetWagerSummary(string spName, long beginTime, long endTime)

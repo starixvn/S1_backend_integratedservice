@@ -10,7 +10,7 @@ namespace ThirdPartyBetHistory.Service
     public interface IThirdPartyBetHelper
     {
         Task<long> AddBetRecord(WorkerType workerType, long siteTicketKey);
-        Task UpdateBetRecordByTransId(WorkerType workerType, DateTime today, int hour);
+        Task UpdateBetRecordByTransId(WorkerType workerType, DateTime startTime, DateTime endTime, IEnumerable<SettlementType> settlementTypeList);
         SyncParams InitialSyncParams();
         bool IsDebug { set; get; }
         bool IsRunning { set; get; }
@@ -28,8 +28,8 @@ namespace ThirdPartyBetHistory.Service
         public bool IsRunning { get; set; }
         public SyncParams syncParams { set; get; }
         public ThirdPartyModel thirdPartyModel { set; get; }
-        public abstract Task<long> AddBetRecord(WorkerType workerType, long siteTicketKey);      
-        public abstract Task UpdateBetRecordByTransId(WorkerType workerType, DateTime today, int hour);
+        public abstract Task<long> AddBetRecord(WorkerType workerType, long siteTicketKey);
+        public abstract Task UpdateBetRecordByTransId(WorkerType workerType, DateTime startTime, DateTime endTime, IEnumerable<SettlementType> settlementTypeList);
         public abstract SyncParams InitialSyncParams();
         protected ILogger<ThirdPartyBetHelperBase> _logger;
         protected ThirdPartyService _thirdPartyService;

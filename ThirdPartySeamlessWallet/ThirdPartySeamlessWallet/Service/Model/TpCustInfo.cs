@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using ThirdPartySeamlessWallet.Service.Model.enums;
+
 namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class TpCustInfo
@@ -74,5 +76,14 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public bool IsResetPwd { get; set; }
         public string Aff { get; set; }
         public string AffCode { get; set; }
+    }
+
+    public class CustBonus
+    {
+        public int BonusId { get; set; } 
+        public decimal Bonus { get; set; }
+        public PromotionCategory PromoCategoryId { get; set; }
+        public int GameType { get; set; }
+        public int TpId { get; set; }      
     }
 }
