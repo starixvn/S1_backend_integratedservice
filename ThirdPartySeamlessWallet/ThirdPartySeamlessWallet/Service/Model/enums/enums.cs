@@ -128,6 +128,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         BG_LiveCasino = 94,
         SBSW_Vgaming = 95,
         SBSW_CardClub = 96,
+        TFG_Esports = 97
     }
     public enum Tp
     {
@@ -176,7 +177,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Skywind = 43,
         SimplePlay = 44,
         Yeebet = 46,
-        BG = 47
+        BG = 47,
+        TFG = 48
     }
     public enum TransferType : int
     {
@@ -215,7 +217,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Lottery = 6,
         VirtualSports = 7,
         P2P = 8,
-        Games = 10
+        Games = 10,
+        Esports = 11
     }
 
     public enum PromotionCategory
