@@ -28,8 +28,8 @@ namespace ThirdPartyBetHistory.Service.Model.enums
         SBSW_Keno = 73,
         SBSW_Lottery = 74,
         SBSW_TableGame = 75,
-        SBSW_CardClub = 95,
-        SBSW_Vgaming = 96,
+        SBSW_Vgaming = 95,
+        SBSW_CardClub = 96,
     }
 
     public enum Tp
@@ -55,7 +55,7 @@ namespace ThirdPartyBetHistory.Service.Model.enums
     {
         Main, //MainDB
         Report,//ReportDB
-	}
+    }
 
     public enum WorkerType
     {
