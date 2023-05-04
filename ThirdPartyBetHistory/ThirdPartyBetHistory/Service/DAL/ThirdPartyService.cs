@@ -101,7 +101,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                         // 1.先找到用戶還在Running的CustBonusList
                         // 2.找出符合條件的Bonus才可以使用
                         var custBonus = _settledService.GetCustBonusList(tpCustInfo.CustId)
-                            .FirstOrDefault(i => i.TpId == (int)Tp.Saba || i.PromoCategoryId == 0);
+                            .FirstOrDefault(i => i.TpId == (int)Tp.SBSW || i.PromoCategoryId == 0);
                         if (custBonus != null)
                         {
                             hasJoinBonus = true;
