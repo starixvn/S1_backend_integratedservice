@@ -150,6 +150,8 @@ namespace ThirdPartyCore.Model.enums
         Lottery = 6,
         VirtualSports = 7,
         Poker = 8,
+        Games = 10,
+        Esports = 11
     }
 
     public enum FinancialType
