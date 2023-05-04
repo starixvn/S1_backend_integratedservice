@@ -234,7 +234,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         PTLiveCasino = 8,
         SBSW = 9,
         Mega888SlotRNGFishing = 10,
-        Esports = 11
+        ESports = 11,
     }
 
     public enum Direction
