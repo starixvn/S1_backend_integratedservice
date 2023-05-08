@@ -209,7 +209,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             // 先走新流程取得Bonus
             var result = GetTpSeamlessBonus(tpId, tpTransId, gameType, out CustId, out BonusId);
-            if (CustId > 0 && BonusId > 0)
+            if (CustId > 0 && BonusId > 0 || tpCategory == TpCategory.Esports)
             {
                 return result;
             }
