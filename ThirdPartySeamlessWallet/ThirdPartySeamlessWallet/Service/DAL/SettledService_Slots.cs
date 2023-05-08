@@ -4514,7 +4514,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var trans = conn.BeginTransaction();
 
                 // check exist
-                // Service_BettransRng_AP_Mini_crash_Get、Service_BettransRng_AP_Mini_cardracing_Get
+                // Service_BettransRng_AP_Mini_crash_Get
                 var spName = $"Service_BettransRng_AP_Mini_{resultData_AdvantPlayMini.MiniGameCode.ToLower()}_Get";
                 var partitionTime = DateTimeOffset.FromUnixTimeSeconds(resultData_AdvantPlayMini.SettlementTime).DateTime;
 
@@ -4553,7 +4553,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 });
                 p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
 
-                // Service_BettransRng_AP_Mini_crash_Ins、Service_BettransRng_AP_Mini_cardracing_Ins
+                // Service_BettransRng_AP_Mini_crash_Ins
                 spName = $"Service_BettransRng_AP_Mini_{resultData_AdvantPlayMini.MiniGameCode.ToLower()}_Ins";
                 result = _partitionService.Execute(partitionTime, spName, p, trans);
 
