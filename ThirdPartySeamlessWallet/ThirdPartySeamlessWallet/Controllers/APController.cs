@@ -1308,6 +1308,65 @@ namespace ThirdPartySeamlessWallet.Controllers
             return errResponse;
         }
 
+        [HttpPost]
+        [Route("[controller]/{sitename}/api/v1/cardracing/wallet/refundPayoutByPostman")]
+        public async Task<dynamic> refundByPostmanOfMiniAsync(string sitename)
+        {
+            var game = "cardracing";
+            string logName = $"{_tpName}_RefundPayoutByPostmanOfMini";
+            Response.StatusCode = (int)HttpStatusCode.INVALID_DATA;
+            ErrorResponse errResponse = new ErrorResponse();
+            errResponse.errorMessage = "Server error";
+
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            string Content = await reader.ReadToEndAsync();
+
+            try
+            {
+                if (string.IsNullOrEmpty(game) || !CheckGameOfMini(game))
+                {
+                    Response.StatusCode = (int)HttpStatusCode.INVALID_DATA;
+                    errResponse.errorMessage = "game error";
+                    log2File.Error($"{errResponse.errorMessage} - {game}", logName);
+                    return errResponse;
+                }
+
+                RefundMiniResp response = new RefundMiniResp();
+                var getCommReq = JsonConvert.DeserializeObject<CommonMiniReq>(Content);
+                var getReq = JsonConvert.DeserializeObject<CancelBetData_AdvantPlayMini>(Content);
+
+                var betting = bettingBLL.GetAdvantPlayMiniBet(getReq.TransId, getReq.refundTime, game, out _);
+                if (betting == null)
+                {
+                    log2File.Error($"PlaceBet data not found", logName);
+                    return errResponse;
+                }
+
+                getReq.MiniGameCode = betting.First().MiniGameCode;
+                getReq.UserReferenceId = betting.First().UserReferenceId;
+
+                var result = settledBLL.CancelPayout_AdvantPlayMini(getReq);
+                if (result > 0 || result == -1)
+                {
+                    Response.StatusCode = (int)HttpStatusCode.OK;
+                    response.refundId = getReq.TransId;
+                    response.timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                    return response;
+                }
+                else
+                {
+                    errResponse.errorMessage = "Unknow error";
+                    log2File.Error($"Unknow error {result}", logName);
+                }
+            }
+            catch (Exception ex)
+            {
+                log2File.Error($"{ex.Message}", logName, ex);
+            }
+
+            return errResponse;
+        }
+
         private bool CheckGameOfMini(string game)
         {
             return _gameOfMiniList.Contains(game, StringComparer.OrdinalIgnoreCase);
