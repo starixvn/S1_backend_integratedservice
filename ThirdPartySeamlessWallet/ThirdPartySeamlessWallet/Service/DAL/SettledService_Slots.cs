@@ -4757,7 +4757,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                     }
                 }
             }
