@@ -2291,6 +2291,23 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public int CancelPayout_AdvantPlayMini(CancelBetData_AdvantPlayMini cancelBetData_AdvantPlayMini)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, cancelBetData_AdvantPlayMini.UserReferenceId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                foreach (var item in cancelBetData_AdvantPlayMini.Data)
+                {
+                    item.Amount *= tpCurrency.ExchangeRate;
+                }
+            }
+
+            var result = settledService.CancelPayout_AdvantPlayMini(tpCustInfo, cancelBetData_AdvantPlayMini);
+            return result;
+        }
+
         public int SetSettleFlag_BettransRng_AP_Mini(string spName, string transId, long settleTime)
         {
             return settledService.SetSettleFlag_BettransRng_AP_Mini(spName, transId, settleTime);
