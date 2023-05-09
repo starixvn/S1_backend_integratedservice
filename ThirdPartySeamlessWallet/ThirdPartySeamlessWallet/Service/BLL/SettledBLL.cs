@@ -2267,10 +2267,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public int Result_AdvantPlayMini(ResultData_AdvantPlayMini resultData_AdvantPlayMini, out long SQ)
+        public int Result_AdvantPlayMini(ResultData_AdvantPlayMini resultData_AdvantPlayMini)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, resultData_AdvantPlayMini.UserReferenceId);
-            var result = settledService.Result_AdvantPlayMini(tpCustInfo, resultData_AdvantPlayMini, out SQ);
+            var result = settledService.Result_AdvantPlayMini(tpCustInfo, resultData_AdvantPlayMini);
             return result;
         }
 

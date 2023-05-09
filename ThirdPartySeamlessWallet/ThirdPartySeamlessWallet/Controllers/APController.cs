@@ -1159,17 +1159,18 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 foreach (var bettransItem in prepareEndRound)
                 {
+                    // 排除已處理
                     if (bettransItem.Any(c => c.TicketType == (int)BettransType.EndRound))
                     {
                         continue;
                     }
-
+                    
                     // 待處理
                     var endRoundData = bettransItem.First(c => c.TicketType == (int)BettransType.Bet);
                     getReq.MiniGameCode = endRoundData.MiniGameCode;
                     getReq.UserReferenceId = endRoundData.UserReferenceId;
                     getReq.TransId = endRoundData.TransId;
-                    var result = settledBLL.Result_AdvantPlayMini(getReq, out long SQ);
+                    var result = settledBLL.Result_AdvantPlayMini(getReq);
                     if (result > 0 || result == -1)
                     {
                         log2File.Info($"ResultOfMiniAsync success {result}\r\n{JsonConvert.SerializeObject(bettransItem)}", logName);
@@ -1217,7 +1218,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 var Decrypt = DecrypeRequest(getCommReq.payload, sitename);
                 log2File.Info($"{Decrypt}", logName);
-                //var TransId = "";
                 var getReq = JsonConvert.DeserializeObject<PayoutData_AdvantPlayMini>(Decrypt);
 
                 var bettrans = bettingBLL.GetAdvantPlayMiniBySession(getReq.GameId, Convert.ToInt64(getReq.SessionId), getReq.SettlementTime, "cardracing", out _);
@@ -1262,7 +1262,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 userReferenceId = winItem.UserReferenceId,
                                 balance = tpAffterAmount
                             });
-
+                            log2File.Info($"PayoutEndResultOfMiniAsync success {result}\r\n{JsonConvert.SerializeObject(winItem)}", logName);
                         }
                         else if (result == -1)
                         {
@@ -1272,6 +1272,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 userReferenceId = winItem.UserReferenceId,
                                 balance = tpAffterAmount
                             });
+                            log2File.Info($"PayoutEndResultOfMiniAsync success {result}\r\n{JsonConvert.SerializeObject(winItem)}", logName);
                         }
                         else
                         {
@@ -1291,23 +1292,31 @@ namespace ThirdPartySeamlessWallet.Controllers
                         {
                             lostItem
                         };
-                        var getBet = bettrans.First(i => i.TicketType == 1 && i.TransId == lostItem.TransactionReferenceId);
-                        singleBettrans.TransactionReferenceId = lostItem.TransactionReferenceId;
-                        singleBettrans.GameId = getReq.GameId;
-                        singleBettrans.SessionId = getReq.SessionId;
-                        singleBettrans.SettlementTime = getReq.SettlementTime;
-                        singleBettrans.LostResults = singleLostResults;
-                        singleBettrans.GameResult = getReq.GameResult;
-                        singleBettrans.UserReferenceId = getBet.UserReferenceId;
-                        singleBettrans.MiniGameCode = getReq.MiniGameCode;
-
-                        var result = settledBLL.Payout_AdvantPlayMini(singleBettrans, out decimal tpAffterAmount);
-                        if (result != -1 && result <= 0)
+                        var getBet = bettrans.FirstOrDefault(i => i.TicketType == 1 && i.TransId == lostItem.TransactionReferenceId);
+                        if(getBet == null)
                         {
                             error = true;
-                            Response.StatusCode = (int)HttpStatusCode.INVALID_DATA;
-                            errResponse.errorMessage = "Unknow error";
-                            log2File.Error($"Unknow error {result}\r\n{JsonConvert.SerializeObject(lostItem)}", logName);
+                            log2File.Error($"bettrans no found bet error\r\n{JsonConvert.SerializeObject(lostItem)}", logName);
+                        }
+                        else
+                        {
+                            singleBettrans.TransactionReferenceId = lostItem.TransactionReferenceId;
+                            singleBettrans.GameId = getReq.GameId;
+                            singleBettrans.SessionId = getReq.SessionId;
+                            singleBettrans.SettlementTime = getReq.SettlementTime;
+                            singleBettrans.LostResults = singleLostResults;
+                            singleBettrans.GameResult = getReq.GameResult;
+                            singleBettrans.UserReferenceId = getBet.UserReferenceId;
+                            singleBettrans.MiniGameCode = getReq.MiniGameCode;
+
+                            var result = settledBLL.Payout_AdvantPlayMini(singleBettrans, out decimal tpAffterAmount);
+                            if (result != -1 && result <= 0)
+                            {
+                                error = true;
+                                Response.StatusCode = (int)HttpStatusCode.INVALID_DATA;
+                                errResponse.errorMessage = "Unknow error";
+                                log2File.Error($"Unknow error {result}\r\n{JsonConvert.SerializeObject(lostItem)}", logName);
+                            }
                         }
                     }
                 }

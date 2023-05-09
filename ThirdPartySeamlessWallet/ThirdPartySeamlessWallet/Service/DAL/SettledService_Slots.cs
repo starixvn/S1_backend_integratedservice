@@ -4335,10 +4335,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public int Result_AdvantPlayMini(TpCustInfo tpCustInfo, ResultData_AdvantPlayMini resultData_AdvantPlayMini, out long SQ)
+        public int Result_AdvantPlayMini(TpCustInfo tpCustInfo, ResultData_AdvantPlayMini resultData_AdvantPlayMini)
         {
             var result = 0;
-            SQ = 0;
             try
             {
                 using var conn = _mainDbClient.GetMySqlConnection();
@@ -4349,14 +4348,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 // Service_BettransRng_AP_Mini_crash_Get
                 var spName = $"Service_BettransRng_AP_Mini_{resultData_AdvantPlayMini.MiniGameCode.ToLower()}_Get";
                 var partitionTime = DateTimeOffset.FromUnixTimeSeconds(resultData_AdvantPlayMini.SettlementTime).DateTime;
-
-                var check = _partitionService.Query<BettransData_AdvantPlayMini_Payout>(partitionTime, spName, new { _TransId = resultData_AdvantPlayMini.TransId });
-                if (check.Any(a => a.TicketType == (int)BettransType.EndRound))
+                var data = "[]";
+                if (resultData_AdvantPlayMini.Data.Any(i => i.TransactionReferenceId == resultData_AdvantPlayMini.TransId))
                 {
-                    SQ = check.Where(a => a.TicketType == (int)BettransType.EndRound).First().SQ;
-                    return -1;
+                    data = JsonConvert.SerializeObject(resultData_AdvantPlayMini.Data.Where(i => i.TransactionReferenceId == resultData_AdvantPlayMini.TransId).ToList());
                 }
-
                 var p = new DynamicParameters(new
                 {
                     TransId = resultData_AdvantPlayMini.TransId,
@@ -4374,7 +4370,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     Odds = 0,
                     //Suit = Suit,
                     RefundTime = 0,
-                    Data = JsonConvert.SerializeObject(resultData_AdvantPlayMini.Data),
+                    Data = data,
                     WinResults = "[]",
                     LostResults = "[]",
                     GameResult = "",
@@ -4391,7 +4387,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    SQ = p.Get<long>("SQ");
                     result = _tpUnsettleService.InsertTpUnsettle(Tp.AP, GameType.AP_RNG, resultData_AdvantPlayMini.TransId, trans);
 
                     if (result > 0)
