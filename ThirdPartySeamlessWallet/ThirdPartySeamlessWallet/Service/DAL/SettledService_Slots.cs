@@ -4706,6 +4706,79 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        public int CancelPayout_AdvantPlayMini(TpCustInfo tpCustInfo, CancelBetData_AdvantPlayMini cancelBetData_AdvantPlayMini)
+        {
+            var result = 0;
+            var bonusId = 0;
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            var trans = conn.BeginTransaction();
+
+            try
+            {
+                var amount = cancelBetData_AdvantPlayMini.Data.First().Amount;
+                var TransactionReferenceId = cancelBetData_AdvantPlayMini.Data.First().TransactionReferenceId;
+
+                // Service_BettransRng_AP_Mini_cardracing_CancelPayout_Set
+                var spName = $"Service_BettransRng_AP_Mini_cardracing_CancelPayout_Set";
+                var partitionTime = DateTimeOffset.FromUnixTimeSeconds(cancelBetData_AdvantPlayMini.refundTime).DateTime;
+
+                var p = new DynamicParameters(new
+                {
+                    TransactionReferenceId = TransactionReferenceId,
+                    TicketType = (int)BettransType.CancelBet,
+                    TicketStatus = (int)TicketStatus.Refund
+                });
+
+                result = _partitionService.Execute(partitionTime, spName, p, trans);
+
+                if (result > 0)
+                {
+                    if (amount != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            amount,
+                            (int)Tp.AP,
+                            TransactionReferenceId,
+                            (int)GameType.AP_RNG,
+                            TpCategory.Slots,
+                            TransactionReferenceId,
+                            TransType.Payout,
+                            null,
+                            out _,
+                            "Resettle",
+                            out bonusId,
+                            conn,
+                            trans,
+                            AllowNegative.Allow
+                       );
+                    }
+
+                    if (result > 0)
+                    {
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                logger.LogError(mySqlEx.Message);
+                // Duplicate
+                if (mySqlEx.Number == 1062)
+                {
+                    return -1;
+                }
+                throw mySqlEx;
+            }
+
+            return result;
+        }
+
         public int SetSettleFlag_BettransRng_AP_Mini(string spName, string transId, long settleTime)
         {
             var result = 0;
