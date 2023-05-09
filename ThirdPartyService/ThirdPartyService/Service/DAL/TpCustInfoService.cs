@@ -32,7 +32,7 @@ namespace ThirdPartyService.Service.DAL
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
         }
-        
+
         public ApiResult<TpCustInfo> GetTpCustInfo(int custId, int tpId)
         {
             var apiResult = new ApiResult<TpCustInfo>();
@@ -48,7 +48,7 @@ namespace ThirdPartyService.Service.DAL
                     apiResult.Message = "Test environment not supported";
                     return apiResult;
                 }
-                
+
                 tpCustInfo = _mainDbClient.QueryFirst<TpCustInfo>("TpCustInfo_Get", new { CustId = custId, TpId = tpId });
 
                 if (tpCustInfo == null)
@@ -68,7 +68,7 @@ namespace ThirdPartyService.Service.DAL
 
                     var tpHelper = _thirdPartyHelper.GetThirdPartyHelper(tpId, customer.SiteId);
                     var serverInfo = _serverInfoBll.GetServerInfo(customer.SiteId);
-                    
+
                     // 特殊幣別TpUserName前綴
                     var currencyPrefixCode = "";
                     var currencyPrefix = _mainDbClient.QueryFirst<CurrencyPrefix>("Service_CurrencyPrefix_ByCurrencyId_Get", new { _CurrencyId = customer.CurrencyId });
@@ -95,7 +95,7 @@ namespace ThirdPartyService.Service.DAL
                     regTpCustInfo.IsTest = customer.IsTest;
                     regTpCustInfo.ActStatus = customer.ActStatus;
 
-                    
+
                     var tpCurrency = _mainDbClient.QueryFirst<TpCurrency>("TpCurrency_Get", new { TpId = tpId, customer.CurrencyId });
 
                     if (tpCurrency == null)
@@ -141,7 +141,7 @@ namespace ThirdPartyService.Service.DAL
                     return apiResult;
                 }
 
-                if (tpCustInfo is {CustId: > 0})
+                if (tpCustInfo is { CustId: > 0 })
                 {
                     _cache.Set(sTpCustInfoKey, tpCustInfo, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(30)));
                     apiResult.Data = tpCustInfo;
@@ -156,12 +156,12 @@ namespace ThirdPartyService.Service.DAL
 
             return apiResult;
         }
-        
+
         public void SetTpLastLoginTime(int custId, int tpId)
         {
             _mainDbClient.Execute("TpLastLoginTime_Set", new { TpId = tpId, CustId = custId });
         }
-        
+
         public void SetTpLastTradingTime(int custId, int tpId)
         {
             _mainDbClient.Execute("TpLastTradingTime_Set", new { TpId = tpId, CustId = custId });
@@ -178,7 +178,7 @@ namespace ThirdPartyService.Service.DAL
         /// <param name="tpId">第三方ID</param>
         /// <param name="siteId">平台ID</param>
         /// <returns></returns>
-        public IEnumerable<BalanceTpCustInfoModel> GetTpCustInfoList(bool firstRun,int tpId, int siteId)
+        public IEnumerable<BalanceTpCustInfoModel> GetTpCustInfoList(bool firstRun, int tpId, int siteId)
         {
             var parameter = new DynamicParameters();
             parameter.Add("_FirstRun", firstRun);
@@ -205,7 +205,7 @@ namespace ThirdPartyService.Service.DAL
                 if (tpId == (int)TpEnum.PT)
                 {
                     // allow test custid
-                    var _testCustId = new List<long> { 127590,127591,127592,127593 };
+                    var _testCustId = new List<long> { 127590, 127591, 127592, 127593, 250918, 250917, 250919, 644497, 644110, 649153, 644081, 644503, 250914, 250915 };
                     if (_testCustId.Contains(custId))
                     {
                         return false;
