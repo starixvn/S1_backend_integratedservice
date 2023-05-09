@@ -1218,7 +1218,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 var Decrypt = DecrypeRequest(getCommReq.payload, sitename);
                 log2File.Info($"{Decrypt}", logName);
-                //var TransId = "";
                 var getReq = JsonConvert.DeserializeObject<PayoutData_AdvantPlayMini>(Decrypt);
 
                 var bettrans = bettingBLL.GetAdvantPlayMiniBySession(getReq.GameId, Convert.ToInt64(getReq.SessionId), getReq.SettlementTime, "cardracing", out _);
