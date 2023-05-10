@@ -1093,7 +1093,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     SettleFlag = (int)SettleFlag.EndGame
                 });
 
-                var bettransTCG = await _mainDbClient.QueryFirstAsync<TCGBettransLottery>("Service_BettransLottery_TCG_Get", trans , p);
+                var bettransTCG = await _mainDbClient.QueryFirstOrDefaultAsync<TCGBettransLottery>("Service_BettransLottery_TCG_Get", trans , p);
                 if (bettransTCG != null)
                 {
                     return new TCGResult()
@@ -1164,7 +1164,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     SettleFlag = (int)SettleFlag.Settled
                 });
 
-                var bettransTCG = await _mainDbClient.QueryFirstAsync<TCGBettransLottery>("Service_BettransLottery_TCG_Get", trans , p);
+                var bettransTCG = await _mainDbClient.QueryFirstOrDefaultAsync<TCGBettransLottery>("Service_BettransLottery_TCG_Get", trans , p);
                 if (bettransTCG == null)
                 {
                     return new TCGResult()
@@ -1242,7 +1242,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     SettleFlag = (int)SettleFlag.EndGame
                 });
 
-                var bettransTCG = await _mainDbClient.QueryFirstAsync<TCGBettransLottery>("Service_BettransLottery_TCG_Get", trans , p);
+                var bettransTCG = await _mainDbClient.QueryFirstOrDefaultAsync<TCGBettransLottery>("Service_BettransLottery_TCG_Get", trans , p);
                 if (bettransTCG == null)
                 {
                     return new TCGResult()
