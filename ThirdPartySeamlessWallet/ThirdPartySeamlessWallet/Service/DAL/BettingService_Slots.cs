@@ -445,7 +445,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 // 檢查該局是否已經結算 (避免會員重新進入遊戲對方會再重送資料)
-                var isCompleted = await _mainDbClient.QueryFirstAsync<bool>("Service_BettransRng_MG_Check", trans ,new { bettingDataRNG_MG.betId });
+                var isCompleted = await _mainDbClient.QueryFirstOrDefaultAsync<bool>("Service_BettransRng_MG_Check", trans ,new { bettingDataRNG_MG.betId });
                 if (isCompleted)
                 {
                     logger.LogError($"{bettingDataRNG_MG.betId} is completed");
