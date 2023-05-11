@@ -326,6 +326,13 @@ namespace ThirdPartyService.Service.BLL
 
             try
             {
+                if (ThirdPartyIsMaintain(tpInfo.SiteId, tpInfo.TpId))
+                {
+                    apiResult.ErrorCode = ErrorCode.ThirdPartyUnderMaintenance;
+                    apiResult.Message = "Third party under maintenance.";
+                    return apiResult;
+                }
+                
                 var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
                 if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
                 {
