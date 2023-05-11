@@ -138,7 +138,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         }
                         else
                         {
-                            result = -1;
                             trans.Rollback();
                         }
                     }
