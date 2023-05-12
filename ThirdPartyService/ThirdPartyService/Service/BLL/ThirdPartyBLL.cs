@@ -193,7 +193,7 @@ namespace ThirdPartyService.Service.BLL
                     return apiResult;
                 }
 
-                if (ThirdPartyIsMaintain(tpCustInfoResult.Data.SiteId, tpTransfer.TpId))
+                if (tpCustInfoResult.Data.IsTest == false && ThirdPartyIsMaintain(tpCustInfoResult.Data.SiteId, tpTransfer.TpId))
                 {
                     apiResult.ErrorCode = ErrorCode.ThirdPartyUnderMaintenance;
                     apiResult.Message = "Third party under maintenance.";
@@ -330,7 +330,7 @@ namespace ThirdPartyService.Service.BLL
                 var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
                 if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
                 {
-                    if (ThirdPartyIsMaintain(tpCustInfoResult.Data.SiteId, tpInfo.TpId))
+                    if (tpCustInfoResult.Data.IsTest == false && ThirdPartyIsMaintain(tpCustInfoResult.Data.SiteId, tpInfo.TpId))
                     {
                         apiResult.ErrorCode = ErrorCode.ThirdPartyUnderMaintenance;
                         apiResult.Message = "Third party under maintenance.";
@@ -339,7 +339,7 @@ namespace ThirdPartyService.Service.BLL
 
                     IThirdPartyHelper tpHelper =
                         thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
-                    
+
                     var oThirdPartyModel =
                         thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
                     var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
