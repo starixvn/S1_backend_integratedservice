@@ -70,6 +70,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/authenticate")]
+        [Route("[controller]/nova_stream/authenticate")]
         public AuthenticateResp Authenticate([FromForm] Dictionary<string, string> authenticateReqq)
         {
             AuthenticateResp authenticateResp = new AuthenticateResp();
@@ -160,6 +161,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/balance")]
+        [Route("[controller]/nova_stream/balance")]
         public BalanceResp Balance([FromForm] Dictionary<string, string> balanceReqq)
         {
             //log2File.Info(JsonConvert.SerializeObject(balanceReqq), $"{thisTp}_Balance");
@@ -247,6 +249,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/bet")]
+        [Route("[controller]/nova_stream/bet")]
         public BetResp Bet([FromForm] Dictionary<string, string> betReqq)
         {
             BetResp betResp = new BetResp();
@@ -360,6 +363,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/result")]
+        [Route("[controller]/nova_stream/result")]
         public PayoutResp Result([FromForm] Dictionary<string, string> resultReqq)
         {
             PayoutResp resultResp = new PayoutResp();
@@ -438,6 +442,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/bonusWin")]
+        [Route("[controller]/nova_stream/bonusWin")]
         public PayoutResp BonusWin([FromForm] Dictionary<string, string> bonusWinReqq)
         {
             PayoutResp payoutResp = new PayoutResp();
@@ -480,6 +485,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/JackpotWin")]
+        [Route("[controller]/nova_stream/JackpotWin")]
         public PayoutResp JackpotWin([FromForm] Dictionary<string, string> jackpotWinReqq)
         {
             //log2File.Info(JsonConvert.SerializeObject(jackpotWinReqq), $"{thisTp}_JackpotWin");
@@ -557,6 +563,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/promoWin")]
+        [Route("[controller]/nova_stream/promoWin")]
         public PayoutResp PromoWin([FromForm] Dictionary<string, string> promoWinReqq)
         {
             //log2File.Info(JsonConvert.SerializeObject(promoWinReqq), $"{thisTp}_PromoWin");
@@ -648,6 +655,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/endRound")]
+        [Route("[controller]/nova_stream/endRound")]
         public EndRoundResp EndRound([FromForm] Dictionary<string, string> endRoundReqq)
         {
             var endRoundResp = new EndRoundResp
@@ -705,6 +713,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/refund")]
+        [Route("[controller]/nova_stream/refund")]
         public RefundResp refund([FromForm] Dictionary<string, string> refundReqq)
         {
             RefundResp refundResp = new RefundResp();
@@ -778,6 +787,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/adjustment")]
+        [Route("[controller]/nova_stream/adjustment")]
         public AdjustmentResp adjustment([FromForm] Dictionary<string, string> adjustmentReqq)
         {
             AdjustmentResp adjustmentResp = new AdjustmentResp();
