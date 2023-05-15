@@ -72,6 +72,12 @@ namespace ThirdPartySettleWorker.Workers
                         var betID = debitList.Any() ? debitList.First().BetID : null;
                         var gameId = debitList.Any() ? FindGameId(debitList) : string.Empty;
 
+                        //下注流程異常，debit沒有資料，unsettledList的TicketStatus未更新，需要手動處理
+                        if (betID == null && unsettledList.Any(i => i.TicketStatus == (int)TicketStatus.UnSettled))
+                        {
+                            continue;
+                        }
+
                         //使用BetID作為transId，如果DebitList是空的，使用unsettledList裡面的ReserveId
                         var transId = betID ?? unsettledList.First().TransId;
 
