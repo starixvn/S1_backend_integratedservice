@@ -83,7 +83,8 @@ namespace ThirdPartyService.Service.DAL
                         CustId = customer.CustId,
                         UserName = customer.UserName,
                         SiteId = customer.SiteId,
-                        TpUserName = $"{serverInfo.SiteName}{currencyPrefixCode}_{customer.CustId}"
+                        TpUserName = $"{serverInfo.SiteName}{currencyPrefixCode}_{customer.CustId}",
+                        MemberType = customer.MemberType
                     };
 
                     if (_environment.EnvironmentName != "Production")
