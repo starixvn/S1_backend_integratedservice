@@ -89,7 +89,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount):#,##0.##}", refId, out afterAmount, ref bonusId, conn, trans);
 
                     //新增tpSeamlessBonus紀錄
-                    if (tpTransId != null && custBonus != null)
+                    if (result > 0)
                     {
                         var tpSeamlessBonus = new TpSeamlessBonus
                         {
