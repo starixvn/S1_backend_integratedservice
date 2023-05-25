@@ -113,20 +113,16 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal Amount { get; set; }
         public string RoundId { get; set; }
         public string TxnId { get; set; }
+        public string BetId { get; set; }
         public bool Completed { get; set; }
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
         public int SettleFlag { get; set; }
     }
     
-    public class BettransLC_MG
+    public class BettransLC_MG : BettransRng_MG
     {
-        public long ExtTxnId { get; set; }
-        public string PlayerId { get; set; }
-        public decimal Amount { get; set; }
-        public string RoundId { get; set; }
-        public int TicketType { get; set; }
-        public int TicketStatus { get; set; }
+        public long trx_id { get; set; }
     }
 
     public class MGPlaceBetResult

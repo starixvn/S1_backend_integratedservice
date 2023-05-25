@@ -2707,7 +2707,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
 
-                var bettransMg = await conn.QueryAsync<BettransRng_MG>("Service_BettransRngByBet_MG_Get_V3", new { cancelDataRng_MG.betId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                var bettransMg = await conn.QueryAsync<BettransRng_MG>("Service_BettransRng_MG_txnId_Get", new { cancelDataRng_MG.txnId }, transaction: trans, commandType: CommandType.StoredProcedure);
                 var bettrans = bettransMg.ToList();
 
                 // 不存在有效下注
@@ -2745,7 +2745,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     return new MGCancelResult() { Result = 1 };
                 }
 
-                var result = conn.Execute("Service_BettransRng_MG_CancelBet_Set", new { cancelDataRng_MG.betId, cancelDataRng_MG.txnId }, transaction: trans, commandType: CommandType.StoredProcedure);
+                var betId = (!string.IsNullOrEmpty(cancelDataRng_MG.betId)) ? cancelDataRng_MG.betId : bet.BetId;
+
+
+                var result = conn.Execute("Service_BettransRng_MG_CancelBet_Set", new { betId, cancelDataRng_MG.txnId }, transaction: trans, commandType: CommandType.StoredProcedure);
                 if (result > 0)
                 {
                     if (cancelDataRng_MG.amount != 0)
@@ -2796,17 +2799,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return conn.Execute(spName, new { betId = transId }, commandType: CommandType.StoredProcedure);
         }
 
-        public int GetTpGameType_MG(string betId, long creationTimeMs)
+        public int GetTpGameType_MG(string txnId, long creationTimeMs)
         {
             var tpGameType = 0;
             var p = new DynamicParameters(new
             {
-                betId = betId
+                txnId = txnId
             });
 
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
 
-            var slot = conn.QueryFirstOrDefault("Service_BettransRngByBet_MG_Get_V3", p, commandType: CommandType.StoredProcedure);
+            var slot = conn.QueryFirstOrDefault("Service_BettransRng_MG_txnId_Get", p, commandType: CommandType.StoredProcedure);
 
             if (slot != null)
             {
@@ -2816,7 +2819,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(creationTimeMs).DateTime;
 
-            var live = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLC_MG_BetId_Get", p);
+            var live = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLC_MG_txnId_Get", p);
             if (live.Any())
             {
                 tpGameType = (int)GameType.MG_LiveCasino;
