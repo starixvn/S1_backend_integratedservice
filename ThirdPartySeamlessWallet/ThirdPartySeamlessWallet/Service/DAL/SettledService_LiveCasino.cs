@@ -2916,7 +2916,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataRNG_MG.creationTimeMs).DateTime;
 
-                var bettransMg = _partitionService.Query<BettransRng_MG>(partitionTime, "Service_BettransLC_MG_BetId_Get", new { bettingDataRNG_MG.betId });
+                var bettransMg = _partitionService.Query<BettransLC_MG>(partitionTime, "Service_BettransLC_MG_BetId_Get", new { bettingDataRNG_MG.betId });
                 var bettrans = bettransMg.ToList();
 
                 // 已結束局
@@ -2940,7 +2940,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         Result = 1,
                         AfterAmount = afterAmount,
-                        ExtTxnId = bettrans.FirstOrDefault(b => b.TxnId == bettingDataRNG_MG.txnId).ExtTxnId
+                        ExtTxnId = bettrans.FirstOrDefault(b => b.TxnId == bettingDataRNG_MG.txnId).trx_id
                     };
                 }
 
@@ -3028,7 +3028,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(cancelDataRng_MG.creationTimeMs).DateTime;
 
-                var bettransMg = _partitionService.Query<BettransRng_MG>(partitionTime, "Service_BettransLC_MG_BetId_Get", new { cancelDataRng_MG.betId });
+                var bettransMg = _partitionService.Query<BettransLC_MG>(partitionTime, "Service_BettransLC_MG_txnId_Get", new { cancelDataRng_MG.txnId });
                 var bettrans = bettransMg.ToList();
 
                 // 不存在有效下注
@@ -3059,6 +3059,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     throw new MGException(MGErrorCode.TransactionIncompatible, $"{JsonConvert.SerializeObject(cancelDataRng_MG)}");
                 }
 
+                var betId = (!string.IsNullOrEmpty(cancelDataRng_MG.betId)) ? cancelDataRng_MG.betId : bet.BetId;
+
                 //已取消
                 if (bet.TicketType == (int)BettransType.CancelBet)
                 {
@@ -3067,11 +3069,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         Result = 1,
                         AfterAmount = afterAmount,
-                        ExtTxnId = bettrans.FirstOrDefault(b => b.TxnId == cancelDataRng_MG.txnId).ExtTxnId
+                        ExtTxnId = bettrans.FirstOrDefault(b => b.TxnId == cancelDataRng_MG.txnId).trx_id
                     };
                 }
 
-                var result = _partitionService.Execute(partitionTime, "Service_BettransLC_MG_CancelBet_Set", new { cancelDataRng_MG.betId, cancelDataRng_MG.txnId }, trans);
+                var result = _partitionService.Execute(partitionTime, "Service_BettransLC_MG_CancelBet_Set", new { betId, cancelDataRng_MG.txnId }, trans);
 
                 if (result > 0 && cancelDataRng_MG.amount != 0)
                 {
