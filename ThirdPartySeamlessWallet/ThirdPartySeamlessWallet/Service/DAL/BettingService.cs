@@ -72,14 +72,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 // 1.先找到用戶還在Running的CustBonusList
                 // 2.找出符合條件的Bonus才可以使用
                 var custBonus = walletService.GetCustBonusList(tpCustInfo.CustId)
-                    .FirstOrDefault(i => i.GameType == gameType || i.PromoCategoryId == PromotionCategory.ALL);
+                    .FirstOrDefault(i => i.GameType == gameType || i.PromoCategoryId == PromotionCategory.ALL);                           
+                
                 if (custBonus != null)
                 {
                     bonusId = custBonus.BonusId;
-                }                                 
-                
-                if (bonusId > 0 && custBonus != null)
-                {
+
                     // 用BonusId扣除CustBonus餘額
                     result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount):#,##0.##}", refId, out afterAmount, ref bonusId, conn, trans);
 
