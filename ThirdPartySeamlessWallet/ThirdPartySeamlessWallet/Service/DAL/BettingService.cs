@@ -64,33 +64,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             afterAmount = 0;
             int result = 0;
-            CustBonus custBonus = default;
             try
             {
-                // 傳進來的bonusId = 0 時，先查詢用戶是否有還在Running的CustBonus
-                if (bonusId == 0)
-                {
-                    // 1.先找到用戶還在Running的CustBonusList
-                    // 2.找出符合條件的Bonus才可以使用
-                    custBonus = walletService.GetCustBonusList(tpCustInfo.CustId)
-                        .FirstOrDefault(i => i.GameType == gameType || i.PromoCategoryId == PromotionCategory.ALL);
-                    if (custBonus != null)
-                    {
-                        bonusId = custBonus.BonusId;
-                    }                  
-                }
+                // 1.先找到用戶還在Running的CustBonusList
+                // 2.找出符合條件的Bonus才可以使用
+                var custBonus = walletService.GetCustBonusList(tpCustInfo.CustId)
+                    .FirstOrDefault(i => i.GameType == gameType || i.PromoCategoryId == PromotionCategory.ALL);                           
                 
-                if (bonusId > 0)
+                if (custBonus != null)
                 {
+                    bonusId = custBonus.BonusId;
+
                     // 用BonusId扣除CustBonus餘額
                     result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount):#,##0.##}", refId, out afterAmount, ref bonusId, conn, trans);
-
-                    // 避免外層直接傳入bonusId造成null錯誤，這邊再次檢查custBonus
-                    if (custBonus == null)
-                    {
-                        custBonus = walletService.GetCustBonusList(tpCustInfo.CustId)
-                            .FirstOrDefault(i => i.GameType == gameType || i.PromoCategoryId == PromotionCategory.ALL);
-                    }
 
                     // 新增tpSeamlessBonus紀錄
                     if (result > 0)
