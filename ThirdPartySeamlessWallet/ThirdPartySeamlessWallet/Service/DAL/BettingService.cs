@@ -85,7 +85,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     // 用BonusId扣除CustBonus餘額
                     result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount):#,##0.##}", refId, out afterAmount, ref bonusId, conn, trans);
 
-                    //新增tpSeamlessBonus紀錄
+                    // 避免外層直接傳入bonusId造成null錯誤，這邊再次檢查custBonus
+                    if (custBonus == null)
+                    {
+                        custBonus = walletService.GetCustBonusList(tpCustInfo.CustId)
+                            .FirstOrDefault(i => i.GameType == gameType || i.PromoCategoryId == PromotionCategory.ALL);
+                    }
+
+                    // 新增tpSeamlessBonus紀錄
                     if (result > 0)
                     {
                         var tpSeamlessBonus = new TpSeamlessBonus
