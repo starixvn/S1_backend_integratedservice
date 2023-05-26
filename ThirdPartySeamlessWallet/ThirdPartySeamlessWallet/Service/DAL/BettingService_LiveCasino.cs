@@ -200,6 +200,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
             afterAmount = 0;
 
+            var cntTxn = betLC_Sexy.txns.Count;
+            var cntExet = 0;
+
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
             foreach (var txn in betLC_Sexy.txns)
             {
                 var p = new DynamicParameters(new
@@ -224,12 +231,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     SettleFlag = (int)SettleFlag.Running
                 });
 
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-                conn.Open();
-                using var trans = conn.BeginTransaction();
-
                 try
                 {
+                    result = 0;
                     result = conn.Execute("Service_BettransLC_AWC_Sexy_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
 
                     if (result > 0)
@@ -251,7 +255,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     }
                     if (result > 0)
                     {
-                        trans.Commit();
+                        cntExet++;
+                    }
+                    else
+                    {
+                        return result;
                     }
                 }
                 catch (MySqlException mySqlEx)
@@ -260,6 +268,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (mySqlEx.Number == 1062)
                     {
                         result = -1;
+                        cntExet++;
                         continue;
                     }
                     else
@@ -268,7 +277,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     }
                 }
             }
-            return result;
+            if (cntExet == cntTxn)
+            {
+                trans.Commit();
+                return result;
+            }
+            return 0;
         }
 
         public int TipLC_AWC_Sexy(TpCustInfo tpCustInfo, TipLC_Sexy tipLC_Sexy, out decimal afterAmount)
