@@ -207,28 +207,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         private int GetTpBonus(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId, SeamlessBonusType bonusType = SeamlessBonusType.TpCategory)
         {
-            // 先走新流程取得Bonus
-            var result = GetTpSeamlessBonus(tpId, tpTransId, gameType, out CustId, out BonusId);
-            if (CustId > 0 && BonusId > 0 || tpCategory == TpCategory.Esports)
-            {
-                return result;
-            }
-
-            // 找不到再走舊流程，上線過轉換期後下面可以移除
-            var spName = bonusType == SeamlessBonusType.TpCategory ? $"Service_Tp{tpCategory}Bonus_Get" : $"Service_Tp_Bonus_Get";
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var p = new DynamicParameters(new { TpId = tpId, TransId = tpTransId, GameType = gameType });
-            p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
-            p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);
-            result = conn.Execute(spName, p, commandType: CommandType.StoredProcedure);
-
-            if (result > 0)
-            {
-                CustId = p.Get<int>("CustId");
-                BonusId = p.Get<int>("BonusId");
-            }
-
-            return result;
+            return GetTpSeamlessBonus(tpId, tpTransId, gameType, out CustId, out BonusId);
         }
 
         private int GetTpSeamlessBonus(int TpId, string TransId, int GameType, out int CustId, out int BonusId)
