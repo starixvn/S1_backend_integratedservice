@@ -94,9 +94,11 @@ namespace ThirdPartyWager.Service.BLL.TFG
                 var setting = _thirdPartyBLL.GetThirdPartySetting(48);
                 var apiUrl = setting["ApiUrl"];
                 var checkList = await _wagerTFGService.GetUnsettleCheckList();
+                _logger.LogInformation($"TFG Unsettle Count:{checkList.Count()}");
                 var doQuick = checkList.Count() == 1000;
                 foreach (var chcek in checkList)
                 {
+                    _logger.LogInformation($"TFG id:{chcek.TransId}");
                     try
                     {
                         var bettrans = await _wagerTFGService.GetBettrans(chcek.TransId);
@@ -153,6 +155,14 @@ namespace ThirdPartyWager.Service.BLL.TFG
                                     }
                                 }
                             }
+                            else
+                            {
+                                _logger.LogInformation($"TFG dataWager is null id:{chcek.TransId}");
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogInformation($"TFG bettrans is null id:{chcek.TransId}");
                         }
                     }
                     catch (Exception ex)

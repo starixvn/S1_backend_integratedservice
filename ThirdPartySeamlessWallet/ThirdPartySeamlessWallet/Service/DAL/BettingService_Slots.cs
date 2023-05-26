@@ -138,7 +138,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         }
                         else
                         {
-                            result = -1;
                             trans.Rollback();
                         }
                     }
@@ -1167,6 +1166,31 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
 
                 TransactionReferenceId = bettrans.First().TransId;
+                return bettrans;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.Message);
+                throw;
+            }
+        }
+
+        public IEnumerable<BettransData_AdvantPlayMini_Bet> GetAdvantPlayMiniBySession(string GameId, long SessionId, long SettlementTime, string MiniGameCode, out string TransactionReferenceId)
+        {
+            try
+            {
+                // Service_BettransRng_AP_Mini_crash_BySession_Get、Service_BettransRng_AP_Mini_cardracing_BySession_Get
+                var spName = $"Service_BettransRng_AP_Mini_{MiniGameCode.ToLower()}_BySession_Get";
+
+                TransactionReferenceId = "";
+                var partitionTime = DateTimeOffset.FromUnixTimeSeconds(SettlementTime).DateTime;
+
+                var bettrans = _partitionService.Query<BettransData_AdvantPlayMini_Bet>(partitionTime, spName, new { _GameId = GameId, _SessionId = SessionId });
+                if (!bettrans.Any())
+                {
+                    return null;
+                }
+
                 return bettrans;
             }
             catch (Exception ex)

@@ -2267,10 +2267,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public int Result_AdvantPlayMini(ResultData_AdvantPlayMini resultData_AdvantPlayMini, out long SQ)
+        public int Result_AdvantPlayMini(ResultData_AdvantPlayMini resultData_AdvantPlayMini)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, resultData_AdvantPlayMini.UserReferenceId);
-            var result = settledService.Result_AdvantPlayMini(tpCustInfo, resultData_AdvantPlayMini, out SQ);
+            var result = settledService.Result_AdvantPlayMini(tpCustInfo, resultData_AdvantPlayMini);
             return result;
         }
 
@@ -2288,6 +2288,23 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
 
             var result = settledService.CancelBet_AdvantPlayMini(tpCustInfo, cancelBetData_AdvantPlayMini);
+            return result;
+        }
+
+        public int CancelPayout_AdvantPlayMini(CancelBetData_AdvantPlayMini cancelBetData_AdvantPlayMini)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, cancelBetData_AdvantPlayMini.UserReferenceId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                foreach (var item in cancelBetData_AdvantPlayMini.Data)
+                {
+                    item.Amount *= tpCurrency.ExchangeRate;
+                }
+            }
+
+            var result = settledService.CancelPayout_AdvantPlayMini(tpCustInfo, cancelBetData_AdvantPlayMini);
             return result;
         }
 

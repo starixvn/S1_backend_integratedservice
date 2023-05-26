@@ -350,7 +350,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 try
                 {
-                    if (_bettingBll.PlaceBetRNG_YGG(wagerReq, out decimal tpAfterAmount, out string countryCode) > 0)
+                    var result = _bettingBll.PlaceBetRNG_YGG(wagerReq, out decimal tpAfterAmount, out string countryCode);
+                    if (result > 0)
                     {
                         if (wagerReq.amount == 0)
                         {
@@ -370,11 +371,22 @@ namespace ThirdPartySeamlessWallet.Controllers
                         wagerData.balance = tpCustBalance.Balance;
                         statusCode = 1006;
                     }
-                    else
+                    else if(result == -1)
                     {
                         var tpCustBalance = _tpCustInfoBll.GetBalance((int)_thisTp, wagerReq.playerid, _gameType);
                         wagerData.balance = tpCustBalance.Balance;
                         statusCode = 0;
+                    }
+                    else
+                    {
+                        wagerRep = new WagerRep()
+                        {
+                            code = 1,
+                            data = wagerData
+                        };
+
+                        _log2File.Error($"result = {result}\r\n{JsonConvert.SerializeObject(wagerReq)}\r\n{JsonConvert.SerializeObject(wagerRep)}", logName);
+                        return wagerRep;
                     }
                 }
                 catch (Exception ex)
@@ -386,6 +398,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     };
 
                     _log2File.Error($"{JsonConvert.SerializeObject(wagerReq)}\r\n{JsonConvert.SerializeObject(wagerRep)}\r\n{ex}", logName, ex);
+                    return wagerRep;
                 }
             }
 
