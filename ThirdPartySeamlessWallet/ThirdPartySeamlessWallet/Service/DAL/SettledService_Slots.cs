@@ -2910,7 +2910,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 txnId = txnId
             });
 
-            var slot = _mainDbClient.QueryFirst<BettingDataRNG_MG>("Service_BettransRng_MG_txnId_Get", p);
+            var slot = _mainDbClient.QueryFirst<BettransRng_MG>("Service_BettransRng_MG_txnId_Get", p);
 
             if (slot != null)
             {
