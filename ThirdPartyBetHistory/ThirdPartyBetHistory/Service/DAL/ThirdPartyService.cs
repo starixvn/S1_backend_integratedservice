@@ -17,6 +17,7 @@ namespace ThirdPartyBetHistory.Service.DAL
         private readonly SettledService _settledService;
         private readonly ILogger<ThirdPartyService> _logger;
         private readonly MySqlClient _mainDbClient;
+        private readonly MySqlClient _reportDbClient;
         private readonly TpBetRecordExtendBLL _tpBetRecordExtendBLL;
 
         public ThirdPartyService(IServiceProvider serviceProvider)
@@ -26,6 +27,7 @@ namespace ThirdPartyBetHistory.Service.DAL
             _settledService = serviceProvider.GetRequiredService<SettledService>();
             TpCurrencyList = new ConcurrentDictionary<string, TpCurrency>();
             _mainDbClient = serviceProvider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+            _reportDbClient = serviceProvider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
             _tpBetRecordExtendBLL = serviceProvider.GetRequiredService<TpBetRecordExtendBLL>();
         }
 
@@ -36,7 +38,7 @@ namespace ThirdPartyBetHistory.Service.DAL
 
         public IEnumerable<ThirdPartyModel> GetSiteTpList()
         {
-            return _mainDbClient.Query<ThirdPartyModel>("Common_SiteTpList_Get");
+            return _mainDbClient.Query<ThirdPartyModel>("Service_SiteTpList_Get");
         }
 
         public void DoSettleTicket(IEnumerable<SabaSettleData> settleDataList, WorkerType workerType)
@@ -70,11 +72,11 @@ namespace ThirdPartyBetHistory.Service.DAL
                     conn.Open();
                     using var trans = conn.BeginTransaction();
                     
-                    bool hasJoinBonus;
-                    int bonusId;
+                    var hasJoinBonus = false;
+                    var bonusId = 0;
 
                     /*Only count Sports*/
-                    if (betRecord.GameType != GameType.Saba_Sports && betRecord.SettlementType == SettlementType.SettledForValid)
+                    if (betRecord.GameType != GameType.SBSW_Sports && betRecord.SettlementType == SettlementType.SettledForValid)
                     {
                         betRecord.SettlementType = SettlementType.SettledForValidNotRollover;
                     }
@@ -96,7 +98,16 @@ namespace ThirdPartyBetHistory.Service.DAL
                     }
                     else
                     {
-                        hasJoinBonus = _settledService.GetBonusIdByTpId((int)Tp.Saba, tpCustInfo.CustId, out bonusId);
+                        // 1.先找到用戶還在Running的CustBonusList
+                        // 2.找出符合條件的Bonus才可以使用
+                        var custBonus = _settledService.GetCustBonusList(tpCustInfo.CustId)
+                            .FirstOrDefault(i => i.TpId == (int)Tp.SBSW || i.PromoCategoryId == 0);
+                        if (custBonus != null)
+                        {
+                            hasJoinBonus = true;
+                            bonusId = custBonus.BonusId;
+                        }
+
                         if (hasJoinBonus && (RefBetRecord == null || betRecord.TicketStatus == TicketStatus.UnSettled))
                         {
                             betRecord.BonusId = bonusId;
@@ -118,12 +129,10 @@ namespace ThirdPartyBetHistory.Service.DAL
                                 tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", bonusId,
                                 betRecord.TransId, trans);
 
-                        }
-
-                        if (bonusId > 0)
-                        {
-                            AutoCancelBonus(bonusId, betRecord.TransId, trans);
-                            //AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, conn, trans);
+                            if (Losses != 0)
+                            {
+                                AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, trans);
+                            }
                         }
                     }
                     else if (RefBetRecord != null && (RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win)
@@ -140,12 +149,11 @@ namespace ThirdPartyBetHistory.Service.DAL
                                 SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId,
                                     tpCustInfo.UserName, tpCustInfo.SiteId, Winnings - RefWinnings, Losses - RefLosses,
                                     "Settled", bonusId, betRecord.TransId, trans);
-                            }
-
-                            if (bonusId > 0)
-                            {
-                                AutoCancelBonus(bonusId, betRecord.TransId, trans);
-                                //AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, conn, trans);
+                                
+                                if (Losses != 0)
+                                {
+                                    AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, trans);
+                                }
                             }
                         }
                     }
@@ -383,12 +391,6 @@ namespace ThirdPartyBetHistory.Service.DAL
             return _mainDbClient.Execute("Service_BonusWinLost_Set", parameters, trans);
         }
 
-        private int AutoCancelBonus(int bonusId, string transId, IDbTransaction trans)
-        {
-            var parameters = new DynamicParameters(new { BonusId = bonusId, TransId = transId });
-            return _mainDbClient.Execute("Service_AutoCancelBonus_Set_V3", parameters,  trans);
-        }
-
         private int AutoCancelSeamlessBonus(TpCustInfo tpCustInfo, int bonusId, GameType gameType, IDbTransaction trans)
         {
             var p = new DynamicParameters(tpCustInfo);
@@ -398,35 +400,59 @@ namespace ThirdPartyBetHistory.Service.DAL
             var result = _mainDbClient.Execute("Service_AutoCancelSeamlessBonusV2_Set", p, trans);
             var bonus = p.Get<decimal?>("Bonus") ?? 0;
 
+            var parameter = new
+            {
+                BonusId = bonusId,
+                GameType = gameType,
+                CustId = tpCustInfo.CustId,
+                AfterBonus = bonus,
+                OutResult = result
+            };
+
+            _logger.LogInformation($"SBSW AutoCancelSeamlessBonus:{JsonConvert.SerializeObject(parameter)} | result:{result} | bonus:{bonus}");
             if (bonus > 0)
             {
-                result = RefundCancelBonus(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bonus, $"Bonus: {Math.Abs(bonus).ToString("#,##0.##")}", bonusId.ToString(), out _, trans);
+                result = RefundCancelBonus(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bonus, $"{Tp.SBSW} Bonus: {Math.Abs(bonus):#,##0.##}", bonusId.ToString(), out _, trans);
             }
 
             return result;
         }
-        private int RefundCancelBonus(int custId, int siteId, string userName, decimal Amount, string Memo, string RefTransId, out decimal afterAmount, IDbTransaction trans)
-        {
-            var p = new DynamicParameters(new { CustId = custId, SiteId = siteId, UserName = userName, Amount, Type = 5, Memo = Memo, RefTransId });
-            p.Add("Is1stDepoist", dbType: DbType.Boolean, direction: ParameterDirection.Output);
-            p.Add("AfterAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
-            _ = _mainDbClient.Execute("Wallet_Set_V2", p, trans);
-            _ = p.Get<byte?>("Is1stDepoist") ?? 0;
+        private int RefundCancelBonus(int custId, int siteId, string userName, decimal Amount, string Memo, string RefTransId, out decimal afterAmount, IDbTransaction trans)
+        {          
+            var p = new DynamicParameters(new { 
+                CustId = custId,
+                UserName = userName,
+                SiteId = siteId,               
+                Amount, 
+                Type = 5, 
+                Memo = Memo, 
+                RefTransId
+            });
+
+            var allowNegative = 1;
+            p.Add("AllowNegative", allowNegative, dbType: DbType.Decimal, direction: ParameterDirection.Input);
+            p.Add("AfterAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+       
+            var result = _mainDbClient.Execute("Service_SeamlessWallet_Set_V2", p, trans);
             afterAmount = p.Get<decimal>("AfterAmount");
-            return afterAmount >= 0 ? 1 : 0;
+            _logger.LogInformation($"SBSW RefundCancelBonus:{JsonConvert.SerializeObject(p)} | result:{result} | afterAmount:{afterAmount}");
+            return result >= 0 ? 1 : 0;
         }
 
 
-        public IEnumerable<UnSettle> GetTpBetRecordReSettleTicket(Tp tp, SiteId siteId, string settlementTypeList,
-            DateTime startTime, DateTime endTime)
+        public IEnumerable<UnSettle> GetTpBetRecordReSettleTicket(Tp tp, SiteId siteId, IEnumerable<SettlementType> settlementTypeList, DateTime startTime, DateTime endTime)
         {
-            return _mainDbClient.Query<UnSettle>("Service_TpBetRecord_ReSettle_Get",
+            return _reportDbClient.Query<UnSettle>("Service_TpBetRecord_ReSettle_Get",
                 new
                 {
-                    _TpId = (int)tp, _SiteId = (int)siteId, SettlementTypeList = settlementTypeList,
-                    StartTime = startTime, EndTime = endTime
-                });
+                    _TpId = (int)tp, 
+                    _SiteId = (int)siteId, 
+                    SettlementTypeList = JsonConvert.SerializeObject(settlementTypeList.Select(i => (int)i)),
+                    settlementTypeList,
+                    StartTime = startTime, 
+                    EndTime = endTime
+                }, 120);
         }
 
         public long GetSiteTicketKey(SiteId SiteId, int TpId, WorkerType workerType)

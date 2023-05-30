@@ -84,7 +84,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         {
             get
             {
-                return $"{GameId}_{SessionId}";
+                var prefixGameId = GameId.Split('-')[0];
+                return $"{prefixGameId}_{SessionId}_{UserReferenceId}";
             }
         }
         public string GameId { get; set; }
@@ -93,9 +94,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal Amount { get; set; }
         public long BetTime { get; set; }
         public string MiniGameCode { get; set; }
-
-        //[Description("SQ、transactionReferenceId")]
-        //public string SQ { get; set; }
     }
 
     [JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]
@@ -152,14 +150,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
     [JsonObject(ItemNullValueHandling = NullValueHandling.Ignore)]
     public class ResultData_AdvantPlayMini
     {
-        public string TransId
-        {
-            get
-            {
-                return $"{GameId}_{SessionId}";
-            }
-        }
-
         public string GameId { get; set; }
         public string SessionId { get; set; }
         public decimal Multiplier { get; set; }
@@ -167,17 +157,19 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public long SettlementTime { get; set; }
         public string UserReferenceId { get; set; }
         public string MiniGameCode { get; set; }
+        public string TransId { get; set; }
     }
 
     public class CancelBetData_AdvantPlayMini
     {
-        public string TransId
-        {
-            get
-            {
-                return $"{GameId}_{SessionId}";
-            }
-        }
+        //public string TransId
+        //{
+        //    get
+        //    {
+        //        var prefixGameId = GameId.Split('-')[0];
+        //        return $"{prefixGameId}_{SessionId}_{UserReferenceId}";
+        //    }
+        //}
 
         public string GameId { get; set; }
         public string SessionId { get; set; }
@@ -185,6 +177,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public IList<Data_AdvantPlayMini> Data { get; set; } = new List<Data_AdvantPlayMini>();
         public string UserReferenceId { get; set; }
         public string MiniGameCode { get; set; }
+        public string TransId { get; set; }
     }
 
     public class BettransData_AdvantPlayMini_Bet

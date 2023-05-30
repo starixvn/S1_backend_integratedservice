@@ -137,17 +137,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0 && insertData.amount < 0)
                     {
-                        result = PlaceBetV2(tpCustInfo, insertData.amount, (int)Tp.YGG, insertData.reference, gameType, insertData.subreference, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
-                    }
-                    
-                    if (result > 0)
-                    {
-                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
-                    }
-                    else
-                    {
-                        result = -1;
-                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
+                        result = _mainDbClient.Execute("Service_BettransRngV2_YGG_Ins", p, conn, trans);
+
+                        if (result > 0 && insertData.amount < 0)
+                        {
+                            result = PlaceBetV2(tpCustInfo, insertData.amount, (int)Tp.YGG, insertData.reference, gameType, insertData.subreference, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+                        }
+
+                        if (result > 0)
+                        {
+                             _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                        }
+                        else
+                        {
+                            _mainDbClient.RollbackAndDisposeConnection(conn,trans);
+                        }
                     }
                 }
             }
@@ -1225,6 +1229,31 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
 
                 TransactionReferenceId = bettrans.First().TransId;
+                return bettrans;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.Message);
+                throw;
+            }
+        }
+
+        public IEnumerable<BettransData_AdvantPlayMini_Bet> GetAdvantPlayMiniBySession(string GameId, long SessionId, long SettlementTime, string MiniGameCode, out string TransactionReferenceId)
+        {
+            try
+            {
+                // Service_BettransRng_AP_Mini_crash_BySession_Get、Service_BettransRng_AP_Mini_cardracing_BySession_Get
+                var spName = $"Service_BettransRng_AP_Mini_{MiniGameCode.ToLower()}_BySession_Get";
+
+                TransactionReferenceId = "";
+                var partitionTime = DateTimeOffset.FromUnixTimeSeconds(SettlementTime).DateTime;
+
+                var bettrans = _partitionService.Query<BettransData_AdvantPlayMini_Bet>(partitionTime, spName, new { _GameId = GameId, _SessionId = SessionId });
+                if (!bettrans.Any())
+                {
+                    return null;
+                }
+
                 return bettrans;
             }
             catch (Exception ex)

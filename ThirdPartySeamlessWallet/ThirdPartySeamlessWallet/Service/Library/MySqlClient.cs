@@ -286,6 +286,28 @@ namespace ThirdPartySeamlessWallet.Service.Library
             _logger.LogInformation($"{name} {sw.Elapsed:c}");
             return result;
         }
+
+        public async Task<T> QueryMultiple<T>(string spName, Func<SqlMapper.GridReader, T> func, object parameters = null)
+        {
+            T result;
+            var sw = Stopwatch.StartNew();           
+            try
+            {
+                using var connection = new MySqlConnection(_connectionString);
+                var multiple = await connection.QueryMultipleAsync(spName, parameters, commandType: CommandType.StoredProcedure);
+                result = func.Invoke(multiple);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, spName);
+                throw;
+            }
+
+            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
+            _logger.LogDebug($"{spName} {sw.Elapsed:c}");
+            return result;
+        
+        }
         
         #endregion
         

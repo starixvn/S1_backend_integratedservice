@@ -94,7 +94,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             afterAmount = 0;
             bonusId = 0;
-            var result = 0;
+            int result;
             try
             {
                 result = GetTpBonus(tpId, tpTransId, gameType, tpCategory, out var custId, out bonusId, bonusType);
@@ -106,13 +106,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         return 0;
                     }
 
-                    result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, transType, $"{memoHead}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out var afterBonus, ref bonusId, conn, trans);
-
-                    //var bonusMinBet = thirdPartyBLL.GetBonusMinBet(gameType, tpCustInfo.CurrencyId);
+                    result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, transType, $"{memoHead}: {Math.Abs(amount):#,##0.##}", refId, out var afterBonus, ref bonusId, conn, trans);
 
                     if ((transType == TransType.Prize && bonusId == 0) || afterBonus < 0 || bonusId == -1)
                     {
-                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, afterBonus, tpId, transType, $"{memoHead}: {Math.Abs(afterBonus).ToString("#,##0.##")}", refId, out afterAmount, conn, trans, allowNegative);
+                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, afterBonus, tpId, transType, $"{memoHead}: {Math.Abs(afterBonus):#,##0.##}", refId, out afterAmount, conn, trans, allowNegative);
                     }
                     else
                     {
@@ -127,28 +125,27 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
-                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, transType, $"{memoHead}: {Math.Abs(amount).ToString("#,##0.##")}", refId, out afterAmount, conn, trans, allowNegative);
+                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, transType, $"{memoHead}: {Math.Abs(amount):#,##0.##}", refId, out afterAmount, conn, trans, allowNegative);
                 }
             }
             catch (Exception ex)
             {
-                result = 0;
                 LogContext.PushProperty("Observe", MethodBase.GetCurrentMethod().Name);
                 var parameter = new
                 {
                     tpCustInfo = JsonConvert.SerializeObject(tpCustInfo),
-                    amount = amount,
-                    tpId = tpId,
-                    tpTransId = tpTransId,
-                    gameType = gameType,
-                    tpCategory = tpCategory,
-                    refId = refId,
-                    transType = transType,
-                    betData = betData,
-                    afterAmount = afterAmount,
-                    memoHead = memoHead,
-                    bonusId = bonusId,
-                    allowNegative = allowNegative
+                    amount,
+                    tpId,
+                    tpTransId,
+                    gameType,
+                    tpCategory,
+                    refId,
+                    transType,
+                    betData,
+                    afterAmount,
+                    memoHead,
+                    bonusId,
+                    allowNegative
                 };
                 logger.LogError(ex, $"PARAMETER: {parameter}, EXCEPTION: {ex.Message}");
                 throw;
@@ -208,14 +205,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         private int GetTpBonus(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId, SeamlessBonusType bonusType = SeamlessBonusType.TpCategory)
         {
+            return GetTpSeamlessBonus(tpId, tpTransId, gameType, out CustId, out BonusId);
+        }
+
+        private int GetTpSeamlessBonus(int TpId, string TransId, int GameType, out int CustId, out int BonusId)
+        {
             CustId = 0;
             BonusId = 0;
-            var spName = bonusType == SeamlessBonusType.TpCategory ? $"Service_Tp{tpCategory}Bonus_Get" : $"Service_Tp_Bonus_Get";
-            var p = new DynamicParameters(new { TpId = tpId, TransId = tpTransId, GameType = gameType });
-            p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
-            p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);
-            var result = _mainDbClient.Execute(spName, commandType: CommandType.StoredProcedure , p);
 
+            var p = new DynamicParameters(new { TpId, TransId, GameType });
+            p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);          
+            var result = _mainDbClient.Execute("Service_TpSeamlessBonus_Get", parameters: p);
             if (result > 0)
             {
                 CustId = p.Get<int>("CustId");
@@ -727,7 +728,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     AfterBonus = afterBonus,
                     OutResult = outResult
                 };
-                log2File.Info($"{JsonConvert.SerializeObject(parameter)}", MethodBase.GetCurrentMethod().Name);
+                logger.LogInformation($"{JsonConvert.SerializeObject(parameter)}");
 
                 if (runningAfterBonus > 0) //將退回主帳戶的餘額重新扣掉
                 {

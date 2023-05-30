@@ -102,7 +102,7 @@ namespace ThirdPartyBetHistory.Service.Library
             return result.ToList();
         }
 
-        public IEnumerable<T> Query<T>(string name, object parameters)
+        public IEnumerable<T> Query<T>(string name, object parameters, int? commandTimeout = null)
         {
             IEnumerable<T> result;
             var sw = Stopwatch.StartNew();
@@ -111,7 +111,8 @@ namespace ThirdPartyBetHistory.Service.Library
                 using var connection = new MySqlConnection(_connectionString);
                 var command = new CommandDefinition(name,parameters,
                     commandType: CommandType.StoredProcedure,
-                    flags: CommandFlags.NoCache);
+                    flags: CommandFlags.NoCache,
+                    commandTimeout: commandTimeout);
                 result = connection.Query<T>(command);
                 connection.Close();
                 connection.Dispose();

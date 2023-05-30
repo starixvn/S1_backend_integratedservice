@@ -1,0 +1,19 @@
+﻿using ThirdPartySeamlessWallet.Service.Model.enums;
+
+namespace ThirdPartySeamlessWallet.Service.Model
+{
+    public class TpSeamlessBonus
+    {
+        public int PromotionCategoryId { get; set; }
+        public int TpId { get; set; }
+        public string TransId { get; set; }
+        public int GameType { get; set; }
+        public int CustId { get; set; }
+        public string UserName { get; set; }
+        public int CurrencyId { get; set; }
+        public int SiteId { get; set; }
+        public decimal Stake { get; set; }
+        public int BonusId { get; set; }
+    }
+
+}

@@ -46,6 +46,7 @@ namespace CommonService.Service.BLL
             };
 
             var apiUrl = config.ApiUrl;
+            var (verify, template) = CreateTemplate(type, config, GetUserLang(custInfo.UserLang));
             var sendGridResetPasswordBody = new SendGridTemplateBody
             {
                 from = new NameEmail {name = config.mailFrom.name, email = config.mailFrom.email},
@@ -60,13 +61,20 @@ namespace CommonService.Service.BLL
                         dynamic_template_data = dynamicTemplateData
                     }
                 },
-                template_id = CreateTemplate(type, config, GetUserLang(custInfo.UserLang))
+                template_id = template
             };
+
+            if (!verify)
+            {
+                apiResult.ErrorCode = ErrorCode.Success;
+                apiResult.Message = template;
+                return apiResult;
+            }
             
             using var result = await _httpHelper.HttpPost1Async(apiUrl, headerParams, JsonConvert.SerializeObject(sendGridResetPasswordBody), "application/json");
             if (result.StatusCode == HttpStatusCode.Accepted)
             {
-                apiResult.ErrorCode = 0;
+                apiResult.ErrorCode = ErrorCode.Success;
             }
             else
             {
@@ -75,10 +83,11 @@ namespace CommonService.Service.BLL
                 apiResult.Message = resultResp.errors[0].message;
                 apiResult.RawMessage = resultResp.errors[0].message;
             }
+
             return apiResult;
         }
 
-        private string CreateTemplate(TemplateType type, SendGridConfig config, string userLang)
+        private (bool, string) CreateTemplate(TemplateType type, SendGridConfig config, string userLang)
         {
             var lang = "en";
             if (config.ResetPasswordTemplate.ContainsKey(userLang) && config.VerifyMailTemplate.ContainsKey(userLang))
@@ -86,9 +95,15 @@ namespace CommonService.Service.BLL
 
             return type switch
             {
-                TemplateType.ResetPassword => config.ResetPasswordTemplate[lang],
-                TemplateType.VerificationMail => config.VerifyMailTemplate[lang],
-                TemplateType.WelcomeMail => config.WelcomeMailTemplate[lang],
+                TemplateType.ResetPassword => config.ResetPasswordTemplate.TryGetValue(lang, out var resetPasswordValue)
+                    ? (true, resetPasswordValue)
+                    : (false, $"ResetPassword template lang key ({lang}) not define"),
+                TemplateType.VerificationMail => config.VerifyMailTemplate.TryGetValue(lang, out var verificationMailValue)
+                    ? (true, verificationMailValue)
+                    : (false, $"VerificationMail template lang key ({lang}) not define"),
+                TemplateType.WelcomeMail => config.WelcomeMailTemplate.TryGetValue(lang, out var welcomeMailValue)
+                    ? (true, welcomeMailValue)
+                    : (false, $"WelcomeMail template lang key ({lang}) not define"),
                 _ => throw new ArgumentOutOfRangeException(nameof(type), type, @"template type not define")
             };
         }

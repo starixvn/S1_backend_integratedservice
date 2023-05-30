@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using MySql.Data.MySqlClient;
 using System.Data;
+
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -9,12 +10,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 {
     public class WalletService
     {
-        private readonly MySqlClient _mainDbClient;
         private const int typePosition = 10000;
+        private readonly MySqlClient _mainDbClient;
+
         public WalletService(IServiceProvider provider)
         {
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
+
         public int SetBalance(int custId, int siteId, string userName, decimal Amount, int tpId, TransType transType, string Memo, string RefTransId, out decimal afterAmount, MySqlConnection conn, MySqlTransaction trans, AllowNegative allowNegative = AllowNegative.NotAllow)
         {
             var type = typePosition + ((int)transType * 1000) + tpId;
@@ -50,32 +53,42 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 return afterAmount >= 0 ? 1 : 0;
             }
         }
-        public decimal GetBalance(int custId)
+
+        public decimal GetBalance(int CustId)
         {
-            return _mainDbClient.ExecuteScalar<decimal>("Balance_Get", new { CustId = custId });
+            return _mainDbClient.QueryFirst<decimal>("Balance_Get", new { CustId });
         }
-        public int SetBonus(int gameType, int custId, int siteId, string userName, decimal Amount, int tpId, TransType transType, string Memo, string RefTransId, out decimal afterBonus, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+
+        public int SetBonus(int GameType, int CustId, int SiteId, string UserName, decimal Amount, int tpId, TransType transType, string Memo, string RefTransId, out decimal afterBonus, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
-            var type = typePosition + ((int)transType * 1000) + tpId;
-            Enum.TryParse(tpId.ToString(), out Tp tp);
-            var p = new DynamicParameters(new { gameType = gameType, CustId = custId, SiteId = siteId, UserName = userName, Amount = Amount, Type = type, Memo = $"{tp} {Memo}", RefTransId = RefTransId });
-            p.Add("BonusId", value: bonusId, dbType: DbType.Int32, direction: ParameterDirection.InputOutput);
+            int result = 0;
+            Tp tp = Tp.None;
+
+            int Type = typePosition + ((int)transType * 1000) + tpId;
+            Enum.TryParse(tpId.ToString(), out tp);
+            var p = new DynamicParameters(new { GameType, CustId, SiteId, UserName, Amount, Type, Memo = $"{tp} {Memo}", RefTransId });
             p.Add("AfterBonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            var result = _mainDbClient.Execute("Service_BonusWallet_Set_V2", p,  conn ,trans);
-
-            bonusId = p.Get<int?>("BonusId") ?? 0;
+            p.Add("BonusId", value: bonusId, dbType: DbType.Int32, direction: ParameterDirection.InputOutput);
+           
+            result = _mainDbClient.Execute("Service_BonusWallet_Set_V3", p, conn ,trans);
             afterBonus = p.Get<decimal>("AfterBonus");
-
+            bonusId = p.Get<int?>("BonusId") ?? 0;           
             return result;
         }
-        public decimal GetBonus(int custId, int promoCategoryId)
+
+        /// <summary>
+        /// 找到用戶還在Running的CustBonus
+        /// </summary>
+        public IEnumerable<CustBonus> GetCustBonusList(int CustId)
         {
-            return _mainDbClient.QueryFirst<decimal>("Service_Bonus_Get", new { CustId = custId, PromoCategoryId = promoCategoryId });
+            return _mainDbClient.Query<CustBonus>("Service_Bonus_Get_V2", parameters: new { CustId });
         }
+
         public IEnumerable<BonusFulfill> GetBonusFulfill()
         {
             return _mainDbClient.Query<BonusFulfill>("Service_BonusFulfillSeamless_Get", commandType: CommandType.StoredProcedure);
         }
+
         public int BonusSettle(BonusFulfill bonusFulfill)
         {
             using var conn = _mainDbClient.GetMySqlConnection();
