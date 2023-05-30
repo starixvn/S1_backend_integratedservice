@@ -125,16 +125,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
+                using var trans = conn.BeginTransaction();
                 
                 var p = new DynamicParameters(insertData);
                 p.Add("tickets", (int?)null);
                 p.Add("bonusprize", (decimal?)null);
                 p.Add("type", (int)BettransType.Bet);
+                
+                result = _mainDbClient.Execute("Service_BettransRngV2_YGG_Ins", p, conn, trans);
 
-                using (var trans = conn.BeginTransaction())
+                if (result > 0 && insertData.amount < 0)
                 {
-                    result = _mainDbClient.Execute("Service_BettransRngV2_YGG_Ins", p, conn, trans);
-
                     if (result > 0 && insertData.amount < 0)
                     {
                         result = PlaceBetV2(tpCustInfo, insertData.amount, (int)Tp.YGG, insertData.reference, gameType, insertData.subreference, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);

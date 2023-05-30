@@ -2848,7 +2848,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 var betId = (!string.IsNullOrEmpty(cancelDataRng_MG.betId)) ? cancelDataRng_MG.betId : bet.BetId;
 
-                var result = conn.Execute("Service_BettransRng_MG_CancelBet_Set", new { betId, cancelDataRng_MG.txnId }, transaction: trans, commandType: CommandType.StoredProcedure);
+
+                var result = _mainDbClient.Execute("Service_BettransRng_MG_CancelBet_Set", new { betId, cancelDataRng_MG.txnId }, conn, trans);
                 if (result > 0)
                 {
                     if (cancelDataRng_MG.amount != 0)
