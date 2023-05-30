@@ -12,22 +12,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 {
     public partial class BettingService
     {
-        private readonly IConfiguration configuration;
         private readonly WalletService walletService;
-        private readonly RiskInspection _riskInspection;
         private readonly Tools tools;
         private readonly ILogger<BettingService> logger;
         private readonly MySqlClient _mainDbClient;
+        private readonly MySqlClient _reportDbClient;
         private readonly PartitionService _partitionService;
         private readonly TpUnsettleService _tpUnsettleService;
 
         public BettingService(IServiceProvider provider)
         {
-            configuration = provider.GetRequiredService<IConfiguration>();
             walletService = provider.GetRequiredService<WalletService>();
             tools = provider.GetRequiredService<Tools>();
             logger = provider.GetRequiredService<ILogger<BettingService>>();
-            _riskInspection = provider.GetRequiredService<RiskInspection>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _partitionService = provider.GetRequiredService<PartitionService>();
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();

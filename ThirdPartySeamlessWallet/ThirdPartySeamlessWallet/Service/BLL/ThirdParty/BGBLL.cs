@@ -138,7 +138,7 @@ public class BGBLL : IBGBLL
                 parameters.orders = parameters.orders.Where(x => !alreadyExistOrders.Contains(x.orderId.ToString())).OrderBy(x => x.orderId); //remove exist orderIds
             }
 
-        using var conn = _mainDbClient.GetMySqlConnection();
+        await using var conn = _mainDbClient.GetMySqlConnection();
         await conn.OpenAsync();
         await using var trans = await conn.BeginTransactionAsync();
 
@@ -177,7 +177,7 @@ public class BGBLL : IBGBLL
 
             if (!PlaceData(partitionTime, data, trans, out message))
             {
-                await trans.RollbackAsync();
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                 return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
             }
 
@@ -188,13 +188,13 @@ public class BGBLL : IBGBLL
                 if (!SetBalance(tpCustInfo, data, 0,
                     tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
                 {
-                    await trans.RollbackAsync();
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                     return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
                 }
             }
         }
 
-        await trans.CommitAsync();
+        await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
 
         #region Test recalc
 
@@ -253,7 +253,7 @@ public class BGBLL : IBGBLL
                 parameters.orders = parameters.orders.Where(x => !alreadyExistOrders.Contains(x.orderId.ToString())).OrderBy(x => x.orderId); //remove exist orderIds
             }
 
-        using var conn = _mainDbClient.GetMySqlConnection();
+        await using var conn = _mainDbClient.GetMySqlConnection();
         await conn.OpenAsync();
         await using var trans = await conn.BeginTransactionAsync();
 
@@ -301,7 +301,7 @@ public class BGBLL : IBGBLL
 
             if (!PlaceData(partitionTime, data, trans, out message))
             {
-                await trans.RollbackAsync();
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                 return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
             }
 
@@ -310,7 +310,7 @@ public class BGBLL : IBGBLL
                 if (!SetBalance(tpCustInfo, data, payoutAmount, tpCurrency.ExchangeRate,
                     out message, out balance, out int bonusId, conn, trans))
                 {
-                    await trans.RollbackAsync();
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                     return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
                 }
             }
@@ -323,7 +323,7 @@ public class BGBLL : IBGBLL
                 case BGOrderStatusEnum.Expired:
                     if (!InsertUnsettleData(partitionTime, data.orderId, out message, trans))
                     {
-                        await trans.RollbackAsync();
+                        await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                         return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
                     }
                     break;
@@ -335,12 +335,12 @@ public class BGBLL : IBGBLL
             //派彩amount=0，balance取db資料
             if (!GetBalance(tpCustInfo.TpUserName, out balance, out message))
             {
-                await trans.RollbackAsync();
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                 return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
             }
         }
 
-        await trans.CommitAsync();
+        await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
 
         #region Test recalc
 

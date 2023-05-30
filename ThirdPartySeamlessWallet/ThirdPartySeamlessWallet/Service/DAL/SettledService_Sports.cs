@@ -1,11 +1,6 @@
-﻿using System;
-using Dapper;
-using Microsoft.Extensions.Configuration;
+﻿using Dapper;
 using MySql.Data.MySqlClient;
-using System.Collections.Generic;
 using System.Data;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
@@ -19,9 +14,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             try
             {
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-                conn.Open();
-                using var trans = conn.BeginTransaction();
+                await using var conn = _mainDbClient.GetMySqlConnection();
+                await conn.OpenAsync();
+                await using var trans = await conn.BeginTransactionAsync();
 
                 var p = new DynamicParameters(new
                 {
@@ -34,7 +29,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("returnAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
                 p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
 
-                _ = await conn.ExecuteAsync("Service_BettransSports_BTI_CancelReserve_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                _ = await _mainDbClient.ExecuteAsync("Service_BettransSports_BTI_CancelReserve_Set", trans ,p);
 
                 var btiResult = new BTIResult()
                 {
@@ -67,7 +62,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (btiResult.SetBalanceResult == 1)
                 {
                     btiResult.AfterAmount = afterAmount;
-                    trans.Commit();
+                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+                }
+                else
+                {
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                 }
 
                 return btiResult;
@@ -90,9 +89,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             try
             {
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-                conn.Open();
-                using var trans = conn.BeginTransaction();
+                await using var conn = _mainDbClient.GetMySqlConnection();
+                await conn.OpenAsync();
+                await using var trans = await conn.BeginTransactionAsync();
 
                 var p = new DynamicParameters(new
                 {
@@ -106,7 +105,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("returnAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
                 p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
 
-                _ = await conn.ExecuteAsync("Service_BettransSports_BTI_CommitReserve_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                _ = await _mainDbClient.ExecuteAsync("Service_BettransSports_BTI_CommitReserve_Set", trans ,p);
                 var btiResult = new BTIResult()
                 {
                     SPResult = p.Get<short>("SPResult"),
@@ -121,7 +120,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (btiResult.SPResult == 1 && btiResult.ReturnAmount <= 0)
                 {
-                    trans.Commit();
+                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
                     return btiResult;
                 }
 
@@ -146,7 +145,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 btiResult.AfterAmount = afterAmount;
                 if (btiResult.SetBalanceResult == 1)
                 {
-                    trans.Commit();
+                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+                }
+                else
+                {
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                 }
                 return btiResult;
             }
@@ -168,15 +171,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             try
             {
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-                conn.Open();
-                using var trans = conn.BeginTransaction();
+                await using var conn = _mainDbClient.GetMySqlConnection();
+                await conn.OpenAsync();
+                await using var trans = await conn.BeginTransactionAsync();
 
                 var p = new DynamicParameters(credit);
                 p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
                 p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
 
-                _ = await conn.ExecuteAsync("Service_BettransSports_BTI_Credit_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                _ = await _mainDbClient.ExecuteAsync("Service_BettransSports_BTI_Credit_Ins", trans ,p);
                 var btiResult = new BTIResult()
                 {
                     SPResult = p.Get<short>("SPResult"),
@@ -212,7 +215,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         _bettingService.AddTpBonus((int)Tp.BTI, credit.BetID, (int)GameType.BTI_Sports, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, credit.amount, bonusId, TpCategory.Sports, conn, trans);
                     }
-                    trans.Commit();
+                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
                 }
                 return btiResult;
             }
@@ -234,8 +237,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         
         public IEnumerable<BTISettleData> GetUnsettledList_BTI()
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<BTISettleData>("Service_BettransSports_BTI_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Query<BTISettleData>("Service_BettransSports_BTI_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
 
         public int SetSettleFlag_BTI(string account, string transId, bool isSuccess)
@@ -249,13 +251,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 await using var conn = _mainDbClient.GetMySqlConnection();
-                conn.Open();
+                await conn.OpenAsync();
                 await using var trans = await conn.BeginTransactionAsync();
 
                 dto.TicketType = (int)BettransType.Payout;
                 dto.TicketStatus = (int)GetSboTicketStatus(dto.ResultType);
                 var p = new DynamicParameters(dto);
-                var result = await conn.ExecuteAsync("Service_BettransSports_SBO_Settle_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var result = await _mainDbClient.ExecuteAsync("Service_BettransSports_SBO_Settle_Set", trans ,p);
 
                 if (result < 1)
                 {
@@ -305,7 +307,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     Result = 1,
                     AfterAmount = afterAmount
                 };
-                await trans.CommitAsync();
+                await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
                 return sboResult;
             }
             catch (Exception ex)
@@ -323,7 +325,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 await using var conn = _mainDbClient.GetMySqlConnection();
-                conn.Open();
+                await conn.OpenAsync();
                 await using var trans = await conn.BeginTransactionAsync();
                 
                 var p = new DynamicParameters(new
@@ -331,7 +333,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     dto.TransferCode
                 });
 
-                var result = await conn.ExecuteAsync("Service_BettransSports_SBO_Cancel_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var result = await _mainDbClient.ExecuteAsync("Service_BettransSports_SBO_Cancel_Set", trans ,p);
                 if (result != 1)
                 {
                     logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode} " +
@@ -375,7 +377,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     AfterAmount = afterAmount,
                     Result = 1
                 };
-                trans.Commit();
+                await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
                 return sboResult;
             }
             catch (Exception ex)
@@ -394,11 +396,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 var bonusId = 0;
                 await using var conn = _mainDbClient.GetMySqlConnection();
-                conn.Open();
+                await conn.OpenAsync();
                 await using var trans = await conn.BeginTransactionAsync();
                 
                 var p = new DynamicParameters(dto);
-                var result = await conn.ExecuteAsync("Service_BettransSports_SBO_Rollback_Set", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var result = await _mainDbClient.ExecuteAsync("Service_BettransSports_SBO_Rollback_Set", trans ,p);
                 if (result < 1)
                 {
                     logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode}" +
@@ -445,7 +447,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     AfterAmount = afterAmount,
                     Result = 1
                 };
-                trans.Commit();
+                await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
                 return sboResult;
             }
             catch (Exception ex)

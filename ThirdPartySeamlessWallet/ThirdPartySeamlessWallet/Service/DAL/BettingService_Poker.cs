@@ -1,11 +1,6 @@
 ﻿using Dapper;
-using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
-using System;
 using System.Data;
-using System.Globalization;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
@@ -39,12 +34,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             p.Add("result", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             try
             {
-                result = conn.Execute("Service_BettransPK_OneGaming_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransPK_OneGaming_Ins", p, conn, trans);
 
                 if (p.Get<int>("result") == 1)
                 {
@@ -62,8 +57,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         trans
                     );
                 }
-
-                trans.Commit();
+                _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                
             }
             catch (MySqlException mySqlEx)
             {
@@ -111,12 +106,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 SettleFlag = (int)SettleFlag.Running
             });
 
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             try
             {
-                result = conn.Execute("Service_BettransPK_AMB_Bet_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransPK_AMB_Bet_Ins", p, conn, trans);
 
                 if (result > 0)
                 {
@@ -137,7 +132,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
             catch (MySqlException mySqlEx)
@@ -164,8 +163,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             var result = 0;
             var bonusId = 0;
-            await using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Open();
+            await using var conn = _mainDbClient.GetMySqlConnection();
+            await conn.OpenAsync();
             await using var trans = await conn.BeginTransactionAsync();
 
             var p = new DynamicParameters(new
@@ -202,8 +201,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                await conn.ExecuteAsync("Service_BettransPK_KM_Debit_Ins", p, transaction: trans,
-                    commandType: CommandType.StoredProcedure);
+                await _mainDbClient.ExecuteAsync("Service_BettransPK_KM_Debit_Ins", trans , p);
                 result = p.Get<short>("SPResult");
                 var trxId = p.Get<long>("trx_id");
                 if (result != 1)
@@ -236,7 +234,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     );
                     if (result != 1)
                     {
-                        await trans.RollbackAsync();
+                        await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                         logger.LogError($"PlaceBetPK_KM result:{result}, afterAmount:{afterAmount}");
                         if (result == 0 && afterAmount < 0)
                         {
@@ -246,8 +244,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         throw new KmException(KMErrorCode.SystemError);
                     }
                 }
-
-                trans.Commit();
+                
+                await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
                 return new KmDbResult()
                 {
                     SPResult = result,
@@ -262,7 +260,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             catch (Exception e)
             {
                 logger.LogError(e, $"exec PlaceBetPK_KM failed: {e.Message}");
-                await trans.RollbackAsync();
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                 throw new KmException(KMErrorCode.SystemError);
             }
         }
@@ -270,8 +268,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public async Task<KmDbResult> PlaceBetNoSetBalance_KM(KMDebitRequestTransaction debitTransaction)
         {
             var result = 0;
-            await using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            conn.Open();
+            await using var conn = _mainDbClient.GetMySqlConnection();
+            await conn.OpenAsync();
             await using var trans = await conn.BeginTransactionAsync();
 
             var p = new DynamicParameters(new
@@ -308,8 +306,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                await conn.ExecuteAsync("Service_BettransPK_KM_Debit_Ins", p, transaction: trans,
-                    commandType: CommandType.StoredProcedure);
+                await _mainDbClient.ExecuteAsync("Service_BettransPK_KM_Debit_Ins", trans ,p);
                 result = p.Get<short>("SPResult");
                 var trxId = p.Get<long>("trx_id");
                 if (result != 1)
@@ -324,7 +321,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     throw new KmException(KMErrorCode.SystemError);
                 }
                 
-                trans.Commit();
+                await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
                 return new KmDbResult()
                 {
                     SPResult = result,
@@ -334,7 +331,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             catch (Exception e)
             {
                 logger.LogError(e, $"exec PlaceBetPK_KM failed: {e.Message}");
-                await trans.RollbackAsync();
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                 throw new KmException(KMErrorCode.SystemError);
             }
         }
@@ -371,12 +368,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 SettleFlag = (int)SettleFlag.Running
             });
 
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             try
             {
-                result = conn.Execute("Service_BettransPK_MP_Ins_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                result = _mainDbClient.Execute("Service_BettransPK_MP_Ins_V2", p, conn , trans);
 
                 if (result > 0 && amount != 0)
                 {
@@ -397,7 +394,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
             catch (MySqlException mySqlEx)
