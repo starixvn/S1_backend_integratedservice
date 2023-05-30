@@ -20,9 +20,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public int SetBalance(int custId, int siteId, string userName, decimal Amount, int tpId, TransType transType, string Memo, string RefTransId, out decimal afterAmount, MySqlConnection conn, MySqlTransaction trans, AllowNegative allowNegative = AllowNegative.NotAllow)
         {
-            Tp tp = Tp.None;
-            int type = typePosition + ((int)transType * 1000) + tpId;
-            Enum.TryParse(tpId.ToString(), out tp);
+            var type = typePosition + ((int)transType * 1000) + tpId;
+            Enum.TryParse(tpId.ToString(), out Tp tp);
 
             if (tpId == 0 && transType == TransType.Prize)
             {
@@ -35,11 +34,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             if (allowNegative == AllowNegative.Allow)
             {
                 p.Add("AllowNegative", (int)allowNegative, dbType: DbType.Decimal, direction: ParameterDirection.Input);
-                conn.Execute("Service_SeamlessWallet_Set_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                _mainDbClient.Execute("Service_SeamlessWallet_Set_V2", p, conn, trans);
             }
             else
             {
-                conn.Execute("Wallet_Set_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                _mainDbClient.Execute("Wallet_Set_V2", p, conn, trans);
             }
 
             _ = p.Get<byte?>("Is1stDepoist") ?? 0;
@@ -71,7 +70,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             p.Add("AfterBonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("BonusId", value: bonusId, dbType: DbType.Int32, direction: ParameterDirection.InputOutput);
            
-            result = conn.Execute("Service_BonusWallet_Set_V3", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            result = _mainDbClient.Execute("Service_BonusWallet_Set_V3", p, conn ,trans);
             afterBonus = p.Get<decimal>("AfterBonus");
             bonusId = p.Get<int?>("BonusId") ?? 0;           
             return result;
@@ -99,19 +98,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var p = new DynamicParameters(bonusFulfill);
             p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
-            int result = conn.Execute("Service_BonusSettle_Set_V2", p, transaction: trans, commandType: CommandType.StoredProcedure);
+            var result = _mainDbClient.Execute("Service_BonusSettle_Set_V2", p, conn ,trans);
 
             if (result > 0)
             {
-                decimal bonus = p.Get<decimal>("Bonus");
+                var bonus = p.Get<decimal>("Bonus");
                 if (bonus > 0)
                 {
-                    result = SetBalance(bonusFulfill.CustId, bonusFulfill.SiteId, bonusFulfill.UserName, bonus, 0, TransType.Prize, $"Bonus Transfer to Cash: {Math.Abs(bonus):#,##0.##}", bonusFulfill.BonusId.ToString(), out decimal _, conn, trans);
+                    result = SetBalance(bonusFulfill.CustId, bonusFulfill.SiteId, bonusFulfill.UserName, bonus, 0, TransType.Prize, $"Bonus Transfer to Cash: {Math.Abs(bonus):#,##0.##}", bonusFulfill.BonusId.ToString(), out _, conn, trans);
                 }
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
 

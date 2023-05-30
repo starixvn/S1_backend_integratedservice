@@ -1,67 +1,56 @@
 ﻿using Dapper;
-using Microsoft.Extensions.Configuration;
-using MySql.Data.MySqlClient;
-using System;
 using System.Data;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
     public class TpCustInfoService
     {
-        private readonly IConfiguration configuration;
         private readonly MySqlClient _mainDbClient;
 
         public TpCustInfoService(IServiceProvider provider)
         {
-            configuration = provider.GetRequiredService<IConfiguration>();
-            var mySqlLogger = provider.GetRequiredService<ILogger<MySqlClient>>();
-            _mainDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionString"), mySqlLogger);
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
         public TpCustInfo GetTpCustInfo(int TpId, string TpUserName,string tpCustId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.QueryFirstOrDefault<TpCustInfo>("Common_TpCustInfoByTpUserName_Get_V3", new { _TpId = TpId, _TpUserName = TpUserName, _TpCustId= tpCustId }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.QueryFirst<TpCustInfo>("Common_TpCustInfoByTpUserName_Get_V3", new { _TpId = TpId, _TpUserName = TpUserName, _TpCustId= tpCustId });
         }
 
         public int SetCustGotoGame(int custId, int tpId, int gameType)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_CustGotoGame_Set", new { CustId = custId, TpId = tpId, GameType = gameType }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Execute("Service_CustGotoGame_Set", commandType: CommandType.StoredProcedure ,new { CustId = custId, TpId = tpId, GameType = gameType });
         }
         public int GetCustGotoGameType(int custId, int tpId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var p = new DynamicParameters(new { CustId = custId, TpId = tpId });
             p.Add("GameType", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-            var result = conn.Execute("Service_CustGotoGameType_Get", p, commandType: CommandType.StoredProcedure);
+            var result = _mainDbClient.Execute("Service_CustGotoGameType_Get", commandType: CommandType.StoredProcedure ,p);
             return p.Get<int>("GameType");
         }
         public int SetTpPwd(int tpId, string tpUserName, string tpPwd)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Service_TpPwd_Set", new { TpId = tpId, TpUserName = tpUserName, TpPwd = tpPwd }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Execute("Service_TpPwd_Set", commandType: CommandType.StoredProcedure ,new { TpId = tpId, TpUserName = tpUserName, TpPwd = tpPwd });
         }
         public void AddLoginRecord(int custId, int siteId, string ip, out string token)
         {
             token = GetToken();
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
-            using MySqlTransaction trans = conn.BeginTransaction();
-            conn.Execute("LoginRecord_Set", new { CustId = custId, SiteId = siteId, IP = ip, Token = token }, trans, commandType: CommandType.StoredProcedure);
-            trans.Commit();
+            using var trans = conn.BeginTransaction();
+            
+            _mainDbClient.Execute("LoginRecord_Set", trans ,new { CustId = custId, SiteId = siteId, IP = ip, Token = token });
+            _mainDbClient.CommitAndDisposeConnection(conn,trans);
         }
         public void AddUserLoginLog(int custId, string userName, int siteId, string loginIp, string fromUrl, string userAgent)
         {
             Task.Run(() =>
             {
-                using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-                conn.Execute("LoginLog_Ins", new { CustId = custId, UserName = userName, SiteId = siteId, LoginIp = loginIp, FromUrl = fromUrl, UserAgent = userAgent }, commandType: CommandType.StoredProcedure);
+                _mainDbClient.Execute("LoginLog_Ins", commandType: CommandType.StoredProcedure , new { CustId = custId, UserName = userName, SiteId = siteId, LoginIp = loginIp, FromUrl = fromUrl, UserAgent = userAgent });
             });
         }
         public int UpdateOnline(int custId, bool isOnline, string token, string ip)
