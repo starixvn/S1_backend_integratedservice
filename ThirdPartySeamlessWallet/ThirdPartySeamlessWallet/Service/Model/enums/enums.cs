@@ -128,7 +128,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         BG_LiveCasino = 94,
         SBSW_Vgaming = 95,
         SBSW_CardClub = 96,
-        TFG_Esports = 97
+        TFG_Esports = 97,
     }
     public enum Tp
     {

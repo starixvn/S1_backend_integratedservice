@@ -325,6 +325,9 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerTFG>();
             services.AddHostedService<WagerUnsettleCheckTFG>();
 
+            // health check use
+            services.AddControllers();
+
             /*******************closed tp*************************/
             //services.AddHostedService<WagerOneGaming>();
             //services.AddHostedService<WagerRedoOneGaming>();
@@ -343,6 +346,17 @@ namespace ThirdPartyWager
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseRouting();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapGet("/health", async context =>
+                {
+                    await context.Response.WriteAsync($"{env.EnvironmentName}-{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}");
+                });
+
+                endpoints.MapControllers();
+            });
         }
     }
 }
