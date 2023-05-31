@@ -147,8 +147,8 @@ namespace ThirdPartyService.Service.BLL
                 }
 
                 /*Use Async to Record Log*/
-                Task.Run(() => 
-                { 
+                Task.Run(() =>
+                {
                     tpCustInfoService.SetTpLastLoginTime(tpInfo.CustId, tpInfo.TpId);
                     SetRecentlyPlayed(tpInfo);
                 });
@@ -192,7 +192,7 @@ namespace ThirdPartyService.Service.BLL
                     return apiResult;
                 }
 
-                if (ThirdPartyIsMaintain(tpCustInfoResult.Data.SiteId, tpTransfer.TpId))
+                if (tpCustInfoResult.Data.IsTest == false && ThirdPartyIsMaintain(tpCustInfoResult.Data.SiteId, tpTransfer.TpId))
                 {
                     apiResult.ErrorCode = ErrorCode.ThirdPartyUnderMaintenance;
                     apiResult.Message = "Third party under maintenance.";
@@ -329,8 +329,16 @@ namespace ThirdPartyService.Service.BLL
                 var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
                 if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
                 {
+                    if (tpCustInfoResult.Data.IsTest == false && ThirdPartyIsMaintain(tpCustInfoResult.Data.SiteId, tpInfo.TpId))
+                    {
+                        apiResult.ErrorCode = ErrorCode.ThirdPartyUnderMaintenance;
+                        apiResult.Message = "Third party under maintenance.";
+                        return apiResult;
+                    }
+
                     IThirdPartyHelper tpHelper =
                         thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
+
                     var oThirdPartyModel =
                         thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
                     var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
@@ -764,7 +772,7 @@ namespace ThirdPartyService.Service.BLL
             {
                 amount = adminTpTransfer.Amount / tpCustInfoResult.Data.ExchangeRate;
             }
-            
+
             tpTransferInfo.InsAdjustWalletLog(tpCustInfoResult.Data, adminTpTransfer, out transId);
 
             if (string.IsNullOrEmpty(transId))
@@ -772,13 +780,13 @@ namespace ThirdPartyService.Service.BLL
                 _logger.LogError($"InsAdjustWalletLog failed.");
                 apiResult.ErrorCode = ErrorCode.ServerIsBusy;
                 apiResult.Message = "AdjustWallet Failed.";
-                
+
                 return apiResult;
             }
-            
+
             var transferResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, amount, adminTpTransfer.direction, transId,
                 thirdId);
-            
+
             tpTransferInfo.SetAdjustWalletLog(transferResult, transId);
             if (transferResult.ErrorCode == ErrorCode.Success
                 && adminTpTransfer.Category == 9 && adminTpTransfer.DepositId > 0) // Category 9: Deposit
@@ -798,7 +806,7 @@ namespace ThirdPartyService.Service.BLL
             apiResult.RawErrorCode = transferResult.RawErrorCode;
             apiResult.RawMessage = transferResult.RawMessage;
             apiResult.Data = new AdjustWalletResult(transferResult.Data, transId);
-            
+
             return apiResult;
         }
 
@@ -1158,8 +1166,8 @@ namespace ThirdPartyService.Service.BLL
             var merchantBalanceResponse = tpHelper.GetMerchantBalance(tpMerchantInfo, inputs);
             return merchantBalanceResponse;
         }
-		
-		public ApiResult<TpBetRecordExtend> GetTpBetRecordExtend(GetTpBetRecordExtendRequest request)
+
+        public ApiResult<TpBetRecordExtend> GetTpBetRecordExtend(GetTpBetRecordExtendRequest request)
         {
             var tpId = request.BetRecordInfo.TpId;
 
@@ -1187,7 +1195,7 @@ namespace ThirdPartyService.Service.BLL
 
             var tpHelper = (IThirdPartyTpBetRecordDetail)thirdPartyHelper.GetThirdPartyHelper(tpId, tpCustInfoResult.Data.SiteId);
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper.GetThirdPartyBySite(tpId, tpCustInfoResult.Data.SiteId).Setting);
-            
+
             try
             {
                 var result = tpHelper.GetTpBetRecordExtend(request.BetRecordInfo, gameTypeOption, tpCustInfoResult.Data, inputs);
@@ -1201,7 +1209,7 @@ namespace ThirdPartyService.Service.BLL
             {
                 _logger.LogError(ex, $"{ex.Message} ||  {JsonConvert.SerializeObject(request.BetRecordInfo)}");
                 return new ApiResult<TpBetRecordExtend>(new TpBetRecordExtend(request.BetRecordInfo, gameTypeOption, tpCustInfoResult.Data));
-            }      
+            }
         }
 
         public string GetTpName(int tpId)
@@ -1465,12 +1473,12 @@ namespace ThirdPartyService.Service.BLL
         private void SetRecentlyPlayed(TpInfo tpInfo)
         {
             try
-            {        
+            {
                 if (!int.TryParse(tpInfo.inputs.GetValueOrDefault("tpGameType"), out var tpGameType))
-                { 
+                {
                     _logger.LogError($"SetRecentlyPlayed tpGameType Error. tpInfo:{JsonConvert.SerializeObject(tpInfo)}");
                 }
-            
+
                 if (!_tpGameTypeConfig.TryGetValue(tpGameType, out var gameTypeOption))
                 {
                     _logger.LogError($"SetRecentlyPlayed _tpGameTypeConfig Error. tpInfo:{JsonConvert.SerializeObject(tpInfo)}");
@@ -1483,11 +1491,11 @@ namespace ThirdPartyService.Service.BLL
                         tpInfo.CustId,
                         GameInfo = $"{tpInfo.TpId}_{tpInfo.inputs.GetValueOrDefault("gameId")}"
                     });
-                } 
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex,ex.Message);
+                _logger.LogError(ex, ex.Message);
             }
         }
 

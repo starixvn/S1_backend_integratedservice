@@ -116,6 +116,18 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string processId { get; set; }
             public long timestamp { get; set; }
         }
+        public class EndResultMiniResp
+        {
+            public List<WinResult> winResults { get; set; }
+            public string processId { get; set; }
+            public long timestamp { get; set; }
+        }
+
+        public class WinResult
+        {
+            public string userReferenceId { get; set; }
+            public decimal balance { get; set; }
+        }
 
         public class RefundMiniResp
         {
@@ -199,6 +211,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             public string GameId { get; set; }
             public string SessionId { get; set; }
+            public string UserReferenceId { get; set; }
         }
         #endregion
 
@@ -878,7 +891,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 if (SettleResult > 0 || SettleResult == -1)
                 {
-                    if(tpAffterAmount == 0)
+                    if (tpAffterAmount == 0)
                     {
                         tpAffterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.PlayerId, gameType).Balance;
                     }
@@ -1071,8 +1084,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return errResponse;
                 }
 
-                var split = splitTransactionReferenceId(getReq.TransactionReferenceId);
-                getReq.GameId = split.GameId;
+                //var split = splitTransactionReferenceId(getReq.TransactionReferenceId);
+                getReq.GameId = betting.First().GameId;
                 getReq.MiniGameCode = betting.First().MiniGameCode;
                 getReq.UserReferenceId = betting.First().UserReferenceId;
 
@@ -1133,30 +1146,50 @@ namespace ThirdPartySeamlessWallet.Controllers
                 log2File.Info($"{Decrypt}", logName);
                 var getReq = JsonConvert.DeserializeObject<ResultData_AdvantPlayMini>(Decrypt);
 
-                var betting = bettingBLL.GetAdvantPlayMiniBet(getReq.TransId, getReq.SettlementTime, "crash", out _);
-                if (betting == null || !betting.Any(x => x.TicketType == (int)BettransType.Bet))
+                var bettrans = bettingBLL.GetAdvantPlayMiniBySession(getReq.GameId, Convert.ToInt64(getReq.SessionId), getReq.SettlementTime, "crash", out _);
+                if (bettrans == null)
                 {
                     log2File.Error($"PlaceBet data not found", logName);
                     return errResponse;
                 }
+                //{ "GameId":"3c37e64f-bd5b-11ed-b383-42010ae490d6","SessionId":"1185809","Multiplier":2.89,"Data":[],"SettlementTime":1683352197}
+                //假設10個會員都下注 SessionId 12345 是送一笔 crash/wallet/result 只会传送输家的资料, transaction reference id & user reference id 已经在data 里面了....
+                var err = false;
+                var prepareEndRound = bettrans.GroupBy(i => i.TransId);
 
-                getReq.MiniGameCode = betting.First().MiniGameCode;
-                getReq.UserReferenceId = betting.First().UserReferenceId;
+                foreach (var bettransItem in prepareEndRound)
+                {
+                    // 排除已處理
+                    if (bettransItem.Any(c => c.TicketType == (int)BettransType.EndRound))
+                    {
+                        continue;
+                    }
+                    
+                    // 待處理
+                    var endRoundData = bettransItem.First(c => c.TicketType == (int)BettransType.Bet);
+                    getReq.MiniGameCode = endRoundData.MiniGameCode;
+                    getReq.UserReferenceId = endRoundData.UserReferenceId;
+                    getReq.TransId = endRoundData.TransId;
+                    var result = settledBLL.Result_AdvantPlayMini(getReq);
+                    if (result > 0 || result == -1)
+                    {
+                        log2File.Info($"ResultOfMiniAsync success {result}\r\n{JsonConvert.SerializeObject(bettransItem)}", logName);
+                    }
+                    else
+                    {
+                        errResponse.errorMessage = "Unknow error";
+                        log2File.Error($"Unknow error {result}\r\n{JsonConvert.SerializeObject(bettransItem)}", logName);
+                        err = true;
+                    }
+                }
 
                 ResultMiniResp response = new ResultMiniResp();
-
-                var result = settledBLL.Result_AdvantPlayMini(getReq, out long SQ);
-                if (result > 0 || result == -1)
+                if (!err)
                 {
                     Response.StatusCode = (int)HttpStatusCode.OK;
-                    response.processId = SQ.ToString();
+                    response.processId = $"{getReq.GameId}_{getReq.SessionId}";
                     response.timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                     return response;
-                }
-                else
-                {
-                    errResponse.errorMessage = "Unknow error";
-                    log2File.Error($"Unknow error {result}", logName);
                 }
             }
             catch (Exception ex)
@@ -1185,57 +1218,118 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 var Decrypt = DecrypeRequest(getCommReq.payload, sitename);
                 log2File.Info($"{Decrypt}", logName);
-                var TransId = "";
                 var getReq = JsonConvert.DeserializeObject<PayoutData_AdvantPlayMini>(Decrypt);
-                if (getReq.WinResults.Any() && getReq.WinResults.Count() > 0)
-                {
-                    TransId = getReq.WinResults.First().TransactionReferenceId;
-                }
-                if (getReq.LostResults.Any() && getReq.LostResults.Count() > 0)
-                {
-                    TransId = getReq.LostResults.First().TransactionReferenceId;
-                }
-                if (TransId == "")
-                {
-                    log2File.Error($"get TransactionReferenceId error", logName);
-                    return errResponse;
-                }
 
-                var betting = bettingBLL.GetAdvantPlayMiniBet(TransId, getReq.SettlementTime, "cardracing", out _);
-                if (betting == null || !betting.Any(x => x.TicketType == (int)BettransType.Bet))
+                var bettrans = bettingBLL.GetAdvantPlayMiniBySession(getReq.GameId, Convert.ToInt64(getReq.SessionId), getReq.SettlementTime, "cardracing", out _);
+                if (bettrans == null)
                 {
                     log2File.Error($"PlaceBet data not found", logName);
                     return errResponse;
                 }
-                getReq.MiniGameCode = betting.First().MiniGameCode;
-                getReq.UserReferenceId = betting.First().UserReferenceId;
-
-                CommonMiniResp response = new CommonMiniResp();
-                var result = settledBLL.Payout_AdvantPlayMini(getReq, out decimal tpAffterAmount);
-                if (result > 0)
+                getReq.MiniGameCode = bettrans.First().MiniGameCode;
+                EndResultMiniResp response = new EndResultMiniResp();
+                List<WinResult> winResultsList = new List<WinResult>();
+                var error = false;
+                if (getReq.WinResults.Any() && getReq.WinResults.Count() > 0)
                 {
-                    if (tpAffterAmount == 0)
+                    foreach (var winItem in getReq.WinResults)
                     {
-                        tpAffterAmount = tpCustInfoBLL.GetBalance((int)thisTp, getReq.UserReferenceId, gameType).Balance;
+                        var singleBettrans = new PayoutData_AdvantPlayMini();
+                        var singleWinResults = new List<WinResults_AdvantPlayMini>
+                        {
+                            winItem
+                        };
+                        singleBettrans.TransactionReferenceId = winItem.TransactionReferenceId;
+                        singleBettrans.GameId = getReq.GameId;
+                        singleBettrans.SessionId = getReq.SessionId;
+                        singleBettrans.SettlementTime = getReq.SettlementTime;
+                        singleBettrans.Odds = winItem.Odds;
+                        singleBettrans.WinResults = singleWinResults;
+                        singleBettrans.GameResult = getReq.GameResult;
+                        singleBettrans.UserReferenceId = winItem.UserReferenceId;
+                        singleBettrans.MiniGameCode = getReq.MiniGameCode;
+
+                        var result = settledBLL.Payout_AdvantPlayMini(singleBettrans, out decimal tpAffterAmount);
+                        if (result > 0)
+                        {
+                            if (tpAffterAmount == 0)
+                            {
+                                tpAffterAmount = tpCustInfoBLL.GetBalance((int)thisTp, winItem.UserReferenceId, gameType).Balance;
+                            }
+
+                            winResultsList.Add(new WinResult()
+                            {
+                                userReferenceId = winItem.UserReferenceId,
+                                balance = tpAffterAmount
+                            });
+                            log2File.Info($"PayoutEndResultOfMiniAsync success {result}\r\n{JsonConvert.SerializeObject(winItem)}", logName);
+                        }
+                        else if (result == -1)
+                        {
+                            tpAffterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, winItem.UserReferenceId, gameType).Balance;
+                            winResultsList.Add(new WinResult()
+                            {
+                                userReferenceId = winItem.UserReferenceId,
+                                balance = tpAffterAmount
+                            });
+                            log2File.Info($"PayoutEndResultOfMiniAsync success {result}\r\n{JsonConvert.SerializeObject(winItem)}", logName);
+                        }
+                        else
+                        {
+                            error = true;
+                            Response.StatusCode = (int)HttpStatusCode.INVALID_DATA;
+                            errResponse.errorMessage = "Unknow error";
+                            log2File.Error($"Unknow error {result}\r\n{JsonConvert.SerializeObject(winItem)}", logName);
+                        }
                     }
+                }
+                if (getReq.LostResults.Any() && getReq.LostResults.Count() > 0)
+                {
+                    foreach (var lostItem in getReq.LostResults)
+                    {
+                        var singleBettrans = new PayoutData_AdvantPlayMini();
+                        var singleLostResults = new List<LostResults_AdvantPlayMini>
+                        {
+                            lostItem
+                        };
+                        var getBet = bettrans.FirstOrDefault(i => i.TicketType == 1 && i.TransId == lostItem.TransactionReferenceId);
+                        if(getBet == null)
+                        {
+                            error = true;
+                            log2File.Error($"bettrans no found bet error\r\n{JsonConvert.SerializeObject(lostItem)}", logName);
+                        }
+                        else
+                        {
+                            singleBettrans.TransactionReferenceId = lostItem.TransactionReferenceId;
+                            singleBettrans.GameId = getReq.GameId;
+                            singleBettrans.SessionId = getReq.SessionId;
+                            singleBettrans.SettlementTime = getReq.SettlementTime;
+                            singleBettrans.LostResults = singleLostResults;
+                            singleBettrans.GameResult = getReq.GameResult;
+                            singleBettrans.UserReferenceId = getBet.UserReferenceId;
+                            singleBettrans.MiniGameCode = getReq.MiniGameCode;
+
+                            var result = settledBLL.Payout_AdvantPlayMini(singleBettrans, out decimal tpAffterAmount);
+                            if (result != -1 && result <= 0)
+                            {
+                                error = true;
+                                Response.StatusCode = (int)HttpStatusCode.INVALID_DATA;
+                                errResponse.errorMessage = "Unknow error";
+                                log2File.Error($"Unknow error {result}\r\n{JsonConvert.SerializeObject(lostItem)}", logName);
+                            }
+                        }
+                    }
+                }
+
+                if (!error)
+                {
                     Response.StatusCode = (int)HttpStatusCode.OK;
-                    response.balance = tpAffterAmount;
+                    response.processId = $"{getReq.GameId}_{getReq.SessionId}";
+                    response.winResults = winResultsList;
                     response.timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                     return response;
                 }
-                else if (result == -1)
-                {
-                    Response.StatusCode = (int)HttpStatusCode.OK;
-                    response.balance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.UserReferenceId, gameType).Balance; ;
-                    response.timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                    return response;
-                }
-                else
-                {
-                    Response.StatusCode = (int)HttpStatusCode.INVALID_DATA;
-                    errResponse.errorMessage = "Unknow error";
-                    log2File.Error($"Unknow error {result}", logName);
-                }
+
             }
             catch (Exception ex)
             {
@@ -1274,13 +1368,204 @@ namespace ThirdPartySeamlessWallet.Controllers
                 log2File.Info($"{Decrypt}", logName);
                 var getReq = JsonConvert.DeserializeObject<CancelBetData_AdvantPlayMini>(Decrypt);
 
-                var betting = bettingBLL.GetAdvantPlayMiniBet(getReq.TransId, getReq.refundTime, game, out _);
-                if (betting == null || betting.Any(x => x.TicketType == (int)BettransType.CancelBet))
+                var bettrans = bettingBLL.GetAdvantPlayMiniBySession(getReq.GameId, Convert.ToInt64(getReq.SessionId), getReq.refundTime, game, out _);
+                if (bettrans == null)
                 {
                     Response.StatusCode = (int)HttpStatusCode.OK;
                     response.refundId = getReq.TransId;
                     response.timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                     return response;
+                }
+
+                var err = false;
+                foreach (var item in getReq.Data)
+                {
+                    if(bettrans.Any(i => i.TransId == item.TransactionReferenceId && i.TicketType == (int)BettransType.CancelBet))
+                    {
+                        continue;
+                    }
+
+                    // 待處理
+                    var cancelData = bettrans.First(i => i.TransId == item.TransactionReferenceId && i.TicketType == (int)BettransType.CancelBet);
+
+                    getReq.MiniGameCode = cancelData.MiniGameCode;
+                    getReq.UserReferenceId = cancelData.UserReferenceId;
+                    getReq.TransId = item.TransactionReferenceId;
+
+                    var singleBettrans = new CancelBetData_AdvantPlayMini();
+                    List<Data_AdvantPlayMini> cancelList = new List<Data_AdvantPlayMini>();
+
+                    singleBettrans.GameId = getReq.GameId;
+                    singleBettrans.SessionId = getReq.SessionId;
+                    singleBettrans.refundTime = getReq.refundTime;
+                    singleBettrans.Data = new List<Data_AdvantPlayMini>()
+                    {
+                        item,
+                    };
+                    singleBettrans.MiniGameCode = cancelData.MiniGameCode;
+                    singleBettrans.UserReferenceId = cancelData.UserReferenceId;
+
+                    var result = settledBLL.CancelBet_AdvantPlayMini(singleBettrans);
+                    if (result > 0 || result == -1)
+                    {
+                        log2File.Info($"RefundOfMiniAsync success {result}\r\n{JsonConvert.SerializeObject(item)}", logName);
+                    }
+                    else
+                    {
+                        errResponse.errorMessage = "Unknow error";
+                        log2File.Error($"Unknow error {result}", logName);
+                        err = true;
+                    }
+                }
+
+                if (!err)
+                {
+                    Response.StatusCode = (int)HttpStatusCode.OK;
+                    response.refundId = $"{getReq.GameId}_{getReq.SessionId}";
+                    response.timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                    return response;
+                }
+            }
+            catch (Exception ex)
+            {
+                log2File.Error($"{ex.Message}", logName, ex);
+            }
+
+            return errResponse;
+        }
+
+        [HttpPost]
+        [Route("[controller]/{sitename}/api/v1/cardracing/wallet/refundPayoutByPostman")]
+        public async Task<dynamic> refundPayoutByPostmanOfMiniAsync(string sitename)
+        {
+            /*
+              單筆處理
+             {
+                  "GameId": "fb5f8362-708f-11ed-bd9b-42010a8c0005",
+                  "SessionId": "1227322",
+                  "RefundTime": 1677050572,
+                  "Data": [
+                    {
+                      "TransactionReferenceId": "fb5f8362-708f-11ed-bd9b-42010a8c0005_1227322",
+                      "Amount": -25.0
+                    }
+                  ]
+              }
+             */
+            var game = "cardracing";
+            string logName = $"{_tpName}_refundPayoutByPostmanOfMini";
+            Response.StatusCode = (int)HttpStatusCode.INVALID_DATA;
+            ErrorResponse errResponse = new ErrorResponse();
+            errResponse.errorMessage = "Server error";
+
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            string Content = await reader.ReadToEndAsync();
+
+            try
+            {
+                if (string.IsNullOrEmpty(game) || !CheckGameOfMini(game))
+                {
+                    Response.StatusCode = (int)HttpStatusCode.INVALID_DATA;
+                    errResponse.errorMessage = "game error";
+                    log2File.Error($"{errResponse.errorMessage} - {game}", logName);
+                    return errResponse;
+                }
+
+                RefundMiniResp response = new RefundMiniResp();
+                var getCommReq = JsonConvert.DeserializeObject<CommonMiniReq>(Content);
+                var getReq = JsonConvert.DeserializeObject<CancelBetData_AdvantPlayMini>(Content);
+
+                var betting = bettingBLL.GetAdvantPlayMiniBySession(getReq.GameId, Convert.ToInt64(getReq.SessionId), getReq.refundTime, game, out _);
+                if (betting == null)
+                {
+                    log2File.Error($"PlaceBet data not found", logName);
+                    return errResponse;
+                }
+
+                if (!betting.Any(x => x.TicketType == (int)BettransType.Payout))
+                {
+                    log2File.Error($"Payout data not found", logName);
+                    return errResponse;
+                }
+
+                getReq.MiniGameCode = betting.First().MiniGameCode;
+                getReq.UserReferenceId = betting.First().UserReferenceId;
+
+                var result = settledBLL.CancelPayout_AdvantPlayMini(getReq);
+                if (result > 0 || result == -1)
+                {
+                    Response.StatusCode = (int)HttpStatusCode.OK;
+                    response.refundId = $"{getReq.GameId}_{getReq.SessionId}";
+                    response.timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                    return response;
+                }
+                else
+                {
+                    errResponse.errorMessage = "Unknow error";
+                    log2File.Error($"Unknow error {result}", logName);
+                }
+            }
+            catch (Exception ex)
+            {
+                log2File.Error($"{ex.Message}", logName, ex);
+            }
+
+            return errResponse;
+        }
+
+        [HttpPost]
+        [Route("[controller]/{sitename}/api/v1/cardracing/wallet/refundPlaceBetByPostman")]
+        public async Task<dynamic> refundPlaceBetByPostmanOfMiniAsync(string sitename)
+        {
+            /*
+             單筆處理
+             {
+                  "GameId": "fb5f8362-708f-11ed-bd9b-42010a8c0005",
+                  "SessionId": "1227322",
+                  "RefundTime": 1677050572,
+                  "Data": [
+                    {
+                      "TransactionReferenceId": "fb5f8362-708f-11ed-bd9b-42010a8c0005_1227322",
+                      "Amount": 25.0
+                    }
+                  ]
+              }
+             */
+            var game = "cardracing";
+            string logName = $"{_tpName}_refundPlaceBetByPostmanOfMini";
+            Response.StatusCode = (int)HttpStatusCode.INVALID_DATA;
+            ErrorResponse errResponse = new ErrorResponse();
+            errResponse.errorMessage = "Server error";
+
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            string Content = await reader.ReadToEndAsync();
+
+            try
+            {
+                if (string.IsNullOrEmpty(game) || !CheckGameOfMini(game))
+                {
+                    Response.StatusCode = (int)HttpStatusCode.INVALID_DATA;
+                    errResponse.errorMessage = "game error";
+                    log2File.Error($"{errResponse.errorMessage} - {game}", logName);
+                    return errResponse;
+                }
+
+                RefundMiniResp response = new RefundMiniResp();
+                var getCommReq = JsonConvert.DeserializeObject<CommonMiniReq>(Content);
+                var getReq = JsonConvert.DeserializeObject<CancelBetData_AdvantPlayMini>(Content);
+                getReq.TransId = getReq.Data.First().TransactionReferenceId;
+
+                var betting = bettingBLL.GetAdvantPlayMiniBet(getReq.TransId, getReq.refundTime, game, out _);
+                if (betting == null)
+                {
+                    log2File.Error($"PlaceBet data not found", logName);
+                    return errResponse;
+                }
+
+                if (betting.Any(x => x.TicketType == (int)BettransType.CancelBet))
+                {
+                    log2File.Error($"Ready Cancel", logName);
+                    return errResponse;
                 }
 
                 getReq.MiniGameCode = betting.First().MiniGameCode;
@@ -1290,7 +1575,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 if (result > 0 || result == -1)
                 {
                     Response.StatusCode = (int)HttpStatusCode.OK;
-                    response.refundId = getReq.TransId;
+                    response.refundId = $"{getReq.GameId}_{getReq.SessionId}";
                     response.timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                     return response;
                 }
@@ -1325,15 +1610,23 @@ namespace ThirdPartySeamlessWallet.Controllers
         private SplitTransactionReferenceId splitTransactionReferenceId(string transactionReferenceId)
         {
             var split = transactionReferenceId.Split("_");
-            if (split.Count() != 2)
+            var p = new SplitTransactionReferenceId();
+            if (split.Count() == 2)
             {
-                throw new Exception("splitTransactionReferenceId failed");
+                p.GameId = split[0];
+                p.SessionId = split[1];
+                return p;
+
             }
 
-            var p = new SplitTransactionReferenceId();
-            p.GameId = split[0];
-            p.SessionId = split[1];
-            return p;
+            if (split.Count() == 3)
+            {
+                p.GameId = split[0];
+                p.SessionId = split[1];
+                p.UserReferenceId = split[2];
+                return p;
+            }
+            throw new Exception("splitTransactionReferenceId failed");
         }
 
         #endregion

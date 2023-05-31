@@ -22,6 +22,8 @@ using Microsoft.Extensions.Configuration;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
 using ThirdParty.TFG;
+using static ThirdParty.TCG.TpHelper;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.TFG.Tests
 {
@@ -67,6 +69,7 @@ namespace ThirdParty.TFG.Tests
             var provider = services.BuildServiceProvider();
             ThirdPartyHelperBase.AuthProvider = provider.GetRequiredService<AuthBLL>();
             ThirdPartyHelperBase.TpCustInfoProvider = provider.GetRequiredService<TpCustInfoBLL>();
+            ThirdPartyHelperBase.TpBetRecordProvider = provider.GetRequiredService<TpBetRecordService>();
         }
         [SetUp]
         public void Setup()
@@ -93,11 +96,11 @@ namespace ThirdParty.TFG.Tests
             _inputs = new Dictionary<string, string>
             {
                 { "ApiUrl", "spi-test.r4espt.com" },
-                { "RetrieveUrl_VND", "https://api-test-v4.diaoq.com/api/v4/launch/url/?auth=0a47dd19d91c40f0ae57c7cffe3c1905" },
+                { "RetrieveUrl", "https://api-test-v4.diaoq.com" },
                 { "PublicToken_VND", "0a47dd19d91c40f0ae57c7cffe3c1905" },
                 { "PartnerId_VND", "4253" },
                 { "PrivateToken_VND", "00021b63e00da92648ff86c4cdff7ef1501079372548bcbc7bc5fd39012b4da4d11b0c2a55883e45c195bf1dc189974793a1620a69cdc6aaf80fb8b25c8fc8306bc95216327dc8696207578b18b8f85716e254a3df8514e3f84f2dbe2a1c7d40344966f7700f28b0dbba0f810a06dce3e5fc1af05041720657544360236e9b8ca763" },
-                { "Token", "rQ55U0TMkkGfkq5hxirZCA"}
+                { "Token", "IYNF6iDgZ0GOxQ/wmkebjQ"}
             };
         }
 
@@ -113,6 +116,48 @@ namespace ThirdParty.TFG.Tests
 
             //Assert
             actual.ErrorCode.Should().Be(ErrorCode.Success);
+        }
+
+        //[Test()]
+        public void GetBetDetailTest()
+        {
+            //Arrange
+            var appType = AppType.Desktop;
+            var tpLangId = "en";
+            GetBetDetailRequest request = new GetBetDetailRequest()
+            {
+                CustId = 644440,
+                TransId = "CDPCC198430I5340SZCA7CB",
+                GameType = 97,
+                SettledTime = DateTime.Now
+            };
+            TpGameTypeOption tpGameTypeOption = new TpGameTypeOption();
+            GetBetDetail getBetDetail = new GetBetDetail(request, tpGameTypeOption);
+            //Act
+            var actual = _tpHelper.GetBetDetail(getBetDetail, _tpCustInfo, _inputs);
+        }
+
+        //[Test()]
+        public void GetTpBetRecordExtendTest()
+        {
+            //Arrange
+            var appType = AppType.Desktop;
+            var tpLangId = "en";
+            GetBetDetailRequest request = new GetBetDetailRequest()
+            {
+                CustId = 644440,
+                TransId = "CDPCC198430I5340SZCA7CB",
+                GameType = 97,
+                SettledTime = DateTime.Now
+            };
+            TpGameTypeOption tpGameTypeOption = new TpGameTypeOption();
+            GetBetDetail getBetDetail = new GetBetDetail(request, tpGameTypeOption);
+            BetRecordInfo betRecordInfo = new BetRecordInfo()
+            {
+                TransId = "CDPCC198430I5340SZCA7CB"
+            };
+            //Act
+            var actual = _tpHelper.GetTpBetRecordExtend(betRecordInfo, tpGameTypeOption, _tpCustInfo, _inputs);
         }
     }
 }
