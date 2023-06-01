@@ -4,7 +4,6 @@ using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
@@ -136,12 +135,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.Success, "already exist this data.", request.referenceID, balance);
 
             await using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
+            await conn.OpenAsync();
             await using var trans = await conn.BeginTransactionAsync();
 
             if (!PlaceData(partitionTime, data, out message, trans))
             {
-                trans.Rollback();
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
 
@@ -155,7 +154,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     if (!GenNewRoundId(data.playSessionID, out newRoundId, out message, trans))
                     {
-                        trans.Rollback();
+                        await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                         return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
                     }
                 }
@@ -164,12 +163,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
                 {
-                    trans.Rollback();
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                     return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
                 }
             }
 
-            trans.Commit();
+            await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
             return new OperationResponse_Kiss918(Kiss918ErrorCode.Success, "", request.referenceID, balance);
         }
 
@@ -227,12 +226,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             await using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
+            await conn.OpenAsync();
             await using var trans = await conn.BeginTransactionAsync();
 
             if (!PlaceData(partitionTime, data, out message, trans))
             {
-                trans.Rollback();
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
 
@@ -243,7 +242,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 if (!GenNewRoundId(data.playSessionID, out newRoundId, out message, trans))
                 {
-                    trans.Rollback();
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                     return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
                 }
             }
@@ -254,7 +253,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
                 {
-                    trans.Rollback();
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                     return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
                 }
             }
@@ -267,17 +266,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (!ProcessTpBonus(tpCustInfo, data, out message, conn, trans))
             {
-                trans.Rollback();
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
 
             if (!InsertUnsettleData(partitionTime, data.referenceID, out message, trans))
             {
-                trans.Rollback();
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
 
-            trans.Commit();
+            await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
 
             return new OperationResponse_Kiss918(Kiss918ErrorCode.Success, "", request.referenceID, balance);
         }
@@ -331,12 +330,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             await using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
+            await conn.OpenAsync();
             await using var trans = await conn.BeginTransactionAsync();
 
             if (!PlaceData(partitionTime, data, out message, trans))
             {
-                trans.Rollback();
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
 
@@ -347,7 +346,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 if (!GenNewRoundId(data.playSessionID, out newRoundId, out message, trans))
                 {
-                    trans.Rollback();
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                     return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
                 }
             }
@@ -358,7 +357,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
                 {
-                    trans.Rollback();
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                     return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
                 }
             }
@@ -370,17 +369,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (!ProcessTpBonus(tpCustInfo, data, out message, conn, trans))
             {
-                trans.Rollback();
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
 
             if (!InsertUnsettleData(partitionTime, data.referenceID, out message, trans))
             {
-                trans.Rollback();
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
 
-            trans.Commit();
+            await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
 
             return new OperationResponse_Kiss918(Kiss918ErrorCode.Success, "", request.referenceID, balance);
         }
@@ -439,12 +438,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             await using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
+            await conn.OpenAsync();
             await using var trans = await conn.BeginTransactionAsync();
 
             if (!PlaceData(partitionTime, data, out message, trans))
             {
-                trans.Rollback();
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
 
@@ -459,7 +458,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 if (!GenNewRoundId(tpRoundId, out newRoundId, out message, trans))
                 {
-                    trans.Rollback();
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                     return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
                 }
             }
@@ -470,7 +469,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
                 {
-                    trans.Rollback();
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                     return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
                 }
             }
@@ -483,18 +482,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (!ProcessTpBonus(tpCustInfo, data, out message, conn, trans))
             {
-                trans.Rollback();
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
 
             if (!InsertUnsettleData(partitionTime, data.referenceID, out message, trans))
             {
-                trans.Rollback();
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                 return new OperationResponse_Kiss918(Kiss918ErrorCode.ServiceNotAvailable, message);
             }
 
-            trans.Commit();
-
+            await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+            
             return new OperationResponse_Kiss918(Kiss918ErrorCode.Success, "", request.referenceID, balance);
         }
 

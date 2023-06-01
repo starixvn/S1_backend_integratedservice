@@ -21,9 +21,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 var bonusId = 0;
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-                conn.Open();
-                using var trans = conn.BeginTransaction();
+                await using var conn = _mainDbClient.GetMySqlConnection();
+                await conn.OpenAsync();
+                await using var trans = await conn.BeginTransactionAsync();
 
                 var p = new DynamicParameters(new
                 {
@@ -36,7 +36,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 });
                 p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
                 p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
-                _ = await conn.ExecuteAsync("Service_BettransSports_BTI_Reserve_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                _ = await _mainDbClient.ExecuteAsync("Service_BettransSports_BTI_Reserve_Ins", transaction: trans , p);
 
                 var btiResult = new BTIResult()
                 {
@@ -65,8 +65,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 btiResult.AfterAmount = afterAmount;
                 if (btiResult.SetBalanceResult == 1)
+                {                  
+                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+                }
+                else
                 {
-                    trans.Commit();
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
                 }
 
                 return btiResult;
@@ -89,13 +93,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             try
             {
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-                conn.Open();
-                using var trans = conn.BeginTransaction();
+                await using var conn = _mainDbClient.GetMySqlConnection();
+                await conn.OpenAsync();
+                await using var trans = await conn.BeginTransactionAsync();
 
                 var p = new DynamicParameters(debitReserve);
                 p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
-                _ = await conn.ExecuteAsync("Service_BettransSports_BTI_DebitReserve_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                _ = await _mainDbClient.ExecuteAsync("Service_BettransSports_BTI_DebitReserve_Ins", trans ,p);
 
                 var btiResult = new BTIResult()
                 {
@@ -104,9 +108,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (btiResult.Trx_id > 0)
                 {
-                    trans.Commit();
+                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
                     btiResult.SPResult = 1;
                 }
+                else
+                {
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                }
+                
                 return btiResult;
             }
             catch (MySqlException mySqlEx)
@@ -131,13 +140,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 var bonusId = 0;
                 await using var conn = _mainDbClient.GetMySqlConnection();
-                conn.Open();
+                await conn.OpenAsync();
                 await using var trans = await conn.BeginTransactionAsync();
 
                 dto.TicketType = (int)BettransType.Bet;
                 dto.TicketStatus = (int)TicketStatus.UnSettled;
                 var p = new DynamicParameters(dto);
-                var result = await conn.ExecuteAsync("Service_BettransSports_SBO_Deduct_Ins", p, transaction: trans, commandType: CommandType.StoredProcedure);
+                var result = await _mainDbClient.ExecuteAsync("Service_BettransSports_SBO_Deduct_Ins", transaction: trans, p);
 
                 if (result < 1)
                 {
@@ -179,7 +188,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     Result = 1,
                     AfterAmount = afterAmount
                 };
-                await trans.CommitAsync();
+                await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
                 return sboResult;
             }
             catch (Exception ex)

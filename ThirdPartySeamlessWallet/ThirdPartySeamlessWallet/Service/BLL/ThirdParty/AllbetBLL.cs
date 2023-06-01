@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Data;
 using Dapper;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
@@ -337,7 +330,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
             else if (p.Get<int>("hasCanceled") == 1)
@@ -383,7 +380,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 if (result > 0)
                 {
-                    trans.Commit();
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
             catch (MySqlException mySqlEx)
@@ -432,7 +433,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     {
                         _mainDbClient.Execute("Service_BettransLC_Allbet_SettleFlag_Set",
                             trans, new { betNum = request.Details[0].BetNum, SettleFlag = 2 });
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     }
                 }
             }
@@ -486,12 +491,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         {
                             _mainDbClient.Execute("Service_BettransLC_Allbet_SettleFlag_Set", trans,
                                 new { betNum = request.Details[0].BetNum, SettleFlag = 2 });
-                            trans.Commit();
+                            _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                        }
+                        else
+                        {
+                            _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                         }
                     }
                     else
                     {
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
                     }
                 }
             }
@@ -597,7 +606,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                     if (result > 0)
                     {
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     }
                 }
             }
