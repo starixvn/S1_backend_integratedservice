@@ -12,7 +12,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
     {
         NextspinCommonResponse Handle(AuthorizeRequest request);
         NextspinCommonResponse Handle(GetBalanceRequest request);
-        NextspinCommonResponse Handle(TransferRequest request);
+        Task<NextspinCommonResponse> Handle(TransferRequest request);
     }
 
     public class NextspinHandler : INextspinHandler
@@ -90,9 +90,51 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 SerialNo = GenerateSerialNo(),
             };
         }
-        public NextspinCommonResponse Handle(TransferRequest request)
+        public async Task<NextspinCommonResponse> Handle(TransferRequest request)
         {
-            throw new NotImplementedException();
+
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, request.AcctId);
+            if (tpCheck == null || tpCheck.Locked)
+            {
+                _logger.LogError($"tpcheck fail:{JsonConvert.SerializeObject(tpCheck)}");
+                throw new NextspinException(NextspinErrorCode.AcctLocked);
+            }
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, request.AcctId);
+            if (tpCustInfo == null)
+            {
+                _logger.LogError($"tpCustInfo is null, tpUserName:{request.AcctId}");
+                throw new NextspinException(NextspinErrorCode.AcctLocked);
+            }
+            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
+            if (tpCurrency == null || tpCurrency.ExchangeRate < 0)
+            {
+                _logger.LogError($"tpCurrency is null, {JsonConvert.SerializeObject(tpCurrency)}");
+                throw new NextspinException(NextspinErrorCode.AcctLocked);
+            }
+            var bettingData = new BettingDataRNG_Nextspin()
+            {
+                TransferId = request.TransferId,
+                Amount = request.Amount.ConvertToMain(tpCurrency.ExchangeRate),
+                TicketId = request.TicketId,
+            };
+            var result = await _bettingService.PlaceBetRNG_Nextspin(tpCustInfo, bettingData);
+
+            if (result > 0)
+            {
+                var balance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.AcctId, (int)GameType.Nextspin_RNG);
+                return new TransferResponse()
+                {
+                    TransferId = request.TransferId,
+                    MerchantTxId = DateTimeOffset.Now.ToUnixTimeSeconds().ToString(),
+                    AcctId = tpCustInfo.TpUserName,
+                    Balance = balance.Balance,
+                    MerchantCode = request.MerchantCode,
+                    Msg = NextspinErrorCode.Success.GetEnumDescription(),
+                    Code = (int)NextspinErrorCode.Success,
+                    SerialNo = GenerateSerialNo()
+                };
+            }
+            throw new NextspinException(NextspinErrorCode.InsufficientBalance);
         }
 
         public static string GenerateSerialNo() => Guid.NewGuid().ToString();

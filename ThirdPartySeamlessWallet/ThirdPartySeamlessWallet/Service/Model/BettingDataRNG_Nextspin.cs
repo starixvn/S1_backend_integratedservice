@@ -4,6 +4,17 @@ namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class BettingDataRNG_Nextspin
     {
+        public string MerchantCode { get; set; }
+        public string SerialNo { get; set; }
+        public string AcctId { get; set; }
+        public string TransferId { get; set; }
+        public string Currency { get; set; }
+        public decimal Amount { get; set; }
+        public int Type { get; set; }
+        public string GameCode { get; set; }
+        public string ReferenceId { get; set; }
+        public string TicketId { get; set; }
+        public string Channel { get; set; }
     }
     public class NextspinHeader 
     {
@@ -59,11 +70,19 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string AcctId { get; set; }
         public string TransferId { get; set; }
         public string Currency { get; set; }
-        public double Amount { get; set; }
+        public decimal Amount { get; set; }
         public int Type { get; set; }
         public string GameCode { get; set; }
         public string ReferenceId { get; set; }
         public string TicketId { get; set; }
         public string Channel { get; set; }
+    }
+
+    public class TransferResponse : NextspinCommonResponse
+    {
+        public string TransferId { get; set; }
+        public string MerchantTxId { get; set; }
+        public string AcctId { get; set; }
+        public decimal Balance { get; set; }
     }
 }

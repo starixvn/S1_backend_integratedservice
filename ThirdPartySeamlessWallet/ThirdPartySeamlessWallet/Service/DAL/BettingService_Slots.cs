@@ -1652,5 +1652,41 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         #endregion
 
+
+        public async Task<int> PlaceBetRNG_Nextspin(TpCustInfo tpCustInfo, BettingDataRNG_Nextspin bettingData) 
+        {
+            await using var conn = _mainDbClient.GetMySqlConnection();
+            await conn.OpenAsync();
+            await using var trans = await conn.BeginTransactionAsync();
+            try
+            {
+                var bonusId = 0;
+                var result = PlaceBetV2(
+                    tpCustInfo: tpCustInfo,
+                    amount: Math.Abs(bettingData.Amount) * -1,
+                    tpId: (int)Tp.Nextspin,
+                    tpTransId: bettingData.TicketId,
+                    gameType: (int)GameType.Nextspin_RNG,
+                    refId: bettingData.TransferId,
+                    betData: null,
+                    tpCategory: TpCategory.Sports,
+                    afterAmount: out var afterAmount,
+                    bonusId: ref bonusId,
+                    conn: conn,
+                    trans: trans
+                    );
+                if (result > 0) 
+                {
+                    await trans.CommitAsync();
+                }
+                return result;
+            }
+            catch (Exception ex)
+            {
+                await trans.RollbackAsync();
+                logger.LogError(ex, ex.Message);
+                return -1;
+            }
+        }
     }
 }
