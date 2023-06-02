@@ -68,13 +68,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public MGGetBalanceResponse GetBalance(MGGetBalanceRequest request)
         {
-            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, request.playerId);
-            if (tpCheck == null || tpCheck.Locked)
-            {
-                _logger.LogError($"tpcheck fail:{JsonConvert.SerializeObject(tpCheck)}");
-                throw new MGException(MGErrorCode.PlayerIsLocked, $"{request.playerId} is locked");
-            }
-
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, request.playerId);
             var gameType = _tpCustInfoBLL.GetCustGotoGameType(tpCustInfo.CustId, (int)ThirdParty);
 
