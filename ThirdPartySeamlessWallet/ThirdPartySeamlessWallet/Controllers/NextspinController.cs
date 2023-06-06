@@ -26,7 +26,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpPost]
         public async Task<NextspinCommonResponse> Action([FromHeader] NextspinHeader header)
         {
-            LogContext.PushProperty("Method", header.API);
+            LogContext.PushProperty("API", header.API);
 
             try
             {
@@ -42,7 +42,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         return _nextspinHandler.Handle(getBalance);
                     case "transfer":
                         var transfer = JsonConvert.DeserializeObject<TransferRequest>(body);
-                        return _nextspinHandler.Handle(transfer);
+                        return await _nextspinHandler.Handle(transfer);
                     default:
                         var nextspin = JsonConvert.DeserializeObject<NextspinCommonRequest>(body);
                         throw new NextspinException(NextspinErrorCode.InvalidRequest);
