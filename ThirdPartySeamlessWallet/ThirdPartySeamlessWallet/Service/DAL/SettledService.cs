@@ -226,6 +226,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        private decimal GetUseBonus(int TpId, string TransId, int GameType)
+        {
+            return _mainDbClient.QueryFirst<decimal>("Service_TpSeamlessBonus_UseBonus_Get", parameters: new { TpId, TransId, GameType });
+        }
+
         public bool GetBonusIdByPromoCategoryId(int custId, int promoCategoryId, out int bonusId)
         {
             bonusId = 0;
@@ -529,6 +534,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             && refValidBet != validBet)
                         {
                             SetWithdrawalLimitTurnOver(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, validBet - refValidBet, "Re-Settled", betRecord.TransId, conn, trans);
+                        }
+                    }
+                }
+                else
+                {
+                    // 使用Bonus的要判斷是否有用到主錢包下注，主錢包下注的金額，第一次Settle時要沖提款限額
+                    var useBonus = GetUseBonus(betRecord.TpId, betRecord.TransId, (int)betRecord.GameType);
+                    var stakeWithoutBonus = validBet - useBonus; // 沒有使用Bonus用主錢包下注的下注的金額
+                    if (stakeWithoutBonus > 0 && RefBetRecord == null)
+                    {
+                        if (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win || betRecord.TicketStatus == TicketStatus.Draw)
+                        {
+                            SetWithdrawalLimitTurnOver(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, stakeWithoutBonus, "Settled", betRecord.TransId, conn, trans);
                         }
                     }
                 }
