@@ -1,14 +1,9 @@
-﻿using System;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 using Serilog.Context;
 using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
-using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
@@ -20,22 +15,49 @@ namespace ThirdPartySeamlessWallet.Controllers
     public class NextspinController : ControllerBase
     {
         private readonly INextspinHandler _nextspinHandler;
-        public NextspinController(INextspinHandler nextspinHandler)
+        private readonly ILogger<NextspinController> _logger;
+        public NextspinController(INextspinHandler nextspinHandler, ILogger<NextspinController> logger)
         {
             _nextspinHandler = nextspinHandler;
+            _logger = logger;
         }
 
 
         [HttpPost]
-        public async Task<NextspinCommonResponse> Action()
+        public async Task<NextspinCommonResponse> Action([FromHeader] NextspinHeader header)
         {
-            Request.Headers.TryGetValue("API", out StringValues apiName);
-            LogContext.PushProperty("Method", apiName);
+            LogContext.PushProperty("API", header.API);
 
-            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-            var body = await reader.ReadToEndAsync();
-            var request = JsonConvert.DeserializeObject<GetBalanceRequest>(body);
-            return _nextspinHandler.Handle(request);
+            try
+            {
+                using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+                var body = await reader.ReadToEndAsync();
+                switch (header.API)
+                {
+                    case "authorize":
+                        var authorize = JsonConvert.DeserializeObject<AuthorizeRequest>(body);
+                        return _nextspinHandler.Handle(authorize);
+                    case "getBalance":
+                        var getBalance = JsonConvert.DeserializeObject<GetBalanceRequest>(body);
+                        return _nextspinHandler.Handle(getBalance);
+                    case "transfer":
+                        var transfer = JsonConvert.DeserializeObject<TransferRequest>(body);
+                        return await _nextspinHandler.Handle(transfer);
+                    default:
+                        var nextspin = JsonConvert.DeserializeObject<NextspinCommonRequest>(body);
+                        throw new NextspinException(NextspinErrorCode.InvalidRequest);
+                }
+            }
+            catch (NextspinException nex)
+            {
+                _logger.LogError(nex, nex.Message);
+                return new NextspinCommonResponse() { MerchantCode = nex.MerchantCode, Code = (int)nex.NextspinErrorCode, Msg = nex.ErrorMessage, SerialNo = NextspinHandler.GenerateSerialNo() };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "system error");
+                return new NextspinCommonResponse() { Code = (int)NextspinErrorCode.SystemError, Msg = NextspinErrorCode.SystemError.GetEnumDescription(), SerialNo = NextspinHandler.GenerateSerialNo() };
+            }
         }
     }
 }
