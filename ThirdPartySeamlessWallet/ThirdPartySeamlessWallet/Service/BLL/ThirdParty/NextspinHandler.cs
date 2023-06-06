@@ -121,9 +121,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             var bettingData = new BettingDataRNG_Nextspin()
             {
-                TransferId = request.TransferId,
-                Amount = request.Amount.ConvertToMain(tpCurrency.ExchangeRate),
-                TicketId = request.TicketId,
+                acctId = request.AcctId,
+                transferId = request.TransferId,
+                currency = request.Currency,
+                amount = request.Amount.ConvertToMain(tpCurrency.ExchangeRate),
+                type = (int)request.Type,
+                gameCode = request.GameCode,
+                channel = request.Channel,
+                referenceId = request.TransferId,
+                ticketId = ""
             };
             var result = await _bettingService.PlaceBetRNG_Nextspin(tpCustInfo, bettingData);
             if (result.Result > 0)
@@ -159,9 +165,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             var bettingData = new BettingDataRNG_Nextspin()
             {
-                TransferId = request.TransferId,
-                Amount = request.Amount.ConvertToMain(tpCurrency.ExchangeRate),
-                TicketId = request.TicketId,
+                acctId = request.AcctId,
+                transferId = request.TransferId,
+                currency = request.Currency,
+                amount = request.Amount.ConvertToMain(tpCurrency.ExchangeRate),
+                type = (int)request.Type,
+                gameCode = request.GameCode,
+                referenceId = request.ReferenceId,
+                ticketId = request.TicketId,
+                channel = request.Channel
             };
             var result = await _settledService.PayoutRNG_Nextspin(tpCustInfo, bettingData);
             var response = new TransferResponse()

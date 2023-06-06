@@ -5448,23 +5448,33 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public async Task<NextspinResult> PayoutRNG_Nextspin(TpCustInfo tpCustInfo, BettingDataRNG_Nextspin bettingData)
         {
-            var result = 0;
             var afterAmount = 0m;
             using var conn = _mainDbClient.GetMySqlConnection();
             await conn.OpenAsync();
             await using var trans = await conn.BeginTransactionAsync();
             try
             {
-                if (bettingData.Amount != 0)
+                var partitionTime = DateTime.UtcNow;
+                bettingData.TicketType = (int)BettransType.Payout;
+                bettingData.TicketStatus = (int)bettingData.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
+                var result = _partitionService.Execute(partitionTime, "Service_BettransRng_Nextspin_Ins", bettingData, trans);
+                if (result < 1)
+                {
+                    logger.LogError($"Username:{tpCustInfo.TpUserName} TransferCode:{bettingData.transferId}" +
+                                    $" exec Service_BettransRng_Nextspin_Ins failed");
+                    throw new NextspinException(NextspinErrorCode.SystemError);
+                }
+
+                if (bettingData.amount != 0)
                 {
                     result = PayoutV2(
                         tpCustInfo,
-                        bettingData.Amount,
+                        bettingData.amount,
                         (int)Tp.Nextspin,
-                        bettingData.TicketId,
+                        bettingData.referenceId,
                         (int)GameType.Nextspin_RNG,
                         TpCategory.Slots,
-                        bettingData.TransferId,
+                        bettingData.transferId,
                         TransType.Payout,
                         null,
                         out afterAmount,
@@ -5479,6 +5489,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         logger.LogError($"Username:{tpCustInfo.TpUserName} afterAmount:{afterAmount} < 0 return Result:-2");
                         throw new NextspinException(NextspinErrorCode.InsufficientBalance);
                     }
+                }
+                result = _tpUnsettleService.InsertTpUnsettle(Tp.Nextspin, GameType.Nextspin_RNG, bettingData.referenceId, trans, partitionTime);
+                if (result < 1)
+                {
+                    logger.LogError($"Username:{tpCustInfo.TpUserName} TransferCode:{bettingData.transferId}" +
+                                    $"exec Service_TpUnsettle_Ins_V2 failed ");
+                    throw new NextspinException(NextspinErrorCode.SystemError);
                 }
 
                 await trans.CommitAsync();

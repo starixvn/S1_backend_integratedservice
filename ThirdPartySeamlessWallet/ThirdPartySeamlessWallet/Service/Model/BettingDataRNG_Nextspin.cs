@@ -4,17 +4,20 @@ namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class BettingDataRNG_Nextspin
     {
-        public string MerchantCode { get; set; }
-        public string SerialNo { get; set; }
-        public string AcctId { get; set; }
-        public string TransferId { get; set; }
-        public string Currency { get; set; }
-        public decimal Amount { get; set; }
-        public int Type { get; set; }
-        public string GameCode { get; set; }
-        public string ReferenceId { get; set; }
-        public string TicketId { get; set; }
-        public string Channel { get; set; }
+        public string acctId { get; set; }
+        public string transferId { get; set; }
+        public string currency { get; set; }
+        public decimal amount { get; set; }
+        public int type { get; set; }
+        public string gameCode { get; set; }
+        public string referenceId { get; set; }
+        public string ticketId { get; set; }
+        public string channel { get; set; }
+        public string specialGameType { get; set; }
+        public string count { get; set; }
+        public string sequence { get; set; }
+        public int TicketType { get; set; }
+        public int TicketStatus { get; set; }
     }
     public class NextspinResult 
     {
