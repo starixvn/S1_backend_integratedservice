@@ -1660,24 +1660,37 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             await using var trans = await conn.BeginTransactionAsync();
             try
             {
+                var partitionTime = DateTime.UtcNow;
+                bettingData.TicketType = (int)BettransType.Bet;
+                bettingData.TicketStatus = (int)TicketStatus.UnSettled;
+                var result = _partitionService.Execute(partitionTime, "Service_BettransRng_Nextspin_Ins", bettingData, trans);
+                if (result < 1) 
+                {
+                    logger.LogError($"Username:{tpCustInfo.TpUserName} TransferCode:{bettingData.transferId}" +
+                                    $" exec Service_BettransRng_Nextspin_Ins failed");
+                    throw new NextspinException(NextspinErrorCode.SystemError);
+                }
+
                 var bonusId = 0;
-                var result = PlaceBetV2(
+                result = PlaceBetV2(
                     tpCustInfo: tpCustInfo,
-                    amount: Math.Abs(bettingData.Amount) * -1,
+                    amount: Math.Abs(bettingData.amount) * -1,
                     tpId: (int)Tp.Nextspin,
-                    tpTransId: bettingData.TicketId,
+                    tpTransId: bettingData.transferId,
                     gameType: (int)GameType.Nextspin_RNG,
-                    refId: bettingData.TransferId,
+                    refId: bettingData.transferId,
                     betData: null,
-                    tpCategory: TpCategory.Sports,
+                    tpCategory: TpCategory.Slots,
                     afterAmount: out var afterAmount,
                     bonusId: ref bonusId,
                     conn: conn,
                     trans: trans);
-                if (result > 0) 
+                if (result < 1) 
                 {
-                    await trans.CommitAsync();
+                    logger.LogError($"Username:{tpCustInfo.TpUserName} afterAmount:{afterAmount} < 0 return Result:-2");
+                    throw new NextspinException(NextspinErrorCode.InsufficientBalance);
                 }
+                await trans.CommitAsync();
                 return new NextspinResult() 
                 {
                     Result = 1,
