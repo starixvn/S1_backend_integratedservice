@@ -205,22 +205,25 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         private int GetTpBonus(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId, SeamlessBonusType bonusType = SeamlessBonusType.TpCategory)
         {
-            return GetTpSeamlessBonus(tpId, tpTransId, gameType, out CustId, out BonusId);
+            return GetTpSeamlessBonus(tpId, tpTransId, gameType, out CustId, out BonusId, out _);
         }
 
-        private int GetTpSeamlessBonus(int TpId, string TransId, int GameType, out int CustId, out int BonusId)
+        private int GetTpSeamlessBonus(int TpId, string TransId, int GameType, out int CustId, out int BonusId, out decimal UseBonus)
         {
             CustId = 0;
             BonusId = 0;
+            UseBonus = 0;
 
             var p = new DynamicParameters(new { TpId, TransId, GameType });
             p.Add("CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
-            p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);          
-            var result = _mainDbClient.Execute("Service_TpSeamlessBonus_Get", parameters: p);
+            p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            p.Add("UseBonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            var result = _mainDbClient.Execute("Service_TpSeamlessBonus_Get_V2", parameters: p);
             if (result > 0)
             {
                 CustId = p.Get<int>("CustId");
                 BonusId = p.Get<int>("BonusId");
+                UseBonus = p.Get<decimal>("UseBonus");
             }
 
             return result;

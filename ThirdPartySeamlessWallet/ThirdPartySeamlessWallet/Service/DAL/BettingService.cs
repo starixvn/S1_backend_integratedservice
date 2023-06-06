@@ -81,6 +81,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     // 新增tpSeamlessBonus紀錄
                     if (result > 0)
                     {
+                        var stake = Math.Abs(amount);
                         var tpSeamlessBonus = new TpSeamlessBonus
                         {
                             PromotionCategoryId = (int)custBonus.PromoCategoryId,
@@ -91,7 +92,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             UserName = tpCustInfo.UserName,
                             CurrencyId = tpCustInfo.CurrencyId,
                             SiteId = tpCustInfo.SiteId,
-                            Stake = amount,
+                            Stake = afterAmount < 0 ? stake + afterAmount : stake, // 紀錄實際使用的Bonus金額
                             BonusId = bonusId,
                         };
                         AddTpSeamlessBonus(tpSeamlessBonus, conn, trans);
