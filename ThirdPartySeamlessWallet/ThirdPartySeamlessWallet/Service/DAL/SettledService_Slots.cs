@@ -5439,5 +5439,64 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        public async Task<NextspinResult> PayoutRNG_Nextspin(TpCustInfo tpCustInfo, BettingDataRNG_Nextspin bettingData)
+        {
+            var result = 0;
+            var afterAmount = 0m;
+            using var conn = _mainDbClient.GetMySqlConnection();
+            await conn.OpenAsync();
+            await using var trans = await conn.BeginTransactionAsync();
+            try
+            {
+                if (bettingData.Amount != 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        bettingData.Amount,
+                        (int)Tp.Nextspin,
+                        bettingData.TicketId,
+                        (int)GameType.Nextspin_RNG,
+                        TpCategory.Slots,
+                        bettingData.TransferId,
+                        TransType.Payout,
+                        null,
+                        out afterAmount,
+                        "Payout",
+                        out var bonusId,
+                        conn,
+                        trans
+                    );
+
+                    if (result != 1)
+                    {
+                        logger.LogError($"Username:{tpCustInfo.TpUserName} afterAmount:{afterAmount} < 0 return Result:-2");
+                        throw new NextspinException(NextspinErrorCode.InsufficientBalance);
+                    }
+                }
+
+                await trans.CommitAsync();
+                return new NextspinResult() 
+                {
+                    Result = 1,
+                    SQ = Guid.NewGuid().ToString(),
+                    AfterAmount = afterAmount
+                };
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    throw new NextspinException(NextspinErrorCode.DuplicatedSerialNo);
+                }
+                throw;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                await trans.RollbackAsync();
+                throw new NextspinException(NextspinErrorCode.SystemError);
+            }
+        }
     }
 }

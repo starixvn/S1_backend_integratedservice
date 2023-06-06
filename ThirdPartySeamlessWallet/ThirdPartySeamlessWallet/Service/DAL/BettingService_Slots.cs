@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using System.Globalization;
+using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -1652,10 +1653,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         #endregion
 
-
-        public async Task<int> PlaceBetRNG_Nextspin(TpCustInfo tpCustInfo, BettingDataRNG_Nextspin bettingData) 
+        public async Task<NextspinResult> PlaceBetRNG_Nextspin(TpCustInfo tpCustInfo, BettingDataRNG_Nextspin bettingData) 
         {
-            await using var conn = _mainDbClient.GetMySqlConnection();
+            using var conn = _mainDbClient.GetMySqlConnection();
             await conn.OpenAsync();
             await using var trans = await conn.BeginTransactionAsync();
             try
@@ -1673,19 +1673,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     afterAmount: out var afterAmount,
                     bonusId: ref bonusId,
                     conn: conn,
-                    trans: trans
-                    );
+                    trans: trans);
                 if (result > 0) 
                 {
                     await trans.CommitAsync();
                 }
-                return result;
+                return new NextspinResult() 
+                {
+                    Result = 1,
+                    SQ = Guid.NewGuid().ToString(),
+                    AfterAmount = afterAmount
+                };
             }
             catch (Exception ex)
             {
                 await trans.RollbackAsync();
                 logger.LogError(ex, ex.Message);
-                return -1;
+                throw new NextspinException(NextspinErrorCode.SystemError);
             }
         }
     }

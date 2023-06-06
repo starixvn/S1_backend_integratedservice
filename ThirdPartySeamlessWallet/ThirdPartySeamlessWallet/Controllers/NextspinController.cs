@@ -26,7 +26,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpPost]
         public async Task<NextspinCommonResponse> Action([FromHeader] NextspinHeader header)
         {
-            LogContext.PushProperty("Method", header.API);
+            LogContext.PushProperty("API", header.API);
 
             try
             {
