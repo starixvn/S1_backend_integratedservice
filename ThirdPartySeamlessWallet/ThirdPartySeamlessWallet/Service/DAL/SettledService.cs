@@ -275,11 +275,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int bonusId = 0;
             int gameType = (int)betRecordInfo.GameType;
 
-            GetTpBonus(betRecordInfo.TpId, betRecordInfo.TransId, gameType, tpCategory, out int custId, out bonusId);
-            if (bonusId == 0 && betRecordInfo.TpId == (int)Tp.N2Live && !string.IsNullOrEmpty(betRecordInfo.ReferenceNo))
+            // 1.先用TransId去TpSeamlessBonus取得BonusId
+            // 2.取不到改用ReferenceNo再去TpSeamlessBonus檢查一次
+            GetTpBonus(betRecordInfo.TpId, betRecordInfo.TransId, gameType, tpCategory, out int custId, out bonusId);            
+            if (bonusId == 0 && !string.IsNullOrEmpty(betRecordInfo.ReferenceNo))
             {
-                // for n2 smart bet use
-                // for n2 temporary fix noraml bet
                 GetTpBonus(betRecordInfo.TpId, betRecordInfo.ReferenceNo, gameType, tpCategory, out custId, out bonusId);
             }
 

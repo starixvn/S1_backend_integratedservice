@@ -26,7 +26,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketKey { get; set; }
         public int BonusId { get; set; }
         /// <summary>
-        /// 用此單號來取回TpSeamlessBonus存放的Bonus紀錄
+        /// 可用此單號來取回TpSeamlessBonus存放的Bonus紀錄
         /// </summary>
         public string ReferenceNo { get; set; } = string.Empty;
         public string GameID 
