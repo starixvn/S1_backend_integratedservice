@@ -226,9 +226,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        private decimal GetUseBonus(int TpId, string TransId, int GameType)
+        private decimal GetUseBonus(int TpId, string ReferenceNo, int GameType)
         {
-            return _mainDbClient.QueryFirst<decimal>("Service_TpSeamlessBonus_UseBonus_Get", parameters: new { TpId, TransId, GameType });
+            return _mainDbClient.QueryFirst<decimal>("Service_TpSeamlessBonus_UseBonus_Get", parameters: new { TpId, TransId = ReferenceNo, GameType });
         }
 
         public bool GetBonusIdByPromoCategoryId(int custId, int promoCategoryId, out int bonusId)
@@ -540,7 +540,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 else
                 {
                     // 使用Bonus的要判斷是否有用到主錢包下注，主錢包下注的金額，第一次Settle時要沖提款限額
-                    var useBonus = GetUseBonus(betRecord.TpId, betRecord.TransId, (int)betRecord.GameType);
+                    var referenceNo = string.IsNullOrEmpty(betRecord.ReferenceNo) ? betRecord.TransId : betRecord.ReferenceNo;
+                    var useBonus = GetUseBonus(betRecord.TpId, referenceNo, (int)betRecord.GameType);
                     var stakeWithoutBonus = validBet - useBonus; // 沒有使用Bonus用主錢包下注的下注的金額
                     if (stakeWithoutBonus > 0 && RefBetRecord == null)
                     {

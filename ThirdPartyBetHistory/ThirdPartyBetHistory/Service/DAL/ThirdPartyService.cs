@@ -201,9 +201,10 @@ namespace ThirdPartyBetHistory.Service.DAL
                             }
                         }
 
-                        // 使用Bonus的要判斷是否有用到主錢包下注，主錢包下注的金額，第一次Settle時要沖提款限額
-                        var useBonus = GetUseBonus(betRecord.TpId, betRecord.TransId, (int)betRecord.GameType);
-                        var stakeWithoutBonus = betRecord.ValidBet - useBonus; // 沒有使用Bonus用主錢包下注的下注的金額
+                        // 使用Bonus的要判斷是否有用到主錢包下注，主錢包下注的金額第一次Settle時要沖提款限額
+                        var refId = GetRefId(long.Parse(betRecord.TransId));
+                        var useBonus = GetUseBonus(betRecord.TpId, refId, (int)betRecord.GameType);
+                        var stakeWithoutBonus = betRecord.ValidBet - useBonus; // 沒有使用Bonus下注的金額
                         if (stakeWithoutBonus > 0 && RefBetRecord == null)
                         {
                             if (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win)
@@ -488,6 +489,11 @@ namespace ThirdPartyBetHistory.Service.DAL
         private decimal GetUseBonus(int TpId, string TransId, int GameType)
         {
             return _mainDbClient.QueryFirst<decimal>("Service_TpSeamlessBonus_UseBonus_Get", parameters: new { TpId, TransId, GameType });
+        }
+
+        private string GetRefId(long txId)
+        {
+            return _mainDbClient.QueryFirst<string>("Service_Bettrans_SBSW_refId_Get", parameters: new { txId });
         }
     }
 }
