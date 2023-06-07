@@ -85,6 +85,14 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string ReferenceId { get; set; }
         public string TicketId { get; set; }
         public string Channel { get; set; }
+        public NextspinSpecialGame SpecialGame { get; set; }
+    }
+
+    public class NextspinSpecialGame 
+    {
+        public string Type { get; set; }
+        public int Count { get; set; }
+        public int Sequence { get; set; }
     }
 
     public class TransferResponse : NextspinCommonResponse
