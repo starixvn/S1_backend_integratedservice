@@ -5456,11 +5456,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var result = _partitionService.Execute(partitionTime, "Service_BettransRng_Nextspin_Ins", p, trans);
                 var sq = p.Get<long>("SQ");
                 if (sq == 0)
-                {
-                    logger.LogError($"Username:{tpCustInfo.TpUserName} SQ:{sq}");
                     throw new NextspinException(NextspinErrorCode.SystemError);
-                }
+                
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_Nextspin_Set", new { ticketId = bettingData.ticketId, referenceId = bettingData.referenceId }, trans);
+                if(result < 1)
+                    throw new NextspinException(NextspinErrorCode.RecordIdNotFound);
 
                 if (bettingData.amount != 0)
                 {
@@ -5480,20 +5480,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         conn,
                         trans
                     );
-
                     if (result != 1)
-                    {
-                        logger.LogError($"Username:{tpCustInfo.TpUserName} afterAmount:{afterAmount} < 0 return Result:-2");
                         throw new NextspinException(NextspinErrorCode.InsufficientBalance);
-                    }
+                    
                 }
                 result = _tpUnsettleService.InsertTpUnsettle(Tp.Nextspin, GameType.Nextspin_RNG, bettingData.ticketId, trans, partitionTime);
                 if (result < 1)
-                {
-                    logger.LogError($"Username:{tpCustInfo.TpUserName} TransferCode:{bettingData.ticketId}" +
-                                    $"exec Service_TpUnsettle_Ins_V2 failed ");
                     throw new NextspinException(NextspinErrorCode.SystemError);
-                }
 
                 await trans.CommitAsync();
                 return new NextspinResult() 
@@ -5507,7 +5500,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
                 {
-                    throw new NextspinException(NextspinErrorCode.DuplicatedSerialNo);
+                    throw new NextspinException(NextspinErrorCode.DuplicatedReferenceId);
                 }
                 throw;
             }

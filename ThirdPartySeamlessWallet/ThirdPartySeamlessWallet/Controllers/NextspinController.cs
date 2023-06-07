@@ -26,7 +26,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpPost]
         public async Task<NextspinCommonResponse> Action([FromHeader] NextspinHeader header)
         {
-            LogContext.PushProperty("API", header.API);
+            _nextspinHandler.SetApiName(header.API);
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
@@ -46,11 +46,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                         var nextspin = JsonConvert.DeserializeObject<NextspinCommonRequest>(body);
                         throw new NextspinException(NextspinErrorCode.InvalidRequest);
                 }
-            }
-            catch (NextspinException nex)
-            {
-                _logger.LogError(nex, nex.Message);
-                return new NextspinCommonResponse() { MerchantCode = nex.MerchantCode, Code = (int)nex.NextspinErrorCode, Msg = nex.ErrorMessage, SerialNo = NextspinHandler.GenerateSerialNo() };
             }
             catch (Exception ex)
             {
