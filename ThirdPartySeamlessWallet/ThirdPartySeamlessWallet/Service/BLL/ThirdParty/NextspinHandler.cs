@@ -140,7 +140,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 acctId = request.AcctId,
                 transferId = request.TransferId,
                 currency = request.Currency,
-                amount = request.Amount.ConvertToMain(tpCurrency.ExchangeRate),
+                amount = request.Amount.ConvertToMain(tpCurrency.ExchangeRate) * -1,
                 type = (int)request.Type,
                 gameCode = request.GameCode,
                 channel = request.Channel,
