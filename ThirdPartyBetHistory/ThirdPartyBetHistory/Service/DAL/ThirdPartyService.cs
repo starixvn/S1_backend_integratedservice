@@ -74,6 +74,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                     
                     var hasJoinBonus = false;
                     var bonusId = 0;
+                    decimal useBonus = 0;
 
                     /*Only count Sports*/
                     if (betRecord.GameType != GameType.SBSW_Sports && betRecord.SettlementType == SettlementType.SettledForValid)
@@ -98,15 +99,11 @@ namespace ThirdPartyBetHistory.Service.DAL
                     }
                     else
                     {
-                        // 1.先找到用戶還在Running的CustBonusList
-                        // 2.找出符合條件的Bonus才可以使用
-                        var custBonus = _settledService.GetCustBonusList(tpCustInfo.CustId)
-                            .FirstOrDefault(i => i.TpId == (int)Tp.SBSW || i.PromoCategoryId == 0);
-                        if (custBonus != null)
-                        {
-                            hasJoinBonus = true;
-                            bonusId = custBonus.BonusId;
-                        }
+                        // 1.先用TransId轉換成RefId
+                        // 2.用RefId去TpSeamlessBonus取回BonusId與實際使用的Bonus
+                        var refId = GetRefId(long.Parse(betRecord.TransId));
+                        (bonusId, useBonus) = GetUseBonus(betRecord.TpId, refId, (int)betRecord.GameType);                        
+                        hasJoinBonus = bonusId > 0;
 
                         if (hasJoinBonus && (RefBetRecord == null || betRecord.TicketStatus == TicketStatus.UnSettled))
                         {
@@ -202,8 +199,6 @@ namespace ThirdPartyBetHistory.Service.DAL
                         }
 
                         // 使用Bonus的要判斷是否有用到主錢包下注，主錢包下注的金額第一次Settle時要沖提款限額
-                        var refId = GetRefId(long.Parse(betRecord.TransId));
-                        var useBonus = GetUseBonus(betRecord.TpId, refId, (int)betRecord.GameType);
                         var stakeWithoutBonus = betRecord.ValidBet - useBonus; // 沒有使用Bonus下注的金額
                         if (stakeWithoutBonus > 0 && RefBetRecord == null)
                         {
@@ -486,9 +481,19 @@ namespace ThirdPartyBetHistory.Service.DAL
             return _mainDbClient.QueryFirst<int>("Service_TpBetRecordDetail_Ins_V2", detail); 
         }
 
-        private decimal GetUseBonus(int TpId, string TransId, int GameType)
+        private (int BonusId, decimal UseBonus) GetUseBonus(int TpId, string ReferenceNo, int GameType)
         {
-            return _mainDbClient.QueryFirst<decimal>("Service_TpSeamlessBonus_UseBonus_Get", parameters: new { TpId, TransId, GameType });
+            var p = new DynamicParameters(new { TpId, TransId = ReferenceNo, GameType });
+            p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            p.Add("UseBonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            var result = _mainDbClient.Execute("Service_TpSeamlessBonus_UseBonus_Get", parameters: p);
+
+            if (result > 0)
+            {
+                return (p.Get<int>("BonusId"), p.Get<decimal>("UseBonus"));
+            }
+
+            return default;
         }
 
         private string GetRefId(long txId)
