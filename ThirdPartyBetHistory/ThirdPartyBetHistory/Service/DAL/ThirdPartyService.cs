@@ -200,6 +200,18 @@ namespace ThirdPartyBetHistory.Service.DAL
                                     betRecord.ValidBet - RefBetRecord.ValidBet, "Re-Settled", betRecord.TransId, trans);
                             }
                         }
+
+                        // 使用Bonus的要判斷是否有用到主錢包下注，主錢包下注的金額第一次Settle時要沖提款限額
+                        var refId = GetRefId(long.Parse(betRecord.TransId));
+                        var useBonus = GetUseBonus(betRecord.TpId, refId, (int)betRecord.GameType);
+                        var stakeWithoutBonus = betRecord.ValidBet - useBonus; // 沒有使用Bonus下注的金額
+                        if (stakeWithoutBonus > 0 && RefBetRecord == null)
+                        {
+                            if (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win)
+                            {
+                                SetWithdrawalLimitTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, stakeWithoutBonus, "Settled", betRecord.TransId, trans);
+                            }
+                        }
                     }
                     else //沒Bonus走SetWithdrawalLimitTurnOver
                     {
@@ -232,6 +244,7 @@ namespace ThirdPartyBetHistory.Service.DAL
 
                     #endregion
 
+                    #region Set EffectiveBet of Cust
                     if ((RefBetRecord == null || RefBetRecord.TicketStatus == TicketStatus.UnSettled || RefBetRecord.TicketStatus == TicketStatus.Refund || RefBetRecord.TicketStatus == TicketStatus.Draw)
                         && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win))
                     {
@@ -250,6 +263,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                     {
                         SetEffectiveBetSum(tpCustInfo.CustId, tpCustInfo.SiteId, RefBetRecord.ValidBet * -1, trans);
                     }
+                    #endregion
 
                     var result = SetTpBetRecord(betRecord, tpCustInfo, trans);
                     if (result > 0)
@@ -470,6 +484,16 @@ namespace ThirdPartyBetHistory.Service.DAL
         public int AddTpBetRecordDetail(TpBetRecordDetail detail)
         {
             return _mainDbClient.QueryFirst<int>("Service_TpBetRecordDetail_Ins_V2", detail); 
+        }
+
+        private decimal GetUseBonus(int TpId, string TransId, int GameType)
+        {
+            return _mainDbClient.QueryFirst<decimal>("Service_TpSeamlessBonus_UseBonus_Get", parameters: new { TpId, TransId, GameType });
+        }
+
+        private string GetRefId(long txId)
+        {
+            return _mainDbClient.QueryFirst<string>("Service_Bettrans_SBSW_refId_Get", parameters: new { txId });
         }
     }
 }
