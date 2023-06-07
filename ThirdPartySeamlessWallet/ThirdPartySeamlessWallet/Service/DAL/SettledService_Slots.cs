@@ -5496,7 +5496,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 result = _tpUnsettleService.InsertTpUnsettle(Tp.Nextspin, GameType.Nextspin_RNG, bettingData.ticketId, trans, partitionTime);
                 if (result < 1)
                 {
-                    logger.LogError($"Username:{tpCustInfo.TpUserName} TransferCode:{bettingData.transferId}" +
+                    logger.LogError($"Username:{tpCustInfo.TpUserName} TransferCode:{bettingData.ticketId}" +
                                     $"exec Service_TpUnsettle_Ins_V2 failed ");
                     throw new NextspinException(NextspinErrorCode.SystemError);
                 }

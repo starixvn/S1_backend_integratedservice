@@ -65,8 +65,7 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var unsettleData = _partitionService.GetUnsettleDataList<SettleDataRNG_HB>("Service_BettransRng_Nextspin_Unsettle_Get", tpUnsettle).FirstOrDefault();
-
+                        var unsettleData = _partitionService.GetUnsettleDataList<SettleDataRNG_Nextspin>("Service_BettransRng_Nextspin_Unsettle_Get", tpUnsettle).FirstOrDefault();
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettleData.TpUserName);
                         if (tpCustInfo == null)
                         {
@@ -87,6 +86,7 @@ namespace ThirdPartySettleWorker.Workers
                             SettlementType = SettlementType.SettledForValid,
                             TicketStatus = CaculateTicketStatus(unsettleData.WinLostAmount),
                             GameID = unsettleData.GameId,
+                            ReferenceNo = unsettleData.ReferenceId
                         };
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)
