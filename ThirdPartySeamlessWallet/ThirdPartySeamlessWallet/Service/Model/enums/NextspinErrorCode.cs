@@ -20,6 +20,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         DuplicatedSerialNo = 107,
         [Description("Merchant Key Error")]
         MerchantKeyError = 108,
+        [Description("Duplicated ReferenceId")]
+        DuplicatedReferenceId = 109,
         [Description("Record Id Not Found")]
         RecordIdNotFound = 110,
         [Description("Invalid Acct Id")]
@@ -31,6 +33,10 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         [Description("Acct Locked")]
         AcctLocked = 50102,
         [Description("Insufficient Balance")]
-        InsufficientBalance = 50110
+        InsufficientBalance = 50110,
+        [Description("Currency Invalid")]
+        CurrencyInvalid = 50112,
+        [Description("Amount Invalid")]
+        AmountInvalid = 50113
     }
 }

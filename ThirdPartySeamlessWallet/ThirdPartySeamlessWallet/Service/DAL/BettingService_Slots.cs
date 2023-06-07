@@ -1653,6 +1653,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         #endregion
 
+        #region Nextspin
+        public BettingDataRNG_Nextspin GetBettingDataRNG_Nextspin(string referenceId)
+        {
+            var now = DateTime.UtcNow;
+            return _partitionService.Query<BettingDataRNG_Nextspin>(now, "Service_BettransRng_Nextspin_Get", new { referenceId }).FirstOrDefault();
+        }
+
         public async Task<NextspinResult> PlaceBetRNG_Nextspin(TpCustInfo tpCustInfo, BettingDataRNG_Nextspin bettingData) 
         {
             using var conn = _mainDbClient.GetMySqlConnection();
@@ -1663,11 +1670,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var partitionTime = DateTime.UtcNow;
                 bettingData.TicketType = (int)BettransType.Bet;
                 bettingData.TicketStatus = (int)TicketStatus.UnSettled;
-                var result = _partitionService.Execute(partitionTime, "Service_BettransRng_Nextspin_Ins", bettingData, trans);
-                if (result < 1) 
+                var p = new DynamicParameters(bettingData);
+                p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
+                var result = _partitionService.Execute(partitionTime, "Service_BettransRng_Nextspin_Ins", p, trans);
+                var sq = p.Get<long>("SQ");
+                if (sq == 0) 
                 {
-                    logger.LogError($"Username:{tpCustInfo.TpUserName} TransferCode:{bettingData.transferId}" +
-                                    $" exec Service_BettransRng_Nextspin_Ins failed");
+                    logger.LogError($"Username:{tpCustInfo.TpUserName} SQ:{sq}");
                     throw new NextspinException(NextspinErrorCode.SystemError);
                 }
 
@@ -1687,16 +1696,24 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     trans: trans);
                 if (result < 1) 
                 {
-                    logger.LogError($"Username:{tpCustInfo.TpUserName} afterAmount:{afterAmount} < 0 return Result:-2");
+                    logger.LogError($"Username:{tpCustInfo.TpUserName} afterAmount:{afterAmount} < 0");
                     throw new NextspinException(NextspinErrorCode.InsufficientBalance);
                 }
                 await trans.CommitAsync();
                 return new NextspinResult() 
                 {
                     Result = 1,
-                    SQ = Guid.NewGuid().ToString(),
+                    SQ = sq.ToString(),
                     AfterAmount = afterAmount
                 };
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    throw new NextspinException(NextspinErrorCode.DuplicatedReferenceId);
+                }
+                throw;
             }
             catch (Exception ex)
             {
@@ -1705,5 +1722,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 throw new NextspinException(NextspinErrorCode.SystemError);
             }
         }
+        #endregion
     }
 }

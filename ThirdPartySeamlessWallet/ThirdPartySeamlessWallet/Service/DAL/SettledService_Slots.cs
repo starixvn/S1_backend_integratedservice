@@ -5451,13 +5451,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var partitionTime = DateTime.UtcNow;
                 bettingData.TicketType = (int)BettransType.Payout;
                 bettingData.TicketStatus = (int)bettingData.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
-                var result = _partitionService.Execute(partitionTime, "Service_BettransRng_Nextspin_Ins", bettingData, trans);
-                if (result < 1)
+                var p = new DynamicParameters(bettingData);
+                p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
+                var result = _partitionService.Execute(partitionTime, "Service_BettransRng_Nextspin_Ins", p, trans);
+                var sq = p.Get<long>("SQ");
+                if (sq == 0)
                 {
-                    logger.LogError($"Username:{tpCustInfo.TpUserName} TransferCode:{bettingData.transferId}" +
-                                    $" exec Service_BettransRng_Nextspin_Ins failed");
+                    logger.LogError($"Username:{tpCustInfo.TpUserName} SQ:{sq}");
                     throw new NextspinException(NextspinErrorCode.SystemError);
                 }
+                result = _partitionService.Execute(partitionTime, "Service_BettransRng_Nextspin_Set", new { ticketId = bettingData.ticketId, referenceId = bettingData.referenceId }, trans);
 
                 if (bettingData.amount != 0)
                 {
@@ -5465,7 +5468,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo,
                         bettingData.amount,
                         (int)Tp.Nextspin,
-                        bettingData.referenceId,
+                        bettingData.ticketId,
                         (int)GameType.Nextspin_RNG,
                         TpCategory.Slots,
                         bettingData.transferId,
@@ -5496,7 +5499,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 return new NextspinResult() 
                 {
                     Result = 1,
-                    SQ = Guid.NewGuid().ToString(),
+                    SQ = sq.ToString(),
                     AfterAmount = afterAmount
                 };
             }

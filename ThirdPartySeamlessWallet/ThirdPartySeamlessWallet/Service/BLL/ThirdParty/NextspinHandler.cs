@@ -92,17 +92,27 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
         }
         public async Task<NextspinCommonResponse> Handle(TransferRequest request)
-        {    
-            if(request.Type == NextspinTransferType.PlaceBet)
+        {
+            ValidateRequest(request);
+            if (request.Type == NextspinTransferType.PlaceBet)
                 return await PlaceBet(request);
             else if(request.Type == NextspinTransferType.Payout)
                 return await Payout(request);
             throw new NotImplementedException();
         }
 
+        private void ValidateRequest(TransferRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.AcctId)) throw new NextspinException(NextspinErrorCode.InvalidAcctId);
+            if (request.Amount < 0) throw new NextspinException(NextspinErrorCode.AmountInvalid);
+        }
+
         private async Task<NextspinCommonResponse> PlaceBet(TransferRequest request)
         {
-            Sleep();
+            if (request.GameCode == "s5ForStar" && request.Amount == 100) 
+            {
+                Sleep();
+            }
             var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, request.AcctId);
             if (tpCheck == null || tpCheck.Locked)
             {
@@ -113,14 +123,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (tpCustInfo == null)
             {
                 _logger.LogError($"tpCustInfo is null, tpUserName:{request.AcctId}");
-                throw new NextspinException(NextspinErrorCode.AcctLocked);
+                throw new NextspinException(NextspinErrorCode.AcctNotFound);
             }
             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
             if (tpCurrency == null || tpCurrency.ExchangeRate < 0)
             {
                 _logger.LogError($"tpCurrency is null, {JsonConvert.SerializeObject(tpCurrency)}");
-                throw new NextspinException(NextspinErrorCode.AcctLocked);
+                throw new NextspinException(NextspinErrorCode.AcctNotFound);
             }
+            var data = _bettingService.GetBettingDataRNG_Nextspin(request.TransferId);
+            if(data != null)
+                throw new NextspinException(NextspinErrorCode.DuplicatedReferenceId);
+
             var bettingData = new BettingDataRNG_Nextspin()
             {
                 acctId = request.AcctId,
@@ -141,7 +155,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     TransferId = request.TransferId,
                     MerchantTxId = result.SQ,
                     AcctId = tpCustInfo.TpUserName,
-                    Balance = result.AfterAmount,
+                    Balance = result.AfterAmount.ConvertToTp(tpCurrency.ExchangeRate),
                     MerchantCode = request.MerchantCode,
                     Msg = NextspinErrorCode.Success.GetEnumDescription(),
                     Code = (int)NextspinErrorCode.Success,
@@ -165,6 +179,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 _logger.LogError($"tpCurrency is null, {JsonConvert.SerializeObject(tpCurrency)}");
                 throw new NextspinException(NextspinErrorCode.AcctLocked);
             }
+            var data = _bettingService.GetBettingDataRNG_Nextspin(request.ReferenceId);
+            if (data == null)
+                throw new NextspinException(NextspinErrorCode.DuplicatedReferenceId);
+
             var bettingData = new BettingDataRNG_Nextspin()
             {
                 acctId = request.AcctId,
@@ -199,7 +217,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         }
 
         public static string GenerateSerialNo() => Guid.NewGuid().ToString();
-        // 建立一個方法,讓程式sleep 30 秒
-        private void Sleep() => Thread.Sleep(30000);
+        // 建立一個方法,讓程式sleep 60 秒
+        private void Sleep() => Thread.Sleep(60000);
     }
 }
