@@ -1674,12 +1674,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
                 var result = _partitionService.Execute(partitionTime, "Service_BettransRng_Nextspin_Ins", p, trans);
                 var sq = p.Get<long>("SQ");
-                if (sq == 0) 
-                {
-                    logger.LogError($"Username:{tpCustInfo.TpUserName} SQ:{sq}");
+                if (sq == 0)
                     throw new NextspinException(NextspinErrorCode.SystemError);
-                }
-
+                
                 var bonusId = 0;
                 result = PlaceBetV2(
                     tpCustInfo: tpCustInfo,
@@ -1694,11 +1691,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     bonusId: ref bonusId,
                     conn: conn,
                     trans: trans);
-                if (result < 1) 
-                {
-                    logger.LogError($"Username:{tpCustInfo.TpUserName} afterAmount:{afterAmount} < 0");
+                if (result < 1)
                     throw new NextspinException(NextspinErrorCode.InsufficientBalance);
-                }
+
                 await trans.CommitAsync();
                 return new NextspinResult() 
                 {
