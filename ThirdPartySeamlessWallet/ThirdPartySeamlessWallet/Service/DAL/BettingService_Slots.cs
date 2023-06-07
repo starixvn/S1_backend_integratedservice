@@ -1685,7 +1685,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     tpCustInfo: tpCustInfo,
                     amount: Math.Abs(bettingData.amount) * -1,
                     tpId: (int)Tp.Nextspin,
-                    tpTransId: bettingData.transferId,
+                    tpTransId: bettingData.referenceId,
                     gameType: (int)GameType.Nextspin_RNG,
                     refId: bettingData.transferId,
                     betData: null,

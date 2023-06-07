@@ -5474,7 +5474,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpCustInfo,
                         bettingData.amount,
                         (int)Tp.Nextspin,
-                        bettingData.ticketId,
+                        bettingData.referenceId,
                         (int)GameType.Nextspin_RNG,
                         TpCategory.Slots,
                         bettingData.transferId,
@@ -5493,7 +5493,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         throw new NextspinException(NextspinErrorCode.InsufficientBalance);
                     }
                 }
-                result = _tpUnsettleService.InsertTpUnsettle(Tp.Nextspin, GameType.Nextspin_RNG, bettingData.referenceId, trans, partitionTime);
+                result = _tpUnsettleService.InsertTpUnsettle(Tp.Nextspin, GameType.Nextspin_RNG, bettingData.ticketId, trans, partitionTime);
                 if (result < 1)
                 {
                     logger.LogError($"Username:{tpCustInfo.TpUserName} TransferCode:{bettingData.transferId}" +
