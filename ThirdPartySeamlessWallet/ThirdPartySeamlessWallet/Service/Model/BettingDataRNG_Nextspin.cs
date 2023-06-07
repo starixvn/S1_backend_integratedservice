@@ -102,6 +102,20 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string AcctId { get; set; }
         public decimal Balance { get; set; }
     }
+    public class SettleDataRNG_Nextspin
+    {
+        public string TransId { get; set; }
+        public string TpUserName { get; set; }
+        public decimal Stake { get; set; }
+        public decimal ValidBet { get; set; }
+        public decimal ProgressiveBet { get; set; }
+        public decimal ProgressiveWin { get; set; }
+        public decimal WinLostAmount { get; set; }
+        public long SettledTime { get; set; }
+        public long TransTime { get; set; }
+        public string GameId { get; set; }
+        public string ReferenceId { get; set; }
+    }
     public enum NextspinTransferType 
     {
         PlaceBet = 1,
