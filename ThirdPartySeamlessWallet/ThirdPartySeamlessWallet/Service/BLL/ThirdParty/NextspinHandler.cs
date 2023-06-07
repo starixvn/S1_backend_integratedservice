@@ -99,8 +99,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return await Payout(request);
             throw new NotImplementedException();
         }
+
         private async Task<NextspinCommonResponse> PlaceBet(TransferRequest request)
         {
+            Sleep();
             var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, request.AcctId);
             if (tpCheck == null || tpCheck.Locked)
             {
@@ -196,6 +198,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return response;
         }
 
-        public static string GenerateSerialNo() => Guid.NewGuid().ToString("N");
+        public static string GenerateSerialNo() => Guid.NewGuid().ToString();
+        // 建立一個方法,讓程式sleep 30 秒
+        private void Sleep() => Thread.Sleep(30000);
     }
 }
