@@ -75,6 +75,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                     var hasJoinBonus = false;
                     // 1.先用TransId轉換成RefId
                     // 2.用RefId去TpSeamlessBonus取回BonusId與實際使用的Bonus
+                    betRecord.TransId = "127046429699997736";
                     var refId = GetRefId(long.Parse(betRecord.TransId));
                     var (bonusId, useBonus) = GetUseBonus(betRecord.TpId, refId, (int)betRecord.GameType);
 
@@ -164,13 +165,6 @@ namespace ThirdPartyBetHistory.Service.DAL
                                 SetRollOverTurnOver(bonusId, betRecord.TpId, (int)betRecord.GameType,
                                     tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.ValidBet,
                                     "Settled", betRecord.TransId, trans);
-
-                                // 使用Bonus的要判斷是否有用到主錢包下注，主錢包下注的金額第一次Settle時要沖提款限額
-                                var stakeWithoutBonus = betRecord.ValidBet - useBonus; // 沒有使用Bonus下注的金額
-                                if (stakeWithoutBonus > 0)
-                                {
-                                    SetWithdrawalLimitTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, stakeWithoutBonus, "Settled", betRecord.TransId, trans);
-                                }
                             }
                         }
                         else
@@ -199,6 +193,15 @@ namespace ThirdPartyBetHistory.Service.DAL
                                     tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId,
                                     betRecord.ValidBet - RefBetRecord.ValidBet, "Re-Settled", betRecord.TransId, trans);
                             }
+                        }
+
+                        // 使用Bonus的要判斷是否有用到主錢包下注，主錢包下注的金額第一次Settle時要沖提款限額
+                        var stakeWithoutBonus = betRecord.ValidBet - useBonus; // 沒有使用Bonus下注的金額
+                        if (stakeWithoutBonus > 0
+                            && (RefBetRecord == null || RefBetRecord.TicketStatus == TicketStatus.UnSettled || RefBetRecord.TicketStatus == TicketStatus.Refund || RefBetRecord.TicketStatus == TicketStatus.Draw)
+                            && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win))   
+                        {
+                            SetWithdrawalLimitTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, stakeWithoutBonus, "Settled", betRecord.TransId, trans);
                         }
                     }
                     else //沒Bonus走SetWithdrawalLimitTurnOver
