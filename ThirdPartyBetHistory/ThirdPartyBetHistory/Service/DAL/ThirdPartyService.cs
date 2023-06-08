@@ -73,8 +73,10 @@ namespace ThirdPartyBetHistory.Service.DAL
                     using var trans = conn.BeginTransaction();
                     
                     var hasJoinBonus = false;
-                    var bonusId = 0;
-                    decimal useBonus = 0;
+                    // 1.先用TransId轉換成RefId
+                    // 2.用RefId去TpSeamlessBonus取回BonusId與實際使用的Bonus
+                    var refId = GetRefId(long.Parse(betRecord.TransId));
+                    var (bonusId, useBonus) = GetUseBonus(betRecord.TpId, refId, (int)betRecord.GameType);
 
                     /*Only count Sports*/
                     if (betRecord.GameType != GameType.SBSW_Sports && betRecord.SettlementType == SettlementType.SettledForValid)
@@ -83,7 +85,6 @@ namespace ThirdPartyBetHistory.Service.DAL
                     }
 
                     var RefBetRecord = GetTpBetRecord(betRecord.TpId, betRecord.TransId, (int)betRecord.GameType);
-
                     if (RefBetRecord != null && RefBetRecord.BonusId > 0)
                     {
                         hasJoinBonus = true;
@@ -98,13 +99,8 @@ namespace ThirdPartyBetHistory.Service.DAL
                         bonusId = betRecord.BonusId;
                     }
                     else
-                    {
-                        // 1.先用TransId轉換成RefId
-                        // 2.用RefId去TpSeamlessBonus取回BonusId與實際使用的Bonus
-                        var refId = GetRefId(long.Parse(betRecord.TransId));
-                        (bonusId, useBonus) = GetUseBonus(betRecord.TpId, refId, (int)betRecord.GameType);                        
+                    {                                 
                         hasJoinBonus = bonusId > 0;
-
                         if (hasJoinBonus && (RefBetRecord == null || betRecord.TicketStatus == TicketStatus.UnSettled))
                         {
                             betRecord.BonusId = bonusId;
@@ -168,6 +164,13 @@ namespace ThirdPartyBetHistory.Service.DAL
                                 SetRollOverTurnOver(bonusId, betRecord.TpId, (int)betRecord.GameType,
                                     tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.ValidBet,
                                     "Settled", betRecord.TransId, trans);
+
+                                // 使用Bonus的要判斷是否有用到主錢包下注，主錢包下注的金額第一次Settle時要沖提款限額
+                                var stakeWithoutBonus = betRecord.ValidBet - useBonus; // 沒有使用Bonus下注的金額
+                                if (stakeWithoutBonus > 0)
+                                {
+                                    SetWithdrawalLimitTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, stakeWithoutBonus, "Settled", betRecord.TransId, trans);
+                                }
                             }
                         }
                         else
@@ -195,16 +198,6 @@ namespace ThirdPartyBetHistory.Service.DAL
                                 SetRollOverTurnOver(bonusId, betRecord.TpId, (int)betRecord.GameType,
                                     tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId,
                                     betRecord.ValidBet - RefBetRecord.ValidBet, "Re-Settled", betRecord.TransId, trans);
-                            }
-                        }
-
-                        // 使用Bonus的要判斷是否有用到主錢包下注，主錢包下注的金額第一次Settle時要沖提款限額
-                        var stakeWithoutBonus = betRecord.ValidBet - useBonus; // 沒有使用Bonus下注的金額
-                        if (stakeWithoutBonus > 0 && RefBetRecord == null)
-                        {
-                            if (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win)
-                            {
-                                SetWithdrawalLimitTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, stakeWithoutBonus, "Settled", betRecord.TransId, trans);
                             }
                         }
                     }
