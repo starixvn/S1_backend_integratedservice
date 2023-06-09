@@ -75,7 +75,6 @@ namespace ThirdPartyBetHistory.Service.DAL
                     var hasJoinBonus = false;
                     // 1.先用TransId轉換成RefId
                     // 2.用RefId去TpSeamlessBonus取回BonusId與實際使用的Bonus
-                    betRecord.TransId = "127046429699997736";
                     var refId = GetRefId(long.Parse(betRecord.TransId));
                     var (bonusId, useBonus) = GetUseBonus(betRecord.TpId, refId, (int)betRecord.GameType);
 
