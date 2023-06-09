@@ -2660,7 +2660,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public int SetSettleFlag_TpWagerRng_PT(long TransId)
         {
-            return _mainDbClient.Execute("Service_TpWagerRng_PT_Settle_Set", commandType: CommandType.StoredProcedure ,new { TransId = TransId } );
+            return _wagerDbClient.Execute("Service_TpWagerRng_PT_Settle_Set", commandType: CommandType.StoredProcedure ,new { TransId = TransId } );
         }
 
         #endregion
