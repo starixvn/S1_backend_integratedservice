@@ -1,11 +1,6 @@
-﻿using Newtonsoft.Json;
-using System.Net.Mime;
-using System.Text;
-using System.Web;
-using ThirdPartyCore;
+﻿using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.Nextspin
@@ -71,38 +66,24 @@ namespace ThirdParty.Nextspin
         {
             var merchantCode = GetInputValue(inputs, "MerchantCode");
             var launchUrl = GetInputValue(inputs, "LaunchUrl");
-            var gameCode = GetInputValue(inputs, "gameId");
+            var secretKey = GetInputValue(inputs, "SecretKey");
             launchUrl = launchUrl.Replace("lobby", "gameapi");
 
+            var secret = $"{getBetDetail.TransId}|{secretKey}";
+            var token = ToMD5(secret);
 
-            var config = new SboConfig(inputs);
-            var apiUrl = $"{config.ApiUrl}/web-root/restricted/report/get-bet-payload.aspx";
+            var betDetailUrl = $"{launchUrl}/betDetails?merchantId={merchantCode}&token={token}&lang=en&ticketId={getBetDetail.TransId}";
 
-            var betDetail = new
+            return new BaseDetail(getBetDetail.TpGameTypeOption)
             {
-                CompanyKey = config.CompanyKey,
-                ServerId = config.ServerId,
-                Portfolio = "SportsBook",
-                Refno = getBetDetail.TransId
-            };
-
-            var responseJson = HttpPostClient(apiUrl,
-                JsonConvert.SerializeObject(betDetail),
-                ContentType);
-
-            var responseResult = FromJson<BetDetailResponse>(responseJson);
-
-            if (responseResult.Error.Id == 0)
-            {
-                return new BaseDetail(getBetDetail.TpGameTypeOption)
+                TransId = getBetDetail.TransId,
+                DetailUrl = betDetailUrl,
+                TpCurrency = new TpCurrency()
                 {
-                    TransId = getBetDetail.TransId,
-                    DetailUrl = responseResult.Url,
-                    TpCurrency = tpCurrency
-                };
-            }
-
-            throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {responseResult.Error.Msg}");
+                    ExchangeRate = tpCustInfo.ExchangeRate,
+                    TpCurrencyId = tpCustInfo.TpCurrencyId,
+                }
+            };
         }
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
