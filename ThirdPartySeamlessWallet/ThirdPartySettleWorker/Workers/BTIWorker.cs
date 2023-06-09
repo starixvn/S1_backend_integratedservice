@@ -124,6 +124,7 @@ namespace ThirdPartySettleWorker.Workers
                             SettlementType = settlementType,
                             TicketStatus = ticketStatus,
                             GameID = gameId,
+                            ReferenceNo = reserve_id,
                         };
 
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Sports);

@@ -226,6 +226,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        private (int BonusId, decimal UseBonus) GetUseBonus(int TpId, string ReferenceNo, int GameType)
+        {
+            var p = new DynamicParameters(new { TpId, TransId = ReferenceNo, GameType });
+            p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            p.Add("UseBonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            var result = _mainDbClient.Execute("Service_TpSeamlessBonus_UseBonus_Get", parameters: p);
+            
+            if (result > 0)
+            {
+                return (p.Get<int>("BonusId"), p.Get<decimal>("UseBonus"));
+            }
+
+            return default;
+        }
+
         public bool GetBonusIdByPromoCategoryId(int custId, int promoCategoryId, out int bonusId)
         {
             bonusId = 0;
@@ -260,11 +275,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int bonusId = 0;
             int gameType = (int)betRecordInfo.GameType;
 
-            GetTpBonus(betRecordInfo.TpId, betRecordInfo.TransId, gameType, tpCategory, out int custId, out bonusId);
-            if (bonusId == 0 && betRecordInfo.TpId == (int)Tp.N2Live && !string.IsNullOrEmpty(betRecordInfo.ReferenceNo))
+            // 1.先用TransId去TpSeamlessBonus取得BonusId
+            // 2.取不到改用ReferenceNo再去TpSeamlessBonus檢查一次
+            GetTpBonus(betRecordInfo.TpId, betRecordInfo.TransId, gameType, tpCategory, out int custId, out bonusId);            
+            if (bonusId == 0 && !string.IsNullOrEmpty(betRecordInfo.ReferenceNo))
             {
-                // for n2 smart bet use
-                // for n2 temporary fix noraml bet
                 GetTpBonus(betRecordInfo.TpId, betRecordInfo.ReferenceNo, gameType, tpCategory, out custId, out bonusId);
             }
 
@@ -529,6 +544,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             && refValidBet != validBet)
                         {
                             SetWithdrawalLimitTurnOver(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, validBet - refValidBet, "Re-Settled", betRecord.TransId, conn, trans);
+                        }
+                    }
+                }
+                else
+                {
+                    // 使用Bonus的要判斷是否有用到主錢包下注，主錢包下注的金額，第一次Settle時要沖提款限額
+                    var referenceNo = string.IsNullOrEmpty(betRecord.ReferenceNo) ? betRecord.TransId : betRecord.ReferenceNo;
+                    var (_, useBonus) = GetUseBonus(betRecord.TpId, referenceNo, (int)betRecord.GameType);
+                    var stakeWithoutBonus = validBet - useBonus; // 沒有使用Bonus用主錢包下注的下注的金額
+                    if (stakeWithoutBonus > 0 && RefBetRecord == null)
+                    {
+                        if (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win || betRecord.TicketStatus == TicketStatus.Draw)
+                        {
+                            SetWithdrawalLimitTurnOver(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, stakeWithoutBonus, "Settled", betRecord.TransId, conn, trans);
                         }
                     }
                 }
