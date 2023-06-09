@@ -217,6 +217,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     if (bonusId > 0)
                     {
+                        //把BetID加入AddTpSeamlessBonus，避免結算無法正常取出BonusId
                         _bettingService.AddTpBonus((int)Tp.BTI, credit.BetID, (int)GameType.BTI_Sports, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, credit.amount, bonusId, TpCategory.Sports, conn, trans);
                     }
 
