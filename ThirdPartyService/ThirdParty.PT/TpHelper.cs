@@ -617,7 +617,9 @@ namespace ThirdParty.PT
         {
             var pem = Path.Combine(storagePath, "PEM", $"{currency}.pem");
             var key = Path.Combine(storagePath, "PEM", $"{currency}.key");
-            return X509Certificate2.CreateFromPemFile(pem, key);
+
+            var cert = X509Certificate2.CreateFromPemFile(pem, key);
+            return new X509Certificate2(cert.Export(X509ContentType.Pfx));
         }
 
         /// <summary>
@@ -674,7 +676,7 @@ namespace ThirdParty.PT
         /// <returns></returns>
         private void SandLesTalkMessage(TpCustInfo tpCustInfo, decimal userTransferAmount)
         {
-         
+
             var message = GetAlertMessage(tpCustInfo, userTransferAmount);
 
             var postData = new
