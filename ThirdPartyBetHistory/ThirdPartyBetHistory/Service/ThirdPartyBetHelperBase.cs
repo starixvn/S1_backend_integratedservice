@@ -18,6 +18,7 @@ namespace ThirdPartyBetHistory.Service
         ThirdPartyModel thirdPartyModel { set; get; }
         SiteId SiteId { set; get; }
         Tp Tp { set; get; }
+        Task<long> AddTpBetRecordDetail(WorkerType workerType, long siteTicketKey);
     }
 
     public abstract class ThirdPartyBetHelperBase : IThirdPartyBetHelper
@@ -76,5 +77,6 @@ namespace ThirdPartyBetHistory.Service
 
         protected long ConvertLocTime(DateTime time) =>
             new DateTimeOffset(time, new TimeSpan(syncParams.Offsets, 0, 0)).ToUnixTimeSeconds();
+        public abstract Task<long> AddTpBetRecordDetail(WorkerType workerType, long siteTicketKey);
     }
 }
