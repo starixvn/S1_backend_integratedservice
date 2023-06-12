@@ -43,7 +43,7 @@ namespace ThirdPartyWager.Service.BLL.Nextspin
                     Encoding.UTF8,
                     Application.Json);
 
-                var client = _httpHelper.GetClientWithHandler(CreateHandler());
+                using var client = _httpHelper.GetClientWithHandler(CreateHandler());
                 client.DefaultRequestHeaders.Add("API", "getBetHistory");
                 client.DefaultRequestHeaders.Add("DataType", "JSON");
                 var httpResponseMessage = await client.PostAsync(apiUrl, stringContent);

@@ -1,5 +1,7 @@
+using Newtonsoft.Json;
 using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -15,6 +17,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly SettledBLL _settledBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ILogger<NextspinWorker> _logger;
         private readonly string _tpName;
         private readonly PartitionService _partitionService;
@@ -28,6 +31,7 @@ namespace ThirdPartySettleWorker.Workers
             _logger = provider.GetRequiredService<ILogger<NextspinWorker>>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
             _partitionService = provider.GetRequiredService<PartitionService>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -66,12 +70,20 @@ namespace ThirdPartySettleWorker.Workers
                     try
                     {
                         var unsettleData = _partitionService.GetUnsettleDataList<SettleDataRNG_Nextspin>("Service_BettransRng_Nextspin_Unsettle_Get", tpUnsettle).FirstOrDefault();
+                        var tpWagerData = _tpUnSettledBLL.GetTpUnsettleData<SettleDataRNG_Nextspin>("Service_TpWagerRng_Nextspin_Unsettle_Get", new { tpUnsettle .TransId }, DataBase.Wager).FirstOrDefault();
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettleData.TpUserName);
+                        var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
                         if (tpCustInfo == null)
                         {
                             throw new UnsettleNotFoundException($"{unsettleData.TpUserName} TpCustInfo not found.");
                         }
-
+                        if (!IsBettransSameAsTpWager(unsettleData, tpWagerData, tpCurrency))
+                        {
+                            _logger.LogError($"transId: {tpUnsettle.TransId} is not equal " +
+                                             $"settle: {JsonConvert.SerializeObject(unsettleData)} " +
+                                             $"wager: {JsonConvert.SerializeObject(tpWagerData)}");
+                            continue;
+                        }
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
@@ -132,6 +144,21 @@ namespace ThirdPartySettleWorker.Workers
                 timerRNG?.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
+
+        private bool IsBettransSameAsTpWager(SettleDataRNG_Nextspin bettrans, SettleDataRNG_Nextspin tpWager, TpCurrency tpCurrency)
+        {
+            if (bettrans == null || tpWager == null || tpCurrency == null || tpCurrency.ExchangeRate <= 0) return false;
+            tpWager.Stake *= tpCurrency.ExchangeRate;
+            tpWager.WinLostAmount *= tpCurrency.ExchangeRate;
+
+            var targetWinLost = tpWager.WinLostAmount;
+            var targetStake = tpWager.Stake;
+
+            var stake = bettrans.Stake;
+            var winLost = bettrans.WinLostAmount;
+            return stake == targetStake && winLost == targetWinLost;
+        }
+
         private TicketStatus CaculateTicketStatus(decimal amount) 
         {
             if (amount > 0)
