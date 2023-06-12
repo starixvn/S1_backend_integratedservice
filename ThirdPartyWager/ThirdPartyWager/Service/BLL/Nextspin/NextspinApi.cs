@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System.Net;
 using System.Text;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -14,11 +15,13 @@ namespace ThirdPartyWager.Service.BLL.Nextspin
     public class NextspinApi : INextspinApi
     {
         private readonly HttpHelper _httpHelper;
+        private readonly IConfiguration _configuration;
         private readonly ILogger<NextspinApi> _logger;
-        public NextspinApi(HttpHelper httpHelper, ILogger<NextspinApi> logger)
+        public NextspinApi(HttpHelper httpHelper, ILogger<NextspinApi> logger, IConfiguration configuration)
         {
             _httpHelper = httpHelper;
             _logger = logger;
+            _configuration = configuration;
         }
 
         public async Task<NextspinBetHistory> GetBetHistory(string beginDate, string endDate, int page, NextspinSetting setting)
@@ -40,10 +43,9 @@ namespace ThirdPartyWager.Service.BLL.Nextspin
                     Encoding.UTF8,
                     Application.Json);
 
-                var client = _httpHelper.GetClient();
+                var client = _httpHelper.GetClientWithHandler(CreateHandler());
                 client.DefaultRequestHeaders.Add("API", "getBetHistory");
                 client.DefaultRequestHeaders.Add("DataType", "JSON");
-
                 var httpResponseMessage = await client.PostAsync(apiUrl, stringContent);
 
                 var content = await httpResponseMessage.Content.ReadAsStringAsync();
@@ -65,6 +67,18 @@ namespace ThirdPartyWager.Service.BLL.Nextspin
                 _logger.LogError(ex, $"{apiUrl} get bet list failed, request:{JsonConvert.SerializeObject(request)} exception:{ex.Message}");
                 return null;
             }
+        }
+        private HttpClientHandler CreateHandler()
+        {
+            var handler = new HttpClientHandler();
+            if (!string.IsNullOrEmpty(_configuration.GetValue<string>("ProxyHost")))
+            {
+                handler.UseProxy = true;
+                handler.Proxy = new WebProxy(_configuration.GetValue<string>("ProxyHost"),
+                    _configuration.GetValue<int>("ProxyPort"));
+            }
+
+            return handler;
         }
     }
 }
