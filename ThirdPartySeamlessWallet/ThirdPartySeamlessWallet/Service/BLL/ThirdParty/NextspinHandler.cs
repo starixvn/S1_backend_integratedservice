@@ -220,7 +220,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     response.Balance = tpCustBalance.Balance;
                     return response;
                 }
-                response.Balance = result.AfterAmount;
+                response.Balance = result.AfterAmount.ConvertToTp(tpCurrency.ExchangeRate);
                 return response;
             }
             catch (NextspinException ex)
