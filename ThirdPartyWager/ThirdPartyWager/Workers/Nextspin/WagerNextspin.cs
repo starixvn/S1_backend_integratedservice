@@ -45,8 +45,13 @@ namespace ThirdPartyWager.Workers
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimer(TpId, (int)gameType);
                 var thisTime = lastTime?.StartTime ?? DateTime.UtcNow;
 
+                if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > 3)
+                {
+                    doQuickly = true;
+                }
                 if (thisTime < DateTime.UtcNow)
                 {
+                    thisTime = thisTime.AddMinutes(1);
                     var timeCast = _dateTimeHelper.GetTimeByMinuteRevert(dataRangeMins, TimeZone, "yyyyMMddTHHmmss", thisTime);
                     var isSuccess = await _nextspinBLL.GetWagersAsync(timeCast.startTime, timeCast.endTime);
                     if (isSuccess)
@@ -54,10 +59,6 @@ namespace ThirdPartyWager.Workers
                         _logger.LogInformation($"{gameType} Get Wagers: {timeCast.startTime} ~ {timeCast.endTime}");
                         _thirdPartyBLL.SetThirdPartyTimer(TpId, (int)gameType, timeCast.endUnix);
                     }
-                }
-                if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > 5)
-                {
-                    doQuickly = true;
                 }
             }
             catch (Exception ex)
