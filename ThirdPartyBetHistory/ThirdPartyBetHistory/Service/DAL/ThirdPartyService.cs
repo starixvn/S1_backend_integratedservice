@@ -124,7 +124,7 @@ namespace ThirdPartyBetHistory.Service.DAL
 
                             if (Losses != 0)
                             {
-                                AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, betRecord.TransId ,trans);
+                                AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, trans);
                             }
                         }
                     }
@@ -145,7 +145,7 @@ namespace ThirdPartyBetHistory.Service.DAL
                                 
                                 if (Losses != 0)
                                 {
-                                    AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, betRecord.TransId , trans);
+                                    AutoCancelSeamlessBonus(tpCustInfo, bonusId, betRecord.GameType, trans);
                                 }
                             }
                         }
@@ -395,13 +395,13 @@ namespace ThirdPartyBetHistory.Service.DAL
             return _mainDbClient.Execute("Service_BonusWinLost_Set", parameters, trans);
         }
 
-        private int AutoCancelSeamlessBonus(TpCustInfo tpCustInfo, int bonusId, GameType gameType, string transId, IDbTransaction trans)
+        private int AutoCancelSeamlessBonus(TpCustInfo tpCustInfo, int bonusId, GameType gameType, IDbTransaction trans)
         {
             var p = new DynamicParameters(tpCustInfo);
-            p.AddDynamicParams(new { BonusId = bonusId, GameType = (int)gameType , TransId = transId });
+            p.AddDynamicParams(new { BonusId = bonusId, GameType = (int)gameType });
             p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
-            var result = _mainDbClient.Execute("Service_AutoCancelSeamlessBonus_Set_V3", p, trans);
+            var result = _mainDbClient.Execute("Service_AutoCancelSeamlessBonusV2_Set", p, trans);
             var bonus = p.Get<decimal?>("Bonus") ?? 0;
 
             var parameter = new
