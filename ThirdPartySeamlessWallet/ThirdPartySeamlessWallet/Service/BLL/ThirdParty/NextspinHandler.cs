@@ -24,6 +24,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
         private readonly ILogger<NextspinHandler> _logger;
+        private Dictionary<NextspinTransferType, Func<TransferRequest, Task<NextspinCommonResponse>>> TransferHandler;
 
         public NextspinHandler(ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingService bettingService, SettledService settledService, ILogger<NextspinHandler> logger)
         {
@@ -32,6 +33,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _bettingService = bettingService;
             _settledService = settledService;
             _logger = logger;
+            TransferHandler = new Dictionary<NextspinTransferType, Func<TransferRequest, Task<NextspinCommonResponse>>>()
+            {
+                { NextspinTransferType.PlaceBet, PlaceBet},
+                { NextspinTransferType.CancelBet, CancelBet},
+                { NextspinTransferType.Payout, Payout},
+
+            };
         }
         public void SetApiName(string apiName)
         {
@@ -100,20 +108,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public async Task<NextspinCommonResponse> Handle(TransferRequest request)
         {
             ValidateRequest(request);
-            if (request.Type == NextspinTransferType.PlaceBet)
-                return await PlaceBet(request);
-            else if(request.Type == NextspinTransferType.Payout)
-                return await Payout(request);
+            if (TransferHandler.ContainsKey(request.Type)) 
+            {
+                return await TransferHandler[request.Type].Invoke(request);
+            }
             throw new NotImplementedException();
         }
 
-        private void ValidateRequest(TransferRequest request)
-        {
-            if (string.IsNullOrWhiteSpace(request.AcctId)) throw new NextspinException(NextspinErrorCode.InvalidAcctId);
-            if (request.Amount < 0) throw new NextspinException(NextspinErrorCode.AmountInvalid);
-        }
 
-        private async Task<NextspinCommonResponse> PlaceBet(TransferRequest request)
+
+        public async Task<NextspinCommonResponse> PlaceBet(TransferRequest request)
         {
             var bettingData = new BettingDataRNG_Nextspin();
             try
@@ -135,8 +139,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     throw new NextspinException(NextspinErrorCode.CurrencyInvalid);
 
                 var data = _bettingService.GetBettingDataRNG_Nextspin(request.TransferId);
-                if (data != null)
-                    throw new NextspinException(NextspinErrorCode.DuplicatedReferenceId);
+                ValidateBettrans(NextspinTransferType.PlaceBet, data, request.TransferId);
 
                 bettingData = new BettingDataRNG_Nextspin()
                 {
@@ -181,15 +184,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, request.AcctId);
                 if (tpCustInfo == null)
-                    throw new NextspinException(NextspinErrorCode.AcctLocked);
+                    throw new NextspinException(NextspinErrorCode.AcctNotFound);
                 
                 var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
                 if (tpCurrency == null || tpCurrency.ExchangeRate < 0)
-                    throw new NextspinException(NextspinErrorCode.AcctLocked);
-                
+                    throw new NextspinException(NextspinErrorCode.CurrencyInvalid);
+
                 var data = _bettingService.GetBettingDataRNG_Nextspin(request.ReferenceId);
-                if (data == null)
-                    throw new NextspinException(NextspinErrorCode.RecordIdNotFound);
+                ValidateBettrans(NextspinTransferType.Payout, data, request.TransferId);
 
                 bettingData = new BettingDataRNG_Nextspin()
                 {
@@ -235,9 +237,87 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
         }
+        public async Task<NextspinCommonResponse> CancelBet(TransferRequest request) 
+        {
+            var bettingData = new BettingDataRNG_Nextspin();
+            try
+            {
+                var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, request.AcctId);
+                if (tpCustInfo == null)
+                    throw new NextspinException(NextspinErrorCode.AcctNotFound);
 
+                var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
+                if (tpCurrency == null || tpCurrency.ExchangeRate < 0)
+                    throw new NextspinException(NextspinErrorCode.CurrencyInvalid);
+
+                var data = _bettingService.GetBettingDataRNG_Nextspin(request.ReferenceId);
+                ValidateBettrans(NextspinTransferType.CancelBet, data, request.TransferId);
+
+                bettingData = new BettingDataRNG_Nextspin()
+                {
+                    acctId = request.AcctId,
+                    transferId = request.TransferId,
+                    currency = request.Currency,
+                    amount = request.Amount.ConvertToMain(tpCurrency.ExchangeRate),
+                    type = (int)request.Type,
+                    gameCode = request.GameCode,
+                    referenceId = request.ReferenceId,
+                    ticketId = request.TicketId,
+                    channel = request.Channel
+                };
+                var result = await _settledService.CancelBetRNG_Nextspin(tpCustInfo, bettingData);
+                var response = new TransferResponse()
+                {
+                    TransferId = request.TransferId,
+                    MerchantTxId = result.SQ,
+                    AcctId = tpCustInfo.TpUserName,
+                    MerchantCode = request.MerchantCode,
+                    Msg = NextspinErrorCode.Success.GetEnumDescription(),
+                    Code = (int)NextspinErrorCode.Success,
+                    SerialNo = GenerateSerialNo()
+                };
+                if (result.AfterAmount == 0)
+                {
+                    var tpCustBalance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.AcctId, (int)GameType.Nextspin_RNG);
+                    response.Balance = tpCustBalance.Balance;
+                    return response;
+                }
+                response.Balance = result.AfterAmount.ConvertToTp(tpCurrency.ExchangeRate);
+                return response;
+            }
+            catch (NextspinException ex)
+            {
+                _logger.LogError(ex, $"AcctId:{request.AcctId} bettingData:{JsonConvert.SerializeObject(bettingData)}");
+                return new NextspinCommonResponse()
+                {
+                    MerchantCode = request.MerchantCode,
+                    Code = (int)ex.NextspinErrorCode,
+                    Msg = ex.ErrorMessage,
+                    SerialNo = GenerateSerialNo()
+                };
+            }
+        }
+
+        public void ValidateBettrans(NextspinTransferType type, IEnumerable<BettingDataRNG_Nextspin> bettrans, string transferId) 
+        {
+            if (type == NextspinTransferType.PlaceBet) 
+            {
+                // 已存在
+                if (bettrans.Any()) throw new NextspinException(NextspinErrorCode.DuplicatedReferenceId);
+            }
+            else
+            {
+                // 不存在
+                if (!bettrans.Any()) throw new NextspinException(NextspinErrorCode.RecordIdNotFound);
+                if (bettrans.Any(x => x.transferId == transferId)) throw new NextspinException(NextspinErrorCode.DuplicatedReferenceId);
+            }
+        }
+        private void ValidateRequest(TransferRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.AcctId)) throw new NextspinException(NextspinErrorCode.InvalidAcctId);
+            if (request.Amount < 0) throw new NextspinException(NextspinErrorCode.AmountInvalid);
+        }
         public static string GenerateSerialNo() => Guid.NewGuid().ToString();
-        // 建立一個方法,讓程式sleep 60 秒
         private void Sleep() => Thread.Sleep(60000);
     }
 }
