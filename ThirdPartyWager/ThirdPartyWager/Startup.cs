@@ -3,6 +3,7 @@ using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.BLL.MG;
+using ThirdPartyWager.Service.BLL.Nextspin;
 using ThirdPartyWager.Service.BLL.SBO;
 using ThirdPartyWager.Service.BLL.TFG;
 using ThirdPartyWager.Service.DAL;
@@ -243,6 +244,11 @@ namespace ThirdPartyWager
             services.AddSingleton<ApiTFGBLL>();
             services.AddSingleton<WagerTFGBLL>();
 
+            //Nextspin
+            services.AddSingleton<IWagerNextspinService, WagerNextspinService>();
+            services.AddSingleton<INextspinApi, NextspinApi>();
+            services.AddSingleton<INextspinBLL, NextspinBLL>();
+
             //Worker
             services.AddHostedService<WagerDG>();
             services.AddHostedService<WagerRedoDG>();
@@ -324,6 +330,7 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceBG>();
             services.AddHostedService<WagerTFG>();
             services.AddHostedService<WagerUnsettleCheckTFG>();
+            services.AddHostedService<WagerNextspin>();
 
             // health check use
             services.AddControllers();
