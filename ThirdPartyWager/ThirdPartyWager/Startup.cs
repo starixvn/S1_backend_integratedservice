@@ -270,7 +270,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerSG>();
             services.AddHostedService<FinanceSG>();
             services.AddHostedService<FinanceYL>();
-            services.AddHostedService<WagerNextspin>();
+            services.AddHostedService<WagerSBO>();
             services.AddHostedService<FinanceSBO>();
             services.AddHostedService<WagerWM>();
             services.AddHostedService<WagerRedoWM>();
