@@ -4,7 +4,7 @@ using ThirdPartyWager.Service.BLL.Nextspin;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Workers
+namespace ThirdPartyWager.Workers.Nextspin
 {
     public class WagerNextspin : BackgroundService
     {
