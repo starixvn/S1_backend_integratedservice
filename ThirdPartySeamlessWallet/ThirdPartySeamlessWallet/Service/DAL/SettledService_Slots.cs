@@ -5464,6 +5464,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (sq == 0)
                     throw new NextspinException(NextspinErrorCode.SystemError);
                 
+                // update ticketId
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_Nextspin_Set", new { ticketId = bettingData.ticketId, referenceId = bettingData.referenceId }, trans);
                 if(result < 1)
                     throw new NextspinException(NextspinErrorCode.RecordIdNotFound);
@@ -5549,10 +5550,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     out var bonusId,
                     conn,
                     trans);
-                if (result != 1)
+                if (result < 1)
                     throw new NextspinException(NextspinErrorCode.InsufficientBalance);
 
-                result = _tpUnsettleService.InsertTpUnsettle(Tp.Nextspin, GameType.Nextspin_RNG, bettingData.ticketId, trans, partitionTime);
+                result = _tpUnsettleService.InsertTpUnsettle(Tp.Nextspin, GameType.Nextspin_RNG, bettingData.referenceId, trans, partitionTime);
                 if (result < 1)
                     throw new NextspinException(NextspinErrorCode.SystemError);
 

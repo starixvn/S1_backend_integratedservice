@@ -1,4 +1,5 @@
 ﻿using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -15,7 +16,7 @@ namespace ThirdPartyWager.Service.BLL.Nextspin
         private readonly INextspinApi _apiNextspinBll;
         private readonly IWagerNextspinService _wagerService;
         private readonly ILogger<NextspinBLL> _logger;
-        private readonly List<int> _siteList = new() { 1 };
+        private readonly List<int> _siteList = new() { 1, 2 ,3 };
         public NextspinBLL(ThirdPartyBLL thirdPartyBLL, INextspinApi apiNextspinBll, IWagerNextspinService wagerService, ILogger<NextspinBLL> logger)
         {
             _thirdPartyBLL = thirdPartyBLL;

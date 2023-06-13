@@ -26,7 +26,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpPost]
         public async Task<NextspinCommonResponse> Action([FromHeader] NextspinHeader header)
         {
-            _nextspinHandler.SetApiName(header.API);
+            LogContext.PushProperty("NextspinApi", header.API);
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);

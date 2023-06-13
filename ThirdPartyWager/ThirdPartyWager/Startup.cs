@@ -11,6 +11,7 @@ using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
+using ThirdPartyWager.Workers.Nextspin;
 
 namespace ThirdPartyWager
 {
@@ -248,6 +249,7 @@ namespace ThirdPartyWager
             services.AddSingleton<IWagerNextspinService, WagerNextspinService>();
             services.AddSingleton<INextspinApi, NextspinApi>();
             services.AddSingleton<INextspinBLL, NextspinBLL>();
+            services.AddSingleton<INextspinFinancBLL, NextspinFinancBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -331,6 +333,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerTFG>();
             services.AddHostedService<WagerUnsettleCheckTFG>();
             services.AddHostedService<WagerNextspin>();
+            services.AddHostedService<FinanceNextspin>();
 
             // health check use
             services.AddControllers();
