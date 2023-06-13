@@ -19,7 +19,7 @@ public class CommonBGBLL
     }
 
     internal bool GetSnAndSecretKey(Dictionary<string, string> setting, string tpCurrencyId,
-        out string sn, out string secretKey,out string secretCode, out string agentLoginId, out string message)
+        out string sn, out string secretKey, out string secretCode, out string agentLoginId, out string message)
     {
         sn = string.Empty;
         secretKey = string.Empty;
@@ -96,7 +96,11 @@ public class CommonBGBLL
                     Payment = itemsResult.items.Sum(x => x.aAmount ?? 0),
                     WinLostAmount = itemsResult.items.Sum(x => x.payment),
                 };
-                if (itemsResult.total == wagerSummary.TotalCount)
+                if (apiTotal.TotalCount == wagerSummary.TotalCount
+                    && apiTotal.Stake == wagerSummary.Stake
+                    && apiTotal.ValidBet == wagerSummary.ValidBet
+                    && apiTotal.Payment == wagerSummary.Payment
+                    && apiTotal.WinLostAmount == wagerSummary.WinLostAmount)
                 {
                     msg = prefixMsg + "MATCH";
                     _logger.LogInformation($"{msg}\r\nApi Summary={JsonConvert.SerializeObject(apiTotal)}\r\nWager Summary={JsonConvert.SerializeObject(wagerSummary)}");
