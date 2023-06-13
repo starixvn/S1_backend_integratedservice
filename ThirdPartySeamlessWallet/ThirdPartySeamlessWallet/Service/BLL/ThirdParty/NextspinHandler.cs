@@ -37,7 +37,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 { NextspinTransferType.PlaceBet, PlaceBet},
                 { NextspinTransferType.CancelBet, CancelBet},
                 { NextspinTransferType.Payout, Payout},
-
+                { NextspinTransferType.JackpotPayout, Payout},
             };
         }
         public NextspinCommonResponse Handle(AuthorizeRequest request) 
@@ -110,8 +110,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             throw new NotImplementedException();
         }
 
-
-
         public async Task<NextspinCommonResponse> PlaceBet(TransferRequest request)
         {
             var bettingData = new BettingDataRNG_Nextspin();
@@ -134,7 +132,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     throw new NextspinException(NextspinErrorCode.CurrencyInvalid);
 
                 var data = _bettingService.GetBettingDataRNG_Nextspin(request.TransferId);
-                ValidateBettrans(NextspinTransferType.PlaceBet, data, request.TransferId);
+                ValidateBettrans(NextspinTransferType.PlaceBet, data);
 
                 bettingData = new BettingDataRNG_Nextspin()
                 {
@@ -186,7 +184,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     throw new NextspinException(NextspinErrorCode.CurrencyInvalid);
 
                 var data = _bettingService.GetBettingDataRNG_Nextspin(request.ReferenceId);
-                ValidateBettrans(NextspinTransferType.Payout, data, request.TransferId);
+                ValidateBettrans(NextspinTransferType.Payout, data);
 
                 bettingData = new BettingDataRNG_Nextspin()
                 {
@@ -198,7 +196,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     gameCode = request.GameCode,
                     referenceId = request.ReferenceId,
                     ticketId = request.TicketId,
-                    channel = request.Channel
+                    channel = request.Channel,
+                    specialGameType = request.SpecialGame.Type,
+                    count = request.SpecialGame.Count,
+                    sequence = request.SpecialGame.Sequence
                 };
                 var result = await _settledService.PayoutRNG_Nextspin(tpCustInfo, bettingData);
                 var response = new TransferResponse()
@@ -246,7 +247,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     throw new NextspinException(NextspinErrorCode.CurrencyInvalid);
 
                 var data = _bettingService.GetBettingDataRNG_Nextspin(request.ReferenceId);
-                ValidateBettrans(NextspinTransferType.CancelBet, data, request.TransferId);
+                ValidateBettrans(NextspinTransferType.CancelBet, data);
 
                 bettingData = new BettingDataRNG_Nextspin()
                 {
@@ -293,18 +294,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        public void ValidateBettrans(NextspinTransferType type, IEnumerable<BettingDataRNG_Nextspin> bettrans, string transferId) 
+        public void ValidateBettrans(NextspinTransferType type, IEnumerable<BettingDataRNG_Nextspin> bettrans) 
         {
             if (type == NextspinTransferType.PlaceBet) 
             {
-                // 已存在
+                // 已存在下注注單
                 if (bettrans.Any()) throw new NextspinException(NextspinErrorCode.DuplicatedReferenceId);
             }
             else
             {
-                // 不存在
+                // 不存在下注注單
                 if (!bettrans.Any()) throw new NextspinException(NextspinErrorCode.RecordIdNotFound);
-                if (bettrans.Any(x => x.transferId == transferId)) throw new NextspinException(NextspinErrorCode.DuplicatedReferenceId);
+                // 已經payout或取消
+                if (bettrans.Max(x => x.TicketStatus) > 0) throw new NextspinException(NextspinErrorCode.DuplicatedReferenceId);
             }
         }
         private void ValidateRequest(TransferRequest request)
