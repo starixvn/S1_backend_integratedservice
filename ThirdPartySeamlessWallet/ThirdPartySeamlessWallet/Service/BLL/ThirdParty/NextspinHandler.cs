@@ -10,7 +10,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
     public interface INextspinHandler
     {
-        void SetApiName(string apiName);
         NextspinCommonResponse Handle(AuthorizeRequest request);
         NextspinCommonResponse Handle(GetBalanceRequest request);
         Task<NextspinCommonResponse> Handle(TransferRequest request);
@@ -40,10 +39,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 { NextspinTransferType.Payout, Payout},
 
             };
-        }
-        public void SetApiName(string apiName)
-        {
-            LogContext.PushProperty("ApiName", apiName);
         }
         public NextspinCommonResponse Handle(AuthorizeRequest request) 
         {
