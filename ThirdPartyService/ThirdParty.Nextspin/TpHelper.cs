@@ -1,12 +1,19 @@
 ﻿using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model.TpBetRecordExtend;
+using Newtonsoft.Json;
 
 namespace ThirdParty.Nextspin
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly IReadOnlyDictionary<string, string> _gameNameList;
+        public TpHelper()
+        {
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList(50).ToDictionary(d => d.AppId, d => d.Name);
+        }
         #region NotImplemented
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -88,7 +95,29 @@ namespace ThirdParty.Nextspin
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
+            var type = betRecordInfo.TransId.Length > 20 ? 1 : 0;
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_Nextspin_Detail_Get",
+                new { YYYYMM, betRecordInfo.TransId, Type = type }, DataBase.Main);
+            if (!detail.Any())
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+
+            var gameCode = detail.GetStringValue("gameCode");
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = gameCode,
+                Game = GetGameName(gameCode),
+                RefNo = detail.GetStringValue("referenceId"),
+                Title = tpGameType.TypeName,
+                MatchID = detail.GetStringValue("ticketId"),
+                BetType = string.Empty,
+                BetChoice = string.Empty,
+                Result = string.Empty,
+                DeviceType = GetDeviceType(detail.GetStringValue("channel")),
+                IP = string.Empty,
+            };
         }
 
         private bool IsFunMode(Dictionary<string, string> inputs)
@@ -106,6 +135,29 @@ namespace ThirdParty.Nextspin
             if (allowNull)
                 return "";
             throw new Exception($"inputs {key} is empty");
+        }
+        private string GetGameName(string gameCode)
+        {
+            if (!_gameNameList.TryGetValue(gameCode, out var name))
+            {
+                return string.Empty;
+            }
+            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
+            return dic.TryGetValue("en", out var result) ? result : string.Empty;
+        }
+        private DeviceType GetDeviceType(string device)
+        {
+            if (device.Equals("Web", StringComparison.OrdinalIgnoreCase))
+            {
+                return DeviceType.Desktop;
+            }
+
+            if (device.Equals("Mobile", StringComparison.OrdinalIgnoreCase))
+            {
+                return DeviceType.Mobile;
+            }
+
+            return DeviceType.None;
         }
     }
 }
