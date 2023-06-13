@@ -9,10 +9,10 @@
     public class GetRNGBetDetailData
     {
         public long last_version_key { get; set; }
-        public IEnumerable<RNGBetDetail> RNGBetDetails { get; set; }
+        public IEnumerable<BetRNGDetail> BetRNGDetails { get; set; }
     }
 
-    public class RNGBetDetail
+    public class BetRNGDetail
     {
         public long trans_id { get; set; }
         public string vendor_member_id { get; set; }

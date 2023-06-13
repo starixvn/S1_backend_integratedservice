@@ -4,6 +4,7 @@ using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.Model;
 using ThirdPartyBetHistory.Service.Model.enums;
 using ThirdPartyBetHistory.Service.Model.Interfaces;
+using ThirdPartyBetHistory.Service.Library;
 
 namespace ThirdPartyBetHistory.Service.TpBetHistory
 {
@@ -434,18 +435,63 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 
             if (workerType == WorkerType.RngWager)
             {
-                return await GetRNGBetDetail(siteTicketKey, parameters);
+                return await GetRNGBetDetailToAdd(parameters);
             }
             else
             {
-                return await GetRNGBetDetail(siteTicketKey, parameters);
+                return await GetTpBetRecordDetailToAdd(parameters);
             }
         }
-        private void GetTpBetRecordDetail(long siteTicketKey, Dictionary<string, string> parameters)
+        private async Task<long> GetTpBetRecordDetailToAdd(Dictionary<string, string> parameters)
         {
+            var tpSetting = thirdPartyModel.TpSetting;
+            var getBetDetailUrl = $"{tpSetting["ApiUrl"]}/GetBetDetail";
+            var p = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
 
+            var result = await HttpPostAsync(getBetDetailUrl, p, "application/x-www-form-urlencoded");
+            var getBetDetail = FromJson<GetBetDetail>(result);
+
+            if (getBetDetail.error_code != 0)
+            {
+                _logger.LogError(getBetDetail.message, $"GetRNGBetDetail");
+            }
+
+            if (DataNotExists(getBetDetail))
+            {
+                return getBetDetail.Data.last_version_key;
+            }
+
+            if (getBetDetail.Data?.BetDetails != null)
+            {
+                foreach (var betDetail in getBetDetail.Data?.BetDetails)
+                {
+                    try
+                    {
+                        var gameType = GetBetDetailGameType(betDetail.sport_type);
+                        //VG的資料由GetRNGBetDetailToAdd取得，這邊不重複塞入資料
+                        if (gameType == GameType.SBSW_Vgaming)
+                            continue;
+
+                        var tpCustInfo = _thirdPartyBLL.GetTpCustInfoWithCache((int)Tp.SBSW, betDetail.vendor_member_id);
+                        var tpBetRecordDetail = new TpBetRecordDetail((int)Tp.SBSW, gameType, tpCustInfo.CurrencyId, betDetail.trans_id.ToString(), betDetail.transaction_time)
+                        {
+                            Detail = betDetail
+                        };
+
+                        if (_thirdPartyBLL.AddTpBetRecordDetail(tpBetRecordDetail) > 0)
+                        {
+                            _thirdPartyBLL.InsertTpUnsettle(Tp.SBSW, gameType, betDetail.trans_id.ToString());
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"AddTpBetRecordDetail, TransId={betDetail.trans_id}");
+                    }
+                }
+            }
+            return getBetDetail.Data.last_version_key;
         }
-        private async Task<long> GetRNGBetDetail(long siteTicketKey, Dictionary<string, string> parameters)
+        private async Task<long> GetRNGBetDetailToAdd(Dictionary<string, string> parameters)
         {
             var tpSetting = thirdPartyModel.TpSetting;
             var getBetDetailUrl = $"{tpSetting["ApiUrl"]}/GetRNGBetDetail";
@@ -456,36 +502,36 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 
             if (GetRNGBetDetail.error_code != 0)
             {
-                throw new Exception(GetRNGBetDetail.message);
+                _logger.LogError(GetRNGBetDetail.message, $"GetRNGBetDetail");
             }
 
-            if (GetRNGBetDetail.Data?.RNGBetDetails is null)
+            if (GetRNGBetDetail.Data?.BetRNGDetails is null)
             {
                 return GetRNGBetDetail.Data.last_version_key;
             }
 
-            foreach(var betDetail in GetRNGBetDetail.Data.RNGBetDetails)
+            foreach (var betDetail in GetRNGBetDetail.Data.BetRNGDetails)
             {
-                var tpCustInfo = _thirdPartyBLL.GetTpCustInfoWithCache((int)Tp.SBSW, betDetail.vendor_member_id);
-                var tpBetRecordDetail = new TpBetRecordDetail((int)Tp.SBSW, GameType.SBSW_Vgaming, tpCustInfo.CurrencyId, betDetail.trans_id.ToString(), betDetail.transaction_time)
+                try
                 {
-                    Detail = betDetail
-                };
+                    var tpCustInfo = _thirdPartyBLL.GetTpCustInfoWithCache((int)Tp.SBSW, betDetail.vendor_member_id);
+                    var tpBetRecordDetail = new TpBetRecordDetail((int)Tp.SBSW, GameType.SBSW_Vgaming, tpCustInfo.CurrencyId, betDetail.trans_id.ToString(), betDetail.transaction_time)
+                    {
+                        Detail = betDetail
+                    };
 
-                if(_thirdPartyBLL.AddTpBetRecordDetail(tpBetRecordDetail) > 0)
+                    if (_thirdPartyBLL.AddTpBetRecordDetail(tpBetRecordDetail) > 0)
+                    {
+                        _thirdPartyBLL.InsertTpUnsettle(Tp.SBSW, GameType.SBSW_Vgaming, betDetail.trans_id.ToString());
+                    }
+                }
+                catch (Exception ex)
                 {
-
+                    _logger.LogError(ex, $"AddTpBetRecordDetail, TransId={betDetail.trans_id}");
                 }
             }
-            //var settleDataList = ProcessData(getBetDetail);
 
-            //if (settleDataList.Count == 0)
-            //{
-            //    return getBetDetail.Data.last_version_key;
-            //}
-
-            //_thirdPartyBLL.DoSettleTicket(settleDataList, workerType);
-            //return getBetDetail.Data.last_version_key;
+            return GetRNGBetDetail.Data.last_version_key;
         }
     }
 }
