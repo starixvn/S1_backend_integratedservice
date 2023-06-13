@@ -51,7 +51,9 @@
         SimplePlay = 44,
         Yeebet = 46,
         BG = 47,
-        TFG = 48
+        TFG = 48,
+
+        Nextspin = 50
     }
 
     public enum GameType
@@ -86,7 +88,9 @@
         GPI_Fast3 = 91,
         Yeebet_LiveCasino = 93,
         BG_LiveCasino = 94,
-        TFG_Esports = 97
+        TFG_Esports = 97,
+
+        Nextspin_RNG = 99
     }
 
 	 public enum SettlementType

@@ -1,6 +1,4 @@
-﻿using System.Text;
-using System.Web;
-using ThirdPartyCore;
+﻿using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordExtend;
@@ -66,7 +64,26 @@ namespace ThirdParty.Nextspin
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var merchantCode = GetInputValue(inputs, "MerchantCode");
+            var launchUrl = GetInputValue(inputs, "LaunchUrl");
+            var secretKey = GetInputValue(inputs, "SecretKey");
+            launchUrl = launchUrl.Replace("lobby", "gameapi");
+
+            var secret = $"{getBetDetail.TransId}|{secretKey}";
+            var token = ToMD5(secret);
+
+            var betDetailUrl = $"{launchUrl}/betDetails?merchantId={merchantCode}&token={token}&lang=en&ticketId={getBetDetail.TransId}";
+
+            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                DetailUrl = betDetailUrl,
+                TpCurrency = new TpCurrency()
+                {
+                    ExchangeRate = tpCustInfo.ExchangeRate,
+                    TpCurrencyId = tpCustInfo.TpCurrencyId,
+                }
+            };
         }
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)

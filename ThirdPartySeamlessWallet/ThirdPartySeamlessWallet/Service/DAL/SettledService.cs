@@ -424,7 +424,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             if (thirdPartySetting.WalletType == (int)WalletType.TransferWallet)
                                 AutoCancelTransferBonus(bonusId, betRecord.TransId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
                             else if (Losses != 0)
-                                AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, conn, trans);
+                                AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.TransId, conn, trans);
                         }
                     }
                 }
@@ -445,7 +445,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             if (thirdPartySetting.WalletType == (int)WalletType.TransferWallet)
                                 AutoCancelTransferBonus(bonusId, betRecord.TransId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
                             else if (Losses != 0)
-                                AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, conn, trans);
+                                AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.TransId, conn, trans);
                         }
                     }
                     else if ((RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win || RefBetRecord.TicketStatus == TicketStatus.FreeBetWin)
@@ -470,7 +470,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 if (thirdPartySetting.WalletType == (int)WalletType.TransferWallet)
                                     AutoCancelTransferBonus(bonusId, betRecord.TransId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
                                 else if (Losses != 0)
-                                    AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, conn, trans);
+                                    AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.TransId ,conn, trans);
                             }
                         }
                     }
@@ -723,17 +723,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.Execute("Service_AutoCancelTransferBonus_Set_V2", new { BonusId = bonusId, TransId = transId, CurrencyId = currencyId, GameType = gameType },conn , trans);
         }
 
-        public int AutoCancelSeamlessBonus(int bonusId, int currencyId, int gameType, int custId, string userName, int siteId, MySqlConnection conn, MySqlTransaction trans)
+        public int AutoCancelSeamlessBonus(int bonusId, int currencyId, int gameType, int custId, string userName, int siteId, string transId, MySqlConnection conn, MySqlTransaction trans)
         {
-            var p = new DynamicParameters(new { BonusId = bonusId, CurrencyId = currencyId, GameType = gameType, CustId = custId, UserName = userName, SiteId = siteId });
+            var p = new DynamicParameters(new { BonusId = bonusId, CurrencyId = currencyId, GameType = gameType, CustId = custId, UserName = userName, SiteId = siteId , TransId = transId });
             p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+            p.Add("BonusStatus", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-            var result = _mainDbClient.Execute("Service_AutoCancelSeamlessBonusV2_Set", p, conn , trans);
-            decimal bonus = p.Get<decimal?>("Bonus") ?? 0;
-
-            if (bonus > 0)
+            var result = _mainDbClient.Execute("Service_AutoCancelSeamlessBonus_Set_V3", p, conn , trans);
+            var bonus = p.Get<decimal?>("Bonus") ?? 0;
+            var bonusStatus = p.Get<int?>("BonusStatus") ?? 0;
+            if (bonusStatus == 2 && bonus > 0)
             {
-                result = walletService.SetBalance(custId, siteId, userName, bonus, 0, TransType.Prize, $"Bonus: {Math.Abs(bonus).ToString("#,##0.##")}", bonusId.ToString(), out _, conn, trans);
+                result = walletService.SetBalance(custId, siteId, userName, bonus, 0, TransType.Prize, $"Bonus: {Math.Abs(bonus):#,##0.##}", bonusId.ToString(), out _, conn, trans);
             }
 
             return result;

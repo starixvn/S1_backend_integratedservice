@@ -1654,10 +1654,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         #endregion
 
         #region Nextspin
-        public BettingDataRNG_Nextspin GetBettingDataRNG_Nextspin(string referenceId)
+        public IEnumerable<BettingDataRNG_Nextspin> GetBettingDataRNG_Nextspin(string referenceId)
         {
             var now = DateTime.UtcNow;
-            return _partitionService.Query<BettingDataRNG_Nextspin>(now, "Service_BettransRng_Nextspin_Get", new { referenceId }).FirstOrDefault();
+            return _partitionService.Query<BettingDataRNG_Nextspin>(now, "Service_BettransRng_Nextspin_Get", new { referenceId });
         }
 
         public async Task<NextspinResult> PlaceBetRNG_Nextspin(TpCustInfo tpCustInfo, BettingDataRNG_Nextspin bettingData) 
