@@ -14,8 +14,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string ticketId { get; set; }
         public string channel { get; set; }
         public string specialGameType { get; set; }
-        public int count { get; set; }
-        public int sequence { get; set; }
+        public int? count { get; set; }
+        public int? sequence { get; set; }
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
     }
@@ -113,6 +113,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public long TransTime { get; set; }
         public string GameId { get; set; }
         public string ReferenceId { get; set; }
+        public int TicketType { get; set; }
+        public int TicketStatus { get; set; }
     }
     public enum NextspinTransferType 
     {
