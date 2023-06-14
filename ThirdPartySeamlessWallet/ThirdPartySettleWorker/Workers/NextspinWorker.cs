@@ -90,7 +90,7 @@ namespace ThirdPartySettleWorker.Workers
                             Stake = unsettleData.Stake,
                             ValidBet = unsettleData.ValidBet,
                             WinlostAmount = unsettleData.WinLostAmount,
-                            TransId = tpUnsettle.TransId,
+                            TransId = unsettleData.TicketStatus == (int)TicketStatus.Refund ? unsettleData.ReferenceId : tpUnsettle.TransId,
                             GameType = gametype,
                             TpUserName = unsettleData.TpUserName,
                             SettledTime = unsettleData.SettledTime,
