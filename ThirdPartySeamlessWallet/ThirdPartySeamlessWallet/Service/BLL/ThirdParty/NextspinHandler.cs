@@ -115,10 +115,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var bettingData = new BettingDataRNG_Nextspin();
             try
             {
-                if (request.GameCode == "s5ForStar" && request.Amount == 100)
-                {
-                    Sleep();
-                }
                 var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, request.AcctId);
                 if (tpCheck == null || tpCheck.Locked)
                     throw new NextspinException(NextspinErrorCode.AcctLocked);
@@ -197,9 +193,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     referenceId = request.ReferenceId,
                     ticketId = request.TicketId,
                     channel = request.Channel,
-                    specialGameType = request.SpecialGame.Type,
-                    count = request.SpecialGame.Count,
-                    sequence = request.SpecialGame.Sequence
+                    specialGameType = request.SpecialGame?.Type,
+                    count = request.SpecialGame?.Count,
+                    sequence = request.SpecialGame?.Sequence
                 };
                 var result = await _settledService.PayoutRNG_Nextspin(tpCustInfo, bettingData);
                 var response = new TransferResponse()
@@ -315,6 +311,5 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (request.Amount < 0) throw new NextspinException(NextspinErrorCode.AmountInvalid);
         }
         public static string GenerateSerialNo() => Guid.NewGuid().ToString();
-        private void Sleep() => Thread.Sleep(60000);
     }
 }
