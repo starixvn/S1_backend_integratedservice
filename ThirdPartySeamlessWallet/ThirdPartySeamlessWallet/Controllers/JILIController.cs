@@ -89,6 +89,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/auth")]
         [Route("[controller]/goal123/auth")]
         [Route("[controller]/bwing/auth")]
+        [Route("[controller]/nova_stream/auth")]
         public async Task<dynamic> authAsync()
         {
             string logName = $"{_thisTp}_auth";
@@ -105,7 +106,21 @@ namespace ThirdPartySeamlessWallet.Controllers
             Request.Headers.TryGetValue("Authorization", out var authorization);
             string sAuthorization = authorization.ToString();
 
-            var check = checkAuthorization(sAuthorization);
+            #region GetToken
+
+            var tokenInfo = getTokenInfo(getReq.token);
+            var verify = _authBLL.Authenticate(tokenInfo.shortTimeToken, out TpCustInfoAuth tpCustInfoAuth);
+            if (!verify)
+            {
+                getErrorResponse.errorCode = 4;
+                getErrorResponse.message = "Token expired";
+                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
+                return getErrorResponse;
+            }
+
+            #endregion
+
+            var check = checkAuthorization(tpCustInfoAuth?.MemberType == 3, sAuthorization);
             if (check.errorCode != 0)
             {
                 _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(check)}", logName);
@@ -114,16 +129,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var tokenInfo = getTokenInfo(getReq.token);
-                var verify = _authBLL.Authenticate(tokenInfo.shortTimeToken, out TpCustInfoAuth tpCustInfoAuth);
-                if (!verify)
-                {
-                    getErrorResponse.errorCode = 4;
-                    getErrorResponse.message = "Token expired";
-                    _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
-                    return getErrorResponse;
-                }
-
                 var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, tokenInfo.tpUserName);
                 if (tpCheck == null)
                 {
@@ -173,6 +178,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/bet")]
         [Route("[controller]/goal123/bet")]
         [Route("[controller]/bwing/bet")]
+        [Route("[controller]/nova_stream/bet")]
         public async Task<dynamic> betAsync([FromQuery] Dictionary<string, string> getQuery)
         {
             string logName = $"{_thisTp}_bet";
@@ -189,7 +195,16 @@ namespace ThirdPartySeamlessWallet.Controllers
             Request.Headers.TryGetValue("Authorization", out var authorization);
             string sAuthorization = authorization.ToString();
 
-            var check = checkAuthorization(sAuthorization);
+            var custInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, getReq.userId);
+            if (custInfo == null)
+            {
+                getErrorResponse.errorCode = 3;
+                getErrorResponse.message = "userId Not Exist.";
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
+                return getErrorResponse;
+            }
+
+            var check = checkAuthorization(custInfo.MemberType == 3, sAuthorization);
             if (check.errorCode != 0)
             {
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(check)}", logName);
@@ -198,7 +213,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 var tokenInfo = getTokenInfo(getReq.token);
-
                 // offline payment no need to check online
                 var logToken = "";
                 if (!getReq.isFreeRound)
@@ -304,8 +318,10 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/cancelSessionBet")]
         [Route("[controller]/goal123/cancelBet")]
         [Route("[controller]/goal123/cancelSessionBet")]
-        [Route("[controller]/bwing/cancelSessionBet")]
         [Route("[controller]/bwing/cancelBet")]
+        [Route("[controller]/bwing/cancelSessionBet")]
+        [Route("[controller]/nova_stream/cancelBet")]
+        [Route("[controller]/nova_stream/cancelSessionBet")]
         public async Task<dynamic> cancelBetAsync([FromQuery] Dictionary<string, string> getQuery)
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
@@ -322,7 +338,16 @@ namespace ThirdPartySeamlessWallet.Controllers
             Request.Headers.TryGetValue("Authorization", out var authorization);
             string sAuthorization = authorization.ToString();
 
-            var check = checkAuthorization(sAuthorization);
+            var custInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, getReq.userId);
+            if (custInfo == null)
+            {
+                getErrorResponse.errorCode = 3;
+                getErrorResponse.message = "userId Not Exist.";
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
+                return getErrorResponse;
+            }
+
+            var check = checkAuthorization(custInfo.MemberType == 3, sAuthorization);
             if (check.errorCode != 0)
             {
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(check)}", logName);
@@ -380,6 +405,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/sessionBet")]
         [Route("[controller]/goal123/sessionBet")]
         [Route("[controller]/bwing/sessionBet")]
+        [Route("[controller]/nova_stream/sessionBet")]
         public async Task<dynamic> sessionBetAsync([FromQuery] Dictionary<string, string> getQuery)
         {
             string logName = $"{_thisTp}_sessionBet";
@@ -396,7 +422,16 @@ namespace ThirdPartySeamlessWallet.Controllers
             Request.Headers.TryGetValue("Authorization", out var authorization);
             string sAuthorization = authorization.ToString();
 
-            var check = checkAuthorization(sAuthorization);
+            var custInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, getReq.userId);
+            if (custInfo == null)
+            {
+                getErrorResponse.errorCode = 3;
+                getErrorResponse.message = "userId Not Exist.";
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
+                return getErrorResponse;
+            }
+
+            var check = checkAuthorization(custInfo.MemberType == 3, sAuthorization);
             if (check.errorCode != 0)
             {
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(check)}", logName);
@@ -498,9 +533,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             return getErrorResponse;
         }
 
-        private ErrorResp checkAuthorization(string authorization = null)
+        private ErrorResp checkAuthorization(bool isLiveStreaming, string authorization = null)
         {
             ErrorResp getErrorResponse = new ErrorResp();
+            byte[] authTmp = null;
 
             if (string.IsNullOrEmpty(authorization))
             {
@@ -510,7 +546,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             // all site use same username and password
             var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)_thisTp);
-            byte[] authTmp = Encoding.ASCII.GetBytes($"{thirdPartySetting.TpSetting["Username"]}:{thirdPartySetting.TpSetting["Password"]}");
+
+            if (isLiveStreaming)
+                authTmp = Encoding.ASCII.GetBytes($"{thirdPartySetting.TpSetting["Username_Stream"]}:{thirdPartySetting.TpSetting["Password_Stream"]}");
+            else
+                authTmp = Encoding.ASCII.GetBytes($"{thirdPartySetting.TpSetting["Username"]}:{thirdPartySetting.TpSetting["Password"]}");
+
             string authToken = Convert.ToBase64String(authTmp);
             string[] aAuthorization = authorization.Split(' ');
             if (aAuthorization.Count() != 2 && aAuthorization[0] != "Basic")

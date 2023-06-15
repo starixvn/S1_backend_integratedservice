@@ -57,6 +57,9 @@ namespace ThirdParty.JILI
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
             GameUrl = $"{GameUrl}/Login";
 
+            if (tpCustInfo.MemberType == CustomerMemberTypeEnum.LiveStreaming)
+                AgentId = inputs.ContainsKey("AgentId_Stream") && !String.IsNullOrEmpty(inputs["AgentId_Stream"]) ? inputs["AgentId_Stream"] : throw new Exception($"AgentId_Stream is empty");
+
             ApiResult oApiResult = new ApiResult();
 
             if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
