@@ -17,6 +17,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int SiteId { set; get; }
         public string TpCustId { get; set; }
         public string TpCurrencyId { get; set; }
+        public int MemberType { get; set; }
     }
     public class TpCustInfoAuth
     {
@@ -34,6 +35,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string TpUserName { get; set; }
         public decimal ExchangeRate { get; set; }
         public string TpCurrencyId { get; set; }
+        public int MemberType { get; set; }
     }
     public class TpCustBalance
     {
