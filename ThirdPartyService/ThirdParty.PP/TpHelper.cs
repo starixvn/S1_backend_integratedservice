@@ -112,8 +112,10 @@ namespace ThirdParty.PP
             string Uri = "/v3/http/CasinoGameAPI/game/url/";
 
             if (tpCustInfo.MemberType == CustomerMemberTypeEnum.LiveStreaming)
+            {
+                SecureKey = inputs.ContainsKey("SecureKey_Stream") && !String.IsNullOrEmpty(inputs["SecureKey_Stream"]) ? inputs["SecureKey_Stream"] : throw new Exception($"SecureKey_Stream is empty");
                 SecureLogin = inputs.ContainsKey("SecureLogin_Stream") && !String.IsNullOrEmpty(inputs["SecureLogin_Stream"]) ? inputs["SecureLogin_Stream"] : throw new Exception($"SecureLogin_Stream is empty");
-
+            }
 
             var parameters = new Dictionary<string, string>()
             {
