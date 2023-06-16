@@ -16,7 +16,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         public TpCustInfo GetTpCustInfo(int TpId, string TpUserName,string tpCustId)
         {
-            return _mainDbClient.QueryFirst<TpCustInfo>("Common_TpCustInfoByTpUserName_Get_V4", new { _TpId = TpId, _TpUserName = TpUserName, _TpCustId= tpCustId });
+            return _mainDbClient.QueryFirst<TpCustInfo>("Common_TpCustInfoByTpUserName_Get_V4", new { _TpId = TpId, _TpUserName = TpUserName, _TpCustId = tpCustId });
         }
 
         public int SetCustGotoGame(int custId, int tpId, int gameType)
