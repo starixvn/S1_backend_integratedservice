@@ -41,7 +41,8 @@ namespace ThirdPartyBetHistory.Service.Model.enums
     {
         Nova88 = 1,
         Goal123 = 2,
-        Bwing = 3
+        Bwing = 3,
+        Ivorysport = 5
     }
 
     public enum BetType
