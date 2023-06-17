@@ -832,7 +832,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             var dicP = req.Where(x => x.Key != "hash").OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
             string p = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}{secureKey}";
 
-            //log2File.Info($"{p}\r\n{hashKey}\r\n{tools.ToMD5(p)}", $"{thisTp}_hashCheck");
+            //_log2File.Info($"{p}\r\n{hashKey}\r\n{_tools.ToMD5(p)}", $"{thisTp}_hashCheck");
 
             return hashKey.Equals(_tools.ToMD5(p), StringComparison.OrdinalIgnoreCase);
         }
