@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -70,8 +71,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/authenticate")]
-        [Route("[controller]/nova_stream/authenticate")]
-        public AuthenticateResp Authenticate([FromForm] Dictionary<string, string> authenticateReqq)
+        [Route("[controller]/{agentId}/authenticate")]
+        public AuthenticateResp Authenticate([FromForm] Dictionary<string, string> authenticateReqq, string agentId)
         {
             AuthenticateResp authenticateResp = new AuthenticateResp();
             authenticateResp.error = 100;
@@ -79,10 +80,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                var secureKey = thirdPartySetting.TpSetting["SecureKey"];
 
-                if (hashCheck(authenticateReqq, secureKey))
+                if (hashCheck(authenticateReqq, agentId))
                 {
                     AuthenticateReq authenticateReq = JsonConvert.DeserializeObject<AuthenticateReq>(JsonConvert.SerializeObject(authenticateReqq));
 
@@ -161,8 +160,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/balance")]
-        [Route("[controller]/nova_stream/balance")]
-        public BalanceResp Balance([FromForm] Dictionary<string, string> balanceReqq)
+        [Route("[controller]/{agentId}/balance")]
+        public BalanceResp Balance([FromForm] Dictionary<string, string> balanceReqq, string agentId)
         {
             //log2File.Info(JsonConvert.SerializeObject(balanceReqq), $"{thisTp}_Balance");
             BalanceResp balanceResp = new BalanceResp();
@@ -171,10 +170,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                var secureKey = thirdPartySetting.TpSetting["SecureKey"];
-
-                if (hashCheck(balanceReqq, secureKey))
+                if (hashCheck(balanceReqq, agentId))
                 {
                     BalanceReq balanceReq = JsonConvert.DeserializeObject<BalanceReq>(JsonConvert.SerializeObject(balanceReqq));
 
@@ -249,8 +245,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/bet")]
-        [Route("[controller]/nova_stream/bet")]
-        public BetResp Bet([FromForm] Dictionary<string, string> betReqq)
+        [Route("[controller]/{agentId}/bet")]
+        public BetResp Bet([FromForm] Dictionary<string, string> betReqq, string agentId)
         {
             BetResp betResp = new BetResp();
             betResp.error = 100;
@@ -258,10 +254,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                var secureKey = thirdPartySetting.TpSetting["SecureKey"];
-
-                if (hashCheck(betReqq, secureKey))
+                if (hashCheck(betReqq, agentId))
                 {
                     BetReq betReq = JsonConvert.DeserializeObject<BetReq>(JsonConvert.SerializeObject(betReqq));
                     betResp.transactionId = betReq.reference;
@@ -363,8 +356,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/result")]
-        [Route("[controller]/nova_stream/result")]
-        public PayoutResp Result([FromForm] Dictionary<string, string> resultReqq)
+        [Route("[controller]/{agentId}/result")]
+        public PayoutResp Result([FromForm] Dictionary<string, string> resultReqq, string agentId)
         {
             PayoutResp resultResp = new PayoutResp();
             resultResp.error = 100;
@@ -372,10 +365,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                var secureKey = thirdPartySetting.TpSetting["SecureKey"];
-
-                if (hashCheck(resultReqq, secureKey))
+                if (hashCheck(resultReqq, agentId))
                 {
                     BetReq betReq = JsonConvert.DeserializeObject<BetReq>(JsonConvert.SerializeObject(resultReqq));
 
@@ -442,8 +432,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/bonusWin")]
-        [Route("[controller]/nova_stream/bonusWin")]
-        public PayoutResp BonusWin([FromForm] Dictionary<string, string> bonusWinReqq)
+        [Route("[controller]/{agentId}/bonusWin")]
+        public PayoutResp BonusWin([FromForm] Dictionary<string, string> bonusWinReqq, string agentId)
         {
             PayoutResp payoutResp = new PayoutResp();
             payoutResp.error = 100;
@@ -451,10 +441,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                var secureKey = thirdPartySetting.TpSetting["SecureKey"];
-
-                if (hashCheck(bonusWinReqq, secureKey))
+                if (hashCheck(bonusWinReqq, agentId))
                 {
                     BetReq betReq = JsonConvert.DeserializeObject<BetReq>(JsonConvert.SerializeObject(bonusWinReqq));
                     payoutResp.transactionId = betReq.reference;
@@ -485,8 +472,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/JackpotWin")]
-        [Route("[controller]/nova_stream/JackpotWin")]
-        public PayoutResp JackpotWin([FromForm] Dictionary<string, string> jackpotWinReqq)
+        [Route("[controller]/{agentId}/JackpotWin")]
+        public PayoutResp JackpotWin([FromForm] Dictionary<string, string> jackpotWinReqq, string agentId)
         {
             //log2File.Info(JsonConvert.SerializeObject(jackpotWinReqq), $"{thisTp}_JackpotWin");
             PayoutResp payoutResp = new PayoutResp();
@@ -495,10 +482,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                var secureKey = thirdPartySetting.TpSetting["SecureKey"];
-
-                if (hashCheck(jackpotWinReqq, secureKey))
+                if (hashCheck(jackpotWinReqq, agentId))
                 {
                     BetReq betReq = JsonConvert.DeserializeObject<BetReq>(JsonConvert.SerializeObject(jackpotWinReqq));
                     payoutResp.transactionId = betReq.reference;
@@ -563,8 +547,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/promoWin")]
-        [Route("[controller]/nova_stream/promoWin")]
-        public PayoutResp PromoWin([FromForm] Dictionary<string, string> promoWinReqq)
+        [Route("[controller]/{agentId}/promoWin")]
+        public PayoutResp PromoWin([FromForm] Dictionary<string, string> promoWinReqq, string agentId)
         {
             //log2File.Info(JsonConvert.SerializeObject(promoWinReqq), $"{thisTp}_PromoWin");
             PayoutResp payoutResp = new PayoutResp();
@@ -573,10 +557,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                var secureKey = thirdPartySetting.TpSetting["SecureKey"];
-
-                if (hashCheck(promoWinReqq, secureKey))
+                if (hashCheck(promoWinReqq, agentId))
                 {
                     PromoWinReq promoWinReq = JsonConvert.DeserializeObject<PromoWinReq>(JsonConvert.SerializeObject(promoWinReqq));
                     payoutResp.transactionId = promoWinReq.Reference;
@@ -655,8 +636,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/endRound")]
-        [Route("[controller]/nova_stream/endRound")]
-        public EndRoundResp EndRound([FromForm] Dictionary<string, string> endRoundReqq)
+        [Route("[controller]/{agentId}/endRound")]
+        public EndRoundResp EndRound([FromForm] Dictionary<string, string> endRoundReqq, string agentId)
         {
             var endRoundResp = new EndRoundResp
             {
@@ -667,10 +648,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                var secureKey = thirdPartySetting.TpSetting["SecureKey"];
-
-                if (hashCheck(endRoundReqq, secureKey))
+                if (hashCheck(endRoundReqq, agentId))
                 {
                     var gameType = _thirdPartyBLL.GetGameType_PP(betReq.gameId);
 
@@ -713,8 +691,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/refund")]
-        [Route("[controller]/nova_stream/refund")]
-        public RefundResp refund([FromForm] Dictionary<string, string> refundReqq)
+        [Route("[controller]/{agentId}/refund")]
+        public RefundResp refund([FromForm] Dictionary<string, string> refundReqq, string agentId)
         {
             RefundResp refundResp = new RefundResp();
             refundResp.error = 100;
@@ -722,10 +700,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                var secureKey = thirdPartySetting.TpSetting["SecureKey"];
-
-                if (hashCheck(refundReqq, secureKey))
+                if (hashCheck(refundReqq, agentId))
                 {
                     RefundReq refundReq = JsonConvert.DeserializeObject<RefundReq>(JsonConvert.SerializeObject(refundReqq));
                     refundResp.transactionId = $"{refundReq.reference}_refund";
@@ -787,8 +762,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/adjustment")]
-        [Route("[controller]/nova_stream/adjustment")]
-        public AdjustmentResp adjustment([FromForm] Dictionary<string, string> adjustmentReqq)
+        [Route("[controller]/{agentId}/adjustment")]
+        public AdjustmentResp adjustment([FromForm] Dictionary<string, string> adjustmentReqq, string agentId)
         {
             AdjustmentResp adjustmentResp = new AdjustmentResp();
             adjustmentResp.error = 100;
@@ -796,10 +771,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             string logName = $"{thisTp}_adjustment";
             try
             {
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                var secureKey = thirdPartySetting.TpSetting["SecureKey"];
-
-                if (!hashCheck(adjustmentReqq, secureKey))
+                if (!hashCheck(adjustmentReqq, agentId))
                 {
                     adjustmentResp.error = 5;
                     adjustmentResp.description = "Invalid hash code.";
@@ -849,8 +821,13 @@ namespace ThirdPartySeamlessWallet.Controllers
             return adjustmentResp;
         }
 
-        private bool hashCheck(Dictionary<string, string> req, string secureKey)
+        private bool hashCheck(Dictionary<string, string> req, string agentId)
         {
+            var suffix = GetSecureKeySuffixByAgentId(agentId);
+
+            var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+            var secureKey = thirdPartySetting.TpSetting[$"SecureKey{suffix}"];
+
             var hashKey = req["hash"];
             var dicP = req.Where(x => x.Key != "hash").OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
             string p = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}{secureKey}";
@@ -859,5 +836,14 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             return hashKey.Equals(_tools.ToMD5(p), StringComparison.OrdinalIgnoreCase);
         }
+
+        private string GetSecureKeySuffixByAgentId(string agentId)
+        {
+            if (string.IsNullOrWhiteSpace(agentId))
+                return "";
+            else
+                return $"_Stream_{agentId.Split("_")[0]}";
+        }
+
     }
 }
