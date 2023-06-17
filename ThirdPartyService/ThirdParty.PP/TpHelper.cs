@@ -14,6 +14,9 @@ namespace ThirdParty.PP
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly Dictionary<int, string> _siteSuffixList = new()
+        { { 1, "nova" }, { 2, "goal123" }, { 3, "bwing" } };
+
         public class UserReq
         {
             public string username { get; set; }
@@ -112,8 +115,14 @@ namespace ThirdParty.PP
             string Uri = "/v3/http/CasinoGameAPI/game/url/";
 
             if (tpCustInfo.MemberType == CustomerMemberTypeEnum.LiveStreaming)
-                SecureLogin = inputs.ContainsKey("SecureLogin_Stream") && !String.IsNullOrEmpty(inputs["SecureLogin_Stream"]) ? inputs["SecureLogin_Stream"] : throw new Exception($"SecureLogin_Stream is empty");
-
+            {
+                ApiUrl = inputs.ContainsKey("ApiUrl_Stream") && !string.IsNullOrEmpty(inputs["ApiUrl_Stream"]) ? inputs["ApiUrl_Stream"] : throw new Exception();
+                var suffix = _siteSuffixList[tpCustInfo.SiteId];
+                SecureKey = inputs.ContainsKey($"SecureKey_Stream_{suffix}") && !String.IsNullOrEmpty(inputs[$"SecureKey_Stream_{suffix}"])
+                    ? inputs[$"SecureKey_Stream_{suffix}"] : throw new Exception($"SecureKey_Stream_{suffix} is empty");
+                SecureLogin = inputs.ContainsKey($"SecureLogin_Stream_{suffix}") && !String.IsNullOrEmpty(inputs[$"SecureLogin_Stream_{suffix}"])
+                    ? inputs[$"SecureLogin_Stream_{suffix}"] : throw new Exception($"SecureLogin_Stream_{suffix} is empty");
+            }
 
             var parameters = new Dictionary<string, string>()
             {
@@ -174,6 +183,16 @@ namespace ThirdParty.PP
             var secureLogin = inputs.GetValueOrDefault("SecureLogin") ?? throw new Exception();
             var secureKey = inputs.GetValueOrDefault("SecureKey") ?? throw new Exception();
 
+            if (tpCustInfo.MemberType == CustomerMemberTypeEnum.LiveStreaming)
+            {
+                apiUrl = inputs.GetValueOrDefault("ApiUrl_Stream") ?? throw new Exception();
+                var suffix = _siteSuffixList[tpCustInfo.SiteId];
+                secureKey = inputs.ContainsKey($"SecureKey_Stream_{suffix}") && !String.IsNullOrEmpty(inputs[$"SecureKey_Stream_{suffix}"])
+                    ? inputs[$"SecureKey_Stream_{suffix}"] : throw new Exception($"SecureKey_Stream_{suffix} is empty");
+                secureLogin = inputs.ContainsKey($"SecureLogin_Stream_{suffix}") && !String.IsNullOrEmpty(inputs[$"SecureLogin_Stream_{suffix}"])
+                    ? inputs[$"SecureLogin_Stream_{suffix}"] : throw new Exception($"SecureLogin_Stream_{suffix} is empty");
+            }
+
             if (Regex.IsMatch(getBetDetail.TransId, @"[a-z]"))
             {
                 throw new BetDetailNotFoundException($"{getBetDetail.TransId} is PromoWin, No bet detail.");
@@ -231,7 +250,7 @@ namespace ThirdParty.PP
                 Result = isPromoWin ? string.Empty : detail.GetStringValue("result"),
                 DeviceType = DeviceType.None,
                 IP = string.Empty,
-            };          
+            };
         }
 
         public class DetailResult
