@@ -49,7 +49,7 @@ namespace ThirdPartySettleWorker.Workers
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            timer = new Timer(SettleSBSW, TimeSpan.Zero, TimeSpan.Zero);
+            timer = new Timer(SettleSBSW, null, TimeSpan.Zero, TimeSpan.Zero);
 
             return Task.CompletedTask;
         }
@@ -85,8 +85,6 @@ namespace ThirdPartySettleWorker.Workers
                         //取不到下注資料，直接跳過這筆
                         if (betData != null)
                             continue;
-
-                        //var (wagerData, betDetail, isSettledForValidNotRollover, sportType) = GetWagerData(tpBetRecordDetail);
 
                         #region 取得wager資料
                         BaseBetDetail wagerData = tpBetRecordDetail.GameType switch
@@ -130,8 +128,8 @@ namespace ThirdPartySettleWorker.Workers
                             TransId = tpUnsettle.TransId,
                             GameType = (GameType)gameType,
                             TpUserName = wagerData.vendor_member_id,
-                            SettledTime = wagerData.transaction_time.Ticks,
-                            TransTime = wagerData.transaction_time.Ticks,
+                            SettledTime = settledTime.Ticks,
+                            TransTime = transTime.Ticks,
                             SettlementType = settlementType,
                             TicketStatus = ticketStatus,
                             GameID = GetBetDetailGameType(wagerData.sport_type).ToString()
