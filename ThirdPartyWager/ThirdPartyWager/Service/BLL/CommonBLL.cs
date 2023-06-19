@@ -20,7 +20,10 @@ namespace ThirdPartyWager.Service.BLL
         {
             return commonService.GetTpCurrencyList(tpId).Where(x => x.IsSubCurrency == 0);
         }
-
+        public IEnumerable<int> GetSiteByTpGameType(int gameType)
+        {
+            return commonService.GetSiteByTpGameType(gameType);
+        }
         public Task<IEnumerable<FincanceDailySummary>> GetWagerSummary(string spName, long beginTime, long endTime)
         {
             return commonService.GetWagerSummary(spName, beginTime, endTime);
