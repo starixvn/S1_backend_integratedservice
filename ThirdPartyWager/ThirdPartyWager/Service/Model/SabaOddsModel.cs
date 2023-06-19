@@ -78,4 +78,10 @@ namespace ThirdPartyWager.Service.Model
         public string o { get; set; }
         public string u { get; set; }
     }
+
+    public class HotEventInfo
+    {
+        public int MatchId { get; set; }
+        public int GameId { get; set; }
+    }
 }

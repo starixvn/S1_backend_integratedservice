@@ -24,6 +24,7 @@
     public class CancelBetData_JILI
     {
         public string reqId { get; set; }
+        public string token { get; set; }
         public string currency { get; set; }
         public int game { get; set; }
         public long round { get; set; }
