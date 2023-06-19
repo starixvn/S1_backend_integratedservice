@@ -465,28 +465,31 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             {
                 foreach (var betDetail in getBetDetail.Data?.BetDetails)
                 {
-                    try
+                    var gameType = GetBetDetailGameType(betDetail.sport_type);
+                    //VG的資料由GetRNGBetDetailToAdd取得，這邊不重複塞入資料
+                    if (gameType == GameType.SBSW_Vgaming)
+                        continue;
+                    ProcessTpBetRecordDetailData(betDetail.vendor_member_id, betDetail.trans_id.ToString(), betDetail.transaction_time, gameType, betDetail);
+                }
+            }
+            if (getBetDetail.Data?.BetNumberDetails != null)
+            {
+                var gameType = GameType.SBSW_NumberGame;
+                foreach (var betDetail in getBetDetail.Data?.BetNumberDetails)
+                {
+                    ProcessTpBetRecordDetailData(betDetail.vendor_member_id, betDetail.trans_id.ToString(), betDetail.transaction_time, gameType, betDetail);
+                }
+            }
+            if (getBetDetail.Data?.BetVirtualSportDetails != null)
+            {
+                var gameType = GameType.SBSW_VirtualSports;
+                foreach (var betDetail in getBetDetail.Data?.BetVirtualSportDetails)
+                {
+                    if (betDetail.sport_type >= 190 && betDetail.sport_type <= 199)
                     {
-                        var gameType = GetBetDetailGameType(betDetail.sport_type);
-                        //VG的資料由GetRNGBetDetailToAdd取得，這邊不重複塞入資料
-                        if (gameType == GameType.SBSW_Vgaming)
-                            continue;
-
-                        var tpCustInfo = _thirdPartyBLL.GetTpCustInfoWithCache((int)Tp.SBSW, betDetail.vendor_member_id);
-                        var tpBetRecordDetail = new TpBetRecordDetail((int)Tp.SBSW, gameType, tpCustInfo.CurrencyId, betDetail.trans_id.ToString(), betDetail.transaction_time)
-                        {
-                            Detail = betDetail
-                        };
-
-                        if (_thirdPartyBLL.AddTpBetRecordDetail(tpBetRecordDetail) > 0)
-                        {
-                            _thirdPartyBLL.InsertTpUnsettle(Tp.SBSW, gameType, betDetail.trans_id.ToString());
-                        }
+                        gameType = GameType.SBSW_VirtualSports2;
                     }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, $"AddTpBetRecordDetail, TransId={betDetail.trans_id}");
-                    }
+                    ProcessTpBetRecordDetailData(betDetail.vendor_member_id, betDetail.trans_id.ToString(), betDetail.transaction_time, gameType, betDetail);
                 }
             }
             return getBetDetail.Data.last_version_key;
@@ -512,26 +515,29 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 
             foreach (var betDetail in GetRNGBetDetail.Data.BetRNGDetails)
             {
-                try
-                {
-                    var tpCustInfo = _thirdPartyBLL.GetTpCustInfoWithCache((int)Tp.SBSW, betDetail.vendor_member_id);
-                    var tpBetRecordDetail = new TpBetRecordDetail((int)Tp.SBSW, GameType.SBSW_Vgaming, tpCustInfo.CurrencyId, betDetail.trans_id.ToString(), betDetail.transaction_time)
-                    {
-                        Detail = betDetail
-                    };
-
-                    if (_thirdPartyBLL.AddTpBetRecordDetail(tpBetRecordDetail) > 0)
-                    {
-                        _thirdPartyBLL.InsertTpUnsettle(Tp.SBSW, GameType.SBSW_Vgaming, betDetail.trans_id.ToString());
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, $"AddTpBetRecordDetail, TransId={betDetail.trans_id}");
-                }
+                ProcessTpBetRecordDetailData(betDetail.vendor_member_id, betDetail.trans_id.ToString(), betDetail.transaction_time, GameType.SBSW_Vgaming, betDetail);
             }
 
             return GetRNGBetDetail.Data.last_version_key;
+        }
+        private void ProcessTpBetRecordDetailData<T>(string tpUserName, string transId, DateTime settledTime, GameType gameType, T betDetail)
+        {
+            try
+            {
+                var tpCustInfo = _thirdPartyBLL.GetTpCustInfoWithCache((int)Tp.SBSW, tpUserName);
+                var tpBetRecordDetail = new TpBetRecordDetail((int)Tp.SBSW, gameType, tpCustInfo.CurrencyId, transId, settledTime)
+                {
+                    Detail = betDetail
+                };
+                if (_thirdPartyBLL.AddTpBetRecordDetail(tpBetRecordDetail) > 0)
+                {
+                    _thirdPartyBLL.InsertTpUnsettle(Tp.SBSW, gameType, transId, settledTime);
+                }
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, $"AddTpBetRecordDetail, TransId={transId}");
+            }
         }
     }
 }

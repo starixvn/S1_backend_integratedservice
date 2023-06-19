@@ -55,9 +55,9 @@ namespace ThirdPartyBetHistory.Service.BLL
         {
             return _thirdPartyService.GetTpCustInfoWithCache(tpId, tpUserName);
         }
-        public int InsertTpUnsettle(Tp tp, GameType gameType, string transId)
+        public int InsertTpUnsettle(Tp tp, GameType gameType, string transId, DateTime? partitionTime = null)
         {
-            return _thirdPartyService.InsertTpUnsettle(tp, gameType, transId);
+            return _thirdPartyService.InsertTpUnsettle(tp, gameType, transId, partitionTime);
         }
     }
 }
