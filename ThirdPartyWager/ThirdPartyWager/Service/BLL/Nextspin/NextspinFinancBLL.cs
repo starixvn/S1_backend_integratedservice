@@ -74,7 +74,7 @@ namespace ThirdPartyWager.Service.BLL.Nextspin
         private async Task<List<dynamic>> GetReport(TimeCast reportTime)
         {
             var reportData = new List<dynamic>();
-            var bettrans = await _commonBLL.GetWagerSummary("Finance_TpWagerSports_SBO_Summary_Get", reportTime.startUnix, reportTime.endUnix);
+            var bettrans = await _commonBLL.GetWagerSummary("Finance_TpWagerRng_Nextspin_Summary_Get", reportTime.startUnix, reportTime.endUnix);
             reportData.AddRange(bettrans);
             return reportData;
         }

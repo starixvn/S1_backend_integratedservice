@@ -16,13 +16,14 @@ namespace ThirdPartyWager.Service.BLL.Nextspin
         private readonly INextspinApi _apiNextspinBll;
         private readonly IWagerNextspinService _wagerService;
         private readonly ILogger<NextspinBLL> _logger;
-        private readonly List<int> _siteList = new() { 1, 2 ,3 };
-        public NextspinBLL(ThirdPartyBLL thirdPartyBLL, INextspinApi apiNextspinBll, IWagerNextspinService wagerService, ILogger<NextspinBLL> logger)
+        private readonly List<int> _siteList;
+        public NextspinBLL(ThirdPartyBLL thirdPartyBLL, INextspinApi apiNextspinBll, IWagerNextspinService wagerService, CommonBLL commonBLL, ILogger<NextspinBLL> logger)
         {
             _thirdPartyBLL = thirdPartyBLL;
             _apiNextspinBll = apiNextspinBll;
             _wagerService = wagerService;
             _logger = logger;
+            _siteList = commonBLL.GetSiteByTpGameType((int)GameType.Nextspin_RNG).ToList();
         }
         public async Task<bool> GetWagersAsync(string startTime, string endTime)
         {

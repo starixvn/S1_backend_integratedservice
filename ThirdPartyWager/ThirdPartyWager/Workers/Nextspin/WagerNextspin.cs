@@ -36,13 +36,13 @@ namespace ThirdPartyWager.Workers.Nextspin
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", Tp.Nextspin.ToString());
             var doQuickly = false;
-            var gameType = (GameType)state;
+            var tpType = WagerTimerType.Wager;
             const int dataRangeMins = 15; //查詢區間15分鐘內的資料
             const int intervalMins = 1;   //每次查詢間隔1分鐘
             const int intervalSec = 5;    //doQuickly 每次查詢間隔5秒
             try
             {
-                var lastTime = _thirdPartyBLL.GetThirdPartyTimer(TpId, (int)gameType);
+                var lastTime = _thirdPartyBLL.GetThirdPartyTimer(TpId, (int)tpType);
                 var thisTime = lastTime?.StartTime ?? DateTime.UtcNow;
 
                 if ((int)DateTime.Now.Subtract(thisTime).TotalMinutes > 3)
@@ -56,14 +56,14 @@ namespace ThirdPartyWager.Workers.Nextspin
                     var isSuccess = await _nextspinBLL.GetWagersAsync(timeCast.startTime, timeCast.endTime);
                     if (isSuccess)
                     {
-                        _logger.LogInformation($"{gameType} Get Wagers: {timeCast.startTime} ~ {timeCast.endTime}");
-                        _thirdPartyBLL.SetThirdPartyTimer(TpId, (int)gameType, timeCast.endUnix);
+                        _logger.LogInformation($"{tpType} Get Wagers: {timeCast.startTime} ~ {timeCast.endTime}");
+                        _thirdPartyBLL.SetThirdPartyTimer(TpId, (int)tpType, timeCast.endUnix);
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"{gameType} WagerNextspin.QueryWager.Exception");
+                _logger.LogError(ex, $"{tpType} WagerNextspin.QueryWager.Exception");
             }
             finally
             {

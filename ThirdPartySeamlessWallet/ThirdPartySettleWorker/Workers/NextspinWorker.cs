@@ -95,8 +95,8 @@ namespace ThirdPartySettleWorker.Workers
                             TpUserName = unsettleData.TpUserName,
                             SettledTime = unsettleData.SettledTime,
                             TransTime = unsettleData.TransTime,
-                            SettlementType = SettlementType.SettledForValid,
-                            TicketStatus = CaculateTicketStatus(unsettleData.WinLostAmount),
+                            SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, unsettleData.GameId),
+                            TicketStatus = CalculateTicketStatus(unsettleData.WinLostAmount),
                             GameID = unsettleData.GameId,
                             ReferenceNo = unsettleData.ReferenceId
                         };
@@ -159,7 +159,7 @@ namespace ThirdPartySettleWorker.Workers
             return stake == targetStake && winLost == targetWinLost;
         }
 
-        private TicketStatus CaculateTicketStatus(decimal amount) 
+        private TicketStatus CalculateTicketStatus(decimal amount) 
         {
             if (amount > 0)
             return TicketStatus.Win;
