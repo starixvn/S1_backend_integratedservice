@@ -8,24 +8,24 @@ using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
-    public interface INextspinHandler
+    public interface INextspinBLL
     {
         NextspinCommonResponse Handle(AuthorizeRequest request);
         NextspinCommonResponse Handle(GetBalanceRequest request);
         Task<NextspinCommonResponse> Handle(TransferRequest request);
     }
 
-    public class NextspinHandler : INextspinHandler
+    public class NextspinBLL : INextspinBLL
     {
         public const Tp ThirdParty = Tp.Nextspin;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
-        private readonly ILogger<NextspinHandler> _logger;
+        private readonly ILogger<NextspinBLL> _logger;
         private Dictionary<NextspinTransferType, Func<TransferRequest, Task<NextspinCommonResponse>>> TransferHandler;
 
-        public NextspinHandler(ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingService bettingService, SettledService settledService, ILogger<NextspinHandler> logger)
+        public NextspinBLL(ThirdPartyBLL thirdPartyBLL, TpCustInfoBLL tpCustInfoBLL, BettingService bettingService, SettledService settledService, ILogger<NextspinBLL> logger)
         {
             _thirdPartyBLL = thirdPartyBLL;
             _tpCustInfoBLL = tpCustInfoBLL;

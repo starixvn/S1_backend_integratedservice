@@ -14,9 +14,9 @@ namespace ThirdPartySeamlessWallet.Controllers
     [Route("[controller]")]
     public class NextspinController : ControllerBase
     {
-        private readonly INextspinHandler _nextspinHandler;
+        private readonly INextspinBLL _nextspinHandler;
         private readonly ILogger<NextspinController> _logger;
-        public NextspinController(INextspinHandler nextspinHandler, ILogger<NextspinController> logger)
+        public NextspinController(INextspinBLL nextspinHandler, ILogger<NextspinController> logger)
         {
             _nextspinHandler = nextspinHandler;
             _logger = logger;
@@ -50,7 +50,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "system error");
-                return new NextspinCommonResponse() { Code = (int)NextspinErrorCode.SystemError, Msg = NextspinErrorCode.SystemError.GetEnumDescription(), SerialNo = NextspinHandler.GenerateSerialNo() };
+                return new NextspinCommonResponse() { Code = (int)NextspinErrorCode.SystemError, Msg = NextspinErrorCode.SystemError.GetEnumDescription(), SerialNo = NextspinBLL.GenerateSerialNo() };
             }
         }
     }
