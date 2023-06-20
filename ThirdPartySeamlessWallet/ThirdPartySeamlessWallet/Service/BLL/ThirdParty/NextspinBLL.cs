@@ -140,7 +140,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     gameCode = request.GameCode,
                     channel = request.Channel,
                     referenceId = request.TransferId,
-                    ticketId = ""
+                    ticketId = "",
+                    specialGameType = ""
                 };
                 var result = await _bettingService.PlaceBetRNG_Nextspin(tpCustInfo, bettingData);
                 return new TransferResponse()
@@ -255,7 +256,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     gameCode = request.GameCode,
                     referenceId = request.ReferenceId,
                     ticketId = request.TicketId,
-                    channel = request.Channel
+                    channel = request.Channel,
+                    specialGameType = ""
                 };
                 var result = await _settledService.CancelBetRNG_Nextspin(tpCustInfo, bettingData);
                 var response = new TransferResponse()
