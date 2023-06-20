@@ -193,9 +193,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     referenceId = request.ReferenceId,
                     ticketId = request.TicketId,
                     channel = request.Channel,
-                    specialGameType = request.SpecialGame?.Type,
-                    count = request.SpecialGame?.Count,
-                    sequence = request.SpecialGame?.Sequence
+                    specialGameType = (request.SpecialGame == null || string.IsNullOrEmpty(request.SpecialGame.Type)) ? "" : request.SpecialGame.Type,
+                    count = request.SpecialGame == null ? 0 : request.SpecialGame.Count,
+                    sequence = request.SpecialGame == null ? 0 : request.SpecialGame.Sequence
                 };
                 var result = await _settledService.PayoutRNG_Nextspin(tpCustInfo, bettingData);
                 var response = new TransferResponse()
