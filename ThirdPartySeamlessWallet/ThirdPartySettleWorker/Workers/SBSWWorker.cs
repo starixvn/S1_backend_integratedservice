@@ -146,6 +146,12 @@ namespace ThirdPartySettleWorker.Workers
                                 {
                                     betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
                                 }
+
+                                /*Only count Sports*/
+                                if (betRecordInfo.GameType != GameType.SBSW_Sports && betRecordInfo.SettlementType == SettlementType.SettledForValid)
+                                {
+                                    betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                                }
                             }
                         }
 
