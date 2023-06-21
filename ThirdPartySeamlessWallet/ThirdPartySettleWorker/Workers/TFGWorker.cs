@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.RazorPages;
+using Newtonsoft.Json;
 using Serilog.Context;
 using System;
 using System.Collections;
@@ -114,6 +115,8 @@ namespace ThirdPartySettleWorker.Workers
                             settledTime = wagerData.unix_settlement_datetime;
                             if (!(betData.amount == wagerData.amount && (wagerData.earnings == null || wagerData.earnings == earnings)))
                             {
+                                LogContext.PushProperty("TP", _tpName);
+                                _logger.LogError($"betData=\r\n{JsonConvert.SerializeObject(betData)}\r\nwagerData=\r\n{JsonConvert.SerializeObject(wagerData)}");
                                 Task.Run(() =>
                                 {
                                     _tpUnSettledBLL.SetTpUnsettle(Tp, GameType.TFG_Esports, tpUnsettle.TransId, false);
