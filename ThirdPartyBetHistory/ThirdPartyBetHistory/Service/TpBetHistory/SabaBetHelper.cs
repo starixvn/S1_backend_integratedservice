@@ -60,8 +60,34 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 
                     if (!DataNotExists(getBetDetail))
                     {
-                        var settleDataList = ProcessData(getBetDetail);
-                        _thirdPartyBLL.DoSettleTicket(settleDataList, workerType);
+                        var betDetail = getBetDetail.Data?.BetDetails?.First();
+                        var betNumberDetail = getBetDetail.Data?.BetNumberDetails?.First();
+                        var betVirtualSportDetail = getBetDetail.Data?.BetVirtualSportDetails?.First();
+                        var gameType = (GameType)ticket.GameType;
+                        if (betDetail != null)
+                        {
+                            var tpBetRecordDetail = new BetDetailsModel() { last_version_key = getBetDetail.Data.last_version_key };
+                            tpBetRecordDetail.BetDetails.Add(betDetail);
+                            ProcessTpBetRecordDetailData(betDetail.vendor_member_id, betDetail.trans_id.ToString(), betDetail.transaction_time, gameType, tpBetRecordDetail);
+                        }
+                        if (betNumberDetail != null)
+                        {
+                            var tpBetRecordDetail = new BetNumberDetailModel() { last_version_key = getBetDetail.Data.last_version_key };
+                            tpBetRecordDetail.BetNumberDetails.Add(betNumberDetail);
+                            ProcessTpBetRecordDetailData(betDetail.vendor_member_id, betDetail.trans_id.ToString(), betDetail.transaction_time, gameType, tpBetRecordDetail);
+                        }
+                        if(betVirtualSportDetail != null)
+                        {
+                            if (betVirtualSportDetail.sport_type >= 190 && betVirtualSportDetail.sport_type <= 199)
+                            {
+                                gameType = GameType.SBSW_VirtualSports2;
+                            }
+                            var tpBetRecordDetail = new BetVirtualSportDetailModel() { last_version_key = getBetDetail.Data.last_version_key };
+                            tpBetRecordDetail.BetVirtualSportDetails.Add(betVirtualSportDetail);
+                            ProcessTpBetRecordDetailData(betDetail.vendor_member_id, betDetail.trans_id.ToString(), betDetail.transaction_time, gameType, tpBetRecordDetail);
+                        }
+                        //var settleDataList = ProcessData(getBetDetail);
+                        //_thirdPartyBLL.DoSettleTicket(settleDataList, workerType);
                     }
                 }
                 catch (Exception e)
