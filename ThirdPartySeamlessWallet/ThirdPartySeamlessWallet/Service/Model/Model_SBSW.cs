@@ -578,6 +578,13 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
     {
         public GameType GameType { get; set; }
     }
+    public class GetBetDetailData
+    {
+        public long last_version_key { get; set; }
+        public IEnumerable<BetDetail> BetDetails { get; set; }
+        public IEnumerable<BetNumberDetail> BetNumberDetails { get; set; }
+        public IEnumerable<BetVirtualSportDetail> BetVirtualSportDetails { get; set; }
+    }
     public interface ISabaBet
     {
         decimal odds { get; set; }

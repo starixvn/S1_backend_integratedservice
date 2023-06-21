@@ -89,11 +89,11 @@ namespace ThirdPartySettleWorker.Workers
                         #region 取得wager資料
                         BaseBetDetail wagerData = tpBetRecordDetail.GameType switch
                         {
-                            (int)GameType.SBSW_NumberGame => JsonConvert.DeserializeObject<BetNumberDetail>(tpBetRecordDetail.Detail),
-                            (int)GameType.SBSW_VirtualSports => JsonConvert.DeserializeObject<BetVirtualSportDetail>(tpBetRecordDetail.Detail),
-                            (int)GameType.SBSW_VirtualSports2 => JsonConvert.DeserializeObject<BetVirtualSportDetail>(tpBetRecordDetail.Detail),
-                            (int)GameType.SBSW_Vgaming => JsonConvert.DeserializeObject<RngBetDetail>(tpBetRecordDetail.Detail),
-                            _=> JsonConvert.DeserializeObject<BetDetail>(tpBetRecordDetail.Detail),
+                            (int)GameType.SBSW_NumberGame => JsonConvert.DeserializeObject<GetBetDetailData>(tpBetRecordDetail.Detail).BetNumberDetails.First(),
+                            (int)GameType.SBSW_VirtualSports => JsonConvert.DeserializeObject<GetBetDetailData>(tpBetRecordDetail.Detail).BetVirtualSportDetails.First(),
+                            (int)GameType.SBSW_VirtualSports2 => JsonConvert.DeserializeObject<GetBetDetailData>(tpBetRecordDetail.Detail).BetVirtualSportDetails.First(),
+                            (int)GameType.SBSW_Vgaming => JsonConvert.DeserializeObject<GetBetDetailData>(tpBetRecordDetail.Detail).BetDetails.First(),
+                            _=> JsonConvert.DeserializeObject<GetBetDetailData>(tpBetRecordDetail.Detail).BetDetails.First(),
                         };
                         #endregion
 

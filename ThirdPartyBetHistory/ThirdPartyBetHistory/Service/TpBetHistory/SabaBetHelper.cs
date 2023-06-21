@@ -523,8 +523,21 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 
             foreach (var betDetail in GetRNGBetDetail.Data.BetRNGDetails)
             {
-                var tpBetRecordDetail = new GetRNGBetDetailData() { last_version_key = GetRNGBetDetail.Data.last_version_key};
-                tpBetRecordDetail.BetRNGDetails.ToList().Add(betDetail);
+                var tpBetRecordDetail = new BetDetailsModel() { last_version_key = GetRNGBetDetail.Data.last_version_key };
+                var tempBetDetail = new BetDetail() 
+                {
+                    trans_id = betDetail.trans_id, 
+                    vendor_member_id = betDetail.vendor_member_id, 
+                    transaction_time = betDetail.transaction_time, 
+                    stake = betDetail.stake, 
+                    winlost_amount = betDetail.winlost_amount, 
+                    after_amount = betDetail.after_amount, 
+                    ticket_status = betDetail.ticket_status, 
+                    bet_type = betDetail.bet_type, 
+                    currency = betDetail.currency, 
+                    version_key = betDetail.version_key
+                };
+                tpBetRecordDetail.BetDetails.ToList().Add(tempBetDetail);
                 ProcessTpBetRecordDetailData(betDetail.vendor_member_id, betDetail.trans_id.ToString(), betDetail.transaction_time, GameType.SBSW_Vgaming, tpBetRecordDetail);
             }
 
