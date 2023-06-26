@@ -33,6 +33,7 @@ namespace ThirdPartyService.Controllers
             ThirdPartyHelperBase.ContentRootPath = _env.ContentRootPath;
             ThirdPartyHelperBase.CommonServiceHost = configuration.GetValue<string>("AiLabServiceHost:CommonServiceHost");
             ThirdPartyHelperBase.LetsTalkGroupName = configuration.GetValue<string>("LetsTalkConfig:LetsTalkGroupName");
+            ThirdPartyHelperBase.SeamlessUrl = configuration.GetValue<string>("AiLabServiceHost:SeamlessUrl");
             ThirdPartyHelperBase.logger = provider.GetRequiredService<ILogger<IThirdPartyHelper>>();
         }
 
