@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using ThirdPartyCore;
+﻿using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using System.Xml;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
-using System.Linq;
 using Newtonsoft.Json;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 using ThirdPartyCore.Extensions;
@@ -40,6 +37,16 @@ namespace ThirdParty.AG
             public string info { get; set; }
             public string msg { get; set; }
         }
+
+        #region Response
+
+        public class BalanceResponse
+        {
+            public string ResponseCode { get; set; }
+            public decimal Balance { get; set; }
+        }
+
+        #endregion
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -149,9 +156,8 @@ namespace ThirdParty.AG
             oddsTypeDic.TryGetValue(tpCustInfo.TpCurrencyId, out _oddtype);
             string oddtype = _oddtype;
 
-            string balance = "";
+            string balance = GetBalance(tpCustInfo.TpUserName);
             string token = "";
-            inputs.TryGetValue("Balance", out balance);
             inputs.TryGetValue("Token", out token);
             string postParams = $"productid={data_cagent}&username={tpCustInfo.TpUserName}&session_token={token}&credit={balance}";
             Dictionary<string, string> header = new Dictionary<string, string>();
@@ -220,7 +226,7 @@ namespace ThirdParty.AG
             var billNoList = TpBetRecordProvider.DbQuery("Service_BettransLC_AGV2_Payout_Get", new { transactionID = getBetDetail.TransId }, DataBase.Report)
                 .Select(item => item.GetValueOrDefault("billNo")?.ToString());
 
-            var wagerDetailList = TpBetRecordProvider.DbQuery("Service_TpWager_AG_Detail_Get", 
+            var wagerDetailList = TpBetRecordProvider.DbQuery("Service_TpWager_AG_Detail_Get",
                 new { billNoList = JsonConvert.SerializeObject(billNoList) }, DataBase.Wager);
 
             var detail = ToJson(wagerDetailList);
@@ -254,7 +260,7 @@ namespace ThirdParty.AG
         {
             var billNoList = TpBetRecordProvider.DbQuery("Service_BettransLC_AGV2_Payout_Get", new { transactionID = betRecordInfo.TransId }, DataBase.Main)
             .Select(item => item.GetValueOrDefault("billNo")?.ToString());
-            var detail = TpBetRecordProvider.DbQuery("Service_TpWager_AG_Detail_Get",new { billNoList = JsonConvert.SerializeObject(billNoList) }, DataBase.Wager);
+            var detail = TpBetRecordProvider.DbQuery("Service_TpWager_AG_Detail_Get", new { billNoList = JsonConvert.SerializeObject(billNoList) }, DataBase.Wager);
             var gameCode = detail.FirstOrDefault()?.GetValueOrDefault("gameType")?.ToString();
 
             return tpGameType.CategoryId switch
@@ -301,7 +307,7 @@ namespace ThirdParty.AG
                 "SHB" => "Sicbo",
                 "ROU" => "Roulette",
                 "LBAC" => "Bid Baccarat",
-                "NN"=> "Bull Bull",
+                "NN" => "Bull Bull",
                 "BJ" => "Blackjack",
                 "ZJH" => "Win Three Cards",
                 "BF" => "Bull Fight",
@@ -344,5 +350,27 @@ namespace ThirdParty.AG
             return nodes[0].SelectSingleNode("ResponseCode").InnerText; ;
         }
 
+        private string GetBalance(string TpUserName)
+        {
+            var postData = new
+            {
+                TpUserName = TpUserName
+            };
+
+            var parameters = JsonConvert.SerializeObject(postData);
+            var result = HttpPost(
+                $"{SeamlessUrl}/AG/getBalance",
+                parameters,
+                "application/json"
+            );
+
+            if (!IsJSON(result))
+            {
+                return "0";
+            }
+
+            var response = JsonConvert.DeserializeObject<BalanceResponse>(result);
+            return response.Balance.ToString();
+        }
     }
 }
