@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System.Text;
+using ThirdPartyWager.Service.BLL.SBO;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 
@@ -8,9 +9,11 @@ namespace ThirdPartyWager.Service.BLL.TFG
     public class ApiTFGBLL
     {
         private readonly HttpHelper _httpHelper;
+        private readonly ILogger<ApiTFGBLL> _logger;
         public ApiTFGBLL(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _logger = provider.GetRequiredService<ILogger<ApiTFGBLL>>();
         }
 
         public async Task<Root> GetBetTransactionByTime(string apiUrl, string privateToken, string startTime, string endTime)
@@ -33,6 +36,8 @@ namespace ThirdPartyWager.Service.BLL.TFG
         public async Task<Root> GetBetTransactionById(string apiUrl, string privateToken, string id)
         {
             string url = $"https://{apiUrl}/api/v2/bet-transaction/?id={id}&settlement_status=settled";
+            _logger.LogError($"TFG url:{url}");
+            _logger.LogError($"TFG privateToken:{privateToken}");
             var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Add("Authorization", privateToken);
             var response = await _httpHelper.GetClient().SendAsync(request);
@@ -41,7 +46,7 @@ namespace ThirdPartyWager.Service.BLL.TFG
             {
                 r = sr.ReadToEnd();
             }
-
+            _logger.LogError($"TFG respone:{r}");
             var result = JsonConvert.DeserializeObject<Root>(r);
 
             return result;

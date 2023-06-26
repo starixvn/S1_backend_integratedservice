@@ -12,22 +12,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 {
     public partial class BettingService
     {
-        private readonly IConfiguration configuration;
         private readonly WalletService walletService;
-        private readonly RiskInspection _riskInspection;
         private readonly Tools tools;
         private readonly ILogger<BettingService> logger;
         private readonly MySqlClient _mainDbClient;
+        private readonly MySqlClient _reportDbClient;
         private readonly PartitionService _partitionService;
         private readonly TpUnsettleService _tpUnsettleService;
 
         public BettingService(IServiceProvider provider)
         {
-            configuration = provider.GetRequiredService<IConfiguration>();
             walletService = provider.GetRequiredService<WalletService>();
             tools = provider.GetRequiredService<Tools>();
             logger = provider.GetRequiredService<ILogger<BettingService>>();
-            _riskInspection = provider.GetRequiredService<RiskInspection>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _partitionService = provider.GetRequiredService<PartitionService>();
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
@@ -67,30 +64,24 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             afterAmount = 0;
             int result = 0;
-            CustBonus custBonus = default;
             try
             {
-                // 傳進來的bonusId = 0 時，先查詢用戶是否有還在Running的CustBonus
-                if (bonusId == 0)
-                {
-                    // 1.先找到用戶還在Running的CustBonusList
-                    // 2.找出符合條件的Bonus才可以使用
-                    custBonus = walletService.GetCustBonusList(tpCustInfo.CustId)
-                        .FirstOrDefault(i => i.GameType == gameType || i.PromoCategoryId == PromotionCategory.ALL);
-                    if (custBonus != null)
-                    {
-                        bonusId = custBonus.BonusId;
-                    }                  
-                }
+                // 1.先找到用戶還在Running的CustBonusList
+                // 2.找出符合條件的Bonus才可以使用
+                var custBonus = walletService.GetCustBonusList(tpCustInfo.CustId)
+                    .FirstOrDefault(i => i.GameType == gameType || i.PromoCategoryId == PromotionCategory.ALL);                           
                 
-                if (bonusId > 0)
+                if (custBonus != null)
                 {
+                    bonusId = custBonus.BonusId;
+
                     // 用BonusId扣除CustBonus餘額
                     result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount):#,##0.##}", refId, out afterAmount, ref bonusId, conn, trans);
 
-                    //新增tpSeamlessBonus紀錄
-                    if (tpTransId != null && custBonus != null)
+                    // 新增tpSeamlessBonus紀錄
+                    if (result > 0)
                     {
+                        var stake = Math.Abs(amount);
                         var tpSeamlessBonus = new TpSeamlessBonus
                         {
                             PromotionCategoryId = (int)custBonus.PromoCategoryId,
@@ -101,7 +92,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             UserName = tpCustInfo.UserName,
                             CurrencyId = tpCustInfo.CurrencyId,
                             SiteId = tpCustInfo.SiteId,
-                            Stake = amount,
+                            Stake = afterAmount < 0 ? stake + afterAmount : stake, // 紀錄實際使用的Bonus金額
                             BonusId = bonusId,
                         };
                         AddTpSeamlessBonus(tpSeamlessBonus, conn, trans);
@@ -124,6 +115,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             catch (Exception ex)
             {
+                result = 0;
                 LogContext.PushProperty("Observe", MethodBase.GetCurrentMethod().Name);
                 var parameter = new
                 {

@@ -12,6 +12,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string UserName { get; set; }
         public int CurrencyId { get; set; }
         public int SiteId { get; set; }
+        /// <summary>
+        /// 紀錄實際使用的Bonus金額
+        /// </summary>
         public decimal Stake { get; set; }
         public int BonusId { get; set; }
     }

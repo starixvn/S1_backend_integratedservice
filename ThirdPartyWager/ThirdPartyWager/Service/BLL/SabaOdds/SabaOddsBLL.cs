@@ -30,34 +30,39 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {
-                var matchIds = GetSabaOddsMatchId().ToList();
-                foreach (var marketType in new List<string>() { "d", "l" })
-                {
-                    var apiUrl = $"{_configModel.ApiUrl}/api/GetMarkets";
-                    var httpContent = CreateFormData(marketType, matchIds);
-
-                    var response = await _httpHelper.GetClientWithHandler(new HttpClientHandler()).PostAsync(apiUrl, httpContent);
-                    var responseResult = await response.Content.ReadAsStringAsync();
-                    var hotEventOddsResponse = _common.FromJson<HotEventOddsResponseModel>(responseResult);
-
-                    if (hotEventOddsResponse.ErrorCode != SuccessErrorCode) return true;
-                    if (hotEventOddsResponse.Data?.Markets == null) continue;
-
-                    var oddsList = hotEventOddsResponse.Data.Markets
-                        .GroupBy(x => x.EventID)
-                        .Select(x => x.MinBy(r => r.Sort)).ToList()
-                        .Where(r => r.Selections.Any() && r.MarketStatus == "running")
-                        .Select(r => new UpdateOdd
-                        {
-                            _MatchId = r.EventID,
-                            _HomeOdds = r.Selections.First(x => x.Key == "h").Price,  //主隊賠率
-                            _AwayOdds = r.Selections.First(x => x.Key == "a").Price,  //客隊賠率
-                            _Handicap = r.Selections.First(x => x.Key == "h").Point   //主隊讓分，客隊前端會顯示相對值
-                        }).ToList();
-
-                    if (oddsList.Any())
+                foreach (var group in GetSabaOddsMatchId().GroupBy(i => i.GameId.ToString()))//用GameId分類
+                {         
+                    foreach (var marketType in new List<string>() { "d", "l" })
                     {
-                        await SetSabaOdds(oddsList);
+                        var apiUrl = $"{_configModel.ApiUrl}/api/GetMarkets";
+                        var httpContent = CreateFormData(
+                            marketType, 
+                            group.Key,
+                            string.Join(",", group.Select(i => i.MatchId)));
+
+                        var response = await _httpHelper.GetClientWithHandler(new HttpClientHandler()).PostAsync(apiUrl, httpContent);
+                        var responseResult = await response.Content.ReadAsStringAsync();
+                        var hotEventOddsResponse = _common.FromJson<HotEventOddsResponseModel>(responseResult);
+
+                        if (hotEventOddsResponse.ErrorCode != SuccessErrorCode) return true;
+                        if (hotEventOddsResponse.Data?.Markets == null) continue;
+
+                        var oddsList = hotEventOddsResponse.Data.Markets
+                            .GroupBy(x => x.EventID)
+                            .Select(x => x.MinBy(r => r.Sort)).ToList()
+                            .Where(r => r.Selections.Any() && r.MarketStatus == "running")
+                            .Select(r => new UpdateOdd
+                            {
+                                _MatchId = r.EventID,
+                                _HomeOdds = r.Selections.First(x => x.Key == "h").Price,  //主隊賠率
+                                _AwayOdds = r.Selections.First(x => x.Key == "a").Price,  //客隊賠率
+                                _Handicap = r.Selections.First(x => x.Key == "h").Point   //主隊讓分，客隊前端會顯示相對值
+                            }).ToList();
+
+                        if (oddsList.Any())
+                        {
+                            await SetSabaOdds(oddsList);
+                        }
                     }
                 }
             }
@@ -70,16 +75,16 @@ namespace ThirdPartyWager.Service.BLL
             return false;
         }
 
-        private FormUrlEncodedContent CreateFormData(string marketType, List<int> matchIds)
+        private FormUrlEncodedContent CreateFormData(string marketType, string gameId, string matchIds)
         {
             var formData = new FormUrlEncodedContent(new Dictionary<string, string>
             {
                 { "vendor_id", _configModel.VendorId },
-                { "sport_type", "1" },  //固定 1(我們只拿足球)
+                { "sport_type", gameId },
                 { "market_type", marketType }, //(d和l都要拿回來)
                 { "market_version_key", new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString()},
                 { "bet_type", "1"},  // 固定1 (我們只拿hdp)
-                { "event_ids", string.Join(",", matchIds.ToArray()) }
+                { "event_ids", matchIds }
             });
 
             return formData;
@@ -90,7 +95,7 @@ namespace ThirdPartyWager.Service.BLL
             return _sabaOddsService.SetSabaOdds(sabaOdds);
         }
 
-        private IEnumerable<int> GetSabaOddsMatchId()
+        private IEnumerable<HotEventInfo> GetSabaOddsMatchId()
         {
             return _sabaOddsService.GetSabaOddsMatchId();
         }

@@ -92,12 +92,12 @@ namespace ThirdParty.NineW
                 {
                     new NineWTransfer()
                     {
-                        userId = item.GetValue("userId").Value<string>(),
-                        tscode = item.GetValue("tsCode").Value<string>(),
-                        balance = item.GetValue("balance").Value<decimal>(),
+                        userId = item.GetValue("userId")?.Value<string>(),
+                        tscode = item.GetValue("tsCode")?.Value<string>(),
+                        balance = item.GetValue("balance")?.Value<decimal?>() ?? 0,
                     }
                 },
-                status = item.GetValue("status").Value<string>()
+                status = item.GetValue("status")?.Value<string>()
             };
             return result;
         }

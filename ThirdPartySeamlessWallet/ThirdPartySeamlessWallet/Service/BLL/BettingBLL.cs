@@ -632,6 +632,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return bettingService.GetAdvantPlayMiniBet(TransId, SettlementTime, MiniGameCode, out TransactionReferenceId);
         }
+
+        public IEnumerable<BettransData_AdvantPlayMini_Bet> GetAdvantPlayMiniBySession(string GameId, long SessionId, long SettlementTime, string MiniGameCode, out string TransactionReferenceId)
+        {
+            return bettingService.GetAdvantPlayMiniBySession(GameId, SessionId, SettlementTime, MiniGameCode, out TransactionReferenceId);
+        }
         #endregion
 
         #region JILI

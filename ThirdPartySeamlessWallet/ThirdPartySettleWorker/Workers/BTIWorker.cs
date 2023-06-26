@@ -104,6 +104,12 @@ namespace ThirdPartySettleWorker.Workers
                             ticketStatus = TicketStatus.Refund;
                         }
 
+                        //下注流程異常，debit沒有資料，unsettledList的TicketStatus未更新，需要手動處理
+                        if (betID == null && ticketStatus != TicketStatus.Refund)
+                        {
+                            continue;
+                        }
+
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
@@ -118,6 +124,7 @@ namespace ThirdPartySettleWorker.Workers
                             SettlementType = settlementType,
                             TicketStatus = ticketStatus,
                             GameID = gameId,
+                            ReferenceNo = reserve_id,
                         };
 
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Sports);

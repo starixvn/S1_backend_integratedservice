@@ -68,13 +68,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public MGGetBalanceResponse GetBalance(MGGetBalanceRequest request)
         {
-            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, request.playerId);
-            if (tpCheck == null || tpCheck.Locked)
-            {
-                _logger.LogError($"tpcheck fail:{JsonConvert.SerializeObject(tpCheck)}");
-                throw new MGException(MGErrorCode.PlayerIsLocked, $"{request.playerId} is locked");
-            }
-
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, request.playerId);
             var gameType = _tpCustInfoBLL.GetCustGotoGameType(tpCustInfo.CustId, (int)ThirdParty);
 
@@ -264,17 +257,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             var cancelResult = new MGCancelResult();
 
-            var gameType = getGameType(request.channel);
-            if (gameType == 0)
+            // check bettrans of gametype by table
+            var tpGameType = _settledService.GetTpGameType_MG(request.txnId, cancelData.creationTimeMs);
+            if (tpGameType == 0)
             {
-                // check bettrans of gametype by table
-                var tpGameType = _settledService.GetTpGameType_MG(request.betId, cancelData.creationTimeMs);
-                if (tpGameType == 0)
-                {
-                    throw new MGException(MGErrorCode.GameTypeError, $"gameType error:{tpGameType}, betId:{request.betId}");
-                }
-                gameType = tpGameType;
+                throw new MGException(MGErrorCode.GameTypeError, $"gameType error:{tpGameType}, betId:{request.betId}");
             }
+            var gameType = tpGameType;
 
             if (gameType == (int)GameType.MG_RNG)
             {
