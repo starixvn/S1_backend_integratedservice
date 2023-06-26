@@ -44,8 +44,8 @@ namespace ThirdPartyCore.Model.enums
         RedTiger = 38,
         AP = 39,
         HB = 40,
-        SimplePlay = 44
-
+        SimplePlay = 44,
+        Nextspin = 50
     }
 
     public enum TpGameType
@@ -126,5 +126,6 @@ namespace ThirdPartyCore.Model.enums
         GPI_Fast3 = 91,
         SBSW_Vgaming = 95,
         SBSW_CardClub = 96,
+        Nextspin_RNG = 99,
     }
 }

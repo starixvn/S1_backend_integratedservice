@@ -65,7 +65,8 @@ builder.Services
     .AddHostedService<One789Worker>()
     .AddHostedService<YeebetWorker>()
     .AddHostedService<BGWorker>()
-    .AddHostedService<TFGWorker>();
+    .AddHostedService<TFGWorker>()
+    .AddHostedService<NextspinWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
