@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace ThirdPartySeamlessWallet.Service.Model
+﻿namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class DataLC_AG
     {
