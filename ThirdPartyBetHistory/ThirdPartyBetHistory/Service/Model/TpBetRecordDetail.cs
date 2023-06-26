@@ -51,37 +51,46 @@ namespace ThirdPartyBetHistory.Service.Model
             return mso.ToArray();
         }
 
-        public TpBetRecordDetail(int tpId, GameType gameType, int currencyId, Vs3rdbetdetails vsDetails)
+        //public TpBetRecordDetail(int tpId, GameType gameType, int currencyId, Vs3rdbetdetails vsDetails)
+        //{
+        //    TpId = tpId;
+        //    GameType = (int)gameType;
+        //    TransId = vsDetails.trans_id.ToString();
+        //    CurrencyId = currencyId;
+        //    //體育結算日期會超過下個月改用現在日期
+        //    SettledTime = vsDetails.transaction_time > DateTime.UtcNow.AddMonths(1) ? DateTime.UtcNow : vsDetails.transaction_time;
+
+        //    var detail = new GetBetDetailData
+        //    {
+        //        BetVirtualSportDetails = new List<BetVirtualSportDetail>()
+        //        {
+        //          new BetVirtualSportDetail()
+        //          {
+        //            trans_id = vsDetails.trans_id,
+        //            vendor_member_id = vsDetails.vendor_member_id,
+        //            transaction_time = vsDetails.transaction_time,
+        //            stake = vsDetails.stake,
+        //            ticket_status = vsDetails.ticket_status,
+        //            winlost_amount = vsDetails.winlost_amount,
+        //            bet_type = vsDetails.bet_type,
+        //            currency = vsDetails.currency,
+        //            version_key =vsDetails.version_key,
+        //            odds = vsDetails.odds,
+        //            customInfo1 = vsDetails.betchoice,
+        //          }
+        //        }
+        //    };
+
+        //    Detail = detail;
+        //}
+        public TpBetRecordDetail(int tpId, GameType gameType, int currencyId, string transId, DateTime settledTime)
         {
             TpId = tpId;
             GameType = (int)gameType;
-            TransId = vsDetails.trans_id.ToString();
+            TransId = transId;
             CurrencyId = currencyId;
             //體育結算日期會超過下個月改用現在日期
-            SettledTime = vsDetails.transaction_time > DateTime.UtcNow.AddMonths(1) ? DateTime.UtcNow : vsDetails.transaction_time;
-
-            var detail = new GetBetDetailData
-            {
-                BetVirtualSportDetails = new List<BetVirtualSportDetail>()
-                {
-                  new BetVirtualSportDetail()
-                  {
-                    trans_id = vsDetails.trans_id,
-                    vendor_member_id = vsDetails.vendor_member_id,
-                    transaction_time = vsDetails.transaction_time,
-                    stake = vsDetails.stake,
-                    ticket_status = vsDetails.ticket_status,
-                    winlost_amount = vsDetails.winlost_amount,
-                    bet_type = vsDetails.bet_type,
-                    currency = vsDetails.currency,
-                    version_key =vsDetails.version_key,
-                    odds = vsDetails.odds,
-                    customInfo1 = vsDetails.betchoice,
-                  }
-                }
-            };
-
-            Detail = detail;
+            SettledTime = settledTime > DateTime.UtcNow.AddMonths(1) ? DateTime.UtcNow : settledTime;
         }
     }
 }

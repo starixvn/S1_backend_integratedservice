@@ -70,7 +70,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             try
             {
                 LogContext.PushProperty("Merchant", merchant);
-                LogContext.PushProperty("Action", transType.ToString());                
+                LogContext.PushProperty("Action", transType.ToString());
                 _logger.LogInformation(bodyText);
 
                 return await _requestHandler[transType].Invoke(transType, merchant, bodyText);
@@ -221,7 +221,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Service_Bettrans_SBSW_Bet", trans, p);
                 if (result.SPResult == -4)
                 {
-                    throw new SBSWException(ReturnCode.TransactionDuplicated,$"refId: {bet.refId} Duplicated.");
+                    throw new SBSWException(ReturnCode.TransactionDuplicated, $"refId: {bet.refId} Duplicated.");
                 }
 
                 if (result.licenseeTxId < 1)
@@ -638,14 +638,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (betList.Any(i => i.TicketType == (int)SBSWTransType.CancelBet))
             {
                 ticketStatus = "refund";
-            }           
+            }
             if (settleList.Any())
             {
                 ticketStatus = settleList.MaxBy(i => i.SQ).status;
             }
-          
+
             var actualStake = betList.Sum(i => i.actualAmount);
-            var winlostAmount = ticketStatus == "running" ? 0 
+            var winlostAmount = ticketStatus == "running" ? 0
                 : settleList.Sum(i => i.creditAmount) - settleList.Sum(i => i.debitAmount) - actualStake;
 
             //將平台匯率轉回第三方匯率
@@ -809,6 +809,30 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return (betList, settleList);
                 },
                 new { refId });
+        }
+        public IEnumerable<SBSWUnsettle> GetSBSWUnsettleList(int LimitCount = 200)
+        {
+            return _mainDbClient.Query<SBSWUnsettle>("Service_SABW_TpUnsettle_Get", parameters: new { LimitCount });
+        }
+
+        public TpBetRecordDetail GetTpBetRecordDetail(int TpId, int GameType, string TransId, DateTime SettledTime)
+        {
+            try
+            {
+                var p = new DynamicParameters(new
+                {
+                    TpId,
+                    GameType,
+                    TransId,
+                    SettledTime
+                });
+
+                return _mainDbClient.QueryFirst<TpBetRecordDetail>("Service_TpBetRecordDetail_Get_V2", p);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
     }
 }

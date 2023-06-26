@@ -478,7 +478,13 @@ namespace ThirdPartyBetHistory.Service.DAL
 
         public int AddTpBetRecordDetail(TpBetRecordDetail detail)
         {
-            return _mainDbClient.QueryFirst<int>("Service_TpBetRecordDetail_Ins_V2", detail); 
+            return _mainDbClient.Execute("Service_TpBetRecordDetail_Ins_V3", detail);
+        }
+        public int InsertTpUnsettle(Tp tp, GameType gameType, string transId, DateTime? partitionTime = null)
+        {
+            var parameters = new { TpId = (int)tp, GameType = (int)gameType, TransId = transId, PartitionTime = partitionTime };
+            return _mainDbClient.Execute("Service_TpUnsettle_Ins_V2",
+                parameters);
         }
 
         private (int BonusId, decimal UseBonus) GetUseBonus(int TpId, string ReferenceNo, int GameType)
