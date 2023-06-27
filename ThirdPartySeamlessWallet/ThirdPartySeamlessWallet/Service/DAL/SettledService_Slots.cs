@@ -5446,6 +5446,602 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #endregion
 
+        #region PlayTech
+
+        public int Payout_PlayTech(TpCustInfo tpCustInfo, BettingData_PlayTech bettingData_PlayTech, GameType gameType, int partitionCheckDay, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            afterAmount = 0;
+            var result = 0;
+
+            var tpCategory = (gameType == GameType.PlayTech_RNG) ? TpCategory.Slots : TpCategory.LiveCasino;
+            var tableName = (gameType == GameType.PlayTech_RNG) ? "Rng" : "LC";
+            // Service_BettransRng_PlayTech_roundId_Get、Service_BettransLC_PlayTech_roundId_Get
+            var GetSpName = $"Service_Bettrans{tableName}_PlayTech_roundId_Get";
+            // Service_BettransRng_PlayTech_Ins、Service_BettransLC_PlayTech_Ins
+            var InsSpName = $"Service_Bettrans{tableName}_PlayTech_Ins";
+
+            var cntTrans = bettingData_PlayTech.trans.Count;
+            var cntExet = 0;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            foreach (var data in bettingData_PlayTech.trans)
+            {
+                try
+                {
+                    var partitionTime = data.transTime;
+
+                    // 檢查是否有下注
+                    var bettrans = _partitionService.Query<BettransData_PlayTech>(partitionTime, GetSpName, new { roundId = data.roundId, playerId = bettingData_PlayTech.playerId }, partitionCheckDay);
+                    if (!bettrans.Any())
+                    {
+                        // 沒有下注單
+                        return -4;
+                    }
+                    else if (!bettrans.Any(i => i.TicketType == BettransType.Bet))
+                    {
+                        if (bettrans.Any(i => i.TicketType == BettransType.CancelBet))
+                        {
+                            // 沒有下注單，全部cancel: 與對方需要處理，在此情況下中獎金額將為0
+                            if (data.amount != 0)
+                            {
+                                // 阻擋amount != 0
+                                return -5;
+                            }
+                            // 處理 amount = 0
+                        }
+                        else
+                        {
+                            // 沒有下注單
+                            return -4;
+                        }
+                    }
+
+                    var p = new DynamicParameters(new
+                    {
+                        requestId = bettingData_PlayTech.requestId,
+                        brandId = bettingData_PlayTech.brandId,
+                        playerId = bettingData_PlayTech.playerId,
+                        playerSessionId = bettingData_PlayTech.playerSessionId,
+                        gameCode = bettingData_PlayTech.gameCode,
+                        endSession = bettingData_PlayTech.endSession,
+                        detailUrl = bettingData_PlayTech.detailUrl,
+                        trans = JsonConvert.SerializeObject(bettingData_PlayTech.trans),
+                        seq = data.seq,
+                        transId = data.transId,
+                        referenceId = data.referenceId,
+                        amount = data.amount,
+                        transType = data.transType,
+                        transTime = data.transTime,
+                        roundId = data.roundId,
+                        roundType = data.roundType,
+                        endRound = data.endRound,
+                        desc = data.desc,
+                        jpc = data.jpc,
+                        jpw = data.jpw,
+                        jpDetails = data.jpDetails != null && data.jpDetails.Any() ? JsonConvert.SerializeObject(data.jpDetails) : "[]",
+                        validBet = data.validBet,
+                        validWin = data.validWin,
+                        additionalData = data.additionalData != null ? JsonConvert.SerializeObject(data.additionalData) : "[]",
+                        transTimeUnix = data.transTimeUnix,
+                        TicketType = (int)TransferType.Payout,
+                        TicketStatus = (int)TicketStatus.UnSettled,
+                        SettleFlag = (data.endRound == 1) ? (int)SettleFlag.EndGame : (int)SettleFlag.Running
+                    });
+
+                    result = 0;
+                    result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
+
+                    if (result > 0)
+                    {
+                        if(data.amount != 0)
+                        {
+                            result = PayoutV2(
+                                tpCustInfo,
+                                data.amount,
+                                (int)Tp.PlayTech,
+                                data.roundId,
+                                (int)gameType,
+                                tpCategory,
+                                data.roundId,
+                                TransType.Payout,
+                                null,
+                                out afterAmount,
+                                $"Payout - {data.transId} ",
+                                out bonusId,
+                                conn,
+                                trans
+                            );
+                        }
+
+                        if (result > 0 && data.endRound == 1)
+                        {
+                            result = _tpUnsettleService.InsertTpUnsettle(Tp.PlayTech, gameType, data.roundId.ToString(), trans, partitionTime);
+                        }
+                    }
+
+                    if (result > 0)
+                    {
+                        cntExet++;
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                        return result;
+                    }
+
+                }
+                catch (MySqlException mySqlEx)
+                {
+                    result = 0;
+                    logger.LogError(mySqlEx.Message);
+                    if (mySqlEx.Number == 1062)
+                    {
+                        /*Duplicate for key 'PRIMARY'*/
+                        result = -1;
+                        cntExet++;
+                        continue;
+                    }
+                    throw;
+                }
+            }
+
+            if (cntExet == cntTrans)
+            {
+                _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                return result;
+            }
+            else if (cntExet != cntTrans && result > 0)
+            {
+                result = 0;
+            }
+
+            _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+            return result;
+        }
+
+        public int CancelBet_PlayTech(TpCustInfo tpCustInfo, BettingData_PlayTech bettingData_PlayTech, GameType gameType, int partitionCheckDay, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            afterAmount = 0;
+            var result = 0;
+
+            var tpCategory = (gameType == GameType.PlayTech_RNG) ? TpCategory.Slots : TpCategory.LiveCasino;
+            var tableName = (gameType == GameType.PlayTech_RNG) ? "Rng" : "LC";
+            // Service_BettransRng_PlayTech_roundId_Get、Service_BettransLC_PlayTech_roundId_Get
+            var GetSpName = $"Service_Bettrans{tableName}_PlayTech_roundId_Get";
+            // Service_BettransRng_PlayTech_CancelBet_Set、Service_BettransLC_PlayTech_CancelBet_Set
+            var SetSpName = $"Service_Bettrans{tableName}_PlayTech_CancelBet_Set";
+            // Service_BettransRng_PlayTech_Ins、Service_BettransLC_PlayTech_Ins
+            var InsSpName = $"Service_Bettrans{tableName}_PlayTech_Ins";
+
+            var cntTrans = bettingData_PlayTech.trans.Count;
+            var cntExet = 0;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            foreach (var data in bettingData_PlayTech.trans)
+            {
+                try
+                {
+                    var partitionTime = data.transTime;
+
+                    // 檢查是否有下注
+                    var bettrans = _partitionService.Query<BettransData_PlayTech>(partitionTime, GetSpName, new { roundId = data.roundId, playerId = bettingData_PlayTech.playerId }, partitionCheckDay);
+                    if (bettrans.Any(i => i.TicketType == BettransType.Bet && i.transId == data.referenceId))
+                    {
+                        // update cancel
+                        var p = new DynamicParameters(new
+                        {
+                            referenceId = data.referenceId,
+                            playerId = bettingData_PlayTech.playerId,
+                        });
+                        result = 0;
+                        result = _partitionService.Execute(partitionTime, SetSpName, p, trans);
+
+                        if (result > 0)
+                        {
+                            result = PayoutV2(
+                                tpCustInfo,
+                                Math.Abs(data.amount),
+                                (int)Tp.PlayTech,
+                                data.roundId,
+                                (int)gameType,
+                                tpCategory,
+                                data.roundId,
+                                TransType.Refunds,
+                                null,
+                                out afterAmount,
+                                $"CancelBet - {data.referenceId} ",
+                                out bonusId,
+                                conn,
+                                trans
+                            );
+
+                            if (result > 0 && data.endRound == 1)
+                            {
+                                result = _tpUnsettleService.InsertTpUnsettle(Tp.PlayTech, gameType, data.roundId.ToString(), trans, partitionTime);
+                            }
+                        }
+                    }
+                    else if (!bettrans.Any(i => i.TicketType == BettransType.Bet) || !bettrans.Any(i => i.TicketType == BettransType.Bet && i.transId == data.referenceId))
+                    {
+                        // insert cancel
+                        var p = new DynamicParameters(new
+                        {
+                            requestId = bettingData_PlayTech.requestId,
+                            brandId = bettingData_PlayTech.brandId,
+                            playerId = bettingData_PlayTech.playerId,
+                            playerSessionId = bettingData_PlayTech.playerSessionId,
+                            gameCode = bettingData_PlayTech.gameCode,
+                            endSession = bettingData_PlayTech.endSession,
+                            detailUrl = bettingData_PlayTech.detailUrl,
+                            trans = JsonConvert.SerializeObject(bettingData_PlayTech.trans),
+                            seq = data.seq,
+                            transId = data.transId,
+                            referenceId = data.referenceId,
+                            amount = data.amount,
+                            transType = data.transType,
+                            transTime = data.transTime,
+                            roundId = data.roundId,
+                            roundType = data.roundType,
+                            endRound = data.endRound,
+                            desc = data.desc,
+                            jpc = data.jpc,
+                            jpw = data.jpw,
+                            jpDetails = data.jpDetails != null && data.jpDetails.Any() ? JsonConvert.SerializeObject(data.jpDetails) : "[]",
+                            validBet = data.validBet,
+                            validWin = data.validWin,
+                            additionalData = data.additionalData != null ? JsonConvert.SerializeObject(data.additionalData) : "[]",
+                            transTimeUnix = data.transTimeUnix,
+                            TicketType = (int)TransferType.Payout,
+                            TicketStatus = (int)TicketStatus.UnSettled,
+                            SettleFlag = (int)SettleFlag.EndGame
+                        });
+
+                        result = 0;
+                        result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
+
+                        if (result > 0)
+                        {
+                            result = -2;
+                        }
+                    }
+
+                    if (result > 0 || result == -2)
+                    {
+                        cntExet++;
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                        return result;
+                    }
+                }
+                catch (MySqlException mySqlEx)
+                {
+                    result = 0;
+                    logger.LogError(mySqlEx.Message);
+                    if (mySqlEx.Number == 1062)
+                    {
+                        /*Duplicate for key 'PRIMARY'*/
+                        result = -1;
+                        cntExet++;
+                        continue;
+                    }
+                    throw;
+                }
+            }
+
+            if (cntExet == cntTrans)
+            {
+                _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                return result;
+            }
+            else if (cntExet != cntTrans && result > 0)
+            {
+                result = 0;
+            }
+
+            _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+            return result;
+        }
+
+        public int BetAndPayout_PlayTech(TpCustInfo tpCustInfo, BettingData_PlayTech bettingData_PlayTech, GameType gameType, out decimal afterAmount)
+        {
+            var result = 0;
+            afterAmount = 0;
+
+            var tpCategory = (gameType == GameType.PlayTech_RNG) ? TpCategory.Slots : TpCategory.LiveCasino;
+            var tableName = (gameType == GameType.PlayTech_RNG) ? "Rng" : "LC";
+            // Service_BettransRng_PlayTech_Ins、Service_BettransLC_PlayTech_Ins
+            var InsSpName = $"Service_Bettrans{tableName}_PlayTech_Ins";
+
+            var cntTrans = bettingData_PlayTech.trans.Count;
+            var cntExet = 0;
+
+            Dictionary<string, int> verifyBonus = new();
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            var trans = conn.BeginTransaction();
+
+            // 同一rouond
+            foreach (var data in bettingData_PlayTech.trans)
+            {
+                try
+                {
+                    result = 0;
+                    int bonusId = 0;
+
+                    var partitionTime = data.transTime;
+                    var p = new DynamicParameters(new
+                    {
+                        requestId = bettingData_PlayTech.requestId,
+                        brandId = bettingData_PlayTech.brandId,
+                        playerId = bettingData_PlayTech.playerId,
+                        playerSessionId = bettingData_PlayTech.playerSessionId,
+                        gameCode = bettingData_PlayTech.gameCode,
+                        endSession = bettingData_PlayTech.endSession,
+                        detailUrl = bettingData_PlayTech.detailUrl,
+                        trans = JsonConvert.SerializeObject(bettingData_PlayTech.trans),
+                        seq = data.seq,
+                        transId = data.transId,
+                        referenceId = data.referenceId,
+                        amount = data.amount,
+                        transType = data.transType,
+                        transTime = data.transTime,
+                        roundId = data.roundId,
+                        roundType = data.roundType,
+                        endRound = data.endRound,
+                        desc = data.desc,
+                        jpc = data.jpc,
+                        jpw = data.jpw,
+                        jpDetails = data.jpDetails != null && data.jpDetails.Any() ? JsonConvert.SerializeObject(data.jpDetails) : "[]",
+                        validBet = data.validBet,
+                        validWin = data.validWin,
+                        additionalData = data.additionalData != null ? JsonConvert.SerializeObject(data.additionalData) : "[]",
+                        transTimeUnix = data.transTimeUnix,
+                        TicketStatus = (int)TicketStatus.UnSettled
+                    });
+
+
+                    if (string.Equals(data.transType, "bet", StringComparison.OrdinalIgnoreCase))
+                    {
+                        p.Add("TicketType", (int)TransferType.PlaceBet);
+                        p.Add("SettleFlag", (int)SettleFlag.Running);
+                        result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
+
+                        if (result > 0)
+                        {
+                            result = _bettingService.PlaceBetV2(
+                                tpCustInfo,
+                                Math.Abs(data.amount) * -1,
+                                (int)Tp.PlayTech,
+                                data.roundId,
+                                (int)gameType,
+                                data.roundId,
+                                null,
+                                tpCategory,
+                                out afterAmount,
+                                ref bonusId,
+                                conn,
+                                trans,
+                                memo: $" - {data.transId} "
+                            );
+
+                            if (bonusId > 0)
+                            {
+                                verifyBonus.Add(data.roundId, bonusId);
+                                _bettingService.AddTpBonus((int)Tp.PlayTech, data.transId, (int)gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, data.amount, bonusId, tpCategory, conn, trans);
+                            }
+                        }
+                    }
+                    else if (string.Equals(data.transType, "win", StringComparison.OrdinalIgnoreCase))
+                    {
+                        p.Add("TicketType", (int)TransferType.Payout);
+                        p.Add("SettleFlag", data.endRound == 1 ? (int)SettleFlag.EndGame : (int)SettleFlag.Running);
+                        result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
+
+                        if (result > 0)
+                        {
+                            if (data.amount != 0)
+                            {
+                                if (verifyBonus.ContainsKey(data.roundId))
+                                {
+                                    result = PayoutWithBonusId(
+                                        tpCustInfo,
+                                        data.amount,
+                                        (int)Tp.PlayTech,
+                                        data.roundId,
+                                        (int)gameType,
+                                        tpCategory,
+                                        data.roundId,
+                                        TransType.Payout,
+                                        out afterAmount,
+                                        $"Payout - {data.transId} ",
+                                        verifyBonus[data.roundId],
+                                        conn,
+                                        trans
+                                    );
+                                }
+                                else
+                                {
+                                    result = PayoutV2(
+                                        tpCustInfo,
+                                        data.amount,
+                                        (int)Tp.PlayTech,
+                                        data.roundId,
+                                        (int)gameType,
+                                        tpCategory,
+                                        data.roundId,
+                                        TransType.Payout,
+                                        null,
+                                        out afterAmount,
+                                        $"Payout - {data.transId} ",
+                                        out bonusId,
+                                        conn,
+                                        trans
+                                    );
+                                }
+                            }
+                        }
+
+                        if (result > 0 && data.endRound == 1)
+                        {
+                            result = _tpUnsettleService.InsertTpUnsettle(Tp.PlayTech, gameType, data.roundId.ToString(), trans, partitionTime);
+                        }
+                    }
+
+                    if (result > 0)
+                    {
+                        cntExet++;
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                        return result;
+                    }
+                }
+                catch (MySqlException mySqlEx)
+                {
+                    result = 0;
+                    logger.LogError(mySqlEx.Message);
+                    if (mySqlEx.Number == 1062)
+                    {
+                        /*Duplicate for key 'PRIMARY'*/
+                        result = -1;
+                        cntExet++;
+                        continue;
+                    }
+                    throw;
+                }
+            }
+
+            try
+            {
+                if (cntExet == cntTrans)
+                {
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    if (verifyBonus.Any())
+                    {
+                        //call Service_TpSeamlessBonus_Get to set flag
+                        foreach (var bonusTransId in verifyBonus)
+                        {
+                            GetTpBonus((int)Tp.PlayTech, bonusTransId.Key, (int)gameType, tpCategory, out _, out _);
+                        }
+                    }
+                    return result;
+                }
+                else if (cntExet != cntTrans && result > 0)
+                {
+                    result = 0;
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                result = 0;
+                logger.LogError(mySqlEx.Message);
+            }
+
+            _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+            return result;
+        }
+
+        public int Reward_PlayTech(TpCustInfo tpCustInfo, RewardData_PlayTech rewardData_PlayTech, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            var InsSpName = $"Service_Reward_PlayTech_Ins";
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            int result;
+            try
+            {
+                var p = new DynamicParameters(new
+                {
+                    requestId = rewardData_PlayTech.requestId,
+                    brandId = rewardData_PlayTech.brandId,
+                    playerId = rewardData_PlayTech.playerId,
+                    transId = rewardData_PlayTech.transId,
+                    type = rewardData_PlayTech.type,
+                    referenceId = rewardData_PlayTech.referenceId,
+                    referenceName = rewardData_PlayTech.referenceName,
+                    currency = rewardData_PlayTech.currency,
+                    amount = rewardData_PlayTech.amount,
+                    transTime = rewardData_PlayTech.transTime,
+                    desc = rewardData_PlayTech.desc,
+                    additionalData = rewardData_PlayTech.additionalData != "" ? JsonConvert.SerializeObject(rewardData_PlayTech.additionalData) : "[]",
+                    transTimeUnix = rewardData_PlayTech.transTimeUnix,
+                    TicketType = (int)TransferType.Payout,
+                    TicketStatus = (int)TicketStatus.UnSettled,
+                    SettleFlag = (int)SettleFlag.Running
+                });
+
+                result = _mainDbClient.Execute(InsSpName, p, conn, trans);
+                if (result > 0)
+                {
+                    if (rewardData_PlayTech.amount != 0)
+                    {
+                        result = walletService.SetBalance(
+                            tpCustInfo.CustId,
+                            tpCustInfo.SiteId,
+                            tpCustInfo.UserName,
+                            rewardData_PlayTech.amount,
+                            (int)Tp.PlayTech,
+                            TransType.Prize,
+                            $"Prize: {Math.Abs(rewardData_PlayTech.amount):#,##0.##}",
+                            rewardData_PlayTech.transId,
+                            out afterAmount,
+                            conn,
+                            trans
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        result = _tpUnRewardService.InsertTpUnReward(Tp.PlayTech, GameType.SG_RNG, rewardData_PlayTech.transId, rewardData_PlayTech.playerId, trans);
+                    }
+                }
+
+                if (result > 0)
+                {
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                result = 0;
+                logger.LogError(mySqlEx.Message);
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    result = -1;
+                    return result;
+                }
+                throw;
+            }
+            return result;
+        }
+
+        public TpBetFailureRecord GetTpBetFailureParam_PlayTech(TpCustInfo tpCustInfo, TpCustBalance custBalance, TpCurrency tpCurrency, BettingData_PlayTech bettingData_PlayTech, int gameType, TpCheckRecordCode Code, decimal AfterAmount)
+        {
+            return _bettingService.GetTpBetFailureParam_PlayTech(tpCustInfo, custBalance, tpCurrency, bettingData_PlayTech, gameType, Code, AfterAmount);
+        }
+
+        #endregion
+
         public async Task<NextspinResult> PayoutRNG_Nextspin(TpCustInfo tpCustInfo, BettingDataRNG_Nextspin bettingData)
         {
             var afterAmount = 0m;
