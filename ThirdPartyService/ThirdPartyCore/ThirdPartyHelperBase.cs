@@ -77,6 +77,8 @@ namespace ThirdPartyCore
 
         public static string LetsTalkGroupName { get; set; }
 
+        public static string SeamlessUrl { get; set; }
+
         public static string EnvironmentName { set; get; }
 
         public static bool IsDevelopment { set; get; }
