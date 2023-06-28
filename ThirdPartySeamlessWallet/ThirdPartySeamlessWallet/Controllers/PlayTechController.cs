@@ -2,7 +2,6 @@
 using Newtonsoft.Json;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 using System.Web;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -16,16 +15,13 @@ namespace ThirdPartySeamlessWallet.Controllers
     {
         private readonly AuthBLL _authBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
-        private readonly ILogger<PlayTechController> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly Tools _tools;
         private readonly BettingBLL _bettingBLL;
         private readonly SettledBLL _settledBLL;
         private readonly Log2File _log2File;
         private readonly int _thisTp;
-        private readonly int _gameType = 0;
         private readonly string _tpName = Tp.PlayTech.ToString();
-        private readonly IHostEnvironment _environment;
         // 通常是一直重试直到成功, 但是由于我们每月会对账,所以到第二个月初如果还有没有完结的话会转入手工处置
         private readonly int _partitionCheckDay = 45;
 
@@ -37,9 +33,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             _bettingBLL = provider.GetRequiredService<BettingBLL>();
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tools = provider.GetRequiredService<Tools>();
-            _logger = provider.GetRequiredService<ILogger<PlayTechController>>();
             _log2File = provider.GetRequiredService<Log2File>();
-            _environment = provider.GetRequiredService<IHostEnvironment>();
             _thisTp = (int)Tp.PlayTech;
         }
 
@@ -147,8 +141,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 var Content = await reader.ReadToEndAsync();
 
-                var hash = (getQuery.ContainsKey("hash")) ? getQuery["hash"] : "";
-                var verifyHash = CheckHash(hash, Content, logName);
+                var verifyHash = false;
+                if (getQuery.TryGetValue("hash", out var hash))
+                {
+                    verifyHash = CheckHash(hash, Content, logName);
+                }
                 if (!verifyHash)
                 {
                     errorResponse.error = "P_02";
@@ -332,15 +329,26 @@ namespace ThirdPartySeamlessWallet.Controllers
                  * 即便游戏会话（Session）已经过期，或游戏已经结束，代理的钱包系统也不能拒绝GM-Ag再次发送相同的请求。
                  * 对于已经成功的操作，也要允许GM-Ag再次发送相同参数值的请求。
                  */
-
-                var betList = getReq.trans.Where(i => string.Equals(i.transType, "bet", StringComparison.OrdinalIgnoreCase)).ToList();
-                var betCnt = (betList != null && betList.Any()) ? betList.Count : 0;
-
-                var winList = getReq.trans.Where(i => string.Equals(i.transType, "win", StringComparison.OrdinalIgnoreCase)).ToList();
-                var winCnt = (winList != null && winList.Any()) ? winList.Count : 0;
-
-                var cancelList = getReq.trans.Where(i => string.Equals(i.transType, "cancel", StringComparison.OrdinalIgnoreCase)).ToList();
-                var cancelCnt = (cancelList != null && cancelList.Any()) ? cancelList.Count : 0;
+                var betCnt = 0;
+                var winCnt = 0;
+                var cancelCnt = 0;
+                foreach (var item in getReq.trans)
+                {
+                    switch (item.transType.ToLower())
+                    {
+                        case "bet":
+                            betCnt++;
+                            break;
+                        case "win":
+                            winCnt++;
+                            break;
+                        case "cancelCnt":
+                            cancelCnt++;
+                            break;
+                        default:
+                            break;
+                    }
+                }
 
                 var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(_thisTp, getReq.playerId, (int)gameType);
                 if (betCnt == transCnt)
