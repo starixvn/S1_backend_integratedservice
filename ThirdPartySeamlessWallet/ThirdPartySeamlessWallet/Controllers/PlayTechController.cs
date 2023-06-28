@@ -196,6 +196,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return errorResponse;
                 }
 
+                _tpCustInfoBLL.SetCustGotoGame(tpCustInfoAuth.CustId, _thisTp, gameType);
                 var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(_thisTp, tpCustInfoAuth.TpUserName, (int)gameType);
                 AuthResp response = new()
                 {
@@ -259,7 +260,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return errorResponse;
             }
 
-            var gameType = _thirdPartyBLL.GetGameType(_thisTp, getReq.gameCode);
+            // 對方的gamecode會有不正確的情況，改透過進入遊戲時auth取額度減少遊戲bonus額度顯示問題，但會有不準確的情況
+            var gameType = _tpCustInfoBLL.GetCustGotoGameType(tpCustInfo.CustId, _thisTp);
             var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(_thisTp, getReq.playerId, (int)gameType);
             BalanceResp response = new()
             {
