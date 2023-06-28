@@ -413,7 +413,86 @@ namespace ThirdParty.SBSW
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var tpBetRecordDetail = TpBetRecordProvider.GetTpBetRecordDetail(betRecordInfo.TpId, betRecordInfo.GameType, betRecordInfo.TransId, DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime);
+
+            if (tpBetRecordDetail == null)
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+
+            var model = JsonConvert.DeserializeObject<DetailModel>(tpBetRecordDetail.Detail);
+            var betDetail = model?.BetDetails?.First();
+            var betNumberDetail = model?.BetNumberDetails?.First();
+            var betVirtualSportDetail = model?.BetVirtualSportDetails?.First();
+
+            if(betDetail == null && betNumberDetail == null && betVirtualSportDetail == null)
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+
+            if(betDetail != null)
+            {
+                int.TryParse(betDetail.odds_type, out int odds_type);
+                decimal.TryParse(betDetail.odds, out decimal odds);
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo) 
+                {
+                    GameID = betDetail.sport_type.ToString(),
+                    Game = betDetail.sportname?.FirstOrDefault(i => i.lang == "en")?.name ?? string.Empty,
+                    RefNo = betDetail.parlay_ref_no.ToString(),
+                    Title = betDetail.leaguename?.FirstOrDefault(i => i.lang == "en")?.name ?? string.Empty,
+                    MatchID = betDetail.match_id.ToString(),
+                    BetType = betDetail.bettypename?.FirstOrDefault(i => i.lang == "en")?.name ?? string.Empty,
+                    BetChoice = betDetail.bet_team ?? string.Empty,
+                    Result = betDetail.ticket_status,
+                    DeviceType = GetDeviceType(betDetail.betfrom),
+                    IP = string.Empty,
+                    Odds = odds,
+                    OddsTypeEnum = GetOddsType(odds_type),
+                    Live = betDetail.islive
+                };
+            }
+            else if (betNumberDetail != null)
+            {
+                int.TryParse(betNumberDetail.odds_type, out int odds_type);
+                decimal.TryParse(betNumberDetail.odds, out decimal odds);
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = betNumberDetail.sport_type.ToString(),
+                    Game = tpGameType.TypeName,
+                    RefNo = betNumberDetail.trans_id.ToString(),
+                    Title = tpGameType.TypeName,
+                    MatchID = betNumberDetail.match_id.ToString(),
+                    BetType = betNumberDetail.bet_type.ToString(),
+                    BetChoice = betNumberDetail.bet_team ?? string.Empty,
+                    Result = betNumberDetail.ticket_status,
+                    DeviceType = GetDeviceType(betNumberDetail.betfrom),
+                    IP = string.Empty,
+                    Odds = odds,
+                    OddsTypeEnum = GetOddsType(odds_type),
+                    Live = betNumberDetail.islive
+                };
+            }
+            else
+            {
+                int.TryParse(betVirtualSportDetail.odds_type, out int odds_type);
+                decimal.TryParse(betVirtualSportDetail.odds, out decimal odds);
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = betVirtualSportDetail.sport_type.ToString(),
+                    Game = tpGameType.TypeName,
+                    RefNo = betVirtualSportDetail.parlay_ref_no.ToString(),
+                    Title = tpGameType.TypeName,
+                    MatchID = betVirtualSportDetail.match_id.ToString(),
+                    BetType = betVirtualSportDetail.bet_type.ToString(),
+                    BetChoice = betVirtualSportDetail.bet_team ?? string.Empty,
+                    Result = betVirtualSportDetail.ticket_status,
+                    DeviceType = GetDeviceType(betVirtualSportDetail.betfrom),
+                    IP = string.Empty,
+                    Odds = odds,
+                    OddsTypeEnum = GetOddsType(odds_type),
+                    Live = betVirtualSportDetail.islive
+                };
+            }
         }
 
         private string ChangeTransIdToString(string json)
@@ -434,6 +513,44 @@ namespace ThirdParty.SBSW
                 jObject["BetVirtualSportDetails"][0]["trans_id"] = jObject["BetVirtualSportDetails"][0]["trans_id"].ToString();
             }
             return jObject.ToString();
+        }
+        private DeviceType GetDeviceType(string device)
+        {
+            switch (device)
+            {
+                case "m":
+                case "l":
+                case "c":
+                case "2":
+                case "5":
+                case "%":
+                case "@":
+                case "]":
+                case "7":
+                case "~":
+                    return DeviceType.Mobile;
+                case "1":
+                case "4":
+                case "[":
+                case "9":
+                case ">":
+                    return DeviceType.Desktop;
+                default:
+                    return DeviceType.None;
+            }
+        }
+
+        private OddsTypeEnum GetOddsType(int oddsType)
+        {
+            return oddsType switch
+            {
+                1 => OddsTypeEnum.MalayOdds,
+                2 => OddsTypeEnum.ChinaOdds,
+                3 => OddsTypeEnum.DecimalOdds,
+                4 => OddsTypeEnum.IndoOdds,
+                5 => OddsTypeEnum.AmericanOdds,
+                _ => OddsTypeEnum.None,
+            };
         }
     }
 }

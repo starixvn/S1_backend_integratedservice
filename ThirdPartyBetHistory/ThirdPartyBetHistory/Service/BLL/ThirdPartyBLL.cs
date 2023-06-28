@@ -26,15 +26,15 @@ namespace ThirdPartyBetHistory.Service.BLL
             return tpList;
         }
 
-        public void DoSettleTicket(IEnumerable<SabaSettleData> settleDataList, WorkerType workerType)
-        {
-            _thirdPartyService.DoSettleTicket(settleDataList, workerType);
-        }
+        //public void DoSettleTicket(IEnumerable<SabaSettleData> settleDataList, WorkerType workerType)
+        //{
+        //    _thirdPartyService.DoSettleTicket(settleDataList, workerType);
+        //}
 
-        public TpCurrency GetTpCurrency(int tpId, int currencyId)
-        {
-            return _thirdPartyService.GetTpCurrency(tpId, currencyId);
-        }
+        //public TpCurrency GetTpCurrency(int tpId, int currencyId)
+        //{
+        //    return _thirdPartyService.GetTpCurrency(tpId, currencyId);
+        //}
 
         public long GetSiteTicketKey(WorkerType workerType, IThirdPartyBetHelper betHelper)
         {

@@ -1,15 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc.RazorPages;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Serilog.Context;
 using StackExchange.Redis;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing.Drawing2D;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -132,7 +124,8 @@ namespace ThirdPartySettleWorker.Workers
                             TransTime = transTime.Ticks,
                             SettlementType = settlementType,
                             TicketStatus = ticketStatus,
-                            GameID = GetBetDetailGameType(wagerData.sport_type).ToString()
+                            GameID = GetBetDetailGameType(wagerData.sport_type).ToString(),
+                            ReferenceNo = settleData.FirstOrDefault()?.refId
                         };
 
                         if (settleData.Any())
