@@ -9,13 +9,13 @@ using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
-    public class ThirdPartyBLL
+    public class ThirdPartyBLL : IThirdPartyBLL
     {
         private readonly ThirdPartyHelper thirdPartyHelper;
         private readonly TpCustInfoService tpCustInfoService;
         private readonly IMemoryCache cache;
 
-        public ThirdPartyBLL(ThirdPartyHelper thirdPartyHelper,TpCustInfoService tpCustInfoService, IMemoryCache cache)
+        public ThirdPartyBLL(ThirdPartyHelper thirdPartyHelper, TpCustInfoService tpCustInfoService, IMemoryCache cache)
         {
             this.thirdPartyHelper = thirdPartyHelper;
             this.tpCustInfoService = tpCustInfoService;

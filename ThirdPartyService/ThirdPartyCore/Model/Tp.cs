@@ -90,6 +90,7 @@ namespace ThirdPartyCore.Model
         public int CStatus { get; set; }
         public string IsoCode { get; set; }
         public string TpCustId { get; set; } = ""; //Default 空字串
+        public CustomerMemberTypeEnum MemberType { get; set; }
     }
 
     public class TpMerchantInfo
