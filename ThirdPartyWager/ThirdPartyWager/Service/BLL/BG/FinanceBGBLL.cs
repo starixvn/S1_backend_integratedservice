@@ -60,7 +60,7 @@ public class FinanceBGBLL : ITpReportBLL
     public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
     {
         var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
-        var siteList = _commonBLL.GetSiteList().Where(x => x.SiteId != 4);
+        var siteList = _commonBLL.GetSiteList().Where(x => x.SiteId != 4 && x.SiteId != 5);
         var reportData = new List<dynamic>();
 
         foreach (var siteInfo in siteList)
