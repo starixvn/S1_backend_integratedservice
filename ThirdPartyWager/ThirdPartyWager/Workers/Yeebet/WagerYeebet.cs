@@ -38,7 +38,7 @@ public class WagerYeebet : BackgroundService
         LogContext.PushProperty("Tp", Tp.Yeebet.ToString());
         try
         {
-            var siteList = _commonBLL.GetSiteList().Where(x => x.SiteId != 4);
+            var siteList = _commonBLL.GetSiteList().Where(x => x.SiteId != 4 && x.SiteId != 5);
             var TpCurrencyList = _commonBLL.GetTpCurrencyList((int)Tp.Yeebet);
             foreach (var siteInfo in siteList)
             {
