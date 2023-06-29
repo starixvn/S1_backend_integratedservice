@@ -23,7 +23,6 @@ namespace ThirdPartySettleWorker.Workers
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly SettledBLL _settledBLL;
-        private readonly SBSWBLL _sBSWBLL;
         private readonly Dictionary<int, SabaSportTypeOption> _sportTypeConfig;
 
         private readonly ILogger<TFGWorker> _logger;
@@ -34,7 +33,6 @@ namespace ThirdPartySettleWorker.Workers
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _settledBLL = provider.GetRequiredService<SettledBLL>();
-            _sBSWBLL = provider.GetRequiredService<SBSWBLL>();
             _logger = provider.GetRequiredService<ILogger<TFGWorker>>();
             _sportTypeConfig = provider.GetRequiredService<IEnumerable<SabaSportTypeOption>>()
                 .ToDictionary(item => item.SportType, item => item);
@@ -58,7 +56,7 @@ namespace ThirdPartySettleWorker.Workers
 
             try
             {
-                var tpUnsettleList = _sBSWBLL.GetSBSWUnsettleList();
+                var tpUnsettleList = _settledBLL.GetSBSWUnsettleList();
                 if (!tpUnsettleList.Any())
                 {
                     throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
@@ -69,13 +67,13 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var tpBetRecordDetail = _sBSWBLL.GetTpBetRecordDetail((int)Tp.SBSW, (int)tpUnsettle.GameType, tpUnsettle.TransId, tpUnsettle.PartitionTime);
-                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleSBSW>(getSettleSp, new { id = tpUnsettle.TransId }, DataBase.Main);
+                        var tpBetRecordDetail = _settledBLL.GetTpBetRecordDetail((int)Tp.SBSW, (int)tpUnsettle.GameType, tpUnsettle.TransId, tpUnsettle.PartitionTime);
+                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleSBSW>(getSettleSp, new { txId = tpUnsettle.TransId }, DataBase.Main);
                         var betData = _tpUnSettledBLL.GetTpUnsettleData<BetSBSW>(tpUnsettle.GameType == GameType.SBSW_Vgaming ? getVGBettransSp : getBettransSp,
-                            tpUnsettle.GameType == GameType.SBSW_Vgaming ? new { id = tpUnsettle.TransId } : new { refId = settleData.FirstOrDefault()?.refId }, DataBase.Main);
+                            tpUnsettle.GameType == GameType.SBSW_Vgaming ? new { refId = settleData.FirstOrDefault()?.refId } : new { txId = tpUnsettle.TransId }, DataBase.Main);
 
                         //取不到下注資料，直接跳過這筆
-                        if (betData != null)
+                        if (betData == null)
                             continue;
 
                         #region 取得wager資料
@@ -85,17 +83,34 @@ namespace ThirdPartySettleWorker.Workers
                             (int)GameType.SBSW_VirtualSports => JsonConvert.DeserializeObject<GetBetDetailData>(tpBetRecordDetail.Detail).BetVirtualSportDetails.First(),
                             (int)GameType.SBSW_VirtualSports2 => JsonConvert.DeserializeObject<GetBetDetailData>(tpBetRecordDetail.Detail).BetVirtualSportDetails.First(),
                             (int)GameType.SBSW_Vgaming => JsonConvert.DeserializeObject<GetBetDetailData>(tpBetRecordDetail.Detail).BetDetails.First(),
-                            _=> JsonConvert.DeserializeObject<GetBetDetailData>(tpBetRecordDetail.Detail).BetDetails.First(),
+                            _ => JsonConvert.DeserializeObject<GetBetDetailData>(tpBetRecordDetail.Detail).BetDetails.First(),
                         };
+
+                        if (tpUnsettle.GameType == GameType.SBSW_Vgaming)
+                            wagerData.sport_type = 171;
                         #endregion
 
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, wagerData.vendor_member_id);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
+                        //SabaSportTypeOption sabaSportType = new SabaSportTypeOption();
+
+                        //if(tpUnsettle.GameType == GameType.SBSW_Vgaming)
+                        //{
+                        //    _sportTypeConfig.TryGetValue(171, out sabaSportType);
+                        //}
+                        //else
+                        //{
+                        //    if (!_sportTypeConfig.TryGetValue(wagerData.sport_type.Value, out sabaSportType))
+                        //    {
+                        //        throw new SBSWException(ReturnCode.InvalidParameters, $"sportType:{wagerData.sport_type.Value} not supported.");
+                        //    }
+                        //}
 
                         if (!_sportTypeConfig.TryGetValue(wagerData.sport_type.Value, out var sabaSportType))
                         {
                             throw new SBSWException(ReturnCode.InvalidParameters, $"sportType:{wagerData.sport_type.Value} not supported.");
                         }
+
 
                         #region 匯率轉換
                         wagerData.stake *= tpCurrency.ExchangeRate;
@@ -120,8 +135,8 @@ namespace ThirdPartySettleWorker.Workers
                             TransId = tpUnsettle.TransId,
                             GameType = (GameType)gameType,
                             TpUserName = wagerData.vendor_member_id,
-                            SettledTime = settledTime.Ticks,
-                            TransTime = transTime.Ticks,
+                            SettledTime = new DateTimeOffset(settledTime, new TimeSpan(-4, 0, 0)).ToUnixTimeSeconds(),
+                            TransTime = new DateTimeOffset(transTime, new TimeSpan(-4, 0, 0)).ToUnixTimeSeconds(),
                             SettlementType = settlementType,
                             TicketStatus = ticketStatus,
                             GameID = GetBetDetailGameType(wagerData.sport_type).ToString(),
