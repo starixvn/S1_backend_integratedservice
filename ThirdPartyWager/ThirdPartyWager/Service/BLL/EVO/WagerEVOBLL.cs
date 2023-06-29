@@ -56,7 +56,7 @@ namespace ThirdPartyWager.Service.BLL
         {
             var wokerTime = GetWorkerTime(type, 0);
             var quick = CheckQuick(wokerTime, 360);
-            var time = _dateTimeHelper.GetTimeByHour(timeRange, _timeZone, _timeFormat, wokerTime, 1);
+            var time = _dateTimeHelper.GetTimeByHour(timeRange, _timeZone, _timeFormat, wokerTime, 0);
 
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
