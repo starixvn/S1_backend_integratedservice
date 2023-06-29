@@ -19,7 +19,6 @@ namespace ThirdPartyBetHistory.Service.DAL
         private readonly ILogger<ThirdPartyService> _logger;
         private readonly MySqlClient _mainDbClient;
         private readonly MySqlClient _reportDbClient;
-        private readonly TpBetRecordExtendBLL _tpBetRecordExtendBLL;
 
         public ThirdPartyService(IServiceProvider serviceProvider)
         {
@@ -29,7 +28,6 @@ namespace ThirdPartyBetHistory.Service.DAL
             TpCurrencyList = new ConcurrentDictionary<string, TpCurrency>();
             _mainDbClient = serviceProvider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _reportDbClient = serviceProvider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
-            _tpBetRecordExtendBLL = serviceProvider.GetRequiredService<TpBetRecordExtendBLL>();
         }
 
         public IEnumerable<ThirdPartyModel> GetTpList()
