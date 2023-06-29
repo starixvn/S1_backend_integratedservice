@@ -237,47 +237,6 @@ namespace ThirdParty.SBSW
             return oApiResult;
         }
 
-        public ApiResult<List<BetSetting>> GetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {
-            var config = new SabaConfig(inputs);
-            var domain = config.ApiUrl;
-            var req = new GetBetSettingLimitReq
-            {
-                vendor_id = config.VendorId,
-                currency = tpCustInfo.TpCurrencyId
-            };
-            var t = req.GetType();
-            var props = t.GetProperties();
-            var postData = $"{string.Join("&", props.Select(kp => $"{kp.Name}={kp.GetValue(req)}"))}";
-
-            var apiUrl = $"{domain}/GetBetSettingLimit";
-            var result = HttpPost(apiUrl, postData, "application/x-www-form-urlencoded");
-
-            var oApiResult = new ApiResult<List<BetSetting>>();
-            if (IsJSON(result))
-            {
-                var betSettingLimit = JsonConvert.DeserializeObject<BetSettingLimit>(result);
-                if (betSettingLimit.error_code == 0)
-                {
-                    oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Data = betSettingLimit.Data;
-                }
-                else
-                {
-                    oApiResult.RawMessage = betSettingLimit.message;
-                    oApiResult.RawErrorCode = betSettingLimit.error_code.ToString();
-                    oApiResult.ErrorCode = ErrorCode.Fail;
-                }
-            }
-            else
-            {
-                oApiResult.ErrorCode = ErrorCode.Fail;
-                oApiResult.RawMessage = result;
-            }
-
-            return oApiResult;
-        }
-
         private LoginResult GetSabaUrl(SabaConfig config, string tpUserName, int platform)
         {
             var apiUrl = $"{config.ApiUrl}/GetSabaUrl";

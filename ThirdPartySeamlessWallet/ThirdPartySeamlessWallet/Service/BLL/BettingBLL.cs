@@ -1,7 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Linq;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -639,6 +636,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
         #endregion
 
+        #region Skywind
+        public int PlaceBet_Skywind(TpCustInfo tpCustInfo, BettingData_Skywind bettingData_Skywind, int gameType, out decimal afterAmount)
+        {
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingData_Skywind.amount *= tpCurrency.ExchangeRate;
+            }
+            var result = bettingService.PlaceBet_Skywind(tpCustInfo, bettingData_Skywind, gameType, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        #endregion
+
         #region JILI
 
         public int PlaceBetRNG_JILI(TpCustInfo tpCustInfo, BettingData_JILI bettingData_JILI, out decimal afterAmount)
@@ -685,23 +701,55 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #endregion
 
+        #region PlayTech
 
-        #region Skywind
-        public int PlaceBet_Skywind(TpCustInfo tpCustInfo, BettingData_Skywind bettingData_Skywind, int gameType, out decimal afterAmount)
+        public int PlaceBet_PlayTech(BettingData_PlayTech bettingData_PlayTech, GameType gameType, int partitionCheckDay, out decimal afterAmount)
         {
-            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
+            var tpId = (int)Tp.PlayTech;
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(tpId, bettingData_PlayTech.playerId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
+            var custBalance = tpCustInfoBLL.GetBalance(tpId, bettingData_PlayTech.playerId, (int)gameType);
 
-            if (tpCurrency.ExchangeRate > 0)
+            decimal totalBet = 0;
+            if (tpCurrency.ExchangeRate != 0)
             {
-                bettingData_Skywind.amount *= tpCurrency.ExchangeRate;
+                foreach (var data in bettingData_PlayTech.trans)
+                {
+                    data.amount *= tpCurrency.ExchangeRate;
+                    data.jpc *= tpCurrency.ExchangeRate;
+                    if (string.Equals(data.transType, "bet", StringComparison.OrdinalIgnoreCase))
+                    {
+                        totalBet += data.amount;
+                    }
+                }
             }
-            var result = bettingService.PlaceBet_Skywind(tpCustInfo, bettingData_Skywind, gameType, out afterAmount);
-            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+
+            if (custBalance.Balance < 0)
+            {
+                afterAmount = custBalance.Balance / tpCurrency.ExchangeRate;
+                var TpCheckRecordParam = bettingService.GetTpBetFailureParam_PlayTech(tpCustInfo, custBalance, tpCurrency, bettingData_PlayTech, (int)gameType, TpCheckRecordCode.InsufficientBalance, afterAmount);
+                thirdPartyBLL.AddTpBetFailureRecord(TpCheckRecordParam);
+                return 0;
+            }
+
+            var checkBalance = custBalance.Balance - totalBet;
+            if (checkBalance < 0)
+            {
+                afterAmount = checkBalance / tpCurrency.ExchangeRate;
+                var TpCheckRecordParam = bettingService.GetTpBetFailureParam_PlayTech(tpCustInfo, custBalance, tpCurrency, bettingData_PlayTech, (int)gameType, TpCheckRecordCode.InsufficientBalance, afterAmount);
+                thirdPartyBLL.AddTpBetFailureRecord(TpCheckRecordParam);
+                return 0;
+            }
+
+            var result = bettingService.PlaceBet_PlayTech(tpCustInfo, bettingData_PlayTech, gameType, partitionCheckDay, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
             }
             return result;
         }
+
         #endregion
+
     }
 }

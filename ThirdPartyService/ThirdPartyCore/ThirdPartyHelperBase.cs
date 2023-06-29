@@ -51,7 +51,6 @@ namespace ThirdPartyCore
     public interface IThirdPartyBetLimitParticular
     {
         ApiResult SetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, string betSetting);
-        ApiResult<List<BetSetting>> GetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
     }
 
     public abstract class ThirdPartyHelperBase : IThirdPartyHelper, IThirdPartyTpBetRecordDetail, IThirdPartyTpGetMerchantBalance
@@ -77,6 +76,8 @@ namespace ThirdPartyCore
         public static string CommonServiceHost { get; set; }
 
         public static string LetsTalkGroupName { get; set; }
+
+        public static string SeamlessUrl { get; set; }
 
         public static string EnvironmentName { set; get; }
 

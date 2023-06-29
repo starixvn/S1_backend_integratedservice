@@ -1,7 +1,6 @@
 ﻿using Dapper;
 using MySql.Data.MySqlClient;
 using System.Data;
-
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -70,7 +69,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             p.Add("AfterBonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("BonusId", value: bonusId, dbType: DbType.Int32, direction: ParameterDirection.InputOutput);
            
-            result = _mainDbClient.Execute("Service_BonusWallet_Set_V3", p, conn ,trans);
+            result = _mainDbClient.Execute("Service_BonusWallet_Set_V3", p,  conn ,trans);
             afterBonus = p.Get<decimal>("AfterBonus");
             bonusId = p.Get<int?>("BonusId") ?? 0;           
             return result;

@@ -905,6 +905,37 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }, conn , trans);
         }
 
+        public int SetSettleFlagOfMonthlyBettrans(string spName, BetRecordInfo betRecordInfo)
+        {
+            var result = 0;
+            var partitionTimeOfSettledTime = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime;
+            var partitionTimeOfTransTime = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.TransTime).DateTime;
+            var tt = partitionTimeOfSettledTime.ToString("yyyyMM");
+            var st = partitionTimeOfTransTime.ToString("yyyyMM");
+            var verifyMonth = (int)(partitionTimeOfSettledTime - partitionTimeOfTransTime).TotalDays;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            var trans = conn.BeginTransaction();
+
+            result = _partitionService.Execute(partitionTimeOfSettledTime, spName, new DynamicParameters(new { TransId = betRecordInfo.TransId }), trans);
+            if (result > 0 && tt != st && verifyMonth < 90)
+            {
+                // 跨月同步
+                result = _partitionService.Execute(partitionTimeOfTransTime, spName, new DynamicParameters(new { TransId = betRecordInfo.TransId }), trans);
+            }
+
+            if (result > 0)
+            {
+                _mainDbClient.CommitAndDisposeConnection(conn, trans);
+            }
+            else
+            {
+                _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+            }
+            return result;
+        }
+
         public TpBetRecordDetail GetTpBetRecordDetail(int TpId, int GameType, string TransId, DateTime SettledTime)
         {
             try

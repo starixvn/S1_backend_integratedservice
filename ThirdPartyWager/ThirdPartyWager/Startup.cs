@@ -70,6 +70,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerV8Service>();
             services.AddSingleton<WagerN2LiveService>();
             services.AddSingleton<WagerPTService>();
+            services.AddSingleton<WagerPlayTechService>();
             services.AddSingleton<LiveStreamingService>();
             services.AddSingleton<LatestHighlightVideoService>();
             services.AddSingleton<SabaOddsService>();
@@ -170,6 +171,9 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerPTBLL>();
             services.AddSingleton<ApiPTBLL>();
             services.AddSingleton<FinancePTBLL>();
+            services.AddSingleton<WagerPlayTechBLL>();
+            services.AddSingleton<ApiPlayTechBLL>();
+            services.AddSingleton<FinancePlayTechBLL>();
             // LiveStreaming
             services.AddSingleton<LiveStreamingBLL>();
             // LatestHighlightVideo
@@ -288,7 +292,10 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerPT>();
             services.AddHostedService<WagerRedoPT>();
             services.AddHostedService<FinancePT>();
-            //services.AddHostedService<WagerReSettlePT>();
+            services.AddHostedService<WagerReSettlePT>();
+            services.AddHostedService<WagerPlayTech>();
+            services.AddHostedService<WagerRedoPlayTech>();
+            services.AddHostedService<FinancePlayTech>();
             services.AddHostedService<LiveStreaming>();
             services.AddHostedService<LatestHighlightVideo>();
             services.AddHostedService<SabaOdds>();
@@ -321,7 +328,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerKiss918>();
             services.AddHostedService<WagerRedoKiss918>();
             services.AddHostedService<WagerSkywind>();
-            services.AddHostedService<WagerUnsettleCheckSkywind>();
+            //services.AddHostedService<WagerUnsettleCheckSkywind>();
             services.AddHostedService<WagerGPI>();
             services.AddHostedService<WagerRedoGPI>();
             services.AddHostedService<FinanceGPI>();
@@ -335,6 +342,9 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerNextspin>();
             services.AddHostedService<FinanceNextspin>();
 
+            // health check use
+            services.AddControllers();
+
             /*******************closed tp*************************/
             //services.AddHostedService<WagerOneGaming>();
             //services.AddHostedService<WagerRedoOneGaming>();
@@ -345,7 +355,6 @@ namespace ThirdPartyWager
             //services.AddHostedService<WagerAT>();
             //services.AddHostedService<WagerRedoAT>();
             //services.AddHostedService<FinanceAT>();
-
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -354,6 +363,17 @@ namespace ThirdPartyWager
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseRouting();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapGet("/health", async context =>
+                {
+                    await context.Response.WriteAsync($"{env.EnvironmentName}-{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}");
+                });
+
+                endpoints.MapControllers();
+            });
         }
     }
 }

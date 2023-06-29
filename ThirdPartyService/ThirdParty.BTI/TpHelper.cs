@@ -63,6 +63,7 @@ namespace ThirdParty.BTI
                ? inputs[$"Host"] : throw new Exception($"host is empty");
             var homeUrl = inputs.ContainsKey($"homeUrl") && !string.IsNullOrEmpty(inputs[$"homeUrl"])
                ? inputs[$"homeUrl"] : "";
+
             var api = HttpUtility.UrlEncode($"{host}/btisport.js");
             //桌機亞洲版 後面加/vi/asian-view/ 桌機歐洲版 後面加/vi/sports
             var view = (appType == AppType.Desktop) ? "/asian-view" : "";
