@@ -42,7 +42,7 @@ public class WagerRedoBG : BackgroundService
         LogContext.PushProperty("Tp", Tp.BG.ToString());
         try
         {
-            var siteList = _commonBLL.GetSiteList().Where(x => x.SiteId != 4);
+            var siteList = _commonBLL.GetSiteList().Where(x => x.SiteId != 4 && x.SiteId != 5);
             var TpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
             var quick = false;
             foreach (var siteInfo in siteList)
