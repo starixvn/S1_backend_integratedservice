@@ -810,29 +810,5 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 },
                 new { refId });
         }
-        public IEnumerable<SBSWUnsettle> GetSBSWUnsettleList(int LimitCount = 200)
-        {
-            return _mainDbClient.Query<SBSWUnsettle>("Service_SABW_TpUnsettle_Get", parameters: new { LimitCount });
-        }
-
-        public TpBetRecordDetail GetTpBetRecordDetail(int TpId, int GameType, string TransId, DateTime SettledTime)
-        {
-            try
-            {
-                var p = new DynamicParameters(new
-                {
-                    TpId,
-                    GameType,
-                    TransId,
-                    SettledTime
-                });
-
-                return _mainDbClient.QueryFirst<TpBetRecordDetail>("Service_TpBetRecordDetail_Get_V2", p);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
     }
 }

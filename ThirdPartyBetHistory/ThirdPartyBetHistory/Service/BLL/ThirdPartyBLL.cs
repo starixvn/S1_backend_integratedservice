@@ -1,4 +1,5 @@
-﻿using ThirdPartyBetHistory.Service.DAL;
+﻿using MySql.Data.MySqlClient;
+using ThirdPartyBetHistory.Service.DAL;
 using ThirdPartyBetHistory.Service.Model;
 using ThirdPartyBetHistory.Service.Model.enums;
 
@@ -26,16 +27,6 @@ namespace ThirdPartyBetHistory.Service.BLL
             return tpList;
         }
 
-        public void DoSettleTicket(IEnumerable<SabaSettleData> settleDataList, WorkerType workerType)
-        {
-            _thirdPartyService.DoSettleTicket(settleDataList, workerType);
-        }
-
-        public TpCurrency GetTpCurrency(int tpId, int currencyId)
-        {
-            return _thirdPartyService.GetTpCurrency(tpId, currencyId);
-        }
-
         public long GetSiteTicketKey(WorkerType workerType, IThirdPartyBetHelper betHelper)
         {
             return _thirdPartyService.GetSiteTicketKey(betHelper.SiteId, (int)betHelper.Tp, workerType);
@@ -46,18 +37,14 @@ namespace ThirdPartyBetHistory.Service.BLL
             return _thirdPartyService.SetSiteTicketKey((int)betHelper.SiteId, (int)betHelper.Tp, workerType, ticketKey);
         }
 
-        public int AddTpBetRecordDetail(TpBetRecordDetail detail)
+        public int AddTpBetRecordDetail(TpBetRecordDetail detail, DateTime? partitionTime = null)
         {
-            return _thirdPartyService.AddTpBetRecordDetail(detail);
+            return _thirdPartyService.AddTpBetRecordDetail(detail, partitionTime);
         }
 
         public TpCustInfo GetTpCustInfoWithCache(int tpId, string tpUserName)
         {
             return _thirdPartyService.GetTpCustInfoWithCache(tpId, tpUserName);
-        }
-        public int InsertTpUnsettle(Tp tp, GameType gameType, string transId, DateTime? partitionTime = null)
-        {
-            return _thirdPartyService.InsertTpUnsettle(tp, gameType, transId, partitionTime);
         }
     }
 }

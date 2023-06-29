@@ -935,5 +935,25 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             return result;
         }
+
+        public TpBetRecordDetail GetTpBetRecordDetail(int TpId, int GameType, string TransId, DateTime SettledTime)
+        {
+            try
+            {
+                var p = new DynamicParameters(new
+                {
+                    TpId,
+                    GameType,
+                    TransId,
+                    SettledTime
+                });
+
+                return _mainDbClient.QueryFirst<TpBetRecordDetail>("Service_TpBetRecordDetail_Get_V2", p);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
     }
 }

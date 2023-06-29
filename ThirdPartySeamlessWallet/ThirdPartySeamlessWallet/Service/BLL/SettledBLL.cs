@@ -2,6 +2,7 @@
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySeamlessWallet.Service.Model.SBSW;
 
 namespace ThirdPartySeamlessWallet.Service.BLL
 {
@@ -49,6 +50,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlagOfMonthlyBettrans(spName, betRecordInfo);
         }
 
+        public TpBetRecordDetail GetTpBetRecordDetail(int TpId, int GameType, string TransId, DateTime SettledTime)
+        {
+            return settledService.GetTpBetRecordDetail(TpId, GameType, TransId, SettledTime);
+        }
         #region SA
 
         public int CancelBetLC_SA(BettingDataLC_SA bettingDataLC_SA, out decimal afterAmount)
@@ -2571,6 +2576,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        #endregion
+
+        #region SBSW
+        public IEnumerable<SBSWUnsettle> GetSBSWUnsettleList(int LimitCount = 200)
+        {
+            return settledService.GetSBSWUnsettleList(LimitCount);
+        }
         #endregion
     }
 }
