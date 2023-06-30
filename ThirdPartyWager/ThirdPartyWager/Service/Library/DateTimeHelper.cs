@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ThirdPartyWager.Service.Library
+﻿namespace ThirdPartyWager.Service.Library
 {
 
     public class TimeCast

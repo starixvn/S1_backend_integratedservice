@@ -1,9 +1,5 @@
 ﻿using Newtonsoft.Json;
-using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
-using ThirdPartyWager.Service.Model.enums;
-using Ubiety.Dns.Core;
 
 namespace ThirdPartyWager.Service.BLL;
 

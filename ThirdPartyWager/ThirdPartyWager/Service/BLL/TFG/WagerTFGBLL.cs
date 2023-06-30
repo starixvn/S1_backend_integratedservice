@@ -1,10 +1,6 @@
 ﻿using Newtonsoft.Json;
-using Org.BouncyCastle.Ocsp;
-using System.Security.Policy;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
-using ThirdPartyWager.Service.Model.enums;
-using ThirdPartyWager.Workers;
 
 namespace ThirdPartyWager.Service.BLL.TFG
 {

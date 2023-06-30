@@ -1,7 +1,5 @@
 ﻿using Newtonsoft.Json;
-using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Data;
-using System.Linq;
-using Microsoft.Extensions.DependencyInjection;
-using ThirdPartyWager.Service.Library;
+﻿using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.DAL
