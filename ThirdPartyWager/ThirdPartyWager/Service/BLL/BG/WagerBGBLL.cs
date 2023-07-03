@@ -1,14 +1,8 @@
 ﻿using Newtonsoft.Json;
-using Org.BouncyCastle.Asn1.Cms;
-using Org.BouncyCastle.Asn1.X509;
-using System;
-using System.Collections.Generic;
-using System.Security.Policy;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
-using static Org.BouncyCastle.Bcpg.Attr.ImageAttrib;
 
 namespace ThirdPartyWager.Service.BLL;
 
