@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Newtonsoft.Json;
-
-/// <summary>
+﻿/// <summary>
 /// Summary description for Class1
 /// </summary>
 namespace ThirdPartyWager.Service.Model

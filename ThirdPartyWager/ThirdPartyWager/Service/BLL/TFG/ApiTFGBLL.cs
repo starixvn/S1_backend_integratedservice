@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using System.Text;
-using ThirdPartyWager.Service.BLL.SBO;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 

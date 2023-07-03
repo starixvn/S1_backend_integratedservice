@@ -1,8 +1,4 @@
-﻿using MySqlX.XDevAPI.Common;
-using Serilog.Context;
-using System;
-using System.Security.AccessControl;
-using System.Threading.Tasks;
+﻿using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.TFG;
 using ThirdPartyWager.Service.Library;

@@ -1,5 +1,4 @@
-﻿using System;
-using ThirdPartyWager.Service.Model.enums;
+﻿using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.Model
 {
