@@ -151,6 +151,7 @@ namespace ThirdPartyService.Service.BLL
                 {
                     tpCustInfoService.SetTpLastLoginTime(tpInfo.CustId, tpInfo.TpId);
                     SetRecentlyPlayed(tpInfo);
+                    SetRecentlyViewed(tpInfo);
                 });
             }
             else
@@ -1467,6 +1468,60 @@ namespace ThirdPartyService.Service.BLL
                     {
                         tpInfo.CustId,
                         GameInfo = $"{tpInfo.TpId}_{tpInfo.inputs.GetValueOrDefault("gameId")}"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
+        }
+
+        private void SetRecentlyViewed(TpInfo tpInfo)
+        {
+            try
+            {
+                if (!int.TryParse(tpInfo.inputs.GetValueOrDefault("tpGameType"), out var tpGameType))
+                {
+                    _logger.LogWarning($"SetRecentlyViewed tpGameType Error. tpInfo:{JsonConvert.SerializeObject(tpInfo)}");
+                }
+
+                if (!_tpGameTypeConfig.TryGetValue(tpGameType, out var gameTypeOption))
+                {
+                    _logger.LogWarning($"SetRecentlyViewed _tpGameTypeConfig Error. tpInfo:{JsonConvert.SerializeObject(tpInfo)}");
+                }
+                else
+                {
+                    var gameId = tpInfo.inputs.ContainsKey("gameId") ? tpInfo.inputs["gameId"] : "0";
+                    gameId = (gameId == "undefined" || gameId == "null") ? "" : gameId;
+                    var betType = tpInfo.inputs.ContainsKey("bettype") ? tpInfo.inputs["bettype"] : "0";
+                    
+                    // 顯示遊戲大廳名 (Dream Gaming)
+                    var type = (int)RecentlyViewedTypeEnum.LobbyName;
+                    // 類型_TP_TpGameType_CategoryId_GameId_BetType
+                    var gameInfo = $"{type}:{tpInfo.TpId}:{tpGameType}:{(int)gameTypeOption.CategoryId}:{gameId}:0";
+                    
+                    // Slot 顯示遊戲名稱
+                    if (gameTypeOption.CategoryId == TpCategory.Casino)
+                    {
+                        if (tpInfo.TpId != (int)TpEnum.SBSW)
+                        {
+                            // 顯示遊戲名稱 (Golden Grimoire)
+                            type = (int)RecentlyViewedTypeEnum.GameName;
+                            gameInfo = $"{type}:{tpInfo.TpId}:{tpGameType}:{(int)gameTypeOption.CategoryId}:{gameId}:0";
+                        }
+                    } 
+                    else if(tpInfo.TpId == (int)TpEnum.SBSW)
+                    {
+                        // esport games 多塞bettype判斷
+                        type = (int)RecentlyViewedTypeEnum.LobbyName;
+                        gameInfo = $"{type}:{tpInfo.TpId}:{tpGameType}:{(int)gameTypeOption.CategoryId}:{gameId}:{betType}";
+                    }
+
+                    _mainDbClient.Execute("Member_CustRecentlyViewed_Set", new
+                    {
+                        _CustId = tpInfo.CustId,
+                        _RecentlyViewed = gameInfo
                     });
                 }
             }
