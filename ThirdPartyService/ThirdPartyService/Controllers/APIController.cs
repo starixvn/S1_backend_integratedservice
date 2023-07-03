@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
@@ -14,7 +8,6 @@ using ThirdPartyCore.Model.TpMerchantBalance.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
-using ThirdPartyService.Service.Library;
 
 namespace ThirdPartyService.Controllers
 {
@@ -239,22 +232,6 @@ namespace ThirdPartyService.Controllers
             try
             {
                 apiResult = _thirdPartyBLL.SetBetLimit(setBetLimit);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-                apiResult.ErrorCode = ErrorCode.SystemError;
-                apiResult.RawMessage = ex.Message;
-            }
-            return apiResult;
-        }
-
-        public ActionResult<ApiResult> GetBetLimit(GetBetLimit getBetLimit)
-        {
-            var apiResult = new ApiResult();
-            try
-            {
-                apiResult = _thirdPartyBLL.GetBetLimit(getBetLimit);
             }
             catch (Exception ex)
             {
