@@ -1,8 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json;
 using ThirdPartyWager.Service.DAL;
 
 namespace ThirdPartyWager.Service.BLL
