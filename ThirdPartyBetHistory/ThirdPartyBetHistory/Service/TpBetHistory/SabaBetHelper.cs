@@ -162,7 +162,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 
             if (getBetDetail.error_code != 0)
             {
-                _logger.LogError(getBetDetail.message, $"GetRNGBetDetail");
+                _logger.LogError(getBetDetail.message, $"GetTpBetRecordDetail");
             }
 
             if (DataNotExists(getBetDetail))
