@@ -25,7 +25,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly SettledBLL _settledBLL;
         private readonly Dictionary<int, SabaSportTypeOption> _sportTypeConfig;
 
-        private readonly ILogger<TFGWorker> _logger;
+        private readonly ILogger<SBSWWorker> _logger;
         public SBSWWorker(IServiceProvider provider)
         {
             _tpName = Enum.GetName(typeof(Tp), Tp);
@@ -33,7 +33,7 @@ namespace ThirdPartySettleWorker.Workers
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _settledBLL = provider.GetRequiredService<SettledBLL>();
-            _logger = provider.GetRequiredService<ILogger<TFGWorker>>();
+            _logger = provider.GetRequiredService<ILogger<SBSWWorker>>();
             _sportTypeConfig = provider.GetRequiredService<IEnumerable<SabaSportTypeOption>>()
                 .ToDictionary(item => item.SportType, item => item);
         }
@@ -109,7 +109,7 @@ namespace ThirdPartySettleWorker.Workers
                         var settlementType = SettlementType.UnSettled;
                         var ticketStatus = TicketStatus.UnSettled;
                         var transTime = wagerData.transaction_time;
-                        var settledTime = wagerData.transaction_time;
+                        var settledTime = string.IsNullOrWhiteSpace(wagerData.settlement_time) ? wagerData.transaction_time : DateTime.Parse(wagerData.settlement_time);
                         var tpCategoryId = sabaSportType.TpCategoryId;
                         var gameType = sabaSportType.TpGameType;
 

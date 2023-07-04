@@ -611,6 +611,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public string vendor_member_id { get; set; }
         public DateTime? winlost_datetime { get; set; }
         public string ticket_extra_status { get; set; } = string.Empty;
+        public string settlement_time { get; set; }
     }
     public class BetDetail: BaseBetDetail
     {
@@ -632,7 +633,6 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public string islive { get; set; }
         public int? home_score { get; set; }
         public int? away_score { get; set; }
-        public string settlement_time { get; set; }
         public string customInfo1 { get; set; }
         public string customInfo2 { get; set; }
         public string customInfo3 { get; set; }
