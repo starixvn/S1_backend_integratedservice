@@ -132,7 +132,7 @@ namespace ThirdPartySettleWorker.Workers
 
                         if (settleData.Any())
                         {
-                            if (betData.Sum(x => x.betAmount) == wagerData.stake)
+                            if (betData.Sum(x => x.debitAmount) == wagerData.stake)
                             {
                                 betRecordInfo.WinlostAmount = wagerData.winlost_amount;
                                 CalculateAvailableBet(wagerData, betRecordInfo);
