@@ -42,7 +42,8 @@ namespace ThirdPartyBetHistory.Service.Model.enums
         Nova88 = 1,
         Goal123 = 2,
         Bwing = 3,
-        Ivorysport = 5
+        Ivorysport = 5,
+        Leobet = 6,
     }
 
     public enum BetType

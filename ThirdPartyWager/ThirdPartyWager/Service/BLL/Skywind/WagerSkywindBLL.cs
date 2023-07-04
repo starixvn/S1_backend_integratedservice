@@ -1,20 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿using System.Text.RegularExpressions;
 using Newtonsoft.Json;
-using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
-	public class WagerSkywindBLL
+    public class WagerSkywindBLL
 	{
 		private readonly ThirdPartyBLL _thirdPartyBLL;
 		private readonly ILogger<WagerSkywindBLL> _logger;

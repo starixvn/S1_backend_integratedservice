@@ -1,7 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using System.Net.Http;
-
-namespace ThirdPartyWager.Service.Library
+﻿namespace ThirdPartyWager.Service.Library
 {
     public class HttpHelper
     {

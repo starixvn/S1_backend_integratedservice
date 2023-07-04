@@ -3,7 +3,6 @@ using System.Text;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model;
-using System.Runtime.Intrinsics.Arm;
 using System.Security.Cryptography;
 
 namespace ThirdPartyWager.Service.BLL;

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using ThirdPartyWager.Service.Model.enums;
-
-namespace ThirdPartyWager.Service.BLL.MG
+﻿namespace ThirdPartyWager.Service.BLL.MG
 {
     public interface IMGBLL
     {
