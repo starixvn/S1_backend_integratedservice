@@ -78,6 +78,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public DateTime transTime { get; set; }
         public string roundId { get; set; }
         public string roundType { get; set; }
+        public int endRound { get; set; }
         public BettransType TicketType { get; set; }
         public TicketStatus TicketStatus { get; set; }
         public SettleFlag SettleFlag { get; set; }
