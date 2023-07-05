@@ -234,8 +234,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
 
-            var hash = (getQuery.ContainsKey("hash")) ? getQuery["hash"] : "";
-            var verifyHash = CheckHash(hash, Content, logName);
+            var verifyHash = false;
+            if (getQuery.TryGetValue("hash", out var hash))
+            {
+                verifyHash = CheckHash(hash, Content, logName);
+            }
             if (!verifyHash)
             {
                 errorResponse.error = "P_02";
@@ -288,8 +291,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 var Content = await reader.ReadToEndAsync();
 
-                var hash = (getQuery.ContainsKey("hash")) ? getQuery["hash"] : "";
-                var verifyHash = CheckHash(hash, Content, logName);
+                var verifyHash = false;
+                if (getQuery.TryGetValue("hash", out var hash))
+                {
+                    verifyHash = CheckHash(hash, Content, logName);
+                }
                 if (!verifyHash)
                 {
                     errorResponse.error = "P_02";
@@ -531,8 +537,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 var Content = await reader.ReadToEndAsync();
 
-                var hash = (getQuery.ContainsKey("hash")) ? getQuery["hash"] : "";
-                var verifyHash = CheckHash(hash, Content, logName);
+                var verifyHash = false;
+                if (getQuery.TryGetValue("hash", out var hash))
+                {
+                    verifyHash = CheckHash(hash, Content, logName);
+                }
                 if (!verifyHash)
                 {
                     errorResponse.error = "P_02";

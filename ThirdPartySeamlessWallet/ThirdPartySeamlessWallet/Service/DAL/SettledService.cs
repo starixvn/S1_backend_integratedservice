@@ -8,6 +8,7 @@ using ThirdPartySeamlessWallet.Service.Model.enums;
 using Serilog.Context;
 using System.Reflection;
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Extensions;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -910,16 +911,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
             var partitionTimeOfSettledTime = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime;
             var partitionTimeOfTransTime = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.TransTime).DateTime;
-            var tt = partitionTimeOfSettledTime.ToString("yyyyMM");
-            var st = partitionTimeOfTransTime.ToString("yyyyMM");
-            var verifyMonth = (int)(partitionTimeOfSettledTime - partitionTimeOfTransTime).TotalDays;
+            var tt = partitionTimeOfSettledTime.GetPartitionKey();
+            var st = partitionTimeOfTransTime.GetPartitionKey();
+            var verifyDays = (int)partitionTimeOfSettledTime.Subtract(partitionTimeOfTransTime).TotalDays;
 
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             var trans = conn.BeginTransaction();
 
             result = _partitionService.Execute(partitionTimeOfSettledTime, spName, new DynamicParameters(new { TransId = betRecordInfo.TransId }), trans);
-            if (result > 0 && tt != st && verifyMonth < 90)
+            if (result > 0 && tt != st && verifyDays < 90)
             {
                 // 跨月同步
                 result = _partitionService.Execute(partitionTimeOfTransTime, spName, new DynamicParameters(new { TransId = betRecordInfo.TransId }), trans);
