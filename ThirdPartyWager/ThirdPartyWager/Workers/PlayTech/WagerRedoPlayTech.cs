@@ -7,8 +7,8 @@ namespace ThirdPartyWager.Workers
     public class WagerRedoPlayTech : BackgroundService
     {
         private readonly ILogger<WagerRedoPlayTech> _logger;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly WagerPlayTechBLL _wagerPlayTechBLL;
-        private readonly CommonBLL _commonBLL;
 
         private Timer timer;
         private readonly int tpType = (int)WagerTimerType.RedoWager;
@@ -16,12 +16,13 @@ namespace ThirdPartyWager.Workers
         private readonly int quickTime = 90; // in seconds
         private readonly int runTime = 30; // in minutes
         private readonly string _tpName = Tp.PlayTech.ToString();
+        private readonly int _tpId = (int)Tp.PlayTech;
 
         public WagerRedoPlayTech(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<WagerRedoPlayTech>>();
             _wagerPlayTechBLL = provider.GetRequiredService<WagerPlayTechBLL>();
-            _commonBLL = provider.GetRequiredService<CommonBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -36,10 +37,14 @@ namespace ThirdPartyWager.Workers
             var quick = false;
             try
             {
-                var res = await _wagerPlayTechBLL.ExecWagerRedoWorker(tpType, timeRange);
-                if (res == true)
+                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+                foreach (var siteData in siteList)
                 {
-                    quick = true;
+                    var res = await _wagerPlayTechBLL.ExecWagerRedoWorker(siteData, tpType, timeRange);
+                    if (res == true)
+                    {
+                        quick = true;
+                    }
                 }
             }
             catch (Exception ex)

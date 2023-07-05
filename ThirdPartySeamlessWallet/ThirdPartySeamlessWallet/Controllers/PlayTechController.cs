@@ -23,7 +23,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly int _thisTp;
         private readonly string _tpName = Tp.PlayTech.ToString();
         // 通常是一直重试直到成功, 但是由于我们每月会对账,所以到第二个月初如果还有没有完结的话会转入手工处置
-        private readonly int _partitionCheckDay = 45;
+        private readonly int _partitionCheckDay = 15;
 
         public PlayTechController(IServiceProvider provider)
         {
@@ -55,6 +55,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {"T_01","Player Insufficient Funds"},
             {"T_03","Transaction does not exist when cancel"},
             {"T_04","Bet limit was exceeded"},
+            {"T_07","Transaction declined"},
             {"R_01","Round is closed when bet"},
             {"R_02","Invalid round when win"},
             {"G_01","Game not found"},
@@ -125,8 +126,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         #endregion
 
         [HttpPost]
-        [Route("[controller]/auth")]
-        public async Task<dynamic> AuthAsync([FromQuery] Dictionary<string, string> getQuery)
+        [Route("[controller]/{sitename}/auth")]
+        public async Task<dynamic> AuthAsync(string sitename, [FromQuery] Dictionary<string, string> getQuery)
         {
             string logName = $"{_tpName}_auth";
 
@@ -144,7 +145,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var verifyHash = false;
                 if (getQuery.TryGetValue("hash", out var hash))
                 {
-                    verifyHash = CheckHash(hash, Content, logName);
+                    verifyHash = CheckHash(sitename, hash, Content, logName);
                 }
                 if (!verifyHash)
                 {
@@ -220,8 +221,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        [Route("[controller]/balance")]
-        public async Task<dynamic> BalanceAsync([FromQuery] Dictionary<string, string> getQuery)
+        [Route("[controller]/{sitename}/balance")]
+        public async Task<dynamic> BalanceAsync(string sitename, [FromQuery] Dictionary<string, string> getQuery)
         {
             string logName = $"{_thisTp}_balance";
 
@@ -237,7 +238,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             var verifyHash = false;
             if (getQuery.TryGetValue("hash", out var hash))
             {
-                verifyHash = CheckHash(hash, Content, logName);
+                verifyHash = CheckHash(sitename, hash, Content, logName);
             }
             if (!verifyHash)
             {
@@ -276,8 +277,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        [Route("[controller]/transaction")]
-        public async Task<dynamic> TransactionAsync([FromQuery] Dictionary<string, string> getQuery)
+        [Route("[controller]/{sitename}/transaction")]
+        public async Task<dynamic> TransactionAsync(string sitename, [FromQuery] Dictionary<string, string> getQuery)
         {
             string logName = $"{_thisTp}_transaction";
 
@@ -294,7 +295,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var verifyHash = false;
                 if (getQuery.TryGetValue("hash", out var hash))
                 {
-                    verifyHash = CheckHash(hash, Content, logName);
+                    verifyHash = CheckHash(sitename, hash, Content, logName);
                 }
                 if (!verifyHash)
                 {
@@ -482,7 +483,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     // 與對方確認: 有的游戏供应商过来的一个请求 就是bet+win. 我们不会拆分所以也会按照这样的情况发送. 同一个trans 中不会出现 bet+win+ cancle/ bet+cancel 情况.
                     // 混合request(bet、win)
-                    var result = _settledBLL.BetAndPayout_PlayTech(getReq, gameType, out decimal tpAffterAmount);
+                    var result = _settledBLL.BetAndPayout_PlayTech(getReq, gameType, _partitionCheckDay, out decimal tpAffterAmount);
                     if (result > 0 || result == -1)
                     {
                         if (tpAffterAmount == 0 || result == -1)
@@ -521,8 +522,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        [Route("[controller]/payUp")]
-        public async Task<dynamic> PayUpAsync([FromQuery] Dictionary<string, string> getQuery)
+        [Route("[controller]/{sitename}/payUp")]
+        public async Task<dynamic> PayUpAsync(string sitename, [FromQuery] Dictionary<string, string> getQuery)
         {
             //payUp 这个接口 是玩家获得的收益 但是没有参与任何游戏
             string logName = $"{_thisTp}_payUp";
@@ -540,7 +541,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var verifyHash = false;
                 if (getQuery.TryGetValue("hash", out var hash))
                 {
-                    verifyHash = CheckHash(hash, Content, logName);
+                    verifyHash = CheckHash(sitename, hash, Content, logName);
                 }
                 if (!verifyHash)
                 {
@@ -653,9 +654,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             return false;
         }
 
-        private bool CheckHash(string hash, string request, string logName)
+        private bool CheckHash(string sitename, string hash, string request, string logName)
         {
-            var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting(_thisTp);
+            var serverInfo = _thirdPartyBLL.GetServerInfoBySiteName(sitename);
+            if (serverInfo == null || serverInfo.SiteId <= 0)
+            {
+                return false;
+            }
+            var thirdPartySetting = _thirdPartyBLL.GetThirdPartyBySite(_thisTp, serverInfo.SiteId);
             var dict = _tools.FromJson<Dictionary<string, dynamic>>(request);
             var dicP = ExceptHashAndSort(dict);
             var encryptHash = EncryptString(dicP + thirdPartySetting.TpSetting["SecretKey"]);

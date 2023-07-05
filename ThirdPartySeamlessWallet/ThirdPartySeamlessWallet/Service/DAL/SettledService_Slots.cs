@@ -5456,7 +5456,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             var cntTrans = bettingData_PlayTech.trans.Count;
             var cntExet = 0;
-
+            int cntContinue = 0;
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
@@ -5478,7 +5478,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         if (bettrans.Any(i => i.TicketType == BettransType.CancelBet))
                         {
-                            // 沒有下注單，全部cancel: 與對方需要處理，在此情況下中獎金額將為0
+                            // 沒有下注單，全部cancel: 與對方確認需要處理，在此情況下中獎金額將為0
                             if (data.amount != 0)
                             {
                                 // 阻擋amount != 0
@@ -5491,6 +5491,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             // 沒有下注單
                             return -4;
                         }
+                    }
+                    else if (bettrans.Any(i => i.TicketType == BettransType.Payout && i.transId == data.transId))
+                    {
+                        // 檢查是否已經收過該transId payout
+                        cntExet++;
+                        cntContinue++;
+                        continue;
                     }
 
                     var p = new DynamicParameters(new
@@ -5565,7 +5572,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                         return result;
                     }
-
                 }
                 catch (MySqlException mySqlEx)
                 {
@@ -5576,13 +5582,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         /*Duplicate for key 'PRIMARY'*/
                         result = -1;
                         cntExet++;
+                        cntContinue++;
                         continue;
                     }
                     throw;
                 }
             }
 
-            if (cntExet == cntTrans)
+            if (cntContinue == cntExet)
+            {
+                // 全為無需處理的Request
+                return -1;
+            }
+            else if (cntExet == cntTrans)
             {
                 _mainDbClient.CommitAndDisposeConnection(conn, trans);
                 return result;
@@ -5613,7 +5625,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             var cntTrans = bettingData_PlayTech.trans.Count;
             var cntExet = 0;
-
+            int cntContinue = 0;
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
@@ -5628,6 +5640,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     var bettrans = _partitionService.Query<BettransData_PlayTech>(partitionTime, GetSpName, new { roundId = data.roundId, playerId = bettingData_PlayTech.playerId }, partitionCheckDay);
                     if (bettrans.Any(i => i.TicketType == BettransType.Bet && i.transId == data.referenceId))
                     {
+                        // 取得下注單的時間 避免跨月抓不到
+                        var betTicket = bettrans.First(i => i.TicketType == BettransType.Bet && i.transId == data.referenceId);
+                        partitionTime = betTicket.transTime;
                         // update cancel
                         var p = new DynamicParameters(new
                         {
@@ -5692,9 +5707,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             validWin = data.validWin,
                             additionalData = data.additionalData != null ? JsonConvert.SerializeObject(data.additionalData) : "[]",
                             transTimeUnix = data.transTimeUnix,
-                            TicketType = (int)TransferType.Payout,
-                            TicketStatus = (int)TicketStatus.UnSettled,
-                            SettleFlag = (int)SettleFlag.EndGame
+                            TicketType = (int)TransferType.CancelBet,
+                            TicketStatus = (int)TicketStatus.Refund,
+                            SettleFlag = (int)SettleFlag.Settled
                         });
 
                         result = 0;
@@ -5725,13 +5740,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         /*Duplicate for key 'PRIMARY'*/
                         result = -1;
                         cntExet++;
+                        cntContinue++;
                         continue;
                     }
                     throw;
                 }
             }
-
-            if (cntExet == cntTrans)
+            
+            if (cntContinue == cntExet)
+            {
+                // 全為無需處理的Request
+                return -1;
+            }
+            else if (cntExet == cntTrans)
             {
                 _mainDbClient.CommitAndDisposeConnection(conn, trans);
                 return result;
@@ -5745,7 +5766,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public int BetAndPayout_PlayTech(TpCustInfo tpCustInfo, BettingData_PlayTech bettingData_PlayTech, GameType gameType, out decimal afterAmount)
+        public int BetAndPayout_PlayTech(TpCustInfo tpCustInfo, BettingData_PlayTech bettingData_PlayTech, GameType gameType, int partitionCheckDay, out decimal afterAmount)
         {
             var result = 0;
             afterAmount = 0;
@@ -5754,12 +5775,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var tableName = (gameType == GameType.PlayTech_RNG) ? "Rng" : "LC";
             // Service_BettransRng_PlayTech_Ins、Service_BettransLC_PlayTech_Ins
             var InsSpName = $"Service_Bettrans{tableName}_PlayTech_Ins";
+            // Service_BettransRng_PlayTech_roundId_Get、Service_BettransLC_PlayTech_roundId_Get
+            var GetSpName = $"Service_Bettrans{tableName}_PlayTech_roundId_Get";
 
             var cntTrans = bettingData_PlayTech.trans.Count;
             var cntExet = 0;
-
+            int cntContinue = 0;
             Dictionary<string, int> verifyBonus = new();
-
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             var trans = conn.BeginTransaction();
@@ -5803,9 +5825,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         TicketStatus = (int)TicketStatus.UnSettled
                     });
 
-
                     if (string.Equals(data.transType, "bet", StringComparison.OrdinalIgnoreCase))
                     {
+                        var bettrans = _partitionService.Query<BettransData_PlayTech>(partitionTime, GetSpName, new { roundId = data.roundId, playerId = bettingData_PlayTech.playerId }, partitionCheckDay);
+                        if (bettrans.Any(i => i.TicketType == BettransType.Bet && i.transId == data.transId))
+                        {
+                            // 檢查是否已經收過該transId bet
+                            cntExet++;
+                            cntContinue++;
+                            continue;
+                        }
+
                         p.Add("TicketType", (int)TransferType.PlaceBet);
                         p.Add("SettleFlag", (int)SettleFlag.Running);
                         result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
@@ -5837,6 +5867,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     }
                     else if (string.Equals(data.transType, "win", StringComparison.OrdinalIgnoreCase))
                     {
+                        var bettrans = _partitionService.Query<BettransData_PlayTech>(partitionTime, GetSpName, new { roundId = data.roundId, playerId = bettingData_PlayTech.playerId }, partitionCheckDay);
+                        if (bettrans.Any(i => i.TicketType == BettransType.Payout && i.transId == data.transId))
+                        {
+                            // 檢查是否已經收過該transId payout
+                            cntExet++;
+                            cntContinue++;
+                            continue;
+                        }
+
                         p.Add("TicketType", (int)TransferType.Payout);
                         p.Add("SettleFlag", data.endRound == 1 ? (int)SettleFlag.EndGame : (int)SettleFlag.Running);
                         result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
@@ -5910,6 +5949,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         /*Duplicate for key 'PRIMARY'*/
                         result = -1;
                         cntExet++;
+                        cntContinue++;
                         continue;
                     }
                     throw;
@@ -5918,7 +5958,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                if (cntExet == cntTrans)
+                if (cntContinue == cntExet)
+                {
+                    // 全為無需處理的Request
+                    return -1;
+                }
+                else if (cntExet == cntTrans)
                 {
                     _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     if (verifyBonus.Any())

@@ -27,6 +27,7 @@ namespace ThirdPartyWager.Service.BLL
         {
             string wagerUrl = setting["WagerUrl"];
             string brandId = setting["BrandId"];
+            string SecretKey = setting["SecretKey"];
             string uri = "/history/game";
             // param
             var param = new
@@ -42,7 +43,7 @@ namespace ThirdPartyWager.Service.BLL
             string sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             // encrypt
-            string hash = EncryptString(ExceptHashAndSort(dicP) + setting["SecretKey"]);
+            string hash = EncryptString(ExceptHashAndSort(dicP) + SecretKey);
             string url = $"{wagerUrl}{uri}?hash={hash}";
 
             // request
@@ -55,6 +56,7 @@ namespace ThirdPartyWager.Service.BLL
         {
             string wagerUrl = setting["WagerUrl"];
             string brandId = setting["BrandId"];
+            string SecretKey = setting["SecretKey"];
             string uri = "/history/gameReport";
             // param
             var param = new
@@ -68,7 +70,7 @@ namespace ThirdPartyWager.Service.BLL
             string sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             // encrypt
-            string hash = EncryptString(ExceptHashAndSort(dicP) + setting["SecretKey"]);
+            string hash = EncryptString(ExceptHashAndSort(dicP) + SecretKey);
             string url = $"{wagerUrl}{uri}?hash={hash}";
 
             // request

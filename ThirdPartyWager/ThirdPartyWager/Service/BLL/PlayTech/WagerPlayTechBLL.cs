@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
@@ -12,10 +13,10 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiPlayTechBLL _apiPlayTechBLL;
         private readonly WagerPlayTechService _wagerPlayTechService;
         private readonly ILogger<WagerPlayTechBLL> _logger;
-        private readonly IHostEnvironment _environment;
 
         private readonly int _tpId = (int)Tp.PlayTech;
         private readonly int _timeZone = 0;
+        private readonly int _gameType = 0; // 不會區分遊戲，只用來塞timer設定
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:00";
         public WagerPlayTechBLL(IServiceProvider provider)
         {
@@ -24,55 +25,57 @@ namespace ThirdPartyWager.Service.BLL
             _apiPlayTechBLL = provider.GetRequiredService<ApiPlayTechBLL>();
             _wagerPlayTechService = provider.GetRequiredService<WagerPlayTechService>();
             _logger = provider.GetRequiredService<ILogger<WagerPlayTechBLL>>();
-            _environment = provider.GetRequiredService<IHostEnvironment>();
         }
 
-        public async Task<bool> ExecWagerWorker(int type, int timeRange)
+        public async Task<bool> ExecWagerWorker(TpListModel siteData, int type, int timeRange)
         {
-            var wokerTime = GetWorkerTime(type, -120);
+            var siteId = siteData.SiteId;
+            var wokerTime = GetWorkerTime(type, -120, siteId);
             var quick = CheckQuick(wokerTime, 5);
             TimeCast time = _dateTimeHelper.GetTimeByMinute(timeRange, _timeZone, _timeFormat, wokerTime);
 
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
             {
-                var result = await GetWagersAsync(time);
+                var result = await GetWagersAsync(time, siteData);
                 if (result)
                 {
-                    _thirdPartyBLL.SetThirdPartyTimer(_tpId, type, time.endUnix);
+                    _thirdPartyBLL.SetThirdPartyTimerByReference(_tpId, type, time.endUnix, _gameType, siteId.ToString());
                 }
             }
 
             return quick;
         }
 
-        public async Task<bool> ExecWagerRedoWorker(int type, int timeRange)
+        public async Task<bool> ExecWagerRedoWorker(TpListModel siteData, int type, int timeRange)
         {
-            var wokerTime = GetWorkerTime(type, 1);
+            var siteId = siteData.SiteId;
+            var wokerTime = GetWorkerTime(type, 1, siteId);
             var quick = CheckQuick(wokerTime, 120);
             var time = _dateTimeHelper.GetTimeByMinute(timeRange, _timeZone, _timeFormat, wokerTime);
 
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
             {
-                var result = await GetWagersAsync(time, true);
+                var result = await GetWagersAsync(time, siteData, true);
                 if (result)
                 {
-                    _thirdPartyBLL.SetThirdPartyTimer(_tpId, type, time.endUnix);
+                    _thirdPartyBLL.SetThirdPartyTimerByReference(_tpId, type, time.endUnix, 0, siteId.ToString());
                 }
             }
 
             return quick;
         }
 
-        public async Task<bool> GetWagersAsync(TimeCast wagerTime, bool redo = false)
+        public async Task<bool> GetWagersAsync(TimeCast wagerTime, TpListModel siteData, bool redo = false)
         {
             var workerName = redo ? "GetRedoWagersAsync" : "GetWagersAsync";
             string msg;
             try
             {
                 // get api info
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+                var siteId = siteData.SiteId;
+                var setting = siteData.SettingDic;
 
                 // pagination
                 var page = 1;
@@ -86,14 +89,14 @@ namespace ThirdPartyWager.Service.BLL
                     if (dataWager == null || dataWager.error != "0")
                     {
                         msg = "THIRD_PARTY_ERROR";
-                        _logger.LogError($"{workerName} {msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                        _logger.LogError($"{workerName} {msg}\r\nsiteId={siteId}\r\n{JsonConvert.SerializeObject(dataWager)}");
                         return false;
                     }
 
                     if (dataWager.total == 0)
                     {
                         msg = "NO_DATA";
-                        _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                        _logger.LogInformation($"{msg}\r\nsiteId={siteId}\r\n{JsonConvert.SerializeObject(dataWager)}");
                         return true;
                     }
 
@@ -109,7 +112,7 @@ namespace ThirdPartyWager.Service.BLL
                         catch (Exception ex)
                         {
                             msg = $"INSERT_WAGER(WAGERID: {bet.roundId} )";
-                            _logger.LogError(ex, $"{workerName} {msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
+                            _logger.LogError(ex, $"{workerName} {msg}\r\nsiteId={siteId}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
                             return false;
                         }
                     }
@@ -117,20 +120,20 @@ namespace ThirdPartyWager.Service.BLL
                 }
 
                 msg = "FINISH";
-                _logger.LogInformation($"{workerName} {msg}\r\n{wagerTime.startTime} ~ {wagerTime.endTime}");
+                _logger.LogInformation($"{workerName} {msg}\r\nsiteId={siteId}\r\n{wagerTime.startTime} ~ {wagerTime.endTime}");
                 return true;
             }
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                _logger.LogError(ex, $"{workerName} {msg}\r\n{ex.Message}");
+                _logger.LogError(ex, $"{workerName} {msg}\r\nsiteId={siteData.SiteId}\r\n{ex.Message}");
                 return false;
             }
         }
 
-        private DateTime GetWorkerTime(int type, int vary)
+        private DateTime GetWorkerTime(int type, int vary, int siteId)
         {
-            var lastTime = _thirdPartyBLL.GetThirdPartyTimer(_tpId, type);
+            var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByReference(_tpId, type, _gameType, siteId.ToString());
             return (lastTime == null) ? DateTime.Now.AddHours(-7) : lastTime.StartTime.AddSeconds(vary);
         }
 

@@ -2502,7 +2502,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public int BetAndPayout_PlayTech(BettingData_PlayTech bettingData_PlayTech, GameType gameType, out decimal afterAmount)
+        public int BetAndPayout_PlayTech(BettingData_PlayTech bettingData_PlayTech, GameType gameType, int partitionCheckDay, out decimal afterAmount)
         {
             var tpId = (int)Tp.PlayTech;
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(tpId, bettingData_PlayTech.playerId);
@@ -2541,7 +2541,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 return 0;
             }
 
-            var result = settledService.BetAndPayout_PlayTech(tpCustInfo, bettingData_PlayTech, gameType, out afterAmount);
+            var result = settledService.BetAndPayout_PlayTech(tpCustInfo, bettingData_PlayTech, gameType, partitionCheckDay, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;

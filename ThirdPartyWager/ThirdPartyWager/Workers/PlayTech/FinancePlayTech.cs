@@ -66,7 +66,7 @@ namespace ThirdPartyWager.Workers
             try
             {
                 // get setting
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+                var setting = "";//改由下一層取全部設定
 
                 // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
@@ -92,7 +92,7 @@ namespace ThirdPartyWager.Workers
                     // process
                     var dailyData = _financPlayTechBLL.DealReport(_tpId, reportDate, reportData);
 
-                    if(dailyData.Count() > 0)
+                    if (dailyData.Count() > 0)
                     {
                         // write
                         result = _fincanceService.SetFinanceTpDailySummary(dailyData);
