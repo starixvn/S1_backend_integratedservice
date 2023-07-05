@@ -1,9 +1,6 @@
 ﻿using Serilog.Context;
-using System;
-using System.Security.Policy;
 using System.Text.Json;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers;
@@ -38,7 +35,7 @@ public class WagerYeebet : BackgroundService
         LogContext.PushProperty("Tp", Tp.Yeebet.ToString());
         try
         {
-            var siteList = _commonBLL.GetSiteList().Where(x => x.SiteId != 4);
+            var siteList = _commonBLL.GetSiteList().Where(x => x.SiteId != 4 && x.SiteId != 5);
             var TpCurrencyList = _commonBLL.GetTpCurrencyList((int)Tp.Yeebet);
             foreach (var siteInfo in siteList)
             {

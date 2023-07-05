@@ -1,21 +1,18 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
-    public class ThirdPartyBLL
+    public class ThirdPartyBLL : IThirdPartyBLL
     {
         private readonly ThirdPartyHelper thirdPartyHelper;
         private readonly TpCustInfoService tpCustInfoService;
         private readonly IMemoryCache cache;
 
-        public ThirdPartyBLL(ThirdPartyHelper thirdPartyHelper,TpCustInfoService tpCustInfoService, IMemoryCache cache)
+        public ThirdPartyBLL(ThirdPartyHelper thirdPartyHelper, TpCustInfoService tpCustInfoService, IMemoryCache cache)
         {
             this.thirdPartyHelper = thirdPartyHelper;
             this.tpCustInfoService = tpCustInfoService;

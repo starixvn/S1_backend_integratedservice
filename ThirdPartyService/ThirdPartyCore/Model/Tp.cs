@@ -90,6 +90,7 @@ namespace ThirdPartyCore.Model
         public int CStatus { get; set; }
         public string IsoCode { get; set; }
         public string TpCustId { get; set; } = ""; //Default 空字串
+        public CustomerMemberTypeEnum MemberType { get; set; }
     }
 
     public class TpMerchantInfo
@@ -267,25 +268,5 @@ namespace ThirdPartyCore.Model
         public int TpId { set; get; }
         public int CustId { set; get; }
         public string BetSetting { get; set; }
-    }
-    public class GetBetLimit
-    {
-        public int TpId { set; get; }
-        public int CustId { set; get; }
-    }
-
-    public class BetSettingLimit
-    {
-        public int error_code { get; set; }
-        public string message { get; set; }
-        public List<BetSetting> Data { get; set; }
-    }
-
-    public class BetSetting
-    {
-        public string sport_type { get; set; }
-        public decimal min_bet { get; set; }
-        public decimal max_bet { get; set; }
-        public decimal max_bet_per_match { get; set; }
     }
 }

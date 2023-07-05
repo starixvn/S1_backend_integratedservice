@@ -2660,7 +2660,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public int SetSettleFlag_TpWagerRng_PT(long TransId)
         {
-            return _mainDbClient.Execute("Service_TpWagerRng_PT_Settle_Set", commandType: CommandType.StoredProcedure ,new { TransId = TransId } );
+            return _wagerDbClient.Execute("Service_TpWagerRng_PT_Settle_Set", commandType: CommandType.StoredProcedure ,new { TransId = TransId } );
         }
 
         #endregion
@@ -5442,5 +5442,140 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        public async Task<NextspinResult> PayoutRNG_Nextspin(TpCustInfo tpCustInfo, BettingDataRNG_Nextspin bettingData)
+        {
+            var afterAmount = 0m;
+            using var conn = _mainDbClient.GetMySqlConnection();
+            await conn.OpenAsync();
+            await using var trans = await conn.BeginTransactionAsync();
+            try
+            {
+                var partitionTime = DateTime.UtcNow;
+                bettingData.TicketType = (int)BettransType.Payout;
+                bettingData.TicketStatus = (int)bettingData.amount > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
+                var p = new DynamicParameters(bettingData);
+                p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
+                var result = _partitionService.Execute(partitionTime, "Service_BettransRng_Nextspin_Ins", p, trans);
+                var sq = p.Get<long>("SQ");
+                if (sq == 0)
+                    throw new NextspinException(NextspinErrorCode.SystemError);
+                
+                // update ticketId
+                result = _partitionService.Execute(partitionTime, "Service_BettransRng_Nextspin_Set", new { ticketId = bettingData.ticketId, referenceId = bettingData.referenceId }, trans);
+                if(result < 1)
+                    throw new NextspinException(NextspinErrorCode.RecordIdNotFound);
+
+                if (bettingData.amount != 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        bettingData.amount,
+                        (int)Tp.Nextspin,
+                        bettingData.referenceId,
+                        (int)GameType.Nextspin_RNG,
+                        TpCategory.Slots,
+                        bettingData.transferId,
+                        TransType.Payout,
+                        null,
+                        out afterAmount,
+                        "Payout",
+                        out var bonusId,
+                        conn,
+                        trans
+                    );
+                    if (result != 1)
+                        throw new NextspinException(NextspinErrorCode.InsufficientBalance);
+                    
+                }
+                result = _tpUnsettleService.InsertTpUnsettle(Tp.Nextspin, GameType.Nextspin_RNG, bettingData.ticketId, trans, partitionTime);
+                if (result < 1)
+                    throw new NextspinException(NextspinErrorCode.SystemError);
+
+                await trans.CommitAsync();
+                return new NextspinResult() 
+                {
+                    Result = 1,
+                    SQ = sq.ToString(),
+                    AfterAmount = afterAmount
+                };
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    throw new NextspinException(NextspinErrorCode.DuplicatedReferenceId);
+                }
+                throw;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                await trans.RollbackAsync();
+                throw new NextspinException(NextspinErrorCode.SystemError);
+            }
+        }
+        public async Task<NextspinResult> CancelBetRNG_Nextspin(TpCustInfo tpCustInfo, BettingDataRNG_Nextspin bettingData) 
+        {
+            await using var conn = _mainDbClient.GetMySqlConnection();
+            await conn.OpenAsync();
+            await using var trans = await conn.BeginTransactionAsync();
+            try
+            {
+                var partitionTime = DateTime.UtcNow;
+                bettingData.TicketType = (int)BettransType.CancelBet;
+                bettingData.TicketStatus = (int)TicketStatus.Refund;
+                var p = new DynamicParameters(bettingData);
+                p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
+                var result = _partitionService.Execute(partitionTime, "Service_BettransRng_Nextspin_Ins", p, trans);
+                var sq = p.Get<long>("SQ");
+                if (sq == 0)
+                    throw new NextspinException(NextspinErrorCode.SystemError);
+
+                result = PayoutV2(
+                    tpCustInfo,
+                    bettingData.amount,
+                    (int)Tp.Nextspin,
+                    bettingData.referenceId,
+                    (int)GameType.Nextspin_RNG,
+                    TpCategory.Slots,
+                    bettingData.transferId,
+                    TransType.Refunds,
+                    null,
+                    out var afterAmount,
+                    "Cancel",
+                    out var bonusId,
+                    conn,
+                    trans);
+                if (result < 1)
+                    throw new NextspinException(NextspinErrorCode.InsufficientBalance);
+
+                result = _tpUnsettleService.InsertTpUnsettle(Tp.Nextspin, GameType.Nextspin_RNG, bettingData.referenceId, trans, partitionTime);
+                if (result < 1)
+                    throw new NextspinException(NextspinErrorCode.SystemError);
+
+                await trans.CommitAsync();
+                return new NextspinResult()
+                {
+                    Result = 1,
+                    SQ = sq.ToString(),
+                    AfterAmount = afterAmount
+                };
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    throw new NextspinException(NextspinErrorCode.DuplicatedReferenceId);
+                }
+                throw;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, ex.Message);
+                await trans.RollbackAsync();
+                throw new NextspinException(NextspinErrorCode.SystemError);
+            }
+        }
     }
 }

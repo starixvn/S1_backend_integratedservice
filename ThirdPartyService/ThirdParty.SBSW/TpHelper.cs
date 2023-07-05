@@ -28,7 +28,7 @@ namespace ThirdParty.SBSW
 
         private class CreateMemberReq : Req
         {
-            public string operatorid { set; get; }
+            public string operatorId { set; get; }
             public string userName { set; get; }
             public string oddsType { set; get; }
             public int currency { set; get; }
@@ -66,27 +66,24 @@ namespace ThirdParty.SBSW
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string ApiUrl = new SabaConfig(inputs).ApiUrl;
-            CreateMemberReq input = new CreateMemberReq();
-            input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
-            input.vendor_member_id = tpCustInfo.TpUserName;
-            input.operatorid = null;
-            input.userName = input.vendor_member_id;
-            input.oddsType = "1";
-            if (tpCustInfo.IsTest)
-                input.currency = 20;
-            else
-                input.currency = Convert.ToInt32(tpCustInfo.TpCurrencyId);
-            input.maxtransfer = int.MaxValue;
-            input.mintransfer = 1;
-
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(input)).ToDictionary(kp => kp.Key, kp => kp.Value);
-            string postdata = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}";
-
-            ApiUrl = $"{ApiUrl}/CreateMember";
+            var config = new SabaConfig(inputs);
+            var ApiUrl = $"{config.ApiUrl}/CreateMember";
+            var input = new CreateMemberReq
+            {
+                vendor_id = config.VendorId,
+                vendor_member_id = tpCustInfo.TpUserName,
+                operatorId = config.OperatorId,
+                userName = tpCustInfo.TpUserName,
+                maxtransfer = int.MaxValue,
+                mintransfer = 1,
+                currency = tpCustInfo.IsTest ? 20 : Convert.ToInt32(tpCustInfo.TpCurrencyId),
+                oddsType = "1",
+            };   
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(input));
+            var postdata = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}"))}";
             var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded");
 
-            ApiResult oApiResult = new ApiResult();
+            var oApiResult = new ApiResult();
             if (IsJSON(result))
             {
                 var json = JsonConvert.DeserializeObject<Result>(result);
@@ -240,47 +237,6 @@ namespace ThirdParty.SBSW
             return oApiResult;
         }
 
-        public ApiResult<List<BetSetting>> GetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {
-            var config = new SabaConfig(inputs);
-            var domain = config.ApiUrl;
-            var req = new GetBetSettingLimitReq
-            {
-                vendor_id = config.VendorId,
-                currency = tpCustInfo.TpCurrencyId
-            };
-            var t = req.GetType();
-            var props = t.GetProperties();
-            var postData = $"{string.Join("&", props.Select(kp => $"{kp.Name}={kp.GetValue(req)}"))}";
-
-            var apiUrl = $"{domain}/GetBetSettingLimit";
-            var result = HttpPost(apiUrl, postData, "application/x-www-form-urlencoded");
-
-            var oApiResult = new ApiResult<List<BetSetting>>();
-            if (IsJSON(result))
-            {
-                var betSettingLimit = JsonConvert.DeserializeObject<BetSettingLimit>(result);
-                if (betSettingLimit.error_code == 0)
-                {
-                    oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Data = betSettingLimit.Data;
-                }
-                else
-                {
-                    oApiResult.RawMessage = betSettingLimit.message;
-                    oApiResult.RawErrorCode = betSettingLimit.error_code.ToString();
-                    oApiResult.ErrorCode = ErrorCode.Fail;
-                }
-            }
-            else
-            {
-                oApiResult.ErrorCode = ErrorCode.Fail;
-                oApiResult.RawMessage = result;
-            }
-
-            return oApiResult;
-        }
-
         private LoginResult GetSabaUrl(SabaConfig config, string tpUserName, int platform)
         {
             var apiUrl = $"{config.ApiUrl}/GetSabaUrl";
@@ -294,11 +250,13 @@ namespace ThirdParty.SBSW
         {
             public string ApiUrl { get; set; }
             public string VendorId { get; set; }
+            public string OperatorId { get; set; }
 
             public SabaConfig(Dictionary<string, string> inputs)
             {
                 ApiUrl = inputs.GetValue("ApiUrl");
                 VendorId = inputs.GetValue("VendorId");
+                OperatorId = inputs.GetValue("OperatorId");
             }
         }
 

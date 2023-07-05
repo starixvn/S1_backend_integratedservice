@@ -1,9 +1,7 @@
 ﻿using Newtonsoft.Json;
-using System.Security.Policy;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
-using Ubiety.Dns.Core;
 
 namespace ThirdPartyWager.Service.BLL;
 
@@ -60,7 +58,7 @@ public class FinanceBGBLL : ITpReportBLL
     public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
     {
         var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
-        var siteList = _commonBLL.GetSiteList().Where(x => x.SiteId != 4);
+        var siteList = _commonBLL.GetSiteList().Where(x => x.SiteId != 4 && x.SiteId != 5);
         var reportData = new List<dynamic>();
 
         foreach (var siteInfo in siteList)

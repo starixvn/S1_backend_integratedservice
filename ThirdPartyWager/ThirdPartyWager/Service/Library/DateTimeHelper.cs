@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ThirdPartyWager.Service.Library
+﻿namespace ThirdPartyWager.Service.Library
 {
 
     public class TimeCast
@@ -135,8 +133,8 @@ namespace ThirdPartyWager.Service.Library
 
             var dStartTime = timeBase.AddMinutes(-1 * period);
 
-            var beginAt = new DateTimeOffset(dStartTime);
-            var endAt = new DateTimeOffset(timeBase);
+            var beginAt = new DateTimeOffset(dStartTime, TimeSpan.Zero);
+            var endAt = new DateTimeOffset(timeBase, TimeSpan.Zero);
             var startTime = beginAt.ToOffset(new TimeSpan(timezone, utcMinute, 0)).ToString(format);
             var endTime = endAt.ToOffset(new TimeSpan(timezone, utcMinute, 0)).ToString(format);
             var startUnix = beginAt.ToUnixTimeSeconds();

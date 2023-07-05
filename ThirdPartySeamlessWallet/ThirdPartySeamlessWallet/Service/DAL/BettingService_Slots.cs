@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using System.Globalization;
+using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -1649,6 +1650,72 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
 
             return result;
+        }
+        #endregion
+
+        #region Nextspin
+        public IEnumerable<BettingDataRNG_Nextspin> GetBettingDataRNG_Nextspin(string referenceId)
+        {
+            var now = DateTime.UtcNow;
+            return _partitionService.Query<BettingDataRNG_Nextspin>(now, "Service_BettransRng_Nextspin_Get", new { referenceId });
+        }
+
+        public async Task<NextspinResult> PlaceBetRNG_Nextspin(TpCustInfo tpCustInfo, BettingDataRNG_Nextspin bettingData) 
+        {
+            using var conn = _mainDbClient.GetMySqlConnection();
+            await conn.OpenAsync();
+            await using var trans = await conn.BeginTransactionAsync();
+            try
+            {
+                var partitionTime = DateTime.UtcNow;
+                bettingData.TicketType = (int)BettransType.Bet;
+                bettingData.TicketStatus = (int)TicketStatus.UnSettled;
+                var p = new DynamicParameters(bettingData);
+                p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
+                var result = _partitionService.Execute(partitionTime, "Service_BettransRng_Nextspin_Ins", p, trans);
+                var sq = p.Get<long>("SQ");
+                if (sq == 0)
+                    throw new NextspinException(NextspinErrorCode.SystemError);
+                
+                var bonusId = 0;
+                result = PlaceBetV2(
+                    tpCustInfo: tpCustInfo,
+                    amount: Math.Abs(bettingData.amount) * -1,
+                    tpId: (int)Tp.Nextspin,
+                    tpTransId: bettingData.referenceId,
+                    gameType: (int)GameType.Nextspin_RNG,
+                    refId: bettingData.transferId,
+                    betData: null,
+                    tpCategory: TpCategory.Slots,
+                    afterAmount: out var afterAmount,
+                    bonusId: ref bonusId,
+                    conn: conn,
+                    trans: trans);
+                if (result < 1)
+                    throw new NextspinException(NextspinErrorCode.InsufficientBalance);
+
+                await trans.CommitAsync();
+                return new NextspinResult() 
+                {
+                    Result = 1,
+                    SQ = sq.ToString(),
+                    AfterAmount = afterAmount
+                };
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    throw new NextspinException(NextspinErrorCode.DuplicatedReferenceId);
+                }
+                throw;
+            }
+            catch (Exception ex)
+            {
+                await trans.RollbackAsync();
+                logger.LogError(ex, ex.Message);
+                throw new NextspinException(NextspinErrorCode.SystemError);
+            }
         }
         #endregion
     }
