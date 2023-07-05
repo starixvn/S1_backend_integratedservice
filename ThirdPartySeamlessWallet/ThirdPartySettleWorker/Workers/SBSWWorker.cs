@@ -72,7 +72,7 @@ namespace ThirdPartySettleWorker.Workers
                         var betData = _tpUnSettledBLL.GetTpUnsettleData<BetSBSW>(tpUnsettle.GameType == GameType.SBSW_Vgaming ? getVGBettransSp : getBettransSp,
                             tpUnsettle.GameType == GameType.SBSW_Vgaming ? new { refId = settleData.FirstOrDefault()?.refId } : new { txId = tpUnsettle.TransId }, DataBase.Main);
 
-                        _logger.LogInformation($"TransId:{tpUnsettle.TransId}\r\nbetData=\r\n{JsonConvert.SerializeObject(betData)}\r\nsettleData=\r\n{JsonConvert.SerializeObject(settleData)}");
+                        _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nbetData=\r\n{JsonConvert.SerializeObject(betData)}\r\nsettleData=\r\n{JsonConvert.SerializeObject(settleData)}");
                         //取不到下注資料，直接跳過這筆
                         if (betData == null)
                             continue;
@@ -87,7 +87,7 @@ namespace ThirdPartySettleWorker.Workers
                             _ => JsonConvert.DeserializeObject<GetBetDetailData>(tpBetRecordDetail.Detail).BetDetails.First(),
                         };
 
-                        _logger.LogInformation($"TransId:{tpUnsettle.TransId}\r\nwagerData=\r\n{JsonConvert.SerializeObject(wagerData)}");
+                        _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nwagerData=\r\n{JsonConvert.SerializeObject(wagerData)}");
 
                         if (tpUnsettle.GameType == GameType.SBSW_Vgaming)
                             wagerData.sport_type = 171;
@@ -163,7 +163,7 @@ namespace ThirdPartySettleWorker.Workers
                             }
                         }
 
-                        _logger.LogInformation($"TransId:{tpUnsettle.TransId}\r\nbetRecordInfo=\r\n{JsonConvert.SerializeObject(betRecordInfo)}");
+                        _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nbetRecordInfo=\r\n{JsonConvert.SerializeObject(betRecordInfo)}");
 
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, (TpCategory)tpCategoryId);
                         if (result == 1)
