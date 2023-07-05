@@ -5499,6 +5499,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             return -4;
                         }
                     }
+                    else if (bettrans.Any(i => i.TicketType == BettransType.Payout && i.endRound == 1))
+                    {
+                        // 檢查是否已經收過end round
+                        return -6;
+                    }
 
                     var p = new DynamicParameters(new
                     {
@@ -5812,7 +5817,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         transTimeUnix = data.transTimeUnix,
                         TicketStatus = (int)TicketStatus.UnSettled
                     });
-
 
                     if (string.Equals(data.transType, "bet", StringComparison.OrdinalIgnoreCase))
                     {

@@ -55,6 +55,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {"T_01","Player Insufficient Funds"},
             {"T_03","Transaction does not exist when cancel"},
             {"T_04","Bet limit was exceeded"},
+            {"T_07","Transaction declined"},
             {"R_01","Round is closed when bet"},
             {"R_02","Invalid round when win"},
             {"G_01","Game not found"},
@@ -436,6 +437,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                         // 與對方需要處理，在此情況下中獎金額將為0: 阻擋amount!=0
                         errorResponse.error = "P_01";
                         errorResponse.message = ErrorMassage["P_01"];
+                        _log2File.Error($"{JsonConvert.SerializeObject(errorResponse)}", logName);
+                        return errorResponse;
+                    }
+                    else if (result == -6)
+                    {
+                        // 阻擋已收過endround後續派彩的request，目前無法實測是否會有此情況
+                        errorResponse.error = "T_07";
+                        errorResponse.message = ErrorMassage["T_07"];
                         _log2File.Error($"{JsonConvert.SerializeObject(errorResponse)}", logName);
                         return errorResponse;
                     }
