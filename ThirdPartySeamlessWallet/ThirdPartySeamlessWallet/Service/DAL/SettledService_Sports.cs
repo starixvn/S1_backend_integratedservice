@@ -487,5 +487,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             return _mainDbClient.Query<SBSWUnsettle>("Service_SBSW_TpUnsettle_Get", parameters: new { LimitCount });
         }
+        public BetRecordInfo GetSBSWUnsettleList(int TpId, string TransId, int GameType)
+        {
+            return _mainDbClient.QueryFirst<BetRecordInfo>("Service_TpBetRecord_Get", parameters: new { TpId = TpId, TransId = TransId, GameType = GameType });
+        }
     }
 }
