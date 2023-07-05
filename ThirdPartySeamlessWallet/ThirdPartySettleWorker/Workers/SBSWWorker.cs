@@ -53,7 +53,6 @@ namespace ThirdPartySettleWorker.Workers
             const string getBettransSp = "Service_Bettrans_SBSW_Bet_Get"; // 取得下注紀錄
             const string getVGBettransSp = "Service_Bettrans_SBSW_Bet_refId_Get"; // 取得下注紀錄(VGAMING)
             const string getSettleSp = "Service_Bettrans_SBSW_Settle_Get"; // 取得未結算的注單
-
             try
             {
                 var tpUnsettleList = _settledBLL.GetSBSWUnsettleList();
@@ -159,6 +158,16 @@ namespace ThirdPartySettleWorker.Workers
                                 {
                                     _tpUnSettledBLL.SetTpUnsettle(Tp, tpUnsettle.GameType, tpUnsettle.TransId, false);
                                 });
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            var tpBetRecordData = _settledBLL.GetSBSWTpBetRecord((int)Tp.SBSW, tpUnsettle.TransId, (int)tpUnsettle.GameType);
+                            //如果已有下注記錄,先將該筆留在TpUnsettle內,等待取得settle資料
+                            if (tpBetRecordData != null)
+                            {
+                                _logger.LogWarning($"TransId:{tpUnsettle.TransId} waiting settleData");
                                 continue;
                             }
                         }
