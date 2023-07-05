@@ -12,6 +12,7 @@
         public decimal debitAmount { get; set; }
         public int TicketType { get; set; }
         public DateTime transactionTime { get; set; }
+        public string refId { get; set; }
     }
     public class SettleSBSW
     {

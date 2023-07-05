@@ -130,7 +130,7 @@ namespace ThirdPartySettleWorker.Workers
                             SettlementType = settlementType,
                             TicketStatus = ticketStatus,
                             GameID = GetBetDetailGameType(wagerData.sport_type).ToString(),
-                            ReferenceNo = settleData.FirstOrDefault()?.refId
+                            ReferenceNo = betData.FirstOrDefault()?.refId
                         };
 
                         if (settleData.Any())
