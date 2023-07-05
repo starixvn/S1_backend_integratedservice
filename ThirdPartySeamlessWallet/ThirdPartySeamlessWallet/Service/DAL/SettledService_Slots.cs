@@ -5635,6 +5635,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     var bettrans = _partitionService.Query<BettransData_PlayTech>(partitionTime, GetSpName, new { roundId = data.roundId, playerId = bettingData_PlayTech.playerId }, partitionCheckDay);
                     if (bettrans.Any(i => i.TicketType == BettransType.Bet && i.transId == data.referenceId))
                     {
+                        // 取得下注單的時間 避免跨月抓不到
+                        var betTicket = bettrans.First(i => i.TicketType == BettransType.Bet && i.transId == data.referenceId);
+                        partitionTime = betTicket.transTime;
                         // update cancel
                         var p = new DynamicParameters(new
                         {
