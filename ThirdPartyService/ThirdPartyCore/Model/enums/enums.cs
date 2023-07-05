@@ -247,10 +247,4 @@ namespace ThirdPartyCore.Model.enums
         Affiliate = 2,  //後續整合代理系統會使用
         LiveStreaming = 3
     }
-
-    public enum RecentlyViewedTypeEnum
-    {
-        LobbyName = 1, // saba sport
-        GameName = 2, // Fishing War
-    }
 }
