@@ -348,7 +348,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         case "win":
                             winCnt++;
                             break;
-                        case "cancelCnt":
+                        case "cancel":
                             cancelCnt++;
                             break;
                         default:
