@@ -2450,6 +2450,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.GetSBSWUnsettleList(LimitCount);
         }
+        public BetRecordInfo GetSBSWTpBetRecord(int TpId, string TransId, int GameType)
+        {
+            return settledService.GetSBSWUnsettleList(TpId, TransId, GameType);
+        }
         #endregion
     }
 }
