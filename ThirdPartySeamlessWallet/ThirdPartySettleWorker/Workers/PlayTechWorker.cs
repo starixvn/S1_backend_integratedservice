@@ -24,7 +24,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly PartitionService _partitionService;
         private readonly ILogger<PlayTechWorker> _logger;
         private readonly string _tpName;
-        private readonly int _partitionCheckDay = 45;
+        private readonly int _partitionCheckDay = 15;
 
         public PlayTechWorker(IServiceProvider provider)
         {

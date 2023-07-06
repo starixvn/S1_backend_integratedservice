@@ -10,19 +10,19 @@ namespace ThirdPartySeamlessWallet.Extensions
             return partitionTime.ToString("yyyyMM");
         }
 
+        /// <remarks>
+        /// partitionCheckDay 為幾號時觸發往前抓一個月
+        /// </remarks>
         public static IEnumerable<string> GetPartitionRange(this DateTime partitionTime, int partitionCheckDay)
         {
-            var result = new List<string>();
-            var end = partitionTime.GetPartitionKey();
-            var start = partitionTime.AddDays(partitionCheckDay * -1);
-            var st = start.GetPartitionKey();
-
-            int i = 0;
-            while (st != end)
+            var result = new List<string>
             {
-                st = start.AddMonths(i).GetPartitionKey();
-                result.Add(st);
-                i++;
+                partitionTime.GetPartitionKey()
+            };
+
+            if (partitionTime.Day <= partitionCheckDay)
+            {
+                result.Add(partitionTime.AddMonths(-1).GetPartitionKey());
             }
             return result;
         }
