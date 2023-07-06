@@ -440,14 +440,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                         _log2File.Error($"{JsonConvert.SerializeObject(errorResponse)}", logName);
                         return errorResponse;
                     }
-                    else if (result == -6)
-                    {
-                        // 阻擋已收過endround後續派彩的request，目前無法實測是否會有此情況
-                        errorResponse.error = "T_07";
-                        errorResponse.message = ErrorMassage["T_07"];
-                        _log2File.Error($"{JsonConvert.SerializeObject(errorResponse)}", logName);
-                        return errorResponse;
-                    }
                     else
                     {
                         _log2File.Error($"result={result}", logName);
@@ -491,7 +483,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     // 與對方確認: 有的游戏供应商过来的一个请求 就是bet+win. 我们不会拆分所以也会按照这样的情况发送. 同一个trans 中不会出现 bet+win+ cancle/ bet+cancel 情况.
                     // 混合request(bet、win)
-                    var result = _settledBLL.BetAndPayout_PlayTech(getReq, gameType, out decimal tpAffterAmount);
+                    var result = _settledBLL.BetAndPayout_PlayTech(getReq, gameType, _partitionCheckDay, out decimal tpAffterAmount);
                     if (result > 0 || result == -1)
                     {
                         if (tpAffterAmount == 0 || result == -1)
