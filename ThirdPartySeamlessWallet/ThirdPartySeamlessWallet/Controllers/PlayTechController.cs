@@ -23,7 +23,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly int _thisTp;
         private readonly string _tpName = Tp.PlayTech.ToString();
         // 通常是一直重试直到成功, 但是由于我们每月会对账,所以到第二个月初如果还有没有完结的话会转入手工处置
-        private readonly int _partitionCheckDay = 45;
+        private readonly int _partitionCheckDay = 15;
 
         public PlayTechController(IServiceProvider provider)
         {
