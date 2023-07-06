@@ -120,8 +120,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var request = JsonConvert.DeserializeObject<BaseReq<PlaceBetParlay>>(bodyText);
             CheckKey(merchant, request.key);
-            var resultList = new List<ExecuteResult>();
             CheckBalance(request.message.userId, request.message.totalBetAmount);
+            var resultList = new List<ExecuteResult>();
             foreach (var ticket in request.message.txns)
             {
                 resultList.Add(await ExecuteBet(transType, new Bet(request.message, ticket)));
@@ -147,7 +147,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var request = JsonConvert.DeserializeObject<BaseReq<PlaceBet3rd>>(bodyText);
             CheckKey(merchant, request.key);
-
+            CheckBalance(request.message.userId, request.message.totalDebitAmount);
             var resultList = new List<ExecuteResult>();
             foreach (var ticket in request.message.ticketList)
             {
@@ -175,6 +175,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var request = JsonConvert.DeserializeObject<BaseReq<PlaceBetEnt>>(bodyText);
             CheckKey(merchant, request.key);
+            CheckBalance(request.message.userId, request.message.debitAmount);
             var resultList = new List<ExecuteResult>();
             foreach (var ticket in request.message.ticketList)
             {
