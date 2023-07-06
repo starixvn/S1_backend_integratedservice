@@ -70,7 +70,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             try
             {
                 LogContext.PushProperty("Merchant", merchant);
-                LogContext.PushProperty("Action", transType.ToString());                
+                LogContext.PushProperty("Action", transType.ToString());
                 _logger.LogInformation(bodyText);
 
                 return await _requestHandler[transType].Invoke(transType, merchant, bodyText);
@@ -120,6 +120,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var request = JsonConvert.DeserializeObject<BaseReq<PlaceBetParlay>>(bodyText);
             CheckKey(merchant, request.key);
+            CheckBalance(request.message.userId, request.message.txns.Sum(x => x.debitAmount));
             var resultList = new List<ExecuteResult>();
             foreach (var ticket in request.message.txns)
             {
@@ -146,7 +147,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var request = JsonConvert.DeserializeObject<BaseReq<PlaceBet3rd>>(bodyText);
             CheckKey(merchant, request.key);
-
+            CheckBalance(request.message.userId, request.message.ticketList.Sum(x => x.debitAmount));
             var resultList = new List<ExecuteResult>();
             foreach (var ticket in request.message.ticketList)
             {
@@ -174,6 +175,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var request = JsonConvert.DeserializeObject<BaseReq<PlaceBetEnt>>(bodyText);
             CheckKey(merchant, request.key);
+            CheckBalance(request.message.userId, request.message.debitAmount);
             var resultList = new List<ExecuteResult>();
             foreach (var ticket in request.message.ticketList)
             {
@@ -221,7 +223,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Service_Bettrans_SBSW_Bet", trans, p);
                 if (result.SPResult == -4)
                 {
-                    throw new SBSWException(ReturnCode.TransactionDuplicated,$"refId: {bet.refId} Duplicated.");
+                    throw new SBSWException(ReturnCode.TransactionDuplicated, $"refId: {bet.refId} Duplicated.");
                 }
 
                 if (result.licenseeTxId < 1)
@@ -597,7 +599,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         return new ExecuteResult(ReturnCode.InvalidAmount);
                     }
                 }
-                
+
                 await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 return result;
             }
@@ -638,14 +640,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (betList.Any(i => i.TicketType == (int)SBSWTransType.CancelBet))
             {
                 ticketStatus = "refund";
-            }           
+            }
             if (settleList.Any())
             {
                 ticketStatus = settleList.MaxBy(i => i.SQ).status;
             }
-          
+
             var actualStake = betList.Sum(i => i.actualAmount);
-            var winlostAmount = ticketStatus == "running" ? 0 
+            var winlostAmount = ticketStatus == "running" ? 0
                 : settleList.Sum(i => i.creditAmount) - settleList.Sum(i => i.debitAmount) - actualStake;
 
             //將平台匯率轉回第三方匯率
@@ -778,6 +780,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (config.VendorId != key)
             {
                 throw new SBSWException(ReturnCode.InvalidVendorId, $"Invalid key | key is:{key}");
+            }
+        }
+
+        private void CheckBalance(string tpUserName, decimal totalBetAmount)
+        {
+            var balance = GetTpCustBalance(tpUserName);
+            if (balance.Balance < totalBetAmount)
+            {
+                throw new SBSWException(ReturnCode.InsufficientBalance, $"CheckBalance | Insufficient. Balance={balance.Balance}. totalBetAmount={totalBetAmount}.");
             }
         }
 
