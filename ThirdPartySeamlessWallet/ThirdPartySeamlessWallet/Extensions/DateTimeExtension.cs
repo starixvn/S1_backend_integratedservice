@@ -12,14 +12,17 @@ namespace ThirdPartySeamlessWallet.Extensions
 
         public static IEnumerable<string> GetPartitionRange(this DateTime partitionTime, int partitionCheckDay)
         {
-            var result = new List<string>
-            {
-                partitionTime.GetPartitionKey()
-            };
+            var result = new List<string>();
+            var end = partitionTime.GetPartitionKey();
+            var start = partitionTime.AddDays(partitionCheckDay * -1);
+            var st = start.GetPartitionKey();
 
-            if (partitionTime.Day <= partitionCheckDay)
+            int i = 0;
+            while (st != end)
             {
-                result.Add(partitionTime.AddMonths(-1).GetPartitionKey());
+                st = start.AddMonths(i).GetPartitionKey();
+                result.Add(st);
+                i++;
             }
             return result;
         }

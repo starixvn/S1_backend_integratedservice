@@ -5714,9 +5714,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             validWin = data.validWin,
                             additionalData = data.additionalData != null ? JsonConvert.SerializeObject(data.additionalData) : "[]",
                             transTimeUnix = data.transTimeUnix,
-                            TicketType = (int)TransferType.Payout,
-                            TicketStatus = (int)TicketStatus.UnSettled,
-                            SettleFlag = (int)SettleFlag.EndGame
+                            TicketType = (int)TransferType.CancelBet,
+                            TicketStatus = (int)TicketStatus.Refund,
+                            SettleFlag = (int)SettleFlag.Settled
                         });
 
                         result = 0;
