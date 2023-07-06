@@ -2,6 +2,7 @@
 using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
+using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySettleWorker.Model.Exceptions;
@@ -15,6 +16,7 @@ namespace ThirdPartySettleWorker.Workers
 
         private Timer _timerRNG;
         private Timer _timerLC;
+        private readonly Tools _tools;
         private readonly SettledBLL _settledBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
@@ -26,6 +28,7 @@ namespace ThirdPartySettleWorker.Workers
 
         public PlayTechWorker(IServiceProvider provider)
         {
+            _tools = provider.GetRequiredService<Tools>();
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
@@ -94,6 +97,20 @@ namespace ThirdPartySettleWorker.Workers
                         var wager = _tpUnSettledBLL.GetTpUnsettleData<SettleData_PlayTech>(wagerGet, new { TransId = TransId }, DataBase.Wager).FirstOrDefault();
                         if (wager == null)
                         {
+                            if (bettrans.Sum(x => x.Stake) == 0 && bettrans.Sum(x => x.ValidBet) == 0 && bettrans.Sum(x => x.WinLostAmount) == 0)
+                            {
+                                // 因取消注單，無法查看下注細單，故不結算至TpBetRecord
+                                var cBetInfo = new BetRecordInfo
+                                {
+                                    TpId = (int)Tp,
+                                    TransId = TransId,
+                                    GameType = gametype,
+                                    SettledTime = _tools.ConvertLocTime(unsettled.PartitionTime, 0),
+                                    TransTime = _tools.ConvertLocTime(unsettled.PartitionTime, 0),
+                                };
+                                SetSettleFlag(wagerSet, bettransSet, gametype, cBetInfo);
+                            }
+
                             LogContext.PushProperty("TP", _tpName);
                             _logger.LogError($"wager not found ({gametype})\r\n{JsonConvert.SerializeObject(unsettled)}\r\n", logName);
                             continue;
