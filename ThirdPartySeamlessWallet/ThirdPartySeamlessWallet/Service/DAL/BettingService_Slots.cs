@@ -1664,7 +1664,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             int cntTrans = bettingData_PlayTech.trans.Count;
             int cntExet = 0;
-
+            int cntContinue = 0;
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
@@ -1681,6 +1681,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         result = -3;
                         cntExet++;
+                        cntContinue++;
                         continue;
                     }
                     // 檢查是否有網路延遲cancel比bet早收到
@@ -1688,6 +1689,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         result = 0;
                         return result;
+                    }
+                    // 檢查是否已經收過該transId bet
+                    if (bettrans.Any(i => i.TicketType == BettransType.Bet && i.transId == data.transId))
+                    {
+                        cntExet++;
+                        cntContinue++;
+                        continue;
                     }
 
                     var p = new DynamicParameters(new
@@ -1769,13 +1777,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         /*Duplicate for key 'PRIMARY'*/
                         result = -1;
                         cntExet++;
+                        cntContinue++;
                         continue;
                     }
                     throw;
                 }
             }
 
-            if (cntExet == cntTrans)
+            if (cntContinue == cntExet)
+            {
+                // 全為無需處理的Request
+                return -1;
+            }
+            else if (cntExet == cntTrans)
             {
                 _mainDbClient.CommitAndDisposeConnection(conn, trans);
                 return result;
