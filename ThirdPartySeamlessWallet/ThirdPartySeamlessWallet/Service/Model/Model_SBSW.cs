@@ -404,6 +404,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public int currency { get; set; }
         public DateTime betTime { get; set; }
         public DateTime updateTime { get; set; }
+        public decimal totalBetAmount { get; set; }
         public string IP { get; set; }
         public string tsId { get; set; } = string.Empty;
         public string betFrom { get; set; }

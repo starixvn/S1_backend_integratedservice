@@ -121,6 +121,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var request = JsonConvert.DeserializeObject<BaseReq<PlaceBetParlay>>(bodyText);
             CheckKey(merchant, request.key);
             var resultList = new List<ExecuteResult>();
+            CheckBalance(request.message.userId, request.message.totalBetAmount);
             foreach (var ticket in request.message.txns)
             {
                 resultList.Add(await ExecuteBet(transType, new Bet(request.message, ticket)));
@@ -778,6 +779,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (config.VendorId != key)
             {
                 throw new SBSWException(ReturnCode.InvalidVendorId, $"Invalid key | key is:{key}");
+            }
+        }
+
+        private void CheckBalance(string tpUserName, decimal totalBetAmount)
+        {
+            var balance = GetTpCustBalance(tpUserName);
+            if (balance.Balance < totalBetAmount)
+            {
+                throw new SBSWException(ReturnCode.InsufficientBalance, $"CheckBalance | Insufficient. Balance={balance.Balance}. totalBetAmount={totalBetAmount}.");
             }
         }
 
