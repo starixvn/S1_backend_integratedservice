@@ -353,6 +353,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public string productName_en { get; set; }
         public string gameName_en { get; set; }
         public string betFrom { get; set; }
+        public decimal totalDebitAmount { get; set; }
+
     }
     public class Ticket
     {
