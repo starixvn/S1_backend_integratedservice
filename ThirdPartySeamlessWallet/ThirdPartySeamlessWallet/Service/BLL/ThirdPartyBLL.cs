@@ -77,20 +77,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return tpCurrency;
         }
 
-        private Dictionary<int, int> GetBonusCategoryList()
+        private Dictionary<int, BonusCategory> GetBonusCategoryList()
         {
             string key = $"GetBonusCategoryList";
-            var dBonusCategoryList = cache.Get<Dictionary<int, int>>(key);
+            var dBonusCategoryList = cache.Get<Dictionary<int, BonusCategory>>(key);
             if (dBonusCategoryList == null)
             {
-                dBonusCategoryList = new Dictionary<int, int>();
-
-                var bonusCategoryList = thirdPartyService.GetBonusCategoryList();
-                foreach (var bonusCategory in bonusCategoryList.Where(x => x.WalletType == (int)WalletType.SeamlessWallet))
-                {
-                    dBonusCategoryList.Add(bonusCategory.Type, bonusCategory.Id);
-                }
-
+                dBonusCategoryList = thirdPartyService.GetBonusCategoryList()
+                    .Where(x => x.WalletType == (int)WalletType.SeamlessWallet)
+                    .ToDictionary(i => i.Type, i => i);
                 cache.Set(key, dBonusCategoryList, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
             }
 
@@ -110,18 +105,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return dBonusMinBetList.FirstOrDefault(x => x.GameType == gameType && x.CurrencyId == currencyId);
         }
 
-        public int GetBonusCategoryId(int gameType)
+        public BonusCategory GetBonusCategory(int gameType)
         {
-            if (gameType == 0)
-                return 0;
-
-            var bonusCategoryList = GetBonusCategoryList();
-
-            if (bonusCategoryList.ContainsKey(gameType))
-                return bonusCategoryList[gameType];
-            else
-                return 0;
+            return GetBonusCategoryList().TryGetValue(gameType, out var bonusCategory) ? bonusCategory : default;
         }
+
         public GameType GetGameType_PP(string gameId)
         {
             GameType gameType = GameType.PP_RNG;
