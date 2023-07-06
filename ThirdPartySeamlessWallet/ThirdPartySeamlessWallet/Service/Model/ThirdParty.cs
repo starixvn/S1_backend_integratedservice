@@ -22,9 +22,22 @@ namespace ThirdPartySeamlessWallet.Service.Model
     }
     public class BonusCategory
     {
+        /// <summary>
+        /// 遊戲類型: TpGameType.Type
+        /// </summary>
         public int Type { set; get; }
+        /// <summary>
+        /// 遊戲分類: TpGameType.CategoryId
+        /// </summary>
+        public int CategoryId { set; get; }
+        /// <summary>
+        /// Promotion分類: PromotionCategory.Id = TpGameType.PromoCategoryId
+        /// </summary>
         public int Id { set; get; }
         public int TpId { set; get; }
+        /// <summary>
+        /// 錢包類型
+        /// </summary>
         public int WalletType { set; get; }
     }
     public class BonusMinBet
