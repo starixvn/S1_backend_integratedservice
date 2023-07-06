@@ -686,7 +686,7 @@ namespace ThirdParty.PT
             };
             var parameters = JsonConvert.SerializeObject(postData);
 
-            var httpResponse = HttpPostClient($"{CommonServiceHost}/Common/LetsTalk/SendMessage",
+            var httpResponse = HttpPostClient($"{CommonServiceHost}/LetsTalk/SendMessage",
                 parameters, "application/json");
         }
 
