@@ -54,7 +54,7 @@ namespace ThirdPartyWager.Service.BLL
                     ProgressiveBet = item.totalJpc,
                     ProgressiveWin = item.totalJpw
                 };
-                if(f.Stake != 0 && f.WinlostAmount != 0)
+                if (f.Stake != 0 && f.WinlostAmount != 0)
                 {
                     dailyData.Add(f);
                 }
@@ -66,28 +66,32 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
         {
             var reportData = new List<dynamic>();
-            setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
-
-            var getWagerSummary = await _apiPlayTechBLL.GetBetSummaryByTime(setting, reportTime.startTime, reportTime.endTime);
-            if (getWagerSummary.error != "0")
+            var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+            foreach (var site in siteList)
             {
-                var msg = "THIRD_PARTY_ERROR";
-                _logger.LogError($"{msg}\r\nSiteId=\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
-                throw systemException;
+                setting = site.SettingDic;
+                var getWagerSummary = await _apiPlayTechBLL.GetBetSummaryByTime(setting, reportTime.startTime, reportTime.endTime);
+                if (getWagerSummary.error != "0")
+                {
+                    var msg = "THIRD_PARTY_ERROR";
+                    _logger.LogError($"{msg}\r\nSiteId=\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                    SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
+                    throw systemException;
+                }
+
+                if (getWagerSummary.error == "0" && getWagerSummary.data.Count == 0)
+                {
+                    var msg = "NO_DATA";
+                    _logger.LogInformation($"{msg}\r\nsiteId={site.SiteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                    return reportData;
+                }
+
+                foreach (var item in getWagerSummary.data)
+                {
+                    reportData.Add(item);
+                }
             }
 
-            if (getWagerSummary.error == "0" && getWagerSummary.data.Count == 0)
-            {
-                var msg = "NO_DATA";
-                _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                return reportData;
-            }
-
-            foreach (var item in getWagerSummary.data)
-            {
-                reportData.Add(item);
-            }
             return reportData;
         }
 

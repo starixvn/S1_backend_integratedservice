@@ -128,7 +128,7 @@ namespace ThirdPartyWager.Service.BLL
             var tpCustInfo = tpCustInfoService.GetTpCustInfo(tpId, tpUserName);
             return tpCustInfo;
         }
-        
+
         public SettlementType GetGameCasinoSettlementType(int tpId, string gameId)
         {
             var settlementType = SettlementType.SettledForValid;
@@ -152,6 +152,23 @@ namespace ThirdPartyWager.Service.BLL
             }
 
             return tpGameCasino;
+        }
+
+        public IEnumerable<TpListModel> GetTpListByTpId(int tpId)
+        {
+            var key = $"GetTpListByTpId_{tpId}";
+            var setting = cache.Get<IEnumerable<TpListModel>>(key);
+            if (setting == null)
+            {
+                var dataTpList = thirdPartyHelper.GetTpListByTpId(tpId);
+                if (dataTpList != null)
+                {
+                    setting = dataTpList.Where(x => x.Status == 1).ToList();
+                    cache.Set(key, setting, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
+                }
+            }
+
+            return setting;
         }
     }
 }
