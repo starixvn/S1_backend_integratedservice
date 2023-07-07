@@ -8,7 +8,7 @@ namespace ThirdPartyWager.Workers
     {
         private readonly ILogger<WagerPlayTech> _logger;
         private readonly WagerPlayTechBLL _wagerPlayTechBLL;
-        private readonly CommonBLL _commonBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
 
         private Timer timer;
         private readonly int tpType = (int)WagerTimerType.Wager;
@@ -16,12 +16,13 @@ namespace ThirdPartyWager.Workers
         private readonly int quickTime = 45; // in seconds
         private readonly int runTime = 90; // in seconds
         private readonly string _tpName = Tp.PlayTech.ToString();
+        private readonly int _tpId = (int)Tp.PlayTech;
 
         public WagerPlayTech(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<WagerPlayTech>>();
             _wagerPlayTechBLL = provider.GetRequiredService<WagerPlayTechBLL>();
-            _commonBLL = provider.GetRequiredService<CommonBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -36,10 +37,15 @@ namespace ThirdPartyWager.Workers
             var quick = false;
             try
             {
-                var res = await _wagerPlayTechBLL.ExecWagerWorker(tpType, timeRange);
-                if (res)
+
+                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+                foreach (var siteData in siteList)
                 {
-                    quick = true;
+                    var res = await _wagerPlayTechBLL.ExecWagerWorker(siteData, tpType, timeRange);
+                    if (res == true)
+                    {
+                        quick = true;
+                    }
                 }
             }
             catch (Exception ex)

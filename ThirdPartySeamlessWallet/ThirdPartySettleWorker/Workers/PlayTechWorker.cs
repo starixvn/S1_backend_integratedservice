@@ -97,20 +97,6 @@ namespace ThirdPartySettleWorker.Workers
                         var wager = _tpUnSettledBLL.GetTpUnsettleData<SettleData_PlayTech>(wagerGet, new { TransId = TransId }, DataBase.Wager).FirstOrDefault();
                         if (wager == null)
                         {
-                            if (bettrans.Sum(x => x.Stake) == 0 && bettrans.Sum(x => x.ValidBet) == 0 && bettrans.Sum(x => x.WinLostAmount) == 0)
-                            {
-                                // 因取消注單，無法查看下注細單，故不結算至TpBetRecord
-                                var cBetInfo = new BetRecordInfo
-                                {
-                                    TpId = (int)Tp,
-                                    TransId = TransId,
-                                    GameType = gametype,
-                                    SettledTime = _tools.ConvertLocTime(unsettled.PartitionTime, 0),
-                                    TransTime = _tools.ConvertLocTime(unsettled.PartitionTime, 0),
-                                };
-                                SetSettleFlag(wagerSet, bettransSet, gametype, cBetInfo);
-                            }
-
                             LogContext.PushProperty("TP", _tpName);
                             _logger.LogError($"wager not found ({gametype})\r\n{JsonConvert.SerializeObject(unsettled)}\r\n", logName);
                             continue;

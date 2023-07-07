@@ -126,8 +126,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         #endregion
 
         [HttpPost]
-        [Route("[controller]/auth")]
-        public async Task<dynamic> AuthAsync([FromQuery] Dictionary<string, string> getQuery)
+        [Route("[controller]/{sitename}/auth")]
+        public async Task<dynamic> AuthAsync(string sitename, [FromQuery] Dictionary<string, string> getQuery)
         {
             string logName = $"{_tpName}_auth";
 
@@ -145,7 +145,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var verifyHash = false;
                 if (getQuery.TryGetValue("hash", out var hash))
                 {
-                    verifyHash = CheckHash(hash, Content, logName);
+                    verifyHash = CheckHash(sitename, hash, Content, logName);
                 }
                 if (!verifyHash)
                 {
@@ -221,8 +221,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        [Route("[controller]/balance")]
-        public async Task<dynamic> BalanceAsync([FromQuery] Dictionary<string, string> getQuery)
+        [Route("[controller]/{sitename}/balance")]
+        public async Task<dynamic> BalanceAsync(string sitename, [FromQuery] Dictionary<string, string> getQuery)
         {
             string logName = $"{_thisTp}_balance";
 
@@ -238,7 +238,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             var verifyHash = false;
             if (getQuery.TryGetValue("hash", out var hash))
             {
-                verifyHash = CheckHash(hash, Content, logName);
+                verifyHash = CheckHash(sitename, hash, Content, logName);
             }
             if (!verifyHash)
             {
@@ -277,8 +277,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        [Route("[controller]/transaction")]
-        public async Task<dynamic> TransactionAsync([FromQuery] Dictionary<string, string> getQuery)
+        [Route("[controller]/{sitename}/transaction")]
+        public async Task<dynamic> TransactionAsync(string sitename, [FromQuery] Dictionary<string, string> getQuery)
         {
             string logName = $"{_thisTp}_transaction";
 
@@ -295,7 +295,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var verifyHash = false;
                 if (getQuery.TryGetValue("hash", out var hash))
                 {
-                    verifyHash = CheckHash(hash, Content, logName);
+                    verifyHash = CheckHash(sitename, hash, Content, logName);
                 }
                 if (!verifyHash)
                 {
@@ -522,8 +522,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        [Route("[controller]/payUp")]
-        public async Task<dynamic> PayUpAsync([FromQuery] Dictionary<string, string> getQuery)
+        [Route("[controller]/{sitename}/payUp")]
+        public async Task<dynamic> PayUpAsync(string sitename, [FromQuery] Dictionary<string, string> getQuery)
         {
             //payUp 这个接口 是玩家获得的收益 但是没有参与任何游戏
             string logName = $"{_thisTp}_payUp";
@@ -541,7 +541,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var verifyHash = false;
                 if (getQuery.TryGetValue("hash", out var hash))
                 {
-                    verifyHash = CheckHash(hash, Content, logName);
+                    verifyHash = CheckHash(sitename, hash, Content, logName);
                 }
                 if (!verifyHash)
                 {
@@ -654,9 +654,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             return false;
         }
 
-        private bool CheckHash(string hash, string request, string logName)
+        private bool CheckHash(string sitename, string hash, string request, string logName)
         {
-            var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting(_thisTp);
+            var serverInfo = _thirdPartyBLL.GetServerInfoBySiteName(sitename);
+            if (serverInfo == null || serverInfo.SiteId <= 0)
+            {
+                return false;
+            }
+            var thirdPartySetting = _thirdPartyBLL.GetThirdPartyBySite(_thisTp, serverInfo.SiteId);
             var dict = _tools.FromJson<Dictionary<string, dynamic>>(request);
             var dicP = ExceptHashAndSort(dict);
             var encryptHash = EncryptString(dicP + thirdPartySetting.TpSetting["SecretKey"]);
