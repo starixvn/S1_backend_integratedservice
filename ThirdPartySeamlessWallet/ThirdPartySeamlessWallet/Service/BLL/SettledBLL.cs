@@ -2,6 +2,7 @@
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySeamlessWallet.Service.Model.SBSW;
 
 namespace ThirdPartySeamlessWallet.Service.BLL
 {
@@ -43,7 +44,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var result = settledService.DoTpRewardTicket(tpCustInfo, tpRewardRecordInfo, tpCategory, checkBonus);
             return result;
         }
-
+        public TpBetRecordDetail GetTpBetRecordDetail(int TpId, int GameType, string TransId, DateTime SettledTime)
+        {
+            return settledService.GetTpBetRecordDetail(TpId, GameType, TransId, SettledTime);
+        }
         #region SA
 
         public int CancelBetLC_SA(BettingDataLC_SA bettingDataLC_SA, out decimal afterAmount)
@@ -2439,6 +2443,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetSettle_TpWagerLC_BG(orderId);
         }
 
+        #endregion
+
+        #region SBSW
+        public IEnumerable<SBSWUnsettle> GetSBSWUnsettleList(int LimitCount = 200)
+        {
+            return settledService.GetSBSWUnsettleList(LimitCount);
+        }
+        public BetRecordInfo GetSBSWTpBetRecord(int TpId, string TransId, int GameType)
+        {
+            return settledService.GetSBSWUnsettleList(TpId, TransId, GameType);
+        }
         #endregion
     }
 }
