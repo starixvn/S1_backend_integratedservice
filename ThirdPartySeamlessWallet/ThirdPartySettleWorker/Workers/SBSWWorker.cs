@@ -172,9 +172,13 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nStep6");
                             var tpBetRecordData = _settledBLL.GetSBSWTpBetRecord((int)Tp.SBSW, tpUnsettle.TransId, (int)tpUnsettle.GameType);
-                            //如果已有下注記錄,先將該筆留在TpUnsettle內,等待取得settle資料
+
                             if (tpBetRecordData != null)
                             {
+                                Task.Run(() =>
+                                {
+                                    _tpUnSettledBLL.SetTpUnsettle(Tp, tpUnsettle.GameType, tpUnsettle.TransId, false);
+                                });
                                 _logger.LogWarning($"TransId:{tpUnsettle.TransId} waiting settleData");
                                 continue;
                             }
