@@ -28,7 +28,8 @@ builder.Services
     .AddHostedService<WorkerService>()
     .AddHostedService<BonusWorker>()
     .AddHostedService<SabaByTransIdUnSettleWorkerService>()
-    .AddHostedService<SabaByTransIdSettleWorkerService>();
+    .AddHostedService<SabaByTransIdSettleWorkerService>()
+    .AddHostedService<RngService>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);

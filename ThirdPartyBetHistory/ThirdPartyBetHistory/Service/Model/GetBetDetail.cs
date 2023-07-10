@@ -157,4 +157,19 @@ namespace ThirdPartyBetHistory.Service.Model
         public string lang { get; set; }
         public string name { get; set; }
     }
+    public class BetDetailsModel
+    {
+        public long last_version_key { get; set; }
+        public List<BetDetail> BetDetails { get; set; }
+    }
+    public class BetNumberDetailModel
+    {
+        public long last_version_key { get; set; }
+        public List<BetNumberDetail> BetNumberDetails { get; set; }
+    }
+    public class BetVirtualSportDetailModel
+    {
+        public long last_version_key { get; set; }
+        public List<BetVirtualSportDetail> BetVirtualSportDetails { get; set; }
+    }
 }

@@ -54,7 +54,6 @@
     <ProjectReference Include="..\ThirdParty.PP\ThirdParty.PP.csproj" />
     <ProjectReference Include="..\ThirdParty.PT\ThirdParty.PT.csproj" />
     <ProjectReference Include="..\ThirdParty.RedTiger\ThirdParty.RedTiger.csproj" />
-    <ProjectReference Include="..\ThirdParty.Saba\ThirdParty.Saba.csproj" />
     <ProjectReference Include="..\ThirdParty.SA\ThirdParty.SA.csproj" />
     <ProjectReference Include="..\ThirdParty.SBO\ThirdParty.SBO.csproj" />
     <ProjectReference Include="..\ThirdParty.SBSW\ThirdParty.SBSW.csproj" />
