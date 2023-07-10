@@ -24,7 +24,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly SettledBLL _settledBLL;
         private readonly Dictionary<int, SabaSportTypeOption> _sportTypeConfig;
-
+        private const int defaultSportType = 1;
         private readonly ILogger<SBSWWorker> _logger;
         public SBSWWorker(IServiceProvider provider)
         {
@@ -95,11 +95,12 @@ namespace ThirdPartySettleWorker.Workers
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, wagerData.vendor_member_id);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
 
+                        wagerData.sport_type = wagerData.sport_type ?? defaultSportType;
+
                         if (!_sportTypeConfig.TryGetValue(wagerData.sport_type.Value, out var sabaSportType))
                         {
                             throw new SBSWException(ReturnCode.InvalidParameters, $"sportType:{wagerData.sport_type.Value} not supported.");
                         }
-
 
                         #region 匯率轉換
                         wagerData.stake *= tpCurrency.ExchangeRate;
