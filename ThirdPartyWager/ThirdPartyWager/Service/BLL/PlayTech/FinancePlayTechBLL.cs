@@ -83,7 +83,7 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     var msg = "NO_DATA";
                     _logger.LogInformation($"{msg}\r\nsiteId={site.SiteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                    return reportData;
+                    continue;
                 }
 
                 foreach (var item in getWagerSummary.data)
