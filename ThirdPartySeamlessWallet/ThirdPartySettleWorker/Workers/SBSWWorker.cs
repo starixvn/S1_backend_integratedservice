@@ -198,7 +198,7 @@ namespace ThirdPartySettleWorker.Workers
                             _tpUnSettledBLL.SetTpUnsettle(Tp, tpUnsettle.GameType, tpUnsettle.TransId, isSuccess: false);
                         });
                         LogContext.PushProperty("TP", _tpName);
-                        _logger.LogError(ex, $"SBSW Settle exception. {ex.Message} || TransId : {tpUnsettle.TransId}");
+                        _logger.LogError(ex, $"SBSW Settle exceptionMessage. {ex.Message} || TransId : {tpUnsettle.TransId} || exception:{JsonConvert.SerializeObject(ex)}  ");
                     }
                 }
             }
