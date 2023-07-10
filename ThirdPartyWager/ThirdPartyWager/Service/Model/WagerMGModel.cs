@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ThirdPartyWager.Service.Model
+﻿namespace ThirdPartyWager.Service.Model
 {
     public class MGFailedTransactions
     {

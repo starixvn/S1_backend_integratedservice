@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace ThirdPartyWager.Extensions
+﻿namespace ThirdPartyWager.Extensions
 {
     public static class DateTimeExtension
     {

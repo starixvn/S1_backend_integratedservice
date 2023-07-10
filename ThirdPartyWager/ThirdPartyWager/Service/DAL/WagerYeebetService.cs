@@ -1,8 +1,6 @@
 ﻿using Dapper;
 using MySql.Data.MySqlClient;
-using System.Configuration;
 using System.Data;
-using System.Text.Json;
 using ThirdPartyWager.Service.Model;
 
 namespace ThirdPartyWager.Service.DAL;

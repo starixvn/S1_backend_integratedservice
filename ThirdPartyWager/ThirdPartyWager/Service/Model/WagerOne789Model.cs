@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace ThirdPartyWager.Service
+﻿namespace ThirdPartyWager.Service
 {
     public class WagerOne789Model
     {

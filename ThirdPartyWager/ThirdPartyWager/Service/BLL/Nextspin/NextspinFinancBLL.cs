@@ -3,7 +3,6 @@ using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Workers;
 
 namespace ThirdPartyWager.Service.BLL.Nextspin
 {

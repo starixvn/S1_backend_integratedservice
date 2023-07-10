@@ -120,6 +120,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var request = JsonConvert.DeserializeObject<BaseReq<PlaceBetParlay>>(bodyText);
             CheckKey(merchant, request.key);
+            CheckBalance(request.message.userId, request.message.txns.Sum(x => x.debitAmount));
             var resultList = new List<ExecuteResult>();
             foreach (var ticket in request.message.txns)
             {
@@ -146,7 +147,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var request = JsonConvert.DeserializeObject<BaseReq<PlaceBet3rd>>(bodyText);
             CheckKey(merchant, request.key);
-
+            CheckBalance(request.message.userId, request.message.ticketList.Sum(x => x.debitAmount));
             var resultList = new List<ExecuteResult>();
             foreach (var ticket in request.message.ticketList)
             {
@@ -174,6 +175,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var request = JsonConvert.DeserializeObject<BaseReq<PlaceBetEnt>>(bodyText);
             CheckKey(merchant, request.key);
+            CheckBalance(request.message.userId, request.message.debitAmount);
             var resultList = new List<ExecuteResult>();
             foreach (var ticket in request.message.ticketList)
             {
@@ -778,6 +780,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (config.VendorId != key)
             {
                 throw new SBSWException(ReturnCode.InvalidVendorId, $"Invalid key | key is:{key}");
+            }
+        }
+
+        private void CheckBalance(string tpUserName, decimal totalBetAmount)
+        {
+            var balance = GetTpCustBalance(tpUserName);
+            if (balance.Balance < totalBetAmount)
+            {
+                throw new SBSWException(ReturnCode.InsufficientBalance, $"CheckBalance | Insufficient. Balance={balance.Balance}. totalBetAmount={totalBetAmount}.");
             }
         }
 
