@@ -19,6 +19,8 @@ namespace ThirdParty.PlayTech
         {
             public string ApiUrl { get; set; }
 
+            public string GameUrl { get; set; }
+
             public string BrandId { get; set; }
 
             public string BrandName { get; set; }
@@ -28,6 +30,7 @@ namespace ThirdParty.PlayTech
             public TpConfig(Dictionary<string, string> inputs)
             {
                 ApiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception("ApiUrl");
+                GameUrl = inputs.GetValueOrDefault("GameUrl") ?? throw new Exception("GameUrl");
                 BrandId = inputs.GetValueOrDefault("BrandId") ?? throw new Exception("BrandId");
                 BrandName = inputs.GetValueOrDefault("BrandName") ?? throw new Exception("BrandName");
                 SecretKey = inputs.GetValueOrDefault("SecretKey") ?? throw new Exception("SecretKey");
@@ -167,7 +170,7 @@ namespace ThirdParty.PlayTech
             ApiResult oApiResult = new ApiResult
             {
                 ErrorCode = ErrorCode.Success,
-                Message = $"{tpConfig.ApiUrl}/launcher?gameCode={gameId}&token={HttpUtility.UrlEncode(sessionKey)}&platform={platform}&language={TpLangId}&playerId={tpCustInfo.TpUserName}&brandId={tpConfig.BrandId}&mode={mode}&backUrl={homeUrl}"
+                Message = $"{tpConfig.GameUrl}/launcher?gameCode={gameId}&token={HttpUtility.UrlEncode(sessionKey)}&platform={platform}&language={TpLangId}&playerId={tpCustInfo.TpUserName}&brandId={tpConfig.BrandId}&mode={mode}&backUrl={homeUrl}"
             };
 
             return oApiResult;
