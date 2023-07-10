@@ -137,7 +137,7 @@ namespace ThirdPartySettleWorker.Workers
                         if (settleData.Any())
                         {
                             _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nStep3");
-                            if (betData.Sum(x => x.debitAmount) == wagerData.stake)
+                            if (betData.Sum(x => x.betAmount) == wagerData.stake)
                             {
                                 _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nStep4");
                                 betRecordInfo.WinlostAmount = wagerData.winlost_amount;
