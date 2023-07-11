@@ -45,15 +45,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public TpBetRecordDetail GetTpBetRecordDetail(int TpId, int GameType, string TransId, DateTime SettledTime)
+        {
+            return settledService.GetTpBetRecordDetail(TpId, GameType, TransId, SettledTime);
+        }
+
         public int SetSettleFlagOfMonthlyBettrans(string spName, BetRecordInfo betRecordInfo)
         {
             return settledService.SetSettleFlagOfMonthlyBettrans(spName, betRecordInfo);
         }
 
-        public TpBetRecordDetail GetTpBetRecordDetail(int TpId, int GameType, string TransId, DateTime SettledTime)
-        {
-            return settledService.GetTpBetRecordDetail(TpId, GameType, TransId, SettledTime);
-        }
         #region SA
 
         public int CancelBetLC_SA(BettingDataLC_SA bettingDataLC_SA, out decimal afterAmount)

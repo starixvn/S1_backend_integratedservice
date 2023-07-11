@@ -906,6 +906,26 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }, conn , trans);
         }
 
+        public TpBetRecordDetail GetTpBetRecordDetail(int TpId, int GameType, string TransId, DateTime SettledTime)
+        {
+            try
+            {
+                var p = new DynamicParameters(new
+                {
+                    TpId,
+                    GameType,
+                    TransId,
+                    SettledTime
+                });
+
+                return _mainDbClient.QueryFirst<TpBetRecordDetail>("Service_TpBetRecordDetail_Get_V2", p);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
         public int SetSettleFlagOfMonthlyBettrans(string spName, BetRecordInfo betRecordInfo)
         {
             var result = 0;
@@ -935,26 +955,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 _mainDbClient.RollbackAndDisposeConnection(conn, trans);
             }
             return result;
-        }
-
-        public TpBetRecordDetail GetTpBetRecordDetail(int TpId, int GameType, string TransId, DateTime SettledTime)
-        {
-            try
-            {
-                var p = new DynamicParameters(new
-                {
-                    TpId,
-                    GameType,
-                    TransId,
-                    SettledTime
-                });
-
-                return _mainDbClient.QueryFirst<TpBetRecordDetail>("Service_TpBetRecordDetail_Get_V2", p);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
         }
     }
 }

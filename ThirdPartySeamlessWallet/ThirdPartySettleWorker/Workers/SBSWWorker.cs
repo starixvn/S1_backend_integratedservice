@@ -24,7 +24,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly SettledBLL _settledBLL;
         private readonly Dictionary<int, SabaSportTypeOption> _sportTypeConfig;
-
+        private const int defaultSportType = 1;
         private readonly ILogger<SBSWWorker> _logger;
         public SBSWWorker(IServiceProvider provider)
         {
@@ -71,7 +71,7 @@ namespace ThirdPartySettleWorker.Workers
                         var betData = _tpUnSettledBLL.GetTpUnsettleData<BetSBSW>(tpUnsettle.GameType == GameType.SBSW_Vgaming ? getVGBettransSp : getBettransSp,
                             tpUnsettle.GameType == GameType.SBSW_Vgaming ? new { refId = settleData.FirstOrDefault()?.refId } : new { txId = tpUnsettle.TransId }, DataBase.Main);
 
-                        _logger.LogInformation($"TransId:{tpUnsettle.TransId}\r\nbetData=\r\n{JsonConvert.SerializeObject(betData)}\r\nsettleData=\r\n{JsonConvert.SerializeObject(settleData)}");
+                        _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nbetData=\r\n{JsonConvert.SerializeObject(betData)}\r\nsettleData=\r\n{JsonConvert.SerializeObject(settleData)}");
                         //取不到下注資料，直接跳過這筆
                         if (betData == null)
                             continue;
@@ -86,7 +86,7 @@ namespace ThirdPartySettleWorker.Workers
                             _ => JsonConvert.DeserializeObject<GetBetDetailData>(tpBetRecordDetail.Detail).BetDetails.First(),
                         };
 
-                        _logger.LogInformation($"TransId:{tpUnsettle.TransId}\r\nwagerData=\r\n{JsonConvert.SerializeObject(wagerData)}");
+                        _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nwagerData=\r\n{JsonConvert.SerializeObject(wagerData)}");
 
                         if (tpUnsettle.GameType == GameType.SBSW_Vgaming)
                             wagerData.sport_type = 171;
@@ -95,11 +95,12 @@ namespace ThirdPartySettleWorker.Workers
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, wagerData.vendor_member_id);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
 
+                        wagerData.sport_type = wagerData.sport_type ?? defaultSportType;
+
                         if (!_sportTypeConfig.TryGetValue(wagerData.sport_type.Value, out var sabaSportType))
                         {
                             throw new SBSWException(ReturnCode.InvalidParameters, $"sportType:{wagerData.sport_type.Value} not supported.");
                         }
-
 
                         #region 匯率轉換
                         wagerData.stake *= tpCurrency.ExchangeRate;
@@ -115,6 +116,7 @@ namespace ThirdPartySettleWorker.Workers
                         var tpCategoryId = sabaSportType.TpCategoryId;
                         var gameType = sabaSportType.TpGameType;
 
+                        _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nStep1");
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
@@ -131,11 +133,13 @@ namespace ThirdPartySettleWorker.Workers
                             GameID = GetBetDetailGameType(wagerData.sport_type).ToString(),
                             ReferenceNo = betData.FirstOrDefault()?.refId
                         };
-
+                        _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nStep2");
                         if (settleData.Any())
                         {
-                            if (betData.Sum(x => x.debitAmount) == wagerData.stake)
+                            _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nStep3");
+                            if (betData.Sum(x => x.betAmount) == wagerData.stake)
                             {
+                                _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nStep4");
                                 betRecordInfo.WinlostAmount = wagerData.winlost_amount;
                                 CalculateAvailableBet(wagerData, betRecordInfo);
 
@@ -149,30 +153,38 @@ namespace ThirdPartySettleWorker.Workers
                                 {
                                     betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
                                 }
+                                _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nStep4-2");
                             }
                             else
                             {
+                                _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nStep5");
                                 LogContext.PushProperty("TP", _tpName);
                                 _logger.LogError($"TransId:{tpUnsettle.TransId}\r\nbetData=\r\n{JsonConvert.SerializeObject(betData)}\r\nwagerData=\r\n{JsonConvert.SerializeObject(wagerData)}");
                                 Task.Run(() =>
                                 {
                                     _tpUnSettledBLL.SetTpUnsettle(Tp, tpUnsettle.GameType, tpUnsettle.TransId, false);
                                 });
+                                _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nStep5-2");
                                 continue;
                             }
                         }
                         else
                         {
+                            _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nStep6");
                             var tpBetRecordData = _settledBLL.GetSBSWTpBetRecord((int)Tp.SBSW, tpUnsettle.TransId, (int)tpUnsettle.GameType);
-                            //如果已有下注記錄,先將該筆留在TpUnsettle內,等待取得settle資料
+
                             if (tpBetRecordData != null)
                             {
+                                Task.Run(() =>
+                                {
+                                    _tpUnSettledBLL.SetTpUnsettle(Tp, tpUnsettle.GameType, tpUnsettle.TransId, false);
+                                });
                                 _logger.LogWarning($"TransId:{tpUnsettle.TransId} waiting settleData");
                                 continue;
                             }
                         }
 
-                        _logger.LogInformation($"TransId:{tpUnsettle.TransId}\r\nbetRecordInfo=\r\n{JsonConvert.SerializeObject(betRecordInfo)}");
+                        _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nbetRecordInfo=\r\n{JsonConvert.SerializeObject(betRecordInfo)}");
 
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, (TpCategory)tpCategoryId);
                         if (result == 1)
@@ -191,7 +203,7 @@ namespace ThirdPartySettleWorker.Workers
                             _tpUnSettledBLL.SetTpUnsettle(Tp, tpUnsettle.GameType, tpUnsettle.TransId, isSuccess: false);
                         });
                         LogContext.PushProperty("TP", _tpName);
-                        _logger.LogError(ex, $"SBSW Settle exception. {ex.Message} || TransId : {tpUnsettle.TransId}");
+                        _logger.LogError(ex, $"SBSW Settle exceptionMessage. {ex.Message} || TransId : {tpUnsettle.TransId} || exception:{JsonConvert.SerializeObject(ex)}  ");
                     }
                 }
             }

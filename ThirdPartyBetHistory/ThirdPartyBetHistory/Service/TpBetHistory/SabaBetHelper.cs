@@ -235,7 +235,8 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 return GetRNGBetDetail.Data.last_version_key;
             }
 
-            foreach (var betDetail in GetRNGBetDetail.Data.BetRNGDetails)
+
+            foreach (var betDetail in GetRNGBetDetail.Data.BetRNGDetails.Where(x=> x.transaction_time > DateTime.Today.AddDays(-10)))
             {
                 var tempBetDetail = new BetDetail()
                 {
