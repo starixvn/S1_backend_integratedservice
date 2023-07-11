@@ -53,7 +53,8 @@
         BG = 47,
         TFG = 48,
 
-        Nextspin = 50
+        Nextspin = 50,
+        PlayTech = 51,
     }
 
     public enum GameType
