@@ -13,6 +13,7 @@
         public int TicketType { get; set; }
         public DateTime transactionTime { get; set; }
         public string refId { get; set; }
+        public int sportType { get; set; }
     }
     public class SettleSBSW
     {
