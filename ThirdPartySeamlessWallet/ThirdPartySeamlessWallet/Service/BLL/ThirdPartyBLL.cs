@@ -304,6 +304,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.GPI_Fast3;
                     }
                     break;
+                case (int)Tp.PlayTech:
+                    gameType = GameType.PlayTech_RNG;
+                    var casinoPlayTech = GetGameCasinoWithCache(tpId);
+                    var checkPlayTech = casinoPlayTech.FirstOrDefault(x => x.GameId == gameId);
+                    if (checkPlayTech == null)
+                    {
+                        gameType = GameType.PlayTech_LiveCasino;
+                    }
+                    break;
                 default:
                     break;
             }
