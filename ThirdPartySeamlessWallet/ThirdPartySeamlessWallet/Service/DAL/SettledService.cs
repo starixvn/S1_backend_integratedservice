@@ -956,5 +956,36 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 return null;
             }
         }
+
+        public int SetSettleFlagOfMonthlyBettrans(string spName, BetRecordInfo betRecordInfo)
+        {
+            var result = 0;
+            var partitionTimeOfSettledTime = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime;
+            var partitionTimeOfTransTime = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.TransTime).DateTime;
+            var tt = partitionTimeOfSettledTime.GetPartitionKey();
+            var st = partitionTimeOfTransTime.GetPartitionKey();
+            var verifyDays = (int)partitionTimeOfSettledTime.Subtract(partitionTimeOfTransTime).TotalDays;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            var trans = conn.BeginTransaction();
+
+            result = _partitionService.Execute(partitionTimeOfSettledTime, spName, new DynamicParameters(new { TransId = betRecordInfo.TransId }), trans);
+            if (result > 0 && tt != st && verifyDays < 90)
+            {
+                // 跨月同步
+                result = _partitionService.Execute(partitionTimeOfTransTime, spName, new DynamicParameters(new { TransId = betRecordInfo.TransId }), trans);
+            }
+
+            if (result > 0)
+            {
+                _mainDbClient.CommitAndDisposeConnection(conn, trans);
+            }
+            else
+            {
+                _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+            }
+            return result;
+        }
     }
 }
