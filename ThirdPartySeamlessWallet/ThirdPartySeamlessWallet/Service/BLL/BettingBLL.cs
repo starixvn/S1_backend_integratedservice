@@ -699,7 +699,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
         #endregion
-        
+
         #region PlayTech
 
         public int PlaceBet_PlayTech(BettingData_PlayTech bettingData_PlayTech, GameType gameType, int partitionCheckDay, out decimal afterAmount)
@@ -749,6 +749,5 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         #endregion
-
     }
 }
