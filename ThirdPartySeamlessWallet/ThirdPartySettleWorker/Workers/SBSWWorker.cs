@@ -134,6 +134,7 @@ namespace ThirdPartySettleWorker.Workers
                             ReferenceNo = betData.FirstOrDefault()?.refId
                         };
                         _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nStep2");
+
                         if (settleData.Any())
                         {
                             _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nStep3");
@@ -171,17 +172,38 @@ namespace ThirdPartySettleWorker.Workers
                         else
                         {
                             _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nStep6");
-                            var tpBetRecordData = _settledBLL.GetSBSWTpBetRecord((int)Tp.SBSW, tpUnsettle.TransId, (int)tpUnsettle.GameType);
 
-                            if (tpBetRecordData != null)
+                            //住單狀態被改為cancel,走共用流判斷ValidBet & SettlementType & TicketStatus
+                            if (betData.ToList().Exists(x=> x.TicketType == (int)SBSWTransType.CancelBet))
                             {
-                                Task.Run(() =>
-                                {
-                                    _tpUnSettledBLL.SetTpUnsettle(Tp, tpUnsettle.GameType, tpUnsettle.TransId, false);
-                                });
-                                _logger.LogWarning($"TransId:{tpUnsettle.TransId} waiting settleData");
-                                continue;
+                                CalculateAvailableBet(wagerData, betRecordInfo);
                             }
+                            else
+                            {
+                                //betData並沒有TicketType被改為CancelBet的單,但wagerData的ticket_status為reject或refund,判斷當初可能下注或是cancel沒有收到,這邊直接不做settle,把該筆從TpUnsettle移除
+                                if (isCancelSataus(wagerData))
+                                {
+                                    Task.Run(() =>
+                                    {
+                                        _tpUnSettledBLL.SetTpUnsettle(Tp, tpUnsettle.GameType, tpUnsettle.TransId, true);
+                                    });
+                                    _logger.LogWarning($"TransId:{tpUnsettle.TransId} was rejected");
+                                    continue;
+                                }
+
+                                var tpBetRecordData = _settledBLL.GetSBSWTpBetRecord((int)Tp.SBSW, tpUnsettle.TransId, (int)tpUnsettle.GameType);
+
+                                //沒有settleData,但TpBetRecord有資料,代表wager已經先拉到settle的資料,但SBSW還沒來敲我們的api做settle的動作,這邊先將這筆留在TpUnsettle,等待SBSW呼叫我方api做完settle
+                                if (tpBetRecordData != null)
+                                {
+                                    Task.Run(() =>
+                                    {
+                                        _tpUnSettledBLL.SetTpUnsettle(Tp, tpUnsettle.GameType, tpUnsettle.TransId, false);
+                                    });
+                                    _logger.LogWarning($"TransId:{tpUnsettle.TransId} waiting settleData");
+                                    continue;
+                                }
+                            }                           
                         }
 
                         _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nbetRecordInfo=\r\n{JsonConvert.SerializeObject(betRecordInfo)}");
@@ -435,6 +457,11 @@ namespace ThirdPartySettleWorker.Workers
             {
                 betRecordInfo.TicketStatus = TicketStatus.Refund;
             }
+        }
+
+        private bool isCancelSataus(ISabaBet betDetial)
+        {
+            return betDetial.ticket_status.Equals("reject", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("refund", StringComparison.OrdinalIgnoreCase);
         }
     }
 }
