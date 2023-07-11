@@ -682,7 +682,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #endregion
 
-
         #region Skywind
         public int PlaceBet_Skywind(TpCustInfo tpCustInfo, BettingData_Skywind bettingData_Skywind, int gameType, out decimal afterAmount)
         {
@@ -700,6 +699,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
         #endregion
+
         #region PlayTech
 
         public int PlaceBet_PlayTech(BettingData_PlayTech bettingData_PlayTech, GameType gameType, int partitionCheckDay, out decimal afterAmount)
@@ -749,6 +749,5 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         #endregion
-
     }
 }

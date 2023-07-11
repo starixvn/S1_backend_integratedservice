@@ -6081,6 +6081,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #endregion
 
+        #region Nextspin
+
         public async Task<NextspinResult> PayoutRNG_Nextspin(TpCustInfo tpCustInfo, BettingDataRNG_Nextspin bettingData)
         {
             var afterAmount = 0m;
@@ -6215,5 +6217,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 throw new NextspinException(NextspinErrorCode.SystemError);
             }
         }
+
+        #endregion
     }
 }
