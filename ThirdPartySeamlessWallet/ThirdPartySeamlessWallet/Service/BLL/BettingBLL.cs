@@ -749,6 +749,5 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         #endregion
-
     }
 }
