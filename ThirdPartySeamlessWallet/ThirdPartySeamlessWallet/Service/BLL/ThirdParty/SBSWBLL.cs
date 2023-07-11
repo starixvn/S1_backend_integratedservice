@@ -21,6 +21,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
+        private readonly TpUnsettleService _tpUnsettleService;
         private readonly ILogger<SBSWBLL> _logger;
         private readonly ThirdPartySetting _thirdPartySetting;
         private readonly Dictionary<SBSWTransType, Func<SBSWTransType, string, string, Task<ReturnObj>>> _requestHandler;
@@ -38,6 +39,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _bettingService = provider.GetRequiredService<BettingService>();
             _settledService = provider.GetRequiredService<SettledService>();
+            _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)ThirdParty);
             _requestHandler = new Dictionary<SBSWTransType, Func<SBSWTransType, string, string, Task<ReturnObj>>>()
@@ -569,6 +571,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 if (amount != 0)
                 {
                     var (gameType, tpCategory) = GetGameType(result.SportType);
+
+                    _tpUnsettleService.InsertTpUnsettle(Tp.SBSW, gameType, detail.txId.ToString(), trans);
+
                     var memoHead = transType switch
                     {
                         SBSWTransType.Settle => "Payout",
