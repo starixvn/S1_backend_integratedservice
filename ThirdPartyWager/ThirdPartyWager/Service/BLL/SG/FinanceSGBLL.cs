@@ -48,7 +48,7 @@ namespace ThirdPartyWager.Service.BLL
                     Stake = item.betAmt,
                     ValidBet = item.betAmt,
                     Payout = item.betAmt + item.winLoss,
-                    WinlostAmount = item.winLoss,
+                    WinlostAmount = item.winLoss - item.bonusAmt,
                     ProgressiveBet = item.jackpotAmount,
                     ProgressiveWin = item.jpWin
                 });
