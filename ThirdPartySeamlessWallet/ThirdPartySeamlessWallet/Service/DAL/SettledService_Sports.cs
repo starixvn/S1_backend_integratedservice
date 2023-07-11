@@ -113,13 +113,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     ReturnAmount = p.Get<decimal>("returnAmount"),
                     Trx_id = p.Get<long>("trx_id"),
                 };
-            
+
                 if (btiResult.SPResult < 1)
                 {
                     return btiResult;
                 }
 
-                btiResult.SPResult = _tpUnsettleService.InsertTpUnsettle(Tp.BTI, GameType.BTI_Sports, request.reserve_id, trans);
                 if (btiResult.SPResult == 1 && btiResult.ReturnAmount <= 0)
                 {
                     await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
@@ -181,7 +180,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
                 p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
 
-                _ = await _mainDbClient.ExecuteAsync("Service_BettransSports_BTI_Credit_Ins_V2",trans ,p);
+                _ = await _mainDbClient.ExecuteAsync("Service_BettransSports_BTI_Credit_Ins", trans ,p);
                 var btiResult = new BTIResult()
                 {
                     SPResult = p.Get<short>("SPResult"),
@@ -211,9 +210,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         AllowNegative.Allow);
 
                 btiResult.AfterAmount = afterAmount;
-                
-
-
                 if (btiResult.SetBalanceResult == 1)
                 {
                     if (bonusId > 0)
@@ -221,12 +217,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         //把BetID加入AddTpSeamlessBonus，避免結算無法正常取出BonusId
                         _bettingService.AddTpBonus((int)Tp.BTI, credit.BetID, (int)GameType.BTI_Sports, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, credit.amount, bonusId, TpCategory.Sports, conn, trans);
                     }
-
-                    if (credit.SettleFlag == (int)SettleFlag.EndGame)
-                    {
-                        _tpUnsettleService.InsertTpUnsettle(Tp.BTI, GameType.BTI_Sports, credit.reserve_id, trans);
-                    }
-
                     await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
                 }
                 return btiResult;

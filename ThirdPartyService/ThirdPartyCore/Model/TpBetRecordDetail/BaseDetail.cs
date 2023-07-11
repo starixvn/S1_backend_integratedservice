@@ -33,7 +33,7 @@ namespace ThirdPartyCore.Model
 
         public BaseDetail(TpGameTypeOption tpGameTypeOption)
         {
-            TpId = tpGameTypeOption.TpId;
+            TpId =tpGameTypeOption.TpId;
             TpCategoryId = (int)tpGameTypeOption.CategoryId;
             GameType = tpGameTypeOption.Type;
             GameTypeName = tpGameTypeOption.TypeName;

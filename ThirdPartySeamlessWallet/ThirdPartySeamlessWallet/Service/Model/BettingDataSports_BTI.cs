@@ -170,7 +170,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal DebitAmount { get; set; }
 
         public decimal CreditAmount { get; set; }
-        
+
         public string CurrentStatus { get; set; }
 
         public string BodyData { get; set; }
@@ -211,5 +211,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         public string BodyData { get; set; }
     }
+
 
 }

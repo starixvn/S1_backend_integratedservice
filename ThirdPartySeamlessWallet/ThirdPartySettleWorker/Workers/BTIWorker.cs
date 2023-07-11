@@ -150,7 +150,7 @@ namespace ThirdPartySettleWorker.Workers
                         _logger.LogError(ex, $"BTI Settle exception. {ex.Message} || reserve_id : {reserve_id}");
                     }
                 }
-                
+
             }
             catch (UnsettleNotFoundException ex)
             {
