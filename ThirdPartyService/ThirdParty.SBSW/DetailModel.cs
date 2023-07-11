@@ -46,7 +46,7 @@
         public string combo_type { get; set; }
         public string home_score { get; set; }
         public Leaguename[] leaguename { get; set; }
-        public double percentage { get; set; }
+        public double? percentage { get; set; }
         public string sport_type { get; set; }
         public Sportname[] sportname { get; set; }
         public Bettypename[] bettypename { get; set; }
@@ -67,12 +67,12 @@
         public Hometeamname[] hometeamname { get; set; }
         public string parlay_ref_no { get; set; }
         public string ticket_status { get; set; }
-        public decimal buyback_amount { get; set; }
-        public decimal discount_stake { get; set; }
+        public decimal? buyback_amount { get; set; }
+        public decimal? discount_stake { get; set; }
         public string esports_gameid { get; set; }
         public DateTime? match_datetime { get; set; }
-        public decimal original_stake { get; set; }
-        public decimal validbetamount { get; set; }
+        public decimal? original_stake { get; set; }
+        public decimal? validbetamount { get; set; }
         public decimal winlost_amount { get; set; }
         public Colossusbetdata[] ColossusBetData { get; set; }
         public string lottery_bettype { get; set; }

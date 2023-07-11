@@ -26,7 +26,6 @@ namespace ThirdPartyBetHistory
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
             services.AddSingleton<SettledBLL>();
-            services.AddSingleton<TpBetRecordExtendBLL>();
 
             services.RegisterSabaSiteHelper();
 

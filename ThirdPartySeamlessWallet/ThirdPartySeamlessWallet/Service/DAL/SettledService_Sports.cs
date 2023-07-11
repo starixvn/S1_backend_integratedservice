@@ -3,6 +3,7 @@ using MySql.Data.MySqlClient;
 using System.Data;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySeamlessWallet.Service.Model.SBSW;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -470,6 +471,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 2 => TicketStatus.Draw,
                 _ => TicketStatus.UnSettled
             };
+        }
+
+        public IEnumerable<SBSWUnsettle> GetSBSWUnsettleList(int LimitCount = 200)
+        {
+            return _mainDbClient.Query<SBSWUnsettle>("Service_SBSW_TpUnsettle_Get", parameters: new { LimitCount });
+        }
+        public BetRecordInfo GetSBSWUnsettleList(int TpId, string TransId, int GameType)
+        {
+            return _mainDbClient.QueryFirst<BetRecordInfo>("Service_TpBetRecord_Get", parameters: new { TpId = TpId, TransId = TransId, GameType = GameType });
         }
     }
 }
