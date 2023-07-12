@@ -378,7 +378,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var resultList = new List<ExecuteResult>();
             foreach (var txn in request.message.txns)
             {
-                resultList.Add(await ExecuteCancelBet(request.message, txn));
+                resultList.Add(await ExecuteCancelBet(request.message, txn, false));
             }
             var error = resultList.FirstOrDefault(result => result.ReturnCode != ReturnCode.Success);
             if (error != null)
@@ -413,11 +413,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     winlostDate = request.message.winLostDate,
                     creditAmount = request.message.creditAmount,
                     debitAmount = request.message.debitAmount,
-                });
+                },true);
             return new ReturnObj(result);
         }
 
-        private async Task<ExecuteResult> ExecuteCancelBet(ConfirmBet confirmBet, ConfirmDetail detail)
+        private async Task<ExecuteResult> ExecuteCancelBet(ConfirmBet confirmBet, ConfirmDetail detail, bool hasTxId)
         {
             try
             {
@@ -429,7 +429,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 await using var conn = _mainDbClient.GetMySqlConnection();
                 await conn.OpenAsync();
                 await using var trans = await conn.BeginTransactionAsync();
-                var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Service_Bettrans_SBSW_CancelBet", trans, new
+                var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>(hasTxId ? "Service_Bettrans_SBSW_CancelBetEnt" : "Service_Bettrans_SBSW_CancelBet", trans, hasTxId ? new
+                {
+                    confirmBet.action,
+                    confirmBet.operationId,
+                    confirmBet.userId,
+                    confirmBet.updateTime,
+                    detail.refId,
+                    detail.creditAmount,
+                    detail.debitAmount,
+                    detail.txId,
+                    TicketType = (int)SBSWTransType.CancelBet,
+                } : new
                 {
                     confirmBet.action,
                     confirmBet.operationId,
