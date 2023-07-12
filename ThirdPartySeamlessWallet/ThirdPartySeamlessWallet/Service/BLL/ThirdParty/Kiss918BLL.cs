@@ -911,7 +911,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         break;
                     case BettransRng_Kiss918TypeEnum.FromBetResult:
                         result = _settledService.SetBalance_Kiss918(tpCustInfo, data,
-                                 TransType.Prize, "Payout", out afterAmount, ref bonusId, conn, trans);
+                                 TransType.Payout, "Payout", out afterAmount, ref bonusId, conn, trans);
                         break;
                     case BettransRng_Kiss918TypeEnum.FromRefund:
                         result = _settledService.SetBalance_Kiss918(tpCustInfo, data,
