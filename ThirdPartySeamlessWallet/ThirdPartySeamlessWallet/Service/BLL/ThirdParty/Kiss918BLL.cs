@@ -910,8 +910,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                                  out afterAmount, ref bonusId, conn, trans);
                         break;
                     case BettransRng_Kiss918TypeEnum.FromBetResult:
-                        result = _settledService.SetBalance_Kiss918(tpCustInfo, data,
-                                 TransType.Payout, "Payout", out afterAmount, ref bonusId, conn, trans);
+                        {
+                            var transType = TransType.Payout;
+                            if (data.roundDetails.Contains("free")) transType = TransType.Prize;
+
+                            result = _settledService.SetBalance_Kiss918(tpCustInfo, data,
+                                     transType, "Payout", out afterAmount, ref bonusId, conn, trans);
+                        }
                         break;
                     case BettransRng_Kiss918TypeEnum.FromRefund:
                         result = _settledService.SetBalance_Kiss918(tpCustInfo, data,
