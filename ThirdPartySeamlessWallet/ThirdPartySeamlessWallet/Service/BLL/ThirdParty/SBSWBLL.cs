@@ -429,7 +429,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 await using var conn = _mainDbClient.GetMySqlConnection();
                 await conn.OpenAsync();
                 await using var trans = await conn.BeginTransactionAsync();
-                var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>(hasTxId ? "Service_Bettrans_SBSW_CancelBet_V2" : "Service_Bettrans_SBSW_CancelBet", trans, hasTxId ? new
+                var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>(hasTxId ? "Service_Bettrans_SBSW_CancelBetEnt" : "Service_Bettrans_SBSW_CancelBet", trans, hasTxId ? new
                 {
                     confirmBet.action,
                     confirmBet.operationId,
