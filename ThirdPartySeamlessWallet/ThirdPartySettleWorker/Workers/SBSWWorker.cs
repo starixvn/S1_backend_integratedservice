@@ -24,7 +24,6 @@ namespace ThirdPartySettleWorker.Workers
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly SettledBLL _settledBLL;
         private readonly Dictionary<int, SabaSportTypeOption> _sportTypeConfig;
-        private const int defaultSportType = 1;
         private readonly ILogger<SBSWWorker> _logger;
         public SBSWWorker(IServiceProvider provider)
         {
@@ -76,6 +75,8 @@ namespace ThirdPartySettleWorker.Workers
                         if (betData == null)
                             continue;
 
+                        int sport_type = betData.FirstOrDefault().sportType;
+
                         #region 取得wager資料
                         BaseBetDetail wagerData = tpBetRecordDetail.GameType switch
                         {
@@ -89,17 +90,15 @@ namespace ThirdPartySettleWorker.Workers
                         _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nwagerData=\r\n{JsonConvert.SerializeObject(wagerData)}");
 
                         if (tpUnsettle.GameType == GameType.SBSW_Vgaming)
-                            wagerData.sport_type = 171;
+                            sport_type = 171;
                         #endregion
 
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, wagerData.vendor_member_id);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
 
-                        wagerData.sport_type = wagerData.sport_type ?? defaultSportType;
-
-                        if (!_sportTypeConfig.TryGetValue(wagerData.sport_type.Value, out var sabaSportType))
+                        if (!_sportTypeConfig.TryGetValue(sport_type, out var sabaSportType))
                         {
-                            throw new SBSWException(ReturnCode.InvalidParameters, $"sportType:{wagerData.sport_type.Value} not supported.");
+                            throw new SBSWException(ReturnCode.InvalidParameters, $"sportType:{sport_type} not supported.");
                         }
 
                         #region 匯率轉換
@@ -130,10 +129,11 @@ namespace ThirdPartySettleWorker.Workers
                             TransTime = new DateTimeOffset(transTime, new TimeSpan(-4, 0, 0)).ToUnixTimeSeconds(),
                             SettlementType = settlementType,
                             TicketStatus = ticketStatus,
-                            GameID = GetBetDetailGameType(wagerData.sport_type).ToString(),
+                            GameID = sport_type.ToString(),
                             ReferenceNo = betData.FirstOrDefault()?.refId
                         };
                         _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nStep2");
+
                         if (settleData.Any())
                         {
                             _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nStep3");
@@ -171,17 +171,38 @@ namespace ThirdPartySettleWorker.Workers
                         else
                         {
                             _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nStep6");
-                            var tpBetRecordData = _settledBLL.GetSBSWTpBetRecord((int)Tp.SBSW, tpUnsettle.TransId, (int)tpUnsettle.GameType);
 
-                            if (tpBetRecordData != null)
+                            //住單狀態被改為cancel,走共用流判斷ValidBet & SettlementType & TicketStatus
+                            if (betData.ToList().Exists(x=> x.TicketType == (int)SBSWTransType.CancelBet))
                             {
-                                Task.Run(() =>
-                                {
-                                    _tpUnSettledBLL.SetTpUnsettle(Tp, tpUnsettle.GameType, tpUnsettle.TransId, false);
-                                });
-                                _logger.LogWarning($"TransId:{tpUnsettle.TransId} waiting settleData");
-                                continue;
+                                CalculateAvailableBet(wagerData, betRecordInfo);
                             }
+                            else
+                            {
+                                //betData並沒有TicketType被改為CancelBet的單,但wagerData的ticket_status為reject或refund,判斷當初可能下注或是cancel沒有收到,這邊直接不做settle,把該筆從TpUnsettle移除
+                                if (isCancelSataus(wagerData))
+                                {
+                                    Task.Run(() =>
+                                    {
+                                        _tpUnSettledBLL.SetTpUnsettle(Tp, tpUnsettle.GameType, tpUnsettle.TransId, true);
+                                    });
+                                    _logger.LogWarning($"TransId:{tpUnsettle.TransId} was rejected");
+                                    continue;
+                                }
+
+                                var tpBetRecordData = _settledBLL.GetSBSWTpBetRecord((int)Tp.SBSW, tpUnsettle.TransId, (int)tpUnsettle.GameType);
+
+                                //沒有settleData,但TpBetRecord有資料,代表wager已經先拉到settle的資料,但SBSW還沒來敲我們的api做settle的動作,這邊先將這筆留在TpUnsettle,等待SBSW呼叫我方api做完settle
+                                if (tpBetRecordData != null)
+                                {
+                                    Task.Run(() =>
+                                    {
+                                        _tpUnSettledBLL.SetTpUnsettle(Tp, tpUnsettle.GameType, tpUnsettle.TransId, false);
+                                    });
+                                    _logger.LogWarning($"TransId:{tpUnsettle.TransId} waiting settleData");
+                                    continue;
+                                }
+                            }                           
                         }
 
                         _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nbetRecordInfo=\r\n{JsonConvert.SerializeObject(betRecordInfo)}");
@@ -435,6 +456,11 @@ namespace ThirdPartySettleWorker.Workers
             {
                 betRecordInfo.TicketStatus = TicketStatus.Refund;
             }
+        }
+
+        private bool isCancelSataus(ISabaBet betDetial)
+        {
+            return betDetial.ticket_status.Equals("reject", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("refund", StringComparison.OrdinalIgnoreCase);
         }
     }
 }
