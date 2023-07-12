@@ -3028,7 +3028,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(cancelDataRng_MG.creationTimeMs).DateTime;
 
-                var bettransMg = _partitionService.Query<BettransLC_MG>(partitionTime, "Service_BettransLC_MG_txnId_Get", new { cancelDataRng_MG.txnId });
+                var bettransMg = _partitionService.Query<BettransLC_MG>(partitionTime, "Service_BettransLC_MG_txnId_Get", new { txnId = cancelDataRng_MG.txnId });
                 var bettrans = bettransMg.ToList();
 
                 // 不存在有效下注
