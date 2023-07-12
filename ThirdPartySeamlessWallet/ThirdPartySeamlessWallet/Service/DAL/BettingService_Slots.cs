@@ -347,13 +347,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (result > 0 && bettingDataFish_Joker.amount != 0)
                 {
                     var bonusId = 0;
+                    var refId = bettingDataFish_Joker.id.Length > 45 ? bettingDataFish_Joker.id.Substring(0, 45) : bettingDataFish_Joker.id;
                     result = PlaceBetV2(
                         tpCustInfo,
                         Math.Abs(bettingDataFish_Joker.amount) * -1,
                         (int)Tp.Joker,
-                        bettingDataFish_Joker.roundid,
+                        string.IsNullOrWhiteSpace(bettingDataFish_Joker.roundid) ? refId : bettingDataFish_Joker.roundid,
                         (int)GameType.Joker_Fish,
-                        bettingDataFish_Joker.id.Length > 45 ? bettingDataFish_Joker.id.Substring(0, 45) : bettingDataFish_Joker.id,
+                        refId,
                         null,
                         TpCategory.Fish,
                         out afterAmount,
