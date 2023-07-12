@@ -327,7 +327,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             // player offline return balance 0 others return cache balance
-            var gameType = thirdPartyBLL.GetGameType((int)thisTp, gamecode);
+            var gameType = string.IsNullOrEmpty(gamecode) ? 0 : thirdPartyBLL.GetGameType((int)thisTp, gamecode);
             var tpCustBalance = (environment.IsDevelopment()) ? tpCustInfoBLL.GetBalance((int)thisTp, account, (int)gameType) : tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, account, (int)gameType);
             getBalanceResp.data = new BalanceData();
             getBalanceResp.status.code = "0";
