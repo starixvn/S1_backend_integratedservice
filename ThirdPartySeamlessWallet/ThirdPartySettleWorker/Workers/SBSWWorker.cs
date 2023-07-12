@@ -24,7 +24,6 @@ namespace ThirdPartySettleWorker.Workers
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly SettledBLL _settledBLL;
         private readonly Dictionary<int, SabaSportTypeOption> _sportTypeConfig;
-        private const int defaultSportType = 1;
         private readonly ILogger<SBSWWorker> _logger;
         public SBSWWorker(IServiceProvider provider)
         {
@@ -76,6 +75,8 @@ namespace ThirdPartySettleWorker.Workers
                         if (betData == null)
                             continue;
 
+                        int sport_type = betData.FirstOrDefault().sportType;
+
                         #region 取得wager資料
                         BaseBetDetail wagerData = tpBetRecordDetail.GameType switch
                         {
@@ -89,17 +90,15 @@ namespace ThirdPartySettleWorker.Workers
                         _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nwagerData=\r\n{JsonConvert.SerializeObject(wagerData)}");
 
                         if (tpUnsettle.GameType == GameType.SBSW_Vgaming)
-                            wagerData.sport_type = 171;
+                            sport_type = 171;
                         #endregion
 
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, wagerData.vendor_member_id);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
 
-                        wagerData.sport_type = wagerData.sport_type ?? defaultSportType;
-
-                        if (!_sportTypeConfig.TryGetValue(wagerData.sport_type.Value, out var sabaSportType))
+                        if (!_sportTypeConfig.TryGetValue(sport_type, out var sabaSportType))
                         {
-                            throw new SBSWException(ReturnCode.InvalidParameters, $"sportType:{wagerData.sport_type.Value} not supported.");
+                            throw new SBSWException(ReturnCode.InvalidParameters, $"sportType:{sport_type} not supported.");
                         }
 
                         #region 匯率轉換
@@ -130,7 +129,7 @@ namespace ThirdPartySettleWorker.Workers
                             TransTime = new DateTimeOffset(transTime, new TimeSpan(-4, 0, 0)).ToUnixTimeSeconds(),
                             SettlementType = settlementType,
                             TicketStatus = ticketStatus,
-                            GameID = GetBetDetailGameType(wagerData.sport_type).ToString(),
+                            GameID = sport_type.ToString(),
                             ReferenceNo = betData.FirstOrDefault()?.refId
                         };
                         _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nStep2");
