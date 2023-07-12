@@ -47,8 +47,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             //  1.CustBonus.PromoCategoryId = TpGameType.PromoCategoryId
             //  2.CustBonus.PromoCategoryId = 0 (不分類皆可使用，但不包含捕魚類遊戲)
             var custBonus = walletService.GetCustBonusList(tpCustInfo.CustId)
-                .FirstOrDefault(i => (int)i.PromoCategoryId == bonusCategory.Id || 
-                (i.PromoCategoryId == PromotionCategory.ALL && bonusCategory.CategoryId != (int)TpCategory.Fish));
+                .FirstOrDefault(i => (int)i.PromoCategoryId == bonusCategory?.Id ||
+                (i.PromoCategoryId == PromotionCategory.ALL && bonusCategory != null && bonusCategory.CategoryId != (int)TpCategory.Fish));
 
             if (custBonus != null)
             {
