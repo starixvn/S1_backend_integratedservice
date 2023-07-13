@@ -947,64 +947,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private bool GetTpBonus(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data, out int bonusId, out string message)
-        {
-            message = string.Empty;
-            bonusId = 0;
-            try
-            {
-                bonusId = _settledService.GetTpBonus_Kiss918(tpCustInfo, data);
-
-                //if (bonusId > 0)
-                //{
-                //    var result = _bettingService.AddTpBonus_Kiss918(tpCustInfo, data, bonusId, conn, trans);
-
-                //    if (!result)
-                //    {
-                //        message = "add tp bonus fail.";
-                //        _logger.LogError($"AddTpBonus Fail:{message}");
-                //        return false;
-                //    }
-                //}
-                return true;
-            }
-            catch (Exception ex)
-            {
-                message = "exception happen.";
-                _logger.LogError(ex, $"ProcessTpBonus Exception:{ex.Message}");
-                return false;
-            }
-        }
-
-        private bool ProcessTpBonus(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data,
-                        out string message, MySqlConnection conn, MySqlTransaction trans)
-        {
-            message = string.Empty;
-            try
-            {
-                var bonusId = _settledService.GetTpBonus_Kiss918(tpCustInfo, data);
-
-                if (bonusId > 0)
-                {
-                    var result = _bettingService.AddTpBonus_Kiss918(tpCustInfo, data, bonusId, conn, trans);
-
-                    if (!result)
-                    {
-                        message = "add tp bonus fail.";
-                        _logger.LogError($"AddTpBonus Fail:{message}");
-                        return false;
-                    }
-                }
-                return true;
-            }
-            catch (Exception ex)
-            {
-                message = "exception happen.";
-                _logger.LogError(ex, $"ProcessTpBonus Exception:{ex.Message}");
-                return false;
-            }
-        }
-
         private bool InsertUnsettleData(DateTime partitionTime, string referenceID, out string message, MySqlTransaction trans)
         {
             message = string.Empty;
