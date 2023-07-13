@@ -61,23 +61,13 @@ namespace ThirdPartySettleWorker.Workers
                 }
                 forContinue = tpUnsettleList.Count() == 200;
 
-                foreach (var tpUnsettle in tpUnsettleList.OrderByDescending(x=> x.TransId))
+                foreach (var tpUnsettle in tpUnsettleList.OrderBy(x=> x.TransId))
                 {
                     try
                     {
-                        var tpBetRecordDetail = _settledBLL.GetTpBetRecordDetail((int)Tp.SBSW, (int)tpUnsettle.GameType, tpUnsettle.TransId, tpUnsettle.PartitionTime);
-                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleSBSW>(getSettleSp, new { txId = tpUnsettle.TransId }, DataBase.Main);
-                        var betData = _tpUnSettledBLL.GetTpUnsettleData<BetSBSW>(tpUnsettle.GameType == GameType.SBSW_Vgaming ? getVGBettransSp : getBettransSp,
-                            tpUnsettle.GameType == GameType.SBSW_Vgaming ? new { refId = settleData.FirstOrDefault()?.refId } : new { txId = tpUnsettle.TransId }, DataBase.Main);
-
-                        _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nbetData=\r\n{JsonConvert.SerializeObject(betData)}\r\nsettleData=\r\n{JsonConvert.SerializeObject(settleData)}");
-                        //取不到下注資料，直接跳過這筆
-                        if (betData == null)
-                            continue;
-
-                        int sport_type = betData.FirstOrDefault().sportType;
-
+                        var betData = new List<BetSBSW>();
                         #region 取得wager資料
+                        var tpBetRecordDetail = _settledBLL.GetTpBetRecordDetail((int)Tp.SBSW, (int)tpUnsettle.GameType, tpUnsettle.TransId, tpUnsettle.PartitionTime);
                         BaseBetDetail wagerData = tpBetRecordDetail.GameType switch
                         {
                             (int)GameType.SBSW_NumberGame => JsonConvert.DeserializeObject<GetBetDetailData>(tpBetRecordDetail.Detail).BetNumberDetails.First(),
@@ -88,10 +78,31 @@ namespace ThirdPartySettleWorker.Workers
                         };
 
                         _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nwagerData=\r\n{JsonConvert.SerializeObject(wagerData)}");
+                        #endregion
 
+                        #region 取得betData資料
+                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleSBSW>(getSettleSp, new { txId = tpUnsettle.TransId }, DataBase.Main);
+
+                        //如果是Vgaming的遊戲,且wager的狀態為Cancel相關,會撈不到settleData,所以改用getBettransSp去取得betData
+                        if (!settleData.Any() && tpUnsettle.GameType == GameType.SBSW_Vgaming && isCancelSataus(wagerData))
+                        {
+                            betData.AddRange(_tpUnSettledBLL.GetTpUnsettleData<BetSBSW>(getBettransSp, new { txId = tpUnsettle.TransId }, DataBase.Main));
+                        }
+                        else
+                        {
+                            betData.AddRange(_tpUnSettledBLL.GetTpUnsettleData<BetSBSW>(tpUnsettle.GameType == GameType.SBSW_Vgaming ? getVGBettransSp : getBettransSp,
+                            tpUnsettle.GameType == GameType.SBSW_Vgaming ? new { refId = settleData.FirstOrDefault()?.refId } : new { txId = tpUnsettle.TransId }, DataBase.Main));
+                        }
+
+                        _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nbetData=\r\n{JsonConvert.SerializeObject(betData)}\r\nsettleData=\r\n{JsonConvert.SerializeObject(settleData)}");
+                        //取不到下注資料，直接跳過這筆
+                        if (!betData.Any())
+                            continue;
+                        #endregion
+
+                        int sport_type = betData.FirstOrDefault().sportType;
                         if (tpUnsettle.GameType == GameType.SBSW_Vgaming)
                             sport_type = 171;
-                        #endregion
 
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, wagerData.vendor_member_id);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
@@ -137,7 +148,7 @@ namespace ThirdPartySettleWorker.Workers
                         if (settleData.Any())
                         {
                             _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nStep3");
-                            if (betData.Sum(x => x.betAmount) == wagerData.stake)
+                            if (betData.Sum(x => x.betAmount) == wagerData.stake || tpUnsettle.GameType == GameType.SBSW_Vgaming)
                             {
                                 _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nStep4");
                                 betRecordInfo.WinlostAmount = wagerData.winlost_amount;
