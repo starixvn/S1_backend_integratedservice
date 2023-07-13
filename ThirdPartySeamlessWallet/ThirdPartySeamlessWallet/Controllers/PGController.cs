@@ -152,7 +152,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else
                         {
-                            VerifySessionRespData respData = new VerifySessionRespData(); ;
+                            VerifySessionRespData respData = new VerifySessionRespData();
                             resp.data = respData;
 
                             respData.currency = tpCustInfoAuth.TpCurrencyId;

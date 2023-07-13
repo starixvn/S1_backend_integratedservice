@@ -749,5 +749,28 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         #endregion
+
+        #region Endorphina
+
+        public int PlaceBetRNG_Endorphina(BettingData_Endorphina bettingData_Endorphina, int gameType, out decimal afterAmount)
+        {
+            var tpId = (int)Tp.Endorphina;
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(tpId, bettingData_Endorphina.player);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                bettingData_Endorphina.InnerAmount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = bettingService.PlaceBetRNG_Endorphina(tpCustInfo, bettingData_Endorphina, gameType, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        #endregion
     }
 }
