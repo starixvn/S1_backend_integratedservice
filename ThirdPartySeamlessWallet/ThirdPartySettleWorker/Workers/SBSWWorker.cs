@@ -84,7 +84,7 @@ namespace ThirdPartySettleWorker.Workers
                         var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleSBSW>(getSettleSp, new { txId = tpUnsettle.TransId }, DataBase.Main);
 
                         //如果是Vgaming的遊戲,且wager的狀態為Cancel相關,會撈不到settleData,所以改用getBettransSp去取得betData
-                        if (!settleData.Any() && tpUnsettle.GameType == GameType.SBSW_Vgaming && isCancelSataus(wagerData))
+                        if (!settleData.Any() && tpUnsettle.GameType == GameType.SBSW_Vgaming && isCancelStatus(wagerData))
                         {
                             betData.AddRange(_tpUnSettledBLL.GetTpUnsettleData<BetSBSW>(getBettransSp, new { txId = tpUnsettle.TransId }, DataBase.Main));
                         }
@@ -191,7 +191,7 @@ namespace ThirdPartySettleWorker.Workers
                             else
                             {
                                 //betData並沒有TicketType被改為CancelBet的單,但wagerData的ticket_status為reject或refund,判斷當初可能下注或是cancel沒有收到,這邊直接不做settle,把該筆從TpUnsettle移除
-                                if (isCancelSataus(wagerData))
+                                if (isCancelStatus(wagerData))
                                 {
                                     Task.Run(() =>
                                     {
@@ -469,9 +469,9 @@ namespace ThirdPartySettleWorker.Workers
             }
         }
 
-        private bool isCancelSataus(ISabaBet betDetial)
+        private bool isCancelStatus(ISabaBet betDetial)
         {
-            return betDetial.ticket_status.Equals("reject", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("refund", StringComparison.OrdinalIgnoreCase);
+            return betDetial.ticket_status.Equals("reject", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("refund", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("void", StringComparison.OrdinalIgnoreCase);
         }
     }
 }
