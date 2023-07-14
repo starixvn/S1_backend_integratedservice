@@ -38,8 +38,18 @@ namespace ThirdPartyWager.Service.BLL
             var _currencyId = tpCurrencyList.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
 
             var getReportData = JsonConvert.DeserializeObject<List<CurrencyStatsData_PlayTech>>(JsonConvert.SerializeObject(reportData));
+            var data = getReportData.GroupBy(i => i.currency).Select(g => new
+            {
+                currency = g.Key,
+                totalBets = g.Sum(s => s.totalBets),
+                totalCancels = g.Sum(s => s.totalCancels),
+                totalWins = g.Sum(s => s.totalWins),
+                ggr = g.Sum(s => s.ggr),
+                totalJpc = g.Sum(s => s.totalJpc),
+                totalJpw = g.Sum(s => s.totalJpw)
+            });
 
-            foreach (var item in getReportData)
+            foreach (var item in data)
             {
                 var f = new FincanceDailySummary()
                 {
