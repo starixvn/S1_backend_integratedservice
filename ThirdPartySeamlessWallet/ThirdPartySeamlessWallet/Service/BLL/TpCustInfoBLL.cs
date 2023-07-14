@@ -39,12 +39,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var tpCustInfo = GetTpCustInfoWithCache(tpId, tpUserName);
             var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
             var balance = walletService.GetBalance(tpCustInfo.CustId);
-            var bonusCategoryId = thirdPartyBLL.GetBonusCategoryId(gameType);
+            var bonusCategory = thirdPartyBLL.GetBonusCategory(gameType);
 
             // 1.先找到用戶還在Running的CustBonusList
-            // 2.再找出符合條件的找到用戶還在Running的CustBonus加到Balance，PromoCategoryId = 0 為不分類皆可使用
+            // 2.再找出符合條件的找到用戶還在Running的CustBonus加到Balance
+            // 符合條件:
+            //  1.CustBonus.PromoCategoryId = TpGameType.PromoCategoryId
+            //  2.CustBonus.PromoCategoryId = 0 (不分類皆可使用，但不包含捕魚類遊戲)
             var custBonus = walletService.GetCustBonusList(tpCustInfo.CustId)
-                .FirstOrDefault(i => (int)i.PromoCategoryId == bonusCategoryId || i.PromoCategoryId == PromotionCategory.ALL);
+                .FirstOrDefault(i => (int)i.PromoCategoryId == bonusCategory?.Id ||
+                (i.PromoCategoryId == PromotionCategory.ALL && bonusCategory != null && bonusCategory.CategoryId != (int)TpCategory.Fish));
+
             if (custBonus != null)
             {
                 balance += custBonus.Bonus;

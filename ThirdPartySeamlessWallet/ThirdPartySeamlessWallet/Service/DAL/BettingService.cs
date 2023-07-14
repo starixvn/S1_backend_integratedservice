@@ -4,6 +4,8 @@ using Newtonsoft.Json;
 using Serilog.Context;
 using System.Data;
 using System.Reflection;
+
+using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -19,6 +21,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly MySqlClient _reportDbClient;
         private readonly PartitionService _partitionService;
         private readonly TpUnsettleService _tpUnsettleService;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
 
         public BettingService(IServiceProvider provider)
         {
@@ -28,6 +31,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _partitionService = provider.GetRequiredService<PartitionService>();
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
 
         public int AddTpBonus(int tpId, string transId, int gameType, int custId, string userName, int currencyId, int siteId, decimal stake, int bonusId, TpCategory tpCategory, MySqlConnection conn, MySqlTransaction trans, SeamlessBonusType bonusType = SeamlessBonusType.TpCategory)
@@ -66,11 +70,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int result = 0;
             try
             {
+                var bonusCategory = _thirdPartyBLL.GetBonusCategory(gameType);
+
                 // 1.先找到用戶還在Running的CustBonusList
-                // 2.找出符合條件的Bonus才可以使用
+                // 2.再找出符合條件的找到用戶還在Running的CustBonus加到Balance
+                // 符合條件:
+                //  1.CustBonus.PromoCategoryId = TpGameType.PromoCategoryId
+                //  2.CustBonus.PromoCategoryId = 0 (不分類皆可使用，但不包含捕魚類遊戲)
                 var custBonus = walletService.GetCustBonusList(tpCustInfo.CustId)
-                    .FirstOrDefault(i => i.GameType == gameType || i.PromoCategoryId == PromotionCategory.ALL);                           
-                
+                    .FirstOrDefault(i => (int)i.PromoCategoryId == bonusCategory?.Id ||
+                    (i.PromoCategoryId == PromotionCategory.ALL && bonusCategory != null && bonusCategory.CategoryId != (int)TpCategory.Fish));
+
                 if (custBonus != null)
                 {
                     bonusId = custBonus.BonusId;

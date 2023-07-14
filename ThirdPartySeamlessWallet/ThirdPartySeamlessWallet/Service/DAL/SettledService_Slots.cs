@@ -250,14 +250,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0 && bettingDataFish_Joker.amount != 0)
                 {
+                    var refId = bettingDataFish_Joker.id.Length > 45 ? bettingDataFish_Joker.id.Substring(0, 45) : bettingDataFish_Joker.id;
                     result = PayoutV2(
                          tpCustInfo: tpCustInfo,
                          amount: bettingDataFish_Joker.amount,
                          tpId: (int)Tp.Joker,
-                         tpTransId: bettingDataFish_Joker.roundid,
+                         tpTransId: string.IsNullOrWhiteSpace(bettingDataFish_Joker.roundid) ? refId : bettingDataFish_Joker.roundid,
                          gameType: (int)GameType.Joker_Fish,
                          tpCategory: TpCategory.Fish,
-                         refId: bettingDataFish_Joker.id.Length > 45 ? bettingDataFish_Joker.id.Substring(0, 45) : bettingDataFish_Joker.id,
+                         refId: refId,
                          TransType.Payout,
                          betData: null,
                          out afterAmount,
