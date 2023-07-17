@@ -23,8 +23,9 @@ namespace ThirdPartySettleWorker.Workers
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly SettledBLL _settledBLL;
-        private readonly Dictionary<int, SabaSportTypeOption> _sportTypeConfig;
+        private readonly Dictionary<int, List<SabaSportTypeOption>> _tpGameTypeConfig;
         private readonly ILogger<SBSWWorker> _logger;
+
         public SBSWWorker(IServiceProvider provider)
         {
             _tpName = Enum.GetName(typeof(Tp), Tp);
@@ -33,8 +34,8 @@ namespace ThirdPartySettleWorker.Workers
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _logger = provider.GetRequiredService<ILogger<SBSWWorker>>();
-            _sportTypeConfig = provider.GetRequiredService<IEnumerable<SabaSportTypeOption>>()
-                .ToDictionary(item => item.SportType, item => item);
+            _tpGameTypeConfig = provider.GetRequiredService<IEnumerable<SabaSportTypeOption>>()
+                .GroupBy(c => c.TpGameType).ToDictionary(c => c.Key, c => c.ToList());
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -107,11 +108,11 @@ namespace ThirdPartySettleWorker.Workers
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, wagerData.vendor_member_id);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
 
-                        if (!_sportTypeConfig.TryGetValue(sport_type, out var sabaSportType))
+                        if (!_tpGameTypeConfig.TryGetValue((int)tpUnsettle.GameType, out var tpGameTypeData))
                         {
-                            throw new SBSWException(ReturnCode.InvalidParameters, $"sportType:{sport_type} not supported.");
+                            throw new SBSWException(ReturnCode.InvalidParameters, $"GameType:{(int)tpUnsettle.GameType} not supported.");
                         }
-
+                        
                         #region 匯率轉換
                         wagerData.stake *= tpCurrency.ExchangeRate;
                         wagerData.winlost_amount *= tpCurrency.ExchangeRate;
@@ -123,8 +124,7 @@ namespace ThirdPartySettleWorker.Workers
                         var ticketStatus = TicketStatus.UnSettled;
                         var transTime = wagerData.transaction_time;
                         var settledTime = string.IsNullOrWhiteSpace(wagerData.settlement_time) ? wagerData.transaction_time : DateTime.Parse(wagerData.settlement_time);
-                        var tpCategoryId = sabaSportType.TpCategoryId;
-                        var gameType = sabaSportType.TpGameType;
+                        var tpCategoryId = tpGameTypeData.FirstOrDefault().TpCategoryId;
 
                         _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nStep1");
                         var betRecordInfo = new BetRecordInfo
@@ -134,7 +134,7 @@ namespace ThirdPartySettleWorker.Workers
                             ValidBet = wagerData.stake,
                             WinlostAmount = winlostAmount,
                             TransId = tpUnsettle.TransId,
-                            GameType = (GameType)gameType,
+                            GameType = tpUnsettle.GameType,
                             TpUserName = wagerData.vendor_member_id,
                             SettledTime = new DateTimeOffset(settledTime, new TimeSpan(-4, 0, 0)).ToUnixTimeSeconds(),
                             TransTime = new DateTimeOffset(transTime, new TimeSpan(-4, 0, 0)).ToUnixTimeSeconds(),
