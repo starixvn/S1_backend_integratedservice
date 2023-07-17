@@ -306,7 +306,6 @@ namespace ThirdPartySeamlessWallet.Service.Library
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{spName} {sw.Elapsed:c}");
             return result;
-        
         }
         
         #endregion

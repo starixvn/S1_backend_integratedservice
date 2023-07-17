@@ -16,7 +16,7 @@ namespace ThirdParty.Saba
     public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular, IThirdPartyGetBalanceParticular, IThirdPartyBetLimitParticular
     {
         private const string ContentType = "application/x-www-form-urlencoded";
-      
+
         private class Result
         {
             public int error_code { get; set; }
@@ -59,19 +59,19 @@ namespace ThirdParty.Saba
         {
             public string bet_setting { get; set; }
         }
-        
+
         public class GetBetSettingLimitReq
         {
             public string vendor_id { set; get; }
             public string currency { set; get; }
         }
-                   
+
         private class SetMemberBetSettingResult
         {
             public int error_code { get; set; }
             public string message { get; set; }
         }
-        
+
         public class Datum
         {
             public string vendor_member_id { get; set; }
@@ -289,14 +289,27 @@ namespace ThirdParty.Saba
             {
                 ErrorCode = ErrorCode.Success,
                 Message = new SabaDeepLinkHelper(loginResult.Data, tpCustInfo, appType, TpLangId, inputs).GameUrl
-            };          
+            };
         }
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
-        { 
+        {
+
+            #region Test Backend Pending Bonus Response
+
+            //return new ApiResult<TransferResult>()
+            //{
+            //    RawMessage = "No Result",
+            //    RawErrorCode = "1",
+            //    ErrorCode = ErrorCode.TransferPending,
+            //    Data = new TransferResult() { Status = TransferStatus.Pending }
+            //};
+
+            #endregion
+
             ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
-            
-            try 
+
+            try
             {
                 string ApiUrl = new SabaConfig(inputs).ApiUrl;
                 TransferReg input = new TransferReg();
@@ -432,6 +445,7 @@ namespace ThirdParty.Saba
 
         public ApiResult<TransferResult> BonusTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal bonus, decimal lockedAmount, decimal rolloverAmount, long expiredDate, string transID, string thirdPartyTransID)
         {
+
             string ApiUrl = new SabaConfig(inputs).ApiUrl;
             BonusTransferReg input = new BonusTransferReg();
             input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
@@ -586,7 +600,7 @@ namespace ThirdParty.Saba
             var apiUrl = config.ApiUrl;
             var req = new SetMemberBetSettingReq
             {
-                vendor_id = config.VendorId, 
+                vendor_id = config.VendorId,
                 vendor_member_id = tpCustInfo.TpUserName,
                 bet_setting = betSetting
             };
@@ -641,9 +655,9 @@ namespace ThirdParty.Saba
                 VendorId = inputs.GetValue("VendorId");
             }
         }
-      
+
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {  
+        {
             var tpCurrency = new TpCurrency()
             {
                 ExchangeRate = tpCustInfo.ExchangeRate,
@@ -717,9 +731,9 @@ namespace ThirdParty.Saba
                     TpCurrency = tpCurrency,
                     RefTransId = gameType == 2 ? betNumberDetail?.trans_id : betDetail?.trans_id,
                     TpUserName = gameType == 2 ? betNumberDetail?.vendor_member_id : betDetail?.vendor_member_id,
-                    UTCBetTime = gameType == 2 ? GetUTCTime(betNumberDetail?.transaction_time, DateTime.MinValue) : 
+                    UTCBetTime = gameType == 2 ? GetUTCTime(betNumberDetail?.transaction_time, DateTime.MinValue) :
                             GetUTCTime(betDetail?.transaction_time, DateTime.MinValue),
-                    UTCSettledTime = gameType == 2 ?　GetUTCTime(betNumberDetail?.transaction_time, DateTime.MinValue) :
+                    UTCSettledTime = gameType == 2 ? GetUTCTime(betNumberDetail?.transaction_time, DateTime.MinValue) :
                             GetUTCTime(betDetail?.transaction_time, (DateTime)betDetail.transaction_time),
                     Stake = gameType == 2 ? betNumberDetail.stake * tpCurrency.ExchangeRate : betDetail.stake * tpCurrency.ExchangeRate,
                     WinlostAmount = gameType == 2 ? betNumberDetail.winlost_amount * tpCurrency.ExchangeRate : betDetail.winlost_amount * tpCurrency.ExchangeRate,
@@ -745,7 +759,7 @@ namespace ThirdParty.Saba
                 }
             };
         }
-    
+
         private DateTime GetUTCTime(DateTime? target, DateTime defaultTime)
         {
             return new DateTimeOffset(target ?? defaultTime, new TimeSpan(-4, 0, 0)).DateTime;
@@ -774,6 +788,6 @@ namespace ThirdParty.Saba
                 jObject["BetVirtualSportDetails"][0]["trans_id"] = jObject["BetVirtualSportDetails"][0]["trans_id"].ToString();
             }
             return jObject.ToString();
-         }
+        }
     }
 }

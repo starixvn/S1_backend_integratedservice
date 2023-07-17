@@ -138,11 +138,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     }
                     else
                     {
-                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                     }
                 }
             }

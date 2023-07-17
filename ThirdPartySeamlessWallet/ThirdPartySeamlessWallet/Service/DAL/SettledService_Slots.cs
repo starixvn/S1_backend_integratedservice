@@ -2910,7 +2910,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 txnId = txnId
             });
-
             var slot = _mainDbClient.QueryFirst<BettransRng_MG>("Service_BettransRng_MG_txnId_Get", p);
 
             if (slot != null)
@@ -4756,7 +4755,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                     }
                 }
             }
@@ -4795,6 +4798,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
         #endregion
+
 
         #region HB
 
@@ -4869,6 +4873,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
+
         public void UpdateTpBonusFlag_HB(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId)
         {
             GetTpBonus(tpId, tpTransId, gameType, tpCategory, out CustId, out BonusId);
@@ -4937,6 +4942,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 BonusId = bonusId
             };
         }
+
         #endregion
 
         #region AMB Slot
@@ -5325,7 +5331,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         bettingData_Skywind.TicketType = (int)BettransType.EndRound;
                         break;
                 }
-                
+
                 result = _partitionService.Execute(partitionTime, "Service_Bettrans_Skywind_Ins", bettingData_Skywind, trans);
 
                 if (result > 0 && bettingData_Skywind.amount > 0)
@@ -5382,7 +5388,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 trx_id = cancelBetData_Skywind.trxid
             };
-            var bettransSkywind = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_Bettrans_Skywind_Check", query)?.FirstOrDefault(x=>x.TicketStatus == (int)TicketStatus.UnSettled);
+            var bettransSkywind = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_Bettrans_Skywind_Check", query)?.FirstOrDefault(x => x.TicketStatus == (int)TicketStatus.UnSettled);
             if (bettransSkywind == null)
             {
                 return -2;
