@@ -292,7 +292,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerPT>();
             services.AddHostedService<WagerRedoPT>();
             services.AddHostedService<FinancePT>();
-            services.AddHostedService<WagerReSettlePT>();
+            //services.AddHostedService<WagerReSettlePT>();
             services.AddHostedService<WagerPlayTech>();
             services.AddHostedService<WagerRedoPlayTech>();
             services.AddHostedService<FinancePlayTech>();
