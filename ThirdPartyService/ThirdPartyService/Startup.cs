@@ -1,4 +1,5 @@
 using System;
+using Elastic.Apm.NetCoreAll;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -75,7 +76,7 @@ namespace ThirdPartyService
             }
 
             //app.UseHttpsRedirection();
-
+            app.UseAllElasticApm(Configuration);
             app.UseRouting();
             app.UseRequestLogMiddleware();
             app.UseResponseLogMiddleware();
