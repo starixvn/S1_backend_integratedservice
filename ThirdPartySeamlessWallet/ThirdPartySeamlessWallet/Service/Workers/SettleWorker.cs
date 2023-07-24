@@ -840,7 +840,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             var category = TpCategory.LiveCasino;
             string logName = "Settle_EVO_LC";
             var tpName = Enum.GetName(typeof(Tp), thisTp);
-
+            LogContext.PushProperty("TP", Tp.EVO);
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             try
             {
                 var unsettledList = settledBLL.GetUnsettledList_EVO();
@@ -892,6 +893,11 @@ namespace ThirdPartySeamlessWallet.Service.Workers
 
                                     settledBLL.Settled(tpCustInfo, betRecordInfo, category);
                                     settledBLL.SetSettleFlag_EVO(unsettled.TransId);
+                                }
+                                else
+                                {
+                                    LogContext.PushProperty("TP", Tp.EVO);
+                                    _logger.LogError($"amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}\r\n", logName);
                                 }
                             }
                             catch (Exception ex1)

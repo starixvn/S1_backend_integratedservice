@@ -68,25 +68,24 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                         var gameType = (GameType)ticket.GameType;
                         if (betDetail != null)
                         {
-                            var tpBetRecordDetail = new BetDetailsModel() { last_version_key = getBetDetail.Data.last_version_key };
-                            tpBetRecordDetail.BetDetails.Add(betDetail);
+                            List<BetDetail> tempBetDetails = new List<BetDetail>();
+                            tempBetDetails.Add(betDetail);
+                            var tpBetRecordDetail = new BetDetailsModel() { last_version_key = getBetDetail.Data.last_version_key, BetDetails = tempBetDetails };
                             ProcessTpBetRecordDetailData(betDetail.vendor_member_id, betDetail.trans_id.ToString(), betDetail.transaction_time, gameType, tpBetRecordDetail);
                         }
                         if (betNumberDetail != null)
                         {
-                            var tpBetRecordDetail = new BetNumberDetailModel() { last_version_key = getBetDetail.Data.last_version_key };
-                            tpBetRecordDetail.BetNumberDetails.Add(betNumberDetail);
-                            ProcessTpBetRecordDetailData(betDetail.vendor_member_id, betDetail.trans_id.ToString(), betDetail.transaction_time, gameType, tpBetRecordDetail);
+                            List<BetNumberDetail> tempBetNumberDetails = new List<BetNumberDetail>();
+                            tempBetNumberDetails.Add(betNumberDetail);
+                            var tpBetRecordDetail = new BetNumberDetailModel() { last_version_key = getBetDetail.Data.last_version_key, BetNumberDetails = tempBetNumberDetails };
+                            ProcessTpBetRecordDetailData(betNumberDetail.vendor_member_id, betNumberDetail.trans_id.ToString(), betNumberDetail.transaction_time, gameType, tpBetRecordDetail);
                         }
                         if(betVirtualSportDetail != null)
                         {
-                            if (betVirtualSportDetail.sport_type >= 190 && betVirtualSportDetail.sport_type <= 199)
-                            {
-                                gameType = GameType.SBSW_VirtualSports2;
-                            }
-                            var tpBetRecordDetail = new BetVirtualSportDetailModel() { last_version_key = getBetDetail.Data.last_version_key };
-                            tpBetRecordDetail.BetVirtualSportDetails.Add(betVirtualSportDetail);
-                            ProcessTpBetRecordDetailData(betDetail.vendor_member_id, betDetail.trans_id.ToString(), betDetail.transaction_time, gameType, tpBetRecordDetail);
+                            List<BetVirtualSportDetail> tempBetVirtualSportDetails = new List<BetVirtualSportDetail>();
+                            tempBetVirtualSportDetails.Add(betVirtualSportDetail);
+                            var tpBetRecordDetail = new BetVirtualSportDetailModel() { last_version_key = getBetDetail.Data.last_version_key, BetVirtualSportDetails = tempBetVirtualSportDetails };
+                            ProcessTpBetRecordDetailData(betVirtualSportDetail.vendor_member_id, betVirtualSportDetail.trans_id.ToString(), betVirtualSportDetail.transaction_time, gameType, tpBetRecordDetail);
                         }
                     }
                 }
@@ -188,9 +187,9 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             }
             if (getBetDetail.Data?.BetNumberDetails != null)
             {
-                var gameType = GameType.SBSW_NumberGame;
                 foreach (var betDetail in getBetDetail.Data?.BetNumberDetails)
                 {
+                    var gameType = GameType.SBSW_NumberGame;
                     List<BetNumberDetail> tempBetNumberDetails = new List<BetNumberDetail>();
                     tempBetNumberDetails.Add(betDetail);
                     var tpBetRecordDetail = new BetNumberDetailModel() { last_version_key = getBetDetail.Data.last_version_key, BetNumberDetails = tempBetNumberDetails };
@@ -200,9 +199,9 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             }
             if (getBetDetail.Data?.BetVirtualSportDetails != null)
             {
-                var gameType = GameType.SBSW_VirtualSports;
                 foreach (var betDetail in getBetDetail.Data?.BetVirtualSportDetails)
                 {
+                    var gameType = GameType.SBSW_VirtualSports;
                     if (betDetail.sport_type >= 190 && betDetail.sport_type <= 199)
                     {
                         gameType = GameType.SBSW_VirtualSports2;

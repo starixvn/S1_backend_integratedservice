@@ -583,8 +583,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     var (gameType, tpCategory) = GetGameType(result.SportType);
 
-                    _tpUnsettleService.InsertTpUnsettle(Tp.SBSW, gameType, detail.txId.ToString(), trans);
-
                     var memoHead = transType switch
                     {
                         SBSWTransType.Settle => "Payout",
