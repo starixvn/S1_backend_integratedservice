@@ -727,14 +727,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int AutoCancelSeamlessBonus(int bonusId, int currencyId, int gameType, int custId, string userName, int siteId, string transId, MySqlConnection conn, MySqlTransaction trans)
         {
             var p = new DynamicParameters(new { BonusId = bonusId, CurrencyId = currencyId, GameType = gameType, CustId = custId, UserName = userName, SiteId = siteId, TransId = transId });
-            logger.LogInformation($"AutoCancelSeamlessBonus:{JsonConvert.SerializeObject(p)}");
+            logger.LogWarning($"AutoCancelSeamlessBonus:bonusId={bonusId},currencyId={currencyId},gameType={gameType},custId={custId},UserName={userName},SiteId={siteId},TransId={transId}");
             p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("BonusStatus", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
             var result = _mainDbClient.Execute("Service_AutoCancelSeamlessBonus_Set_V3", p, conn , trans);
             var bonus = p.Get<decimal?>("Bonus") ?? 0;
             var bonusStatus = p.Get<int?>("BonusStatus") ?? 0;
-            logger.LogInformation($"AutoCancelSeamlessBonus:transId={transId},bonus={bonus},bonusStatus={bonusStatus}");
+            logger.LogWarning($"AutoCancelSeamlessBonus:transId={transId},bonus={bonus},bonusStatus={bonusStatus}");
             if (bonusStatus == 2 && bonus > 0)
             {
                 result = walletService.SetBalance(custId, siteId, userName, bonus, 0, TransType.Prize, $"Bonus: {Math.Abs(bonus):#,##0.##}", bonusId.ToString(), out _, conn, trans);
