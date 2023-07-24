@@ -76,7 +76,10 @@ namespace ThirdPartyService
             }
 
             //app.UseHttpsRedirection();
-            app.UseAllElasticApm(Configuration);
+            if (!env.IsEnvironment("Local"))
+            {
+                app.UseAllElasticApm(Configuration);
+            }
             app.UseRouting();
             app.UseRequestLogMiddleware();
             app.UseResponseLogMiddleware();
