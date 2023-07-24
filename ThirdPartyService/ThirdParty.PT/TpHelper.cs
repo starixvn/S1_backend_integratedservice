@@ -87,6 +87,12 @@ namespace ThirdParty.PT
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
+            ApiResult oApiResult = new ApiResult();
+            oApiResult.RawMessage = "No Result";
+            oApiResult.RawErrorCode = "1";
+            oApiResult.ErrorCode = ErrorCode.Fail;
+            return oApiResult;
+            /*
             var gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
             var fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
 
@@ -123,6 +129,7 @@ namespace ThirdParty.PT
                 })
             };
             return oApiResult;
+            */
         }
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
