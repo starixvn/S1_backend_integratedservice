@@ -93,7 +93,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var gameType = req.ProductWallet switch
                 {
                     "IMSportsbook" => (int) GameType.IM_Sport,
-                    "ESports" => (int) GameType.IM_Esport,
+                    "IMESports" => (int) GameType.IM_Esport,
                     "IMSlot" => (int) GameType.IM_Spribe ,
                     _ => 0
                 };
@@ -134,7 +134,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var gameType = getReq.ProductWallet switch
                 {
                     "IMSportsbook" =>  GameType.IM_Sport,
-                    "ESports" =>  GameType.IM_Esport,
+                    "IMESports" =>  GameType.IM_Esport,
                     "IMSlot" =>  GameType.IM_Spribe ,
                     _ => GameType.IM_Sport
                 };
