@@ -133,6 +133,9 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Nextspin_RNG = 99,
         PlayTech_RNG = 100,
         PlayTech_LiveCasino = 101,
+        IM_Esport = 102,
+        IM_Sport = 103,
+        IM_Spribe = 104
     }
     public enum Tp
     {
@@ -186,6 +189,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
 
         Nextspin = 50,
         PlayTech = 51,
+        IM = 52
     }
     public enum TransferType : int
     {
