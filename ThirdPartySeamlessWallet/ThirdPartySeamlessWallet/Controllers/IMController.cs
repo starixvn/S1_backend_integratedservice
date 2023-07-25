@@ -66,7 +66,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 // check user (exist status online)
-                var tpUserName = GetTpUserName(req.PlayerId);
+                var tpUserName = req.PlayerId;
                 var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)_thisTp, tpUserName);
                 if (tpCheck == null)
                 {
@@ -141,7 +141,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 
                 var transactionsList = getReq.Transactions;
                 
-                var tpUserName = GetTpUserName(transactionsList.FirstOrDefault().PlayerId);
+                var tpUserName = transactionsList.FirstOrDefault().PlayerId;
                 var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)_thisTp, tpUserName);
                 if (tpCheck == null)
                 {
