@@ -30,13 +30,13 @@ namespace ThirdParty.IM
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var apiUrl = $"{inputs["ApiUrl"]}/Player/Register";
-            var prefix = inputs.ContainsKey("Prefix") && !string.IsNullOrEmpty(inputs["Prefix"]) ? inputs["Prefix"] : throw new Exception("Prefix");
-            var playerName = $"{prefix}_{tpCustInfo.TpUserName}";
+            // var prefix = inputs.ContainsKey("Prefix") && !string.IsNullOrEmpty(inputs["Prefix"]) ? inputs["Prefix"] : throw new Exception("Prefix");
+            // var playerName = $"{prefix}_{tpCustInfo.TpUserName}";
             
             var signUp = new RegisterModel
             {
                 MerchantCode = inputs["Key"],
-                PlayerId = playerName,
+                PlayerId = tpCustInfo.TpUserName,
                 Currency = tpCustInfo.TpCurrencyId,
                 Password = tpCustInfo.TpPwd
             };
@@ -65,8 +65,8 @@ namespace ThirdParty.IM
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             var apiUrl = $"{inputs["ApiUrl"]}/Game/NewLaunchGame";
-            var prefix = inputs.ContainsKey("Prefix") && !string.IsNullOrEmpty(inputs["Prefix"]) ? inputs["Prefix"] : throw new Exception("Prefix");
-            var playerName = $"{prefix}_{tpCustInfo.TpUserName}";
+            // var prefix = inputs.ContainsKey("Prefix") && !string.IsNullOrEmpty(inputs["Prefix"]) ? inputs["Prefix"] : throw new Exception("Prefix");
+             var playerName = tpCustInfo.TpUserName;
             
             var tpGameType = inputs.ContainsKey("tpGameType") && !string.IsNullOrEmpty(inputs["tpGameType"]) ? Convert.ToInt32(inputs["tpGameType"]) : (int)TpGameType.IM_Sports;
             var productWallet = tpGameType switch
