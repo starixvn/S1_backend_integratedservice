@@ -1,5 +1,9 @@
 ﻿namespace ThirdPartySeamlessWallet.Service.Model
 {
+    public class BetResponse
+    {
+        public List<BetResultIM> Results { get; set; }
+    }
     public class BetResultIM
     {
         public int Code { get; set; }

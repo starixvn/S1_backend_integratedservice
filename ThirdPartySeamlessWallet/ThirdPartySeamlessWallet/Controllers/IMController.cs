@@ -174,8 +174,12 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 if (result > 0)
                 {
-                    _log2File.Info($"{content}\r\n{JsonConvert.SerializeObject(outData)}", logName);
-                    return outData;
+                    var response = new BetResponse
+                    {
+                        Results = outData
+                    };
+                    _log2File.Info($"{content}\r\n{JsonConvert.SerializeObject(response)}", logName);
+                    return response;
                 }
 
                 if( result == -1)
