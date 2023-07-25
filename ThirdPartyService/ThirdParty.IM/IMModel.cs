@@ -33,6 +33,8 @@ public partial class TpHelper
         public int Code { get; set; }
         public string Message { get; set; }
         public string GameUrl { get; set; }
+        public string SessionToken { get; set; }
+        public int TTL { get; set; }
     }
     
     public enum ProductWallet
