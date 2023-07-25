@@ -3,6 +3,9 @@ using CommonService.Service.BLL;
 using CommonService.Service.DAL;
 using CommonService.Service.Library;
 using CommonService.Service.Model;
+using Elastic.Apm.AspNetCore;
+using Elastic.Apm.NetCoreAll;
+using Elastic.Apm.SqlClient;
 using PaymentService.Service.Library;
 
 namespace CommonService
@@ -69,7 +72,10 @@ namespace CommonService
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            if (!env.IsEnvironment("Local"))
+            {
+                app.UseElasticApm(Configuration, new SqlClientDiagnosticSubscriber());
+            }
             app.UseRouting();
 
             app.UseAuthorization();
