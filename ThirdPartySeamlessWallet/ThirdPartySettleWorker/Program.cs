@@ -45,7 +45,7 @@ builder.Services
     .AddHostedService<SimplePlayWorker>()
     .AddHostedService<SGWorker>()
     .AddHostedService<AllbetWorker>()
-    .AddHostedService<PTWorker>()
+    //.AddHostedService<PTWorker>()
     .AddHostedService<PlayTechWorker>()
     .AddHostedService<SBOWorker>()
     .AddHostedService<JILIWorker>()
