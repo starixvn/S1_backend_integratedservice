@@ -118,7 +118,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/PlaceBet")]
         public async Task<dynamic> PlaceBet()
         {
-            var logName = $"{_thisTp}_bet";
+            var logName = $"{_thisTp}_PlaceBet";
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var content = await reader.ReadToEndAsync();
             
@@ -130,7 +130,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             
             try
             {
-                var getReq = JsonConvert.DeserializeObject<BettingData_IM>(content);
+                var getReq = JsonConvert.DeserializeObject<BettingRequest_IM>(content);
                 var gameType = getReq.ProductWallet switch
                 {
                     "IMSportsbook" =>  GameType.IM_Sport,
@@ -199,10 +199,101 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
         }
         
-        private string GetTpUserName(string tpUserName)
+        [HttpPost]
+        [Route("[controller]/SettleBet")]
+        public async Task<dynamic> SettleBet()
         {
-            tpUserName = tpUserName.Replace("IM22E_" , "");
-            return tpUserName;
+            var logName = $"{_thisTp}_SettleBet";
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var content = await reader.ReadToEndAsync();
+
+            var response = new SettleResponse
+            {
+                Results = new List<object>()
+            };
+            
+            try
+            {
+                var getReq = JsonConvert.DeserializeObject<SettingRequest_IM>(content);
+                var gameType = getReq.ProductWallet switch
+                {
+                    "IMSportsbook" =>  GameType.IM_Sport,
+                    "IMESports" =>  GameType.IM_Esport,
+                    "IMSlot" =>  GameType.IM_Spribe ,
+                    _ => GameType.IM_Sport
+                };
+                
+                var transactionsList = getReq.Transactions;
+
+                foreach (var settle in transactionsList)
+                {
+                    var errorResponse = new SettleErrorRespIM
+                    {
+                        Code = (int)IMResultCode.Exception,
+                        Message = "Error",
+                        TransactionId = settle.TransactionId
+                    };
+                    
+                    var tpUserName = settle.PlayerId;
+                    var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)_thisTp, tpUserName);
+                    if (tpCheck == null)
+                    {
+                        errorResponse.Code = (int)IMResultCode.PlayerDoesNotExist;
+                        errorResponse.Message = "Player Does Not Exist";
+                        _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(errorResponse)}", logName);
+                        response.Results.Add(errorResponse);
+                        continue;
+                    }
+                    
+                    if (tpCheck.Locked)
+                    {
+                        errorResponse.Code = (int)IMResultCode.PlayerIsInactive;
+                        errorResponse.Message = "Player Is Inactive";
+                        _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(errorResponse)}", logName);
+                        response.Results.Add(errorResponse);
+                        continue;
+                    }
+                    
+                    // var result = payout
+
+                    // for test
+                    var testResultIm = new SettleResultIM
+                    {
+                        Code = 0,
+                        Message = "Successful",
+                        OperatorTransactionId = settle.TransactionId,
+                        TransactionId = settle.TransactionId,
+                        Balance = 1000
+                    };
+                    response.Results.Add(testResultIm);
+
+                }
+                
+                // if (result > 0)
+                // {
+                //     var response = new BetResponse
+                //     {
+                //         Results = outData
+                //     };
+                //     _log2File.Info($"{content}\r\n{JsonConvert.SerializeObject(response)}", logName);
+                //     return response;
+                // }
+                //
+                // if( result == -1)
+                // {
+                //     getErrorResponse.Code = (int)IMResultCode.NotEnoughBalance;
+                //     getErrorResponse.Message = "Not enough balance";
+                //     _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
+                //     return getErrorResponse;
+                // }
+                
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(response)}", logName, ex);
+                return response;
+            }
         }
     }
 }
