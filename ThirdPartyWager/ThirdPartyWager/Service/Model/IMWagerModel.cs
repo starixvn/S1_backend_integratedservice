@@ -43,7 +43,7 @@ public class IMWagerModel
 public class IMSlotModel
 {
     public string Provider { get; set; }
-    public string GameID { get; set; }
+    public string GameId { get; set; }
     public string GameName { get; set; }
     public string ChineseGameName { get; set; }
     public string RoundId { get; set; }
@@ -68,7 +68,7 @@ public class IMSlotModel
 public class IMSportsbookModel
 {
     public string Provider { get; set; }
-    public string GameID { get; set; }
+    public string GameId { get; set; }
     public string BetId { get; set; }
     public string WagerCreationDateTime { get; set; }
     public string WagerEventDateTime { get; set; }
@@ -101,7 +101,7 @@ public class IMSportsbookModel
 public class IMESportsModel
 {
     public string Provider { get; set; }
-    public string GameID { get; set; }
+    public string GameId { get; set; }
     public string BetId { get; set; }
     public string WagerCreationDateTime { get; set; }
     public string LastUpdatedDate { get; set; }
@@ -131,7 +131,7 @@ public class IMSlotWager
     public IMSlotWager(IMSlotModel m)
     {
         Provider = m.Provider;
-        GameID = m.GameID;
+        GameId = m.GameId;
         GameName = m.GameName;
         ChineseGameName = m.ChineseGameName;
         RoundId = m.RoundId;
@@ -155,7 +155,7 @@ public class IMSlotWager
     }
 
     public string Provider { get; set; }
-    public string GameID { get; set; }
+    public string GameId { get; set; }
     public string GameName { get; set; }
     public string ChineseGameName { get; set; }
     public string RoundId { get; set; }
@@ -184,7 +184,7 @@ public class IMESportsWager
     public IMESportsWager(IMESportsModel m)
     {
         Provider = m.Provider;
-        GameID = m.GameID;
+        GameId = m.GameId;
         BetId = m.BetId;
         WagerCreationDateTime = DateTimeOffset.Parse(m.WagerCreationDateTime).UtcDateTime;
         LastUpdatedDate = DateTimeOffset.Parse(m.LastUpdatedDate).UtcDateTime;
@@ -209,7 +209,7 @@ public class IMESportsWager
     }
     
     public string Provider { get; set; }
-    public string GameID { get; set; }
+    public string GameId { get; set; }
     public string BetId { get; set; }
     public DateTime WagerCreationDateTime { get; set; }
     public DateTime LastUpdatedDate { get; set; }
@@ -240,7 +240,7 @@ public class IMSportsWager
     public IMSportsWager(IMSportsbookModel m)
     {
         Provider = m.Provider;
-        GameID = m.GameID;
+        GameId = m.GameId;
         BetId = m.BetId;
         WagerCreationDateTime = DateTimeOffset.Parse(m.WagerCreationDateTime).UtcDateTime;
         WagerEventDateTime = DateTimeOffset.Parse(m.WagerEventDateTime).UtcDateTime;
@@ -272,7 +272,7 @@ public class IMSportsWager
     }
     
     public string Provider { get; set; }
-    public string GameID { get; set; }
+    public string GameId { get; set; }
     public string BetId { get; set; }
     public DateTime WagerCreationDateTime { get; set; }
     public DateTime WagerEventDateTime { get; set; }
