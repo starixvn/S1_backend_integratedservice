@@ -52,9 +52,9 @@
         Yeebet = 46,
         BG = 47,
         TFG = 48,
-
         Nextspin = 50,
         PlayTech = 51,
+        IM = 52,
     }
 
     public enum GameType

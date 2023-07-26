@@ -1,0 +1,286 @@
+using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
+
+namespace ThirdPartyWager.Service.BLL.IM;
+
+public class WagerIMBLL
+{
+    private readonly ApiIMBLL _apiIMBll;
+    private readonly WagerIMService _wagerIMService;
+    private readonly CommonService _commonService;
+    private readonly ThirdPartyBLL _thirdPartyBll;
+    private readonly DateTimeHelper _dateTimeHelper;
+    private readonly ILogger<WagerPlayTechBLL> _logger;
+    private const int TpId = (int) Tp.IM;
+    private const int TimeZone = 8; // Report/GetBetLog時區為+8
+    private const string TimeFormat = "yyyy-MM-dd HH.mm.ss";
+    
+    private readonly Dictionary<IMProductWalletEnum, Func<GetBetListByTimeParam, Task<bool>>> _getWagersHandlerMapper;
+    private readonly Dictionary<int, IMProductWalletEnum> _gameTypeMapper = new()
+    {
+        {2, IMProductWalletEnum.IMSlot},
+        {1, IMProductWalletEnum.IMSportsbook},
+        {11, IMProductWalletEnum.ESports}
+    };
+    
+    private class IMErrorCode
+    {
+        public const string Success = "0";
+        public const string NoData = "558";
+    }
+    
+    public WagerIMBLL(IServiceProvider provider)
+    {
+        _apiIMBll = provider.GetRequiredService<ApiIMBLL>();
+        _wagerIMService = provider.GetRequiredService<WagerIMService>();
+        _commonService = provider.GetRequiredService<CommonService>();
+        _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
+        _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+        _logger = provider.GetRequiredService<ILogger<WagerPlayTechBLL>>();
+        
+        _getWagersHandlerMapper = new Dictionary<IMProductWalletEnum, Func<GetBetListByTimeParam, Task<bool>>>
+        {
+            {IMProductWalletEnum.IMSlot, IMSoltGetWagersHandlerAsync},
+            {IMProductWalletEnum.IMSportsbook, IMSportsGetWagersHandlerAsync},
+            {IMProductWalletEnum.ESports, IMESportsGetWagersHandlerAsync}
+        };
+    }
+    
+    public async Task<bool> ExecWagerWorker(TpListModel siteData, int type, int timeRange)
+    {
+        var siteId = siteData.SiteId;
+        var quick = false;
+        const int excess = 120; // min
+        const int vary = 1; // sec
+        
+        foreach (var (gameType, productWallet) in _gameTypeMapper)
+        {
+            var workerTime = GetWorkerTime(type, vary, siteId, gameType);
+            quick = CheckQuick(workerTime, excess);
+            
+            var time = _dateTimeHelper.GetTimeByMinute(timeRange - 1, TimeZone, TimeFormat, workerTime);
+            var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(TimeZone, 0, 0)).ToUnixTimeSeconds();
+
+            if (time.endUnix >= cvTime)
+                continue;
+            
+            var result = await GetWagersAsync(time, siteData, productWallet);
+            if (result)
+                _thirdPartyBll.SetThirdPartyTimerByReference(TpId, type, time.endUnix, gameType, siteId.ToString());
+        }
+        
+        return quick;
+    }
+
+    #region Private
+    
+    private async Task<bool> GetWagersAsync(TimeCast wagerTime, TpListModel tpInfo, IMProductWalletEnum productWallet)
+    {
+        const string workerName = "IM_GetWagers";
+        string msg;
+        try
+        {
+            var param = new GetBetListByTimeParam
+            {
+                Setting = tpInfo.SettingDic,
+                ProductWallet = productWallet,
+                StartTime = wagerTime.startTime,
+                EndTime = wagerTime.endTime
+            };
+            
+            var success = await _getWagersHandlerMapper[productWallet].Invoke(param);
+            if (!success)
+                return false;
+            
+            msg = "FINISH";
+            _logger.LogInformation($"{workerName} {msg}\r\n, ProductWallet={productWallet}\r\n{wagerTime.startTime}~{wagerTime.endTime}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            msg = "FATAL_ERROR";
+            _logger.LogError(ex, $"{workerName} {msg}\r\n, ProductWallet={productWallet}\r\n{ex.Message}");
+            return false;
+        }
+    }
+
+    private async Task<bool> IMSoltGetWagersHandlerAsync(GetBetListByTimeParam param)
+    {
+        var workerName = param.ProductWallet + "_GetWagers";
+        var tpCurrencyList = _commonService.GetTpCurrencyList(TpId);
+        foreach (var tpCurrency in tpCurrencyList)
+        {
+            param.Currency = tpCurrency.TpCurrencyId;
+
+            var page = 1;
+            var totalPage = 1;
+            while (page <= totalPage)
+            {
+                param.Page = page;
+                var resp = await _apiIMBll.GetBetListByTime<IMSlotModel>(param);
+                
+                if (resp.Code == IMErrorCode.NoData)
+                {
+                    _logger.LogInformation($"{workerName} {tpCurrency} NO_DATA");
+                    await Task.Delay(10000); // 1分鐘內發送多筆會被收到併發錯誤，稍停
+                    page++;
+                    continue;
+                }
+
+                if (resp.Code != IMErrorCode.Success)
+                {
+                    _logger.LogError($"{workerName} THIRD_PARTY_ERROR: Code={resp.Code}, Message={resp.Message}");
+                    return false;
+                }
+
+                totalPage = resp.Pagination.TotalPage;
+
+                try
+                {
+                    var wagers = resp.Result.Select(x => new IMSlotWager(x));
+                    var result = _wagerIMService.InsertSlotWager(wagers);
+                    var count = resp.Result.Count();
+                    if (result != count)
+                    {
+                        _logger.LogInformation(
+                            $"{workerName} INSERT_WAGER COUNT_NOT_MATCH: affected={result}, data count={count}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"{workerName} INSERT_WAGER FAILED: {ex.Message}");
+                    return false;
+                }
+
+                page++;
+            }
+
+        }
+
+        return true;
+    }
+    
+    private async Task<bool> IMSportsGetWagersHandlerAsync(GetBetListByTimeParam param)
+    {
+        var workerName = param.ProductWallet + "_GetWagers";
+        var page = 1;
+        var totalPage = 1;
+        while (page <= totalPage)
+        {
+            param.Page = page;
+            param.DateFilterType = 4; // IM Sportsbook 最後更新時間
+            param.Product = null;
+            
+            var resp = await _apiIMBll.GetSportsBetListByTime<IMSportsbookModel>(param);
+
+            
+            if (resp.Code == IMErrorCode.NoData)
+            {
+                _logger.LogInformation($"{workerName} NO_DATA");
+                return true;
+            }
+
+            if (resp.Code != IMErrorCode.Success)
+            {
+                _logger.LogError($"{workerName} THIRD_PARTY_ERROR: Code={resp.Code}, Message={resp.Message}");
+                return false;
+            }
+
+
+            totalPage = resp.Pagination.TotalPage;
+
+            try
+            {
+                var wagers = resp.Result.Select(x => new IMSportsWager(x));
+                var result = _wagerIMService.InsertSportsWager(wagers);
+                var count = resp.Result.Count();
+                if (result != count)
+                {
+                    _logger.LogInformation(
+                        $"{workerName} INSERT_WAGER COUNT_NOT_MATCH: affected={result}, data count={count}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{workerName} INSERT_WAGER FAILED: {ex.Message}");
+                return false;
+            }
+
+            page++;
+        }
+        
+        return true;
+    }
+    
+    private async Task<bool> IMESportsGetWagersHandlerAsync(GetBetListByTimeParam param)
+    {
+        var workerName = param.ProductWallet + "_GetWagers";
+        var page = 1;
+        var totalPage = 1;
+        while (page <= totalPage)
+        {
+            param.Page = page;
+            param.DateFilterType = 3; // IM ESports 最後更新時間
+            param.Product = 1; // 1: 電競 eSportsBulls, 2: ESports Virtual, 3: PK10，目前只接eSportsBulls
+            
+            var resp = await _apiIMBll.GetSportsBetListByTime<IMESportsModel>(param);
+
+            if (resp.Code == IMErrorCode.NoData)
+            {
+                _logger.LogInformation($"{workerName} NO_DATA");
+                return true;
+            }
+
+            if (resp.Code != IMErrorCode.Success)
+            {
+                _logger.LogError($"{workerName} THIRD_PARTY_ERROR: Code={resp.Code}, Message={resp.Message}");
+                return false;
+            }
+
+            totalPage = resp.Pagination.TotalPage;
+
+            try
+            {
+                var wagers = resp.Result.Select(x => new IMESportsWager(x));
+                var result = _wagerIMService.InsertESportsWager(wagers);
+                var count = resp.Result.Count();
+                if (result != count)
+                {
+                    _logger.LogInformation(
+                        $"{workerName} INSERT_WAGER COUNT_NOT_MATCH: affected={result}, data count={count}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{workerName} INSERT_WAGER FAILED: {ex.Message}");
+                return false;
+            }
+
+            page++;
+        }
+        
+        return true;
+    }
+
+    private DateTime GetWorkerTime(int type, int vary, int siteId, int gameType)
+    {
+        var lastTime =
+            _thirdPartyBll.GetThirdPartyTimerReferenceByReference(TpId, type, gameType, siteId.ToString());
+        
+        return lastTime == null
+            ? DateTimeOffset.UtcNow.DateTime.AddHours(-8)
+            : lastTime.StartTime.AddSeconds(vary);
+    }
+
+    private static bool CheckQuick(DateTime workTime, int excess)
+    {
+        var now = DateTimeOffset.UtcNow.DateTime;
+        var diff = now - workTime;
+        
+        return now > workTime && diff.TotalMinutes > excess;
+    }
+
+    #endregion
+}

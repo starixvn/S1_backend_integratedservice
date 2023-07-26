@@ -1,6 +1,7 @@
 using System.Net;
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.BLL.IM;
 using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.BLL.MG;
 using ThirdPartyWager.Service.BLL.Nextspin;
@@ -11,6 +12,7 @@ using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
+using ThirdPartyWager.Workers.IM;
 using ThirdPartyWager.Workers.Nextspin;
 
 namespace ThirdPartyWager
@@ -86,6 +88,7 @@ namespace ThirdPartyWager
             services.AddSingleton<ConfigService>();
             services.AddSingleton<FincanceService>();
             services.AddSingleton<WagerTFGService>();
+            services.AddSingleton<WagerIMService>();
 
             services.AddOptionListByDB<ServerInfo>("Admin_ServerInfoList_Get");
             services.AddOptionListByDB<dynamic>("Service_TpWagerTimer_Get", new { TpId = 1, Type = 1 }, DataBase.Wager);
@@ -254,6 +257,10 @@ namespace ThirdPartyWager
             services.AddSingleton<INextspinApi, NextspinApi>();
             services.AddSingleton<INextspinBLL, NextspinBLL>();
             services.AddSingleton<INextspinFinancBLL, NextspinFinancBLL>();
+            
+            //IM
+            services.AddSingleton<ApiIMBLL>();
+            services.AddSingleton<WagerIMBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -337,6 +344,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerUnsettleCheckTFG>();
             services.AddHostedService<WagerNextspin>();
             services.AddHostedService<FinanceNextspin>();
+            services.AddHostedService<WagerIM>();
 
             // health check use
             services.AddControllers();
