@@ -4,6 +4,7 @@ using CommonService.Service.DAL;
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using Elastic.Apm.AspNetCore;
+using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.NetCoreAll;
 using Elastic.Apm.SqlClient;
 using PaymentService.Service.Library;
@@ -74,7 +75,9 @@ namespace CommonService
             }
             if (!env.IsEnvironment("Local"))
             {
-                app.UseElasticApm(Configuration, new SqlClientDiagnosticSubscriber());
+                app.UseElasticApm(Configuration,
+                    new HttpDiagnosticsSubscriber(),
+                    new SqlClientDiagnosticSubscriber());
             }
             app.UseRouting();
 
