@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.DAL;
+using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.SBSW;
@@ -9,6 +10,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
     public partial class SettledBLL
     {
         private readonly SettledService settledService;
+        private readonly MySqlClient _mainDbClient;
         private readonly TpCustInfoBLL tpCustInfoBLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
 
@@ -44,6 +46,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var result = settledService.DoTpRewardTicket(tpCustInfo, tpRewardRecordInfo, tpCategory, checkBonus);
             return result;
         }
+
         public TpBetRecordDetail GetTpBetRecordDetail(int TpId, int GameType, string TransId, DateTime SettledTime)
         {
             return settledService.GetTpBetRecordDetail(TpId, GameType, TransId, SettledTime);
@@ -2323,6 +2326,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlag_BettransRng_AP_Mini(spName, transId, settleTime);
         }
 
+
         #endregion
 
         #region YGG
@@ -2451,17 +2455,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #endregion
 
-        #region SBSW
-        public IEnumerable<SBSWUnsettle> GetSBSWUnsettleList(int LimitCount = 200)
-        {
-            return settledService.GetSBSWUnsettleList(LimitCount);
-        }
-        public BetRecordInfo GetSBSWTpBetRecord(int TpId, string TransId, int GameType)
-        {
-            return settledService.GetSBSWUnsettleList(TpId, TransId, GameType);
-        }
-        #endregion
-
         #region PlayTech
 
         public int Payout_PlayTech(BettingData_PlayTech bettingData_PlayTech, GameType gameType, int partitionCheckDay, out decimal afterAmount)
@@ -2586,6 +2579,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        #endregion
+
+        #region SBSW
+        public IEnumerable<SBSWUnsettle> GetSBSWUnsettleList(int LimitCount = 200)
+        {
+            return settledService.GetSBSWUnsettleList(LimitCount);
+        }
+        public BetRecordInfo GetSBSWTpBetRecord(int TpId, string TransId, int GameType)
+        {
+            return settledService.GetSBSWUnsettleList(TpId, TransId, GameType);
+        }
         #endregion
     }
 }

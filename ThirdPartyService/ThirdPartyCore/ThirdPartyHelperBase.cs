@@ -182,6 +182,73 @@ namespace ThirdPartyCore
             }
         }
 
+        protected string HttpPostWithProxy(string url, string parameters, string contentType, WebProxy proxy, Dictionary<string, string> headers = null,  int timeOutTime = 0)
+        {
+            try
+            {           
+                var parametersLog = parameters;
+                if (headers != null)
+                {
+                    parametersLog = $"{parametersLog}, Header={JsonConvert.SerializeObject(headers)}";
+                }
+                InsertLog?.Invoke(url, parametersLog, "1");
+
+                if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
+                {
+                    ServicePointManager.SecurityProtocol = (SecurityProtocolType)192 | (SecurityProtocolType)768 | (SecurityProtocolType)3072;
+                    ServicePointManager.ServerCertificateValidationCallback = CheckValidationResult;
+                }
+
+                WebRequest request = WebRequest.Create(url);
+                if (proxy is not null)
+                {
+                    request.Proxy = proxy;
+                }
+
+                if (timeOutTime > 0)
+                {
+                    request.Timeout = timeOutTime * 1000;
+                }
+
+                request.Method = "POST";
+                byte[] byteArray = Encoding.UTF8.GetBytes(parameters);
+                request.ContentType = contentType;
+                request.ContentLength = byteArray.Length;
+
+                if (headers != null)
+                {
+                    foreach (var item in headers)
+                    {
+                        request.Headers.Add(item.Key, item.Value);
+                    }
+                }
+                using (Stream RequestStream = request.GetRequestStream())
+                {
+                    RequestStream.Write(byteArray, 0, byteArray.Length);
+                }
+
+                StringBuilder sb = new StringBuilder();
+                using (WebResponse response = request.GetResponse())
+                using (Stream ResponseStream = response.GetResponseStream())
+                using (StreamReader reader = new StreamReader(ResponseStream, Encoding.UTF8))
+                {
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        sb.Append(line);
+                    }
+                }
+
+                InsertLog?.Invoke(url, parameters, sb.ToString());
+                return sb.ToString();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, e.Message);
+                return e.Message;
+            }
+        }
+        
         protected string HttpPostClient(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
         {
             var parametersLog = parameters;

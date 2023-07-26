@@ -130,5 +130,8 @@ namespace ThirdPartyCore.Model.enums
         Nextspin_RNG = 99,
         PlayTech_RNG = 100,
         PlayTech_LiveCasino = 101,
+        IM_ESports = 102,
+        IM_Sports = 103,
+        SPRIBE = 104,
     }
 }
