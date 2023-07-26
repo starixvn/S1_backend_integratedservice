@@ -28,7 +28,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _logger = provider.GetService<ILogger<HBBLL>>();
         }
         
-        public int Bet_IM(List<Transactions_IM> betList ,string tpUserName, GameType gameType , out List<BetResultIM> resp)
+        public int Bet_IM(List<BetTransactions_IM> betList ,string tpUserName, GameType gameType , out List<BetResultIM> resp)
         {
             var bonusId = 0;
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)Tp.IM, tpUserName);
@@ -60,7 +60,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 switch (gameType)
                 {
                     case GameType.IM_Sport:
-                        var betData = new TransactionsSport
+                        var betData = new BetTransactionsSport
                         {
                             PlayerId = bet.PlayerId,
                             ProviderPlayerId = bet.ProviderPlayerId,
@@ -80,7 +80,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         break;
 
                     case GameType.IM_Esport:
-                        var eSportData = new TransactionsESport
+                        var eSportData = new BetTransactionsESport
                         {
                             PlayerId = bet.PlayerId,
                             ProviderPlayerId = bet.ProviderPlayerId,
@@ -101,7 +101,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         break;
 
                     case GameType.IM_Spribe:
-                        var slotData = new TransactionsSlot
+                        var slotData = new BetTransactionsSlot
                         {
                             PlayerId = bet.PlayerId,
                             ProviderPlayerId = bet.ProviderPlayerId,
