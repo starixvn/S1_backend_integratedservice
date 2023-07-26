@@ -19,7 +19,7 @@ public class ApiIMBLL
         _log2File = provider.GetRequiredService<Log2File>();
     }
     
-    public async Task<IMWagerModel> GetBetListByTime(GetBetListByTimeParam param)
+    public async Task<IMWagerModel<T>> GetBetListByTime<T>(GetBetListByTimeParam param)
     {
         var wagerUrl = param.Setting["WagerUrl"];
         var merchantCode = param.Setting["Key"];
@@ -38,7 +38,34 @@ public class ApiIMBLL
         };
        
         var resp = await DoHttpClientAsync($"{wagerUrl}{uri}", req);
-        var result = JsonConvert.DeserializeObject<IMWagerModel>(resp);
+        var result = JsonConvert.DeserializeObject<IMWagerModel<T>>(resp);
+        
+        return result;
+    }
+    
+    /// <summary>
+    /// For Sportsbook & ESports
+    /// </summary>
+    public async Task<IMWagerModel<T>> GetSportsBetListByTime<T>(GetBetListByTimeParam param)
+    {
+        var wagerUrl = param.Setting["WagerUrl"];
+        var merchantCode = param.Setting["Key"];
+        const string uri = "/Report/GetBetLog";
+        
+        var req = new IMGetSportsBetLogReq
+        {
+            MerchantCode = merchantCode,
+            StartDate = param.StartTime,
+            EndDate = param.EndTime,
+            Page = param.Page,
+            ProductWallet = (int)param.ProductWallet,
+            DateFilterType = param.DateFilterType,
+            Language = "EN",
+            Product = param.Product
+        };
+       
+        var resp = await DoHttpClientAsync($"{wagerUrl}{uri}", req);
+        var result = JsonConvert.DeserializeObject<IMWagerModel<T>>(resp);
         
         return result;
     }

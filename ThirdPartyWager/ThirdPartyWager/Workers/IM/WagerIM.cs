@@ -13,9 +13,9 @@ namespace ThirdPartyWager.Workers.IM
 
         private Timer _timer;
         private const int TpType = (int)WagerTimerType.Wager;
-        private const int TimeRange = 10; // minutes (IM GetBetLog 時間區間最大只能10分鐘)
-        private const int QuickTime = 45; // seconds
-        private const int RunTime = 90; // seconds
+        private const int TimeRange = 10; // min (IM GetBetLog Slot的時間區間最大只能拉10分鐘)
+        private const int QuickTime = 45; // sec
+        private const int RunTime = 90; // sec
         private readonly string _tpName = Tp.IM.ToString();
         private const int TpId = (int)Tp.IM;
 

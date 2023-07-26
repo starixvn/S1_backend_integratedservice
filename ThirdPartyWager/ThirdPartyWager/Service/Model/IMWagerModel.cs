@@ -11,6 +11,20 @@ public class GetBetListByTimeParam
     public int Page { get; set; }
     public string Currency { get; set; }
     public IMProductWalletEnum ProductWallet { get; set; }
+    public int DateFilterType { get; set; }
+    public int? Product { get; set; }
+}
+
+public class IMGetSportsBetLogReq
+{
+    public string MerchantCode { get; set; }
+    public string StartDate { get; set; }
+    public string EndDate { get; set; }
+    public int Page { get; set; }
+    public int ProductWallet { get; set; }
+    public int DateFilterType { get; set; }
+    public string Language { get; set; }
+    public int? Product { get; set; }
 }
 
 public class IMGetBetLogReq
@@ -32,11 +46,11 @@ public class IMPagination
     public int TotalCount { get; set; }
 }
 
-public class IMWagerModel
+public class IMWagerModel<T>
 {
     public string Code { get; set; }
     public string Message { get; set; }
-    public IEnumerable<object> Result { get; set; }
+    public IEnumerable<T> Result { get; set; }
     public IMPagination Pagination { get; set; }
 }
 
@@ -110,6 +124,7 @@ public class IMESportsModel
     public string Currency { get; set; }
     public decimal StakeAmount { get; set; }
     public decimal WinLoss { get; set; }
+    public decimal TurnOver { get; set; }
     public string OddsType { get; set; }
     public decimal TotalOdds { get; set; }
     public string WagerType { get; set; }
@@ -193,6 +208,7 @@ public class IMESportsWager
         Currency = m.Currency;
         StakeAmount = m.StakeAmount;
         WinLoss = m.WinLoss;
+        TurnOver = m.TurnOver;
         OddsType = m.OddsType;
         TotalOdds = m.TotalOdds;
         WagerType = m.WagerType;
@@ -218,6 +234,7 @@ public class IMESportsWager
     public string Currency { get; set; }
     public decimal StakeAmount { get; set; }
     public decimal WinLoss { get; set; }
+    public decimal TurnOver { get; set; }
     public string OddsType { get; set; }
     public decimal TotalOdds { get; set; }
     public string WagerType { get; set; }
