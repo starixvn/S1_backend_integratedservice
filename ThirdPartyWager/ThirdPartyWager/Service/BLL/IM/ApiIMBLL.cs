@@ -27,6 +27,7 @@ public class ApiIMBLL
         {
             var proxyHost = configuration.GetValue<string>("configProxyHost");
             var proxyPort = configuration.GetValue<int>("configProxyPort");
+            _logger.LogInformation($"add proxy, host:{proxyHost}, port:{proxyPort}");
             _proxy = new WebProxy(proxyHost, proxyPort);
         }
     }
@@ -125,6 +126,8 @@ public class ApiIMBLL
         {
             handler.UseProxy = true;
             handler.Proxy = _proxy;
+            
+            _logger.LogInformation($"HttpClientHandler add proxy");
         }
 
         return handler;
