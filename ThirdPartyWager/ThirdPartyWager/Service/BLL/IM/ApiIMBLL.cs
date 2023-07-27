@@ -79,12 +79,11 @@ public class ApiIMBLL
 
     private async Task<string> DoHttpClientAsync(string url, object param)
     {
-        var strReq = JsonConvert.SerializeObject(param);
         var result = "-";
         try
         {
             using var client = _httpHelper.GetClientWithHandler(CreateHandler());
-            var response = await client.PostAsJsonAsync(url, strReq);
+            var response = await client.PostAsJsonAsync(url, param);
         
             using var sr = new StreamReader(await response.Content.ReadAsStreamAsync(), Encoding.UTF8);
             result = await sr.ReadToEndAsync();
@@ -104,7 +103,7 @@ public class ApiIMBLL
         }
         finally
         {
-            _log2File.InsertRequestLog(_tpName, url, strReq, result);
+            _log2File.InsertRequestLog(_tpName, url, JsonConvert.SerializeObject(param), result);
         }
     }
     
