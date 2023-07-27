@@ -13,22 +13,15 @@ public class ApiIMBLL
     private readonly ILogger<ApiIMBLL> _logger;
     private readonly Log2File _log2File;
     private readonly string _tpName = Tp.IM.ToString();
-    private readonly WebProxy _proxy;
+    private readonly IWebHostEnvironment _env;
+    private readonly IConfiguration _configuration;
     public ApiIMBLL(IServiceProvider provider)
     {
         _httpHelper = provider.GetRequiredService<HttpHelper>();
         _logger = provider.GetRequiredService<ILogger<ApiIMBLL>>();
         _log2File = provider.GetRequiredService<Log2File>();
-        
-        var env = provider.GetRequiredService<IWebHostEnvironment>();
-        var configuration = provider.GetRequiredService<IConfiguration>();
-        
-        if (env.EnvironmentName == "Development")
-        {
-            var proxyHost = configuration.GetValue<string>("configProxyHost");
-            var proxyPort = configuration.GetValue<int>("configProxyPort");
-            _proxy = new WebProxy(proxyHost, proxyPort);
-        }
+        _env = provider.GetRequiredService<IWebHostEnvironment>();
+        _configuration = provider.GetRequiredService<IConfiguration>();
     }
     
     public async Task<IMWagerModel<T>> GetBetListByTime<T>(GetBetListByTimeParam param)
@@ -120,11 +113,32 @@ public class ApiIMBLL
     private HttpClientHandler CreateHandler()
     {
         var handler = new HttpClientHandler();
+        _logger.LogInformation($"env name: {_env.EnvironmentName}");
         
-        if (_proxy != null)
+        string proxyHost;
+        int proxyPort;
+        
+        if (_env.EnvironmentName == "Development")
         {
             handler.UseProxy = true;
-            handler.Proxy = _proxy;
+            proxyHost = _configuration.GetValue<string>("configProxyHost");
+            proxyPort = _configuration.GetValue<int>("configProxyPort");
+            handler.Proxy = new WebProxy(proxyHost, proxyPort);
+            
+            _logger.LogInformation($"add proxy, host:{proxyHost}, port:{proxyPort}");
+            
+            return handler;
+        }
+        
+        proxyHost = _configuration.GetValue<string>("ProxyHost");
+        proxyPort = _configuration.GetValue<int>("ProxyPort");
+        
+        if (!string.IsNullOrEmpty(proxyHost))
+        {
+            handler.UseProxy = true;
+            handler.Proxy = new WebProxy(proxyHost, proxyPort);
+            
+            _logger.LogInformation($"add proxy, host:{proxyHost}, port:{proxyPort}");
         }
 
         return handler;
