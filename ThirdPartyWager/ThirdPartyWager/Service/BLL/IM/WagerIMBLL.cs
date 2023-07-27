@@ -61,11 +61,14 @@ public class WagerIMBLL
             var timeRange = GetTimeRange(productWallet);
             var workerTime = GetWorkerTime(type, vary, siteId, gameType);
             
-            if (productWallet == IMProductWalletEnum.IMSlot) // sports一次可以拉24hr就不檢查了
+            if (productWallet == IMProductWalletEnum.IMSlot)
                 quick = CheckQuick(workerTime, excess);
             
             var time = _dateTimeHelper.GetTimeByMinute(timeRange - 1, TimeZone, TimeFormat, workerTime);
-            var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(TimeZone, 0, 0)).ToUnixTimeSeconds();
+            var cvTime = DateTimeOffset.Now
+                .AddMinutes(GetDelayTime(productWallet) * -1) // -log更新延遲
+                .ToOffset(new TimeSpan(TimeZone, 0, 0))
+                .ToUnixTimeSeconds();
 
             if (time.endUnix >= cvTime)
                 continue;
@@ -290,9 +293,16 @@ public class WagerIMBLL
     private static int GetTimeRange(IMProductWalletEnum pw)
         => pw switch
         {
-            IMProductWalletEnum.IMSportsbook => 1440,
-            IMProductWalletEnum.IMESports => 1440,
+            IMProductWalletEnum.IMSportsbook => 30,
+            IMProductWalletEnum.IMESports => 30,
             _ => 10 // (IM GetBetLog 體育以外的時間區間最大只能拉10分鐘)
+        };
+    private static int GetDelayTime(IMProductWalletEnum pw)
+        => pw switch
+        {
+            IMProductWalletEnum.IMSportsbook => 5,
+            IMProductWalletEnum.IMESports => 5,
+            _ => 15
         };
 
     private int GetQuickSec()
