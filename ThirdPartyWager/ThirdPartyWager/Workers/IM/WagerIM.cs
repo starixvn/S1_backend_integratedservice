@@ -13,9 +13,6 @@ namespace ThirdPartyWager.Workers.IM
 
         private Timer _timer;
         private const int TpType = (int)WagerTimerType.Wager;
-        private const int TimeRange = 10; // min (IM GetBetLog Slot的時間區間最大只能拉10分鐘)
-        private const int QuickTime = 90; // sec
-        private const int RunTime = 120; // sec
         private readonly string _tpName = Tp.IM.ToString();
         private const int TpId = (int)Tp.IM;
 
@@ -35,14 +32,14 @@ namespace ThirdPartyWager.Workers.IM
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            var quick = false;
+            var sec = 120;
             try
             {
 
                 var siteList = _thirdPartyBLL.GetTpListByTpId(TpId);
                 foreach (var siteData in siteList)
                 {
-                    quick = await _wagerIMBLL.ExecWagerWorker(siteData, TpType, TimeRange);
+                    sec = await _wagerIMBLL.ExecWagerWorker(siteData, TpType);
                 }
             }
             catch (Exception ex)
@@ -51,7 +48,7 @@ namespace ThirdPartyWager.Workers.IM
             }
             finally
             {
-                var dueTimeSpan = quick ? TimeSpan.FromSeconds(QuickTime) : TimeSpan.FromSeconds(RunTime);
+                var dueTimeSpan = TimeSpan.FromSeconds(sec);
                 _timer?.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }

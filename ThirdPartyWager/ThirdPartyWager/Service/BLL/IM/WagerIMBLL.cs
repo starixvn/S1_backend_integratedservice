@@ -16,13 +16,13 @@ public class WagerIMBLL
     private const int TpId = (int) Tp.IM;
     private const int TimeZone = 8; // Report/GetBetLog時區為+8
     private const string TimeFormat = "yyyy-MM-dd HH.mm.ss";
-    
+
     private readonly Dictionary<IMProductWalletEnum, Func<GetBetListByTimeParam, Task<bool>>> _getWagersHandlerMapper;
     private readonly Dictionary<int, IMProductWalletEnum> _gameTypeMapper = new()
     {
         {2, IMProductWalletEnum.IMSlot},
         {1, IMProductWalletEnum.IMSportsbook},
-        {11, IMProductWalletEnum.ESports}
+        {11, IMProductWalletEnum.IMESports}
     };
     
     private class IMErrorCode
@@ -44,21 +44,25 @@ public class WagerIMBLL
         {
             {IMProductWalletEnum.IMSlot, IMSoltGetWagersHandlerAsync},
             {IMProductWalletEnum.IMSportsbook, IMSportsGetWagersHandlerAsync},
-            {IMProductWalletEnum.ESports, IMESportsGetWagersHandlerAsync}
+            {IMProductWalletEnum.IMESports, IMESportsGetWagersHandlerAsync}
         };
     }
     
-    public async Task<bool> ExecWagerWorker(TpListModel siteData, int type, int timeRange)
+    public async Task<int> ExecWagerWorker(TpListModel siteData, int type)
     {
         var siteId = siteData.SiteId;
         var quick = false;
+        const int runTime = 120; // sec
         const int excess = 120; // min
         const int vary = 1; // sec
         
         foreach (var (gameType, productWallet) in _gameTypeMapper)
         {
+            var timeRange = GetTimeRange(productWallet);
             var workerTime = GetWorkerTime(type, vary, siteId, gameType);
-            quick = CheckQuick(workerTime, excess);
+            
+            if (productWallet == IMProductWalletEnum.IMSlot) // sports一次可以拉24hr就不檢查了
+                quick = CheckQuick(workerTime, excess);
             
             var time = _dateTimeHelper.GetTimeByMinute(timeRange - 1, TimeZone, TimeFormat, workerTime);
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(TimeZone, 0, 0)).ToUnixTimeSeconds();
@@ -70,8 +74,8 @@ public class WagerIMBLL
             if (result)
                 _thirdPartyBll.SetThirdPartyTimerByReference(TpId, type, time.endUnix, gameType, siteId.ToString());
         }
-        
-        return quick;
+
+        return quick ? GetQuickSec() : runTime;
     }
 
     #region Private
@@ -106,6 +110,7 @@ public class WagerIMBLL
         }
     }
 
+    private const int DelaySec = 8;
     private async Task<bool> IMSoltGetWagersHandlerAsync(GetBetListByTimeParam param)
     {
         var workerName = param.ProductWallet + "_GetWagers";
@@ -124,7 +129,7 @@ public class WagerIMBLL
                 if (resp.Code == IMErrorCode.NoData)
                 {
                     _logger.LogInformation($"{workerName} {tpCurrency} NO_DATA");
-                    await Task.Delay(10000); // 1分鐘內發送多筆會被收到併發錯誤，稍停
+                    await Task.Delay(DelaySec * 1000); // 1分鐘內發送多筆會被收到併發錯誤，稍停
                     page++;
                     continue;
                 }
@@ -281,6 +286,20 @@ public class WagerIMBLL
         
         return now > workTime && diff.TotalMinutes > excess;
     }
+    
+    private static int GetTimeRange(IMProductWalletEnum pw)
+        => pw switch
+        {
+            IMProductWalletEnum.IMSportsbook => 1440,
+            IMProductWalletEnum.IMESports => 1440,
+            _ => 10 // (IM GetBetLog 體育以外的時間區間最大只能拉10分鐘)
+        };
 
+    private int GetQuickSec()
+    {
+        var tpCurrencyList = _commonService.GetTpCurrencyList(TpId);
+        return DelaySec * (tpCurrencyList.Count() + 1);
+    }
+    
     #endregion
 }
