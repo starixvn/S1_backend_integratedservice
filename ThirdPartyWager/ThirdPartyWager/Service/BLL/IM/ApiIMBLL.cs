@@ -83,10 +83,8 @@ public class ApiIMBLL
         var result = "-";
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Post, url);
-            request.Content = new StringContent(strReq, Encoding.UTF8, "application/json");
-
-            var response = await _httpHelper.GetClientWithHandler(CreateHandler()).SendAsync(request);
+            using var client = _httpHelper.GetClientWithHandler(CreateHandler());
+            var response = await client.PostAsJsonAsync(url, strReq);
         
             using var sr = new StreamReader(await response.Content.ReadAsStreamAsync(), Encoding.UTF8);
             result = await sr.ReadToEndAsync();
@@ -113,8 +111,6 @@ public class ApiIMBLL
     private HttpClientHandler CreateHandler()
     {
         var handler = new HttpClientHandler();
-        _logger.LogInformation($"env name: {_env.EnvironmentName}");
-        
         string proxyHost;
         int proxyPort;
         
@@ -125,7 +121,7 @@ public class ApiIMBLL
             proxyPort = _configuration.GetValue<int>("configProxyPort");
             handler.Proxy = new WebProxy(proxyHost, proxyPort);
             
-            _logger.LogInformation($"add proxy, host:{proxyHost}, port:{proxyPort}");
+            _logger.LogInformation($"use proxy, host:{proxyHost}, port:{proxyPort}");
             
             return handler;
         }
@@ -138,7 +134,7 @@ public class ApiIMBLL
             handler.UseProxy = true;
             handler.Proxy = new WebProxy(proxyHost, proxyPort);
             
-            _logger.LogInformation($"add proxy, host:{proxyHost}, port:{proxyPort}");
+            _logger.LogInformation($"use proxy, host:{proxyHost}, port:{proxyPort}");
         }
 
         return handler;
