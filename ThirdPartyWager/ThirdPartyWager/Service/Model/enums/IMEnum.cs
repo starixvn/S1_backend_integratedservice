@@ -15,5 +15,5 @@ public enum IMProductWalletEnum
     /// <summary>
     /// ESportsbull
     /// </summary>
-    ESports = 401
+    IMESports = 401
 }

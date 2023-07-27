@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text;
 using Newtonsoft.Json;
 using ThirdPartyWager.Service.Library;
@@ -12,11 +13,22 @@ public class ApiIMBLL
     private readonly ILogger<ApiIMBLL> _logger;
     private readonly Log2File _log2File;
     private readonly string _tpName = Tp.IM.ToString();
+    private readonly WebProxy _proxy;
     public ApiIMBLL(IServiceProvider provider)
     {
         _httpHelper = provider.GetRequiredService<HttpHelper>();
         _logger = provider.GetRequiredService<ILogger<ApiIMBLL>>();
         _log2File = provider.GetRequiredService<Log2File>();
+        
+        var env = provider.GetRequiredService<IWebHostEnvironment>();
+        var configuration = provider.GetRequiredService<IConfiguration>();
+        
+        if (env.EnvironmentName == "Development")
+        {
+            var proxyHost = configuration.GetValue<string>("configProxyHost");
+            var proxyPort = configuration.GetValue<int>("configProxyPort");
+            _proxy = new WebProxy(proxyHost, proxyPort);
+        }
     }
     
     public async Task<IMWagerModel<T>> GetBetListByTime<T>(GetBetListByTimeParam param)
@@ -81,7 +93,7 @@ public class ApiIMBLL
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Content = new StringContent(strReq, Encoding.UTF8, "application/json");
 
-            var response = await _httpHelper.GetClient().SendAsync(request);
+            var response = await _httpHelper.GetClientWithHandler(CreateHandler()).SendAsync(request);
         
             using var sr = new StreamReader(await response.Content.ReadAsStreamAsync(), Encoding.UTF8);
             result = await sr.ReadToEndAsync();
@@ -103,6 +115,19 @@ public class ApiIMBLL
         {
             _log2File.InsertRequestLog(_tpName, url, strReq, result);
         }
+    }
+    
+    private HttpClientHandler CreateHandler()
+    {
+        var handler = new HttpClientHandler();
+        
+        if (_proxy != null)
+        {
+            handler.UseProxy = true;
+            handler.Proxy = _proxy;
+        }
+
+        return handler;
     }
 
     #endregion
