@@ -125,8 +125,8 @@
     public class SettleTransactions_IMSlot : SettleTransactionsBase
     {
         public string RoundId { get; set; }
-        public List<string> RefTransactionId { get; set; }
-        public IMSpecialGame SpecialGame { get; set; }
+        public string RefTransactionId { get; set; }
+        public string SpecialGame { get; set; }
     }
     
     public class SettleTransactions_IMSport : SettleTransactionsBase
