@@ -11,8 +11,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 {
     [ApiController]
     public class IMController : ControllerBase
-    { 
-        private readonly ILogger<IMController> _logger;
+    {
         private readonly ThirdPartyBLL _thirdPartyBll;
         private readonly TpCustInfoBLL _tpCustInfoBll;
         private readonly IIMBLL _imBll;
@@ -22,7 +21,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         public IMController(IServiceProvider provider)
         {
-            _logger = provider.GetRequiredService<ILogger<IMController>>();
             _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
             _tpCustInfoBll = provider.GetRequiredService<TpCustInfoBLL>();
             _imBll = provider.GetRequiredService<IIMBLL>();
@@ -254,38 +252,36 @@ namespace ThirdPartySeamlessWallet.Controllers
                         continue;
                     }
                     
-                    // var result = payout
-
-                    // for test
-                    var testResultIm = new SettleResultIM
+                    if (settle.Amount < 0)
                     {
-                        Code = 0,
-                        Message = "Successful",
-                        OperatorTransactionId = settle.TransactionId,
-                        TransactionId = settle.TransactionId,
-                        Balance = 1000
-                    };
-                    response.Results.Add(testResultIm);
+                        errorResponse.Code = (int)IMResultCode.InvalidArgument;
+                        errorResponse.Message = "Invalid Parameters";
+                        _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(errorResponse)}", logName);
+                        response.Results.Add(errorResponse);
+                        continue;
+                    }
 
+                    var result = _imBll.Settle_IM(settle, tpUserName, gameType, out var outData);
+                    if (result == -1)
+                    {
+                        errorResponse.Code = (int)IMResultCode.InvalidArgument;
+                        errorResponse.Message = "Already accepted";
+                        _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(errorResponse)}", logName);
+                        response.Results.Add(errorResponse);
+                        continue;
+                    }
+                    if (result == -2)
+                    {
+                        errorResponse.Code = (int)IMResultCode.TransactionIdNotFound;
+                        errorResponse.Message = "TransactionId Not Found";
+                        _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(errorResponse)}", logName);
+                        response.Results.Add(errorResponse);
+                        continue;
+                    }
+                    
+                    _log2File.Info($"{content}\r\n Response: {JsonConvert.SerializeObject(outData)}", logName);
+                    response.Results.Add(outData);
                 }
-                
-                // if (result > 0)
-                // {
-                //     var response = new BetResponse
-                //     {
-                //         Results = outData
-                //     };
-                //     _log2File.Info($"{content}\r\n{JsonConvert.SerializeObject(response)}", logName);
-                //     return response;
-                // }
-                //
-                // if( result == -1)
-                // {
-                //     getErrorResponse.Code = (int)IMResultCode.NotEnoughBalance;
-                //     getErrorResponse.Message = "Not enough balance";
-                //     _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
-                //     return getErrorResponse;
-                // }
                 
                 return response;
             }
