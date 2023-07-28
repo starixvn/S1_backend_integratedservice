@@ -153,6 +153,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         {
                             afterAmount = _tpCustInfoBll.GetBalance((int) _thisTp, tpUserName, (int) gameType).Balance;
                         }
+                        else
+                        {
+                            if (tpCurrency.ExchangeRate > 0)
+                                afterAmount /= tpCurrency.ExchangeRate;
+                        }
 
                         var betResult = new BetResultIM
                         {
@@ -343,6 +348,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                     if (result > 0)
                     {
+                        if (afterAmount == 0)
+                        {
+                            afterAmount = _tpCustInfoBll.GetBalance((int) _thisTp, tpUserName, (int) gameType).Balance;
+                        }
+                        else
+                        {
+                            if (tpCurrency.ExchangeRate > 0)
+                                afterAmount /= tpCurrency.ExchangeRate;
+                        }
+                        
                         result = _tpUnsettleService.InsertTpUnsettle(Tp.IM, gameType, transId, trans);
                         if (result > 0)
                         {
