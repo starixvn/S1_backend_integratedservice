@@ -69,8 +69,8 @@ builder.Services
     .AddHostedService<BGWorker>()
     .AddHostedService<TFGWorker>()
     .AddHostedService<NextspinWorker>()
+    .AddHostedService<ENDWorker>()
     .AddHostedService<SBSWWorker>();
-
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
