@@ -26,7 +26,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             _imBll = provider.GetRequiredService<IIMBLL>();
             _log2File = provider.GetRequiredService<Log2File>();
             _thisTp = Tp.IM;
-            _tpGameName = "IM";
+            _tpGameName = Tp.IM.ToString();
         }
 
         #region Request
@@ -35,11 +35,11 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             public string ProductWallet { get; set; }
             public string PlayerId { get; set; }
-            public string Currency { get; set; } 
+            public string Currency { get; set; }
         }
 
         #endregion
-        
+
         #region Response
 
         public class GetBalanceResp
@@ -50,12 +50,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string Currency { get; set; }
             public decimal Balance { get; set; }
         }
-        
+
         #endregion
 
         [HttpPost]
         [Route("[controller]/GetBalance")]
-        public async Task<GetBalanceResp> GetBalance(GetBalanceReq req)
+        public GetBalanceResp GetBalance(GetBalanceReq req)
         {
             var logName = $"{_tpGameName}_GetBalance";
             _log2File.Info($"account={req.PlayerId}\r\n{JsonConvert.SerializeObject(req)}", logName);
@@ -80,24 +80,22 @@ namespace ThirdPartySeamlessWallet.Controllers
                     _log2File.Error($"account={req.PlayerId}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
                     return checkPlayerResp;
                 }
-                else
+
+                // check gametype
+                var gameType = _thirdPartyBll.GetGameType((int)_thisTp, req.ProductWallet);
+                if (gameType == 0)
                 {
-                    checkPlayerResp.PlayerId = req.PlayerId ;
-                    checkPlayerResp.Currency = req.Currency;
-                    checkPlayerResp.Message = "Successful";
-                    checkPlayerResp.Code = (int)IMResultCode.Success;
+                    checkPlayerResp.Code = (int)IMResultCode.InvalidArgument;
+                    checkPlayerResp.Message = "Product Wallet Invalid";
+                    _log2File.Error($"ProductWallet={req.ProductWallet}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
+                    return checkPlayerResp;
                 }
 
-                var gameType = req.ProductWallet switch
-                {
-                    "IMSportsbook" => (int) GameType.IM_Sport,
-                    "IMESports" => (int) GameType.IM_Esport,
-                    "IMSlot" => (int) GameType.IM_Spribe ,
-                    _ => 0
-                };
-            
-                var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)_thisTp, tpUserName, gameType);
-            
+                var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)_thisTp, tpUserName, (int)gameType);
+                checkPlayerResp.Code = (int)IMResultCode.Success;
+                checkPlayerResp.Message = "Successful";
+                checkPlayerResp.PlayerId = req.PlayerId;
+                checkPlayerResp.Currency = req.Currency;
                 checkPlayerResp.Balance = tpCustBalance.Balance;
 
                 _log2File.Info($"account={req.PlayerId}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
@@ -107,7 +105,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 checkPlayerResp.Code = (int)IMResultCode.Exception;
                 checkPlayerResp.Message = "Unknown Error";
-                _log2File.Error($"account={req.PlayerId}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName ,e);
+                _log2File.Error($"account={req.PlayerId}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName, e);
                 return checkPlayerResp;
             }
         }
@@ -119,26 +117,29 @@ namespace ThirdPartySeamlessWallet.Controllers
             var logName = $"{_thisTp}_PlaceBet";
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var content = await reader.ReadToEndAsync();
-            
+
             var getErrorResponse = new ErrorRespIM
             {
                 Code = (int)IMResultCode.Exception,
                 Message = "Error"
             };
-            
+
             try
             {
                 var getReq = JsonConvert.DeserializeObject<BettingRequest_IM>(content);
-                var gameType = getReq.ProductWallet switch
+
+                // check gametype
+                var gameType = _thirdPartyBll.GetGameType((int)_thisTp, getReq.ProductWallet);
+                if (gameType == 0)
                 {
-                    "IMSportsbook" =>  GameType.IM_Sport,
-                    "IMESports" =>  GameType.IM_Esport,
-                    "IMSlot" =>  GameType.IM_Spribe ,
-                    _ => GameType.IM_Sport
-                };
-                
+                    getErrorResponse.Code = (int)IMResultCode.InvalidArgument;
+                    getErrorResponse.Message = "Product Wallet Invalid";
+                    _log2File.Error($"ProductWallet={getReq.ProductWallet}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
+                    return getErrorResponse;
+                }
+
                 var transactionsList = getReq.Transactions;
-                
+
                 var tpUserName = transactionsList.FirstOrDefault().PlayerId;
                 var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)_thisTp, tpUserName);
                 if (tpCheck == null)
@@ -148,16 +149,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                     _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
                     return getErrorResponse;
                 }
-                
-                if (tpCheck.Locked)
+                else if (tpCheck.Locked)
                 {
                     getErrorResponse.Code = (int)IMResultCode.PlayerIsInactive;
                     getErrorResponse.Message = "Player Is Inactive";
                     _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
                     return getErrorResponse;
                 }
-                
-                var custBalance = _tpCustInfoBll.GetBalance((int)Tp.IM, tpUserName, (int)gameType);
+
+                var custBalance = _tpCustInfoBll.GetBalance((int)_thisTp, tpUserName, (int)gameType);
                 var betSum = transactionsList.Sum(x => x.Amount);
                 var checkBalance = custBalance.Balance - betSum;
                 if (checkBalance < 0)
@@ -167,8 +167,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
                     return getErrorResponse;
                 }
-                
-                var result = _imBll.Bet_IM(transactionsList, tpUserName, gameType , out var outData);
+
+                var result = _imBll.Bet_IM(transactionsList, tpUserName, gameType, out var outData);
 
                 if (result > 0)
                 {
@@ -179,15 +179,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     _log2File.Info($"{content}\r\n{JsonConvert.SerializeObject(response)}", logName);
                     return response;
                 }
-
-                if( result == -1)
+                else if (result == -1)
                 {
                     getErrorResponse.Code = (int)IMResultCode.NotEnoughBalance;
                     getErrorResponse.Message = "Not enough balance";
                     _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
                     return getErrorResponse;
                 }
-                
+
                 return getErrorResponse;
             }
             catch (Exception ex)
@@ -196,7 +195,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getErrorResponse;
             }
         }
-        
+
         [HttpPost]
         [Route("[controller]/SettleBet")]
         public async Task<dynamic> SettleBet()
@@ -209,17 +208,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 Results = new List<object>()
             };
-            
+
             try
             {
                 var getReq = JsonConvert.DeserializeObject<SettingRequest_IM>(content);
-                var gameType = getReq.ProductWallet switch
-                {
-                    "IMSportsbook" =>  GameType.IM_Sport,
-                    "IMESports" =>  GameType.IM_Esport,
-                    "IMSlot" =>  GameType.IM_Spribe ,
-                    _ => GameType.IM_Sport
-                };
                 
                 var transactionsList = getReq.Transactions;
 
@@ -231,7 +223,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                         Message = "Error",
                         TransactionId = settle.TransactionId
                     };
-                    
+
+                    // check gametype
+                    var gameType = _thirdPartyBll.GetGameType((int)_thisTp, getReq.ProductWallet);
+                    if (gameType == 0)
+                    {
+                        errorResponse.Code = (int)IMResultCode.InvalidArgument;
+                        errorResponse.Message = "Product Wallet Invalid";
+                        _log2File.Error($"ProductWallet={getReq.ProductWallet}\r\n{JsonConvert.SerializeObject(errorResponse)}", logName);
+                        return errorResponse;
+                    }
+
                     var tpUserName = settle.PlayerId;
                     var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)_thisTp, tpUserName);
                     if (tpCheck == null)
@@ -242,7 +244,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         response.Results.Add(errorResponse);
                         continue;
                     }
-                    
+
                     if (tpCheck.Locked)
                     {
                         errorResponse.Code = (int)IMResultCode.PlayerIsInactive;
@@ -251,7 +253,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         response.Results.Add(errorResponse);
                         continue;
                     }
-                    
+
                     if (settle.Amount < 0)
                     {
                         errorResponse.Code = (int)IMResultCode.InvalidArgument;
@@ -278,11 +280,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                         response.Results.Add(errorResponse);
                         continue;
                     }
-                    
+
                     _log2File.Info($"{content}\r\n Response: {JsonConvert.SerializeObject(outData)}", logName);
                     response.Results.Add(outData);
                 }
-                
+
                 return response;
             }
             catch (Exception ex)
@@ -291,5 +293,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return response;
             }
         }
+
     }
 }

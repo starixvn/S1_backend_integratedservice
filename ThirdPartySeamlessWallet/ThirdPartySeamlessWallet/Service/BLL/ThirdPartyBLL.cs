@@ -301,6 +301,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.PlayTech_LiveCasino;
                     }
                     break;
+                case (int)Tp.IM:
+                    gameType = gameId switch
+                    {
+                        "IMSportsbook" => GameType.IM_Sports,
+                        "IMESports" => GameType.IM_ESports,
+                        "IMSlot" => GameType.IM_RNG_SPRIBE,
+                        _ => 0
+                    };
+                    break;
                 default:
                     break;
             }
