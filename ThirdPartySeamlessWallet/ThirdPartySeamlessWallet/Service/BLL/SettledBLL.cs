@@ -2602,7 +2602,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             if (tpCurrency.ExchangeRate != 0)
             {
-                cancelBetData_Endorphina.InnerAmount *= tpCurrency.ExchangeRate;
+                cancelBetData_Endorphina.amount *= tpCurrency.ExchangeRate;
             }
 
             var result = settledService.CancelBetRNG_Endorphina(tpCustInfo, cancelBetData_Endorphina, gameType, out afterAmount);
@@ -2621,7 +2621,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             if (tpCurrency.ExchangeRate != 0)
             {
-                payoutData_Endorphina.InnerAmount *= tpCurrency.ExchangeRate;
+                payoutData_Endorphina.amount *= tpCurrency.ExchangeRate;
             }
 
             var result = settledService.PayoutRNG_Endorphina(tpCustInfo, payoutData_Endorphina, gameType, out afterAmount);
@@ -2640,11 +2640,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             if (tpCurrency.ExchangeRate != 0)
             {
-                endSessionData_Endorphina.InnerBet *= tpCurrency.ExchangeRate;
-                endSessionData_Endorphina.InnerBonusBet *= tpCurrency.ExchangeRate;
-                endSessionData_Endorphina.InnerBonusWin *= tpCurrency.ExchangeRate;
-                endSessionData_Endorphina.InnerJackpotWin *= tpCurrency.ExchangeRate;
-                endSessionData_Endorphina.InnerWin *= tpCurrency.ExchangeRate;
+                endSessionData_Endorphina.bet *= tpCurrency.ExchangeRate;
+                endSessionData_Endorphina.bonusBet *= tpCurrency.ExchangeRate;
+                endSessionData_Endorphina.bonusWin *= tpCurrency.ExchangeRate;
+                endSessionData_Endorphina.jackpotWin *= tpCurrency.ExchangeRate;
+                endSessionData_Endorphina.win *= tpCurrency.ExchangeRate;
             }
 
             return settledService.EndSessionRNG_Endorphina(tpCustInfo, endSessionData_Endorphina, gameType, out afterAmount);
