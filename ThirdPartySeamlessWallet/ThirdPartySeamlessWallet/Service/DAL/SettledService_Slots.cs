@@ -6247,7 +6247,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     // cancel update
                     result = PayoutV2(
                         tpCustInfo,
-                        Math.Abs(cancelBetData_Endorphina.InnerAmount),
+                        Math.Abs(cancelBetData_Endorphina.amount),
                         (int)tpId,
                         cancelBetData_Endorphina.id.ToString(),
                         gameType,
@@ -6274,7 +6274,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     var p = new DynamicParameters(new
                     {
                         TransId = cancelBetData_Endorphina.id,
-                        amount = cancelBetData_Endorphina.InnerAmount,
+                        amount = cancelBetData_Endorphina.amount,
                         currency = cancelBetData_Endorphina.currency,
                         date = cancelBetData_Endorphina.date,
                         game = cancelBetData_Endorphina.game,
@@ -6361,7 +6361,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var p = new DynamicParameters(new
                 {
                     TransId = TransId,
-                    amount = payoutData_Endorphina.InnerAmount,
+                    amount = payoutData_Endorphina.amount,
                     currency = payoutData_Endorphina.currency,
                     date = payoutData_Endorphina.date,
                     game = payoutData_Endorphina.game,
@@ -6384,7 +6384,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     result = PayoutV2(
                         tpCustInfo,
-                        payoutData_Endorphina.InnerAmount,
+                        payoutData_Endorphina.amount,
                         (int)tpId,
                         TransId.ToString(),
                         gameType,
@@ -6393,7 +6393,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         TransType.Payout,
                         null,
                         out afterAmount,
-                        $"Payout - {payoutData_Endorphina.id.ToString()} ",
+                        $"Payout - {payoutData_Endorphina.id} ",
                         out bonusId,
                         conn,
                         trans
@@ -6445,18 +6445,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 var p = new DynamicParameters(new
                 {
-                    bet = endSessionData_Endorphina.InnerBet,
-                    bonusBet = endSessionData_Endorphina.InnerBonusBet,
+                    bet = endSessionData_Endorphina.bet,
+                    bonusBet = endSessionData_Endorphina.bonusBet,
                     bonusGames = endSessionData_Endorphina.bonusGames,
-                    bonusWin = endSessionData_Endorphina.InnerBonusWin,
+                    bonusWin = endSessionData_Endorphina.bonusWin,
                     currency = endSessionData_Endorphina.currency,
                     game = endSessionData_Endorphina.game,
                     games = endSessionData_Endorphina.games,
-                    jackpotWin = endSessionData_Endorphina.InnerJackpotWin,
+                    jackpotWin = endSessionData_Endorphina.jackpotWin,
                     jackpots = endSessionData_Endorphina.jackpots,
                     player = endSessionData_Endorphina.player,
                     token = endSessionData_Endorphina.token,
-                    win = endSessionData_Endorphina.InnerWin,
+                    win = endSessionData_Endorphina.win,
                     TicketType = (int)BettransType.EndRound,
                     TicketStatus = (int)TicketStatus.Related,
                     SettleFlag = (int)SettleFlag.EndGame

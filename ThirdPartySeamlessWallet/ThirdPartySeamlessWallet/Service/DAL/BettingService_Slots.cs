@@ -1951,7 +1951,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var p = new DynamicParameters(new
                 {
                     TransId = bettingData_Endorphina.id,
-                    amount = bettingData_Endorphina.InnerAmount,
+                    amount = bettingData_Endorphina.amount,
                     currency = bettingData_Endorphina.currency,
                     date = bettingData_Endorphina.date,
                     game = bettingData_Endorphina.game,
@@ -1975,7 +1975,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     result = PlaceBetV2(
                         tpCustInfo,
-                        Math.Abs(bettingData_Endorphina.InnerAmount) * -1,
+                        Math.Abs(bettingData_Endorphina.amount) * -1,
                         (int)tpId,
                         bettingData_Endorphina.id.ToString(),
                         gameType,

@@ -760,7 +760,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             if (tpCurrency.ExchangeRate != 0)
             {
-                bettingData_Endorphina.InnerAmount *= tpCurrency.ExchangeRate;
+                bettingData_Endorphina.amount *= tpCurrency.ExchangeRate;
             }
 
             var result = bettingService.PlaceBetRNG_Endorphina(tpCustInfo, bettingData_Endorphina, gameType, out afterAmount);
