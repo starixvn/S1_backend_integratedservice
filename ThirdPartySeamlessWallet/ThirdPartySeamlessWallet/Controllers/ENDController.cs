@@ -135,12 +135,10 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var Content = JsonConvert.SerializeObject(getReq);
-
                 var verifySign = false;
                 if (!string.IsNullOrEmpty(getReq.sign))
                 {
-                    verifySign = CheckSign(getReq.sign, Content, logName);
+                    verifySign = CheckSign(getReq.sign, JsonConvert.SerializeObject(getReq), logName);
                 }
 
                 if (string.IsNullOrEmpty(getReq.param) || !verifySign)
@@ -191,12 +189,10 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var Content = JsonConvert.SerializeObject(getReq);
-
                 var verifySign = false;
                 if (!string.IsNullOrEmpty(getReq.sign))
                 {
-                    verifySign = CheckSign(getReq.sign, Content, logName);
+                    verifySign = CheckSign(getReq.sign, JsonConvert.SerializeObject(getReq), logName);
                 }
 
                 if (string.IsNullOrEmpty(getReq.token) || !verifySign)
@@ -207,7 +203,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     _log2File.Error($"{JsonConvert.SerializeObject(errorResponse)}", logName);
                     return errorResponse;
                 }
-               
+
                 var verify = _authBLL.Authenticate(getReq.token, out TpCustInfoAuth tpCustInfoAuth);
                 if (!verify)
                 {
@@ -269,12 +265,10 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var Content = JsonConvert.SerializeObject(getReq);
-
                 var verifySign = false;
                 if (!string.IsNullOrEmpty(getReq.sign))
                 {
-                    verifySign = CheckSign(getReq.sign, Content, logName);
+                    verifySign = CheckSign(getReq.sign, JsonConvert.SerializeObject(getReq), logName);
                 }
 
                 if (string.IsNullOrEmpty(getReq.token) || !verifySign)
@@ -371,7 +365,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return errorResponse;
                 }
 
-                getReq.InnerAmount = getReq.amount;
                 var result = _bettingBLL.PlaceBetRNG_Endorphina(getReq, _gameType, out decimal tpAffterAmount);
                 if (result > 0 || result == -1)
                 {
@@ -449,7 +442,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return errorResponse;
                 }
 
-                getReq.InnerAmount = getReq.amount;
                 var result = _settledBLL.CancelBetRNG_Endorphina(getReq, _gameType, out decimal tpAffterAmount);
                 if (result > 0 || result == -1)
                 {
@@ -519,7 +511,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return errorResponse;
                 }
 
-                getReq.InnerAmount = getReq.amount;
                 var result = _settledBLL.PayoutRNG_Endorphina(getReq, _gameType, out decimal tpAffterAmount);
                 if (result > 0 || result == -1)
                 {
@@ -590,11 +581,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return errorResponse;
                 }
 
-                getReq.InnerBet = getReq.bet;
-                getReq.InnerBonusBet = getReq.bonusBet;
-                getReq.InnerBonusWin = getReq.bonusWin;
-                getReq.InnerJackpotWin = getReq.jackpotWin;
-                getReq.InnerWin = getReq.win;
                 var result = _settledBLL.EndSessionRNG_Endorphina(getReq, _gameType, out decimal tpAffterAmount);
                 if (result > 0 || result == -1)
                 {
