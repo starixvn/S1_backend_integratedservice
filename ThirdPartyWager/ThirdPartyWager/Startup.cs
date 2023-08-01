@@ -344,7 +344,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerUnsettleCheckTFG>();
             services.AddHostedService<WagerNextspin>();
             services.AddHostedService<FinanceNextspin>();
-            services.AddHostedService<WagerIM>();
+            //services.AddHostedService<WagerIM>();
 
             // health check use
             services.AddControllers();
