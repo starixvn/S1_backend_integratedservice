@@ -117,10 +117,13 @@ public class WagerIMBLL
     private async Task<bool> IMSoltGetWagersHandlerAsync(GetBetListByTimeParam param)
     {
         var workerName = param.ProductWallet + "_GetWagers";
-        var tpCurrencyList = _commonService.GetTpCurrencyList(TpId);
+        var tpCurrencyList = _commonService.GetTpCurrencyList(TpId)
+            .Select(x => x.TpCurrencyId)
+            .Distinct();
+        
         foreach (var tpCurrency in tpCurrencyList)
         {
-            param.Currency = tpCurrency.TpCurrencyId;
+            param.Currency = tpCurrency;
 
             var page = 1;
             var totalPage = 1;
