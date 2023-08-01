@@ -391,6 +391,33 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return result;
         }
 
+        public int SetSettleFlag_BettransRng_IM(string spName, string transId, DateTime settleTime)
+        {
+            var partitionTime = settleTime;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            var trans = conn.BeginTransaction();
+
+            var result = _partitionService.Execute(partitionTime, spName, new DynamicParameters(new { TransId = transId }), trans);
+            if (result > 0)
+            {
+                _mainDbClient.CommitAndDisposeConnection(conn,trans);
+            }
+            else
+            {
+                _mainDbClient.RollbackAndDisposeConnection(conn,trans);
+            }
+            return result;
+            
+        }
+        
+        public int SetSettleFlag_TpWagerRng_IM(string spName, string transId)
+        {
+            var result = _mainDbClient.Execute(spName, parameters: new DynamicParameters(new { RoundId = transId }));
+            return result;
+        }
+        
         private TransType GetTransType(int actionId)
         {
             var transType = TransType.Payout;

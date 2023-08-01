@@ -98,7 +98,7 @@
         public List<SettleTransactions_IM> Transactions { get; set; }
     }
 
-    public class SettleTransactionsBase
+    public class SettleTransactionsBase : SettleAmountDataIM
     {
         public string PlayerId { get; set; }
         public string Provider { get; set; }
@@ -143,7 +143,7 @@
         public int Product { get; set; }
         public string EventId { get; set; }
     }
-
+    
     public class IMSpecialGame
     {
         public string SgType { get; set; }
@@ -166,6 +166,26 @@
     }
     
     #endregion
+
+    #region SettleWorker
+
+    public class SettleAmountDataIM
+    {
+        public decimal Stake { get; set; }
+        public decimal ValidBet { get; set; }
+        public decimal WinLostAmount { get; set; }
+    }
     
+    public class WagerDataIM
+    {
+        public string PlayerId { get; set; }
+        public string TransId { get; set; }
+        public decimal BetAmount { get; set; }
+        public decimal StakeAmount { get; set; }
+        public decimal WinLoss { get; set; }
+        public string Status { get; set; }
+    }
+
+    #endregion
 }
 
