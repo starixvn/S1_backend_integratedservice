@@ -48,6 +48,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
 
     public enum GameType
     {
+        None = 0,
         Saba_Sports = 1,
         Saba_NumberGame = 2,
         Saba_VirtualSport = 3,
@@ -135,7 +136,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         PlayTech_LiveCasino = 101,
         IM_ESports = 102,
         IM_Sports = 103,
-        IM_RNG_SPRIBE = 104,
+        SPRIBE_RNG = 104,
     }
     public enum Tp
     {
@@ -189,7 +190,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
 
         Nextspin = 50,
         PlayTech = 51,
-        IM = 52
+        IM = 52,
+        SPRIBE = 53
     }
     public enum TransferType : int
     {

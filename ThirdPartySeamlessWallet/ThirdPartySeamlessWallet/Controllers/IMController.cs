@@ -16,7 +16,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly TpCustInfoBLL _tpCustInfoBll;
         private readonly IIMBLL _imBll;
         private readonly Log2File _log2File;
-        private readonly Tp _thisTp;
+        //private readonly Tp _thisTp;
         private readonly string _tpGameName;
 
         public IMController(IServiceProvider provider)
@@ -25,9 +25,23 @@ namespace ThirdPartySeamlessWallet.Controllers
             _tpCustInfoBll = provider.GetRequiredService<TpCustInfoBLL>();
             _imBll = provider.GetRequiredService<IIMBLL>();
             _log2File = provider.GetRequiredService<Log2File>();
-            _thisTp = Tp.IM;
+            //_thisTp = Tp.IM;
             _tpGameName = Tp.IM.ToString();
         }
+
+        Dictionary<string, Tp> _productWalletToTpId = new()
+        {
+            { "IMSportsbook", Tp.IM },
+            { "IMESports", Tp.IM },
+            { "IMSlot", Tp.SPRIBE },
+        };
+
+        Dictionary<string, GameType> _productWalletToTpGameType = new()
+        {
+            { "IMSportsbook", GameType.IM_Sports },
+            { "IMESports", GameType.IM_ESports },
+            { "IMSlot", GameType.SPRIBE_RNG },
+        };
 
         #region Request
 
@@ -58,14 +72,24 @@ namespace ThirdPartySeamlessWallet.Controllers
         public GetBalanceResp GetBalance(GetBalanceReq req)
         {
             var logName = $"{_tpGameName}_GetBalance";
-            _log2File.Info($"account={req.PlayerId}\r\n{JsonConvert.SerializeObject(req)}", logName);
             var checkPlayerResp = new GetBalanceResp();
 
             try
             {
+                // check tp
+                var tpId = GetTpId(req.ProductWallet);
+                var tpGameType = GetTpGameType(req.ProductWallet);
+                if (tpId == Tp.None || tpGameType == GameType.None)
+                {
+                    checkPlayerResp.Code = (int)IMResultCode.InvalidArgument;
+                    checkPlayerResp.Message = "Product Wallet Invalid";
+                    _log2File.Error($"{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
+                    return checkPlayerResp;
+                }
+
                 // check user (exist status online)
                 var tpUserName = req.PlayerId;
-                var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)_thisTp, tpUserName);
+                var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)tpId, tpUserName);
                 if (tpCheck == null)
                 {
                     checkPlayerResp.Code = (int)IMResultCode.PlayerDoesNotExist;
@@ -81,24 +105,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return checkPlayerResp;
                 }
 
-                // check gametype
-                var gameType = _thirdPartyBll.GetGameType((int)_thisTp, req.ProductWallet);
-                if (gameType == 0)
-                {
-                    checkPlayerResp.Code = (int)IMResultCode.InvalidArgument;
-                    checkPlayerResp.Message = "Product Wallet Invalid";
-                    _log2File.Error($"ProductWallet={req.ProductWallet}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
-                    return checkPlayerResp;
-                }
-
-                var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)_thisTp, tpUserName, (int)gameType);
+                var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)tpId, tpUserName, (int)tpGameType);
                 checkPlayerResp.Code = (int)IMResultCode.Success;
                 checkPlayerResp.Message = "Successful";
                 checkPlayerResp.PlayerId = req.PlayerId;
                 checkPlayerResp.Currency = req.Currency;
                 checkPlayerResp.Balance = tpCustBalance.Balance;
-
-                _log2File.Info($"account={req.PlayerId}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
                 return checkPlayerResp;
             }
             catch (Exception e)
@@ -114,7 +126,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/PlaceBet")]
         public async Task<dynamic> PlaceBet()
         {
-            var logName = $"{_thisTp}_PlaceBet";
+            var logName = $"{_tpGameName}_PlaceBet";
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var content = await reader.ReadToEndAsync();
 
@@ -128,20 +140,21 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 var getReq = JsonConvert.DeserializeObject<BettingRequest_IM>(content);
 
-                // check gametype
-                var gameType = _thirdPartyBll.GetGameType((int)_thisTp, getReq.ProductWallet);
-                if (gameType == 0)
+                // check tp
+                var tpId = GetTpId(getReq.ProductWallet);
+                var tpGameType = GetTpGameType(getReq.ProductWallet);
+                if (tpId == Tp.None || tpGameType == GameType.None)
                 {
                     getErrorResponse.Code = (int)IMResultCode.InvalidArgument;
-                    getErrorResponse.Message = "Product Wallet Invalid";
-                    _log2File.Error($"ProductWallet={getReq.ProductWallet}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
+                    getErrorResponse.Message = "Product Wallet Invalid (TP)";
+                    _log2File.Error($"{JsonConvert.SerializeObject(getErrorResponse)}", logName);
                     return getErrorResponse;
                 }
 
                 var transactionsList = getReq.Transactions;
 
                 var tpUserName = transactionsList.FirstOrDefault().PlayerId;
-                var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)_thisTp, tpUserName);
+                var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)tpId, tpUserName);
                 if (tpCheck == null)
                 {
                     getErrorResponse.Code = (int)IMResultCode.PlayerDoesNotExist;
@@ -157,7 +170,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return getErrorResponse;
                 }
 
-                var custBalance = _tpCustInfoBll.GetBalance((int)_thisTp, tpUserName, (int)gameType);
+                var custBalance = _tpCustInfoBll.GetBalance((int)tpId, tpUserName, (int)tpGameType);
                 var betSum = transactionsList.Sum(x => x.Amount);
                 var checkBalance = custBalance.Balance - betSum;
                 if (checkBalance < 0)
@@ -168,7 +181,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return getErrorResponse;
                 }
 
-                var result = _imBll.Bet_IM(transactionsList, tpUserName, gameType, out var outData);
+                var result = _imBll.Bet_IM(transactionsList, tpUserName, tpId, tpGameType, out var outData);
 
                 if (result > 0)
                 {
@@ -200,7 +213,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/SettleBet")]
         public async Task<dynamic> SettleBet()
         {
-            var logName = $"{_thisTp}_SettleBet";
+            var logName = $"{_tpGameName}_SettleBet";
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var content = await reader.ReadToEndAsync();
 
@@ -212,7 +225,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 var getReq = JsonConvert.DeserializeObject<SettingRequest_IM>(content);
-                
+
+                var tpId = GetTpId(getReq.ProductWallet);
+                var tpGameType = GetTpGameType(getReq.ProductWallet);
+
                 var transactionsList = getReq.Transactions;
 
                 foreach (var settle in transactionsList)
@@ -224,18 +240,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                         TransactionId = settle.TransactionId
                     };
 
-                    // check gametype
-                    var gameType = _thirdPartyBll.GetGameType((int)_thisTp, getReq.ProductWallet);
-                    if (gameType == 0)
+                    // check tp
+                    if (tpId == Tp.None || tpGameType == GameType.None)
                     {
                         errorResponse.Code = (int)IMResultCode.InvalidArgument;
-                        errorResponse.Message = "Product Wallet Invalid";
-                        _log2File.Error($"ProductWallet={getReq.ProductWallet}\r\n{JsonConvert.SerializeObject(errorResponse)}", logName);
+                        errorResponse.Message = "Product Wallet Invalid (TP)";
+                        _log2File.Error($"{JsonConvert.SerializeObject(errorResponse)}", logName);
                         return errorResponse;
                     }
 
                     var tpUserName = settle.PlayerId;
-                    var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)_thisTp, tpUserName);
+                    var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)tpId, tpUserName);
                     if (tpCheck == null)
                     {
                         errorResponse.Code = (int)IMResultCode.PlayerDoesNotExist;
@@ -263,7 +278,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         continue;
                     }
 
-                    var result = _imBll.Settle_IM(settle, tpUserName, gameType, out var outData);
+                    var result = _imBll.Settle_IM(settle, tpUserName, tpId, tpGameType, out var outData);
                     if (result == -1)
                     {
                         errorResponse.Code = (int)IMResultCode.InvalidArgument;
@@ -294,5 +309,22 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
         }
 
+        private Tp GetTpId(string productWallet)
+        {
+            if (_productWalletToTpId.ContainsKey(productWallet))
+            {
+                return _productWalletToTpId[productWallet];
+            }
+            return Tp.None;
+        }
+
+        private GameType GetTpGameType(string productWallet)
+        {
+            if (_productWalletToTpGameType.ContainsKey(productWallet))
+            {
+                return _productWalletToTpGameType[productWallet];
+            }
+            return GameType.None;
+        }
     }
 }

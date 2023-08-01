@@ -12,7 +12,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
     public class IMBLL : IIMBLL
     {
-        private readonly Tp _thisTp;
+        //private readonly Tp _thisTp;
         private readonly ThirdPartyBLL _thirdPartyBll;
         private readonly TpCustInfoBLL _tpCustInfoBll;
         private readonly BettingService _bettingService;
@@ -22,9 +22,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly MySqlClient _mainDbClient;
         private readonly PartitionService _partitionService;
 
+        Dictionary<GameType, TpCategory> _tpGameTypeToTpCategory = new()
+        {
+            { GameType.IM_Sports, TpCategory.Sports },
+            { GameType.IM_ESports, TpCategory.Esports },
+            { GameType.SPRIBE_RNG, TpCategory.Slots },
+        };
+
         public IMBLL(IServiceProvider provider)
         {
-            _thisTp = Tp.IM;
+            //_thisTp = Tp.IM;
             _thirdPartyBll = provider.GetService<ThirdPartyBLL>();
             _tpCustInfoBll = provider.GetService<TpCustInfoBLL>();
             _bettingService = provider.GetService<BettingService>();
@@ -35,12 +42,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _logger = provider.GetService<ILogger<IMBLL>>();
         }
 
-        public int Bet_IM(List<BetTransactions_IM> betList, string tpUserName, GameType gameType, out List<BetResultIM> resp)
+        public int Bet_IM(List<BetTransactions_IM> betList, string tpUserName, Tp tpId, GameType gameType, out List<BetResultIM> resp)
         {
             var bonusId = 0;
-            var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)_thisTp, tpUserName);
-            var tpCurrency = _thirdPartyBll.GetTpCurrency((int)_thisTp, tpCustInfo.CurrencyId);
-            var custBalance = _tpCustInfoBll.GetBalance((int)_thisTp, tpUserName, (int)gameType);
+            var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)tpId, tpUserName);
+            var tpCurrency = _thirdPartyBll.GetTpCurrency((int)tpId, tpCustInfo.CurrencyId);
+            var custBalance = _tpCustInfoBll.GetBalance((int)tpId, tpUserName, (int)gameType);
+            var tpCategory = _tpGameTypeToTpCategory[gameType];
 
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
@@ -48,13 +56,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             var result = -1;
             resp = new List<BetResultIM>();
-            var tpCategory = gameType switch
-            {
-                GameType.IM_Sports => TpCategory.Sports,
-                GameType.IM_ESports => TpCategory.Esports,
-                GameType.IM_RNG_SPRIBE => TpCategory.Slots,
-                _ => TpCategory.Sports
-            };
 
             foreach (var bet in betList)
             {
@@ -107,7 +108,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         result = _mainDbClient.Execute("Service_BettransESports_IM_Bet_Ins", p2, conn, trans);
                         break;
 
-                    case GameType.IM_RNG_SPRIBE:
+                    case GameType.SPRIBE_RNG:
                         var partitionTime = bet.TimeStamp;
                         var slotData = new BetTransactionsSlot
                         {
@@ -126,7 +127,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         };
                         var p3 = new DynamicParameters(slotData);
                         p3.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
-                        result = _partitionService.Execute(partitionTime, "Service_BettransRng_IM_Bet_Ins", p3, trans);
+                        result = _partitionService.Execute(partitionTime, "Service_BettransRng_SPRIBE_Bet_Ins", p3, trans);
                         break;
                 }
 
@@ -135,7 +136,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     result = _bettingService.PlaceBetV2(
                         tpCustInfo: tpCustInfo,
                         amount: Math.Abs(bet.Amount) * -1,
-                        tpId: (int)_thisTp,
+                        tpId: (int)tpId,
                         tpTransId: bet.TransactionId,
                         gameType: (int)gameType,
                         refId: bet.TransactionId,
@@ -151,7 +152,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     {
                         if (afterAmount == 0)
                         {
-                            afterAmount = _tpCustInfoBll.GetBalance((int)_thisTp, tpUserName, (int)gameType).Balance;
+                            afterAmount = _tpCustInfoBll.GetBalance((int)tpId, tpUserName, (int)gameType).Balance;
                         }
                         else
                         {
@@ -191,19 +192,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return result;
         }
 
-        public int Settle_IM(SettleTransactions_IM data, string tpUserName, GameType gameType, out object resp)
+        public int Settle_IM(SettleTransactions_IM data, string tpUserName, Tp tpId, GameType gameType, out object resp)
         {
-            var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)_thisTp, tpUserName);
-            var tpCurrency = _thirdPartyBll.GetTpCurrency((int)_thisTp, tpCustInfo.CurrencyId);
-            var transId = gameType == GameType.IM_RNG_SPRIBE ? data.RoundId : data.BetId;
-            var afterAmount = _tpCustInfoBll.GetBalance((int)_thisTp, tpUserName, (int)gameType).Balance;
-            var tpCategory = gameType switch
-            {
-                GameType.IM_Sports => TpCategory.Sports,
-                GameType.IM_ESports => TpCategory.Esports,
-                GameType.IM_RNG_SPRIBE => TpCategory.Slots,
-                _ => TpCategory.Sports
-            };
+            var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)tpId, tpUserName);
+            var tpCurrency = _thirdPartyBll.GetTpCurrency((int)tpId, tpCustInfo.CurrencyId);
+            var afterAmount = _tpCustInfoBll.GetBalance((int)tpId, tpUserName, (int)gameType).Balance;
+            var tpCategory = _tpGameTypeToTpCategory[gameType];
+            var transId = gameType == GameType.SPRIBE_RNG ? data.RoundId : data.BetId;
 
             if (tpCurrency.ExchangeRate > 0)
             {
@@ -287,10 +282,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         result = _mainDbClient.Execute("Service_BettransESports_IM_Settle_Ins", p2, conn, trans);
                         break;
 
-                    case GameType.IM_RNG_SPRIBE:
+                    case GameType.SPRIBE_RNG:
                         var partitionTime = data.TimeStamp;
                         // check exists
-                        var checkSpribe = _partitionService.Query<SettleTransactions_IMSlot>(partitionTime, "Service_BettransRng_IM_Round_Get", new { RoundId = data.RoundId }, 30);
+                        var checkSpribe = _partitionService.Query<SettleTransactions_IMSlot>(partitionTime, "Service_BettransRng_SPRIBE_Round_Get", new { RoundId = data.RoundId }, 30);
                         if (!checkSpribe.Any())
                         {
                             return -2;
@@ -312,25 +307,25 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         };
                         var p3 = new DynamicParameters(slotData);
                         p3.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
-                        result = _partitionService.Execute(partitionTime, "Service_BettransRng_IM_Settle_Ins", p3, trans);
+                        result = _partitionService.Execute(partitionTime, "Service_BettransRng_SPRIBE_Settle_Ins", p3, trans);
                         break;
                 }
 
                 if (result > 0)
                 {
                     var transType = TransType.Payout;
-                    if (gameType != GameType.IM_RNG_SPRIBE)
+                    if (gameType != GameType.SPRIBE_RNG)
                     {
                         transType = GetTransType(data.ActionId);
                     }
 
-                    if ((gameType != GameType.IM_RNG_SPRIBE && data.Amount != 0) ||
-                         (gameType == GameType.IM_RNG_SPRIBE && data.Amount > 0))
+                    if ((gameType != GameType.SPRIBE_RNG && data.Amount != 0) ||
+                         (gameType == GameType.SPRIBE_RNG && data.Amount > 0))
                     {
                         result = _settledService.PayoutV2(
                             tpCustInfo,
                             data.Amount,
-                            (int)_thisTp,
+                            (int)tpId,
                             transId,
                             (int)gameType,
                             tpCategory,
@@ -350,7 +345,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     {
                         if (afterAmount == 0)
                         {
-                            afterAmount = _tpCustInfoBll.GetBalance((int)_thisTp, tpUserName, (int)gameType).Balance;
+                            afterAmount = _tpCustInfoBll.GetBalance((int)tpId, tpUserName, (int)gameType).Balance;
                         }
                         else
                         {
@@ -358,7 +353,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                                 afterAmount /= tpCurrency.ExchangeRate;
                         }
 
-                        result = _tpUnsettleService.InsertTpUnsettle(_thisTp, gameType, transId, trans);
+                        result = _tpUnsettleService.InsertTpUnsettle(tpId, gameType, transId, trans);
                         if (result > 0)
                         {
                             _mainDbClient.CommitAndDisposeConnection(conn, trans);
@@ -402,22 +397,22 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var result = _partitionService.Execute(partitionTime, spName, new DynamicParameters(new { TransId = transId }), trans);
             if (result > 0)
             {
-                _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                _mainDbClient.CommitAndDisposeConnection(conn, trans);
             }
             else
             {
-                _mainDbClient.RollbackAndDisposeConnection(conn,trans);
+                _mainDbClient.RollbackAndDisposeConnection(conn, trans);
             }
             return result;
-            
+
         }
-        
+
         public int SetSettleFlag_TpWagerRng_IM(string spName, string transId)
         {
             var result = _mainDbClient.Execute(spName, parameters: new DynamicParameters(new { RoundId = transId }));
             return result;
         }
-        
+
         private TransType GetTransType(int actionId)
         {
             var transType = TransType.Payout;

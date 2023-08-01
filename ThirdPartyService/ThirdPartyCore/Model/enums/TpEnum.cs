@@ -132,6 +132,6 @@ namespace ThirdPartyCore.Model.enums
         PlayTech_LiveCasino = 101,
         IM_ESports = 102,
         IM_Sports = 103,
-        IM_RNG_SPRIBE = 104,
+        SPRIBE_RNG = 104,
     }
 }
