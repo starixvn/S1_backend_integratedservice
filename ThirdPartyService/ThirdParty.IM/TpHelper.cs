@@ -11,8 +11,18 @@ namespace ThirdParty.IM
 {
     public partial class TpHelper : ThirdPartyHelperBase
     {
+        #region IM Configs Setting
+
+        Dictionary<TpGameType, int> _productWallet = new Dictionary<TpGameType, int>()
+        {
+            {TpGameType.IM_Sports, (int)ProductWallet.IMSB},
+            {TpGameType.IM_ESports, (int)ProductWallet.ESportsbull},
+        };
+
+        #endregion
+
         private const string ContentType = "application/json";
-        private readonly WebProxy _proxy;
+        private readonly WebProxy? _proxy;
 
 
         public TpHelper(IServiceProvider provider)
@@ -65,19 +75,10 @@ namespace ThirdParty.IM
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             var apiUrl = $"{inputs["ApiUrl"]}/Game/NewLaunchGame";
-            // var prefix = inputs.ContainsKey("Prefix") && !string.IsNullOrEmpty(inputs["Prefix"]) ? inputs["Prefix"] : throw new Exception("Prefix");
             var playerName = tpCustInfo.TpUserName;
 
             var tpGameType = inputs.ContainsKey("tpGameType") && !string.IsNullOrEmpty(inputs["tpGameType"]) ? Convert.ToInt32(inputs["tpGameType"]) : (int)TpGameType.IM_Sports;
-            tpGameType = (inputs.ContainsKey("gameType") && inputs["gameType"] == "slots") ? (int)TpGameType.IM_RNG_SPRIBE : tpGameType;
-
-            var productWallet = tpGameType switch
-            {
-                (int)TpGameType.IM_Sports => (int)ProductWallet.IMSB,
-                (int)TpGameType.IM_ESports => (int)ProductWallet.ESportsbull,
-                (int)TpGameType.IM_RNG_SPRIBE => (int)ProductWallet.SPRIBE,
-                _ => 0
-            };
+            var productWallet = _productWallet[(TpGameType)tpGameType];
 
             var fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
             if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
@@ -97,7 +98,7 @@ namespace ThirdParty.IM
                 LobbyURL = inputs["homeUrl"]
             };
 
-            var json = HttpPostWithProxy(apiUrl, ToJson(signUp), ContentType, _proxy, null, 0);
+            var json = HttpPostWithProxy(apiUrl, ToJson(signUp), ContentType, _proxy, null);
             var result = FromJson<LaunchGameResponseModel>(json);
 
             return new ApiResult

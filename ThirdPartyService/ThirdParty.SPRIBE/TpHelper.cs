@@ -15,9 +15,14 @@ namespace ThirdParty.SPRIBE
 
         #region SPRIBE Configs Setting
 
+        public enum ProductWallet
+        {
+            SPRIBE = 101,
+        }
+
         Dictionary<TpGameType, int> _productWallet = new Dictionary<TpGameType, int>()
         {
-            {TpGameType.SPRIBE_RNG, 101},
+            {TpGameType.SPRIBE_RNG, (int)ProductWallet.SPRIBE},
         };
 
         #endregion
@@ -44,7 +49,7 @@ namespace ThirdParty.SPRIBE
 
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
         private const string ContentType = "application/json";
-        private readonly WebProxy _proxy;
+        private readonly WebProxy? _proxy;
 
         public TpHelper(IServiceProvider provider)
         {
