@@ -70,6 +70,7 @@ builder.Services
     .AddHostedService<TFGWorker>()
     .AddHostedService<NextspinWorker>()
     .AddHostedService<ENDWorker>()
+    .AddHostedService<IMWorker>()
     .AddHostedService<SBSWWorker>();
 
 var app = builder.Build();
