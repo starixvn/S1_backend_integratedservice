@@ -386,6 +386,131 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return result;
         }
 
+        public int Refund_SPRIBE(RefundTransaction_Spribe data, string tpUserName, Tp tpId, GameType gameType, out object resp)
+        {
+            var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)tpId, tpUserName);
+            var tpCurrency = _thirdPartyBll.GetTpCurrency((int)tpId, tpCustInfo.CurrencyId);
+            var afterAmount = _tpCustInfoBll.GetBalance((int)tpId, tpUserName, (int)gameType).Balance;
+            var tpCategory = _tpGameTypeToTpCategory[gameType];
+            var transId = data.RefTransactionId;
+
+            var successResp = new SettleResultIM
+            {
+                Code = (int)IMResultCode.Success,
+                Message = "Successful",
+                TransactionId = data.TransactionId,
+                OperatorTransactionId = data.TransactionId
+            };
+            var errorResponse = new SettleErrorRespIM
+            {
+                Code = (int)IMResultCode.Exception,
+                Message = "Failed to process your request",
+                TransactionId = data.TransactionId
+            };
+            resp = errorResponse;
+            
+            var partitionTime = data.TimeStamp;
+            var betData = _partitionService.Query<SettleTransactions_IMSlot>(partitionTime, "Service_BettransRng_SPRIBE_Round_Get", new { RoundId = transId }, 30).FirstOrDefault();
+            if (betData is null)
+            {
+                return -2;
+            }
+            
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                betData.Amount *= tpCurrency.ExchangeRate;
+            }
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            var result = -1;
+            try
+            {
+                var slotData = new SettleTransactions_IMSlot
+                {
+                    PlayerId = data.PlayerId,
+                    Provider = data.Provider,
+                    GameId = betData.GameId,
+                    GameName = betData.GameName,
+                    TransactionId = data.TransactionId,
+                    Type = data.TransactionType,
+                    Currency = betData.Currency,
+                    Amount = betData.Amount,
+                    TimeStamp = data.TimeStamp.ToUniversalTime(),
+                    RoundId = data.RefTransactionId,
+                    RefTransactionId = JsonConvert.SerializeObject(new List<string>{data.RefTransactionId}),
+                    SpecialGame = JsonConvert.SerializeObject(betData.SpecialGame)
+                };
+                var p3 = new DynamicParameters(slotData);
+                p3.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
+                result = _partitionService.Execute(partitionTime, "Service_BettransRng_SPRIBE_Settle_Ins", p3, trans);
+                
+                if (result > 0)
+                {
+                    if ( betData.Amount > 0)
+                    {
+                        result = _settledService.PayoutV2(
+                            tpCustInfo,
+                            betData.Amount,
+                            (int)tpId,
+                            transId,
+                            (int)gameType,
+                            tpCategory,
+                            data.TransactionId,
+                            TransType.Refunds,
+                            null,
+                            out afterAmount,
+                            "Refund",
+                            out var bonusId,
+                            conn,
+                            trans,
+                            AllowNegative.Allow
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        if (afterAmount == 0)
+                        {
+                            afterAmount = _tpCustInfoBll.GetBalance((int)tpId, tpUserName, (int)gameType).Balance;
+                        }
+                        else
+                        {
+                            if (tpCurrency.ExchangeRate > 0)
+                                afterAmount /= tpCurrency.ExchangeRate;
+                        }
+
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                        successResp.Balance = afterAmount;
+                        resp = successResp;
+                        return result;
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                        return result;
+                    }
+                   
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return result;
+            }
+
+            return result;
+        }
+        
         public int SetSettleFlag_BettransRng_IM(string spName, string transId, DateTime settleTime)
         {
             var partitionTime = settleTime;
