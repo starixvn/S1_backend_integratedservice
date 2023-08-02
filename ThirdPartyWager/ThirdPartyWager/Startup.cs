@@ -307,6 +307,7 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceMP>();
             services.AddHostedService<WagerEVO>();
             services.AddHostedService<WagerRedoEVO>();
+            services.AddHostedService<WagerUnsettleEVO>();
             services.AddHostedService<FinanceEVO>();
             services.AddHostedService<TpRefundWorker>();
             services.AddHostedService<FinanceMG>();
