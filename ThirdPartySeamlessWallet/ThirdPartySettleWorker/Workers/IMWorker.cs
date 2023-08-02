@@ -39,7 +39,7 @@ namespace ThirdPartySettleWorker.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         { 
-            timerRngByRound = new Timer(DoSettleRngWork, GameType.IM_Spribe, TimeSpan.Zero, TimeSpan.Zero); 
+            timerRngByRound = new Timer(DoSettleRngWork, GameType.SPRIBE_RNG, TimeSpan.Zero, TimeSpan.Zero); 
             return Task.CompletedTask;
         }
 
@@ -63,7 +63,6 @@ namespace ThirdPartySettleWorker.Workers
             var bettransSet = "Service_BettransRng_IM_Settle_Round_Set";
             var tpWagerRngSet = "Service_TpWagerRng_IM_Settle_Set";
             var logName = "IMDoSettleRngWork";
-
             
             try
             {
