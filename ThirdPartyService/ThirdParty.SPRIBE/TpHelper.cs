@@ -67,8 +67,7 @@ namespace ThirdParty.SPRIBE
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var apiUrl = $"{inputs["ApiUrl"]}/Player/Register";
-
-            tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x").ToLower();
+            
             var signUp = new
             {
                 MerchantCode = inputs["Key"],
