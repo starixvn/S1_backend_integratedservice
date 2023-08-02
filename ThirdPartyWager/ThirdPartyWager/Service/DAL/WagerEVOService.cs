@@ -35,10 +35,5 @@ namespace ThirdPartyWager.Service.DAL
         {
             return _mainDbClient.QueryAsync<SettleData>("Service_BettransLC_EVO_Unsettle_Get", null);
         }
-
-        public IEnumerable<SettleData> GetUnsettledList_EVO()
-        {
-            return _mainDbClient.Query<SettleData>("Service_BettransLC_EVO_Unsettle_Get");
-        }
     }
 }
