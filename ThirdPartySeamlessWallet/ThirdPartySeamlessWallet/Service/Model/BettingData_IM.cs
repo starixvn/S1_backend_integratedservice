@@ -92,7 +92,7 @@
 
     #region Settle
 
-    public class SettingRequest_IM
+    public class SettleRequest_IM
     {
         public string ProductWallet { get; set; }
         public List<SettleTransactions_IM> Transactions { get; set; }
@@ -167,6 +167,25 @@
     
     #endregion
 
+    #region MyRegion
+
+    public class RefundRequest_Spribe
+    {
+        public List<RefundTransaction_Spribe> Transactions { get; set; }
+    }
+    
+    public class RefundTransaction_Spribe
+    {
+        public string TransactionId { get; set; }
+        public string RefTransactionId { get; set; }
+        public string TransactionType { get; set; }
+        public string PlayerId { get; set; }
+        public string ProviderPlayerId { get; set; }
+        public string Provider { get; set; }
+        public DateTime TimeStamp { get; set; }
+    }
+    
+    #endregion
     #region SettleWorker
 
     public class SettleAmountDataIM

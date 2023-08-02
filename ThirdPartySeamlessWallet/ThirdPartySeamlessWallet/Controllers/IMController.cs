@@ -224,7 +224,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var getReq = JsonConvert.DeserializeObject<SettingRequest_IM>(content);
+                var getReq = JsonConvert.DeserializeObject<SettleRequest_IM>(content);
 
                 var tpId = GetTpId(getReq.ProductWallet);
                 var tpGameType = GetTpGameType(getReq.ProductWallet);
@@ -309,6 +309,94 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
         }
 
+        [HttpPost]
+        [Route("[controller]/Refund")]
+        public async Task<dynamic> Refund()
+        {
+            var logName = $"{_tpGameName}_Refund";
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var content = await reader.ReadToEndAsync();
+
+            var response = new SettleResponse
+            {
+                Results = new List<object>()
+            };
+
+            try
+            {
+                var getReq = JsonConvert.DeserializeObject<RefundRequest_Spribe>(content);
+
+                var transactionsList = getReq.Transactions;
+
+                foreach (var refundData in transactionsList)
+                {
+                    var errorResponse = new SettleErrorRespIM
+                    {
+                        Code = (int)IMResultCode.Exception,
+                        Message = "Error",
+                        TransactionId = refundData.TransactionId
+                    };
+                    
+                    var tpUserName = refundData.PlayerId;
+                    var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)Tp.SPRIBE, tpUserName);
+                    if (tpCheck == null)
+                    {
+                        errorResponse.Code = (int)IMResultCode.PlayerDoesNotExist;
+                        errorResponse.Message = "Player Does Not Exist";
+                        _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(errorResponse)}", logName);
+                        response.Results.Add(errorResponse);
+                        continue;
+                    }
+
+                    if (tpCheck.Locked)
+                    {
+                        errorResponse.Code = (int)IMResultCode.PlayerIsInactive;
+                        errorResponse.Message = "Player Is Inactive";
+                        _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(errorResponse)}", logName);
+                        response.Results.Add(errorResponse);
+                        continue;
+                    }
+                    
+                    if (refundData.TransactionType != "Cancel")
+                    {
+                        errorResponse.Code = (int)IMResultCode.InvalidArgument;
+                        errorResponse.Message = "TransactionType Invalid Argument";
+                        _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(errorResponse)}", logName);
+                        response.Results.Add(errorResponse);
+                        continue;
+                    }
+                    
+                    var result = _imBll.Refund_SPRIBE(refundData, tpUserName, Tp.SPRIBE, GameType.SPRIBE_RNG, out var outData);
+                    if (result == -1)
+                    {
+                        errorResponse.Code = (int)IMResultCode.InvalidArgument;
+                        errorResponse.Message = "Already accepted";
+                        _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(errorResponse)}", logName);
+                        response.Results.Add(errorResponse);
+                        continue;
+                    }
+                    if (result == -2)
+                    {
+                        errorResponse.Code = (int)IMResultCode.TransactionIdNotFound;
+                        errorResponse.Message = "TransactionId Not Found";
+                        _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(errorResponse)}", logName);
+                        response.Results.Add(errorResponse);
+                        continue;
+                    }
+
+                    _log2File.Info($"{content}\r\n Response: {JsonConvert.SerializeObject(outData)}", logName);
+                    response.Results.Add(outData);
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(response)}", logName, ex);
+                return response;
+            }
+        }
+        
         private Tp GetTpId(string productWallet)
         {
             if (_productWalletToTpId.ContainsKey(productWallet))

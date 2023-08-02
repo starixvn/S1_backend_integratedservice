@@ -9,6 +9,8 @@ public interface IIMBLL
 
     int Settle_IM(SettleTransactions_IM data, string tpUserName, Tp tpId, GameType gameType, out object resp);
 
+    int Refund_SPRIBE(RefundTransaction_Spribe data, string tpUserName, Tp tpId, GameType gameType, out object resp);
+
     int SetSettleFlag_BettransRng_IM(string spName, string transId, DateTime settleTime);
 
     int SetSettleFlag_TpWagerRng_IM(string spName, string transId);

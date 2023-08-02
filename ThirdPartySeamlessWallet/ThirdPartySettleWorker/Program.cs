@@ -71,6 +71,7 @@ builder.Services
     .AddHostedService<NextspinWorker>()
     .AddHostedService<ENDWorker>()
     .AddHostedService<IMWorker>()
+    .AddHostedService<SPRIBEWorker>()
     .AddHostedService<SBSWWorker>();
 
 var app = builder.Build();
