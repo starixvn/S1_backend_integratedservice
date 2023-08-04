@@ -129,7 +129,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         SBSW_Vgaming = 95,
         SBSW_CardClub = 96,
         TFG_Esports = 97,
-
+        Endorphina_RNG = 98,
         Nextspin_RNG = 99,
         PlayTech_RNG = 100,
         PlayTech_LiveCasino = 101,
@@ -183,7 +183,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Yeebet = 46,
         BG = 47,
         TFG = 48,
-
+        Endorphina = 49,
         Nextspin = 50,
         PlayTech = 51,
     }
