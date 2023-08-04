@@ -30,8 +30,7 @@ namespace ThirdPartyWager.Service.BLL.Nextspin
             {
                 foreach (var siteId in _siteList)
                 {
-                    var dictSetting = _thirdPartyBLL.GetThirdPartyBySite((int)Tp.Nextspin, siteId);
-                    var setting = GetNextspinSetting(dictSetting);
+                    var setting = _thirdPartyBLL.GetThirdPartyBySite<NextspinSetting>((int)Tp.Nextspin, siteId);
 
                     var page = 1;
                     int count;
@@ -58,16 +57,6 @@ namespace ThirdPartyWager.Service.BLL.Nextspin
                 _logger.LogError(ex, $"insert TpWagerNextspin failed: {ex.Message}");
                 return false;
             }
-        }
-        private static NextspinSetting GetNextspinSetting(Dictionary<string, string> setting)
-        {
-            return new NextspinSetting()
-            {
-                LaunchUrl = setting["LaunchUrl"],
-                ApiUrl = setting["ApiUrl"],
-                MerchantCode = setting["MerchantCode"],
-                SecretKey = setting["SecretKey"]
-            };
         }
     }
 }
