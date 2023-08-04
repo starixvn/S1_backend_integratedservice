@@ -2589,5 +2589,64 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
         #endregion
 
+        #region Endorphina
+
+        public int CancelBetRNG_Endorphina(CancelBetData_Endorphina cancelBetData_Endorphina, int gameType, out decimal afterAmount)
+        {
+            var tpId = (int)Tp.Endorphina;
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(tpId, cancelBetData_Endorphina.player);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                cancelBetData_Endorphina.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.CancelBetRNG_Endorphina(tpCustInfo, cancelBetData_Endorphina, gameType, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        public int PayoutRNG_Endorphina(PayoutData_Endorphina payoutData_Endorphina, int gameType, out decimal afterAmount)
+        {
+            var tpId = (int)Tp.Endorphina;
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(tpId, payoutData_Endorphina.player);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                payoutData_Endorphina.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.PayoutRNG_Endorphina(tpCustInfo, payoutData_Endorphina, gameType, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        public int EndSessionRNG_Endorphina(EndSessionData_Endorphina endSessionData_Endorphina, int gameType, out decimal afterAmount)
+        {
+            var tpId = (int)Tp.Endorphina;
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(tpId, endSessionData_Endorphina.player);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                endSessionData_Endorphina.bet *= tpCurrency.ExchangeRate;
+                endSessionData_Endorphina.bonusBet *= tpCurrency.ExchangeRate;
+                endSessionData_Endorphina.bonusWin *= tpCurrency.ExchangeRate;
+                endSessionData_Endorphina.jackpotWin *= tpCurrency.ExchangeRate;
+                endSessionData_Endorphina.win *= tpCurrency.ExchangeRate;
+            }
+
+            return settledService.EndSessionRNG_Endorphina(tpCustInfo, endSessionData_Endorphina, gameType, out afterAmount);
+        }
+
+        #endregion
     }
 }

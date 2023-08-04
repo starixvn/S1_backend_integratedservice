@@ -36,6 +36,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal ExchangeRate { get; set; }
         public string TpCurrencyId { get; set; }
         public int MemberType { get; set; }
+        public string GameId { get; set; }
     }
     public class TpCustBalance
     {
