@@ -13,5 +13,9 @@ public interface IIMBLL
 
     int SetSettleFlag_BettransRng_IM(string spName, string transId, DateTime settleTime);
 
-    int SetSettleFlag_TpWagerRng_IM(string spName, string transId);
+    int SetSettleFlag_Bettrans_IM(string spName, string transId);
+    
+    int SetSettleFlag_TpWager_IM(string spName, string transId);
+
+    TransType GetTransType(int actionId);
 }

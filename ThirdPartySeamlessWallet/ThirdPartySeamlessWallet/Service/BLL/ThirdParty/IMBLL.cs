@@ -20,6 +20,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly TpUnsettleService _tpUnsettleService;
         private readonly ILogger<IMBLL> _logger;
         private readonly MySqlClient _mainDbClient;
+        private readonly MySqlClient _wagerDbClient;
         private readonly PartitionService _partitionService;
 
         Dictionary<GameType, TpCategory> _tpGameTypeToTpCategory = new()
@@ -38,6 +39,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _settledService = provider.GetRequiredService<SettledService>();
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
             _partitionService = provider.GetRequiredService<PartitionService>();
             _logger = provider.GetService<ILogger<IMBLL>>();
         }
@@ -532,13 +534,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         }
 
-        public int SetSettleFlag_TpWagerRng_IM(string spName, string transId)
+        public int SetSettleFlag_Bettrans_IM(string spName, string transId)
         {
-            var result = _mainDbClient.Execute(spName, parameters: new DynamicParameters(new { RoundId = transId }));
+            var result = _mainDbClient.Execute(spName, parameters: new DynamicParameters(new { TransId = transId }));
+            return result;
+        }
+        
+        public int SetSettleFlag_TpWager_IM(string spName, string transId)
+        {
+            var result = _wagerDbClient.Execute(spName, parameters: new DynamicParameters(new { TransId = transId }));
             return result;
         }
 
-        private TransType GetTransType(int actionId)
+        public TransType GetTransType(int actionId)
         {
             var transType = TransType.Payout;
 
@@ -547,8 +555,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 case (int)IMActionId.PlaceBetRefund:
                 case (int)IMActionId.DangerRefund:
                 case (int)IMActionId.LiveBallRefund:
-                case (int)IMActionId.BTBuyBack:
-                case (int)IMActionId.BTRestoreBuyBack:
                 case (int)IMActionId.CancelHT:
                 case (int)IMActionId.CancelFT:
                 case (int)IMActionId.CancelOutright:
@@ -562,6 +568,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 case (int)IMActionId.SettleOutright:
                 case (int)IMActionId.SettleParlay:
                 case (int)IMActionId.SettleOnHold:
+                case (int)IMActionId.BTBuyBack:
+                case (int)IMActionId.BTRestoreBuyBack:
                     transType = TransType.Payout;
                     break;
 
