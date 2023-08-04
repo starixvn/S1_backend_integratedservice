@@ -51,23 +51,21 @@ public class WagerIMBLL
         var quick = false;
         const int runTime = 120; // sec
         const int excess = 120; // min
-        const int vary = 1; // sec
         const int timeRange = 30; // 最大24hr
         const int dataDelayTime = 5; // 體育類log更新延遲 5 min
         
         foreach (var (gameType, productWallet) in _gameTypeMapper)
         {
-            var workerTime = GetWorkerTime(type, vary, siteId, gameType);
+            var workerTime = GetWorkerTime(type, dataDelayTime * -1, siteId, gameType);
             
             quick = CheckQuick(workerTime, excess);
             
             var time = _dateTimeHelper.GetTimeByMinute(timeRange - 1, TimeZone, TimeFormat, workerTime);
             var cvTime = DateTimeOffset.Now
-                .AddMinutes(dataDelayTime * -1) // -log更新延遲
                 .ToOffset(new TimeSpan(TimeZone, 0, 0))
                 .ToUnixTimeSeconds();
 
-            if (time.endUnix >= cvTime)
+            if (time.startUnix >= cvTime)
                 continue;
             
             var result = await GetWagersAsync(time, siteData, productWallet);

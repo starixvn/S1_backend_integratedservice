@@ -41,18 +41,16 @@ public class WagerSPRIBEBLL
         var quick = false;
         const int runTime = 120; // sec
         const int excess = 120; // min
-        const int vary = 1; // sec
         const int timeRange = 10; //SPRIBE GetBetLog 的時間區間最大10分鐘
         const int dataDelayTime = 15; // log更新延遲 15 min
         const int gameType = 2;
         
-        var workerTime = GetWorkerTime(type, vary, siteId, gameType);
+        var workerTime = GetWorkerTime(type, dataDelayTime * -1, siteId, gameType);
         
         quick = CheckQuick(workerTime, excess);
         
         var time = _dateTimeHelper.GetTimeByMinute(timeRange - 1, TimeZone, TimeFormat, workerTime);
         var cvTime = DateTimeOffset.Now
-            .AddMinutes(dataDelayTime * -1) // -log更新延遲
             .ToOffset(new TimeSpan(TimeZone, 0, 0))
             .ToUnixTimeSeconds();
 
