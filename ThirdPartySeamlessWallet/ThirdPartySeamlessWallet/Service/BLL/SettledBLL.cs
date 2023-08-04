@@ -2455,6 +2455,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #endregion
 
+        #region SBSW
+        public IEnumerable<SBSWUnsettle> GetSBSWUnsettleList(int LimitCount = 200)
+        {
+            return settledService.GetSBSWUnsettleList(LimitCount);
+        }
+        public BetRecordInfo GetSBSWTpBetRecord(int TpId, string TransId, int GameType)
+        {
+            return settledService.GetSBSWUnsettleList(TpId, TransId, GameType);
+        }
+        #endregion
+
         #region PlayTech
 
         public int Payout_PlayTech(BettingData_PlayTech bettingData_PlayTech, GameType gameType, int partitionCheckDay, out decimal afterAmount)
@@ -2579,17 +2590,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        #endregion
-
-        #region SBSW
-        public IEnumerable<SBSWUnsettle> GetSBSWUnsettleList(int LimitCount = 200)
-        {
-            return settledService.GetSBSWUnsettleList(LimitCount);
-        }
-        public BetRecordInfo GetSBSWTpBetRecord(int TpId, string TransId, int GameType)
-        {
-            return settledService.GetSBSWUnsettleList(TpId, TransId, GameType);
-        }
         #endregion
 
         #region Endorphina

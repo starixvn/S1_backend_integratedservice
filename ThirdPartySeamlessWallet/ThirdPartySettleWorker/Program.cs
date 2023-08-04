@@ -64,7 +64,6 @@ builder.Services
     .AddHostedService<BTIWorker>()
     .AddHostedService<NineWWorker>()
     .AddHostedService<One789Worker>()
-    .AddHostedService<GPIWorker>()
     .AddHostedService<YeebetWorker>()
     .AddHostedService<BGWorker>()
     .AddHostedService<TFGWorker>()
