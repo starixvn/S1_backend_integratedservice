@@ -335,7 +335,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             transType,
                             null,
                             out afterAmount,
-                            Enum.GetName(typeof(IMActionId), data.ActionId),
+                            gameType != GameType.SPRIBE_RNG ? Enum.GetName(typeof(IMActionId), data.ActionId) : "Payout",
                             out var bonusId,
                             conn,
                             trans,
