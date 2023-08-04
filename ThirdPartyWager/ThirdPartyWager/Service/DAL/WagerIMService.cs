@@ -21,7 +21,7 @@ public class WagerIMService
         var json = JsonConvert.SerializeObject(wagers);
         _logger.LogInformation(json);
         
-        return _wagerDbClient.Execute("Service_TpWagerRng_IM_Batch_Ins",
+        return _wagerDbClient.Execute("Service_TpWagerRng_SPRIBE_Batch_Ins",
             new { _Infos = json });
     }
     

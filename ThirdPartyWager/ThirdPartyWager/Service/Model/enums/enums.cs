@@ -55,6 +55,7 @@
         Nextspin = 50,
         PlayTech = 51,
         IM = 52,
+        SPRIBE = 53
     }
 
     public enum GameType
