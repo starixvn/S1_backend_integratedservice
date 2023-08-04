@@ -6,6 +6,7 @@ using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.BLL.MG;
 using ThirdPartyWager.Service.BLL.Nextspin;
 using ThirdPartyWager.Service.BLL.SBO;
+using ThirdPartyWager.Service.BLL.SPRIBE;
 using ThirdPartyWager.Service.BLL.TFG;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
@@ -14,6 +15,7 @@ using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
 using ThirdPartyWager.Workers.IM;
 using ThirdPartyWager.Workers.Nextspin;
+using ThirdPartyWager.Workers.SPRIBE;
 
 namespace ThirdPartyWager
 {
@@ -261,6 +263,7 @@ namespace ThirdPartyWager
             //IM
             services.AddSingleton<ApiIMBLL>();
             services.AddSingleton<WagerIMBLL>();
+            services.AddSingleton<WagerSPRIBEBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -346,6 +349,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerNextspin>();
             services.AddHostedService<FinanceNextspin>();
             services.AddHostedService<WagerIM>();
+            services.AddHostedService<WagerSPRIBE>();
 
             // health check use
             services.AddControllers();

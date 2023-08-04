@@ -9,10 +9,10 @@ public class WagerIMBLL
 {
     private readonly ApiIMBLL _apiIMBll;
     private readonly WagerIMService _wagerIMService;
-    private readonly CommonService _commonService;
     private readonly ThirdPartyBLL _thirdPartyBll;
     private readonly DateTimeHelper _dateTimeHelper;
     private readonly ILogger<WagerPlayTechBLL> _logger;
+    private readonly Tp _tp = Tp.IM;
     private const int TpId = (int) Tp.IM;
     private const int TimeZone = 8; // Report/GetBetLog時區為+8
     private const string TimeFormat = "yyyy-MM-dd HH.mm.ss";
@@ -20,7 +20,6 @@ public class WagerIMBLL
     private readonly Dictionary<IMProductWalletEnum, Func<GetBetListByTimeParam, Task<bool>>> _getWagersHandlerMapper;
     private readonly Dictionary<int, IMProductWalletEnum> _gameTypeMapper = new()
     {
-        {2, IMProductWalletEnum.IMSlot},
         {1, IMProductWalletEnum.IMSportsbook},
         {11, IMProductWalletEnum.IMESports}
     };
@@ -35,14 +34,12 @@ public class WagerIMBLL
     {
         _apiIMBll = provider.GetRequiredService<ApiIMBLL>();
         _wagerIMService = provider.GetRequiredService<WagerIMService>();
-        _commonService = provider.GetRequiredService<CommonService>();
         _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
         _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         _logger = provider.GetRequiredService<ILogger<WagerPlayTechBLL>>();
         
         _getWagersHandlerMapper = new Dictionary<IMProductWalletEnum, Func<GetBetListByTimeParam, Task<bool>>>
         {
-            {IMProductWalletEnum.IMSlot, IMSoltGetWagersHandlerAsync},
             {IMProductWalletEnum.IMSportsbook, IMSportsGetWagersHandlerAsync},
             {IMProductWalletEnum.IMESports, IMESportsGetWagersHandlerAsync}
         };
@@ -55,18 +52,18 @@ public class WagerIMBLL
         const int runTime = 120; // sec
         const int excess = 120; // min
         const int vary = 1; // sec
+        const int timeRange = 30; // 最大24hr
+        const int dataDelayTime = 5; // 體育類log更新延遲 5 min
         
         foreach (var (gameType, productWallet) in _gameTypeMapper)
         {
-            var timeRange = GetTimeRange(productWallet);
             var workerTime = GetWorkerTime(type, vary, siteId, gameType);
             
-            if (productWallet == IMProductWalletEnum.IMSlot)
-                quick = CheckQuick(workerTime, excess);
+            quick = CheckQuick(workerTime, excess);
             
             var time = _dateTimeHelper.GetTimeByMinute(timeRange - 1, TimeZone, TimeFormat, workerTime);
             var cvTime = DateTimeOffset.Now
-                .AddMinutes(GetDelayTime(productWallet) * -1) // -log更新延遲
+                .AddMinutes(dataDelayTime * -1) // -log更新延遲
                 .ToOffset(new TimeSpan(TimeZone, 0, 0))
                 .ToUnixTimeSeconds();
 
@@ -78,7 +75,7 @@ public class WagerIMBLL
                 _thirdPartyBll.SetThirdPartyTimerByReference(TpId, type, time.endUnix, gameType, siteId.ToString());
         }
 
-        return quick ? GetQuickSec() : runTime;
+        return quick ? runTime / 2 : runTime;
     }
 
     #region Private
@@ -113,66 +110,6 @@ public class WagerIMBLL
         }
     }
 
-    private const int DelaySec = 8;
-    private async Task<bool> IMSoltGetWagersHandlerAsync(GetBetListByTimeParam param)
-    {
-        var workerName = param.ProductWallet + "_GetWagers";
-        var tpCurrencyList = _commonService.GetTpCurrencyList(TpId)
-            .Select(x => x.TpCurrencyId)
-            .Distinct();
-        
-        foreach (var tpCurrency in tpCurrencyList)
-        {
-            param.Currency = tpCurrency;
-
-            var page = 1;
-            var totalPage = 1;
-            while (page <= totalPage)
-            {
-                param.Page = page;
-                var resp = await _apiIMBll.GetBetListByTime<IMSlotModel>(param);
-                
-                if (resp.Code == IMErrorCode.NoData)
-                {
-                    _logger.LogInformation($"{workerName} {tpCurrency} NO_DATA");
-                    await Task.Delay(DelaySec * 1000); // 1分鐘內發送多筆會被收到併發錯誤，稍停
-                    page++;
-                    continue;
-                }
-
-                if (resp.Code != IMErrorCode.Success)
-                {
-                    _logger.LogError($"{workerName} THIRD_PARTY_ERROR: Code={resp.Code}, Message={resp.Message}");
-                    return false;
-                }
-
-                totalPage = resp.Pagination.TotalPage;
-
-                try
-                {
-                    var wagers = resp.Result.Select(x => new IMSlotWager(x));
-                    var result = _wagerIMService.InsertSlotWager(wagers);
-                    var count = resp.Result.Count();
-                    if (result != count)
-                    {
-                        _logger.LogInformation(
-                            $"{workerName} INSERT_WAGER COUNT_NOT_MATCH: affected={result}, data count={count}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, $"{workerName} INSERT_WAGER FAILED: {ex.Message}");
-                    return false;
-                }
-
-                page++;
-            }
-
-        }
-
-        return true;
-    }
-    
     private async Task<bool> IMSportsGetWagersHandlerAsync(GetBetListByTimeParam param)
     {
         var workerName = param.ProductWallet + "_GetWagers";
@@ -184,7 +121,7 @@ public class WagerIMBLL
             param.DateFilterType = 4; // IM Sportsbook 最後更新時間
             param.Product = null;
             
-            var resp = await _apiIMBll.GetSportsBetListByTime<IMSportsbookModel>(param);
+            var resp = await _apiIMBll.GetSportsBetListByTime<IMSportsbookModel>(param, _tp);
 
             
             if (resp.Code == IMErrorCode.NoData)
@@ -236,7 +173,7 @@ public class WagerIMBLL
             param.DateFilterType = 3; // IM ESports 最後更新時間
             param.Product = 1; // 1: 電競 eSportsBulls, 2: ESports Virtual, 3: PK10，目前只接eSportsBulls
             
-            var resp = await _apiIMBll.GetSportsBetListByTime<IMESportsModel>(param);
+            var resp = await _apiIMBll.GetSportsBetListByTime<IMESportsModel>(param, _tp);
 
             if (resp.Code == IMErrorCode.NoData)
             {
@@ -292,27 +229,6 @@ public class WagerIMBLL
         
         return now > workTime && diff.TotalMinutes > excess;
     }
-    
-    private static int GetTimeRange(IMProductWalletEnum pw)
-        => pw switch
-        {
-            IMProductWalletEnum.IMSportsbook => 30,
-            IMProductWalletEnum.IMESports => 30,
-            _ => 10 // (IM GetBetLog 體育以外的時間區間最大只能拉10分鐘)
-        };
-    private static int GetDelayTime(IMProductWalletEnum pw)
-        => pw switch
-        {
-            IMProductWalletEnum.IMSportsbook => 5,
-            IMProductWalletEnum.IMESports => 5,
-            _ => 15
-        };
 
-    private int GetQuickSec()
-    {
-        var tpCurrencyList = _commonService.GetTpCurrencyList(TpId);
-        return DelaySec * (tpCurrencyList.Count() + 1);
-    }
-    
     #endregion
 }

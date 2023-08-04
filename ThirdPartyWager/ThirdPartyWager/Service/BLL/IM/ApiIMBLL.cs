@@ -12,7 +12,6 @@ public class ApiIMBLL
     private readonly HttpHelper _httpHelper;
     private readonly ILogger<ApiIMBLL> _logger;
     private readonly Log2File _log2File;
-    private readonly string _tpName = Tp.IM.ToString();
     private readonly IWebHostEnvironment _env;
     private readonly IConfiguration _configuration;
     public ApiIMBLL(IServiceProvider provider)
@@ -24,7 +23,7 @@ public class ApiIMBLL
         _configuration = provider.GetRequiredService<IConfiguration>();
     }
     
-    public async Task<IMWagerModel<T>> GetBetListByTime<T>(GetBetListByTimeParam param)
+    public async Task<IMWagerModel<T>> GetBetListByTime<T>(GetBetListByTimeParam param, Tp tp)
     {
         var wagerUrl = param.Setting["WagerUrl"];
         var merchantCode = param.Setting["Key"];
@@ -42,7 +41,7 @@ public class ApiIMBLL
             ProductWallet = (int)param.ProductWallet
         };
        
-        var resp = await DoHttpClientAsync($"{wagerUrl}{uri}", req);
+        var resp = await DoHttpClientAsync($"{wagerUrl}{uri}", req, tp);
         var result = JsonConvert.DeserializeObject<IMWagerModel<T>>(resp);
         
         return result;
@@ -51,7 +50,7 @@ public class ApiIMBLL
     /// <summary>
     /// For Sportsbook & ESports
     /// </summary>
-    public async Task<IMWagerModel<T>> GetSportsBetListByTime<T>(GetBetListByTimeParam param)
+    public async Task<IMWagerModel<T>> GetSportsBetListByTime<T>(GetBetListByTimeParam param, Tp tp)
     {
         var wagerUrl = param.Setting["WagerUrl"];
         var merchantCode = param.Setting["Key"];
@@ -69,7 +68,7 @@ public class ApiIMBLL
             Product = param.Product
         };
        
-        var resp = await DoHttpClientAsync($"{wagerUrl}{uri}", req);
+        var resp = await DoHttpClientAsync($"{wagerUrl}{uri}", req, tp);
         var result = JsonConvert.DeserializeObject<IMWagerModel<T>>(resp);
         
         return result;
@@ -77,8 +76,9 @@ public class ApiIMBLL
 
     #region Private
 
-    private async Task<string> DoHttpClientAsync(string url, object param)
+    private async Task<string> DoHttpClientAsync(string url, object param, Tp tp)
     {
+        var tpName = tp.ToString();
         var result = "-";
         try
         {
@@ -90,7 +90,7 @@ public class ApiIMBLL
 
             if (!response.IsSuccessStatusCode)
             {
-                _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
+                _log2File.InsertHttpErrorLog(tpName, response.StatusCode, response.ReasonPhrase);
             }
 
             return result;
@@ -103,7 +103,7 @@ public class ApiIMBLL
         }
         finally
         {
-            _log2File.InsertRequestLog(_tpName, url, JsonConvert.SerializeObject(param), result);
+            _log2File.InsertRequestLog(tpName, url, JsonConvert.SerializeObject(param), result);
         }
     }
     
