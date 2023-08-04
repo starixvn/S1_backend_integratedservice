@@ -99,8 +99,7 @@ namespace ThirdPartySettleWorker.Workers
                         }
                         
                         var tpWagerData = _tpUnSettledBLL.GetTpUnsettleData<WagerDataIM>("Service_TpWagerRng_SPRIBE_Unsettle_Get", new { RoundId = transId }, DataBase.Wager).FirstOrDefault();
-
-
+                        
                         var settleAmountDataIm = new SettleAmountDataIM
                         {
                             Stake = betTransData.Stake,
@@ -136,7 +135,7 @@ namespace ThirdPartySettleWorker.Workers
                             {
                                 _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, transId, isSuccess: true);
                                 _ = _imBll.SetSettleFlag_BettransRng_IM(bettransSet, transId , betTrans.Last().TimeStamp);
-                                _ = _imBll.SetSettleFlag_TpWagerRng_IM(tpWagerRngSet, transId);
+                                _ = _imBll.SetSettleFlag_TpWager_IM(tpWagerRngSet, transId);
                             });
                         }
                     }

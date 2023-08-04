@@ -167,7 +167,7 @@
     
     #endregion
 
-    #region MyRegion
+    #region Refund
 
     public class RefundRequest_Spribe
     {
@@ -186,13 +186,15 @@
     }
     
     #endregion
+    
     #region SettleWorker
 
     public class SettleAmountDataIM
     {
         public decimal Stake { get; set; }
-        public decimal ValidBet { get; set; }
+        public decimal? ValidBet { get; set; }
         public decimal WinLostAmount { get; set; }
+        public decimal PayoutAmount { get; set; }
     }
     
     public class WagerDataIM
@@ -203,8 +205,12 @@
         public decimal StakeAmount { get; set; }
         public decimal WinLoss { get; set; }
         public string Status { get; set; }
+        public int IsSettled { get; set; }
+        public int IsCancelled { get; set; }
+        public string BetTradeStatus { get; set; }
+        public decimal BetTradeBuybackAmount { get; set; }
     }
-
+    
     #endregion
 }
 
