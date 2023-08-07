@@ -301,17 +301,25 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         ReSettle = 4
     }
 
-    public enum SeamlessBonusType
-    {
-        TpCategory,
-        TpId,
-        ALL,
-    }
-
     public enum WalletType
     {
         TransferWallet = 0,
         SeamlessWallet = 1
+    }
+
+    /// <summary>
+    /// 指定查詢TpSeamlessBonus的方式
+    /// </summary>
+    public enum GetTpSeamlessBonusType
+    {
+        /// <summary>
+        /// 使用TpId, GameType, TransId 進行查詢
+        /// </summary>
+        ByGameTypeAndTransId,
+        /// <summary>
+        /// 僅使用TpId, TransId 進行查詢
+        /// </summary>
+        ByTransId,
     }
 
 }
