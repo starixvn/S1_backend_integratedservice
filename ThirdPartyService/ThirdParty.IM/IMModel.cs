@@ -43,4 +43,73 @@ public partial class TpHelper
         IMSB = 301,
         ESportsbull = 401
     }
+
+    public class WagerDetailSport
+    {
+        public string Market { get; set; }
+        public string EventName { get; set; }
+        public string EventDateTime { get; set; }
+        public int CompetitionId { get; set; }
+        public string CompetitionName { get; set; }
+        public int HomeTeamId { get; set; }
+        public string HomeTeamName { get; set; }
+        public int AwayTeamId { get; set; }
+        public string AwayTeamName { get; set; }
+        public string FavTeam { get; set; }
+        public string BetType { get; set; }
+        public string BetTypeDesc { get; set; }
+        public string Period { get; set; }
+        public string Selection { get; set; }
+        public decimal Odds { get; set; }
+        public string HomeTeamHTScore { get; set; }
+        public string AwayTeamHTScore { get; set; }
+        public string HomeTeamFTScore { get; set; }
+        public string AwayTeamFTScore { get; set; }
+        public string WagerHomeTeamScore { get; set; }
+        public string WagerAwayTeamScore { get; set; }
+        public string OverallScore { get; set; }
+        public string Handicap { get; set; }
+        public string IsWagerItemCancelled { get; set; }
+        public string wagerItemCancelType { get; set; }
+        public string wagerItemCancelReason { get; set; }
+        public string SportsName { get; set; }
+        public string EventId { get; set; }
+        public string Specifier { get; set; }
+    }
+    
+    public class WagerDetailESport
+    {
+        public string Odds { get; set; }
+        public string Period { get; set; }
+        public string BetType { get; set; }
+        public string EventId { get; set; }
+        public string FavTeam { get; set; }
+        public string Handicap { get; set; }
+        public int SportsID { get; set; }
+        public string EventName { get; set; }
+        public string EventType { get; set; }
+        public string GameOrder { get; set; }
+        public string IsSettled { get; set; }
+        public string Selection { get; set; }
+        public string BaseTierID { get; set; }
+        public string MarketType { get; set; }
+        public string SportsName { get; set; }
+        public string IsResettled { get; set; }
+        public string AwayTeamName { get; set; }
+        public string BaseTierCode { get; set; }
+        public string BaseTierName { get; set; }
+        public string CancelReason { get; set; }
+        public string HomeTeamName { get; set; }
+        public string ResultStatus { get; set; }
+        public string EventDateTime { get; set; }
+        public string AwayTeamFTScore { get; set; }
+        public string AwayTeamHTScore { get; set; }
+        public string CompetitionName { get; set; }
+        public string HomeTeamFTScore { get; set; }
+        public string HomeTeamHTScore { get; set; }
+        public string WagerAwayTeamScore { get; set; }
+        public string WagerHomeTeamScore { get; set; }
+        public string WagerItemCancelType { get; set; }
+        public string IsWagerItemCancelled { get; set; }
+    }
 }
