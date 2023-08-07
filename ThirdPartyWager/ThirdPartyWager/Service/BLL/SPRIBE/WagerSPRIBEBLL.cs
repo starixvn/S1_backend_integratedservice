@@ -42,10 +42,9 @@ public class WagerSPRIBEBLL
         const int runTime = 120; // sec
         const int excess = 120; // min
         const int timeRange = 10; //SPRIBE GetBetLog 的時間區間最大10分鐘
-        const int dataDelayTime = 15; // log更新延遲 15 min
         const int gameType = 2;
         
-        var workerTime = GetWorkerTime(type, dataDelayTime * -1, siteId, gameType);
+        var workerTime = GetWorkerTime(type, 1, siteId, gameType);
         
         quick = CheckQuick(workerTime, excess);
         
