@@ -221,7 +221,7 @@ public class IMESportsWager
             : DateTimeOffset.Parse(m.SettlementDateTime).UtcDateTime;
         Tolerance = m.Tolerance;
         FlagCategory = m.FlagCategory;
-        DetailItems = JsonConvert.SerializeObject(m.DetailItems);
+        DetailItems = m.DetailItems;
     }
     
     public string Provider { get; set; }
@@ -246,7 +246,7 @@ public class IMESportsWager
     public DateTime? SettlementDateTime { get; set; }
     public string Tolerance { get; set; }
     public string FlagCategory { get; set; }
-    public string DetailItems { get; set; }
+    public IEnumerable<object> DetailItems { get; set; }
 }
 
 
@@ -285,7 +285,7 @@ public class IMSportsWager
         SettlementDate = string.IsNullOrEmpty(m.SettlementDate) ? null
             : DateTimeOffset.Parse(m.SettlementDate).UtcDateTime;
         betTradeSuccessDateTime = DateTimeOffset.Parse(m.betTradeSuccessDateTime).UtcDateTime;
-        DetailItems = JsonConvert.SerializeObject(m.DetailItems);
+        DetailItems = m.DetailItems;
     }
     
     public string Provider { get; set; }
@@ -316,5 +316,5 @@ public class IMSportsWager
     public DateTime LastUpdatedDate { get; set; }
     public DateTime? SettlementDate { get; set; }
     public DateTime betTradeSuccessDateTime { get; set; }
-    public string DetailItems { get; set; }
+    public IEnumerable<object> DetailItems { get; set; }
 }
