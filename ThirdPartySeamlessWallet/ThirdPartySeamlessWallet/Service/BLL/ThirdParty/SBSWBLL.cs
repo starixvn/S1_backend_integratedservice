@@ -246,8 +246,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     out var afterAmount,
                     ref bonusId,
                     conn,
-                    trans,
-                    SeamlessBonusType.TpId);
+                    trans);
 
                 if (result.SetBalanceResult < 1 || afterAmount < 0)
                 {
@@ -348,8 +347,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                                 out int bonusId,
                                 conn,
                                 trans,
-                                AllowNegative.NotAllow,
-                                SeamlessBonusType.TpId);
+                                AllowNegative.NotAllow);
 
                     if (result.SetBalanceResult < 1)
                     {
@@ -483,8 +481,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             out int bonusId,
                             conn,
                             trans,
-                            AllowNegative.NotAllow,
-                            SeamlessBonusType.TpId);
+                            AllowNegative.NotAllow);
 
                 if (result.SetBalanceResult < 1)
                 {
@@ -610,8 +607,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                                 out int bonusId,
                                 conn,
                                 trans,
-                                AllowNegative.Allow,
-                                SeamlessBonusType.TpId);
+                                AllowNegative.Allow);
 
                     if (result.SetBalanceResult < 1)
                     {
@@ -736,8 +732,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             out int bonusId,
                             conn,
                             trans,
-                            AllowNegative.Allow,
-                            SeamlessBonusType.TpId);
+                            AllowNegative.Allow);
 
                 if (result.SetBalanceResult < 1)
                 {
