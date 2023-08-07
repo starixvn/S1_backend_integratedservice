@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.SPRIBE
@@ -20,7 +21,7 @@ namespace ThirdParty.SPRIBE
             SPRIBE = 101,
         }
 
-        Dictionary<TpGameType, int> _productWallet = new Dictionary<TpGameType, int>()
+        Dictionary<TpGameType, int> _productWallet = new()
         {
             {TpGameType.SPRIBE_RNG, (int)ProductWallet.SPRIBE},
         };
@@ -158,7 +159,36 @@ namespace ThirdParty.SPRIBE
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var tpCurrency = new TpCurrency()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerRng_SPRIBE_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
+            var detail = ToJson(wagerDetail);
+            return getBetDetail.TpGameTypeOption.CategoryId switch
+            {
+                TpCategory.LiveCasino => new LiveCasinoDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                    RefTransId = "",
+                    TpUserName = wagerDetail.GetValueOrDefault("PlayerId")?.ToString(),
+                    UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("BetDate", DateTime.MinValue),
+                    UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("SettlementDate", DateTime.MinValue),
+                    Stake = (decimal)wagerDetail.GetValueOrDefault("BetAmount") * tpCurrency.ExchangeRate,
+                    WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("WinLoss") * tpCurrency.ExchangeRate,
+                    GameCode = wagerDetail.GetValueOrDefault("GameId")?.ToString(),
+                    GameName = wagerDetail.GetValueOrDefault("GameName")?.ToString(),
+                },
+                _ => new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                }
+            };  
         }
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)

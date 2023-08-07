@@ -1,10 +1,14 @@
 ﻿using System.Net;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.IM
@@ -13,7 +17,7 @@ namespace ThirdParty.IM
     {
         #region IM Configs Setting
 
-        Dictionary<TpGameType, int> _productWallet = new Dictionary<TpGameType, int>()
+        Dictionary<TpGameType, int> _productWallet = new()
         {
             {TpGameType.IM_Sports, (int)ProductWallet.IMSB},
             {TpGameType.IM_ESports, (int)ProductWallet.ESportsbull},
@@ -135,94 +139,125 @@ namespace ThirdParty.IM
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            // var tpCurrency = new TpCurrency()
-            // {
-            //     ExchangeRate = tpCustInfo.ExchangeRate,
-            //     TpCurrencyId = tpCustInfo.TpCurrencyId,
-            // };
-            // var sportsDetail = TpBetRecordProvider.DbQueryFirst("Service_BettransSports_BTI_Detail_Get", new { getBetDetail.TransId }, DataBase.Report);
-            // if (sportsDetail == null)
-            // {
-            //     return new BaseDetail(getBetDetail.TpGameTypeOption)
-            //     {
-            //         TransId = getBetDetail.TransId,
-            //         TpCurrency = tpCurrency,
-            //     };
-            // }
-            //
-            // var xd = XDocument.Parse(sportsDetail.GetValueOrDefault("BodyData")?.ToString());
-            // var selection = xd.Descendants("Selection").FirstOrDefault();
-            // var detail = ToJson(sportsDetail);
-            // var (homeyScore, awayScore) = FindScore(selection);
-            // var (homeyHandicap, awayHandicap, handicap) = FindHandicap(selection);
-            // return getBetDetail.TpGameTypeOption.CategoryId switch
-            // {
-            //     TpCategory.Sports => new SportsDetail(getBetDetail.TpGameTypeOption)
-            //     {
-            //         TransId = getBetDetail.TransId,
-            //         Detail = detail,
-            //         TpCurrency = tpCurrency,
-            //         TpUserName = sportsDetail.GetValueOrDefault("cust_id")?.ToString(),
-            //         UTCBetTime = DateTime.Parse(sportsDetail.GetValueOrDefault("TransTime").ToString()),
-            //         UTCSettledTime = DateTime.Parse(sportsDetail.GetValueOrDefault("SettleTime").ToString()),
-            //         Stake = (decimal)sportsDetail.GetValueOrDefault("Stake"),
-            //         WinlostAmount = (decimal)sportsDetail.GetValueOrDefault("WinLostAmount"),
-            //         RefTransId = sportsDetail.GetValueOrDefault("reserve_id")?.ToString(),
-            //
-            //         Odds = selection.Attribute("OddsInUserStyle").Value,
-            //         LeagueName = selection.Attribute("LeagueName").Value,
-            //         SelectionName = selection.Attribute("YourBet").Value,
-            //         HomeTeamName = selection.Attribute("HomeTeam").Value,
-            //         AwayTeamName = selection.Attribute("AwayTeam").Value,
-            //         EventName = selection.Attribute("EventTypeName").Value,
-            //         TicketStatus = FindTicketStatus(xd),
-            //         HomeyScore = homeyScore,
-            //         AwayScore = awayScore,
-            //         AwayHandicap = awayHandicap,
-            //         HomeHandicap = homeyHandicap,
-            //         Handicap = handicap,
-            //     },
-            //     _ => new BaseDetail(getBetDetail.TpGameTypeOption)
-            //     {
-            //         TransId = getBetDetail.TransId,
-            //         Detail = detail,
-            //         TpCurrency = tpCurrency,
-            //     }
-            // };
-            return null;
+            var tpCurrency = new TpCurrency()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+
+            IReadOnlyDictionary<string, object>? wagerDetail = null;
+            var detailSportModel = new WagerDetailSport();
+            var detailESportModel = new WagerDetailESport();
+            
+            switch (getBetDetail.TpGameTypeOption.CategoryId)
+            {
+                case TpCategory.Sports:
+                    wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerSport_IM_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
+                    if (wagerDetail == null)
+                    {
+                        throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found.");
+                    }
+                    
+                    var wagerSportDetailsArray = JsonConvert.DeserializeObject<IEnumerable<WagerDetailSport>>(wagerDetail.GetValueOrDefault("DetailItems") as string);
+                    if (wagerSportDetailsArray.Any())
+                    {
+                        detailSportModel = wagerSportDetailsArray.FirstOrDefault();
+                    }
+                    break;
+                
+                case TpCategory.Esports:
+                    wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerESport_IM_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
+                    if (wagerDetail == null)
+                    {
+                        throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found.");
+                    }
+                    
+                    var wagerESportDetailsArray = JsonConvert.DeserializeObject<IEnumerable<WagerDetailESport>>(wagerDetail.GetValueOrDefault("DetailItems") as string);
+                    if (wagerESportDetailsArray.Any())
+                    {
+                        detailESportModel = wagerESportDetailsArray.FirstOrDefault();
+                    }
+                    break;
+            }
+            
+            var detail = ToJson(wagerDetail);
+            
+            return getBetDetail.TpGameTypeOption.CategoryId switch
+            {
+                TpCategory.Sports => new SportsDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                    TpUserName = wagerDetail.GetValueOrDefault("PlayerId")?.ToString(),
+                    UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("WagerCreationDateTime", DateTime.MinValue),
+                    UTCSettledTime = (wagerDetail.GetValueOrDefault("SettlementDate") as DateTime?) ?? DateTime.MinValue,
+                    Odds = detailSportModel?.Odds.ToString(),
+                    Stake = (decimal)wagerDetail.GetValueOrDefault("StakeAmount") * tpCurrency.ExchangeRate,
+                    WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("WinLoss") * tpCurrency.ExchangeRate,
+                    LeagueName = detailSportModel?.EventName,
+                    HomeTeamName = detailSportModel?.HomeTeamName,
+                    AwayTeamName = detailSportModel?.AwayTeamName,
+                    Handicap = detailSportModel?.Handicap,
+                    TicketStatus = GetTicketStatus(wagerDetail.GetValueOrDefault("ResultStatus")?.ToString()),
+                    AwayScore = detailSportModel?.WagerAwayTeamScore,
+                    HomeyScore = detailSportModel?.WagerHomeTeamScore,
+                    SelectionName = detailSportModel?.Selection
+                },
+                TpCategory.Esports => new SportsDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                    TpUserName = wagerDetail.GetValueOrDefault("PlayerId")?.ToString(),
+                    UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("WagerCreationDateTime", DateTime.MinValue),
+                    UTCSettledTime = (wagerDetail.GetValueOrDefault("SettlementDate") as DateTime?) ?? DateTime.MinValue,
+                    Odds = detailESportModel?.Odds,
+                    Stake = (decimal)wagerDetail.GetValueOrDefault("StakeAmount") * tpCurrency.ExchangeRate,
+                    WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("WinLoss") * tpCurrency.ExchangeRate,
+                    LeagueName = detailESportModel?.SportsName,
+                    HomeTeamName = detailESportModel?.HomeTeamName,
+                    AwayTeamName = detailESportModel?.AwayTeamName,
+                    Handicap = detailESportModel?.Handicap,
+                    TicketStatus = GetTicketStatus(wagerDetail.GetValueOrDefault("ResultStatus")?.ToString()),
+                    AwayScore = detailESportModel?.WagerAwayTeamScore,
+                    HomeyScore = detailESportModel?.WagerHomeTeamScore,
+                    SelectionName = detailESportModel?.Selection,
+                    EventName = detailESportModel?.EventName,
+                },
+                _ => new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                }
+            };
         }
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            //     var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransSports_BTI_Detail_Get", new { betRecordInfo.TransId }, DataBase.Main);
-            //     if (detail == null)
-            //     {
-            //         return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
-            //     }
-            //
-            //     var xd = XDocument.Parse(detail.GetValueOrDefault("BodyData")?.ToString());
-            //     var selection = xd.Descendants("Selection").FirstOrDefault();
-            //     var bet = xd.Descendants("Bet").FirstOrDefault();
-            //     return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
-            //     {
-            //         GameID = selection.Attribute("BranchID").Value,
-            //         Game = selection.Attribute("BranchName").Value,
-            //         RefNo = detail.GetStringValue("reserve_id"),
-            //         Title = selection.Attribute("EventName").Value,
-            //         MatchID = selection.Attribute("EventID").Value,
-            //         BetType = bet.Attribute("BetType").Value,
-            //         BetChoice = selection.Attribute("YourBet").Value,
-            //         Result = FindTicketStatus(xd),
-            //         DeviceType = DeviceType.None,
-            //         IP = string.Empty,
-            //         Odds = decimal.TryParse(selection.Attribute("OddsInUserStyle").Value, out var odds) ? odds : 0,
-            //         OddsTypeEnum = GetOddsType(selection.Attribute("UserOddStyle").Value),  
-            //         Live = selection.Attribute("IsLive").Value,
-            //     };
-
-            return null;
+            throw new NotImplementedException();
         }
 
-
+        private string GetTicketStatus(string resultStatus)
+        {
+            return resultStatus switch
+            {
+                "1" => "win",
+                "2" => "loss",
+                "3" => "draw",
+                "4" => "win half",
+                "5" => "loss half",
+                _ => ""
+            };
+        }
+        
+        static string RemoveBackslashes(string input)
+        {
+            // 使用正则表达式替换掉所有的反斜杠
+            string pattern = @"\\";
+            string replacement = "";
+            return Regex.Replace(input, pattern, replacement);
+        }
     }
 }
