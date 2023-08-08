@@ -218,7 +218,7 @@ namespace ThirdPartySettleWorker.Workers
 
                         _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nbetRecordInfo=\r\n{JsonConvert.SerializeObject(betRecordInfo)}");
 
-                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, (TpCategory)tpCategoryId);
+                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, (TpCategory)tpCategoryId, GetTpSeamlessBonusType.ByTransId);
                         if (result == 1)
                         {
                             Task.Run(() =>
