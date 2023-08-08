@@ -51,7 +51,7 @@ public class WagerIMBLL
         var quick = false;
         const int runTime = 120; // sec
         const int excess = 120; // min
-        const int timeRange = 10; // min
+        const int timeRange = 10; // min，最大可拉24HR，體育類更新延遲5分
         
         foreach (var (gameType, productWallet) in _gameTypeMapper)
         {

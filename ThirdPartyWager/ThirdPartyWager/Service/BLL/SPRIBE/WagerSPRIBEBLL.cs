@@ -38,15 +38,13 @@ public class WagerSPRIBEBLL
     public async Task<int> ExecWagerWorker(TpListModel siteData, int type)
     {
         var siteId = siteData.SiteId;
-        var quick = false;
         const int runTime = 120; // sec
         const int excess = 120; // min
-        const int timeRange = 10; //SPRIBE GetBetLog 的時間區間最大10分鐘
+        const int timeRange = 5; //SPRIBE GetBetLog 的時間區間最大10分鐘，更新延遲15分
         const int gameType = 2;
         
         var workerTime = GetWorkerTime(type, 1, siteId, gameType);
-        
-        quick = CheckQuick(workerTime, excess);
+        var quick = CheckQuick(workerTime, excess);
         
         var time = _dateTimeHelper.GetTimeByMinute(timeRange - 1, TimeZone, TimeFormat, workerTime);
         var cvTime = DateTimeOffset.Now
