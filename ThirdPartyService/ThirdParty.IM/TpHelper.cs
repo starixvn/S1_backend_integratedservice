@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -236,7 +235,77 @@ namespace ThirdParty.IM
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            IReadOnlyDictionary<string, object>? wagerDetail = null;
+            var detailSportModel = new WagerDetailSport();
+            var detailESportModel = new WagerDetailESport();
+            
+            switch (tpGameType.CategoryId)
+            {
+                case TpCategory.Sports:
+                    wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerSport_IM_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
+                    if (wagerDetail == null)
+                    {
+                        throw new BetDetailNotFoundException($"{betRecordInfo.TransId} bet detail not found.");
+                    }
+                    
+                    var wagerSportDetailsArray = JsonConvert.DeserializeObject<IEnumerable<WagerDetailSport>>(wagerDetail.GetValueOrDefault("DetailItems") as string);
+                    if (wagerSportDetailsArray.Any())
+                    {
+                        detailSportModel = wagerSportDetailsArray.FirstOrDefault();
+                    }
+                    break;
+                
+                case TpCategory.Esports:
+                    wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerESport_IM_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
+                    if (wagerDetail == null)
+                    {
+                        throw new BetDetailNotFoundException($"{betRecordInfo.TransId} bet detail not found.");
+                    }
+                    
+                    var wagerESportDetailsArray = JsonConvert.DeserializeObject<IEnumerable<WagerDetailESport>>(wagerDetail.GetValueOrDefault("DetailItems") as string);
+                    if (wagerESportDetailsArray.Any())
+                    {
+                        detailESportModel = wagerESportDetailsArray.FirstOrDefault();
+                    }
+                    break;
+            }
+            
+            return tpGameType.CategoryId switch
+            {
+                TpCategory.Sports => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = wagerDetail.GetValueOrDefault("GameID")?.ToString(),
+                    Game = detailSportModel?.SportsName,
+                    RefNo = wagerDetail.GetValueOrDefault("BetId")?.ToString(),
+                    Title = detailSportModel?.EventName,
+                    MatchID = detailSportModel?.EventId,
+                    BetType = detailSportModel?.BetType,
+                    BetChoice = detailSportModel?.Selection,
+                    Result = GetTicketStatus(wagerDetail.GetValueOrDefault("ResultStatus")?.ToString()),
+                    DeviceType = GetDeviceType(wagerDetail.GetValueOrDefault("Platform")?.ToString()),
+                    IP = string.Empty,
+                    Odds = detailSportModel?.Odds ?? 0,
+                    OddsTypeEnum = GetOddsType(wagerDetail.GetValueOrDefault("OddsType")?.ToString()),
+                    Live = detailSportModel?.Market,
+                },
+                TpCategory.Esports => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = wagerDetail.GetValueOrDefault("GameID")?.ToString(),
+                    Game = detailESportModel?.SportsName,
+                    RefNo = wagerDetail.GetValueOrDefault("BetId")?.ToString(),
+                    Title = detailESportModel?.EventName,
+                    MatchID = detailESportModel?.EventId,
+                    BetType = detailESportModel?.BetType,
+                    BetChoice = detailESportModel?.Selection,
+                    Result = GetTicketStatus(wagerDetail.GetValueOrDefault("ResultStatus")?.ToString()),
+                    DeviceType = GetDeviceType(wagerDetail.GetValueOrDefault("Platform")?.ToString()),
+                    IP = string.Empty,
+                    Odds = decimal.TryParse(detailESportModel?.Odds, out var odds) ? odds : 0,
+                    OddsTypeEnum = GetOddsType(wagerDetail.GetValueOrDefault("OddsType")?.ToString()),
+                    Live = detailESportModel?.MarketType,
+                }
+            };
+        
         }
 
         private string GetTicketStatus(string resultStatus)
@@ -252,12 +321,27 @@ namespace ThirdParty.IM
             };
         }
         
-        static string RemoveBackslashes(string input)
+        private DeviceType GetDeviceType(string device)
         {
-            // 使用正则表达式替换掉所有的反斜杠
-            string pattern = @"\\";
-            string replacement = "";
-            return Regex.Replace(input, pattern, replacement);
+            return device switch
+            {
+                "Desktop" => DeviceType.Desktop,
+                "Mobile" => DeviceType.Mobile,
+                _ => DeviceType.None,
+            };
         }
+        
+        private OddsTypeEnum GetOddsType(string oddsType)
+        {
+            return oddsType switch
+            {
+                "HK" => OddsTypeEnum.HongKongOdds,
+                "EURO" => OddsTypeEnum.DecimalOdds,
+                "MALAY" => OddsTypeEnum.MalayOdds,
+                "INDO" => OddsTypeEnum.IndoOdds,
+                _ => OddsTypeEnum.None,
+            };
+        }
+        
     }
 }

@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -193,18 +192,31 @@ namespace ThirdParty.SPRIBE
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerRng_SPRIBE_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
+            
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {             
+                GameID = wagerDetail.GetValueOrDefault("GameId")?.ToString(),              
+                Game = wagerDetail.GetValueOrDefault("GameName")?.ToString(),
+                RefNo = wagerDetail.GetValueOrDefault("RoundId")?.ToString(),
+                Title = tpGameType.TypeName,
+                MatchID = wagerDetail.GetValueOrDefault("ExternalRoundId")?.ToString(),
+                BetType = string.Empty,
+                BetChoice = string.Empty,
+                Result = wagerDetail.GetValueOrDefault("Status")?.ToString(),
+                DeviceType = GetDeviceType(wagerDetail.GetValueOrDefault("Platform")?.ToString()),
+                IP = string.Empty,
+            };
         }
-
-        private string GetGameName(string gameCode)
+        
+        private DeviceType GetDeviceType(string device)
         {
-            if (!_gameNameList.TryGetValue(gameCode, out var name))
+            return device switch
             {
-                return string.Empty;
-            }
-            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
-            return dic.TryGetValue("en", out var result) ? result : string.Empty;
+                "Desktop" => DeviceType.Desktop,
+                "Mobile" => DeviceType.Mobile,
+                _ => DeviceType.None,
+            };
         }
-
     }
 }
