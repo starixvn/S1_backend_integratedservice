@@ -139,7 +139,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         tpCustInfo: tpCustInfo,
                         amount: Math.Abs(bet.Amount) * -1,
                         tpId: (int)tpId,
-                        tpTransId: bet.TransactionId,
+                        tpTransId: gameType == GameType.SPRIBE_RNG ? bet.RoundId : bet.BetId ,
                         gameType: (int)gameType,
                         refId: bet.TransactionId,
                         betData: null,
