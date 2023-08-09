@@ -62,7 +62,7 @@ namespace ThirdPartyWager
             //services.AddSingleton<WagerCFService>();
             services.AddSingleton<WagerSGService>();
             services.AddSingleton<WagerWMService>();
-            services.AddSingleton<WagerKiss918Service>();
+            //services.AddSingleton<WagerKiss918Service>();
             services.AddSingleton<WagerOne789Service>();
             //services.AddSingleton<WagerMegaService>();
             //services.AddSingleton<WagerIconicService>();
@@ -141,8 +141,8 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerRedoWMBLL>();
             services.AddSingleton<FinanceWMBLL>();
             // Kiss918
-            services.AddSingleton<WagerKiss918BLL>();
-            services.AddSingleton<ApiKiss918BLL>();
+            //services.AddSingleton<WagerKiss918BLL>();
+            //services.AddSingleton<ApiKiss918BLL>();
             // One789
             services.AddSingleton<WagerOne789BLL>();
             services.AddSingleton<ApiOne789BLL>();
@@ -322,8 +322,6 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceRedTiger>();
             services.AddHostedService<FinanceSexy>();
             services.AddHostedService<FinanceCQ9>();
-            services.AddHostedService<WagerKiss918>();
-            services.AddHostedService<WagerRedoKiss918>();
             services.AddHostedService<WagerSkywind>();
             services.AddHostedService<WagerUnsettleCheckSkywind>();
             services.AddHostedService<WagerGPI>();
@@ -353,6 +351,8 @@ namespace ThirdPartyWager
             //services.AddHostedService<WagerRedoPT>();
             //services.AddHostedService<FinancePT>();
             //services.AddHostedService<WagerReSettlePT>();
+            //services.AddHostedService<WagerKiss918>();
+            //services.AddHostedService<WagerRedoKiss918>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
