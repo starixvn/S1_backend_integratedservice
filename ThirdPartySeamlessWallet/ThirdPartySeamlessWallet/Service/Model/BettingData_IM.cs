@@ -209,6 +209,10 @@
         public int IsCancelled { get; set; }
         public string BetTradeStatus { get; set; }
         public decimal BetTradeBuybackAmount { get; set; }
+        //spribe
+        public DateTime BetDate { get; set; }
+        //Sport , E-Sport
+        public DateTime WagerCreationDateTime { get; set; }
     }
     
     #endregion
