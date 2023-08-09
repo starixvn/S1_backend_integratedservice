@@ -415,6 +415,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 #region Set WinLostAmount of Cust
                 decimal Winnings = betRecord.WinlostAmount > 0 ? betRecord.WinlostAmount : 0;
                 decimal Losses = betRecord.WinlostAmount < 0 ? betRecord.WinlostAmount : 0;
+                
                 if (RefBetRecord == null && betRecord.WinlostAmount != 0)
                 {
                     if (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win || betRecord.TicketStatus == TicketStatus.FreeBetWin)
@@ -423,12 +424,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (bonusId > 0)
                         {
-                            SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", bonusId, betRecord.TransId, conn, trans);
-
-                            if (thirdPartySetting.WalletType == (int)WalletType.TransferWallet)
-                                AutoCancelTransferBonus(bonusId, betRecord.TransId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
-                            else if (Losses != 0)
-                                AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.TransId, conn, trans);
+                            SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", bonusId, betRecord.TransId, conn, trans);                          
                         }
                     }
                 }
@@ -438,18 +434,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     decimal refLosses = RefBetRecord.WinlostAmount < 0 ? RefBetRecord.WinlostAmount : 0;
 
                     if ((RefBetRecord.TicketStatus == TicketStatus.UnSettled || RefBetRecord.TicketStatus == TicketStatus.Refund)
-                    && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win || betRecord.TicketStatus == TicketStatus.FreeBetWin))
+                        && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win || betRecord.TicketStatus == TicketStatus.FreeBetWin))
                     {
                         SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", betRecord.TransId, conn, trans);
 
                         if (bonusId > 0)
                         {
-                            SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", bonusId, betRecord.TransId, conn, trans);
-
-                            if (thirdPartySetting.WalletType == (int)WalletType.TransferWallet)
-                                AutoCancelTransferBonus(bonusId, betRecord.TransId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
-                            else if (Losses != 0)
-                                AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.TransId, conn, trans);
+                            SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings, Losses, "Settled", bonusId, betRecord.TransId, conn, trans);   
                         }
                     }
                     else if ((RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win || RefBetRecord.TicketStatus == TicketStatus.FreeBetWin)
@@ -458,7 +449,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         SetWinLostAmount(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, refWinnings * -1, refLosses * -1, "Settled To Refund", betRecord.TransId, conn, trans);
 
                         if (bonusId > 0)
+                        { 
                             SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, refWinnings * -1, refLosses * -1, "Settled To Refund", bonusId, betRecord.TransId, conn, trans);
+                        }
                     }
                     else if ((RefBetRecord.TicketStatus == TicketStatus.Lost || RefBetRecord.TicketStatus == TicketStatus.Win || RefBetRecord.TicketStatus == TicketStatus.Draw || RefBetRecord.TicketStatus == TicketStatus.FreeBetWin)
                         && (betRecord.TicketStatus == TicketStatus.Lost || betRecord.TicketStatus == TicketStatus.Win || betRecord.TicketStatus == TicketStatus.FreeBetWin))
@@ -470,25 +463,30 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             if (bonusId > 0)
                             {
                                 SetBonusWinLost(betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, Winnings - refWinnings, Losses - refLosses, "Settled", bonusId, betRecord.TransId, conn, trans);
-
-                                if (thirdPartySetting.WalletType == (int)WalletType.TransferWallet)
-                                    AutoCancelTransferBonus(bonusId, betRecord.TransId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans);
-                                else if (Losses != 0)
-                                    AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.TransId ,conn, trans);
-                            }
+                            }      
                         }
                     }
                 }
+
+                // 把AutoCancel移出來，不管注單狀態變更都會執行AutoCancel檢查
+                if (bonusId > 0)
+                {                   
+                    _ = thirdPartySetting.WalletType switch
+                    {
+                        WalletType.TransferWallet => AutoCancelTransferBonus(bonusId, betRecord.TransId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans),
+                        WalletType.SeamlessWallet => AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.TransId, conn, trans),
+                        _ => throw new NotImplementedException()
+                    };
+                }
+
                 #endregion
 
                 #region Set TurnOver of RollOver
 
-               
                 if (RefBetRecord == null)
                 {
                     if (betRecord.SettlementType == SettlementType.SettledForValid)
-                    {
-                        //SetRollOverTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, validBet, "Settled", betRecord.TransId, conn, trans);
+                    {                        
                         SetRollOverTurnOver(ref bonusId, betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, validBet, "Settled", betRecord.TransId, conn, trans);
                     }
                 }
@@ -497,23 +495,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     decimal refValidBet = RefBetRecord.ValidBet ?? RefBetRecord.Stake;
 
                     if (RefBetRecord.SettlementType != SettlementType.SettledForValid && betRecord.SettlementType == SettlementType.SettledForValid)
-                    {
-                        //SetRollOverTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, validBet, "Settled", betRecord.TransId, conn, trans);
+                    {                        
                         SetRollOverTurnOver(ref bonusId, betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, validBet, "Settled", betRecord.TransId, conn, trans);
                     }
                     else if (RefBetRecord.SettlementType == SettlementType.SettledForValid && betRecord.SettlementType == SettlementType.UnSettled)
-                    {
-                        //SetRollOverTurnOver(RefBetRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, refValidBet * -1, $"UnSettled", RefBetRecord.TransId, conn, trans);
+                    {                        
                         SetRollOverTurnOver(ref bonusId, betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, refValidBet * -1, $"UnSettled", betRecord.TransId, conn, trans);
                     }
                     else if (RefBetRecord.SettlementType == SettlementType.SettledForValid && betRecord.SettlementType != SettlementType.SettledForValid)
-                    {
-                        //SetRollOverTurnOver(RefBetRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, refValidBet * -1, $"Re-Settled", RefBetRecord.TransId, conn, trans);
+                    {                        
                         SetRollOverTurnOver(ref bonusId, betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, refValidBet * -1, "Re-Settled", RefBetRecord.TransId, conn, trans);
                     }
                     else if (RefBetRecord.SettlementType == SettlementType.SettledForValid && betRecord.SettlementType == SettlementType.SettledForValid && refValidBet != validBet)
-                    {
-                        //SetRollOverTurnOver(betRecord.TpId, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, validBet - refValidBet, "Re-Settled", betRecord.TransId, conn, trans);
+                    {                        
                         SetRollOverTurnOver(ref bonusId, betRecord.TpId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, validBet - refValidBet, "Re-Settled", betRecord.TransId, conn, trans);
                     }
                 }
