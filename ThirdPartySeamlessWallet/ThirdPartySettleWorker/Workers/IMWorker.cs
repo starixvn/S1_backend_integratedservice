@@ -116,6 +116,7 @@ namespace ThirdPartySettleWorker.Workers
                             GameType = gameType,
                             TpUserName = lastBetTransData.PlayerId,
                             SettledTime = new DateTimeOffset(lastBetTransData.TimeStamp).ToUnixTimeSeconds(),
+                            TransTime = new DateTimeOffset(tpWagerData.WagerCreationDateTime).ToUnixTimeSeconds(),
                             SettlementType = SettlementType.UnSettled,
                             TicketStatus = TicketStatus.UnSettled,
                             GameID = lastBetTransData.GameId
@@ -243,6 +244,7 @@ namespace ThirdPartySettleWorker.Workers
                             GameType = gameType,
                             TpUserName = lastBetTransData.PlayerId,
                             SettledTime = new DateTimeOffset(lastBetTransData.TimeStamp).ToUnixTimeSeconds(),
+                            TransTime = new DateTimeOffset(tpWagerData.WagerCreationDateTime).ToUnixTimeSeconds(),
                             SettlementType = SettlementType.UnSettled,
                             TicketStatus = TicketStatus.UnSettled,
                             GameID = lastBetTransData.GameId

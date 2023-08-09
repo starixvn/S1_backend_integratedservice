@@ -124,6 +124,7 @@ namespace ThirdPartySettleWorker.Workers
                             GameType = gameType,
                             TpUserName = betTransData.PlayerId,
                             SettledTime = new DateTimeOffset(betTrans.Last().TimeStamp).ToUnixTimeSeconds(),
+                            TransTime = new DateTimeOffset(tpWagerData.BetDate).ToUnixTimeSeconds(),
                             SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, gameId),
                             GameID = betTransData.GameId
                         };
