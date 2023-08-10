@@ -121,6 +121,7 @@ public class IMESportsModel
     public string LastUpdatedDate { get; set; }
     public string PlayerId { get; set; }
     public string ProviderPlayerId { get; set; }
+    public string ProviderOperatorId { get; set; }
     public string Currency { get; set; }
     public decimal StakeAmount { get; set; }
     public decimal WinLoss { get; set; }
@@ -205,6 +206,7 @@ public class IMESportsWager
         LastUpdatedDate = DateTimeOffset.Parse(m.LastUpdatedDate).UtcDateTime;
         PlayerId = m.PlayerId;
         ProviderPlayerId = m.ProviderPlayerId;
+        ProviderOperatorId = m.ProviderOperatorId;
         Currency = m.Currency;
         StakeAmount = m.StakeAmount;
         WinLoss = m.WinLoss;
@@ -231,6 +233,7 @@ public class IMESportsWager
     public DateTime LastUpdatedDate { get; set; }
     public string PlayerId { get; set; }
     public string ProviderPlayerId { get; set; }
+    public string ProviderOperatorId { get; set; }
     public string Currency { get; set; }
     public decimal StakeAmount { get; set; }
     public decimal WinLoss { get; set; }
