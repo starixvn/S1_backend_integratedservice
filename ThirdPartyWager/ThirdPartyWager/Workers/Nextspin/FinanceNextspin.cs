@@ -1,4 +1,5 @@
 ﻿using Serilog.Context;
+using System;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.Nextspin;
 using ThirdPartyWager.Service.Library;
@@ -42,6 +43,7 @@ namespace ThirdPartyWager.Workers.Nextspin
             {
                 // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(TpId, _tpType);
+                // 第一次執行,取兩天前資料
                 if (dataTpTimer == null)
                 {
                     dataTpTimer = new ThirdPartyTimerModel()
@@ -55,23 +57,26 @@ namespace ThirdPartyWager.Workers.Nextspin
                     dataTpTimer.StartTime = dataTpTimer.StartTime.AddSeconds(1);
 
                 // get time 
-                var reportTime = ReportTime.ConvertTo(_dateTimeHelper, dataTpTimer.StartTime, 0, 0);
-                // report
-                DateTime reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);
+                var reportTime = _dateTimeHelper.GetTimeByDay(1440, 0, "yyyyMMddTHHmmss", dataTpTimer.StartTime);
+                var cvTime = DateTimeOffset.Now.ToUnixTimeSeconds();
+                if (reportTime.endUnix > cvTime)
+                {
+                    reportTime = _dateTimeHelper.GetTimeByDay(1440, 0, "yyyyMMddTHHmmss", dataTpTimer.StartTime.AddDays(-1));
+                }
 
-                var result = await _financBLL.ExecReportAsync(TpId, reportTime, reportDate);
+                var result = await _financBLL.ExecReportAsync(TpId, reportTime);
                 // update timer
                 if (result > 0)
                 {
                     _thirdPartyBLL.SetThirdPartyTimer(TpId, _tpType, reportTime.endUnix);
                 }
 
-                var diffDay = (int)(DateTime.Now.Date - reportDate.Date).TotalDays;
+                var diffDay = (int)(DateTime.Now.Date - dataTpTimer.StartTime).TotalDays;
                 if (diffDay >= _beyond)
                 {
                     doQuickly = true;
                 }
-                _logger.LogInformation($"{tpName} Get {reportDate:yyyy-MM-dd} report");
+                _logger.LogInformation($"{tpName} Get {dataTpTimer.StartTime:yyyy-MM-dd} report");
             }
             catch (Exception ex)
             {

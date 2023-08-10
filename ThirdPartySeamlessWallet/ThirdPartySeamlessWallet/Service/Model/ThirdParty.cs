@@ -1,8 +1,5 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -13,7 +10,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string Setting { set; get; }
         public Dictionary<string, string> TpSetting => JsonConvert.DeserializeObject<Dictionary<string, string>>(Setting);
         public int Status { set; get; }
-        public int WalletType { set; get; }
+        public WalletType WalletType { set; get; }
     }
     public class TpCurrency
     {
