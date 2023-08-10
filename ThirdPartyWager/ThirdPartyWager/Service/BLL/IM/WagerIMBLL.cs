@@ -9,6 +9,7 @@ public class WagerIMBLL
 {
     private readonly ApiIMBLL _apiIMBll;
     private readonly WagerIMService _wagerIMService;
+    private readonly TpUnsettleService _tpUnsettleService;
     private readonly ThirdPartyBLL _thirdPartyBll;
     private readonly DateTimeHelper _dateTimeHelper;
     private readonly ILogger<WagerPlayTechBLL> _logger;
@@ -34,6 +35,7 @@ public class WagerIMBLL
     {
         _apiIMBll = provider.GetRequiredService<ApiIMBLL>();
         _wagerIMService = provider.GetRequiredService<WagerIMService>();
+        _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
         _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
         _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         _logger = provider.GetRequiredService<ILogger<WagerPlayTechBLL>>();
@@ -146,6 +148,15 @@ public class WagerIMBLL
                     _logger.LogInformation(
                         $"{workerName} INSERT_WAGER COUNT_NOT_MATCH: affected={result}, data count={count}");
                 }
+
+                BatchInsertTpUnsettle(new BatchTpUnsettleModel
+                {
+                    Tp = _tp,
+                    GameType = GameType.IM_Sports,
+                    Infos = wagers
+                        .Where(x => x.IsSettled == "1")
+                        .Select(x => new TpUnsettleInfo{TransId = x.BetId})
+                }, workerName);
             }
             catch (Exception ex)
             {
@@ -159,54 +170,86 @@ public class WagerIMBLL
         return true;
     }
     
+    
+    // 1: 電競 eSportsBulls, 2: ESports Virtual, 3: PK10
+    private readonly Dictionary<string, int> _eSportsProduct = new()
+    {
+        {"eSportsBulls", 1},
+        {"ESportsVirtual", 2}
+    };
+    
     private async Task<bool> IMESportsGetWagersHandlerAsync(GetBetListByTimeParam param)
     {
-        var workerName = param.ProductWallet + "_GetWagers";
-        var page = 1;
-        var totalPage = 1;
-        while (page <= totalPage)
+        foreach (var product in _eSportsProduct)
         {
-            param.Page = page;
-            param.DateFilterType = 3; // IM ESports 最後更新時間
-            param.Product = 1; // 1: 電競 eSportsBulls, 2: ESports Virtual, 3: PK10，目前只接eSportsBulls
+            var workerName = $"{param.ProductWallet}_{product.Key}_GetWagers";
+            var page = 1;
+            var totalPage = 1;
+            while (page <= totalPage)
+            {
+                param.Page = page;
+                param.DateFilterType = 3; // IM ESports 最後更新時間
+                param.Product = product.Value;
             
-            var resp = await _apiIMBll.GetSportsBetListByTime<IMESportsModel>(param, _tp);
+                var resp = await _apiIMBll.GetSportsBetListByTime<IMESportsModel>(param, _tp);
 
-            if (resp.Code == IMErrorCode.NoData)
-            {
-                _logger.LogInformation($"{workerName} NO_DATA");
-                return true;
-            }
-
-            if (resp.Code != IMErrorCode.Success)
-            {
-                _logger.LogError($"{workerName} THIRD_PARTY_ERROR: Code={resp.Code}, Message={resp.Message}");
-                return false;
-            }
-
-            totalPage = resp.Pagination.TotalPage;
-
-            try
-            {
-                var wagers = resp.Result.Select(x => new IMESportsWager(x));
-                var result = _wagerIMService.InsertESportsWager(wagers);
-                var count = resp.Result.Count();
-                if (result != count)
+                if (resp.Code == IMErrorCode.NoData)
                 {
-                    _logger.LogInformation(
-                        $"{workerName} INSERT_WAGER COUNT_NOT_MATCH: affected={result}, data count={count}");
+                    _logger.LogInformation($"{workerName} NO_DATA");
+                    return true;
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"{workerName} INSERT_WAGER FAILED: {ex.Message}");
-                return false;
-            }
 
-            page++;
+                if (resp.Code != IMErrorCode.Success)
+                {
+                    _logger.LogError($"{workerName} THIRD_PARTY_ERROR: Code={resp.Code}, Message={resp.Message}");
+                    return false;
+                }
+
+                totalPage = resp.Pagination.TotalPage;
+
+                try
+                {
+                    var wagers = resp.Result.Select(x => new IMESportsWager(x));
+                    var result = _wagerIMService.InsertESportsWager(wagers);
+                    var count = resp.Result.Count();
+                    if (result != count)
+                    {
+                        _logger.LogInformation(
+                            $"{workerName} INSERT_WAGER COUNT_NOT_MATCH: affected={result}, data count={count}");
+                    }
+                
+                    BatchInsertTpUnsettle(new BatchTpUnsettleModel
+                    {
+                        Tp = _tp,
+                        GameType = GameType.IM_ESports,
+                        Infos = wagers
+                            .Where(x => x.IsSettled == "1")
+                            .Select(x => new TpUnsettleInfo{TransId = x.BetId})
+                    }, workerName);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"{workerName} INSERT_WAGER FAILED: {ex.Message}");
+                    return false;
+                }
+
+                page++;
+            }
         }
         
         return true;
+    }
+
+    private void BatchInsertTpUnsettle(BatchTpUnsettleModel input, string workerName)
+    {
+        var count = input.Infos.Count();
+        var result = _tpUnsettleService.BatchInsertTpUnsettle(input);
+                
+        if (result != count)
+        {
+            _logger.LogInformation(
+                $"{workerName} INSERT_UNSETTLE_WAGER COUNT_NOT_MATCH: affected={result}, data count={count}");
+        }
     }
 
     private DateTime GetWorkerTime(int type, int vary, int siteId, int gameType)

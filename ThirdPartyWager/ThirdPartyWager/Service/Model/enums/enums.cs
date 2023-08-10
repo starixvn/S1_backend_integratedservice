@@ -91,8 +91,9 @@
         Yeebet_LiveCasino = 93,
         BG_LiveCasino = 94,
         TFG_Esports = 97,
-
-        Nextspin_RNG = 99
+        Nextspin_RNG = 99,
+        IM_ESports = 102,
+        IM_Sports = 103
     }
 
 
