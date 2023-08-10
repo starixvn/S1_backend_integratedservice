@@ -471,12 +471,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 // 把AutoCancel移出來，不管注單狀態變更都會執行AutoCancel檢查
                 if (bonusId > 0)
                 {                   
-                    _ = thirdPartySetting.WalletType switch
+                    var autoCancelResult = thirdPartySetting.WalletType switch
                     {
                         WalletType.TransferWallet => AutoCancelTransferBonus(bonusId, betRecord.TransId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans),
                         WalletType.SeamlessWallet => AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.TransId, conn, trans),
                         _ => throw new NotImplementedException()
                     };
+                    logger.LogWarning($"AutoCancelResult:bonusId={bonusId},TransId={betRecord.TransId},autoCancelResult={autoCancelResult}");
                 }
 
                 #endregion
