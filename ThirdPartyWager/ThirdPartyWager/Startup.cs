@@ -263,7 +263,9 @@ namespace ThirdPartyWager
             //IM
             services.AddSingleton<ApiIMBLL>();
             services.AddSingleton<WagerIMBLL>();
+            services.AddSingleton<FinanceIMBLL>();
             services.AddSingleton<WagerSPRIBEBLL>();
+            services.AddSingleton<FinanceSPRIBEBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -353,6 +355,8 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceNextspin>();
             services.AddHostedService<WagerIM>();
             services.AddHostedService<WagerSPRIBE>();
+            services.AddHostedService<FinanceIM>();
+            services.AddHostedService<FinanceSPRIBE>();
 
             /*******************closed tp*************************/
             //services.AddHostedService<WagerOneGaming>();
