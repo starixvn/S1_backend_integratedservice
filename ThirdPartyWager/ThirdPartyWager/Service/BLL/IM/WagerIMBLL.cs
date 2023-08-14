@@ -180,23 +180,23 @@ public class WagerIMBLL
     
     private async Task<bool> IMESportsGetWagersHandlerAsync(GetBetListByTimeParam param)
     {
-        foreach (var product in _eSportsProduct)
+        foreach (var (productName, product) in _eSportsProduct)
         {
-            var workerName = $"{param.ProductWallet}_{product.Key}_GetWagers";
+            var workerName = $"{param.ProductWallet}_{productName}_GetWagers";
             var page = 1;
             var totalPage = 1;
             while (page <= totalPage)
             {
                 param.Page = page;
                 param.DateFilterType = 3; // IM ESports 最後更新時間
-                param.Product = product.Value;
+                param.Product = product;
             
                 var resp = await _apiIMBll.GetSportsBetListByTime<IMESportsModel>(param, _tp);
 
                 if (resp.Code == IMErrorCode.NoData)
                 {
                     _logger.LogInformation($"{workerName} NO_DATA");
-                    return true;
+                    continue;
                 }
 
                 if (resp.Code != IMErrorCode.Success)
