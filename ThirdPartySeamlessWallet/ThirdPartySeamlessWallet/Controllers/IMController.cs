@@ -268,16 +268,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         response.Results.Add(errorResponse);
                         continue;
                     }
-
-                    if (settle.Amount < 0)
-                    {
-                        errorResponse.Code = (int)IMResultCode.InvalidArgument;
-                        errorResponse.Message = "Invalid Parameters";
-                        _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(errorResponse)}", logName);
-                        response.Results.Add(errorResponse);
-                        continue;
-                    }
-
+                    
                     var result = _imBll.Settle_IM(settle, tpUserName, tpId, tpGameType, out var outData);
                     if (result == -1)
                     {
