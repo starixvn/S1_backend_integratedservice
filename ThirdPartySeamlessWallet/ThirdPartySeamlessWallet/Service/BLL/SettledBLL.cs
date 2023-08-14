@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.DAL;
+using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.SBSW;
@@ -9,6 +10,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
     public partial class SettledBLL
     {
         private readonly SettledService settledService;
+        private readonly MySqlClient _mainDbClient;
         private readonly TpCustInfoBLL tpCustInfoBLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
 
