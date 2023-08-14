@@ -199,10 +199,17 @@ namespace ThirdPartyCore
                     ServicePointManager.ServerCertificateValidationCallback = CheckValidationResult;
                 }
 
-                WebRequest request = WebRequest.Create(url);
+                var request = WebRequest.Create(url);
                 if (proxy is not null)
                 {
                     request.Proxy = proxy;
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(proxyHost))
+                    {
+                        request.Proxy = new WebProxy(proxyHost, proxyPort);
+                    }
                 }
 
                 if (timeOutTime > 0)
