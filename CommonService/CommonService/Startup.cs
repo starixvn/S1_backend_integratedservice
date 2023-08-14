@@ -61,9 +61,11 @@ namespace CommonService
             services.AddSingleton<LiveStreamingBLL>();
             services.AddSingleton<OTPEmailBLL>();
             services.AddSingleton<Tools>();
-
+            services.AddSingleton<ConfigService>();
             services.AddControllers();
 
+            services.AddOptionListByDB<ServerInfo>("ServerInfoList_Get");
+            services.AddSiteConfig(Configuration.GetSection("ConfigService").Get<string[]>());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
