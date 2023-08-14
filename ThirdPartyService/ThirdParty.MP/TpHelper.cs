@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using Microsoft.Extensions.Logging;
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -220,6 +221,8 @@ namespace ThirdParty.MP
             };
             var dicP = FromJson<Dictionary<string, string>>(ToJson(Param));
 
+            logger.LogInformation($"Debug dicP：{dicP}");
+
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             var Login = new
@@ -229,6 +232,9 @@ namespace ThirdParty.MP
                 param = AesEncrypt(sParam, Deskey),
                 key = ToMD5($"{Agent}{timestamp}{Md5key}").ToLower()
             };
+
+            logger.LogInformation($"Debug Login：{Login}");
+
             dicP = FromJson<Dictionary<string, string>>(ToJson(Login));
 
             var sLogin = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
@@ -238,6 +244,8 @@ namespace ThirdParty.MP
                 sLogin,
                 "application/x-www-form-urlencoded"
             );
+
+            logger.LogInformation($"Debug result：{result}");
 
             ApiResult oApiResult = new ApiResult();
             if (!IsJSON(result))
@@ -249,6 +257,9 @@ namespace ThirdParty.MP
             }
 
             var json = JsonConvert.DeserializeObject<ApiResponse>(result);
+
+            logger.LogInformation($"json：{json}");
+
             if (json.d.code == 0)
             {
                 //var returnType = (string.IsNullOrEmpty(HomeUrl)) ? 0 : 1;

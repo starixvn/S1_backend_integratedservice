@@ -312,14 +312,17 @@ namespace ThirdPartyCore
                 WebRequest request = WebRequest.Create($"{url}?{parameters}");
                 if (!string.IsNullOrEmpty(proxyHost))
                 {
+                    logger.LogInformation($"proxyHost：{proxyHost},proxyPort:{proxyPort}");
                     request.Proxy = new WebProxy(proxyHost, proxyPort);
                 }
                 request.Method = "GET";
                 request.ContentType = contentType;
+                logger.LogInformation($"contentType：{contentType}");
                 if (headers != null)
                 {
                     foreach (var item in headers)
                     {
+                        logger.LogInformation($"Headers：item.Key：{item.Key},item.Value：{item.Value}");
                         request.Headers.Add(item.Key, item.Value);
                     }
                 }
