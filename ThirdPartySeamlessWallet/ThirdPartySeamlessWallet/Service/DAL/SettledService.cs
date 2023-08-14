@@ -468,8 +468,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     }
                 }
 
-                // 把AutoCancel移出來，不管注單狀態變更都會執行AutoCancel檢查
-                if (bonusId > 0)
+                // 把AutoCancel移出來，只要此次注單狀態不是Unsettle都會執行AutoCancel檢查
+                if (bonusId > 0 && betRecord.TicketStatus != TicketStatus.UnSettled)
                 {                   
                     var autoCancelResult = thirdPartySetting.WalletType switch
                     {
