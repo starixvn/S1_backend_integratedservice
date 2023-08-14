@@ -126,7 +126,7 @@ public class WagerIMBLL
             if (resp.Code == IMErrorCode.NoData)
             {
                 _logger.LogInformation($"{workerName} NO_DATA");
-                return true;
+                continue;
             }
 
             if (resp.Code != IMErrorCode.Success)
