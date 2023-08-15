@@ -64,8 +64,10 @@ namespace CommonService
             services.AddSingleton<ConfigService>();
             services.AddControllers();
 
+            //³B²zSiteConfig
             services.AddOptionListByDB<ServerInfo>("ServerInfoList_Get");
             services.AddSiteConfig(Configuration.GetSection("ConfigService").Get<string[]>());
+            services.AddSingleton<ConfigBLL>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

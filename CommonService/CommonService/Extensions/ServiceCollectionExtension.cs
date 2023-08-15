@@ -52,7 +52,6 @@ public static class ServiceCollectionExtension
         foreach (var serverInfo in serverInfoList)
         {
             using var client = new HttpClient();
-            Stream result = null;
             foreach (var url in remoteUrls)
             {
                 if (string.IsNullOrEmpty(url))
@@ -63,7 +62,7 @@ public static class ServiceCollectionExtension
                 try
                 {
                     var configUrl = $"{url}config/{serverInfo.SiteId}";
-                    result = client.GetAsync(configUrl).Result.Content.ReadAsStreamAsync().Result;
+                    using var result = client.GetAsync(configUrl).Result.Content.ReadAsStreamAsync().Result;
                     using StreamReader reader = new(result);
                     var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(reader.ReadToEnd());
                     services.AddSingleton(new SiteConfig(serverInfo, dic));
