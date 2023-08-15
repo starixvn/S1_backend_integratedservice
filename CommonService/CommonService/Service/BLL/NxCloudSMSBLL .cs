@@ -25,7 +25,8 @@ namespace CommonService.Service.BLL
             tools = provider.GetRequiredService<Tools>();
             selLangBLL = provider.GetRequiredService<SelLangBLL>();
             logger = provider.GetRequiredService<ILogger<OTPSMSService>>();
-            NxcloudSMSServiceTypeConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<NxcloudSMSServiceTypeConfig>("NxCloud");
+            var configBLL = provider.GetRequiredService<ConfigBLL>();
+            NxcloudSMSServiceTypeConfig = configBLL.GetConfigValuesBySiteName<NxcloudSMSServiceTypeConfig>("NxCloud");
         }
 
         public ApiResult<SendOTPSMSResult> OTPVerifyinfoInsAsync(int custId, string sOTPNum)
