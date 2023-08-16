@@ -38,7 +38,7 @@ public class WagerIMBLL
         _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
         _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
         _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
-        _logger = provider.GetRequiredService<ILogger<WagerPlayTechBLL>>();
+        _logger = provider.GetRequiredService<ILogger<WagerIMBLL>>();
         
         _getWagersHandlerMapper = new Dictionary<IMProductWalletEnum, Func<GetBetListByTimeParam, Task<bool>>>
         {
