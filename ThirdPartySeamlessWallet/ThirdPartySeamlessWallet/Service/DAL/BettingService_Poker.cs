@@ -57,8 +57,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         trans
                     );
                 }
-                _mainDbClient.CommitAndDisposeConnection(conn,trans);
-                
+                _mainDbClient.CommitAndDisposeConnection(conn, trans);
+
             }
             catch (MySqlException mySqlEx)
             {
@@ -87,7 +87,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
 
             var amount = bettingDataPK_AMB.amount * -1;
-            
+
             var p = new DynamicParameters(new
             {
                 TransId = $"{bettingDataPK_AMB.roundId}_{bettingDataPK_AMB.username}",
@@ -132,11 +132,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
                 }
                 else
                 {
-                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                 }
             }
             catch (MySqlException mySqlEx)
@@ -192,16 +192,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 bonuscode = debitTransaction.BonusCode,
                 description = debitTransaction.Desc,
                 commission = debitTransaction.Commission,
-                TicketType = (int) BettransType.Bet,
-                TicketStatus = (int) TicketStatus.UnSettled,
-                SettleFlag = (int) SettleFlag.Running
+                TicketType = (int)BettransType.Bet,
+                TicketStatus = (int)TicketStatus.UnSettled,
+                SettleFlag = (int)SettleFlag.Running
             });
             p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
             p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
 
             try
             {
-                await _mainDbClient.ExecuteAsync("Service_BettransPK_KM_Debit_Ins", trans , p);
+                await _mainDbClient.ExecuteAsync("Service_BettransPK_KM_Debit_Ins", trans, p);
                 result = p.Get<short>("SPResult");
                 var trxId = p.Get<long>("trx_id");
                 if (result != 1)
@@ -209,7 +209,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (result == 0)
                     {
                         logger.LogInformation("訂單已存在");
-                        return new KmDbResult() {SPResult = result, Trx_id = trxId};
+                        return new KmDbResult() { SPResult = result, Trx_id = trxId };
                     }
 
                     logger.LogError("exec Service_BettransPK_KM_Debit_Ins error");
@@ -234,7 +234,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     );
                     if (result != 1)
                     {
-                        await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                        await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                         logger.LogError($"PlaceBetPK_KM result:{result}, afterAmount:{afterAmount}");
                         if (result == 0 && afterAmount < 0)
                         {
@@ -244,8 +244,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         throw new KmException(KMErrorCode.SystemError);
                     }
                 }
-                
-                await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+
+                await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 return new KmDbResult()
                 {
                     SPResult = result,
@@ -260,7 +260,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             catch (Exception e)
             {
                 logger.LogError(e, $"exec PlaceBetPK_KM failed: {e.Message}");
-                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 throw new KmException(KMErrorCode.SystemError);
             }
         }
@@ -297,16 +297,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 bonuscode = debitTransaction.BonusCode,
                 description = debitTransaction.Desc,
                 commission = debitTransaction.Commission,
-                TicketType = (int) BettransType.Bet,
-                TicketStatus = (int) TicketStatus.UnSettled,
-                SettleFlag = (int) SettleFlag.Running
+                TicketType = (int)BettransType.Bet,
+                TicketStatus = (int)TicketStatus.UnSettled,
+                SettleFlag = (int)SettleFlag.Running
             });
             p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
             p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
 
             try
             {
-                await _mainDbClient.ExecuteAsync("Service_BettransPK_KM_Debit_Ins", trans ,p);
+                await _mainDbClient.ExecuteAsync("Service_BettransPK_KM_Debit_Ins", trans, p);
                 result = p.Get<short>("SPResult");
                 var trxId = p.Get<long>("trx_id");
                 if (result != 1)
@@ -314,14 +314,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (result == 0)
                     {
                         logger.LogInformation($"訂單已存在:{trxId}");
-                        return new KmDbResult() {SPResult = result, Trx_id = trxId};
+                        return new KmDbResult() { SPResult = result, Trx_id = trxId };
                     }
 
                     logger.LogError("exec Service_BettransPK_KM_Debit_Ins error");
                     throw new KmException(KMErrorCode.SystemError);
                 }
-                
-                await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+
+                await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 return new KmDbResult()
                 {
                     SPResult = result,
@@ -331,7 +331,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             catch (Exception e)
             {
                 logger.LogError(e, $"exec PlaceBetPK_KM failed: {e.Message}");
-                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 throw new KmException(KMErrorCode.SystemError);
             }
         }
@@ -373,7 +373,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                result = _mainDbClient.Execute("Service_BettransPK_MP_Ins_V2", p, conn , trans);
+                result = _mainDbClient.Execute("Service_BettransPK_MP_Ins_V2", p, conn, trans);
 
                 if (result > 0 && amount != 0)
                 {
@@ -394,11 +394,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
                 }
                 else
                 {
-                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                 }
             }
             catch (MySqlException mySqlEx)
@@ -414,6 +414,69 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
             }
 
+            return result;
+        }
+
+        #endregion
+
+        #region V8
+
+        public int PlaceBetPK_V8(TpCustInfo tpCustInfo, BettingDataPK_V8 bettingDataPK_V8, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            var result = 0;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                var p = new DynamicParameters(bettingDataPK_V8);
+                p.Add("TicketType", (int)BettransType.Bet);
+                p.Add("TicketStatus", (int)TicketStatus.UnSettled);
+                p.Add("SettleFlag", (int)SettleFlag.Running);
+
+                var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataPK_V8.timestamp).DateTime;
+                result = _partitionService.Execute(partitionTime, "Service_BettransPK_V8_Ins", p, trans);
+
+                if (result > 0 && bettingDataPK_V8.money != 0)
+                {
+                    result = walletService.SetBalance(
+                        tpCustInfo.CustId,
+                        tpCustInfo.SiteId,
+                        tpCustInfo.UserName,
+                        Math.Abs(bettingDataPK_V8.money) * -1,
+                        (int)Tp.V8,
+                        TransType.Wagers,
+                        $"Stake: {bettingDataPK_V8.money:#,##0.##} {bettingDataPK_V8.orderId}",
+                        bettingDataPK_V8.gameNo,
+                        out afterAmount,
+                        conn,
+                        trans
+                    );
+                }
+
+                if (result > 0)
+                {
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    return result;
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                result = 0;
+                logger.LogError(mySqlEx.Message);
+                _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+                throw;
+            }
+
+            _mainDbClient.RollbackAndDisposeConnection(conn, trans);
             return result;
         }
 
