@@ -167,7 +167,7 @@ namespace ThirdParty.SPRIBE
             var detail = ToJson(wagerDetail);
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
-                TpCategory.LiveCasino => new LiveCasinoDetail(getBetDetail.TpGameTypeOption)
+                TpCategory.Casino => new LiveCasinoDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
                     Detail = detail,
