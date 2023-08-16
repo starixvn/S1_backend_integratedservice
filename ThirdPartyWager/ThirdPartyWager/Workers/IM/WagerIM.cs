@@ -7,7 +7,7 @@ namespace ThirdPartyWager.Workers.IM
 {
     public class WagerIM : BackgroundService
     {
-        private readonly ILogger<WagerPlayTech> _logger;
+        private readonly ILogger<WagerIM> _logger;
         private readonly WagerIMBLL _wagerIMBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
 
@@ -18,7 +18,7 @@ namespace ThirdPartyWager.Workers.IM
 
         public WagerIM(IServiceProvider provider)
         {
-            _logger = provider.GetRequiredService<ILogger<WagerPlayTech>>();
+            _logger = provider.GetRequiredService<ILogger<WagerIM>>();
             _wagerIMBLL = provider.GetRequiredService<WagerIMBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }

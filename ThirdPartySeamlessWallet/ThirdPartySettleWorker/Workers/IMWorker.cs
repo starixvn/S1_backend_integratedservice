@@ -64,7 +64,7 @@ namespace ThirdPartySettleWorker.Workers
             var category = TpCategory.Sports;
             var betTransGet = "Service_BettransSports_IM_Settle_BetId_Get";
             var betTransSet = "Service_BettransSports_IM_Settle_BetId_Set";
-            var tpWagerRngSet = "Service_TpWagerSports_IM_Settle_Set";
+            var tpWagerSet = "Service_TpWagerSports_IM_Settle_Set";
             var logName = "IMDoSettleSportsWork";
             
             try
@@ -148,7 +148,7 @@ namespace ThirdPartySettleWorker.Workers
                             {
                                 _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, transId, isSuccess: true);
                                 _ = _imBll.SetSettleFlag_Bettrans_IM(betTransSet, transId);
-                                _ = _imBll.SetSettleFlag_TpWager_IM(tpWagerRngSet, transId);
+                                _ = _imBll.SetSettleFlag_TpWager_IM(tpWagerSet, transId);
                             });
                         }
                     }
@@ -193,7 +193,7 @@ namespace ThirdPartySettleWorker.Workers
             var category = TpCategory.Esports;
             var settleBetTransGet = "Service_BettransESports_IM_Settle_BetId_Get";
             var settleBetTransSet = "Service_BettransESports_IM_Settle_BetId_Set";
-            var tpWagerRngSet = "Service_TpWagerESports_IM_Settle_Set";
+            var tpWagerSet = "Service_TpWagerESports_IM_Settle_Set";
             var logName = "IMDoSettleSportsWork";
             
             try
@@ -276,7 +276,7 @@ namespace ThirdPartySettleWorker.Workers
                             {
                                 _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, transId, isSuccess: true);
                                 _ = _imBll.SetSettleFlag_Bettrans_IM(settleBetTransSet, transId);
-                                _ = _imBll.SetSettleFlag_TpWager_IM(tpWagerRngSet, transId);
+                                _ = _imBll.SetSettleFlag_TpWager_IM(tpWagerSet, transId);
                             });
                         }
                     }
