@@ -43,9 +43,7 @@ namespace ThirdParty.IM
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var apiUrl = $"{inputs["ApiUrl"]}/Player/Register";
-            // var prefix = inputs.ContainsKey("Prefix") && !string.IsNullOrEmpty(inputs["Prefix"]) ? inputs["Prefix"] : throw new Exception("Prefix");
-            // var playerName = $"{prefix}_{tpCustInfo.TpUserName}";
-
+            
             var signUp = new RegisterModel
             {
                 MerchantCode = inputs["Key"],

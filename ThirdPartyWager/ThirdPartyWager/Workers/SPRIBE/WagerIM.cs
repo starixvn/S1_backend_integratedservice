@@ -7,7 +7,7 @@ namespace ThirdPartyWager.Workers.SPRIBE
 {
     public class WagerSPRIBE : BackgroundService
     {
-        private readonly ILogger<WagerPlayTech> _logger;
+        private readonly ILogger<WagerSPRIBE> _logger;
         private readonly WagerSPRIBEBLL _wagerSPRIBEBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
 
@@ -18,7 +18,7 @@ namespace ThirdPartyWager.Workers.SPRIBE
 
         public WagerSPRIBE(IServiceProvider provider)
         {
-            _logger = provider.GetRequiredService<ILogger<WagerPlayTech>>();
+            _logger = provider.GetRequiredService<ILogger<WagerSPRIBE>>();
             _wagerSPRIBEBLL = provider.GetRequiredService<WagerSPRIBEBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
