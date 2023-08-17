@@ -17,5 +17,6 @@ namespace ThirdPartyWager.Service.Model
         public decimal ProgressiveWin { get; set; }
         public decimal Reward { get; set; }
         public string TpCurrencyId { get; set; }
+        public int WagerCount { get; set; }
     }
 }
