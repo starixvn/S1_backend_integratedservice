@@ -56,6 +56,46 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
+        public async Task<WagerV8Model> GetBetListByTimeV2(dynamic setting, long startUnix, long endUnix)
+        {
+            var wagerUrl = setting["WagerUrl_SW"];
+            var deskey = setting["Deskey_SW"];
+            var md5key = setting["Md5key_SW"];
+            var agent = setting["Agent_SW"];
+
+            var current = new DateTimeOffset(DateTime.UtcNow);
+            var timestamp = current.ToUnixTimeMilliseconds();
+
+            // param
+            var url = wagerUrl;
+            var param = new
+            {
+                s = 6,
+                startTime = startUnix * 1000,
+                endTime = endUnix * 1000
+            };
+            var dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(param));
+            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+            // log
+            _logger.LogInformation(JsonConvert.SerializeObject(param));
+
+            var wager = new
+            {
+                agent = agent,
+                timestamp = timestamp,
+                param = _common.AesEncrypt(sParam, deskey),
+                key = _common.ToMD5($"{agent}{timestamp}{md5key}").ToLower()
+            };
+            dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(wager));
+            sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+            // request
+            var r = await DoHttpClientAsync(url, sParam);
+            var result = JsonConvert.DeserializeObject<WagerV8Model>(r);
+            return result;
+        }
+
         private async Task<string> DoHttpClientAsync(string url, string param)
         {
             _log2File.InsertRequestLog(_tpName, url, param, "1");
