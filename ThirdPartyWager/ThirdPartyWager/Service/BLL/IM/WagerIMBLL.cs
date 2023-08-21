@@ -52,7 +52,7 @@ public class WagerIMBLL
         var siteId = siteData.SiteId;
         var quick = false;
         const int runTime = 120; // sec
-        const int quickTime = 100; // sec
+        const int quickTime = 80; // sec
         const int excess = 120; // min
         var timeRange = 10; // min，最大可拉24HR，體育類更新延遲5分
         
@@ -130,6 +130,7 @@ public class WagerIMBLL
             if (resp.Code == IMErrorCode.NoData)
             {
                 _logger.LogInformation($"{workerName} NO_DATA");
+                page++;
                 continue;
             }
 
