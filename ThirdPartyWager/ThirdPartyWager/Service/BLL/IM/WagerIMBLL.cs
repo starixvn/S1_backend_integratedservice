@@ -12,7 +12,7 @@ public class WagerIMBLL
     private readonly TpUnsettleService _tpUnsettleService;
     private readonly ThirdPartyBLL _thirdPartyBll;
     private readonly DateTimeHelper _dateTimeHelper;
-    private readonly ILogger<WagerPlayTechBLL> _logger;
+    private readonly ILogger<WagerIMBLL> _logger;
     private readonly Tp _tp = Tp.IM;
     private const int TpId = (int) Tp.IM;
     private const int TimeZone = 8; // Report/GetBetLog時區為+8
@@ -38,7 +38,7 @@ public class WagerIMBLL
         _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
         _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
         _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
-        _logger = provider.GetRequiredService<ILogger<WagerPlayTechBLL>>();
+        _logger = provider.GetRequiredService<ILogger<WagerIMBLL>>();
         
         _getWagersHandlerMapper = new Dictionary<IMProductWalletEnum, Func<GetBetListByTimeParam, Task<bool>>>
         {

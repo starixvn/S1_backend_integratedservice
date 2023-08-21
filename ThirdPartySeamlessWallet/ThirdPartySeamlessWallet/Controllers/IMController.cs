@@ -16,7 +16,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly TpCustInfoBLL _tpCustInfoBll;
         private readonly IIMBLL _imBll;
         private readonly Log2File _log2File;
-        //private readonly Tp _thisTp;
         private readonly string _tpGameName;
 
         public IMController(IServiceProvider provider)
@@ -25,7 +24,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             _tpCustInfoBll = provider.GetRequiredService<TpCustInfoBLL>();
             _imBll = provider.GetRequiredService<IIMBLL>();
             _log2File = provider.GetRequiredService<Log2File>();
-            //_thisTp = Tp.IM;
             _tpGameName = Tp.IM.ToString();
         }
 
@@ -250,24 +248,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
 
                     var tpUserName = settle.PlayerId;
-                    var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)tpId, tpUserName);
-                    if (tpCheck == null)
-                    {
-                        errorResponse.Code = (int)IMResultCode.PlayerDoesNotExist;
-                        errorResponse.Message = "Player Does Not Exist";
-                        _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(errorResponse)}", logName);
-                        response.Results.Add(errorResponse);
-                        continue;
-                    }
-
-                    if (tpCheck.Locked)
-                    {
-                        errorResponse.Code = (int)IMResultCode.PlayerIsInactive;
-                        errorResponse.Message = "Player Is Inactive";
-                        _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(errorResponse)}", logName);
-                        response.Results.Add(errorResponse);
-                        continue;
-                    }
                     
                     var result = _imBll.Settle_IM(settle, tpUserName, tpId, tpGameType, out var outData);
                     if (result == -1)
@@ -329,24 +309,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     };
                     
                     var tpUserName = refundData.PlayerId;
-                    var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)Tp.SPRIBE, tpUserName);
-                    if (tpCheck == null)
-                    {
-                        errorResponse.Code = (int)IMResultCode.PlayerDoesNotExist;
-                        errorResponse.Message = "Player Does Not Exist";
-                        _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(errorResponse)}", logName);
-                        response.Results.Add(errorResponse);
-                        continue;
-                    }
-
-                    if (tpCheck.Locked)
-                    {
-                        errorResponse.Code = (int)IMResultCode.PlayerIsInactive;
-                        errorResponse.Message = "Player Is Inactive";
-                        _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(errorResponse)}", logName);
-                        response.Results.Add(errorResponse);
-                        continue;
-                    }
                     
                     if (refundData.TransactionType != "Cancel")
                     {

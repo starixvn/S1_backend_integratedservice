@@ -89,7 +89,7 @@ namespace ThirdPartyWager.Workers
                 var reportTime = _financeSPRIBEBLL.GetReportTime(execTime.StartTime, day);
 
                 // report
-                var reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);
+                var reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.startUnix);
                 var reportData = await _financeSPRIBEBLL.GetReport(_tpId, setting, reportTime);
                 int result;
                 if (reportData.Count > 0)

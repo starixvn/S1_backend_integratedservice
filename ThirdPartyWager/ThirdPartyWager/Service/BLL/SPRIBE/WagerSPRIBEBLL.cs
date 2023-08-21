@@ -13,7 +13,7 @@ public class WagerSPRIBEBLL
     private readonly CommonService _commonService;
     private readonly ThirdPartyBLL _thirdPartyBll;
     private readonly DateTimeHelper _dateTimeHelper;
-    private readonly ILogger<WagerPlayTechBLL> _logger;
+    private readonly ILogger<WagerSPRIBEBLL> _logger;
     private readonly Tp _tp = Tp.SPRIBE;
     private const int TpId = (int) Tp.SPRIBE;
     private const int TimeZone = 8; // Report/GetBetLog時區為+8
@@ -32,7 +32,7 @@ public class WagerSPRIBEBLL
         _commonService = provider.GetRequiredService<CommonService>();
         _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
         _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
-        _logger = provider.GetRequiredService<ILogger<WagerPlayTechBLL>>();
+        _logger = provider.GetRequiredService<ILogger<WagerSPRIBEBLL>>();
     }
     
     public async Task<int> ExecWagerWorker(TpListModel siteData, int type)
