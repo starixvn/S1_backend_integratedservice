@@ -52,14 +52,18 @@ public class WagerIMBLL
         var siteId = siteData.SiteId;
         var quick = false;
         const int runTime = 120; // sec
+        const int quickTime = 80; // sec
         const int excess = 120; // min
-        const int timeRange = 10; // min，最大可拉24HR，體育類更新延遲5分
+        var timeRange = 10; // min，最大可拉24HR，體育類更新延遲5分
         
         foreach (var (gameType, productWallet) in _gameTypeMapper)
         {
             var workerTime = GetWorkerTime(type, 1, siteId, gameType);
             
             quick = CheckQuick(workerTime, excess);
+
+            if (quick)
+                timeRange = excess;
             
             var time = _dateTimeHelper.GetTimeByMinute(timeRange - 1, TimeZone, TimeFormat, workerTime);
             var cvTime = DateTimeOffset.Now
@@ -74,7 +78,7 @@ public class WagerIMBLL
                 _thirdPartyBll.SetThirdPartyTimerByReference(TpId, type, time.endUnix, gameType, siteId.ToString());
         }
 
-        return quick ? runTime / 2 : runTime;
+        return quick ? quickTime : runTime;
     }
 
     #region Private
@@ -121,11 +125,11 @@ public class WagerIMBLL
             param.Product = null;
             
             var resp = await _apiIMBll.GetSportsBetListByTime<IMSportsbookModel>(param, _tp);
-
             
             if (resp.Code == IMErrorCode.NoData)
             {
                 _logger.LogInformation($"{workerName} NO_DATA");
+                page++;
                 continue;
             }
 
@@ -196,6 +200,7 @@ public class WagerIMBLL
                 if (resp.Code == IMErrorCode.NoData)
                 {
                     _logger.LogInformation($"{workerName} NO_DATA");
+                    page++;
                     continue;
                 }
 
