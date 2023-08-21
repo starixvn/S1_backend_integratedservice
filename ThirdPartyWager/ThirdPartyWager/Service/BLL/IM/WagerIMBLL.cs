@@ -54,13 +54,16 @@ public class WagerIMBLL
         const int runTime = 120; // sec
         const int quickTime = 100; // sec
         const int excess = 120; // min
-        const int timeRange = 10; // min，最大可拉24HR，體育類更新延遲5分
+        var timeRange = 10; // min，最大可拉24HR，體育類更新延遲5分
         
         foreach (var (gameType, productWallet) in _gameTypeMapper)
         {
             var workerTime = GetWorkerTime(type, 1, siteId, gameType);
             
             quick = CheckQuick(workerTime, excess);
+
+            if (quick)
+                timeRange = excess;
             
             var time = _dateTimeHelper.GetTimeByMinute(timeRange - 1, TimeZone, TimeFormat, workerTime);
             var cvTime = DateTimeOffset.Now
