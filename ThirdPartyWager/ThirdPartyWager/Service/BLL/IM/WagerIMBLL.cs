@@ -52,6 +52,7 @@ public class WagerIMBLL
         var siteId = siteData.SiteId;
         var quick = false;
         const int runTime = 120; // sec
+        const int quickTime = 100; // sec
         const int excess = 120; // min
         const int timeRange = 10; // min，最大可拉24HR，體育類更新延遲5分
         
@@ -74,7 +75,7 @@ public class WagerIMBLL
                 _thirdPartyBll.SetThirdPartyTimerByReference(TpId, type, time.endUnix, gameType, siteId.ToString());
         }
 
-        return quick ? runTime / 2 : runTime;
+        return quick ? quickTime : runTime;
     }
 
     #region Private
