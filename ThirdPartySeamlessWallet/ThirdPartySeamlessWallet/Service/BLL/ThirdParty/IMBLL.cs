@@ -12,7 +12,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
     public class IMBLL : IIMBLL
     {
-        //private readonly Tp _thisTp;
         private readonly ThirdPartyBLL _thirdPartyBll;
         private readonly TpCustInfoBLL _tpCustInfoBll;
         private readonly BettingService _bettingService;
@@ -32,7 +31,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public IMBLL(IServiceProvider provider)
         {
-            //_thisTp = Tp.IM;
             _thirdPartyBll = provider.GetService<ThirdPartyBLL>();
             _tpCustInfoBll = provider.GetService<TpCustInfoBLL>();
             _bettingService = provider.GetService<BettingService>();

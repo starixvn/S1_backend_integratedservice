@@ -61,7 +61,7 @@ namespace ThirdPartySettleWorker.Workers
             var category = TpCategory.Slots;
             var bettransGet = "Service_BettransRng_SPRIBE_Settle_Round_Get";
             var bettransSet = "Service_BettransRng_SPRIBE_Settle_Round_Set";
-            var tpWagerRngSet = "Service_TpWagerRng_SPRIBE_Settle_Set";
+            var tpWagerSet = "Service_TpWagerRng_SPRIBE_Settle_Set";
             var logName = "SpribeDoSettleRngWork";
             
             try
@@ -136,7 +136,7 @@ namespace ThirdPartySettleWorker.Workers
                             {
                                 _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, transId, isSuccess: true);
                                 _ = _imBll.SetSettleFlag_BettransRng_IM(bettransSet, transId , betTrans.Last().TimeStamp);
-                                _ = _imBll.SetSettleFlag_TpWager_IM(tpWagerRngSet, transId);
+                                _ = _imBll.SetSettleFlag_TpWager_IM(tpWagerSet, transId);
                             });
                         }
                     }
