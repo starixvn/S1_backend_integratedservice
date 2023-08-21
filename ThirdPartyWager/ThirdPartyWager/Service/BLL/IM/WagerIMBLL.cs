@@ -125,7 +125,6 @@ public class WagerIMBLL
             param.Product = null;
             
             var resp = await _apiIMBll.GetSportsBetListByTime<IMSportsbookModel>(param, _tp);
-
             
             if (resp.Code == IMErrorCode.NoData)
             {
@@ -201,6 +200,7 @@ public class WagerIMBLL
                 if (resp.Code == IMErrorCode.NoData)
                 {
                     _logger.LogInformation($"{workerName} NO_DATA");
+                    page++;
                     continue;
                 }
 
