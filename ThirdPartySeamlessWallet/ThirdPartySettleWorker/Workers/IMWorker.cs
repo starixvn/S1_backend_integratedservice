@@ -98,7 +98,7 @@ namespace ThirdPartySettleWorker.Workers
                             GameID = betDetail.GameId
                         };
                         
-                        if (settleBetTrans is not null)
+                        if (settleBetTrans.Any())
                         {
                             // 最新一筆的Settle結果
                             var lastBetTransData = settleBetTrans.MaxBy(item => item.TimeStamp);
@@ -216,8 +216,8 @@ namespace ThirdPartySettleWorker.Workers
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = thisTp,
-                            Stake = betDetail.Stake,
-                            ValidBet = betDetail.ValidBet,
+                            Stake = betDetail.Amount,
+                            ValidBet = betDetail.Amount,
                             TransId = transId,
                             GameType = gameType,
                             TpUserName = betDetail.PlayerId,
@@ -228,7 +228,7 @@ namespace ThirdPartySettleWorker.Workers
                         
                         var settleBetTrans = _mainDbClient.Query<SettleTransactions_IMESport>(settleBetTransGet, parameters: new { unsettled.TransId });
                         
-                        if (settleBetTrans is not null)
+                        if (settleBetTrans.Any())
                         {
                             // 最新一筆的Settle結果
                             var lastBetTransData = settleBetTrans.MaxBy(x=>x.TimeStamp);
