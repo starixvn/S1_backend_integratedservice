@@ -88,8 +88,8 @@ namespace ThirdPartySettleWorker.Workers
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = thisTp,
-                            Stake = betDetail.Stake,
-                            ValidBet = betDetail.ValidBet,
+                            Stake = betDetail.Amount,
+                            ValidBet = betDetail.Amount,
                             TransId = transId,
                             GameType = gameType,
                             TpUserName = betDetail.PlayerId,
