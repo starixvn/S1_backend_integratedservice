@@ -106,11 +106,18 @@ namespace ThirdPartySettleWorker.Workers
                             ValidBet = betTransData.ValidBet,
                             WinLostAmount = betTransData.WinLostAmount
                         };
-                        if (!IsBetTransSameAsTpWager(settleAmountDataIm, tpWagerData, tpCurrency))
+
+                        if (tpWagerData is not null)
                         {
-                            _logger.LogError($"transId: {transId} is not equal " +
-                                             $"settle: {JsonConvert.SerializeObject(betTransData)} " +
-                                             $"wager: {JsonConvert.SerializeObject(tpWagerData)}");
+                            if (!IsBetTransSameAsTpWager(settleAmountDataIm, tpWagerData, tpCurrency))
+                            {
+                                _logger.LogError($"transId: {transId} is not equal " +
+                                                 $"settle: {JsonConvert.SerializeObject(betTransData)} " +
+                                                 $"wager: {JsonConvert.SerializeObject(tpWagerData)}");
+                            }
+                        }
+                        else
+                        {
                             continue;
                         }
                         
