@@ -160,7 +160,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                                 afterAmount /= tpCurrency.ExchangeRate;
                         }
 
-                        _tpUnsettleService.InsertTpUnsettle(tpId, gameType, gameType == GameType.SPRIBE_RNG ? bet.RoundId : bet.BetId , trans);
+                        if (gameType != GameType.SPRIBE_RNG)
+                        {
+                            _tpUnsettleService.InsertTpUnsettle(tpId, gameType, bet.BetId , trans);
+                        }
                         
                         var betResult = new BetResultIM
                         {
