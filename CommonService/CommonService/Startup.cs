@@ -1,4 +1,4 @@
-using CommonService.Extensions;
+Ôªøusing CommonService.Extensions;
 using CommonService.Service.BLL;
 using CommonService.Service.DAL;
 using CommonService.Service.Library;
@@ -64,7 +64,7 @@ namespace CommonService
             services.AddSingleton<ConfigService>();
             services.AddControllers();
 
-            //≥B≤zSiteConfig
+            //ËôïÁêÜSiteConfig
             services.AddOptionListByDB<ServerInfo>("ServerInfoList_Get");
             services.AddSiteConfig(Configuration.GetSection("ConfigService").Get<string[]>());
             services.AddSingleton<ConfigBLL>();
