@@ -6191,10 +6191,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (result < 1)
                     throw new NextspinException(NextspinErrorCode.InsufficientBalance);
 
-                result = _tpUnsettleService.InsertTpUnsettle(Tp.Nextspin, GameType.Nextspin_RNG, bettingData.referenceId, trans, partitionTime);
-                if (result < 1)
-                    throw new NextspinException(NextspinErrorCode.SystemError);
-
                 await trans.CommitAsync();
                 return new NextspinResult()
                 {
