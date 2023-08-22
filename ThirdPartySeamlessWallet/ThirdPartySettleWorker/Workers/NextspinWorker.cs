@@ -69,15 +69,6 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        if (tpUnsettle.TransId.Length > 20) 
-                        {
-                            Task.Run(() =>
-                            {
-                                _logger.LogInformation($"Refund: {tpUnsettle.TransId}");
-                                _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, tpUnsettle.TransId, isSuccess: true);
-                            });
-                            continue;
-                        }
                         var unsettleData = _partitionService.GetUnsettleDataList<SettleDataRNG_Nextspin>("Service_BettransRng_Nextspin_Unsettle_Get", tpUnsettle).FirstOrDefault();
                         var tpWagerData = _tpUnSettledBLL.GetTpUnsettleData<SettleDataRNG_Nextspin>("Service_TpWagerRng_Nextspin_Unsettle_Get", new { tpUnsettle .TransId }, DataBase.Wager).FirstOrDefault();
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettleData.TpUserName);
@@ -99,7 +90,7 @@ namespace ThirdPartySettleWorker.Workers
                             Stake = unsettleData.Stake,
                             ValidBet = unsettleData.ValidBet,
                             WinlostAmount = unsettleData.WinLostAmount,
-                            TransId = unsettleData.TicketStatus == (int)TicketStatus.Refund ? unsettleData.ReferenceId : tpUnsettle.TransId,
+                            TransId = tpUnsettle.TransId,
                             GameType = gametype,
                             TpUserName = unsettleData.TpUserName,
                             SettledTime = unsettleData.SettledTime,
