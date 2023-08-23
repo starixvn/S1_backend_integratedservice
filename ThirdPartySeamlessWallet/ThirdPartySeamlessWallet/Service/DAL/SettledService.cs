@@ -729,7 +729,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("BonusStatus", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-            var result = _mainDbClient.Execute("Service_AutoCancelSeamlessBonus_Set_V3", p, conn , trans);
+            var result = _mainDbClient.Execute("Service_AutoCancelSeamlessBonus_Set_V4", p, conn , trans);
             var bonus = p.Get<decimal?>("Bonus") ?? 0;
             var bonusStatus = p.Get<int?>("BonusStatus") ?? 0;
             logger.LogWarning($"AutoCancelSeamlessBonusResult:BonusId={bonusId},TransId={transId},bonus={bonus},bonusStatus={bonusStatus}");
