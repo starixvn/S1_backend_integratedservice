@@ -42,5 +42,10 @@ namespace ThirdPartyService.Service.BLL
                 return tpCountryCode;
             }
         }
+
+        public IEnumerable<int> GetCustIdWithoutSabaId(int tpId)
+        {
+            return tpCustInfoService.GetCustIdWithoutSabaId(tpId);
+        }
     }
 }

@@ -1195,6 +1195,11 @@ namespace ThirdPartyService.Service.BLL
             return _TpList.TryGetValue(tpId, out var result) ? result.TpName : string.Empty;
         }
 
+        public ApiResult<TpCustInfo> CreateMember(int custId, int tpId)
+        {
+            return tpCustInfoService.CreateMember(custId, tpId);
+        }
+
         #region Private Methods
 
         /// <summary>
@@ -1495,12 +1500,12 @@ namespace ThirdPartyService.Service.BLL
                     var gameId = tpInfo.inputs.ContainsKey("gameId") ? tpInfo.inputs["gameId"] : "0";
                     gameId = (gameId == "undefined" || gameId == "null") ? "" : gameId;
                     var betType = tpInfo.inputs.ContainsKey("bettype") ? tpInfo.inputs["bettype"] : "0";
-                    
+
                     // 顯示遊戲大廳名 (Dream Gaming)
                     var type = (int)RecentlyViewedTypeEnum.LobbyName;
                     // 類型_TP_TpGameType_CategoryId_GameId_BetType
                     var gameInfo = $"{type}:{tpInfo.TpId}:{tpGameType}:{(int)gameTypeOption.CategoryId}:{gameId}:0";
-                    
+
                     // Slot 顯示遊戲名稱
                     if (gameTypeOption.CategoryId == TpCategory.Casino)
                     {
@@ -1510,8 +1515,8 @@ namespace ThirdPartyService.Service.BLL
                             type = (int)RecentlyViewedTypeEnum.GameName;
                             gameInfo = $"{type}:{tpInfo.TpId}:{tpGameType}:{(int)gameTypeOption.CategoryId}:{gameId}:0";
                         }
-                    } 
-                    else if(tpInfo.TpId == (int)TpEnum.SBSW)
+                    }
+                    else if (tpInfo.TpId == (int)TpEnum.SBSW)
                     {
                         // esport games 多塞bettype判斷
                         type = (int)RecentlyViewedTypeEnum.LobbyName;
