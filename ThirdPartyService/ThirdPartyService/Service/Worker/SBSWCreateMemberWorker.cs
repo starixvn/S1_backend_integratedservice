@@ -14,6 +14,7 @@ namespace ThirdPartyService.Service.Worker
         private readonly ILogger<GetBalanceWorker> _logger;
         private readonly TpCustInfoBLL _tpCustInfoBll;
         private readonly ThirdPartyBLL _thirdPartyBll;
+        private readonly int _tpId = (int)TpEnum.SBSW;
 
         private Timer _timer;
 
@@ -52,11 +53,11 @@ namespace ThirdPartyService.Service.Worker
 
                 _logger.LogInformation($"SBSWCreateMemberWorker-Worker Start.");
 
-                var custIdList = _tpCustInfoBll.GetCustIdWithoutSabaId((int)TpEnum.SBSW);
+                var custIdList = _tpCustInfoBll.GetCustIdWithoutSabaId(_tpId);
 
                 foreach (var custId in custIdList)
                 {
-                    var result = _thirdPartyBll.CreateMember(custId, (int)TpEnum.SBSW);
+                    var result = _thirdPartyBll.CreateMember(custId, _tpId);
                     if (result.ErrorCode is not ErrorCode.Success)
                     {
                         _logger.LogInformation($"SBSWCreateMemberWorker-Create Member Fail. " +
