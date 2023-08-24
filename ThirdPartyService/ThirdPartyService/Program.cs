@@ -28,8 +28,9 @@ var serviceType = Environment.GetEnvironmentVariable("ServiceType");
 if (!string.IsNullOrEmpty(serviceType) && serviceType.Equals("worker", StringComparison.OrdinalIgnoreCase))
 {
     builder.Services
-        .AddHostedService<WorkerService>();
-       // .AddHostedService<GetBalanceWorker>();
+        .AddHostedService<WorkerService>()
+        .AddHostedService<SBSWCreateMemberWorker>();
+        //.AddHostedService<GetBalanceWorker>();
 }
 
 var app = builder.Build();

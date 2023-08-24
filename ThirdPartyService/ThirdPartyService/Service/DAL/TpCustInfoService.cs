@@ -32,7 +32,7 @@ namespace ThirdPartyService.Service.DAL
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
         }
-        
+
         public ApiResult<TpCustInfo> GetTpCustInfo(int custId, int tpId)
         {
             var apiResult = new ApiResult<TpCustInfo>();
@@ -48,7 +48,7 @@ namespace ThirdPartyService.Service.DAL
                     apiResult.Message = "Test environment not supported";
                     return apiResult;
                 }
-                
+
                 tpCustInfo = _mainDbClient.QueryFirst<TpCustInfo>("TpCustInfo_Get_V2", new { CustId = custId, TpId = tpId });
 
                 if (tpCustInfo == null)
@@ -66,73 +66,7 @@ namespace ThirdPartyService.Service.DAL
                         return apiResult;
                     }
 
-                    var tpHelper = _thirdPartyHelper.GetThirdPartyHelper(tpId, customer.SiteId);
-                    var serverInfo = _serverInfoBll.GetServerInfo(customer.SiteId);
-                    
-                    // 特殊幣別TpUserName前綴
-                    var currencyPrefixCode = "";
-                    var currencyPrefix = _mainDbClient.QueryFirst<CurrencyPrefix>("Service_CurrencyPrefix_ByCurrencyId_Get", new { _CurrencyId = customer.CurrencyId });
-                    if (currencyPrefix != null)
-                    {
-                        currencyPrefixCode = $"_{currencyPrefix.PrefixCode}";
-                    }
-
-                    var regTpCustInfo = new TpCustInfo
-                    {
-                        TpId = tpId,
-                        CustId = customer.CustId,
-                        UserName = customer.UserName,
-                        SiteId = customer.SiteId,
-                        TpUserName = $"{serverInfo.SiteName}{currencyPrefixCode}_{customer.CustId}",
-                        MemberType = customer.MemberType
-                    };
-
-                    if (_environment.EnvironmentName != "Production")
-                    {
-                        regTpCustInfo.TpUserName = $"{_common.GetEnv()}{serverInfo.SiteName}{currencyPrefixCode}_{customer.CustId}";
-                    }
-
-                    regTpCustInfo.TpPwd = _tools.GetRandomString(7);
-                    regTpCustInfo.IsTest = customer.IsTest;
-                    regTpCustInfo.ActStatus = customer.ActStatus;
-
-                    
-                    var tpCurrency = _mainDbClient.QueryFirst<TpCurrency>("TpCurrency_Get", new { TpId = tpId, customer.CurrencyId });
-
-                    if (tpCurrency == null)
-                    {
-                        apiResult.ErrorCode = ErrorCode.InvalidCurrency;
-                        return apiResult;
-                    }
-
-                    regTpCustInfo.TpCurrencyId = tpCurrency.TpCurrencyId;
-                    regTpCustInfo.ExchangeRate = tpCurrency.ExchangeRate;
-                    var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(_thirdPartyHelper.GetThirdPartyBySite(tpId, customer.SiteId).Setting);
-
-                    if (inputs == null)
-                    {
-                        apiResult.ErrorCode = ErrorCode.SettingNotFound;
-                        return apiResult;
-                    }
-
-                    var createMemberResult = tpHelper.CreateMember(regTpCustInfo, inputs);
-
-                    if (createMemberResult.ErrorCode == ErrorCode.Success)
-                    {
-                        _mainDbClient.Execute("TpCustInfo_Ins_V2", regTpCustInfo);
-                        regTpCustInfo.Status = (int)CustStatus.Running;
-                        regTpCustInfo.CStatus = (int)CustStatus.Running;
-                        tpCustInfo = regTpCustInfo;
-                        apiResult.Data = tpCustInfo;
-                        apiResult.ErrorCode = ErrorCode.Success;
-                    }
-                    else
-                    {
-                        apiResult.ErrorCode = createMemberResult.ErrorCode;
-                        apiResult.RawMessage = createMemberResult.RawMessage;
-                        apiResult.RawErrorCode = createMemberResult.RawErrorCode;
-                        return apiResult;
-                    }
+                    return CreateMember(customer, tpId);
                 }
                 else if (tpCustInfo.Status is (int)CustStatus.Closed or (int)CustStatus.Suspend ||
                          tpCustInfo.CStatus is (int)CustStatus.Closed or (int)CustStatus.Suspend)
@@ -142,7 +76,7 @@ namespace ThirdPartyService.Service.DAL
                     return apiResult;
                 }
 
-                if (tpCustInfo is {CustId: > 0})
+                if (tpCustInfo is { CustId: > 0 })
                 {
                     _cache.Set(sTpCustInfoKey, tpCustInfo, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(30)));
                     apiResult.Data = tpCustInfo;
@@ -157,12 +91,18 @@ namespace ThirdPartyService.Service.DAL
 
             return apiResult;
         }
-        
+
+        public ApiResult<TpCustInfo> CreateMember(int custId, int tpId)
+        {
+            var customer = _mainDbClient.QueryFirst<Customer>("Customer_Get", new { CustId = custId });
+            return CreateMember(customer, tpId);
+        }
+
         public void SetTpLastLoginTime(int custId, int tpId)
         {
             _mainDbClient.Execute("TpLastLoginTime_Set", new { TpId = tpId, CustId = custId });
         }
-        
+
         public void SetTpLastTradingTime(int custId, int tpId)
         {
             _mainDbClient.Execute("TpLastTradingTime_Set", new { TpId = tpId, CustId = custId });
@@ -179,7 +119,7 @@ namespace ThirdPartyService.Service.DAL
         /// <param name="tpId">第三方ID</param>
         /// <param name="siteId">平台ID</param>
         /// <returns></returns>
-        public IEnumerable<BalanceTpCustInfoModel> GetTpCustInfoList(bool firstRun,int tpId, int siteId)
+        public IEnumerable<BalanceTpCustInfoModel> GetTpCustInfoList(bool firstRun, int tpId, int siteId)
         {
             var parameter = new DynamicParameters();
             parameter.Add("_FirstRun", firstRun);
@@ -191,6 +131,13 @@ namespace ThirdPartyService.Service.DAL
         public void SetCustGotoGame(int custId, int tpId, int gameType)
         {
             _mainDbClient.Execute("Service_CustGotoGame_Set", new { CustId = custId, TpId = tpId, GameType = gameType });
+        }
+
+        public IEnumerable<int> GetCustIdWithoutSabaId(int tpId)
+        {
+            var parameter = new DynamicParameters();
+            parameter.Add("_TpId", tpId);
+            return _reportDbClient.Query<int>("Service_CustWithoutTpCustInfo_Get", parameter, commandType: CommandType.StoredProcedure);
         }
 
         public TpCountryCode GetTpCurrencyCodeByCurrencyId(int tpId, string tpCurrencyId)
@@ -206,7 +153,7 @@ namespace ThirdPartyService.Service.DAL
                 if (tpId == (int)TpEnum.PT)
                 {
                     // allow test custid
-                    var _testCustId = new List<long> {  };
+                    var _testCustId = new List<long> { };
                     if (_testCustId.Contains(custId))
                     {
                         return false;
@@ -219,6 +166,77 @@ namespace ThirdPartyService.Service.DAL
                 }
             }
             return false;
+        }
+
+        private ApiResult<TpCustInfo> CreateMember(Customer customer, int tpId)
+        {
+            var apiResult = new ApiResult<TpCustInfo>();
+
+            var tpHelper = _thirdPartyHelper.GetThirdPartyHelper(tpId, customer.SiteId);
+            var serverInfo = _serverInfoBll.GetServerInfo(customer.SiteId);
+
+            // 特殊幣別TpUserName前綴
+            var currencyPrefixCode = "";
+            var currencyPrefix = _mainDbClient.QueryFirst<CurrencyPrefix>("Service_CurrencyPrefix_ByCurrencyId_Get", new { _CurrencyId = customer.CurrencyId });
+            if (currencyPrefix != null)
+            {
+                currencyPrefixCode = $"_{currencyPrefix.PrefixCode}";
+            }
+
+            var regTpCustInfo = new TpCustInfo
+            {
+                TpId = tpId,
+                CustId = customer.CustId,
+                UserName = customer.UserName,
+                SiteId = customer.SiteId,
+                TpUserName = $"{serverInfo.SiteName}{currencyPrefixCode}_{customer.CustId}",
+                MemberType = customer.MemberType
+            };
+
+            if (_environment.EnvironmentName != "Production")
+            {
+                regTpCustInfo.TpUserName = $"{_common.GetEnv()}{serverInfo.SiteName}{currencyPrefixCode}_{customer.CustId}";
+            }
+
+            regTpCustInfo.TpPwd = _tools.GetRandomString(7);
+            regTpCustInfo.IsTest = customer.IsTest;
+            regTpCustInfo.ActStatus = customer.ActStatus;
+
+            var tpCurrency = _mainDbClient.QueryFirst<TpCurrency>("TpCurrency_Get", new { TpId = tpId, customer.CurrencyId });
+
+            if (tpCurrency == null)
+            {
+                apiResult.ErrorCode = ErrorCode.InvalidCurrency;
+                return apiResult;
+            }
+
+            regTpCustInfo.TpCurrencyId = tpCurrency.TpCurrencyId;
+            regTpCustInfo.ExchangeRate = tpCurrency.ExchangeRate;
+            var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(_thirdPartyHelper.GetThirdPartyBySite(tpId, customer.SiteId).Setting);
+
+            if (inputs == null)
+            {
+                apiResult.ErrorCode = ErrorCode.SettingNotFound;
+                return apiResult;
+            }
+
+            var createMemberResult = tpHelper.CreateMember(regTpCustInfo, inputs);
+
+            if (createMemberResult.ErrorCode == ErrorCode.Success)
+            {
+                _mainDbClient.Execute("TpCustInfo_Ins_V2", regTpCustInfo);
+                regTpCustInfo.Status = (int)CustStatus.Running;
+                regTpCustInfo.CStatus = (int)CustStatus.Running;
+                apiResult.Data = regTpCustInfo;
+                apiResult.ErrorCode = ErrorCode.Success;
+            }
+            else
+            {
+                apiResult.ErrorCode = createMemberResult.ErrorCode;
+                apiResult.RawMessage = createMemberResult.RawMessage;
+                apiResult.RawErrorCode = createMemberResult.RawErrorCode;
+            }
+            return apiResult;
         }
     }
 }
