@@ -57,12 +57,24 @@ namespace ThirdPartyService.Service.Worker
 
                 foreach (var custId in custIdList)
                 {
-                    var result = _thirdPartyBll.CreateMember(custId, _tpId);
+                    var result = _thirdPartyBll.CreateMember(custId, _tpId, true);
                     if (result.ErrorCode is not ErrorCode.Success)
                     {
-                        _logger.LogInformation($"SBSWCreateMemberWorker-Create Member Fail. " +
-                            $"result={JsonConvert.SerializeObject(result)}");
+                        if (result.RawErrorCode is "6") //Duplicate Vendor_Member_ID，補TpCustInfo
+                        {
+                            var duplicateResult = _thirdPartyBll.CreateMember(custId, _tpId, false);
+                            if (result.ErrorCode is not ErrorCode.Success)
+                            {
+                                _logger.LogInformation($"SBSWCreateMemberWorker-Create Member [Duplicate] Fail. custId={custId}. " +
+                                                   $"result={JsonConvert.SerializeObject(result)}");
+                                continue;
+                            }
+                        }
+
+                        _logger.LogInformation($"SBSWCreateMemberWorker-Create Member Fail. custId={custId}. " +
+                                                   $"result={JsonConvert.SerializeObject(result)}");
                     }
+                    Thread.Sleep(5 * 1000); //休息5秒
                 }
 
                 _logger.LogInformation($"SBSWCreateMemberWorker-Worker End.\r\n" +
