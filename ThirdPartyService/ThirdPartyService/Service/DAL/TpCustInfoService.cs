@@ -66,7 +66,7 @@ namespace ThirdPartyService.Service.DAL
                         return apiResult;
                     }
 
-                    return CreateMember(customer, tpId);
+                    return CreateMember(customer, tpId, true);
                 }
                 else if (tpCustInfo.Status is (int)CustStatus.Closed or (int)CustStatus.Suspend ||
                          tpCustInfo.CStatus is (int)CustStatus.Closed or (int)CustStatus.Suspend)
@@ -91,10 +91,10 @@ namespace ThirdPartyService.Service.DAL
 
             return apiResult;
         }
-        public ApiResult<TpCustInfo> CreateMember(int custId, int tpId)
+        public ApiResult<TpCustInfo> CreateMember(int custId, int tpId, bool isNeedSendRequest)
         {
             var customer = _mainDbClient.QueryFirst<Customer>("Customer_Get", new { CustId = custId });
-            return CreateMember(customer, tpId);
+            return CreateMember(customer, tpId, isNeedSendRequest);
         }
 
         public void SetTpLastLoginTime(int custId, int tpId)
@@ -168,7 +168,7 @@ namespace ThirdPartyService.Service.DAL
             return false;
         }
 
-        private ApiResult<TpCustInfo> CreateMember(Customer customer, int tpId)
+        private ApiResult<TpCustInfo> CreateMember(Customer customer, int tpId, bool isNeedSendRequest)
         {
             var apiResult = new ApiResult<TpCustInfo>();
 
@@ -220,21 +220,33 @@ namespace ThirdPartyService.Service.DAL
                 return apiResult;
             }
 
-            var createMemberResult = tpHelper.CreateMember(regTpCustInfo, inputs);
-
-            if (createMemberResult.ErrorCode == ErrorCode.Success)
+            if (isNeedSendRequest)
             {
+                var createMemberResult = tpHelper.CreateMember(regTpCustInfo, inputs);
+
+                if (createMemberResult.ErrorCode == ErrorCode.Success)
+                {
+                    _mainDbClient.Execute("TpCustInfo_Ins_V2", regTpCustInfo);
+                    regTpCustInfo.Status = (int)CustStatus.Running;
+                    regTpCustInfo.CStatus = (int)CustStatus.Running;
+                    apiResult.Data = regTpCustInfo;
+                    apiResult.ErrorCode = ErrorCode.Success;
+                }
+                else
+                {
+                    apiResult.ErrorCode = createMemberResult.ErrorCode;
+                    apiResult.RawMessage = createMemberResult.RawMessage;
+                    apiResult.RawErrorCode = createMemberResult.RawErrorCode;
+                }
+            }
+            else
+            {
+                //for sabaId duplicate case
                 _mainDbClient.Execute("TpCustInfo_Ins_V2", regTpCustInfo);
                 regTpCustInfo.Status = (int)CustStatus.Running;
                 regTpCustInfo.CStatus = (int)CustStatus.Running;
                 apiResult.Data = regTpCustInfo;
                 apiResult.ErrorCode = ErrorCode.Success;
-            }
-            else
-            {
-                apiResult.ErrorCode = createMemberResult.ErrorCode;
-                apiResult.RawMessage = createMemberResult.RawMessage;
-                apiResult.RawErrorCode = createMemberResult.RawErrorCode;
             }
             return apiResult;
         }
