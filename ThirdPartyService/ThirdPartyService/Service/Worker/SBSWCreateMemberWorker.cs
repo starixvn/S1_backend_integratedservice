@@ -17,6 +17,7 @@ namespace ThirdPartyService.Service.Worker
         private readonly int _tpId = (int)TpEnum.SBSW;
 
         private Timer _timer;
+        private List<int> _failCustIdList = new List<int>();
 
         #endregion
 
@@ -65,16 +66,25 @@ namespace ThirdPartyService.Service.Worker
                             var duplicateResult = _thirdPartyBll.CreateMember(custId, _tpId, false);
                             if (result.ErrorCode is not ErrorCode.Success)
                             {
+                                _failCustIdList.Add(custId);
                                 _logger.LogInformation($"SBSWCreateMemberWorker-Create Member [Duplicate] Fail. custId={custId}. " +
                                                    $"result={JsonConvert.SerializeObject(result)}");
                                 continue;
                             }
                         }
-
-                        _logger.LogInformation($"SBSWCreateMemberWorker-Create Member Fail. custId={custId}. " +
+                        else
+                        {
+                            _failCustIdList.Add(custId);
+                            _logger.LogInformation($"SBSWCreateMemberWorker-Create Member Fail. custId={custId}. " +
                                                    $"result={JsonConvert.SerializeObject(result)}");
+                        }
                     }
                     Thread.Sleep(5 * 1000); //休息5秒
+                }
+
+                if (_failCustIdList.Any())
+                {
+                    _logger.LogInformation($"SBSWCreateMemberWorker-Create Member Fail List={JsonConvert.SerializeObject(_failCustIdList)}. ");
                 }
 
                 _logger.LogInformation($"SBSWCreateMemberWorker-Worker End.\r\n" +
