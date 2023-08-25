@@ -1195,9 +1195,9 @@ namespace ThirdPartyService.Service.BLL
             return _TpList.TryGetValue(tpId, out var result) ? result.TpName : string.Empty;
         }
 
-        public ApiResult<TpCustInfo> CreateMember(int custId, int tpId)
+        public ApiResult<TpCustInfo> CreateMember(int custId, int tpId, bool isNeedSendRequest)
         {
-            return tpCustInfoService.CreateMember(custId, tpId);
+            return tpCustInfoService.CreateMember(custId, tpId, isNeedSendRequest);
         }
 
         #region Private Methods
