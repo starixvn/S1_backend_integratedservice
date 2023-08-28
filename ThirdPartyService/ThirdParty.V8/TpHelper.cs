@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -86,6 +87,8 @@ namespace ThirdParty.V8
             public decimal totalMoney { get; set; }
             public decimal freeMoney { get; set; }
             public int status { get; set; }
+            public string extraParam { get; set; }
+            public string lang { get; set; }
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -242,6 +245,14 @@ namespace ThirdParty.V8
             string Md5key = inputs.ContainsKey("Md5key") && !string.IsNullOrEmpty(inputs["Md5key"]) ? inputs["Md5key"] : throw new Exception("Md5key");
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
 
+            if (EnvironmentName != "Production")
+            {
+                ApiUrl = inputs.ContainsKey("ApiUrl_SW") && !string.IsNullOrEmpty(inputs["ApiUrl_SW"]) ? inputs["ApiUrl_SW"] : throw new Exception("ApiUrl_SW");
+                Agent = inputs.ContainsKey("Agent_SW") && !string.IsNullOrEmpty(inputs["Agent_SW"]) ? inputs["Agent_SW"] : throw new Exception("Agent_SW");
+                Deskey = inputs.ContainsKey("Deskey_SW") && !string.IsNullOrEmpty(inputs["Deskey_SW"]) ? inputs["Deskey_SW"] : throw new Exception("Deskey_SW");
+                Md5key = inputs.ContainsKey("Md5key_SW") && !string.IsNullOrEmpty(inputs["Md5key_SW"]) ? inputs["Md5key_SW"] : throw new Exception("Md5key_SW");
+            }
+
             var current = new DateTimeOffset(DateTime.UtcNow);
             var timestamp = current.ToUnixTimeMilliseconds();
             var timecnv = current.ToString("yyyyMMddHHmmssfff");
@@ -278,8 +289,16 @@ namespace ThirdParty.V8
                 var json = JsonConvert.DeserializeObject<ApiResponse>(result);
                 if (json.d.code == 0)
                 {
+                    var uri = new Uri(json.d.url);
+                    var forward = json.d.url;
+                    string pLang = HttpUtility.ParseQueryString(uri.Query).Get("lang");
+                    if (pLang != TpLangId)
+                    {
+                        forward = forward.Replace($"lang={pLang}", $"lang={TpLangId}");
+                    }
+
                     oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Message = json.d.url;
+                    oApiResult.Message = forward;
                 }
                 else
                 {
