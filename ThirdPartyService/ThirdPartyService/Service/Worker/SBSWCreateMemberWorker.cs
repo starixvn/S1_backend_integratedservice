@@ -72,6 +72,10 @@ namespace ThirdPartyService.Service.Worker
                                 continue;
                             }
                         }
+                        else if (result.RawErrorCode is "903") //System Is Under Maintenance 
+                        {
+                            _logger.LogInformation($"SBSWCreateMemberWorker-SBSW System Is Under Maintenance. ");
+                        }
                         else
                         {
                             _failCustIdList.Add(custId);
