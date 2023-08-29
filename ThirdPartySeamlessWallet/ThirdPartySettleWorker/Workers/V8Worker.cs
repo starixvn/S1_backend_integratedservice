@@ -25,6 +25,12 @@ namespace ThirdPartySettleWorker.Workers
         private readonly PartitionService _partitionService;
         private readonly Tools _tools;
         private readonly string _tpName;
+        private readonly int[] _kindId = {
+            220, 600, 610, 620, 630,
+            680, 830, 860, 890, 930,
+            3101, 3890, 8100, 8540, 8600,
+            8700, 1101, 1102
+        };
 
         public V8Worker(IServiceProvider provider)
         {
@@ -93,8 +99,7 @@ namespace ThirdPartySettleWorker.Workers
 
                             // revenue games
                             GameType gameType;
-                            int[] kindId = { 220, 600, 610, 620, 630, 680, 830, 860, 890, 930, 3101, 3890, 8100, 8540, 8600, 8700, 1101, 1102 };
-                            if (kindId.Contains(unsettled.KindID))
+                            if (_kindId.Contains(unsettled.KindID))
                             {
                                 gameType = GameType.V8_Poker;
                             }
@@ -160,12 +165,14 @@ namespace ThirdPartySettleWorker.Workers
 
             var forContinue = false;
             var isError = false;
+            // 統一使用一款處理worker執行
             var gametype = (GameType)state;
             var bettransGet = "Service_BettransPK_V8_Settle_Get";
             var bettransSet = "Service_BettransPK_V8_Settle_Set";
             var wagerGet = "Service_TpWagerPK_V8_Settle_Get";
             var wagerSet = "Service_TpWagerPK_V8_Settle_Set_V2";
             string logName = $"Settle_V8";
+
 
             try
             {
@@ -218,14 +225,14 @@ namespace ThirdPartySettleWorker.Workers
                         }
 
                         // revenue games
-                        int[] kindId = { 220, 600, 610, 620, 630, 680, 830, 860, 890, 930, 3101, 3890, 8100, 8540, 8600, 8700, 1101, 1102 };
-                        if (kindId.Contains(wager.KindID))
+                        var realGameType = gametype;
+                        if (_kindId.Contains(wager.KindID))
                         {
-                            gametype = GameType.V8_Poker;
+                            realGameType = GameType.V8_Poker;
                         }
                         else
                         {
-                            gametype = GameType.V8_Poker_None;
+                            realGameType = GameType.V8_Poker_None;
                         }
 
                         var stake = wager.Stake;
@@ -241,7 +248,7 @@ namespace ThirdPartySettleWorker.Workers
                             Revenue = revenue,
                             WinlostAmount = winLostAmount,
                             TransId = TransId,
-                            GameType = gametype,
+                            GameType = realGameType,
                             TpUserName = tpUserName,
                             SettledTime = wager.SettleTime,
                             TransTime = wager.TransTime,
@@ -291,7 +298,7 @@ namespace ThirdPartySettleWorker.Workers
 
         private void SetSettleFlag(string wagerSet, string bettransSet, GameType gametype, BetRecordInfo betRecordInfo)
         {
-            _ = _tpUnSettledBLL.SetSettleFlag(wagerSet, Tp, GameType.V8_Poker, betRecordInfo.TransId, true, DataBase.Wager);
+            _ = _tpUnSettledBLL.SetSettleFlag(wagerSet, Tp, gametype, betRecordInfo.TransId, true, DataBase.Wager);
             _ = _settledBLL.SetSettleFlagOfMonthlyBettrans(bettransSet, betRecordInfo);
         }
     }

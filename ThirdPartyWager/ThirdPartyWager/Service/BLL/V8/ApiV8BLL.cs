@@ -28,17 +28,16 @@ namespace ThirdPartyWager.Service.BLL
             var timestamp = current.ToUnixTimeMilliseconds();
             // param
             var url = wagerUrl;
-            var param = new
+            var dicP = new Dictionary<string, string>()
             {
-                s = 6,
-                startTime = startUnix * 1000,
-                endTime = endUnix * 1000
+                { "s", "6"},
+                { "startTime", (startUnix * 1000).ToString()},
+                { "endTime", (endUnix * 1000).ToString()}
             };
-            var dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(param));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}"));
             // log
-            _logger.LogInformation(JsonConvert.SerializeObject(param));
+            _logger.LogInformation(JsonConvert.SerializeObject(sParam));
 
             var wager = new
             {
@@ -68,17 +67,16 @@ namespace ThirdPartyWager.Service.BLL
 
             // param
             var url = wagerUrl;
-            var param = new
+            var dicP = new Dictionary<string, string>()
             {
-                s = 6,
-                startTime = startUnix * 1000,
-                endTime = endUnix * 1000
+                { "s", "6"},
+                { "startTime", (startUnix * 1000).ToString()},
+                { "endTime", (endUnix * 1000).ToString()}
             };
-            var dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(param));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}"));
             // log
-            _logger.LogInformation(JsonConvert.SerializeObject(param));
+            _logger.LogInformation(JsonConvert.SerializeObject(sParam));
 
             var wager = new
             {
