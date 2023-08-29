@@ -17,6 +17,8 @@ using CommonService.IntegrationTest.Stubs;
 using NSubstitute;
 using CommonService.Service.Model.enums;
 using CommonService.Service.Model;
+using CommonService.Service.Library;
+using Microsoft.Extensions.Logging;
 
 namespace CommonService.Service.BLL.Tests
 {
@@ -48,6 +50,8 @@ namespace CommonService.Service.BLL.Tests
             services.AddSingleton<IWebHostEnvironment>(env);
             services.AddSingleton<IHostEnvironment>(env);
 
+            services.AddTransient(p => Substitute.For<ILogger<MySqlClient>>());
+
             var startup = new StubStartUp(_configuration);
 
             startup.ConfigureServices(services);
@@ -65,6 +69,17 @@ namespace CommonService.Service.BLL.Tests
         {
             var actual = _configBLL.GetConfigValuesBySiteName<NxcloudSMSServiceTypeConfig>("NxCloud");
             return actual[siteName].OTP.Appkey;
+        }
+
+        [TestCase(1, ExpectedResult = "svTUT8d0")]
+        [TestCase(2, ExpectedResult = "RPQZO7FL")]
+        [TestCase(3, ExpectedResult = "JHvVDPa4")]
+        [TestCase(5, ExpectedResult = "svTUT8d0")]
+        [TestCase(6, ExpectedResult = "svTUT8d0")]
+        public string GetConfigValuesBySiteNameTest(int siteId)
+        {
+            var actual = _configBLL.GetConfigValuesBySiteId<NxcloudSMSServiceTypeConfig>("NxCloud");
+            return actual[siteId].OTP.Appkey;
         }
     }
 }
