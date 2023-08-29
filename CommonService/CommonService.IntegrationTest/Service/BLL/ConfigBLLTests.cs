@@ -76,7 +76,7 @@ namespace CommonService.Service.BLL.Tests
         [TestCase(3, ExpectedResult = "JHvVDPa4")]
         [TestCase(5, ExpectedResult = "svTUT8d0")]
         [TestCase(6, ExpectedResult = "svTUT8d0")]
-        public string GetConfigValuesBySiteNameTest(int siteId)
+        public string GetConfigValuesBySiteIdTest(int siteId)
         {
             var actual = _configBLL.GetConfigValuesBySiteId<NxcloudSMSServiceTypeConfig>("NxCloud");
             return actual[siteId].OTP.Appkey;
