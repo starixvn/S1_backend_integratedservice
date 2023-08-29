@@ -58,7 +58,7 @@ public class WagerIMBLL
         
         foreach (var (gameType, productWallet) in _gameTypeMapper)
         {
-            var workerTime = GetWorkerTime(type, 1, siteId, gameType);
+            var workerTime = GetWorkerTime(type, 0, siteId, gameType);
             
             quick = CheckQuick(workerTime, excess);
 
