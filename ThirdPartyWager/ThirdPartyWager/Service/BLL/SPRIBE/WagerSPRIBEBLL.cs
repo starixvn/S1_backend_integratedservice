@@ -43,7 +43,7 @@ public class WagerSPRIBEBLL
         const int timeRange = 5; //SPRIBE GetBetLog 的時間區間最大10分鐘，更新延遲15分
         const int gameType = 2;
         
-        var workerTime = GetWorkerTime(type, 1, siteId, gameType);
+        var workerTime = GetWorkerTime(type, 0, siteId, gameType);
         var quick = CheckQuick(workerTime, excess);
         
         var time = _dateTimeHelper.GetTimeByMinute(timeRange - 1, TimeZone, TimeFormat, workerTime);

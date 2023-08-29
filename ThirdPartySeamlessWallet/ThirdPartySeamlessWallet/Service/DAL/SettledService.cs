@@ -722,14 +722,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.Execute("Service_AutoCancelTransferBonus_Set_V2", new { BonusId = bonusId, TransId = transId, CurrencyId = currencyId, GameType = gameType },conn , trans);
         }
 
-        public int AutoCancelSeamlessBonus(int bonusId, int currencyId, int gameType, int custId, string userName, int siteId, string transId, MySqlConnection conn, MySqlTransaction trans)
+        private int AutoCancelSeamlessBonus(int bonusId, int currencyId, int gameType, int custId, string userName, int siteId, string transId, MySqlConnection conn, MySqlTransaction trans)
         {
             var p = new DynamicParameters(new { BonusId = bonusId, CurrencyId = currencyId, GameType = gameType, CustId = custId, UserName = userName, SiteId = siteId, TransId = transId });
             logger.LogWarning($"AutoCancelSeamlessBonus:BonusId={bonusId},TransId={transId},currencyId={currencyId},gameType={gameType},custId={custId},UserName={userName},SiteId={siteId}");
             p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("BonusStatus", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-            var result = _mainDbClient.Execute("Service_AutoCancelSeamlessBonus_Set_V3", p, conn , trans);
+            var result = _mainDbClient.Execute("Service_AutoCancelSeamlessBonus_Set_V4", p, conn , trans);
             var bonus = p.Get<decimal?>("Bonus") ?? 0;
             var bonusStatus = p.Get<int?>("BonusStatus") ?? 0;
             logger.LogWarning($"AutoCancelSeamlessBonusResult:BonusId={bonusId},TransId={transId},bonus={bonus},bonusStatus={bonusStatus}");
