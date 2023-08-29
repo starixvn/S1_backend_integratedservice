@@ -598,54 +598,52 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
 
             bettingDataRNG_CQ9.amount = Math.Abs(bettingDataRNG_CQ9.amount) * -1;
-
             try
             {
-                if (bettingDataRNG_CQ9.amount != 0)
+                var p = new DynamicParameters(new
                 {
-                    result = walletService.SetBalance(
-                       tpCustInfo.CustId,
-                       tpCustInfo.SiteId,
-                       tpCustInfo.UserName,
-                       bettingDataRNG_CQ9.amount,
-                       (int)Tp.CQ9,
-                       TransType.Wagers,
-                       $"Stake: {Math.Abs(bettingDataRNG_CQ9.amount):#,##0.##}",
-                       bettingDataRNG_CQ9.mtcode,
-                       out afterAmount,
-                       conn,
-                       trans
-                   );
+                    account = bettingDataRNG_CQ9.account,
+                    eventUnix = bettingDataRNG_CQ9.eventUnix,
+                    gamehall = bettingDataRNG_CQ9.gamehall,
+                    gamecode = bettingDataRNG_CQ9.gamecode,
+                    roundid = bettingDataRNG_CQ9.roundid,
+                    amount = bettingDataRNG_CQ9.amount,
+                    mtcode = bettingDataRNG_CQ9.mtcode,
+                    before = afterAmount + (Math.Abs(bettingDataRNG_CQ9.amount)),
+                    balance = afterAmount,
+                    TicketType = (int)BettransType.Bet,
+                    Actions = "rollout",
+                    TicketStatus = (int)TicketStatus.UnSettled
+                });
+                result = _mainDbClient.Execute("Service_BettransFish_CQ9_Ins", p, conn, trans);
 
-                    if (result > 0)
+                if (result > 0)
+                {
+                    if (bettingDataRNG_CQ9.amount != 0)
                     {
-                        var p = new DynamicParameters(new
-                        {
-                            account = bettingDataRNG_CQ9.account,
-                            eventUnix = bettingDataRNG_CQ9.eventUnix,
-                            gamehall = bettingDataRNG_CQ9.gamehall,
-                            gamecode = bettingDataRNG_CQ9.gamecode,
-                            roundid = bettingDataRNG_CQ9.roundid,
-                            amount = bettingDataRNG_CQ9.amount,
-                            mtcode = bettingDataRNG_CQ9.mtcode,
-                            before = afterAmount + (Math.Abs(bettingDataRNG_CQ9.amount)),
-                            balance = afterAmount,
-                            TicketType = (int)BettransType.Bet,
-                            Actions = "rollout",
-                            TicketStatus = (int)TicketStatus.UnSettled
-                        });
-
-                        result = _mainDbClient.Execute("Service_BettransFish_CQ9_Ins", p, conn, trans);
-
-                        if (result > 0)
-                        {
-                            _mainDbClient.CommitAndDisposeConnection(conn, trans);
-                        }
-                        else
-                        {
-                            _mainDbClient.RollbackAndDisposeConnection(conn, trans);
-                        }
+                        result = walletService.SetBalance(
+                            tpCustInfo.CustId,
+                            tpCustInfo.SiteId,
+                            tpCustInfo.UserName,
+                            bettingDataRNG_CQ9.amount,
+                            (int)Tp.CQ9,
+                            TransType.Wagers,
+                            $"Stake: {Math.Abs(bettingDataRNG_CQ9.amount):#,##0.##}",
+                            bettingDataRNG_CQ9.mtcode,
+                            out afterAmount,
+                            conn,
+                            trans
+                        );
                     }
+                }
+
+                if (result > 0)
+                {
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                 }
             }
             catch (MySqlException mySqlEx)
@@ -673,54 +671,53 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
 
             bettingDataRNG_CQ9.amount = Math.Abs(bettingDataRNG_CQ9.amount) * -1;
-
             try
             {
-                if (bettingDataRNG_CQ9.amount != 0)
+                var p = new DynamicParameters(new
                 {
-                    result = walletService.SetBalance(
-                       tpCustInfo.CustId,
-                       tpCustInfo.SiteId,
-                       tpCustInfo.UserName,
-                       bettingDataRNG_CQ9.amount,
-                       (int)Tp.CQ9,
-                       TransType.Wagers,
-                       $"Stake: {Math.Abs(bettingDataRNG_CQ9.amount):#,##0.##}",
-                       bettingDataRNG_CQ9.mtcode,
-                       out afterAmount,
-                       conn,
-                       trans
-                   );
+                    account = bettingDataRNG_CQ9.account,
+                    eventUnix = bettingDataRNG_CQ9.eventUnix,
+                    gamehall = bettingDataRNG_CQ9.gamehall,
+                    gamecode = bettingDataRNG_CQ9.gamecode,
+                    roundid = bettingDataRNG_CQ9.roundid,
+                    amount = bettingDataRNG_CQ9.amount,
+                    mtcode = bettingDataRNG_CQ9.mtcode,
+                    before = afterAmount + (Math.Abs(bettingDataRNG_CQ9.amount)),
+                    balance = afterAmount,
+                    TicketType = (int)BettransType.Bet,
+                    Actions = "takeall",
+                    TicketStatus = (int)TicketStatus.UnSettled,
+                    SettleFlag = 2
+                });
 
-                    if (result > 0)
+                result = _mainDbClient.Execute("Service_BettransFish_CQ9_Ins", p, conn, trans);
+
+                if (result > 0)
+                {
+                    if (bettingDataRNG_CQ9.amount != 0)
                     {
-                        var p = new DynamicParameters(new
-                        {
-                            account = bettingDataRNG_CQ9.account,
-                            eventUnix = bettingDataRNG_CQ9.eventUnix,
-                            gamehall = bettingDataRNG_CQ9.gamehall,
-                            gamecode = bettingDataRNG_CQ9.gamecode,
-                            roundid = bettingDataRNG_CQ9.roundid,
-                            amount = bettingDataRNG_CQ9.amount,
-                            mtcode = bettingDataRNG_CQ9.mtcode,
-                            before = afterAmount + (Math.Abs(bettingDataRNG_CQ9.amount)),
-                            balance = afterAmount,
-                            TicketType = (int)BettransType.Bet,
-                            Actions = "takeall",
-                            TicketStatus = (int)TicketStatus.UnSettled,
-                            SettleFlag = 2
-                        });
-
-                        result = _mainDbClient.Execute("Service_BettransFish_CQ9_Ins", p, conn, trans);
-                        if (result > 0)
-                        {
-                            _mainDbClient.CommitAndDisposeConnection(conn, trans);
-                        }
-                        else
-                        {
-                            _mainDbClient.RollbackAndDisposeConnection(conn, trans);
-                        }
+                        result = walletService.SetBalance(
+                            tpCustInfo.CustId,
+                            tpCustInfo.SiteId,
+                            tpCustInfo.UserName,
+                            bettingDataRNG_CQ9.amount,
+                            (int)Tp.CQ9,
+                            TransType.Wagers,
+                            $"Stake: {Math.Abs(bettingDataRNG_CQ9.amount):#,##0.##}",
+                            bettingDataRNG_CQ9.mtcode,
+                            out afterAmount,
+                            conn,
+                            trans
+                        );
                     }
+                }
+                if (result > 0)
+                {
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                 }
             }
             catch (MySqlException mySqlEx)

@@ -74,7 +74,7 @@ namespace ThirdPartySettleWorker.Workers
 
                             // revenue games
                             GameType gameType;
-                            int[] kindId = { 220, 600, 610, 620, 630, 680, 830, 860, 890, 930, 3101, 3890, 8100, 8540, 8600, 8700 };
+                            int[] kindId = { 220, 600, 610, 620, 630, 680, 830, 860, 890, 930, 3101, 3890, 8100, 8540, 8600, 8700, 1101, 1102 };
                             if (kindId.Contains(unsettled.KindID))
                             {
                                 gameType = GameType.V8_Poker;

@@ -1,17 +1,21 @@
 using System.Net;
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.BLL.IM;
 using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.BLL.MG;
 using ThirdPartyWager.Service.BLL.Nextspin;
 using ThirdPartyWager.Service.BLL.SBO;
+using ThirdPartyWager.Service.BLL.SPRIBE;
 using ThirdPartyWager.Service.BLL.TFG;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
+using ThirdPartyWager.Workers.IM;
 using ThirdPartyWager.Workers.Nextspin;
+using ThirdPartyWager.Workers.SPRIBE;
 
 namespace ThirdPartyWager
 {
@@ -62,7 +66,7 @@ namespace ThirdPartyWager
             //services.AddSingleton<WagerCFService>();
             services.AddSingleton<WagerSGService>();
             services.AddSingleton<WagerWMService>();
-            services.AddSingleton<WagerKiss918Service>();
+            //services.AddSingleton<WagerKiss918Service>();
             services.AddSingleton<WagerOne789Service>();
             //services.AddSingleton<WagerMegaService>();
             //services.AddSingleton<WagerIconicService>();
@@ -86,6 +90,7 @@ namespace ThirdPartyWager
             services.AddSingleton<ConfigService>();
             services.AddSingleton<FincanceService>();
             services.AddSingleton<WagerTFGService>();
+            services.AddSingleton<WagerIMService>();
 
             services.AddOptionListByDB<ServerInfo>("Admin_ServerInfoList_Get");
             services.AddOptionListByDB<dynamic>("Service_TpWagerTimer_Get", new { TpId = 1, Type = 1 }, DataBase.Wager);
@@ -141,8 +146,8 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerRedoWMBLL>();
             services.AddSingleton<FinanceWMBLL>();
             // Kiss918
-            services.AddSingleton<WagerKiss918BLL>();
-            services.AddSingleton<ApiKiss918BLL>();
+            //services.AddSingleton<WagerKiss918BLL>();
+            //services.AddSingleton<ApiKiss918BLL>();
             // One789
             services.AddSingleton<WagerOne789BLL>();
             services.AddSingleton<ApiOne789BLL>();
@@ -254,6 +259,13 @@ namespace ThirdPartyWager
             services.AddSingleton<INextspinApi, NextspinApi>();
             services.AddSingleton<INextspinBLL, NextspinBLL>();
             services.AddSingleton<INextspinFinancBLL, NextspinFinancBLL>();
+            
+            //IM
+            services.AddSingleton<ApiIMBLL>();
+            services.AddSingleton<WagerIMBLL>();
+            services.AddSingleton<FinanceIMBLL>();
+            services.AddSingleton<WagerSPRIBEBLL>();
+            services.AddSingleton<FinanceSPRIBEBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -322,8 +334,6 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceRedTiger>();
             services.AddHostedService<FinanceSexy>();
             services.AddHostedService<FinanceCQ9>();
-            services.AddHostedService<WagerKiss918>();
-            services.AddHostedService<WagerRedoKiss918>();
             services.AddHostedService<WagerSkywind>();
             services.AddHostedService<WagerUnsettleCheckSkywind>();
             services.AddHostedService<WagerGPI>();
@@ -338,6 +348,10 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerUnsettleCheckTFG>();
             services.AddHostedService<WagerNextspin>();
             services.AddHostedService<FinanceNextspin>();
+            services.AddHostedService<WagerIM>();
+            services.AddHostedService<WagerSPRIBE>();
+            services.AddHostedService<FinanceIM>();
+            services.AddHostedService<FinanceSPRIBE>();
 
             /*******************closed tp*************************/
             //services.AddHostedService<WagerOneGaming>();
@@ -353,6 +367,8 @@ namespace ThirdPartyWager
             //services.AddHostedService<WagerRedoPT>();
             //services.AddHostedService<FinancePT>();
             //services.AddHostedService<WagerReSettlePT>();
+            //services.AddHostedService<WagerKiss918>();
+            //services.AddHostedService<WagerRedoKiss918>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
