@@ -1,4 +1,5 @@
-﻿using ThirdPartySeamlessWallet.Service.Model.enums;
+﻿using Newtonsoft.Json;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -31,6 +32,25 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public string GameID { get; set; }
         public int KindID { get; set; }
+    }
+
+    public class ApiReq
+    {
+        public string agent { get; set; }
+        public long timestamp { get; set; }
+        [JsonProperty("@param")]
+        public string param { get; set; }
+        public string key { get; set; }
+    }
+
+    public class CommonP
+    {
+        public int s { get; set; }
+    }
+
+    public class GetBalanceP : CommonP
+    {
+        public string account { get; set; }
     }
 
 }
