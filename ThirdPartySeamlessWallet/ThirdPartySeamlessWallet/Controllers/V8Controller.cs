@@ -14,53 +14,6 @@ namespace ThirdPartySeamlessWallet.Controllers
     [ApiController]
     public class V8Controller : ControllerBase
     {
-        public enum SubType
-        {
-            GetBalance = 1001,
-            RequestBet = 1002,
-            ReturnBalance = 1003,
-            GetOrderStatus = 1004,
-            CancelBet = 1005,
-        }
-
-        // 当状态为 2 或 4 时，会进行重新派奬, 成功后修正订单为已处理
-        public enum StatusType
-        {
-            // 成功
-            Success = 1,
-            // 失败
-            Failure = 2,
-            // 处理中
-            Process = 3,
-            // 查无订单
-            NoResult = 4,
-            // 其他错误
-            OtherError = 5,
-        }
-
-        #region Request
-
-        public class ApiReq
-        {
-            public string agent { get; set; }
-            public long timestamp { get; set; }
-            [JsonProperty("@param")]
-            public string param { get; set; }
-            public string key { get; set; }
-        }
-
-        public class CommonP
-        {
-            public int s { get; set; }
-        }
-
-        public class GetBalanceP : CommonP
-        {
-            public string account { get; set; }
-        }
-
-        #endregion
-
         #region Response
 
         public class GetApiResp
@@ -79,76 +32,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             public int code { get; set; }
             public decimal money { get; set; }
-        }
-
-        public class GetBalanceRespOfSeamless
-        {
-            public int s { get; set; }
-            public string m { get; set; }
-            public GetBalanceD d { get; set; }
-        }
-
-        public class PlaceBetResp : GetBalanceRespOfSeamless
-        {
-        }
-
-        public class PayoutResp : GetBalanceRespOfSeamless
-        {
-        }
-
-        public class GetOrderStatusResp
-        {
-            public int s { get; set; }
-            public string m { get; set; }
-            public GetOrderStatusD d { get; set; }
-        }
-
-        public class CancelBetResp : GetOrderStatusResp
-        {
-        }
-
-        public class GetBalanceD
-        {
-            public int code { get; set; }
-            public string account { get; set; }
-            public decimal money { get; set; }
-        }
-
-        public class GetOrderStatusD
-        {
-            public int code { get; set; }
-            public int status { get; set; }
-        }
-
-        #endregion
-
-        #region ErrorCode
-
-        public enum Error
-        {
-            Success = 0,
-            // Insufficient balance
-            Insufficient = 1,
-            // Account does not exist
-            Account = 2,
-            // maintains
-            Maintains = 3,
-            // token validation error
-            Token = 4,
-            // data format error
-            Format = 5,
-            // decryption error
-            Decryption = 6,
-            // MD5 key error
-            Md5 = 7,
-            // unknown sub-type operation
-            Subtype = 8,
-            // Duplicate order
-            Duplicate = 9,
-            // Agent does not exist
-            Agent = 10,
-            // Account under deposit or withdrawn
-            Transaction = 11,
         }
 
         #endregion
@@ -434,14 +317,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 if (string.IsNullOrEmpty(getReq.agent))
                 {
-                    getApiResponse.d.code = (int)Error.Agent;
+                    getApiResponse.d.code = (int)ErrorCodeOfV8.Agent;
                     _log2File.Error($"Agent Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
 
                 if (string.IsNullOrEmpty(getReq.param))
                 {
-                    getApiResponse.d.code = (int)Error.Decryption;
+                    getApiResponse.d.code = (int)ErrorCodeOfV8.Decryption;
                     _log2File.Error($"Decryption Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
@@ -450,7 +333,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 if (string.IsNullOrEmpty(param))
                 {
-                    getApiResponse.d.code = (int)Error.Decryption;
+                    getApiResponse.d.code = (int)ErrorCodeOfV8.Decryption;
                     _log2File.Error($"Decryption Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
@@ -461,9 +344,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var req = JsonConvert.DeserializeObject<CommonP>(json);
                 getApiResponse.s = req.s;
 
-                if (!Enum.IsDefined(typeof(SubType), req.s))
+                if (!Enum.IsDefined(typeof(SubTypeOfV8), req.s))
                 {
-                    getApiResponse.d.code = (int)Error.Subtype;
+                    getApiResponse.d.code = (int)ErrorCodeOfV8.Subtype;
                     _log2File.Error($"Subtype Error {req.s}", logName);
                     return getApiResponse;
                 }
@@ -475,334 +358,25 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 if (!verifyKey)
                 {
-                    getApiResponse.d.code = (int)Error.Md5;
+                    getApiResponse.d.code = (int)ErrorCodeOfV8.Md5;
                     _log2File.Error($"CheckKey Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
 
                 switch (req.s)
                 {
-                    case (int)SubType.GetBalance:
-                        return GetBalance(json);
-                    case (int)SubType.RequestBet:
-                        return PlaceBet(getReq, json);
-                    case (int)SubType.ReturnBalance:
-                        return Payout(getReq, json);
-                    case (int)SubType.GetOrderStatus:
-                        return GetOrderStatus(getReq, json);
-                    case (int)SubType.CancelBet:
-                        return CancelBet(getReq, json);
+                    case (int)SubTypeOfV8.GetBalance:
+                        return _v8BLL.GetBalance(json);
+                    case (int)SubTypeOfV8.RequestBet:
+                        return _v8BLL.PlaceBet(getReq, json);
+                    case (int)SubTypeOfV8.ReturnBalance:
+                        return _v8BLL.Payout(getReq, json);
+                    case (int)SubTypeOfV8.GetOrderStatus:
+                        return _v8BLL.GetOrderStatus(getReq, json);
+                    case (int)SubTypeOfV8.CancelBet:
+                        return _v8BLL.CancelBet(getReq, json);
                     default:
                         break;
-                }
-            }
-            catch (Exception ex)
-            {
-                _log2File.Error($"{ex.Message}", logName, ex);
-            }
-
-            _log2File.Error($"Unknow Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
-            return getApiResponse;
-        }
-
-        private dynamic GetBalance(string reqParam)
-        {
-            string logName = $"{_thisTp}_getBalance";
-            var subType = SubType.GetBalance;
-            GetApiResp getApiResponse = new GetApiResp
-            {
-                s = (int)subType,
-                m = "/channelHandle",
-                d = new info
-                {
-                    code = 999
-                }
-            };
-
-            var req = JsonConvert.DeserializeObject<GetBalanceP>(reqParam);
-
-            if (req.s != (int)subType)
-            {
-                getApiResponse.d.code = (int)Error.Subtype;
-                _log2File.Error($"Subtype Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
-                return getApiResponse;
-            }
-            if (req.account == null)
-            {
-                getApiResponse.d.code = (int)Error.Account;
-                _log2File.Error($"Account Empty {JsonConvert.SerializeObject(getApiResponse)}", logName);
-                return getApiResponse;
-            }
-
-            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, req.account);
-            if (tpCustBalance != null)
-            {
-                GetBalanceRespOfSeamless getBalanceResponse = new()
-                {
-                    s = (int)subType,
-                    m = "/channelHandle",
-                    d = new GetBalanceD
-                    {
-                        code = (int)Error.Success,
-                        account = req.account,
-                        money = tpCustBalance.Balance
-                    }
-                };
-                return getBalanceResponse;
-            }
-
-            _log2File.Error($"Unknow Error {JsonConvert.SerializeObject(req)} {JsonConvert.SerializeObject(getApiResponse)}", logName);
-            return getApiResponse;
-        }
-
-        private dynamic PlaceBet(ApiReq getReq, string reqParam)
-        {
-            var result = 0;
-            string logName = $"{_thisTp}_PlaceBet";
-            var subType = SubType.RequestBet;
-            GetApiResp getApiResponse = new GetApiResp
-            {
-                s = (int)subType,
-                m = "/channelHandle",
-                d = new info
-                {
-                    code = 999
-                }
-            };
-
-            try
-            {
-                var req = JsonConvert.DeserializeObject<BettingDataPK_V8>(reqParam);
-                _log2File.Info($"{JsonConvert.SerializeObject(req)}", logName);
-
-                req.timestamp = getReq.timestamp;
-
-                if (req.s != (int)subType)
-                {
-                    getApiResponse.d.code = (int)Error.Subtype;
-                    _log2File.Error($"Subtype Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
-                    return getApiResponse;
-                }
-                if (req.account == null)
-                {
-                    getApiResponse.d.code = (int)Error.Account;
-                    _log2File.Error($"Account Empty {JsonConvert.SerializeObject(getApiResponse)}", logName);
-                    return getApiResponse;
-                }
-
-                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, req.account);
-                if (tpCheck == null)
-                {
-                    getApiResponse.d.code = (int)Error.Account;
-                    _log2File.Error($"{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                    return getApiResponse;
-                }
-                else if (tpCheck.Locked)
-                {
-                    getApiResponse.d.code = (int)Error.Account;
-                    _log2File.Error($"Locked {JsonConvert.SerializeObject(getApiResponse)}", logName);
-                    return getApiResponse;
-                }
-
-                result = _v8BLL.PlaceBetPK_V8(req, out decimal tpAffterAmount);
-                if (result > 0 || result == -1)
-                {
-                    if (tpAffterAmount == 0 || result == -1)
-                    {
-                        var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, req.account, _gameType);
-                        tpAffterAmount = tpCustBalance.Balance;
-                    }
-                    PlaceBetResp getPlaceBetResponse = new()
-                    {
-                        s = (int)subType,
-                        m = "/channelHandle",
-                        d = new GetBalanceD
-                        {
-                            code = (int)Error.Success,
-                            account = req.account,
-                            money = tpAffterAmount
-                        }
-                    };
-                    return getPlaceBetResponse;
-                }
-                else if (tpAffterAmount < 0)
-                {
-                    getApiResponse.d.code = (int)Error.Insufficient;
-                    _log2File.Error($"{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                    return getApiResponse;
-                }
-            }
-            catch (Exception ex)
-            {
-                _log2File.Error($"{ex.Message}", logName, ex);
-            }
-
-            _log2File.Error($"Unknow Error result={result} {JsonConvert.SerializeObject(getApiResponse)}", logName);
-            return getApiResponse;
-        }
-
-        private dynamic Payout(ApiReq getReq, string reqParam)
-        {
-            var result = 0;
-            string logName = $"{_thisTp}_Payout";
-            var subType = SubType.ReturnBalance;
-            GetApiResp getApiResponse = new GetApiResp
-            {
-                s = (int)subType,
-                m = "/channelHandle",
-                d = new info
-                {
-                    code = 999
-                }
-            };
-
-            try
-            {
-                var req = JsonConvert.DeserializeObject<BettingDataPK_V8>(reqParam);
-                _log2File.Info($"{JsonConvert.SerializeObject(req)}", logName);
-
-                req.timestamp = getReq.timestamp;
-
-                if (req.s != (int)subType)
-                {
-                    getApiResponse.d.code = (int)Error.Subtype;
-                    _log2File.Error($"Subtype Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
-                    return getApiResponse;
-                }
-                if (req.account == null)
-                {
-                    getApiResponse.d.code = (int)Error.Account;
-                    _log2File.Error($"Account Empty {JsonConvert.SerializeObject(getApiResponse)}", logName);
-                    return getApiResponse;
-                }
-
-                result = _v8BLL.PayoutPK_V8(req, out decimal tpAffterAmount);
-                if (result > 0 || result == -1)
-                {
-                    if (tpAffterAmount == 0 || result == -1)
-                    {
-                        var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, req.account, _gameType);
-                        tpAffterAmount = tpCustBalance.Balance;
-                    }
-                    PayoutResp getPayoutResponse = new()
-                    {
-                        s = (int)subType,
-                        m = "/channelHandle",
-                        d = new GetBalanceD
-                        {
-                            code = (int)Error.Success,
-                            account = req.account,
-                            money = tpAffterAmount
-                        }
-                    };
-                    return getPayoutResponse;
-                }
-            }
-            catch (Exception ex)
-            {
-                _log2File.Error($"{ex.Message}", logName, ex);
-            }
-
-            _log2File.Error($"Unknow Error result={result} {JsonConvert.SerializeObject(getApiResponse)}", logName);
-            return getApiResponse;
-        }
-
-        private dynamic CancelBet(ApiReq getReq, string reqParam)
-        {
-            var result = 0;
-            string logName = $"{_thisTp}_CancelBet";
-            var subType = SubType.CancelBet;
-            CancelBetResp getApiResponse = new()
-            {
-                s = (int)subType,
-                m = "/channelHandle",
-                d = new GetOrderStatusD
-                {
-                    code = 999,
-                    status = (int)StatusType.Failure
-                }
-            };
-
-            try
-            {
-                var req = JsonConvert.DeserializeObject<BettingDataPK_V8>(reqParam);
-                _log2File.Info($"{JsonConvert.SerializeObject(req)}", logName);
-
-                req.timestamp = getReq.timestamp;
-
-                if (req.s != (int)subType)
-                {
-                    getApiResponse.d.code = (int)Error.Subtype;
-                    _log2File.Error($"Subtype Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
-                    return getApiResponse;
-                }
-                if (req.account == null)
-                {
-                    getApiResponse.d.code = (int)Error.Account;
-                    _log2File.Error($"Account Empty {JsonConvert.SerializeObject(getApiResponse)}", logName);
-                    return getApiResponse;
-                }
-
-                result = _v8BLL.CancelBetPK_V8(req, out decimal tpAffterAmount);
-                if (result > 0 || result == -1)
-                {
-                    getApiResponse.d.code = (int)Error.Success;
-                    getApiResponse.d.status = (int)StatusType.Success;
-                    return getApiResponse;
-                }
-            }
-            catch (Exception ex)
-            {
-                _log2File.Error($"{ex.Message}", logName, ex);
-            }
-
-            _log2File.Error($"Unknow Error result={result} {JsonConvert.SerializeObject(getApiResponse)}", logName);
-            return getApiResponse;
-        }
-
-        private dynamic GetOrderStatus(ApiReq getReq, string reqParam)
-        {
-            string logName = $"{_thisTp}_GetOrderStatus";
-            var subType = SubType.GetOrderStatus;
-            GetOrderStatusResp getApiResponse = new()
-            {
-                s = (int)subType,
-                m = "/channelHandle",
-                d = new GetOrderStatusD
-                {
-                    code = 999,
-                    status = (int)StatusType.OtherError,
-                }
-            };
-
-            try
-            {
-                var req = JsonConvert.DeserializeObject<OrderDataPK_V8>(reqParam);
-                _log2File.Info($"{JsonConvert.SerializeObject(req)}", logName);
-
-                req.timestamp = getReq.timestamp;
-
-                if (req.s != (int)subType)
-                {
-                    getApiResponse.d.code = (int)Error.Subtype;
-                    _log2File.Error($"Subtype Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
-                    return getApiResponse;
-                }
-
-                var bettrans = _v8BLL.GetRecordPK_V8(req);
-                if (!bettrans.Any() || bettrans == null)
-                {
-                    // 4:查无订单
-                    getApiResponse.d.code = (int)Error.Success;
-                    getApiResponse.d.status = (int)StatusType.NoResult;
-                    return getApiResponse;
-                }
-                else if (bettrans.Any())
-                {
-                    // 1:成功
-                    getApiResponse.d.code = (int)Error.Success;
-                    getApiResponse.d.status = (int)StatusType.Success;
-                    return getApiResponse;
                 }
             }
             catch (Exception ex)
