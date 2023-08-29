@@ -75,19 +75,12 @@ namespace ThirdParty.IM
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var apiUrl = $"{inputs["ApiUrl"]}/Game/NewLaunchGame";
+            var apiUrl = appType == AppType.Desktop ? $"{inputs["ApiUrl"]}/Game/NewLaunchGame" : $"{inputs["ApiUrl"]}/Game/NewLaunchMobileGame";
             var playerName = tpCustInfo.TpUserName;
 
             var tpGameType = inputs.ContainsKey("tpGameType") && !string.IsNullOrEmpty(inputs["tpGameType"]) ? Convert.ToInt32(inputs["tpGameType"]) : (int)TpGameType.IM_Sports;
             var productWallet = _productWallet[(TpGameType)tpGameType];
-
-            var fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
-            if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
-            {
-                apiUrl = $"{inputs["ApiUrl"]}/Game/LaunchFreeGame";
-                playerName = null;
-            }
-
+            
             var signUp = new LaunchGameModel
             {
                 MerchantCode = inputs["Key"],
