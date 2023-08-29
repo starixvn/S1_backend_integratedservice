@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Text;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 
@@ -9,12 +10,14 @@ namespace ThirdPartySeamlessWallet.Controllers
     public class PNGController : ControllerBase
     {
         private readonly Tools _tools;
-        private readonly ILogger<NextspinController> _logger;
+        private readonly ILogger<PNGController> _logger;
+        private readonly IPNGBLL _pngBll;
 
-        public PNGController(Tools tools, ILogger<NextspinController> logger)
+        public PNGController(Tools tools, ILogger<PNGController> logger, IPNGBLL pngBll)
         {
             _tools = tools;
             _logger = logger;
+            _pngBll = pngBll;
         }
 
         [Route("[controller]/Auth")]
@@ -26,10 +29,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             var body = await reader.ReadToEndAsync();
 
             var authenticateRequest = _tools.XMLDeserialize<PNG_AuthenticateRequest>(body);
+            var authenticateResponse = _pngBll.Authenticate(authenticateRequest);
 
-
-            await Task.Delay(1);
-            return "";
+            return authenticateResponse;
         }
     }
 }
