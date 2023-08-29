@@ -45,7 +45,7 @@ builder.Services
     .AddHostedService<SimplePlayWorker>()
     .AddHostedService<SGWorker>()
     .AddHostedService<AllbetWorker>()
-    .AddHostedService<PTWorker>()
+    //.AddHostedService<PTWorker>()
     .AddHostedService<PlayTechWorker>()
     .AddHostedService<SBOWorker>()
     .AddHostedService<JILIWorker>()
@@ -69,8 +69,10 @@ builder.Services
     .AddHostedService<BGWorker>()
     .AddHostedService<TFGWorker>()
     .AddHostedService<NextspinWorker>()
+    .AddHostedService<ENDWorker>()
+    .AddHostedService<IMWorker>()
+    .AddHostedService<SPRIBEWorker>()
     .AddHostedService<SBSWWorker>();
-
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);

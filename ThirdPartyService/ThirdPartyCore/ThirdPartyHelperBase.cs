@@ -182,6 +182,80 @@ namespace ThirdPartyCore
             }
         }
 
+        protected string HttpPostWithProxy(string url, string parameters, string contentType, WebProxy proxy, Dictionary<string, string> headers = null,  int timeOutTime = 0)
+        {
+            try
+            {           
+                var parametersLog = parameters;
+                if (headers != null)
+                {
+                    parametersLog = $"{parametersLog}, Header={JsonConvert.SerializeObject(headers)}";
+                }
+                InsertLog?.Invoke(url, parametersLog, "1");
+
+                if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
+                {
+                    ServicePointManager.SecurityProtocol = (SecurityProtocolType)192 | (SecurityProtocolType)768 | (SecurityProtocolType)3072;
+                    ServicePointManager.ServerCertificateValidationCallback = CheckValidationResult;
+                }
+
+                var request = WebRequest.Create(url);
+                if (proxy is not null)
+                {
+                    request.Proxy = proxy;
+                }
+                else
+                {
+                    if (!string.IsNullOrEmpty(proxyHost))
+                    {
+                        request.Proxy = new WebProxy(proxyHost, proxyPort);
+                    }
+                }
+
+                if (timeOutTime > 0)
+                {
+                    request.Timeout = timeOutTime * 1000;
+                }
+
+                request.Method = "POST";
+                byte[] byteArray = Encoding.UTF8.GetBytes(parameters);
+                request.ContentType = contentType;
+                request.ContentLength = byteArray.Length;
+
+                if (headers != null)
+                {
+                    foreach (var item in headers)
+                    {
+                        request.Headers.Add(item.Key, item.Value);
+                    }
+                }
+                using (Stream RequestStream = request.GetRequestStream())
+                {
+                    RequestStream.Write(byteArray, 0, byteArray.Length);
+                }
+
+                StringBuilder sb = new StringBuilder();
+                using (WebResponse response = request.GetResponse())
+                using (Stream ResponseStream = response.GetResponseStream())
+                using (StreamReader reader = new StreamReader(ResponseStream, Encoding.UTF8))
+                {
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        sb.Append(line);
+                    }
+                }
+
+                InsertLog?.Invoke(url, parameters, sb.ToString());
+                return sb.ToString();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, e.Message);
+                return e.Message;
+            }
+        }
+        
         protected string HttpPostClient(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
         {
             var parametersLog = parameters;
@@ -685,11 +759,23 @@ namespace ThirdPartyCore
         public abstract ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID);
         public abstract ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID);
         public abstract TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
+
+        /// <summary>
+        /// 回傳後台STATEMENT的單號明細（優先使用第三方API提供的明細連結，放置在DetailUrl欄位）
+        /// </summary>
         public abstract BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
+
+        /// <summary>
+        /// 呼叫第三方API查詢商號餘額
+        /// </summary>
         public virtual ApiResult<MerchantBalanceResponse> GetMerchantBalance(TpMerchantInfo tpMerchantInfo, Dictionary<string, string> inputs)
         {
             throw new GetMerchantBalanceNotImplementedException($"TpId:{tpMerchantInfo.TpId} GetMerchantBalance NotImplemented.");
         }
+
+        /// <summary>
+        /// 回傳後台BetList所需要的注單明細
+        /// </summary>
         public abstract TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
     }
 

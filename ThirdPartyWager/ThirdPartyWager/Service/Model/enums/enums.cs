@@ -52,9 +52,10 @@
         Yeebet = 46,
         BG = 47,
         TFG = 48,
-
         Nextspin = 50,
         PlayTech = 51,
+        IM = 52,
+        SPRIBE = 53
     }
 
     public enum GameType
@@ -90,8 +91,9 @@
         Yeebet_LiveCasino = 93,
         BG_LiveCasino = 94,
         TFG_Esports = 97,
-
-        Nextspin_RNG = 99
+        Nextspin_RNG = 99,
+        IM_ESports = 102,
+        IM_Sports = 103
     }
 
 	 public enum SettlementType

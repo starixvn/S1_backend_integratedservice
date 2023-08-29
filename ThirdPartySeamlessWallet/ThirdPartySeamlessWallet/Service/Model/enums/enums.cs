@@ -48,6 +48,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
 
     public enum GameType
     {
+        None = 0,
         Saba_Sports = 1,
         Saba_NumberGame = 2,
         Saba_VirtualSport = 3,
@@ -129,10 +130,13 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         SBSW_Vgaming = 95,
         SBSW_CardClub = 96,
         TFG_Esports = 97,
-
+        Endorphina_RNG = 98,
         Nextspin_RNG = 99,
         PlayTech_RNG = 100,
         PlayTech_LiveCasino = 101,
+        IM_ESports = 102,
+        IM_Sports = 103,
+        SPRIBE_RNG = 104,
     }
     public enum Tp
     {
@@ -183,9 +187,11 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Yeebet = 46,
         BG = 47,
         TFG = 48,
-
+        Endorphina = 49,
         Nextspin = 50,
         PlayTech = 51,
+        IM = 52,
+        SPRIBE = 53
     }
     public enum TransferType : int
     {
@@ -295,17 +301,25 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         ReSettle = 4
     }
 
-    public enum SeamlessBonusType
-    {
-        TpCategory,
-        TpId,
-        ALL,
-    }
-
     public enum WalletType
     {
         TransferWallet = 0,
         SeamlessWallet = 1
+    }
+
+    /// <summary>
+    /// 指定查詢TpSeamlessBonus的方式
+    /// </summary>
+    public enum GetTpSeamlessBonusType
+    {
+        /// <summary>
+        /// 使用TpId, GameType, TransId 進行查詢
+        /// </summary>
+        ByGameTypeAndTransId,
+        /// <summary>
+        /// 僅使用TpId, TransId 進行查詢
+        /// </summary>
+        ByTransId,
     }
 
 }
