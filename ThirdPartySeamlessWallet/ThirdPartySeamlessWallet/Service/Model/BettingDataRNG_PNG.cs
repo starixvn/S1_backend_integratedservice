@@ -3,6 +3,9 @@ using System.Xml.Serialization;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
+
+    #region Authenticate Model
+
     [XmlRoot(ElementName = "authenticate")]
     public class PNG_AuthenticateRequest
     {
@@ -10,7 +13,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// 运营商提供的会话令牌账户系统。
         /// </summary>
         [XmlElement(ElementName = "username")]
-        public string Username { get; set; }
+        public string AuthToken { get; set; }
 
         /// <summary>
         /// 为产品分配标识符。
@@ -41,14 +44,14 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int Channel { get; set; }
     }
 
-    [XmlRoot(ElementName = "authenticate")]
+    [XmlRoot(ElementName = "authenticate",Namespace = "")]
     public class PNG_AuthenticateResponse
     {
         /// <summary>
         /// 唯一的客户 ID。对于同一用户，此 ID 必须始终相同。区分大小写。
         /// </summary>
         [XmlElement(ElementName = "externalId")]
-        public string ExternalId { get; set; }
+        public string TpUserName { get; set; }
 
         /// <summary>
         /// 请求的状态。请参阅第 6.1 节中的状态代码。
@@ -92,6 +95,64 @@ namespace ThirdPartySeamlessWallet.Service.Model
         [XmlElement(ElementName = "real")]
         public decimal Real { get; set; }
     }
+
+    #endregion
+
+    #region Balance Model
+
+    [XmlRoot(ElementName = "balance")]
+    public class PNG_BalanceRequest
+    {
+        /// <summary>
+        /// 唯一的客户 ID。对于同一用户，此 ID 必须始终相同。区分大小写。
+        /// </summary>
+        [XmlElement(ElementName = "externalId")]
+        public string TpUserName { get; set; }
+
+        /// <summary>
+        /// 分配给产品的标识符。
+        /// </summary>
+        [XmlElement(ElementName = "productId")]
+        public int ProductId { get; set; }
+
+        /// <summary>
+        /// 返回余额必须使用的货币代码。请参阅游戏、货币、国家/地区和语言附录。
+        /// </summary>
+        [XmlElement(ElementName = "currency")]
+        public string Currency { get; set; }
+
+        /// <summary>
+        /// 游戏标识符。请参阅游戏详情表
+        /// </summary>
+        [XmlElement(ElementName = "gameId")]
+        public int GameId { get; set; }
+
+        /// <summary>
+        /// 应始终验证的私人访问令牌
+        /// </summary>
+        [XmlElement(ElementName = "accessToken")]
+        public string AccessToken { get; set; }
+    }
+
+    [XmlRoot(ElementName = "balance")]
+    public class PNG_BalanceResponse
+    {
+        [XmlElement(ElementName = "real")]
+        public decimal Real { get; set; }
+
+        [XmlElement(ElementName = "statusCode")]
+        public int StatusCode { get; set; }
+
+        /// <summary>
+        /// 自行添加，讓 ELK 有錯誤訊息較快定位問題
+        /// </summary>
+        [XmlElement(ElementName = "statusMessage")]
+        public string StatusMessage { get; set; }
+    }
+
+
+    #endregion
+
 
     public enum PNG_StatsuCode
     {
