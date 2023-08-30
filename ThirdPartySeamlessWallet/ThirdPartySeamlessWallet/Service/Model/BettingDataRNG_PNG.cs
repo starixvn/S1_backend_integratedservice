@@ -54,7 +54,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// 请求的状态。请参阅第 6.1 节中的状态代码。
         /// </summary>
         [XmlElement(ElementName = "statusCode")]
-        public PNG_StatsuCode StatusCode { get; set; }
+        public int StatusCode { get; set; }
 
         /// <summary>
         /// 状态不正常时在客户端中显示的错误 string。
@@ -90,9 +90,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// 玩家的真钱余额
         /// </summary>
         [XmlElement(ElementName = "real")]
-        public double Real { get; set; }
+        public decimal Real { get; set; }
     }
-
 
     public enum PNG_StatsuCode
     {
