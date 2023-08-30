@@ -30,7 +30,6 @@ namespace CommonService
             services.Configure<Dictionary<string, LiveStreamingConfig>>(Configuration.GetSection("LiveStreamingConfig"));
             services.Configure<Dictionary<string, SkyLineSMSServiceTypeConfig>>(Configuration.GetSection("SkyLineSMSServiceConfig"));
             services.Configure<Dictionary<string, YcSmsServiceTypeConfig>>(Configuration.GetSection("YcSMSServiceConfig"));
-            services.Configure<Dictionary<string, NxcloudSMSServiceTypeConfig>>(Configuration.GetSection("NxCloudSMSServiceConfig"));
             services.Configure<AWSKeyConfig>(Configuration.GetSection("ailab-sns"));
             services.Configure<Dictionary<string, Dictionary<string, string>>>(Configuration.GetSection("SMSSupportConfig"));
             services.Configure<Dictionary<string, Dictionary<string, string>>>(Configuration.GetSection("Telegram"));
