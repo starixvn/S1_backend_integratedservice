@@ -3,10 +3,11 @@ using CommonService.Service.BLL;
 using CommonService.Service.DAL;
 using CommonService.Service.Library;
 using CommonService.Service.Model;
+
 using Elastic.Apm.AspNetCore;
 using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.NetCoreAll;
 using Elastic.Apm.SqlClient;
+
 using PaymentService.Service.Library;
 
 namespace CommonService
@@ -66,7 +67,8 @@ namespace CommonService
 
             //處理SiteConfig
             services.AddOptionListByDB<ServerInfo>("ServerInfoList_Get");
-            services.AddSiteConfig(Configuration.GetSection("ConfigService").Get<string[]>());
+            services.AddOptionListByDB<Config>("SiteConfig_Get");
+            services.AddSiteConfig();
             services.AddSingleton<ConfigBLL>();
         }
 

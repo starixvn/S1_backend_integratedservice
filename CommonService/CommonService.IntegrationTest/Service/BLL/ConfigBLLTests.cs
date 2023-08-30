@@ -15,10 +15,10 @@ using CommonService.Extensions;
 using CommonService.IntegrationTest.Models;
 using CommonService.IntegrationTest.Stubs;
 using NSubstitute;
-using CommonService.Service.Model.enums;
 using CommonService.Service.Model;
 using CommonService.Service.Library;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace CommonService.Service.BLL.Tests
 {
@@ -80,6 +80,30 @@ namespace CommonService.Service.BLL.Tests
         {
             var actual = _configBLL.GetConfigValuesBySiteId<NxcloudSMSServiceTypeConfig>("NxCloud");
             return actual[siteId].OTP.Appkey;
+        }
+
+        [TestCase(1, ExpectedResult = "svTUT8d0")]
+        [TestCase(2, ExpectedResult = "RPQZO7FL")]
+        [TestCase(3, ExpectedResult = "JHvVDPa4")]
+        [TestCase(5, ExpectedResult = "svTUT8d0")]
+        [TestCase(6, ExpectedResult = "svTUT8d0")]
+        public string GetConfigValueBySiteIdTest(int siteId)
+        {
+            var json = _configBLL.GetConfigValue(siteId, "NxCloud");
+            var actual = JsonConvert.DeserializeObject<NxcloudSMSServiceTypeConfig>(json);
+            return actual.OTP.Appkey;
+        }
+
+        [TestCase("Nova88", ExpectedResult = "svTUT8d0")]
+        [TestCase("Goal123", ExpectedResult = "RPQZO7FL")]
+        [TestCase("Bwing", ExpectedResult = "JHvVDPa4")]
+        [TestCase("Ivorysport", ExpectedResult = "svTUT8d0")]
+        [TestCase("Leobet", ExpectedResult = "svTUT8d0")]
+        public string GetConfigValueBySiteNameTest(string siteName)
+        {
+            var json = _configBLL.GetConfigValue(siteName, "NxCloud");
+            var actual = JsonConvert.DeserializeObject<NxcloudSMSServiceTypeConfig>(json);
+            return actual.OTP.Appkey;
         }
     }
 }
