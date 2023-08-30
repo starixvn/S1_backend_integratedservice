@@ -66,7 +66,7 @@ namespace CommonService
 
             //處理SiteConfig
             services.AddOptionListByDB<ServerInfo>("ServerInfoList_Get");
-            services.AddOptionListByDB<Config>("SiteConfig_Get");
+            services.AddOptionListByDB<Config>("SiteConfig_Get", new { ConfigGroup = "CommonService" });
             services.AddSiteConfig();
             services.AddSingleton<ConfigBLL>();
         }
