@@ -20,7 +20,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             _pngBll = pngBll;
         }
 
-        [Route("[controller]/Auth")]
+        /// <summary>
+        /// 驗證
+        /// </summary>
+        /// <returns></returns>
+        [Route("[controller]/authenticate")]
         [Produces("application/xml")]
         [HttpPost]
         public async Task<dynamic> Action()
@@ -33,5 +37,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             return authenticateResponse;
         }
+
+
     }
 }
