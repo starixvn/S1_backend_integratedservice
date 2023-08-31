@@ -54,11 +54,12 @@ public class WagerIMBLL
         const int runTime = 120; // sec
         const int quickTime = 80; // sec
         const int excess = 120; // min
-        var timeRange = 10; // min，最大可拉24HR，體育類更新延遲5分
+        const int dataDelayTime = 5; // min，體育類資料更新最大延遲5分
+        var timeRange = 10; // min，最大可拉24HR
         
         foreach (var (gameType, productWallet) in _gameTypeMapper)
         {
-            var workerTime = GetWorkerTime(type, 0, siteId, gameType);
+            var workerTime = GetWorkerTime(type, dataDelayTime * -60, siteId, gameType);
             
             quick = CheckQuick(workerTime, excess);
 
