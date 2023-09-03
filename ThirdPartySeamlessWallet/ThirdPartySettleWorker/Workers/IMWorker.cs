@@ -330,7 +330,7 @@ namespace ThirdPartySettleWorker.Workers
 
         private static decimal MathFloor4Decimal(decimal d, int decimals)
         {
-            var x = Convert.ToDecimal(Math.Pow(10, decimals));
+            var x = decimals * 10m;
 
             return decimal.Truncate(d * x) / x;
         }
