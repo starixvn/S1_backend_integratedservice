@@ -327,8 +327,15 @@ namespace ThirdPartySettleWorker.Workers
 
             return dueTimeSpan;
         }
+
+        private static decimal MathFloor4Decimal(decimal d, int decimals)
+        {
+            var x = decimals * 10m;
+
+            return decimal.Truncate(d * x) / x;
+        }
         
-        private bool IsBetTransSameAsTpWager(SettleAmountDataIM betTrans, WagerDataIM wager, TpCurrency tpCurrency , bool isRefund)
+        private static bool IsBetTransSameAsTpWager(SettleAmountDataIM betTrans, WagerDataIM wager, TpCurrency tpCurrency , bool isRefund)
         {
             if (tpCurrency.ExchangeRate <= 0) return false;
 
@@ -337,8 +344,8 @@ namespace ThirdPartySettleWorker.Workers
             decimal? wagerWinLostAmount = (isRefund ? wager.BetTradeBuybackAmount - wager.StakeAmount : wager.WinLoss ) 
                                           * tpCurrency.ExchangeRate;
             
-            return Math.Round(wagerStake, 4) == betTrans.Stake
-                   && Math.Round((decimal) wagerWinLostAmount, 4) == betTrans.WinLostAmount;
+            return MathFloor4Decimal(wagerStake, 4) == betTrans.Stake
+                   && MathFloor4Decimal((decimal) wagerWinLostAmount, 4) == betTrans.WinLostAmount;
         }
 
         private void CalculateTicketStatusAndAmount(BetRecordInfo betRecordInfo ,WagerDataIM tpWagerData ,int actionId , out bool isRefund)
