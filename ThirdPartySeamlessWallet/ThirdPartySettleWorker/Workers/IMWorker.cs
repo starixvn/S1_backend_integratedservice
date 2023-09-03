@@ -337,8 +337,8 @@ namespace ThirdPartySettleWorker.Workers
             decimal? wagerWinLostAmount = (isRefund ? wager.BetTradeBuybackAmount - wager.StakeAmount : wager.WinLoss ) 
                                           * tpCurrency.ExchangeRate;
             
-            return Math.Round(wagerStake, 4) == betTrans.Stake
-                   && Math.Round((decimal) wagerWinLostAmount, 4) == betTrans.WinLostAmount;
+            return Math.Floor(wagerStake) == betTrans.Stake
+                   && Math.Floor((decimal) wagerWinLostAmount) == betTrans.WinLostAmount;
         }
 
         private void CalculateTicketStatusAndAmount(BetRecordInfo betRecordInfo ,WagerDataIM tpWagerData ,int actionId , out bool isRefund)
