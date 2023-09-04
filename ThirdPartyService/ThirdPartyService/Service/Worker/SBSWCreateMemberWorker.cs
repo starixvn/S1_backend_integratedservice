@@ -83,7 +83,7 @@ namespace ThirdPartyService.Service.Worker
                                                    $"result={JsonConvert.SerializeObject(result)}");
                         }
                     }
-                    Thread.Sleep(5 * 1000); //休息5秒
+                    Thread.Sleep(2 * 1000); //休息5秒
                 }
 
                 if (_failCustIdList.Any())
