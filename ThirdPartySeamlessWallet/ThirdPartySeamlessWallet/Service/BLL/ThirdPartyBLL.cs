@@ -125,7 +125,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 }
                 return gameType;
             }
-            
+
             var casino = GetGameCasinoWithCache((int)Tp.PP);
             var check = casino.FirstOrDefault(x => x.GameId == gameId);
             if (check == null)
@@ -200,7 +200,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     if (int.TryParse(gameId, out int tempGameId))
                     {
                         gameType = GameType.PP_LiveCasino;
-                        
+
                         // Spaceman 
                         if (tempGameId == 1302)
                         {
@@ -208,7 +208,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         }
                         return gameType;
                     }
-                    
+
                     var pp = GetGameCasinoWithCache(tpId);
                     var checkPP = pp.FirstOrDefault(x => x.GameId == gameId);
                     if (checkPP == null)
@@ -362,6 +362,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 }
             }
             return ServerInfoData.ContainsKey(key) ? ServerInfoData[key] : null;
+        }
+
+        public Dictionary<string, string> GeTpCurrencyOfIsoCode(int tpId)
+        {
+            var key = $"TpCurrencyOfIsoCode_{tpId}";
+
+            var tpCurrencyOfIsoCode = cache.Get<IEnumerable<TpCurrencyOfIsoCode>>(key);
+            if (tpCurrencyOfIsoCode == null)
+            {
+                tpCurrencyOfIsoCode = thirdPartyService.GetTpCurrencyOfIsoCode(tpId);
+                cache.Set(key, tpCurrencyOfIsoCode, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(60)));
+            }
+
+            return tpCurrencyOfIsoCode.ToDictionary(k => k.TpCurrencyId.ToString(), v => v.IsoCode);
         }
     }
 }
