@@ -3,8 +3,6 @@ using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
 
-using Newtonsoft.Json;
-
 namespace CommonService.Extensions;
 
 public static class ServiceCollectionExtension
@@ -43,37 +41,24 @@ public static class ServiceCollectionExtension
         return services;
     }
 
-    public static IServiceCollection AddSiteConfig(this IServiceCollection services, IEnumerable<string> remoteUrls)
+    public static IServiceCollection AddSiteConfig(this IServiceCollection services)
     {
         var provider = services.BuildServiceProvider();
+        // 準備ServerInfo
         var serverInfoList = new List<ServerInfo>() { new ServerInfo() { SiteId = 0, SiteName = "default" } };
-        serverInfoList.AddRange(provider.GetServices<ServerInfo>());
+        serverInfoList.AddRange(provider.GetRequiredService<IEnumerable<ServerInfo>>());
+
+        // 準備Config
+        var siteConfigGroup = provider.GetRequiredService<IEnumerable<Config>>().GroupBy(i => i.SiteId);
 
         foreach (var serverInfo in serverInfoList)
         {
-            using var client = new HttpClient();
-            foreach (var url in remoteUrls)
-            {
-                if (string.IsNullOrEmpty(url))
-                {
-                    continue;
-                }
-
-                try
-                {
-                    var configUrl = $"{url}config/{serverInfo.SiteId}";
-                    using var result = client.GetAsync(configUrl).Result.Content.ReadAsStreamAsync().Result;
-                    using StreamReader reader = new(result);
-                    var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(reader.ReadToEnd());
-                    services.AddSingleton(new SiteConfig(serverInfo, dic));
-                    break;
-                }
-                catch
-                {
-                    continue;
-                }
-            }
+            //設定SiteConfig
+            var siteConfig = siteConfigGroup.FirstOrDefault(i => i.Key == serverInfo.SiteId) ?? siteConfigGroup.First(i => i.Key == 0);
+            var config = siteConfig.ToDictionary(i => i.ConfigKey, i => i.ConfigValue);         
+            services.AddSingleton(new SiteConfig(serverInfo, config));
         }
+
         return services;
     }
 }

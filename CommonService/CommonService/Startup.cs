@@ -3,10 +3,11 @@ using CommonService.Service.BLL;
 using CommonService.Service.DAL;
 using CommonService.Service.Library;
 using CommonService.Service.Model;
+
 using Elastic.Apm.AspNetCore;
 using Elastic.Apm.DiagnosticSource;
-using Elastic.Apm.NetCoreAll;
 using Elastic.Apm.SqlClient;
+
 using PaymentService.Service.Library;
 
 namespace CommonService
@@ -29,7 +30,6 @@ namespace CommonService
             services.Configure<Dictionary<string, LiveStreamingConfig>>(Configuration.GetSection("LiveStreamingConfig"));
             services.Configure<Dictionary<string, SkyLineSMSServiceTypeConfig>>(Configuration.GetSection("SkyLineSMSServiceConfig"));
             services.Configure<Dictionary<string, YcSmsServiceTypeConfig>>(Configuration.GetSection("YcSMSServiceConfig"));
-            services.Configure<Dictionary<string, NxcloudSMSServiceTypeConfig>>(Configuration.GetSection("NxCloudSMSServiceConfig"));
             services.Configure<AWSKeyConfig>(Configuration.GetSection("ailab-sns"));
             services.Configure<Dictionary<string, Dictionary<string, string>>>(Configuration.GetSection("SMSSupportConfig"));
             services.Configure<Dictionary<string, Dictionary<string, string>>>(Configuration.GetSection("Telegram"));
@@ -66,7 +66,8 @@ namespace CommonService
 
             //處理SiteConfig
             services.AddOptionListByDB<ServerInfo>("ServerInfoList_Get");
-            services.AddSiteConfig(Configuration.GetSection("ConfigService").Get<string[]>());
+            services.AddOptionListByDB<Config>("SiteConfig_Get", new { ConfigGroup = "CommonService" });
+            services.AddSiteConfig();
             services.AddSingleton<ConfigBLL>();
         }
 
