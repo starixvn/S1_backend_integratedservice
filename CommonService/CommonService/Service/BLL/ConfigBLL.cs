@@ -15,13 +15,13 @@ namespace CommonService.Service.BLL
             var siteConfigList = provider.GetServices<SiteConfig>();
             _defaultSiteConfig = siteConfigList.First(i => i.SiteId == 0).Config;
             var siteConfigs = siteConfigList.Where(i => i.SiteId != 0);
-            _siteNameConfigs = siteConfigs.ToDictionary(i => i.SiteName, i => i);
+            _siteNameConfigs = new Dictionary<string, SiteConfig>(siteConfigs.ToDictionary(i => i.SiteName, i => i), StringComparer.OrdinalIgnoreCase);
             _siteIdConfigs = siteConfigs.ToDictionary(i => i.SiteId, i => i);
         }
 
         public string GetConfigValue(string siteName, string configKey)
         {
-            var defaultValue = _defaultSiteConfig.GetValueOrDefault(configKey, string.Empty);           
+            var defaultValue = _defaultSiteConfig.GetValueOrDefault(configKey, string.Empty);
             if (_siteNameConfigs.TryGetValue(siteName, out var siteConfig))
             {
                 return siteConfig.Config.TryGetValue(configKey, out var configValue) ? configValue : defaultValue;
@@ -43,15 +43,15 @@ namespace CommonService.Service.BLL
 
         public Dictionary<int, TItem> GetConfigValuesBySiteId<TItem>(string configKey)
         {
-            var defaultItem = _defaultSiteConfig.TryGetValue(configKey, out var json) 
+            var defaultItem = _defaultSiteConfig.TryGetValue(configKey, out var json)
                 ? JsonConvert.DeserializeObject<TItem>(json) : default;
 
             var result = new Dictionary<int, TItem>();
             foreach (var siteConfig in _siteIdConfigs)
             {
-                var data = siteConfig.Value.Config.TryGetValue(configKey, out var configValue) 
+                var data = siteConfig.Value.Config.TryGetValue(configKey, out var configValue)
                     ? JsonConvert.DeserializeObject<TItem>(configValue) : defaultItem;
-                result.Add(siteConfig.Key, data);            
+                result.Add(siteConfig.Key, data);
             }
             return result;
         }
@@ -61,7 +61,7 @@ namespace CommonService.Service.BLL
             var defaultItem = _defaultSiteConfig.TryGetValue(configKey, out var json)
                ? JsonConvert.DeserializeObject<TItem>(json) : default;
 
-            var result = new Dictionary<string, TItem>();
+            var result = new Dictionary<string, TItem>(StringComparer.OrdinalIgnoreCase);
             foreach (var siteConfig in _siteNameConfigs)
             {
                 var data = siteConfig.Value.Config.TryGetValue(configKey, out var configValue)

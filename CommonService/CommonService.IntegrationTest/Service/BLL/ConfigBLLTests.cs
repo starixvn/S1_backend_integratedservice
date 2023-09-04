@@ -1,11 +1,4 @@
 ﻿using NUnit.Framework;
-using CommonService.Service.BLL;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -61,6 +54,8 @@ namespace CommonService.Service.BLL.Tests
         }
 
         [TestCase("Nova88", ExpectedResult = "svTUT8d0")]
+        [TestCase("NOVA88", ExpectedResult = "svTUT8d0")]
+        [TestCase("nova88", ExpectedResult = "svTUT8d0")]
         [TestCase("Goal123", ExpectedResult = "RPQZO7FL")]
         [TestCase("Bwing", ExpectedResult = "JHvVDPa4")]
         [TestCase("Ivorysport", ExpectedResult = "svTUT8d0")]
@@ -95,6 +90,8 @@ namespace CommonService.Service.BLL.Tests
         }
 
         [TestCase("Nova88", ExpectedResult = "svTUT8d0")]
+        [TestCase("NOVA88", ExpectedResult = "svTUT8d0")]
+        [TestCase("nova88", ExpectedResult = "svTUT8d0")]
         [TestCase("Goal123", ExpectedResult = "RPQZO7FL")]
         [TestCase("Bwing", ExpectedResult = "JHvVDPa4")]
         [TestCase("Ivorysport", ExpectedResult = "svTUT8d0")]
