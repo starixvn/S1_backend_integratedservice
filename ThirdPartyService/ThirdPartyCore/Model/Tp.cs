@@ -30,6 +30,7 @@ namespace ThirdPartyCore.Model
         public string Remarks { set; get; }
         public int Category { set; get; }
         public int DepositId { set; get; }
+        public bool IsDepositId { set; get; }
     }
 
     public class TransferResult

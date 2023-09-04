@@ -790,7 +790,7 @@ namespace ThirdPartyService.Service.BLL
 
             tpTransferInfo.SetAdjustWalletLog(transferResult, transId);
             if (transferResult.ErrorCode == ErrorCode.Success
-                && adminTpTransfer.Category == 9 && adminTpTransfer.DepositId > 0) // Category 9: Deposit
+                && adminTpTransfer.IsDepositId && adminTpTransfer.DepositId > 0) // IsDepositId = true
             {
                 var adjustAmount = adminTpTransfer.Amount * (adminTpTransfer.direction == Direction.ToTp ? 1 : -1);
                 var reslutCode = tpTransferInfo.SetAdjustmentActualDeposit(transId, adminTpTransfer.DepositId, adjustAmount);
