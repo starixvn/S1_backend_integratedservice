@@ -134,6 +134,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
         }
 
+        #region private method
 
         private bool ValidToken(string inputAccessToken)
         {
@@ -157,5 +158,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _logger.LogError("tpCurrencyOfIsoCode not found");
             return string.Empty;
         }
+
+        #endregion
     }
 }
