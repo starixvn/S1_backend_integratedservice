@@ -1,11 +1,14 @@
 ﻿using System.Net.NetworkInformation;
 using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 using NuGet.Common;
 using Org.BouncyCastle.Crypto.Tls;
 using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
+using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
@@ -14,6 +17,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         PNG_AuthenticateResponse Authenticate(PNG_AuthenticateRequest authenticateRequest);
 
         PNG_BalanceResponse Balance(PNG_BalanceRequest balanceRequest);
+
+        Task<PNG_ReserveResponse> Reserve(PNG_ReserveRequest reserveRequest);
     }
 
     public class PNGBLL : IPNGBLL
@@ -25,15 +30,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBll;
         private readonly ILogger<PNGBLL> _logger;
+        private readonly BettingService _bettingService;
 
         public PNGBLL(AuthBLL authBll, ThirdPartyBLL thirdPartyBLL,
             TpCustInfoBLL tpCustInfoBll,
-            ILogger<PNGBLL> logger)
+            ILogger<PNGBLL> logger,
+            BettingService bettingService)
         {
             _authBll = authBll;
             _thirdPartyBLL = thirdPartyBLL;
             _tpCustInfoBll = tpCustInfoBll;
             _logger = logger;
+            _bettingService = bettingService;
         }
 
 
@@ -44,7 +52,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 return new PNG_AuthenticateResponse()
                 {
-                    StatusCode = (int)PNG_StatsuCode.NoUser,
+                    StatusCode = (int)PNG_StatsuCodeEnum.NoUser,
                     StatusMessage = "AuthToken Expired",
                 };
             }
@@ -54,18 +62,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 return new PNG_AuthenticateResponse()
                 {
-                    StatusCode = (int)PNG_StatsuCode.Internal,
+                    StatusCode = (int)PNG_StatsuCodeEnum.Internal,
                     StatusMessage = "AccessToken Invalid",
                 };
             }
 
             var tpCheck = _thirdPartyBLL.ThirdPartyCheck((int)TpId, tpCustInfoAuth.TpUserName);
-
             if (tpCheck == null || tpCheck.Locked)
             {
                 return new PNG_AuthenticateResponse()
                 {
-                    StatusCode = (int)PNG_StatsuCode.AccountLocked,
+                    StatusCode = (int)PNG_StatsuCodeEnum.AccountLocked,
                     StatusMessage = "User Account Locked",
                 };
             }
@@ -74,11 +81,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)TpId, tpCustInfoAuth.TpUserName);
             var tpCountryCode = _tpCustInfoBll.GetTpCurrencyCode((int)TpId, tpCustInfo.CurrencyId);
             var userCurrency = this.GetCurrencyIsoCode(tpCountryCode.TpCurrencyId);
-            
+
             return new PNG_AuthenticateResponse()
             {
                 TpUserName = tpCustInfoAuth.TpUserName,
-                StatusCode = (int)PNG_StatsuCode.Ok,
+                StatusCode = (int)PNG_StatsuCodeEnum.Ok,
                 StatusMessage = "Success",
                 UserCurrency = userCurrency,
                 Country = tpCountryCode.CountryCode,
@@ -95,7 +102,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 return new PNG_BalanceResponse()
                 {
-                    StatusCode = (int)PNG_StatsuCode.Internal,
+                    StatusCode = (int)PNG_StatsuCodeEnum.Internal,
                     StatusMessage = "AccessToken not equal",
                     Real = default
                 };
@@ -107,7 +114,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 return new PNG_BalanceResponse()
                 {
-                    StatusCode = (int)PNG_StatsuCode.Internal,
+                    StatusCode = (int)PNG_StatsuCodeEnum.Internal,
                     StatusMessage = "tpCustInfo not found user not exist",
                     Real = default
                 };
@@ -119,7 +126,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 return new PNG_BalanceResponse()
                 {
-                    StatusCode = (int)PNG_StatsuCode.Internal,
+                    StatusCode = (int)PNG_StatsuCodeEnum.Internal,
                     StatusMessage = $"{balanceRequest.TpUserName} Currency wrong",
                     Real = default
                 };
@@ -128,13 +135,63 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)TpId, balanceRequest.TpUserName, (int)TpGameType);
             return new PNG_BalanceResponse
             {
-                StatusCode = (int)PNG_StatsuCode.Ok,
+                StatusCode = (int)PNG_StatsuCodeEnum.Ok,
                 StatusMessage = "Success",
                 Real = tpCustBalance.Balance
             };
         }
 
+        public async Task<PNG_ReserveResponse> Reserve(PNG_ReserveRequest reserveRequest)
+        {
+            var bettingData = new BettingDataRNG_PNG();
+            try
+            {
+                var checkResult = CheckTpUserWithAccessToken(reserveRequest.TpUserName, reserveRequest.AccessToken);
+                if (!checkResult.IsVaild)
+                    return new PNG_ReserveResponse(checkResult.response.StatusCode, checkResult.response.StatusMessage);
+
+                bettingData = new BettingDataRNG_PNG()
+                {
+                    TpUserName = reserveRequest.TpUserName,
+                    ProductId = reserveRequest.ProductId,
+                    TransactionId = reserveRequest.TransactionId,
+                    Amount = reserveRequest.Real,
+                    CurrencyIsoCode = reserveRequest.Currency,
+                    GameId = reserveRequest.GameId,
+                    GameSessionId = reserveRequest.GameSessionId,
+                    RoundId = reserveRequest.RoundId,
+                    Channel = reserveRequest.Channel,
+                    FreeGameExternalId = reserveRequest.FreeGameExternalId,
+                    ActualAmount = reserveRequest.ActualAmount,
+                    JackpotLoss = GetJackpotsLossAmount(reserveRequest.PngJackpots),
+                    TicketType = (int)BettransType.Bet,
+                    TicketStatus = (int)TicketStatus.UnSettled
+                };
+
+                var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)TpId, reserveRequest.TpUserName);
+                var response = await _bettingService.PlaceBetRNG_PNG(tpCustInfo, bettingData);
+                return response;
+            }
+            catch (PNGException ex)
+            {
+                _logger.LogError(ex, $"TpUserName:{reserveRequest.TpUserName} bettingData:{JsonConvert.SerializeObject(bettingData)}");
+                return new PNG_ReserveResponse((int)PNG_StatsuCodeEnum.Internal, ex.ErrorMessage);
+            }
+        }
+
         #region private method
+
+
+
+        private string GetCurrencyIsoCode(string tpCurrencyId)
+        {
+            var tpCurrencyOfIsoCode = _thirdPartyBLL.GeTpCurrencyOfIsoCode((int)TpId);
+
+            if (tpCurrencyOfIsoCode.ContainsKey(tpCurrencyId)) return tpCurrencyOfIsoCode[tpCurrencyId];
+
+            _logger.LogError("tpCurrencyOfIsoCode not found");
+            return string.Empty;
+        }
 
         private bool ValidToken(string inputAccessToken)
         {
@@ -149,14 +206,38 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return false;
         }
 
-        private string GetCurrencyIsoCode(string tpCurrencyId)
+        private (bool IsVaild, PNG_BaseResponse response) CheckTpUserWithAccessToken(string tpUserName, string accessToken)
         {
-            var tpCurrencyOfIsoCode = _thirdPartyBLL.GeTpCurrencyOfIsoCode((int)TpId);
+            // 檢查 PlayNGo AccessToken
+            if (!ValidToken(accessToken))
+            {
+                return (false, new PNG_BaseResponse()
+                {
+                    StatusCode = (int)PNG_StatsuCodeEnum.Internal,
+                    StatusMessage = "AccessToken Invalid"
+                });
+            }
 
-            if (tpCurrencyOfIsoCode.ContainsKey(tpCurrencyId)) return tpCurrencyOfIsoCode[tpCurrencyId];
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheck((int)TpId, tpUserName);
+            if (tpCheck == null || tpCheck.Locked)
+            {
+                return (false, new PNG_BaseResponse()
+                {
+                    StatusCode = (int)PNG_StatsuCodeEnum.AccountLocked,
+                    StatusMessage = "User Account Locked"
+                });
+            }
 
-            _logger.LogError("tpCurrencyOfIsoCode not found");
-            return string.Empty;
+            return (true, null);
+        }
+
+        private decimal GetJackpotsLossAmount(PNGJackpots pngJackpots)
+        {
+            if (pngJackpots == null) return 0;
+
+            return !pngJackpots.PNGJackpot.Any()
+                ? 0
+                : pngJackpots.PNGJackpot.Sum(r => r.Loss);
         }
 
         #endregion

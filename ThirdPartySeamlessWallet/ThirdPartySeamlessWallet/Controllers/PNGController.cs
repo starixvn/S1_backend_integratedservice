@@ -14,7 +14,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly ILogger<PNGController> _logger;
         private readonly IPNGBLL _pngBll;
         
-
         public PNGController(Tools tools, ILogger<PNGController> logger, IPNGBLL pngBll)
         {
             _tools = tools;
@@ -59,6 +58,25 @@ namespace ThirdPartySeamlessWallet.Controllers
             var xmlString = XmlHelper.SerializeToXmlString(balanceResponse);
 
             return Content(xmlString, "application/xml");
+        }
+
+        /// <summary>
+        /// 投注
+        /// </summary>
+        /// <returns></returns>
+        [Route("[controller]/reserve")]
+        [Produces("application/xml")]
+        [HttpPost]
+        public async Task<dynamic> Reserve()
+        {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var body = await reader.ReadToEndAsync();
+
+            var reserveRequest = _tools.XMLDeserialize<PNG_ReserveRequest>(body);
+            var reserveResponse = await _pngBll.Reserve(reserveRequest);
+            var xmlString = XmlHelper.SerializeToXmlString(reserveResponse);
+            return Content(xmlString, "application/xml");
+
         }
     }
 }

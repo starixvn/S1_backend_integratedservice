@@ -138,11 +138,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     }
                     else
                     {
-                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                     }
                 }
             }
@@ -2008,6 +2008,69 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             _mainDbClient.RollbackAndDisposeConnection(conn, trans);
             return result;
+        }
+
+        #endregion
+
+        #region PNG
+
+        public async Task<PNG_ReserveResponse> PlaceBetRNG_PNG(TpCustInfo tpCustInfo, BettingDataRNG_PNG bettingData)
+        {
+            await using var conn = _mainDbClient.GetMySqlConnection();
+            await conn.OpenAsync();
+            await using var trans = await conn.BeginTransactionAsync();
+
+            try
+            {
+                var partitionTime = DateTime.UtcNow;
+                var p = new DynamicParameters(bettingData);
+                var result = _partitionService.Execute(partitionTime, "Service_BettransRng_PNG_Ins", p, trans);
+
+                if (result == 0)
+                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "BettingData fail");
+
+                var bonusId = 0;
+                result = PlaceBetV2(
+                    tpCustInfo: tpCustInfo,
+                    amount: Math.Abs(bettingData.Amount) * -1,
+                    tpId: (int)Tp.PNG,
+                    tpTransId: bettingData.TransactionId,
+                    gameType: (int)GameType.PNG_RNG,
+                    refId: bettingData.TransactionId,
+                    betData: null,
+                    tpCategory: TpCategory.Slots,
+                    afterAmount: out var afterAmount,
+                    bonusId: ref bonusId,
+                    conn: conn,
+                    trans: trans);
+
+                if (result < 1)
+                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "Insufficient Balance");
+
+                await trans.CommitAsync();
+
+                return new PNG_ReserveResponse
+                {
+                    StatusCode = (int)PNG_StatsuCodeEnum.Ok,
+                    StatusMessage = "Reserve Success",
+                    ExternalTransactionId = bettingData.TransactionId,
+                    Real = afterAmount
+                };
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "相同交易重覆");
+                }
+                throw;
+            }
+            catch (Exception ex)
+            {
+                await trans.RollbackAsync();
+                logger.LogError(ex, ex.Message);
+                throw new PNGException(PNG_StatsuCodeEnum.Internal, ex.Message);
+            }
         }
 
         #endregion
