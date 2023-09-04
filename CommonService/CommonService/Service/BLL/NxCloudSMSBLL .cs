@@ -1,11 +1,11 @@
 ﻿using System.Net;
+
 using CommonService.Service.DAL;
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-using Microsoft.Extensions.Options;
+
 using Newtonsoft.Json;
-using PaymentService.Service.Library;
 
 namespace CommonService.Service.BLL
 {
@@ -13,19 +13,20 @@ namespace CommonService.Service.BLL
     {
         private readonly HttpHelper httpHelper;
         private readonly OTPSMSService sOTPSMSService;
-        private readonly IOptions<Dictionary<string, NxcloudSMSServiceTypeConfig>> NxcloudSMSServiceTypeConfig;
+        private readonly Dictionary<string, NxcloudSMSServiceTypeConfig> NxcloudSMSServiceTypeConfig;
         private readonly Tools tools;
         private readonly SelLangBLL selLangBLL;
         private readonly ILogger<OTPSMSService> logger;
 
-        public NxCloudSMSBLL(HttpHelper httpHelper, OTPSMSService sOTPSMSService, IOptions<Dictionary<string, NxcloudSMSServiceTypeConfig>> NxcloudSMSServiceTypeConfig, Tools tools, SelLangBLL selLangBLL, ILogger<OTPSMSService> logger, Log2File log2File)
+        public NxCloudSMSBLL(IServiceProvider provider)
         {
-            this.httpHelper = httpHelper;
-            this.sOTPSMSService = sOTPSMSService;
-            this.NxcloudSMSServiceTypeConfig = NxcloudSMSServiceTypeConfig;
-            this.tools = tools;
-            this.selLangBLL = selLangBLL;
-            this.logger = logger;
+            httpHelper = provider.GetRequiredService<HttpHelper>();
+            sOTPSMSService = provider.GetRequiredService<OTPSMSService>();            
+            tools = provider.GetRequiredService<Tools>();
+            selLangBLL = provider.GetRequiredService<SelLangBLL>();
+            logger = provider.GetRequiredService<ILogger<OTPSMSService>>();
+            var configBLL = provider.GetRequiredService<ConfigBLL>();
+            NxcloudSMSServiceTypeConfig = configBLL.GetConfigValuesBySiteName<NxcloudSMSServiceTypeConfig>("NxCloud");
         }
 
         public ApiResult<SendOTPSMSResult> OTPVerifyinfoInsAsync(int custId, string sOTPNum)
@@ -90,7 +91,7 @@ namespace CommonService.Service.BLL
         public async Task<ApiResult> SendOTPSMSAsync(string PhoneNo, string OTPNum, CustInfoProfile custInfo, string userLang, int custId)
         {
             var apiResult = new ApiResult();
-            var Config = NxcloudSMSServiceTypeConfig.Value[custInfo.SiteName].OTP;
+            var Config = NxcloudSMSServiceTypeConfig[custInfo.SiteName].OTP;
             var smsMessage = MakeSMSContext(custInfo, OTPNum, PhoneNo);
             var oTPLog = new OTPLog
             {
