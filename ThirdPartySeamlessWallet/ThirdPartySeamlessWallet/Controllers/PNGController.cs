@@ -43,7 +43,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
 
         /// <summary>
-        /// 餘額
+        /// 取餘額
         /// </summary>
         /// <returns></returns>
         [Route("[controller]/balance")]

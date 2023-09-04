@@ -134,6 +134,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
         }
 
+
         private bool ValidToken(string inputAccessToken)
         {
             var tpListSetting = _thirdPartyBLL.GetThirdPartySetting((int)TpId);
