@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ThirdParty.PG
+﻿namespace ThirdParty.PG
 {
     public class DetailModel
     {

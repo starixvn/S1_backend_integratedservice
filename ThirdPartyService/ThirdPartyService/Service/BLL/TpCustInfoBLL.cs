@@ -1,6 +1,8 @@
 ﻿using System.Collections.Concurrent;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
+
 using ThirdPartyService.Service.DAL;
 
 namespace ThirdPartyService.Service.BLL

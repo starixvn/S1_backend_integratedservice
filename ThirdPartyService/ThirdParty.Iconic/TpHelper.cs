@@ -1,17 +1,15 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Linq;
+﻿using System.Collections.Concurrent;
 using System.Text;
 using System.Web;
+
+using Newtonsoft.Json;
+
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-using System.Threading.Tasks;
 using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpBetRecordExtend;
-using ThirdPartyCore.Extensions;
 
 namespace ThirdParty.Iconic
 {
@@ -257,7 +255,7 @@ namespace ThirdParty.Iconic
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_AT_Detail_Get", new { betRecordInfo.TransId, GameType = tpGameType.Type }, DataBase.Wager);
-            if (detail== null)
+            if (detail == null)
             {
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
             }

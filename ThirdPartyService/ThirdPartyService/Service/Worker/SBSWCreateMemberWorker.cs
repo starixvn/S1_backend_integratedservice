@@ -1,7 +1,11 @@
-﻿using Newtonsoft.Json;
+﻿using System.Diagnostics;
+
+using Newtonsoft.Json;
+
 using Serilog.Context;
-using System.Diagnostics;
+
 using ThirdPartyCore.Model.enums;
+
 using ThirdPartyService.Service.BLL;
 
 namespace ThirdPartyService.Service.Worker
