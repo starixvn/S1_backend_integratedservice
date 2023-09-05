@@ -44,7 +44,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _bettingService = bettingService;
         }
 
-
         public PNG_AuthenticateResponse Authenticate(PNG_AuthenticateRequest authenticateRequest)
         {
             // 檢查 AuthToken
@@ -57,25 +56,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            // 檢查 PlayNGo AccessToken
-            if (!ValidToken(authenticateRequest.AccessToken))
-            {
-                return new PNG_AuthenticateResponse()
-                {
-                    StatusCode = (int)PNG_StatsuCodeEnum.Internal,
-                    StatusMessage = "AccessToken Invalid",
-                };
-            }
-
-            var tpCheck = _thirdPartyBLL.ThirdPartyCheck((int)TpId, tpCustInfoAuth.TpUserName);
-            if (tpCheck == null || tpCheck.Locked)
-            {
-                return new PNG_AuthenticateResponse()
-                {
-                    StatusCode = (int)PNG_StatsuCodeEnum.AccountLocked,
-                    StatusMessage = "User Account Locked",
-                };
-            }
+            var checkResult = CheckTpUserWithAccessToken(tpCustInfoAuth.TpUserName, authenticateRequest.AccessToken);
+            if (!checkResult.IsVaild)
+                return new PNG_AuthenticateResponse(checkResult.response.StatusCode, checkResult.response.StatusMessage);
 
             var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)TpId, tpCustInfoAuth.TpUserName, (int)TpGameType);
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)TpId, tpCustInfoAuth.TpUserName);
@@ -179,9 +162,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
+
+
         #region private method
-
-
 
         private string GetCurrencyIsoCode(string tpCurrencyId)
         {
@@ -239,6 +222,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 ? 0
                 : pngJackpots.PNGJackpot.Sum(r => r.Loss);
         }
+
 
         #endregion
     }
