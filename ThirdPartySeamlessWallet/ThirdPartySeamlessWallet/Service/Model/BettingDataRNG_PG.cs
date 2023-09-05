@@ -1,8 +1,5 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
@@ -166,10 +163,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         [JsonProperty("jackpot_rtp_contribution_amount")]
         public decimal JackpotRtpContributionAmount { get; set; }
-        
+
         [JsonProperty("is_end_round")]
         public bool IsEndRound { get; set; }
-        
+
         [JsonProperty("platform")]
         public string Platform { get; set; }
 

@@ -1,4 +1,5 @@
 ﻿using MySql.Data.MySqlClient;
+
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -136,7 +137,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (!PlaceReward(RewardRNG_JokerTypeEnum.FromJoin, data, out message, conn, trans))
             {
-                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 return new JokerResponse()
                 {
                     Status = JokerErrorCode.Other,
@@ -149,7 +150,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 if (!SetBalance(RewardRNG_JokerTypeEnum.FromJoin, tpCustInfo, data, tpCurrency.ExchangeRate,
                                 out message, out balance, out int bonusId, conn, trans))
                 {
-                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                     return new JokerResponse()
                     {
                         Status = JokerErrorCode.Other,
@@ -169,7 +170,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 }
             }
 
-            await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+            await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
 
             return new JokerResponse()
             {
@@ -264,7 +265,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (!PlaceReward(RewardRNG_JokerTypeEnum.FromWin, data, out message, conn, trans))
             {
-                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 return new JokerResponse()
                 {
                     Status = JokerErrorCode.Other,
@@ -277,7 +278,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 if (!SetBalance(RewardRNG_JokerTypeEnum.FromWin, tpCustInfo, data, tpCurrency.ExchangeRate,
                                 out message, out balance, out int bonusId, conn, trans))
                 {
-                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                     return new JokerResponse()
                     {
                         Status = JokerErrorCode.Other,
@@ -297,7 +298,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 }
             }
 
-            await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+            await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
 
             return new JokerResponse()
             {
@@ -415,7 +416,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (!PlaceReward(RewardRNG_JokerTypeEnum.FromCancel, joinData, out message, conn, trans))
             {
-                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 return new JokerResponse()
                 {
                     Status = JokerErrorCode.Other,
@@ -431,7 +432,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 if (!SetBalance(RewardRNG_JokerTypeEnum.FromCancel, tpCustInfo, joinData, tpCurrency.ExchangeRate,
                                 out message, out balance, out int bonusId, conn, trans))
                 {
-                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                     return new JokerResponse()
                     {
                         Status = JokerErrorCode.Other,
@@ -451,7 +452,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 }
             }
 
-            await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+            await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
 
             return new JokerResponse()
             {

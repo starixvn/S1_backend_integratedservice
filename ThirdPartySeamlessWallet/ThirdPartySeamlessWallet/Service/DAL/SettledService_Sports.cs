@@ -1,6 +1,9 @@
-﻿using Dapper;
+﻿using System.Data;
+
+using Dapper;
+
 using MySql.Data.MySqlClient;
-using System.Data;
+
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.SBSW;
@@ -30,7 +33,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("returnAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
                 p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
 
-                _ = await _mainDbClient.ExecuteAsync("Service_BettransSports_BTI_CancelReserve_Set", trans ,p);
+                _ = await _mainDbClient.ExecuteAsync("Service_BettransSports_BTI_CancelReserve_Set", trans, p);
 
                 var btiResult = new BTIResult()
                 {
@@ -63,11 +66,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (btiResult.SetBalanceResult == 1)
                 {
                     btiResult.AfterAmount = afterAmount;
-                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 }
                 else
                 {
-                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 }
 
                 return btiResult;
@@ -106,14 +109,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("returnAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
                 p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
 
-                _ = await _mainDbClient.ExecuteAsync("Service_BettransSports_BTI_CommitReserve_Set", trans ,p);
+                _ = await _mainDbClient.ExecuteAsync("Service_BettransSports_BTI_CommitReserve_Set", trans, p);
                 var btiResult = new BTIResult()
                 {
                     SPResult = p.Get<short>("SPResult"),
                     ReturnAmount = p.Get<decimal>("returnAmount"),
                     Trx_id = p.Get<long>("trx_id"),
                 };
-            
+
                 if (btiResult.SPResult < 1)
                 {
                     return btiResult;
@@ -122,7 +125,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 btiResult.SPResult = _tpUnsettleService.InsertTpUnsettle(Tp.BTI, GameType.BTI_Sports, request.reserve_id, trans);
                 if (btiResult.SPResult == 1 && btiResult.ReturnAmount <= 0)
                 {
-                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                     return btiResult;
                 }
 
@@ -147,11 +150,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 btiResult.AfterAmount = afterAmount;
                 if (btiResult.SetBalanceResult == 1)
                 {
-                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 }
                 else
                 {
-                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 }
                 return btiResult;
             }
@@ -181,7 +184,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
                 p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
 
-                _ = await _mainDbClient.ExecuteAsync("Service_BettransSports_BTI_Credit_Ins_V2",trans ,p);
+                _ = await _mainDbClient.ExecuteAsync("Service_BettransSports_BTI_Credit_Ins_V2", trans, p);
                 var btiResult = new BTIResult()
                 {
                     SPResult = p.Get<short>("SPResult"),
@@ -211,7 +214,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         AllowNegative.Allow);
 
                 btiResult.AfterAmount = afterAmount;
-                
+
 
 
                 if (btiResult.SetBalanceResult == 1)
@@ -227,7 +230,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         _tpUnsettleService.InsertTpUnsettle(Tp.BTI, GameType.BTI_Sports, credit.reserve_id, trans);
                     }
 
-                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 }
                 return btiResult;
             }
@@ -246,7 +249,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
-        
+
         public IEnumerable<BTISettleData> GetUnsettledList_BTI()
         {
             return _mainDbClient.Query<BTISettleData>("Service_BettransSports_BTI_Unsettle_Get", commandType: CommandType.StoredProcedure);
@@ -269,7 +272,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 dto.TicketType = (int)BettransType.Payout;
                 dto.TicketStatus = (int)GetSboTicketStatus(dto.ResultType);
                 var p = new DynamicParameters(dto);
-                var result = await _mainDbClient.ExecuteAsync("Service_BettransSports_SBO_Settle_Set", trans ,p);
+                var result = await _mainDbClient.ExecuteAsync("Service_BettransSports_SBO_Settle_Set", trans, p);
 
                 if (result < 1)
                 {
@@ -298,14 +301,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         trans,
                         AllowNegative.Allow
                     );
-                    
+
                     if (result != 1)
                     {
                         logger.LogError($"Username:{dto.Username} afterAmount:{afterAmount} < 0 return Result:-2");
                         return new SBOResult() { Result = -2 };
                     }
                 }
-                
+
                 result = _tpUnsettleService.InsertTpUnsettle(Tp.SBO, dto.TpGameType, dto.TransferCode, trans, dto.ResultTime);
                 if (result < 1)
                 {
@@ -313,13 +316,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                     $"exec Service_TpUnsettle_Ins_V2 failed return Result:-3");
                     return new SBOResult() { Result = -3 };
                 }
-                
+
                 var sboResult = new SBOResult
                 {
                     Result = 1,
                     AfterAmount = afterAmount
                 };
-                await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+                await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 return sboResult;
             }
             catch (Exception ex)
@@ -339,20 +342,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 await using var conn = _mainDbClient.GetMySqlConnection();
                 await conn.OpenAsync();
                 await using var trans = await conn.BeginTransactionAsync();
-                
+
                 var p = new DynamicParameters(new
                 {
                     dto.TransferCode
                 });
 
-                var result = await _mainDbClient.ExecuteAsync("Service_BettransSports_SBO_Cancel_Set", trans ,p);
+                var result = await _mainDbClient.ExecuteAsync("Service_BettransSports_SBO_Cancel_Set", trans, p);
                 if (result != 1)
                 {
                     logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode} " +
                                     $"exec Service_BettransSports_SBO_Cancel_Set failed return Result:-1");
                     return new SBOResult() { Result = -1 };
                 }
-                
+
                 result = PayoutV2(
                     tpCustInfo,
                     dto.Amount,
@@ -374,7 +377,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     logger.LogError($"Username:{dto.Username} afterAmount:{afterAmount} < 0 return Result:-2");
                     return new SBOResult() { Result = -2 };
                 }
-                
+
                 var partitionTime = dto.ResultTime ?? DateTime.UtcNow;
                 result = _tpUnsettleService.InsertTpUnsettle(Tp.SBO, dto.TpGameType, dto.TransferCode, trans, partitionTime);
                 if (result < 1)
@@ -383,13 +386,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                     $" exec Service_TpUnsettle_Ins_V2 failed return Result:-3");
                     return new SBOResult() { Result = -3 };
                 }
-                
+
                 var sboResult = new SBOResult
                 {
                     AfterAmount = afterAmount,
                     Result = 1
                 };
-                await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+                await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 return sboResult;
             }
             catch (Exception ex)
@@ -401,7 +404,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 };
             }
         }
-        
+
         public async Task<SBOResult> RollbackSport_SBO(TpCustInfo tpCustInfo, RollbackSportDto_SBO dto)
         {
             try
@@ -410,9 +413,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 await using var conn = _mainDbClient.GetMySqlConnection();
                 await conn.OpenAsync();
                 await using var trans = await conn.BeginTransactionAsync();
-                
+
                 var p = new DynamicParameters(dto);
-                var result = await _mainDbClient.ExecuteAsync("Service_BettransSports_SBO_Rollback_Set", trans ,p);
+                var result = await _mainDbClient.ExecuteAsync("Service_BettransSports_SBO_Rollback_Set", trans, p);
                 if (result < 1)
                 {
                     logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode}" +
@@ -453,13 +456,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         return new SBOResult() { Result = -3 };
                     }
                 }
-                
+
                 var sboResult = new SBOResult
                 {
                     AfterAmount = afterAmount,
                     Result = 1
                 };
-                await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+                await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 return sboResult;
             }
             catch (Exception ex)

@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 
 namespace ThirdPartySeamlessWallet.Service.Model.enums
-{    
+{
     public enum AMBErrorCode
     {
         [Description("Success")]
