@@ -2014,7 +2014,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region PNG
 
-        public async Task<PNG_ReserveResponse> PlaceBetRNG_PNG(TpCustInfo tpCustInfo, BettingDataRNG_PNG bettingData)
+        public async Task<PNGResult> PlaceBetRNG_PNG(TpCustInfo tpCustInfo, BettingDataRNG_PNG bettingData)
         {
             await using var conn = _mainDbClient.GetMySqlConnection();
             await conn.OpenAsync();
@@ -2027,7 +2027,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var result = _partitionService.Execute(partitionTime, "Service_BettransRng_PNG_Ins", p, trans);
 
                 if (result == 0)
-                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "BettingData fail");
+                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "Reserve fail");
 
                 var bonusId = 0;
                 result = PlaceBetV2(
@@ -2049,19 +2049,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 await trans.CommitAsync();
 
-                return new PNG_ReserveResponse
+                return new PNGResult
                 {
-                    StatusCode = (int)PNG_StatsuCodeEnum.Ok,
-                    StatusMessage = "Reserve Success",
                     ExternalTransactionId = bettingData.TransactionId,
-                    Real = afterAmount
+                    AfterAmount = afterAmount
                 };
             }
             catch (MySqlException mySqlEx)
             {
                 if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
                 {
-                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "相同交易重覆");
+                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "Duplicate Reserve");
                 }
                 throw;
             }

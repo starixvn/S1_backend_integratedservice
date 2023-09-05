@@ -301,7 +301,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// 交易后客户的真钱余额。
         /// </summary>
         [XmlElement(ElementName = "real")]
-        public decimal Real { get; set; }
+        public decimal AfterAmount { get; set; }
     }
 
     #endregion
@@ -399,6 +399,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public PNGJackpots PngJackpots { get; set; }
     }
 
+    [XmlRoot(ElementName = "cancelReserve")]
     public class PNG_CancelReserveResponse :PNG_BaseResponse
     {
         #region Constructor
