@@ -1,4 +1,5 @@
 ﻿using K4os.Hash.xxHash;
+using Microsoft.AspNetCore.Http;
 using System.Xml.Serialization;
 
 namespace ThirdPartySeamlessWallet.Service.Model
@@ -45,25 +46,24 @@ namespace ThirdPartySeamlessWallet.Service.Model
     }
 
     [XmlRoot(ElementName = "authenticate", Namespace = "")]
-    public class PNG_AuthenticateResponse
+    public class PNG_AuthenticateResponse : PNG_BaseResponse
     {
+        #region Constructor 
+
+        public PNG_AuthenticateResponse() { }
+
+        public PNG_AuthenticateResponse(int statusCode, string statusMessage)
+        {
+            StatusCode = statusCode;
+            StatusMessage = statusMessage;
+        }
+        #endregion
+
         /// <summary>
         /// 唯一的客户 ID。对于同一用户，此 ID 必须始终相同。区分大小写。
         /// </summary>
         [XmlElement(ElementName = "externalId")]
         public string TpUserName { get; set; }
-
-        /// <summary>
-        /// 请求的状态。请参阅第 6.1 节中的状态代码。
-        /// </summary>
-        [XmlElement(ElementName = "statusCode")]
-        public int StatusCode { get; set; }
-
-        /// <summary>
-        /// 状态不正常时在客户端中显示的错误 string。
-        /// </summary>
-        [XmlElement(ElementName = "statusMessage")]
-        public string StatusMessage { get; set; }
 
         /// <summary>
         /// 玩家货币。请参阅游戏、货币、国家/地区和语言附录。
@@ -135,19 +135,21 @@ namespace ThirdPartySeamlessWallet.Service.Model
     }
 
     [XmlRoot(ElementName = "balance")]
-    public class PNG_BalanceResponse
+    public class PNG_BalanceResponse : PNG_BaseResponse
     {
+        #region Constructor
+        public PNG_BalanceResponse() { }
+
+        public PNG_BalanceResponse(int statusCode, string statusMessage)
+        {
+            StatusCode = statusCode;
+            StatusMessage = statusMessage;
+        }
+
+        #endregion
+
         [XmlElement(ElementName = "real")]
         public decimal Real { get; set; }
-
-        [XmlElement(ElementName = "statusCode")]
-        public int StatusCode { get; set; }
-
-        /// <summary>
-        /// 自行添加，讓 ELK 有錯誤訊息較快定位問題
-        /// </summary>
-        [XmlElement(ElementName = "statusMessage")]
-        public string StatusMessage { get; set; }
     }
 
 
@@ -277,16 +279,17 @@ namespace ThirdPartySeamlessWallet.Service.Model
     [XmlRoot(ElementName = "reserve")]
     public class PNG_ReserveResponse : PNG_BaseResponse
     {
-        public PNG_ReserveResponse()
-        {
-            
-        }
+        #region Constructor
+
+        public PNG_ReserveResponse() { }
 
         public PNG_ReserveResponse(int statusCode, string statusMessage)
         {
             StatusCode = statusCode;
             StatusMessage = statusMessage;
         }
+
+        #endregion
 
         /// <summary>
         /// 可选此交易的运营商帐户系统唯一 ID。
@@ -318,6 +321,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         [XmlElement(ElementName = "statusMessage")]
         public string StatusMessage { get; set; }
     }
+
+    #region Enum
 
     public enum PNG_StatsuCodeEnum
     {
@@ -387,8 +392,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         ServiceUnavailable = 12
     }
 
+    #endregion
 
-    #region Dto
+    #region Data Transfer Model
 
     public class BettingDataRNG_PNG
     {
