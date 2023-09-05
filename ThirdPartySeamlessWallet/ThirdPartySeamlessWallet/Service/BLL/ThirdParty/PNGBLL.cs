@@ -146,6 +146,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     Channel = reserveRequest.Channel,
                     FreeGameExternalId = reserveRequest.FreeGameExternalId,
                     ActualAmount = reserveRequest.ActualAmount,
+                    JackpotWin = default,
                     JackpotLoss = GetJackpotsLossAmount(reserveRequest.PngJackpots),
                     TicketType = (int)BettransType.Bet,
                     TicketStatus = (int)TicketStatus.UnSettled

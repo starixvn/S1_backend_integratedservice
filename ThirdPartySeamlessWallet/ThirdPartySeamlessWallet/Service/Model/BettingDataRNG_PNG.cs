@@ -452,6 +452,11 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal ActualAmount { get; set; }
 
         /// <summary>
+        /// 累積大獎贏得的金額
+        /// </summary>
+        public decimal JackpotWin { get; set; }
+
+        /// <summary>
         /// 累積大獎貢獻金額
         /// </summary>
         public decimal JackpotLoss { get; set; }
