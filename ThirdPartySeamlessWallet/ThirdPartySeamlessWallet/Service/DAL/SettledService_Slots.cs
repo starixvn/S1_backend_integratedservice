@@ -6493,22 +6493,54 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
+                var partitionTime = DateTime.UtcNow;
+                var p = new DynamicParameters(bettingData);
+                var result = _partitionService.Execute(partitionTime, "Service_BettransRng_PNG_Ins", p, trans);
 
+                if (result == 0)
+                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "CancelReserve fail");
 
+                result = PayoutV2(
+                    tpCustInfo,
+                    bettingData.Amount,
+                    (int)Tp.PNG,
+                    bettingData.TransactionId,
+                    (int)GameType.PNG_RNG,
+                    TpCategory.Slots,
+                    bettingData.TransactionId,
+                    TransType.Refunds,
+                    null,
+                    out var afterAmount,
+                    "Cancel",
+                    out var bonusId,
+                    conn,
+                    trans);
 
+                if (result < 1)
+                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "CancelReserve Set Balance Fail");
+
+                await trans.CommitAsync();
+                return new PNGResult
+                {
+                    ExternalTransactionId = bettingData.TransactionId,
+                    AfterAmount = afterAmount
+                };
 
             }
-            catch (Exception e)
+            catch (MySqlException mySqlEx)
             {
-                Console.WriteLine(e);
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "Duplicate CancelReserve");
+                }
                 throw;
             }
-
-
-            await Task.Delay(1);
-
-            return null;
-
+            catch (Exception ex)
+            {
+                await trans.RollbackAsync();
+                logger.LogError(ex, ex.Message);
+                throw new PNGException(PNG_StatsuCodeEnum.Internal, ex.Message);
+            }
         }
 
 

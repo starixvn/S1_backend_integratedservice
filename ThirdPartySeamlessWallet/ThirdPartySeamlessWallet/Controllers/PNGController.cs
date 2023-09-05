@@ -91,13 +91,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var body = await reader.ReadToEndAsync();
 
+            var cancelReserveRequest = _tools.XMLDeserialize<PNG_CancelReserveRequest>(body);
+            var cancelReserveResponse = await _pngBll.CancelReserve(cancelReserveRequest);
+            var xmlString = XmlHelper.SerializeToXmlString(cancelReserveResponse);
 
-
-            await Task.Delay(1);
-            return null;
+            return Content(xmlString, "application/xml");
         }
-
-
-
     }
 }

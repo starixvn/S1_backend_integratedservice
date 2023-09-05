@@ -31,19 +31,21 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly AuthBLL _authBll;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBll;
-        private readonly ILogger<PNGBLL> _logger;
         private readonly BettingService _bettingService;
+        private readonly SettledService _settledService;
+        private readonly ILogger<PNGBLL> _logger;
 
         public PNGBLL(AuthBLL authBll, ThirdPartyBLL thirdPartyBLL,
             TpCustInfoBLL tpCustInfoBll,
             ILogger<PNGBLL> logger,
-            BettingService bettingService)
+            BettingService bettingService, SettledService settledService)
         {
             _authBll = authBll;
             _thirdPartyBLL = thirdPartyBLL;
             _tpCustInfoBll = tpCustInfoBll;
-            _logger = logger;
             _bettingService = bettingService;
+            _settledService = settledService;
+            _logger = logger;
         }
 
         public PNG_AuthenticateResponse Authenticate(PNG_AuthenticateRequest authenticateRequest)
@@ -154,12 +156,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
 
                 var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)TpId, reserveRequest.TpUserName);
-                var response = await _bettingService.PlaceBetRNG_PNG(tpCustInfo, bettingData);
-                return response;
+                var reserveResult = await _bettingService.PlaceBetRNG_PNG(tpCustInfo, bettingData);
+
+                return new PNG_ReserveResponse
+                {
+                    StatusCode = (int)PNG_StatsuCodeEnum.Ok,
+                    StatusMessage = "Reserve Success",
+                    ExternalTransactionId = reserveResult.ExternalTransactionId,
+                    AfterAmount = reserveResult.AfterAmount
+                };
             }
             catch (PNGException ex)
             {
-                _logger.LogError(ex, $"TpUserName:{reserveRequest.TpUserName} bettingData:{JsonConvert.SerializeObject(bettingData)}");
+                _logger.LogError(ex, $"Reserve TpUserName:{reserveRequest.TpUserName} bettingData:{JsonConvert.SerializeObject(bettingData)}");
                 return new PNG_ReserveResponse((int)PNG_StatsuCodeEnum.Internal, ex.ErrorMessage);
             }
         }
@@ -181,7 +190,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     Amount = cancelReserveRequest.Real,
                     CurrencyIsoCode = cancelReserveRequest.Currency,
                     GameId = cancelReserveRequest.GameId,
-                    GameSessionId = cancelReserveRequest.GameSessionId,
+                    GameSessionId = cancelReserveRequest.GameSessionId ?? string.Empty,
                     RoundId = cancelReserveRequest.RoundId,
                     Channel = cancelReserveRequest.Channel,
                     FreeGameExternalId = cancelReserveRequest.FreeGameExternalId,
@@ -192,18 +201,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
 
                 var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)TpId, cancelReserveRequest.TpUserName);
-                //var response = await _bettingService.PlaceBetRNG_PNG(tpCustInfo, bettingData);
+                var cancelBetResult = await _settledService.CancelBetRNG_PNG(tpCustInfo, bettingData);
 
-                await Task.Delay(1);
-
+                return new PNG_CancelReserveResponse
+                {
+                    ExternalTransactionId = cancelBetResult.ExternalTransactionId,
+                    StatusCode = (int)PNG_StatsuCodeEnum.Ok,
+                    StatusMessage = "CancelReserve Success"
+                };
             }
-            catch (Exception ex)
+            catch (PNGException ex)
             {
-                
-
+                _logger.LogError(ex, $"CancelReserve TpUserName:{cancelReserveRequest.TpUserName} bettingData:{JsonConvert.SerializeObject(bettingData)}");
+                return new PNG_CancelReserveResponse((int)PNG_StatsuCodeEnum.Internal, ex.ErrorMessage);
             }
-
-            return null;
         }
 
 
