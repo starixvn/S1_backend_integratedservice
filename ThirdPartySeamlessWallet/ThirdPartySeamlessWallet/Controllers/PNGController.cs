@@ -78,5 +78,26 @@ namespace ThirdPartySeamlessWallet.Controllers
             return Content(xmlString, "application/xml");
 
         }
+
+        /// <summary>
+        /// 取消投注
+        /// </summary>
+        /// <returns></returns>
+        [Route("[controller]/cancelReserve")]
+        [Produces("application/xml")]
+        [HttpPost]
+        public async Task<dynamic> CancelReserve()
+        {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var body = await reader.ReadToEndAsync();
+
+
+
+            await Task.Delay(1);
+            return null;
+        }
+
+
+
     }
 }

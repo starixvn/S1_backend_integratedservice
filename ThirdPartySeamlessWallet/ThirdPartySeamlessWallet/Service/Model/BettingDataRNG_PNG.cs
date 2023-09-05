@@ -306,6 +306,121 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     #endregion
 
+    #region CancelReserve Model
+
+    [XmlRoot(ElementName = "cancelReserve")]
+    public class PNG_CancelReserveRequest
+    {
+        /// <summary>
+        /// 唯一的客户 ID。对于同一用 户 ， 此 ID 必 须 始 终相同。
+        /// </summary>
+        [XmlElement(ElementName = "externalId")]
+        public string TpUserName { get; set; }
+
+        /// <summary>
+        /// 分配给产品的标识符。
+        /// </summary>
+        [XmlElement(ElementName = "productId")]
+        public string ProductId { get; set; }
+
+        /// <summary>
+        /// 唯一的交易 ID。
+        /// </summary>
+        [XmlElement(ElementName = "transactionId")]
+        public string TransactionId { get; set; }
+
+        /// <summary>
+        /// 投注中使用的"真钱"金额。如果是免费游戏回合，则为 0。
+        /// </summary>
+        [XmlElement(ElementName = "real")]
+        public decimal Real { get; set; }
+
+        /// <summary>
+        /// 货币代码。请参阅游戏、货币、国家/地区和语言附录。
+        /// </summary>
+        [XmlElement(ElementName = "currency")]
+        public string Currency { get; set; }
+
+        /// <summary>
+        /// 游戏标识符。请参阅游戏详情表。
+        /// </summary>
+        [XmlElement(ElementName = "gameId")]
+        public string GameId { get; set; }
+
+        /// <summary>
+        /// 游戏会话标识符由 Play’n GO 生成。
+        /// </summary>
+        [XmlElement(ElementName = "gameSessionId")]
+        public string GameSessionId { get; set; }
+
+        /// <summary>
+        /// 可选如身份验证请求中所指定。
+        /// </summary>
+        [XmlElement(ElementName = "contextId")]
+        public string ContextId { get; set; }
+
+        /// <summary>
+        /// 应始终验证的私人访问令牌。
+        /// </summary>
+        [XmlElement(ElementName = "accessToken")]
+        public string AccessToken { get; set; }
+
+        /// <summary>
+        /// 应始终验证的私人访问令牌。
+        /// </summary>
+        [XmlElement(ElementName = "roundId")]
+        public long RoundId { get; set; }
+
+        /// <summary>
+        /// 可选如运营商帐户系统在身份验证响应中指定
+        /// </summary>
+        [XmlElement(ElementName = "externalGameSessionId")]
+        public string ExternalGameSessionId { get; set; }
+
+        /// <summary>
+        /// 启动游戏所在的通道。
+        /// </summary>
+        [XmlElement(ElementName = "channel")]
+        public int Channel { get; set; }
+
+        [XmlElement(ElementName = "freegameExternalId")]
+        public string FreeGameExternalId { get; set; }
+
+        /// <summary>
+        /// 注额的实际值。同时用于正常投注和免费游戏。对于免费游戏，是为免费游戏配置的注额。对于正常投注，这将与"real"中的相同。
+        /// </summary>
+        [XmlElement(ElementName = "actualValue")]
+        public decimal ActualAmount { get; set; }
+
+        /// <summary>
+        /// 标记包含一个或多个累积大奖标记。
+        /// </summary>
+        [XmlElement(ElementName = "jackpots")]
+        public PNGJackpots PngJackpots { get; set; }
+    }
+
+    public class PNG_CancelReserveResponse :PNG_BaseResponse
+    {
+        #region Constructor
+
+        public PNG_CancelReserveResponse() { }
+
+        public PNG_CancelReserveResponse(int statusCode, string statusMessage)
+        {
+            StatusCode = statusCode;
+            StatusMessage = statusMessage;
+        }
+
+        #endregion
+
+        /// <summary>
+        /// 可选此交易的运营商帐户系统唯一 ID。
+        /// </summary>
+        [XmlElement(ElementName = "externalTransactionId")]
+        public string ExternalTransactionId { get; set; }
+    }
+
+    #endregion
 
     public class PNG_BaseResponse
     {
@@ -462,8 +577,13 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal JackpotLoss { get; set; }
 
         public int TicketType { get; set; }
+    }
 
-        public int TicketStatus {get; set; }
+    public class PNGResult
+    {
+        public string ExternalTransactionId { get; set; }
+
+        public decimal AfterAmount { get; set; }
     }
 
     #endregion

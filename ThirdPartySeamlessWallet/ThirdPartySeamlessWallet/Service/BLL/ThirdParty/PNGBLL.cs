@@ -19,6 +19,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         PNG_BalanceResponse Balance(PNG_BalanceRequest balanceRequest);
 
         Task<PNG_ReserveResponse> Reserve(PNG_ReserveRequest reserveRequest);
+
+        Task<PNG_CancelReserveResponse> CancelReserve(PNG_CancelReserveRequest cancelReserveRequest);
     }
 
     public class PNGBLL : IPNGBLL
@@ -149,7 +151,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     JackpotWin = default,
                     JackpotLoss = GetJackpotsLossAmount(reserveRequest.PngJackpots),
                     TicketType = (int)BettransType.Bet,
-                    TicketStatus = (int)TicketStatus.UnSettled
                 };
 
                 var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)TpId, reserveRequest.TpUserName);
@@ -163,6 +164,47 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
+        public async Task<PNG_CancelReserveResponse> CancelReserve(PNG_CancelReserveRequest cancelReserveRequest)
+        {
+            var bettingData = new BettingDataRNG_PNG();
+            try
+            {
+                var checkResult = CheckTpUserWithAccessToken(cancelReserveRequest.TpUserName, cancelReserveRequest.AccessToken);
+                if (!checkResult.IsVaild)
+                    return new PNG_CancelReserveResponse(checkResult.response.StatusCode, checkResult.response.StatusMessage);
+
+                bettingData = new BettingDataRNG_PNG()
+                {
+                    TpUserName = cancelReserveRequest.TpUserName,
+                    ProductId = cancelReserveRequest.ProductId,
+                    TransactionId = cancelReserveRequest.TransactionId,
+                    Amount = cancelReserveRequest.Real,
+                    CurrencyIsoCode = cancelReserveRequest.Currency,
+                    GameId = cancelReserveRequest.GameId,
+                    GameSessionId = cancelReserveRequest.GameSessionId,
+                    RoundId = cancelReserveRequest.RoundId,
+                    Channel = cancelReserveRequest.Channel,
+                    FreeGameExternalId = cancelReserveRequest.FreeGameExternalId,
+                    ActualAmount = cancelReserveRequest.ActualAmount,
+                    JackpotWin = default,
+                    JackpotLoss = GetJackpotsLossAmount(cancelReserveRequest.PngJackpots),
+                    TicketType = (int)BettransType.CancelBet
+                };
+
+                var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)TpId, cancelReserveRequest.TpUserName);
+                //var response = await _bettingService.PlaceBetRNG_PNG(tpCustInfo, bettingData);
+
+                await Task.Delay(1);
+
+            }
+            catch (Exception ex)
+            {
+                
+
+            }
+
+            return null;
+        }
 
 
         #region private method
