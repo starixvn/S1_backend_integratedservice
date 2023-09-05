@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ThirdPartySettleWorker.Model.Exceptions
+﻿namespace ThirdPartySettleWorker.Model.Exceptions
 {
     public class UnsettleNotFoundException : Exception
     {

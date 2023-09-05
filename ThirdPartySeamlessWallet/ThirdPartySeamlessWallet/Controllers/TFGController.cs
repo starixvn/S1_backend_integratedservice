@@ -1,11 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
-using ThirdPartySeamlessWallet.Service.BLL;
-using ThirdPartySeamlessWallet.Service.Model.enums;
-using ThirdPartySeamlessWallet.Service.Model;
-using Newtonsoft.Json;
-using System.Text;
+﻿using System.Text;
 using System.Web;
+
+using Microsoft.AspNetCore.Mvc;
+
+using Newtonsoft.Json;
+
+using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
+using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Controllers
 {
@@ -96,7 +99,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 var result = await _tfgbLL.Transfer(req);
 
-                if(result.Code == ResultCode.Success)
+                if (result.Code == ResultCode.Success)
                 {
                     _logger.LogInformation(ResultCode.Success.ToString());
                     return Ok();

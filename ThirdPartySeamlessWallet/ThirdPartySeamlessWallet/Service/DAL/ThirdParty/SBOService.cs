@@ -1,4 +1,5 @@
 ﻿using Dapper;
+
 using ThirdPartySeamlessWallet.Service.DAL.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -20,7 +21,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL.ThirdParty
             var p = new DynamicParameters(new { _TransferCode = transferCode });
             return await _sqlClient.QueryFirstAsync<SBOGetBetStatusData>("Service_BettransSports_SBO_Status_Get", p);
         }
-        
+
         public async Task<SBOLiveCoinTransactionData> GetLiveCoinTransaction(string transferCode)
         {
             var p = new DynamicParameters(new { _TransferCode = transferCode });

@@ -1,8 +1,11 @@
 ﻿using Newtonsoft.Json;
+
 using Serilog.Context;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -91,7 +94,7 @@ namespace ThirdPartySettleWorker.Workers
                                 SettledTime = unsettled.SettleTime,
                                 TransTime = unsettled.TransTime,
                                 SettlementType = _settledBLL.GetSettlementType(GameType.GPI_RNG, unsettled.game_id),
-                                GameID = unsettled.game_id,                                
+                                GameID = unsettled.game_id,
                             };
 
                             var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Slots);

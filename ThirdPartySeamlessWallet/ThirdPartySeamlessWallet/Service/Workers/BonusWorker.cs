@@ -1,15 +1,4 @@
-﻿using Dapper;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using MySql.Data.MySqlClient;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using ThirdPartySeamlessWallet.Service.DAL;
+﻿using ThirdPartySeamlessWallet.Service.DAL;
 
 namespace ThirdPartySeamlessWallet.Service.Workers
 {

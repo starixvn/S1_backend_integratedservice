@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-
-namespace ThirdPartySeamlessWallet.Service.Model.enums
+﻿namespace ThirdPartySeamlessWallet.Service.Model.enums
 {
     public enum SimplePlayErrorCode
     {

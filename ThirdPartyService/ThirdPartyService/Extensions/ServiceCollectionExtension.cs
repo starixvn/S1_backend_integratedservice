@@ -1,9 +1,5 @@
-﻿using System;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using ThirdPartyCore.Model.enums;
+﻿using ThirdPartyCore.Model.enums;
+
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
 

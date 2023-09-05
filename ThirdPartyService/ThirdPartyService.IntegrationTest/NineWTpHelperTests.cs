@@ -1,12 +1,9 @@
-﻿using NUnit.Framework;
-using ThirdParty.NineW;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using FluentAssertions;
+
+using NUnit.Framework;
+
 using ThirdPartyCore.Model;
-using FluentAssertions;
 using ThirdPartyCore.Model.enums;
-using System.Threading.Tasks;
 
 namespace ThirdParty.NineW.Tests
 {
@@ -44,7 +41,7 @@ namespace ThirdParty.NineW.Tests
                 { "ApiUrl", "https://apiinfo.cckk77.net/api/apiWallet" },
                 { "OldApiUrl", "https://test81.cckk77.net/apiWallet" },
                 { "cert", "wkVwQ8sMVr252EA9" },
-                { "agent", "testnvccricma" },             
+                { "agent", "testnvccricma" },
                 { "website", "WICKETSPRO" },
             };
         }
@@ -97,7 +94,7 @@ namespace ThirdParty.NineW.Tests
             //Assert
             actual.ErrorCode.Should().Be(ErrorCode.Success);
             var checkResult = _tpHelper.CheckTransfer(_tpCustInfo, _inputs, amount, direction, transID, null);
-            checkResult.ErrorCode.Should().Be(ErrorCode.Success);           
+            checkResult.ErrorCode.Should().Be(ErrorCode.Success);
         }
 
         [TestCase(1000)]
@@ -106,7 +103,7 @@ namespace ThirdParty.NineW.Tests
             //先檢查第三方餘額
             var tpuserBalance = _tpHelper.GetBalance(_tpCustInfo, _inputs);
             tpuserBalance.ErrorCode.Should().Be(ErrorCode.Success);
-            
+
             Task.Delay(1000);
 
             //第三方有餘額先全部轉回主帳戶
@@ -150,7 +147,7 @@ namespace ThirdParty.NineW.Tests
             tpuserBalance = _tpHelper.GetBalance(_tpCustInfo, _inputs);
             tpuserBalance.ErrorCode.Should().Be(ErrorCode.Success);
             tpuserBalance.Data.balance.Should().Be(amount / 2);
-         
+
         }
 
         [Test()]

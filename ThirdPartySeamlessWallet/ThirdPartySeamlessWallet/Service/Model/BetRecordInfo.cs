@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ThirdPartySeamlessWallet.Service.Model.enums;
+﻿using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -29,7 +25,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// 可用此單號來取回TpSeamlessBonus存放的Bonus紀錄
         /// </summary>
         public string ReferenceNo { get; set; } = string.Empty;
-        public string GameID 
+        public string GameID
         {
             get
             {

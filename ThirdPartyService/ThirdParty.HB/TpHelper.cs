@@ -1,10 +1,9 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using System.Web;
+
+using Newtonsoft.Json;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -13,7 +12,7 @@ using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.HB
 {
-    public class TpHelper: ThirdPartyHelperBase
+    public class TpHelper : ThirdPartyHelperBase
     {
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
         public TpHelper()
@@ -91,7 +90,7 @@ namespace ThirdParty.HB
             var gameHistory = url[..idx];
             var friendlygameinstanceid = getBetDetail.TransId;
             var hash = SHA256($"{friendlygameinstanceid.ToLower()}{brandId.ToLower()}{apiKey.ToLower()}");
-            
+
             var URL = $"{gameHistory}/games/history/?brandid={brandId}&friendlyid={friendlygameinstanceid}&hash={hash}&locale=en&viewtype=game";
             return new BaseDetail(getBetDetail.TpGameTypeOption)
             {
@@ -107,7 +106,7 @@ namespace ThirdParty.HB
 
         private string GetInputValue(Dictionary<string, string> inputs, string key, bool allowNull = false)
         {
-            if(inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))
+            if (inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))
             {
                 return inputs[key];
             }
@@ -121,7 +120,7 @@ namespace ThirdParty.HB
         {
             return inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) && inputs["fun"] == "1";
         }
-        
+
         private string SHA256(string message)
         {
             var sha256 = new SHA256CryptoServiceProvider();

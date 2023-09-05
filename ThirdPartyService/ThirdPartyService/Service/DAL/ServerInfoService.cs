@@ -1,5 +1,6 @@
 ﻿using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+
 using ThirdPartyService.Service.Library;
 using ThirdPartyService.Service.Model;
 
@@ -9,7 +10,7 @@ namespace ThirdPartyService.Service.DAL
     {
 
         #region Fields
-        
+
         private readonly MySqlClient _mainDbClient;
 
         #endregion

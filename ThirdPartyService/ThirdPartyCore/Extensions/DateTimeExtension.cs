@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace ThirdPartyCore.Extensions
+﻿namespace ThirdPartyCore.Extensions
 {
     public static class DateTimeExtension
     {

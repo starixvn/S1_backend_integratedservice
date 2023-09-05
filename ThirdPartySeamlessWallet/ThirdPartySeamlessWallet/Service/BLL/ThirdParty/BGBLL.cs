@@ -1,5 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
+
 using Newtonsoft.Json;
+
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -177,7 +179,7 @@ public class BGBLL : IBGBLL
 
             if (!PlaceData(partitionTime, data, trans, out message))
             {
-                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
             }
 
@@ -188,13 +190,13 @@ public class BGBLL : IBGBLL
                 if (!SetBalance(tpCustInfo, data, 0,
                     tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
                 {
-                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                     return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
                 }
             }
         }
 
-        await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+        await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
 
         #region Test recalc
 
@@ -301,7 +303,7 @@ public class BGBLL : IBGBLL
 
             if (!PlaceData(partitionTime, data, trans, out message))
             {
-                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
             }
 
@@ -310,7 +312,7 @@ public class BGBLL : IBGBLL
                 if (!SetBalance(tpCustInfo, data, payoutAmount, tpCurrency.ExchangeRate,
                     out message, out balance, out int bonusId, conn, trans))
                 {
-                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                     return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
                 }
             }
@@ -323,7 +325,7 @@ public class BGBLL : IBGBLL
                 case BGOrderStatusEnum.Expired:
                     if (!InsertUnsettleData(partitionTime, data.orderId, out message, trans))
                     {
-                        await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                        await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                         return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
                     }
                     break;
@@ -335,12 +337,12 @@ public class BGBLL : IBGBLL
             //派彩amount=0，balance取db資料
             if (!GetBalance(tpCustInfo.TpUserName, out balance, out message))
             {
-                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 return new ResponseModel_BG(request, BGErrorCode.InternalError, message, parameters.sn);
             }
         }
 
-        await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+        await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
 
         #region Test recalc
 

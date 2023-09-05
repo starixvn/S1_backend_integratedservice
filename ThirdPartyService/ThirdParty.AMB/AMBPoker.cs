@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace ThirdParty.AMB
 {
@@ -10,8 +8,8 @@ namespace ThirdParty.AMB
         {
             Setting = new AMBSetting()
             {
-                ApiUrl = inputs["ApiUrl"], 
-                Agent = inputs["Agent"], 
+                ApiUrl = inputs["ApiUrl"],
+                Agent = inputs["Agent"],
                 SecretKey = inputs["SecretKey"]
             };
         }
@@ -35,7 +33,7 @@ namespace ThirdParty.AMB
             {
                 {"x-amb-signature", HMACSHA512(JsonConvert.SerializeObject(param), Setting.SecretKey)}
             };
-            
+
             try
             {
                 var response = callback(apiUrl, jsonParam, "application/json", header, 0);
@@ -64,13 +62,13 @@ namespace ThirdParty.AMB
                 username = tpUserName,
                 agent = Setting.Agent,
             };
-            
+
             var jsonParam = JsonConvert.SerializeObject(param);
             var header = new Dictionary<string, string>
             {
                 {"x-amb-signature", HMACSHA512(jsonParam, Setting.SecretKey)}
             };
-            
+
             try
             {
                 var content = callback(apiUrl, jsonParam, "application/json", header, 0);
@@ -102,14 +100,14 @@ namespace ThirdParty.AMB
                 language = "en",
             };
 
-            var jsonParam = JsonConvert.SerializeObject(param); 
-            
+            var jsonParam = JsonConvert.SerializeObject(param);
+
             var header = new Dictionary<string, string>
             {
                 { "x-amb-signature", HMACSHA512(jsonParam, Setting.SecretKey) }
             };
             var result = callback(apiUrl, jsonParam, "application/json", header, 0);
-            
+
             try
             {
                 return JsonConvert.DeserializeObject<GameReportResponse>(result);

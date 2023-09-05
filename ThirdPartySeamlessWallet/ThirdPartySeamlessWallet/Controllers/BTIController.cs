@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
+
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+
 using Serilog.Context;
+
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.Model;
+
 using static ThirdPartySeamlessWallet.Extensions.MethodExtension;
 
 namespace ThirdPartySeamlessWallet.Controllers
@@ -23,7 +22,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         public BTIController(IServiceProvider provider, ILogger<BTIController> logger)
         {
-            this.logger = logger; 
+            this.logger = logger;
             _bTIBLL = new BTIBLL(provider);
         }
 
@@ -59,7 +58,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                LogExceptionError(GetCurrentMethod(), ex);          
+                LogExceptionError(GetCurrentMethod(), ex);
                 return ReturnBTI(new Dictionary<string, string>
                 {
                     { "error_code", "-1" },
@@ -140,7 +139,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         { "error_message", $"Wrong Request." },
                     });
                 }
-                
+
                 return Content(await _bTIBLL.CancelReserveAsync(new BTIRequestObj()
                 {
                     cust_id = cust_id,
@@ -220,7 +219,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 using var requestBody = new StreamReader(Request.Body, Encoding.UTF8, true, 1024, true);
-                
+
                 return Content(await _bTIBLL.Credit(new BTIRequestObj()
                 {
                     cust_id = cust_id,
