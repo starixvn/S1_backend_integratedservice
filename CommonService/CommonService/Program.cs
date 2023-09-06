@@ -5,7 +5,6 @@ using Serilog;
 using Serilog.Exceptions;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
 
 var excludesMessage = builder.Configuration.GetSection("ExcludesMessage").Get<string[]>();
 var excludesApiEndpoints = builder.Configuration.GetSection("ExcludesApiEndpoint").Get<string[]>();
