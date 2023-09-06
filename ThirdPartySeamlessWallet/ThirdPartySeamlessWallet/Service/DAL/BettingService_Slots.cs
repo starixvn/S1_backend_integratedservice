@@ -2071,6 +2071,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
+        public IEnumerable<BettingDataRNG_PNG> GetBettingDataRng_PNG(string transactionId)
+        {
+            var now = DateTime.UtcNow;
+            return _partitionService.Query<BettingDataRNG_PNG>(now, "Service_BettransRng_PNG_Get", new { _transactionId = transactionId });
+        }
+
         #endregion
     }
 }

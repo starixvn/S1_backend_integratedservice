@@ -6494,7 +6494,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var result = _partitionService.Execute(partitionTime, "Service_BettransRng_PNG_Ins", p, trans);
 
                 if (result == 0)
-                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "CancelReserve fail");
+                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "CancelReserve Fail");
 
                 result = PayoutV2(
                     tpCustInfo,
@@ -6536,6 +6536,64 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 await trans.RollbackAsync();
                 logger.LogError(ex, ex.Message);
                 throw new PNGException(PNG_StatsuCodeEnum.Internal, ex.Message);
+            }
+        }
+
+        public async Task<PNGResult> PayoutRNG_PNG(TpCustInfo tpCustInfo, BettingDataRNG_PNG bettingData)
+        {
+            var afterAmount = 0m;
+            await using var conn = _mainDbClient.GetMySqlConnection();
+            await conn.OpenAsync();
+            await using var trans = await conn.BeginTransactionAsync();
+
+            try
+            {
+                var partitionTime = DateTime.UtcNow;
+                var p = new DynamicParameters(bettingData);
+                var result = _partitionService.Execute(partitionTime, "Service_BettransRng_PNG_Ins", p, trans);
+
+                if (result == 0)
+                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "Release Fail");
+
+                if (bettingData.Amount > 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        bettingData.Amount,
+                        (int)Tp.PNG,
+                        bettingData.TransactionId,
+                        (int)GameType.PNG_RNG,
+                        TpCategory.Slots,
+                        bettingData.TransactionId,
+                        TransType.Payout,
+                        null,
+                        out afterAmount,
+                        "Payout",
+                        out var bonusId,
+                        conn,
+                        trans);
+                }
+
+                if (result < 1)
+                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "Release Set Balance Fail");
+
+                result = _tpUnsettleService.InsertTpUnsettle(Tp.PNG, GameType.PNG_RNG, bettingData.TransactionId, trans, partitionTime);
+                if (result < 1)
+                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "PNG TpUnsettle Fail");
+
+                await trans.CommitAsync();
+
+                return new PNGResult
+                {
+                    ExternalTransactionId = bettingData.TransactionId,
+                    AfterAmount = afterAmount
+                };
+            }
+            catch (PNGException ex)
+            {
+                logger.LogError(ex, ex.Message);
+                await trans.RollbackAsync();
+                throw new PNGException(PNG_StatsuCodeEnum.Internal,ex.Message);
             }
         }
 
