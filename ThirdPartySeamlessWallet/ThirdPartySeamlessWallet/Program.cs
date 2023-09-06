@@ -1,6 +1,5 @@
 using Serilog;
 using Serilog.Exceptions;
-
 using ThirdPartySeamlessWallet;
 using ThirdPartySeamlessWallet.Core.Extensions;
 

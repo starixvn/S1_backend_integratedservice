@@ -1,9 +1,14 @@
-﻿using System.Text;
-
-using Microsoft.AspNetCore.Mvc;
-
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -465,7 +470,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             var request = JsonConvert.DeserializeObject<AMBSlotCancelRequest>(content);
             return await _AMBBLL.SlotCancel(request);
         }
-
+        
         /// <summary>
         /// Slot取消下注
         /// </summary>

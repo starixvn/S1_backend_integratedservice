@@ -1,11 +1,8 @@
 ﻿using System.Data;
 using System.Text.RegularExpressions;
-
 using Dapper;
-
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-
 using ThirdPartyService.Service.Library;
 
 namespace ThirdPartyService.Service.DAL
@@ -16,7 +13,7 @@ namespace ThirdPartyService.Service.DAL
         private readonly BonusService _bonusService;
         private readonly WalletService _walletService;
         private readonly MySqlClient _mainDbClient;
-
+        
         public TpTransferBonusInfoService(IServiceProvider provider)
         {
             _common = provider.GetRequiredService<Common>();
@@ -42,15 +39,15 @@ namespace ThirdPartyService.Service.DAL
                 }));
             var m = Regex.Match(transId, @"\d+");
             int.TryParse(m.Value, out var transferId);
-
+            
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
-
+            
             var rwalletServiceResult = _bonusService.BonusTransferOutAll(tpCustInfo.CustId, tpCustInfo.SiteId,
                 tpCustInfo.UserName, tpBonusTransfer.TpId, null, transId, out BonusId, out var Bonus,
                 out var LockedAmount, out var BonusAmount, out var RolloverAmount, out var ExpiryTime, trans);
-
+            
             tpBonusTransfer.Bonus = Bonus;
             tpBonusTransfer.LockedAmount = LockedAmount;
             tpBonusTransfer.BonusAmount = BonusAmount;
@@ -63,7 +60,7 @@ namespace ThirdPartyService.Service.DAL
                 apiResult.Data.Difference = 0;
                 apiResult.Message = "No bonus can be transferred.";
 
-                _mainDbClient.Execute("Service_TpTransferBonusInfo_Set", trans,
+                _mainDbClient.Execute("Service_TpTransferBonusInfo_Set",trans,
                     new
                     {
                         TransferBonusId = transferId,
@@ -83,17 +80,17 @@ namespace ThirdPartyService.Service.DAL
                 return apiResult;
             }
 
-            _mainDbClient.Execute("Service_TpTransferBonusInfo_Set", trans,
+            _mainDbClient.Execute("Service_TpTransferBonusInfo_Set",trans,
                 new DynamicParameters(new
                 {
                     TransferBonusId = transferId,
                     tpBonusTransfer.Bonus,
                     tpBonusTransfer.BonusAmount,
                     tpBonusTransfer.LockedAmount,
-                    tpBonusTransfer.RolloverAmount,
+                    tpBonusTransfer.RolloverAmount, 
                     ExpiredDate = tpBonusTransfer.ExpiryTime,
-                    ThirdId = thirdId,
-                    Memo = (string)null,
+                    ThirdId = thirdId, 
+                    Memo = (string)null, 
                     ForStatus = (int)TransferStatus.Pending,
                     Status = (int)TransferStatus.PendingD
                 }));
@@ -113,17 +110,17 @@ namespace ThirdPartyService.Service.DAL
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
-
+            
             if (transferResult.Data.Status == TransferStatus.Success && transferResult.ErrorCode == ErrorCode.Success)
             {
-                var isSuccess = _mainDbClient.Execute("Service_TpTransferBonusInfoStatus_Set", trans, new
+                var isSuccess = _mainDbClient.Execute("Service_TpTransferBonusInfoStatus_Set", trans ,new
                 {
                     TransferBonusId = transferId,
                     transferResult.Data.ThirdId,
                     Memo = transferResult.RawMessage,
                     ForStatus = (int)TransferStatus.PendingD,
                     Status = (int)TransferStatus.Success
-                }) > 0;
+                } ) > 0;
 
                 if (isSuccess)
                 {
@@ -133,7 +130,7 @@ namespace ThirdPartyService.Service.DAL
                 if (isSuccess)
                     trans.Commit();
             }
-            else if (transferResult.Data.Status == TransferStatus.Fail)
+            else if (transferResult.Data.Status == TransferStatus.Fail )
             {
                 string memo = null;
                 if (transferResult.ErrorCode == ErrorCode.MoneyNotEnough)
@@ -147,8 +144,8 @@ namespace ThirdPartyService.Service.DAL
 
                 var p = new DynamicParameters(new
                 {
-                    TransferBonusId = transferId,
-                    transferResult.Data.ThirdId,
+                    TransferBonusId = transferId, 
+                    transferResult.Data.ThirdId, 
                     ForStatus = (int)TransferStatus.PendingD,
                     Status = (int)TransferStatus.Fail
                 });
@@ -169,20 +166,20 @@ namespace ThirdPartyService.Service.DAL
             else if (transferResult.Data.Status == TransferStatus.Pending)
             {
                 string memo = null;
-                if (!string.IsNullOrEmpty(transferResult.RawMessage))
+                if (!string.IsNullOrEmpty(transferResult.RawMessage)) 
                 {
                     memo = transferResult.RawMessage;
                 }
 
                 var p = new DynamicParameters(new
                 {
-                    TransferBonusId = transferId,
-                    transferResult.Data.ThirdId,
+                    TransferBonusId = transferId, 
+                    transferResult.Data.ThirdId, 
                     ForStatus = (int)TransferStatus.PendingD,
                     Status = (int)TransferStatus.Pending
                 });
                 p.Add("Memo", memo, DbType.String, ParameterDirection.Input, 100);
-                var isSuccess = _mainDbClient.Execute("Service_TpTransferBonusInfoStatus_Set", trans, p) > 0;
+                var isSuccess = _mainDbClient.Execute("Service_TpTransferBonusInfoStatus_Set", trans , p ) > 0;
                 var rwalletServiceResult = false;
                 if (isSuccess)
                 {
@@ -195,7 +192,7 @@ namespace ThirdPartyService.Service.DAL
                 if (rwalletServiceResult)
                     trans.Commit();
             }
-
+            
             conn.Close();
             conn.Dispose();
         }
@@ -204,20 +201,20 @@ namespace ThirdPartyService.Service.DAL
         {
             var m = Regex.Match(tpTransferInfoModel.TransId, @"\d+");
             int.TryParse(m.Value, out var transferId);
-
+            
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
-
+            
             if (transferResult.Data.Status == TransferStatus.Success && transferResult.ErrorCode == ErrorCode.Success)
             {
                 //歸零
                 var rWalletServiceResult = _bonusService.BonusTransferOutAll(tpCustInfo.CustId, tpCustInfo.SiteId,
-                    tpCustInfo.UserName, tpBonusTransfer.TpId, null, tpTransferInfoModel.TransId, out _, out _, out _, out _, out _, out _, trans);
+                    tpCustInfo.UserName, tpBonusTransfer.TpId, null, tpTransferInfoModel.TransId, out _, out _, out _, out _, out _, out _,trans);
 
                 if (rWalletServiceResult)
                 {
-                    var isSuccess = _mainDbClient.Execute("Service_TpTransferBonusInfoStatus_Set", trans, new
+                    var isSuccess = _mainDbClient.Execute("Service_TpTransferBonusInfoStatus_Set",trans, new
                     {
                         TransferBonusId = transferId,
                         transferResult.Data.ThirdId,
@@ -235,7 +232,7 @@ namespace ThirdPartyService.Service.DAL
                     {
                         trans.Commit();
                     }
-
+                    
                 }
             }
             else if (transferResult.Data.Status == TransferStatus.Pending || transferResult.Data.Status == TransferStatus.Fail)
@@ -247,24 +244,24 @@ namespace ThirdPartyService.Service.DAL
                 }
                 var p = new DynamicParameters(new
                 {
-                    TransferBonusId = transferId,
-                    transferResult.Data.ThirdId,
+                    TransferBonusId = transferId, 
+                    transferResult.Data.ThirdId, 
                     ForStatus = tpTransferInfoModel.Status,
                     Status = (int)transferResult.Data.Status
                 });
                 p.Add("Memo", memo, DbType.String, ParameterDirection.Input, 100);
-                var isSuccess = _mainDbClient.Execute("Service_TpTransferBonusInfoStatus_Set", trans, p) > 0;
-
+                var isSuccess = _mainDbClient.Execute("Service_TpTransferBonusInfoStatus_Set", trans ,p) > 0;
+                
                 if (isSuccess)
                 {
                     trans.Commit();
                 }
             }
-
+            
             conn.Close();
             conn.Dispose();
         }
-
+        
         public void TpTransferBonusCancelCommit(TpBonusCancelTransfer tpBonusCancelTransfer, ApiResult<TransferResult> transferResult)
         {
             if (transferResult.Data.Status == TransferStatus.Success && transferResult.ErrorCode == ErrorCode.Success)
@@ -273,7 +270,7 @@ namespace ThirdPartyService.Service.DAL
                 conn.Open();
                 using var trans = conn.BeginTransaction();
 
-                var result = _mainDbClient.Execute("Service_BonusExpired_Set_V2", trans,
+                var result = _mainDbClient.Execute("Service_BonusExpired_Set_V2",trans,
                     new
                     {
                         tpBonusCancelTransfer.BonusId,
@@ -283,7 +280,7 @@ namespace ThirdPartyService.Service.DAL
                         TYPE = (int)FinancialType.CancelledBonus,
                         tpBonusCancelTransfer.PromoCategoryId,
                         Bonus = tpBonusCancelTransfer.RemainingBonus,
-                        Memo = tpBonusCancelTransfer.UpdateBonusTransferStatus ? "Cancel Bonus" : "Expired Bonus"
+                        Memo = tpBonusCancelTransfer.UpdateBonusTransferStatus ? "Cancel Bonus" : "Expired Bonus" 
                     });
 
                 if (result >= 0 && tpBonusCancelTransfer.RemainingBonus > 0)
@@ -298,24 +295,24 @@ namespace ThirdPartyService.Service.DAL
                         tpBonusCancelTransfer.RefundAmount - tpBonusCancelTransfer.RemainingBonus,
                         tpBonusCancelTransfer.TpId,
                         memo,
-                        tpBonusCancelTransfer.BonusId.ToString(),
-                        out _, trans);
+                        tpBonusCancelTransfer.BonusId.ToString(), 
+                        out _,trans);
 
                     if (result >= 0 && tpBonusCancelTransfer.RefundAmount > 0)
                     {
                         result = _walletService.SetWithdrawalLimit(tpBonusCancelTransfer.CustId,
                             tpBonusCancelTransfer.UserName,
-                            tpBonusCancelTransfer.SiteId,
-                            tpBonusCancelTransfer.RefundAmount,
+                            tpBonusCancelTransfer.SiteId, 
+                            tpBonusCancelTransfer.RefundAmount, 
                             0,
                             memo,
                             tpBonusCancelTransfer.BonusId.ToString(),
                             (int)WithdrawalLimitLogCreateFromEnum.Bonus,
                             "System",
-                            out _, trans);
+                            out _,trans);
                     }
                 }
-
+                
                 if (result >= 0)
                 {
                     var cp = new DynamicParameters(
@@ -324,7 +321,7 @@ namespace ThirdPartyService.Service.DAL
                             _BonusId = tpBonusCancelTransfer.BonusId,
                             _CancelBonus = tpBonusCancelTransfer.RemainingBonus - tpBonusCancelTransfer.RefundAmount
                         });
-                    result = _mainDbClient.Execute("Service_CancelBonusAmount_Set", trans, cp);
+                    result = _mainDbClient.Execute("Service_CancelBonusAmount_Set", trans ,cp );
                 }
 
                 if (result >= 0)

@@ -616,7 +616,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public string ticket_extra_status { get; set; } = string.Empty;
         public string settlement_time { get; set; }
     }
-    public class BetDetail : BaseBetDetail
+    public class BetDetail: BaseBetDetail
     {
         public string operator_id { get; set; }
         public int? league_id { get; set; }

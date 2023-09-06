@@ -1,8 +1,8 @@
-﻿using FluentAssertions;
-
+﻿using System.Collections.Generic;
+using FluentAssertions;
 using NUnit.Framework;
-
 using ThirdPartyCore.Model;
+using ThirdParty.AMB;
 using ThirdPartyCore.Model.enums;
 
 namespace ThirdParty.AMB.Tests
@@ -13,7 +13,7 @@ namespace ThirdParty.AMB.Tests
         private TpHelper _tpHelper;
         private TpCustInfo _tpCustInfo;
         private Dictionary<string, string> _inputs;
-
+        
         [SetUp]
         public void Setup()
         {
@@ -41,7 +41,7 @@ namespace ThirdParty.AMB.Tests
                 {"SlotSecretKey", "1b15232c9933c8d031a68a98d14a2333"}
             };
         }
-
+        
         [Test]
         public void CreateMemberTest()
         {
@@ -49,7 +49,7 @@ namespace ThirdParty.AMB.Tests
             //Assert
             actual.ErrorCode.Should().Be(ErrorCode.Success);
         }
-
+        
         [Test]
         public void CreatePokerMember()
         {
@@ -79,7 +79,7 @@ namespace ThirdParty.AMB.Tests
             //Assert
             actual.ErrorCode.Should().Be(ErrorCode.Success);
         }
-
+        
         [Test]
         public void CreatePokerAndSlotMember()
         {
@@ -97,7 +97,7 @@ namespace ThirdParty.AMB.Tests
             //Assert
             actual.ErrorCode.Should().Be(ErrorCode.Success);
         }
-
+        
         [Test]
         public void CreateMemberButNoSetting()
         {
@@ -125,12 +125,12 @@ namespace ThirdParty.AMB.Tests
             //Assert
             actual.ErrorCode.Should().Be(ErrorCode.Success);
         }
-
+        
         [Test]
         public void GetBalanceTest()
         {
             var actual = _tpHelper.GetBalance(_tpCustInfo, _inputs);
-
+            
             actual.ErrorCode.Should().Be(ErrorCode.Fail);
         }
     }

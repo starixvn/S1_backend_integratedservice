@@ -1,7 +1,8 @@
-﻿using System.Web;
-
-using Newtonsoft.Json;
-
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -108,8 +109,8 @@ namespace ThirdParty.One789
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_One789_Detail_Get",
-                new { getBetDetail.TransId, GameType = getBetDetail.TpGameTypeOption.Type }, DataBase.Wager);
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_One789_Detail_Get", 
+                new { getBetDetail.TransId , GameType = getBetDetail.TpGameTypeOption.Type }, DataBase.Wager);
             if (wagerDetail == null)
             {
                 return new BaseDetail(getBetDetail.TpGameTypeOption)
@@ -120,7 +121,7 @@ namespace ThirdParty.One789
             }
 
             var detail = ToJson(wagerDetail);
-
+            
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
                 TpCategory.Lottery => new LotteryDetail(getBetDetail.TpGameTypeOption)
@@ -161,7 +162,7 @@ namespace ThirdParty.One789
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_One789_Detail_Get", new { betRecordInfo.TransId, GameType = tpGameType.Type }, DataBase.Wager);
-
+            
             return tpGameType.CategoryId switch
             {
                 TpCategory.Lottery => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)

@@ -1,10 +1,7 @@
-﻿using System.Text;
-using System.Web;
-
-using Microsoft.AspNetCore.Mvc;
-
+﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-
+using System.Text;
+using System.Web;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -1167,7 +1164,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         continue;
                     }
-
+                    
                     // 待處理
                     var endRoundData = bettransItem.First(c => c.TicketType == (int)BettransType.Bet);
                     getReq.MiniGameCode = endRoundData.MiniGameCode;
@@ -1296,7 +1293,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             lostItem
                         };
                         var getBet = bettrans.FirstOrDefault(i => i.TicketType == 1 && i.TransId == lostItem.TransactionReferenceId);
-                        if (getBet == null)
+                        if(getBet == null)
                         {
                             error = true;
                             log2File.Error($"bettrans no found bet error\r\n{JsonConvert.SerializeObject(lostItem)}", logName);
@@ -1383,7 +1380,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var err = false;
                 foreach (var item in getReq.Data)
                 {
-                    if (bettrans.Any(i => i.TransId == item.TransactionReferenceId && i.TicketType == (int)BettransType.CancelBet))
+                    if(bettrans.Any(i => i.TransId == item.TransactionReferenceId && i.TicketType == (int)BettransType.CancelBet))
                     {
                         continue;
                     }

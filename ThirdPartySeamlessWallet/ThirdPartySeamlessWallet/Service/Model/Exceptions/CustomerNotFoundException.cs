@@ -1,4 +1,6 @@
-﻿namespace ThirdPartySeamlessWallet.Service.Model.Exceptions
+﻿using System;
+
+namespace ThirdPartySeamlessWallet.Service.Model.Exceptions
 {
     public class CustomerNotFoundException : Exception
     {

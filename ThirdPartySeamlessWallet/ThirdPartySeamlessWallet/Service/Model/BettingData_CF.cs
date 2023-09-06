@@ -1,4 +1,8 @@
-﻿using ThirdPartySeamlessWallet.Service.Model.enums;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -30,7 +34,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int SettleFlag { get; set; }
         public string status { get; set; }
     }
-
+   
     public class SettleData_CF
     {
         public long ticket_id { get; set; }

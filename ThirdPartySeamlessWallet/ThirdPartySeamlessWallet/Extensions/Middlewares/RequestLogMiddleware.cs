@@ -1,9 +1,6 @@
 ﻿using System.Text;
-
 using Microsoft.AspNetCore.Http.Extensions;
-
 using Newtonsoft.Json;
-
 using Serilog.Context;
 
 namespace ThirdPartySeamlessWallet.Extensions.Middlewares
@@ -28,7 +25,7 @@ namespace ThirdPartySeamlessWallet.Extensions.Middlewares
                 await _next(context);
             }
             else
-            {
+            {               
                 var originalRequestBody = context.Request.Body;
                 var content = string.Empty;
                 if (context.Request.ContentType?.StartsWith("application/x-www-form-urlencoded") ?? false)
@@ -43,8 +40,8 @@ namespace ThirdPartySeamlessWallet.Extensions.Middlewares
                 using (var requestBody = new StreamReader(requestBodyStream, Encoding.UTF8, true, 1024, true))
                 {
                     var codePage = requestBody.CurrentEncoding.CodePage;
-
-                    content = !context.Request.Method.Equals("GET", StringComparison.OrdinalIgnoreCase)
+                
+                    content = !context.Request.Method.Equals("GET",StringComparison.OrdinalIgnoreCase)
                               && string.IsNullOrEmpty(content)
                         ? await requestBody.ReadToEndAsync()
                         : content;

@@ -1,5 +1,4 @@
 ﻿using System.Data;
-
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -13,7 +12,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
-
+        
         public TpCheck ThirdPartyCheck(int tpId, string tpUserName)
         {
             return _mainDbClient.QueryFirst<TpCheck>("Service_TpCheck_Get", new { TpId = tpId, TpUserName = tpUserName });
@@ -41,20 +40,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         public IEnumerable<TpGameCasino> GetGameCasino(int tpId)
         {
-            return _mainDbClient.Query<TpGameCasino>("Service_GameCasino_Get_V2", commandType: CommandType.StoredProcedure, new { TpId = tpId });
+            return _mainDbClient.Query<TpGameCasino>("Service_GameCasino_Get_V2", commandType: CommandType.StoredProcedure , new { TpId = tpId });
         }
         public int AddTpBetFailureRecord(TpBetFailureRecord tpBetFailureRecord)
         {
-            return _mainDbClient.Execute("Service_TpBetFailureRecord_Ins", commandType: CommandType.StoredProcedure, tpBetFailureRecord);
+            return _mainDbClient.Execute("Service_TpBetFailureRecord_Ins", commandType: CommandType.StoredProcedure ,tpBetFailureRecord);
         }
         public IEnumerable<FinancialLog> GetFinancialLogTransactionCheck(string RefTransId, string YYYYMM)
         {
-            return _mainDbClient.Query<FinancialLog>("Service_FinancialLog_TransactionCheck_Get", commandType: CommandType.StoredProcedure, new { _RefTransId = RefTransId, _YYYYMM = YYYYMM });
+            return _mainDbClient.Query<FinancialLog>("Service_FinancialLog_TransactionCheck_Get", commandType: CommandType.StoredProcedure ,new { _RefTransId = RefTransId, _YYYYMM = YYYYMM });
         }
 
         public IEnumerable<BonusLog> GetBonusLogTransactionCheck(string RefTransId)
         {
-            return _mainDbClient.Query<BonusLog>("Service_BonusLog_TransactionCheck_Get", commandType: CommandType.StoredProcedure, new { _RefTransId = RefTransId });
+            return _mainDbClient.Query<BonusLog>("Service_BonusLog_TransactionCheck_Get", commandType: CommandType.StoredProcedure , new { _RefTransId = RefTransId });
         }
 
         public ServerInfo GetServerInfoBySiteName(string siteName)

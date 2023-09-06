@@ -1,4 +1,6 @@
-﻿namespace ThirdPartySeamlessWallet.Service.Model
+﻿using ThirdPartySeamlessWallet.Service.Model.enums;
+
+namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class TpSeamlessBonus
     {

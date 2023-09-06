@@ -1,5 +1,7 @@
 ﻿using Newtonsoft.Json;
-
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -88,7 +90,7 @@ namespace ThirdParty.AWC
             tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x").ToLower();
 
             var betLimit = IsDevelopment ? betLimitDev[tpCustInfo.TpCurrencyId] : betLimitPrd[tpCustInfo.TpCurrencyId];
-
+           
             SignupReq SignUp = new SignupReq
             {
                 cert = cert,

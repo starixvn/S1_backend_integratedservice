@@ -1,9 +1,15 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Serilog.Context;
-
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -101,7 +107,7 @@ namespace ThirdPartySettleWorker.Workers
                             var stake = unsettled.Stake;
                             var validBet = unsettled.Stake;
                             var winLostAmount = unsettled.WinLostAmount;
-
+                                
                             var betRecordInfo = new BetRecordInfo
                             {
                                 TpId = (int)Tp,
@@ -124,10 +130,10 @@ namespace ThirdPartySettleWorker.Workers
                             {
                                 Task.Run(() =>
                                 {
-                                    _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gameType, transId, true, DataBase.Wager);
+                                    _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gameType, transId,true, DataBase.Wager);
                                 });
                             }
-                        }
+                    }                           
                     }
                     catch (Exception ex1)
                     {

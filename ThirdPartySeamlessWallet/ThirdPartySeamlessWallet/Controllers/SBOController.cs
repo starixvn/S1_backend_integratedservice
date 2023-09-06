@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
+﻿using System;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -50,7 +52,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 };
             }
         }
-
+        
         /// <summary>
         /// 下注
         /// </summary>
@@ -80,7 +82,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 };
             }
         }
-
+        
         /// <summary>
         /// 结算投注
         /// </summary>
@@ -110,7 +112,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 };
             }
         }
-
+        
         /// <summary>
         /// 下注
         /// </summary>
@@ -140,7 +142,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 };
             }
         }
-
+        
         /// <summary>
         /// 回滚
         /// </summary>
@@ -170,7 +172,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 };
             }
         }
-
+        
         /// <summary>
         /// 取消投注
         /// </summary>
@@ -200,7 +202,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 };
             }
         }
-
+        
         /// <summary>
         /// 小费
         /// </summary>
@@ -210,7 +212,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             return new SBOBalanceResponse();
         }
-
+        
         /// <summary>
         /// 红利
         /// </summary>
@@ -220,7 +222,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             return new SBOBalanceResponse();
         }
-
+        
         /// <summary>
         /// 归还注额
         /// </summary>
@@ -230,7 +232,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             return new SBOBalanceResponse();
         }
-
+        
         /// <summary>
         /// LiveCoin购买
         /// </summary>

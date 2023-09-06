@@ -10,7 +10,7 @@
         /// <summary>
         /// 商戶名稱
         /// </summary>
-
+    
         public string MerchantName { get; set; }
 
         /// <summary>

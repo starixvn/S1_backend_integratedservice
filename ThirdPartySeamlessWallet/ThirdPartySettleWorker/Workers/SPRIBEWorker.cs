@@ -1,13 +1,10 @@
 ﻿using Newtonsoft.Json;
-
 using Serilog.Context;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -26,7 +23,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly IIMBLL _imBll;
         private readonly ILogger<SPRIBEWorker> _logger;
         private readonly string _tpName;
-
+        
         public SPRIBEWorker(IServiceProvider provider)
         {
             _settledBLL = provider.GetRequiredService<SettledBLL>();
@@ -41,8 +38,8 @@ namespace ThirdPartySettleWorker.Workers
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            timerRngByRound = new Timer(DoSettleRngWork, GameType.SPRIBE_RNG, TimeSpan.Zero, TimeSpan.Zero);
+        { 
+            timerRngByRound = new Timer(DoSettleRngWork, GameType.SPRIBE_RNG, TimeSpan.Zero, TimeSpan.Zero); 
             return Task.CompletedTask;
         }
 
@@ -66,7 +63,7 @@ namespace ThirdPartySettleWorker.Workers
             var bettransSet = "Service_BettransRng_SPRIBE_Settle_Round_Set";
             var tpWagerSet = "Service_TpWagerRng_SPRIBE_Settle_Set";
             var logName = "SpribeDoSettleRngWork";
-
+            
             try
             {
                 var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
@@ -86,7 +83,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             continue;
                         }
-
+                        
                         var betTransData = betTrans.First();
                         var gameId = betTransData.GameId;
                         var transId = betTransData.RoundId;
@@ -100,9 +97,9 @@ namespace ThirdPartySettleWorker.Workers
                             _logger.LogError($"{logName} {betTransData.PlayerId} TpCurrency not found.");
                             continue;
                         }
-
+                        
                         var tpWagerData = _tpUnSettledBLL.GetTpUnsettleData<WagerDataIM>("Service_TpWagerRng_SPRIBE_Unsettle_Get", new { RoundId = transId }, DataBase.Wager).FirstOrDefault();
-
+                        
                         var settleAmountDataIm = new SettleAmountDataIM
                         {
                             Stake = betTransData.Stake,
@@ -123,7 +120,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             continue;
                         }
-
+                        
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = thisTp,
@@ -138,14 +135,14 @@ namespace ThirdPartySettleWorker.Workers
                             SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, gameId),
                             GameID = betTransData.GameId
                         };
-
+                        
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, category);
                         if (result == 1)
                         {
                             Task.Run(() =>
                             {
                                 _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, transId, isSuccess: true);
-                                _ = _imBll.SetSettleFlag_BettransRng_IM(bettransSet, transId, betTrans.Last().TimeStamp);
+                                _ = _imBll.SetSettleFlag_BettransRng_IM(bettransSet, transId , betTrans.Last().TimeStamp);
                                 _ = _imBll.SetSettleFlag_TpWager_IM(tpWagerSet, transId);
                             });
                         }
@@ -178,7 +175,7 @@ namespace ThirdPartySettleWorker.Workers
                 timerRngByRound.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
-
+        
         private static TimeSpan GetDueTimeSpan(bool forContinue, bool isError)
         {
             var dueTimeSpan = TimeSpan.FromMinutes(1);
@@ -194,7 +191,7 @@ namespace ThirdPartySettleWorker.Workers
 
             return dueTimeSpan;
         }
-
+        
         private bool IsBetTransSameAsTpWager(SettleAmountDataIM betTrans, WagerDataIM wager, TpCurrency tpCurrency)
         {
             if (tpCurrency.ExchangeRate <= 0) return false;
@@ -203,7 +200,7 @@ namespace ThirdPartySettleWorker.Workers
             var wagerStake = wager.StakeAmount * tpCurrency.ExchangeRate;
             var wagerValidBet = wager.BetAmount * tpCurrency.ExchangeRate;
             decimal? wagerWinLostAmount = wager.WinLoss * tpCurrency.ExchangeRate;
-
+            
             return wagerStake == betTrans.Stake
                    && wagerValidBet == betTrans.ValidBet
                    && wagerWinLostAmount == betTrans.WinLostAmount;

@@ -1,4 +1,5 @@
-﻿using ThirdPartySeamlessWallet.Extensions.Middlewares;
+﻿using Microsoft.AspNetCore.Builder;
+using ThirdPartySeamlessWallet.Extensions.Middlewares;
 
 namespace ThirdPartySeamlessWallet.Extensions
 {

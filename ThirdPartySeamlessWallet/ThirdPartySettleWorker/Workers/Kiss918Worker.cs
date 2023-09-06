@@ -1,10 +1,13 @@
 ﻿using Serilog.Context;
-
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 

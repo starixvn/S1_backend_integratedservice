@@ -1,5 +1,7 @@
-﻿using System.ComponentModel;
-
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Text;
 using ThirdPartyCore.Model.enums;
 
 namespace ThirdPartyCore.Model

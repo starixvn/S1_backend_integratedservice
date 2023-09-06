@@ -1,15 +1,17 @@
-﻿using System.Text;
-
+﻿using System;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-
 using Serilog.Context;
-
 using ThirdPartySeamlessWallet.Controllers;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
 using static ThirdPartySeamlessWallet.Extensions.MethodExtension;
 
 namespace ThirdPartySeamlessWallet.Service.Workers
@@ -26,7 +28,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         private Timer _evoTimer;
         private Timer _ppTimer;
         private Timer _allBetTimer;
-
+        
         public TpReRequestWorker(IServiceProvider provider)
         {
             _environment = provider.GetRequiredService<IHostEnvironment>();
@@ -51,7 +53,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             var tp = (Tp)state;
             LogContext.PushProperty("TP", Enum.GetName(typeof(Tp), tp));
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-
+            
             try
             {
                 var list = _tpRequestFailBll.GetRequestFail(RequestFailureType.Tp, tp);
@@ -133,7 +135,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             var tp = (Tp)state;
             LogContext.PushProperty("TP", Enum.GetName(typeof(Tp), tp));
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-
+            
             try
             {
                 var list = _tpRequestFailBll.GetRequestFail(RequestFailureType.Tp, tp);
@@ -170,13 +172,13 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 _ppTimer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
-
+        
         private void DoAllBetTask(object state)
         {
             var tp = (Tp)state;
             LogContext.PushProperty("TP", Enum.GetName(typeof(Tp), tp));
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-
+            
             try
             {
                 var list = _tpRequestFailBll.GetRequestFail(RequestFailureType.Tp, tp);
@@ -195,8 +197,8 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                             result = _allBetBll.ReSettle(tpCustInfo, betReq, out _);
                             break;
                     }
-
-                    if (result > 0)
+                    
+                    if (result > 0 )
                     {
                         _tpRequestFailBll.DelRequestFail(data.Id);
                     }
@@ -216,7 +218,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 _allBetTimer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
-
+        
         #region Evo Private Method
 
         private EVOController.TokenInfo getTokenInfo(string token)

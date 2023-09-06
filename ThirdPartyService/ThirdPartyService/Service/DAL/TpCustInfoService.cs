@@ -1,16 +1,11 @@
-﻿using System.Data;
-
+﻿using ThirdPartyCore.Model;
 using Dapper;
-
-using Microsoft.Extensions.Caching.Memory;
-
-using Newtonsoft.Json;
-
-using ThirdPartyCore.Model;
+using System.Data;
 using ThirdPartyCore.Model.enums;
-
-using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.Library;
+using Newtonsoft.Json;
+using Microsoft.Extensions.Caching.Memory;
+using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.Model;
 
 namespace ThirdPartyService.Service.DAL

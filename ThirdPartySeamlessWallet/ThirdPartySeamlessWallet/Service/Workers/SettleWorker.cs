@@ -1,11 +1,9 @@
 ﻿using Newtonsoft.Json;
-
-using Serilog.Context;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using Serilog.Context;
 
 namespace ThirdPartySeamlessWallet.Service.Workers
 {
@@ -43,7 +41,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleEBet = new Timer(DoSettleEBetWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleWM = new Timer(DoSettleWMWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleN2Live = new Timer(DoSettleN2LiveWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettleN2LiveLC_Smart = new Timer(DoSettleN2LiveLC_SmartWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            timerSettleN2LiveLC_Smart = new Timer(DoSettleN2LiveLC_SmartWork, null, TimeSpan.Zero, TimeSpan.Zero);          
             timerSettleSexy = new Timer(DoSettleSexyWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleEVO = new Timer(DoSettleEVOWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleRewardEVO = new Timer(DoSettleRewardEVOWork, null, TimeSpan.Zero, TimeSpan.Zero);

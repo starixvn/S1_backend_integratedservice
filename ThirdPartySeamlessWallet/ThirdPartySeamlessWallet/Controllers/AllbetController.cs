@@ -1,9 +1,12 @@
-﻿using System.Security.Cryptography;
+﻿using System;
+using System.IO;
+using System.Security.Cryptography;
 using System.Text;
-
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
@@ -21,7 +24,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Tp thisTp;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private static IAllbetBll _AllbetBll { get; set; }
-
+        
 
         public AllbetController(IServiceProvider provider)
         {
@@ -48,7 +51,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 var signString = $"GET\n\n\n{date}\n/{method}/{username}";
                 var signature = GetSign(signString, thirdPartySetting.TpSetting["PartnerKey"]);
-
+                
                 CheckSign(authorization, thirdPartySetting, signature);
 
                 return await _AllbetBll.SeamlessWallet(transType, username);

@@ -1,4 +1,11 @@
-﻿using ThirdPartySeamlessWallet.Service.Library;
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Service.Library;
 
 namespace ThirdPartySeamlessWallet.Service.Workers
 {

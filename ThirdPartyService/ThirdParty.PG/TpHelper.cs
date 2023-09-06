@@ -1,13 +1,15 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Web;
-
 using Newtonsoft.Json;
-
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.PG

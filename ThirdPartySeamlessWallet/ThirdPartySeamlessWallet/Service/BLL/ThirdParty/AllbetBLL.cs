@@ -1,11 +1,7 @@
 ﻿using System.Data;
-
 using Dapper;
-
 using MySql.Data.MySqlClient;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -15,7 +11,7 @@ using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
-    public class AllbetBll : IAllbetBll, IThirdPartyBLL
+    public class AllbetBll: IAllbetBll, IThirdPartyBLL
     {
         public Tp ThirdParty { get; set; }
         public GameType GameType { get; set; }
@@ -27,7 +23,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly MySqlClient _mainDbClient;
         private readonly ILogger<AllbetBll> _logger;
         private readonly Dictionary<AllbetType, Func<AllbetType, string, Task<AllBetTransferResponse>>> _requestHandler;
-
+        
         public AllbetBll(IServiceProvider provider)
         {
             ThirdParty = Tp.Allbet;
@@ -46,7 +42,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 { AllbetType.GetBalance, GetBalance},
             };
         }
-
+        
         public async Task<AllBetTransferResponse> SeamlessWallet(AllbetType transType, string bodyText)
         {
             try
@@ -84,7 +80,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     case AllbetTransferType.EventSettle:
                         eventRequest = JsonConvert.DeserializeObject<AllBetTransferRequest<AllbetTransferEventDetail>>(bodyText);
                         break;
-
+                    
                     case AllbetTransferType.TransferIn:
                     case AllbetTransferType.TransferOut:
                     default:
@@ -199,7 +195,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     return new AllBetTransferResponse(AllbetResultCode.InsufficientBalance, GetBalance(tpUserName));
                 }
-
+                
                 return result switch
                 {
                     0 => new AllBetTransferResponse(AllbetResultCode.TranIdNotExists),
@@ -216,13 +212,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 switch (type.Type)
                 {
                     case AllbetTransferType.Settle:
-                        _tpRequestFailBll.SetRequestFail(RequestFailureType.Tp, Tp.Allbet, TpRequestFailureCategory.Settle, JsonConvert.SerializeObject(request), ex.Message);
+                        _tpRequestFailBll.SetRequestFail( RequestFailureType.Tp, Tp.Allbet, TpRequestFailureCategory.Settle, JsonConvert.SerializeObject(request), ex.Message);
                         break;
                     case AllbetTransferType.ReSettle:
-                        _tpRequestFailBll.SetRequestFail(RequestFailureType.Tp, Tp.Allbet, TpRequestFailureCategory.ReSettle, JsonConvert.SerializeObject(request), ex.Message);
+                        _tpRequestFailBll.SetRequestFail( RequestFailureType.Tp, Tp.Allbet, TpRequestFailureCategory.ReSettle, JsonConvert.SerializeObject(request), ex.Message);
                         break;
                 }
-
+              
                 _logger.LogError(ex, ex.Message);
                 return new AllBetTransferResponse(AllbetResultCode.SystemError);
             }
@@ -290,7 +286,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType);
             return tpCustBalance.Balance;
         }
-
+        
         public (TpCustInfo, TpCurrency) GetTPInfo(string tpUserName)
         {
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, tpUserName);
@@ -306,7 +302,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             return (tpCustInfo, tpCurrency);
         }
-
+        
         private int Cancel(TpCustInfo tpCustInfo, AllBetCancelTransferRequest request)
         {
             using var conn = _mainDbClient.GetMySqlConnection();
@@ -314,7 +310,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             using var trans = conn.BeginTransaction();
             var p = new DynamicParameters(new
             {
-                originalTranId = request.OriginalTranId,
+                originalTranId = request.OriginalTranId, 
                 client = request.Player,
                 details = JsonConvert.SerializeObject(
                     JsonConvert.DeserializeObject<List<AllbetDbDetail>>(JsonConvert.SerializeObject(request.OriginalDetails)))
@@ -334,11 +330,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 if (result > 0)
                 {
-                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
                 }
                 else
                 {
-                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
             else if (p.Get<int>("hasCanceled") == 1)
@@ -384,11 +380,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 if (result > 0)
                 {
-                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
                 }
                 else
                 {
-                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                 }
             }
             catch (MySqlException mySqlEx)
@@ -409,7 +405,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             return result;
         }
-
+        
         public int Settle(TpCustInfo tpCustInfo, AllBetTransferRequest<AllBetTransferDetails> request, out decimal afterAmount)
         {
             var result = 0;
@@ -417,7 +413,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             try
             {
-
+                
                 using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 using var trans = conn.BeginTransaction();
@@ -432,16 +428,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             request.Details[0].BetNum.ToString(), TransType.Payout, null, out afterAmount, "Payout",
                             out _, conn, trans);
                     }
-
+        
                     if (result > 0)
                     {
                         _mainDbClient.Execute("Service_BettransLC_Allbet_SettleFlag_Set",
                             trans, new { betNum = request.Details[0].BetNum, SettleFlag = 2 });
-                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
                     }
                     else
                     {
-                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     }
                 }
             }
@@ -460,7 +456,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 throw ex;
             }
-
+        
             return result;
         }
 
@@ -495,16 +491,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         {
                             _mainDbClient.Execute("Service_BettransLC_Allbet_SettleFlag_Set", trans,
                                 new { betNum = request.Details[0].BetNum, SettleFlag = 2 });
-                            _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                            _mainDbClient.CommitAndDisposeConnection(conn,trans);
                         }
                         else
                         {
-                            _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                            _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                         }
                     }
                     else
                     {
-                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
                     }
                 }
             }
@@ -610,11 +606,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                     if (result > 0)
                     {
-                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
                     }
                     else
                     {
-                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
                     }
                 }
             }

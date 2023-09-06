@@ -1,9 +1,15 @@
-﻿using System.Text;
-
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Web;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -508,7 +514,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 getPayoutResp.data.statusCode = 0;
                 getPayoutResp.data.username = getReq.username;
                 getPayoutResp.data.balance = Math.Truncate(tpCustBalance.Balance);
-                getPayoutResp.data.hash = tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{getReq.username}{Math.Truncate(tpCustBalance.Balance)}").ToLower();
+                getPayoutResp.data.hash = tools.ToMD5($"{thirdPartySetting.TpSetting["secure_code"]}{ getReq.username}{Math.Truncate(tpCustBalance.Balance)}").ToLower();
                 log2File.Info($"{JsonConvert.SerializeObject(getReq)}\r\n{JsonConvert.SerializeObject(getPayoutResp)}", logName);
                 return getPayoutResp;
             }

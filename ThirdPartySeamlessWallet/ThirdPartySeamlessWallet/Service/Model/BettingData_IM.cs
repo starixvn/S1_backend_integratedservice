@@ -5,14 +5,14 @@
         public int Code { get; set; }
         public string Message { get; set; }
     }
-
+    
     public class SettleErrorRespIM
     {
         public int Code { get; set; }
         public string Message { get; set; }
         public string TransactionId { get; set; }
     }
-
+    
     #region Bet
 
     public class BettingRequest_IM
@@ -40,7 +40,7 @@
         public int Product { get; set; }
         public DateTime TimeStamp { get; set; }
     }
-
+    
     public class BetTransactionsBase
     {
         public string PlayerId { get; set; }
@@ -54,31 +54,31 @@
         public string Type { get; set; }
         public DateTime TimeStamp { get; set; }
     }
-
+    
     public class BetTransactionsSlot : BetTransactionsBase
     {
         public string RoundId { get; set; }
         public string Platform { get; set; }
     }
-
+    
     public class BetTransactionsSport : BetTransactionsBase
     {
         public string BetId { get; set; }
         public int ActionId { get; set; }
     }
-
+    
     public class BetTransactionsESport : BetTransactionsBase
     {
         public string BetId { get; set; }
         public int ActionId { get; set; }
         public int Product { get; set; }
     }
-
+    
     public class BetResponse
     {
         public List<BetResultIM> Results { get; set; }
     }
-
+    
     public class BetResultIM
     {
         public int Code { get; set; }
@@ -87,7 +87,7 @@
         public string TransactionId { get; set; }
         public decimal Balance { get; set; }
     }
-
+    
     #endregion
 
     #region Settle
@@ -110,7 +110,7 @@
         public decimal Amount { get; set; }
         public DateTime TimeStamp { get; set; }
     }
-
+    
     public class SettleTransactions_IM : SettleTransactionsBase
     {
         public string RoundId { get; set; }
@@ -121,21 +121,21 @@
         public string EventId { get; set; }
         public int Product { get; set; }
     }
-
+    
     public class SettleTransactions_IMSlot : SettleTransactionsBase
     {
         public string RoundId { get; set; }
         public string RefTransactionId { get; set; }
         public string SpecialGame { get; set; }
     }
-
+    
     public class SettleTransactions_IMSport : SettleTransactionsBase
     {
         public string BetId { get; set; }
         public int ActionId { get; set; }
         public string EventId { get; set; }
     }
-
+    
     public class SettleTransactions_IMESport : SettleTransactionsBase
     {
         public string BetId { get; set; }
@@ -143,19 +143,19 @@
         public int Product { get; set; }
         public string EventId { get; set; }
     }
-
+    
     public class IMSpecialGame
     {
         public string SgType { get; set; }
         public int SgCount { get; set; }
         public int SgSequence { get; set; }
     }
-
+    
     public class SettleResponse
     {
         public List<object> Results { get; set; }
     }
-
+    
     public class SettleResultIM
     {
         public int Code { get; set; }
@@ -164,7 +164,7 @@
         public string TransactionId { get; set; }
         public decimal Balance { get; set; }
     }
-
+    
     #endregion
 
     #region Refund
@@ -173,7 +173,7 @@
     {
         public List<RefundTransaction_Spribe> Transactions { get; set; }
     }
-
+    
     public class RefundTransaction_Spribe
     {
         public string TransactionId { get; set; }
@@ -184,9 +184,9 @@
         public string Provider { get; set; }
         public DateTime TimeStamp { get; set; }
     }
-
+    
     #endregion
-
+    
     #region SettleWorker
 
     public class SettleAmountDataIM
@@ -196,7 +196,7 @@
         public decimal WinLostAmount { get; set; }
         public decimal PayoutAmount { get; set; }
     }
-
+    
     public class WagerDataIM
     {
         public string PlayerId { get; set; }
@@ -214,7 +214,7 @@
         //Sport , E-Sport
         public DateTime WagerCreationDateTime { get; set; }
     }
-
+    
     #endregion
 }
 

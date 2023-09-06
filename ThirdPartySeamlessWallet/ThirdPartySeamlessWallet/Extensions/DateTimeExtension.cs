@@ -1,4 +1,7 @@
-﻿namespace ThirdPartySeamlessWallet.Extensions
+﻿using System;
+using System.Collections.Generic;
+
+namespace ThirdPartySeamlessWallet.Extensions
 {
     public static class DateTimeExtension
     {

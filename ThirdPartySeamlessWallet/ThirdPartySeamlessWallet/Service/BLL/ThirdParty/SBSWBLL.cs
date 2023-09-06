@@ -1,13 +1,8 @@
-﻿using System.Data;
-
-using Dapper;
-
+﻿using Dapper;
 using MySql.Data.MySqlClient;
-
 using Newtonsoft.Json;
-
 using Serilog.Context;
-
+using System.Data;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -454,7 +449,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     detail.debitAmount,
                     TicketType = (int)SBSWTransType.CancelBet,
                 });
-                if (result.SPResult == -1) //查無此交易
+                if (result.SPResult == -1 ) //查無此交易
                 {
                     throw new SBSWException(ReturnCode.TransactionNotFound);
                 }

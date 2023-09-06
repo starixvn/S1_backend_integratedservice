@@ -1,26 +1,24 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
+﻿using NUnit.Framework;
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-
-using Newtonsoft.Json;
-
 using NSubstitute;
-
-using NUnit.Framework;
-
-using ThirdPartyCore;
+using Microsoft.Extensions.Configuration;
+using System.IO;
+using ThirdPartyService.IntegrationTest.Stubs;
+using ThirdPartyService.Service.Library;
+using Microsoft.Extensions.Logging;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-using ThirdPartyCore.Model.TpBetRecordExtend;
-
-using ThirdPartyService.Extensions;
+using Microsoft.AspNetCore.Hosting;
 using ThirdPartyService.IntegrationTest.Models;
-using ThirdPartyService.IntegrationTest.Stubs;
 using ThirdPartyService.Service.DAL;
-using ThirdPartyService.Service.Library;
+using Newtonsoft.Json;
+using ThirdPartyCore;
+using System.Collections.Generic;
+using ThirdPartyCore.Model.TpBetRecordExtend;
+using Microsoft.AspNetCore.Builder;
+using ThirdPartyService.Extensions;
 
 namespace ThirdPartyService.Service.BLL.Tests
 {
@@ -100,7 +98,7 @@ namespace ThirdPartyService.Service.BLL.Tests
         }
 
         [Ignore("dev")]
-        [TestCase(226500, "5WG09igtsu5CEV", 67, 39, 51, ExpectedResult = ErrorCode.Success)]
+        [TestCase(226500, "5WG09igtsu5CEV", 67, 39,51, ExpectedResult = ErrorCode.Success)]
         public ErrorCode GetTpBetRecordExtendTest(int custId, string transId, int gameType, int tpId, int currencyId)
         {
             var actual = _thirdPartyBLL.GetTpBetRecordExtend(new GetTpBetRecordExtendRequest

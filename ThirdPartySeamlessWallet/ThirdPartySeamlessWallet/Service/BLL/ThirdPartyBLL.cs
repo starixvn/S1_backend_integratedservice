@@ -1,7 +1,5 @@
-﻿using System.Collections.Concurrent;
-
-using Microsoft.Extensions.Caching.Memory;
-
+﻿using Microsoft.Extensions.Caching.Memory;
+using System.Collections.Concurrent;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;

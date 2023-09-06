@@ -1,5 +1,5 @@
-﻿using ThirdPartyCore.Model.enums;
-
+﻿using System;
+using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Extensions;
 
 namespace ThirdPartyService.Service.Model

@@ -1,9 +1,14 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Serilog.Context;
-
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -76,7 +81,7 @@ namespace ThirdPartySettleWorker.Workers
                         var split = transId.Split("_");
                         var gameId = split[0];
                         var userName = split[1];
-
+                        
                         var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP, new { GameID = gameId, Username = userName }, DataBase.Wager).First();
                         var betTrans = _settledBLL.GetSettle_BettransLC_SA(gameId, userName);
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, userName);
@@ -112,7 +117,7 @@ namespace ThirdPartySettleWorker.Workers
                             }
                         }
 
-
+                       
                     }
                     catch (Exception ex1)
                     {

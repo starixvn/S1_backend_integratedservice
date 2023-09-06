@@ -1,13 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
+﻿using System;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
 using static ThirdPartySeamlessWallet.Extensions.MethodExtension;
 
 namespace ThirdPartySeamlessWallet.Controllers
@@ -37,8 +39,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         public ContentResult CheckOnlineMember([FromForm] CheckOnlineMemberInput input)
         {
             var json = GetJsonResult(SabaOnlineMemberStatus.InvalidSecretKeyOrIpAddressNotAllow, "System Error");
-            var errorResult = "";
-
+            var errorResult = ""; 
+            
             try
             {
                 errorResult = _tools.TransformJsonToXml<CheckOnlineMember>(json);
@@ -55,7 +57,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else
                     {
-                        var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)Tp.Saba, input.Vendor_Member_Id);
+                        var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int) Tp.Saba, input.Vendor_Member_Id);
                         if (tpCheck == null)
                         {
                             json = GetJsonResult(SabaOnlineMemberStatus.MemberIsOffline);
@@ -69,12 +71,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
 
                 var result = _tools.TransformJsonToXml<CheckOnlineMember>(json);
-                return new ContentResult() { Content = result, ContentType = "application/xml", StatusCode = 200 };
+                return new ContentResult() {Content = result, ContentType = "application/xml", StatusCode = 200};
             }
             catch (Exception e)
             {
                 _logger.LogError(e, GetCurrentMethod());
-                return new ContentResult() { Content = errorResult, ContentType = "application/xml", StatusCode = 403 };
+                return new ContentResult() {Content = errorResult, ContentType = "application/xml", StatusCode = 403};
             }
         }
 
@@ -85,7 +87,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 CheckOnlineMember = new CheckOnlineMember
                 {
                     Version = Version,
-                    StatusCode = (int)status,
+                    StatusCode = (int) status,
                     Message = message ?? status.GetEnumDescription()
                 }
             });

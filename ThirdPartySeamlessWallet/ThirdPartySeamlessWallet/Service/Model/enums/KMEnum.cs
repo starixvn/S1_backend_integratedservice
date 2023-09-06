@@ -39,12 +39,12 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         /// 結束局
         /// </summary>
         EndRound = 590,
-
+        
         //There are 3 games will use extra transaction type (610.600.611)
         //1. Gao Gae
         //2. Kingmaker Pok Deng
         //3. Pai Kang
-
+        
         /// <summary>
         /// 電子錢包加錢
         /// </summary>

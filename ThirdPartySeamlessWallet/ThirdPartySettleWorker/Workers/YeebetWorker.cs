@@ -1,12 +1,10 @@
 ﻿using Serilog.Context;
-
 using ThirdPartySeamlessWallet.Service.BLL;
-using ThirdPartySeamlessWallet.Service.DAL;
-using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
+using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
+using ThirdPartySeamlessWallet.Service.DAL;
 
 namespace ThirdPartySettleWorker.Workers;
 
@@ -80,7 +78,7 @@ internal class YeebetWorker : BackgroundService, ISettleWorker
 
                     var wager = _settledBLL.GetSettle_TpWagerLC_Yeebet(unsettleData.FirstOrDefault().TransId).FirstOrDefault(); //serialnumber
 
-                    if (wager == null) continue;
+                    if (wager == null ) continue;
 
                     if (!CanSettle(unsettleData, wager, tpCustInfo,
                         out decimal stake, out decimal validbet, out decimal winlost)) continue;

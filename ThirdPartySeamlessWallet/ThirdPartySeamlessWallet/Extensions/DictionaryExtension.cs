@@ -1,4 +1,9 @@
-﻿namespace ThirdPartySeamlessWallet.Extensions
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace ThirdPartySeamlessWallet.Extensions
 {
     public static class DictionaryExtension
     {

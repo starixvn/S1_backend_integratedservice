@@ -1,9 +1,7 @@
 ﻿using System.Dynamic;
 using System.Text;
 using System.Web;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -119,7 +117,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     _logger.LogError($"tpCheck:{JsonConvert.SerializeObject(authToken)}, wrong tpUser");
                     return false;
                 }
-                else if (tpCheck.Token != authToken.longTimeToken)
+                else if(tpCheck.Token != authToken.longTimeToken)
                 {
                     _logger.LogError($"tpCheck:{JsonConvert.SerializeObject(tpCheck)}, player session is expired");
                     return false;
@@ -140,10 +138,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
         }
-
+        
         public async Task<dynamic> FundTransfer(dynamic request)
         {
-            var tpUserName = (string)request.accountid;
+            var tpUserName = (string) request.accountid;
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.HB, tpUserName);
             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp.HB, tpCustInfo.CurrencyId);
 
@@ -165,7 +163,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var bonusId = 0;
             var afterAmount = 0m;
             var transId = "";
-
+            
             await using var conn = _mainDbClient.GetMySqlConnection();
             await conn.OpenAsync();
             await using var trans = await conn.BeginTransactionAsync();
@@ -215,15 +213,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         gameinstanceid = request.gameinstanceid,
                         friendlygameinstanceid = request.friendlygameinstanceid,
                         gamestatemode = fundInfo.gamestatemode,
-                        transferid = (bool)request.isrecredit ? fundInfo.originaltransferid : fundInfo.transferid,
+                        transferid = (bool) request.isrecredit ? fundInfo.originaltransferid : fundInfo.transferid,
                         currencycode = fundInfo.currencycode,
                         amount = fundInfo.amount,
                         bonusamount = fundInfo.bonusamount,
                         jpwin = fundInfo.jpwin,
                         jpcont = fundInfo.jpcont,
                         isbonus = fundInfo.isbonus,
-                        dtevent = DateTimeOffset.Parse((string)fundInfo.dtevent).DateTime,
-                        initialdebittransferid = (bool)fundInfo.isbonus ? request.bonusdetails.bonusbalanceid : fundInfo.initialdebittransferid,
+                        dtevent = DateTimeOffset.Parse((string) fundInfo.dtevent).DateTime,
+                        initialdebittransferid = (bool) fundInfo.isbonus ? request.bonusdetails.bonusbalanceid : fundInfo.initialdebittransferid,
                         accounttransactiontype = fundInfo.accounttransactiontype,
                         gameinfeature = fundInfo.gameinfeature,
                         gamename = request.gamedetails.name,
@@ -241,7 +239,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     break;
                 }
             }
-
+            
             if (transactionResult > 0)
             {
                 if (afterAmount == 0)
@@ -250,7 +248,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 }
                 else
                 {
-                    if (tpCurrency.ExchangeRate > 0)
+                    if (tpCurrency.ExchangeRate > 0) 
                         afterAmount /= tpCurrency.ExchangeRate;
                 }
 
@@ -258,7 +256,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 if (bonusId > 0)
                 {
                     _logger.LogInformation($"user {tpCustInfo.TpUserName} has bonus wallet bonusId:{bonusId} transId:{transId}");
-                    _settledService.UpdateTpBonusFlag_HB((int)Tp.HB, transId, (int)GameType.HB_RNG, TpCategory.Slots, out int CustId, out bonusId);
+                    _settledService.UpdateTpBonusFlag_HB((int) Tp.HB, transId, (int) GameType.HB_RNG, TpCategory.Slots, out int CustId, out bonusId);
                 }
                 response.status = new ExpandoObject();
                 response.status.success = true;

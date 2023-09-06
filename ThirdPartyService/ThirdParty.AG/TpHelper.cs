@@ -1,13 +1,11 @@
-﻿using System.Xml;
-
-using Newtonsoft.Json;
-
-using ThirdPartyCore;
-using ThirdPartyCore.Extensions;
+﻿using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using System.Xml;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using Newtonsoft.Json;
 using ThirdPartyCore.Model.TpBetRecordExtend;
+using ThirdPartyCore.Extensions;
 
 
 namespace ThirdParty.AG
@@ -70,7 +68,7 @@ namespace ThirdParty.AG
             string sParams = $"cagent={cagent}/\\\\/loginname={tpCustInfo.TpUserName}/\\\\/method=lg/\\\\/actype={actype}/\\\\/password={tpCustInfo.TpPwd}/\\\\/oddtype={oddtype}/\\\\/cur={tpCustInfo.TpCurrencyId}";
             string eParams = DESEncrypt(sParams, inputs["Deskey"]);
             string oMD5 = $"{eParams}{Md5key}";
-            string postParams = $"params={eParams}&key={ToMD5(oMD5).ToLower()}";
+            string postParams = $"params={eParams}&key={ ToMD5(oMD5).ToLower() }";
 
             Dictionary<string, string> header = new Dictionary<string, string>();
             header["User-Agent"] = $"WEB_LIB_GI_{cagent}";
@@ -210,7 +208,7 @@ namespace ThirdParty.AG
             // encrypt
             string eParams = DESEncrypt(sParams, inputs["Deskey"]);
             string oMD5 = $"{eParams}{Md5key}";
-            postParams = $"params={eParams}&key={ToMD5(oMD5).ToLower()}";
+            postParams = $"params={eParams}&key={ ToMD5(oMD5).ToLower() }";
 
             oApiResult.ErrorCode = ErrorCode.Success;
             oApiResult.Message = $"{GameUrl}?{postParams}";

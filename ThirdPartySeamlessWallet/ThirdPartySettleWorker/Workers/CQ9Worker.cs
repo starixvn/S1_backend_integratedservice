@@ -1,16 +1,13 @@
 ﻿using Newtonsoft.Json;
-
 using Serilog.Context;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
 using ThirdPartySettleWorker.Model.Interfaces;
 
 namespace ThirdPartySettleWorker.Workers
 {
-    public class CQ9Worker : BackgroundService, ISettleWorker
+    public class CQ9Worker:BackgroundService, ISettleWorker
     {
         public Tp Tp => Tp.CQ9;
         private Timer _timerSettleCq9Slot;
@@ -19,7 +16,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly SettledBLL _settledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly ILogger<CQ9Worker> _logger;
-
+        
         public CQ9Worker(IServiceProvider provider)
         {
             _settledBLL = provider.GetRequiredService<SettledBLL>();

@@ -1,8 +1,6 @@
-﻿using System.Web;
+﻿using Newtonsoft.Json;
+using System.Web;
 using System.Xml.Serialization;
-
-using Newtonsoft.Json;
-
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -140,7 +138,7 @@ namespace ThirdParty.SimplePlay
             var result = HttpPost(tpConfig.ApiUrl, postData, "application/x-www-form-urlencoded");
             if (IsXML(result))
             {
-                var xml = (fun.Equals("1", StringComparison.OrdinalIgnoreCase)) ? XMLDeserialize<LoginFunResult>(result) : XMLDeserialize<LoginResult>(result);
+                var xml = (fun.Equals("1", StringComparison.OrdinalIgnoreCase)) ? XMLDeserialize<LoginFunResult>(result)  : XMLDeserialize<LoginResult>(result);
 
                 if (xml.ErrorMsgId == 0)
                 {
@@ -213,8 +211,8 @@ namespace ThirdParty.SimplePlay
             var bettrans = TpBetRecordProvider.DbQuery("Service_BettransRng_SimplePlay_Detail_Get", new { YYYYMM, betRecordInfo.TransId }, DataBase.Main);
             if (!bettrans.Any())
             {
-                var YYYYMMCrossDate = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.TransTime).DateTime.AddDays(-1).GetPartitionKey();
-                if (YYYYMM != YYYYMMCrossDate)
+               var YYYYMMCrossDate = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.TransTime).DateTime.AddDays(-1).GetPartitionKey();
+                if(YYYYMM != YYYYMMCrossDate)
                 {
                     bettrans = TpBetRecordProvider.DbQuery("Service_BettransRng_SimplePlay_Detail_Get", new { YYYYMMCrossDate, betRecordInfo.TransId }, DataBase.Main);
                 }
@@ -256,7 +254,7 @@ namespace ThirdParty.SimplePlay
             return (dic != null) ? dic.TryGetValue("en", out var result) ? result : string.Empty : string.Empty;
         }
 
-        private DeviceType GetDeviceType(string platform, string betSource)
+        private DeviceType GetDeviceType( string platform, string betSource)
         {
             DeviceType deviceType;
             switch (betSource)

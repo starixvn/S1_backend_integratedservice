@@ -1,7 +1,5 @@
-﻿using Newtonsoft.Json;
-
-using StackExchange.Redis;
-
+﻿using StackExchange.Redis;
+using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Library

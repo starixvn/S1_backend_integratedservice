@@ -1,12 +1,8 @@
 ﻿using System.Data;
 using System.Diagnostics;
-
 using Dapper;
-
 using MySql.Data.MySqlClient;
-
 using Serilog.Context;
-
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Library
@@ -18,13 +14,13 @@ namespace ThirdPartySeamlessWallet.Service.Library
         private readonly string _connectionString;
 
         private readonly ILogger<MySqlClient> _logger;
-
+        
         public MySqlClient(string connectionString, ILogger<MySqlClient> logger)
         {
             _connectionString = connectionString;
             _logger = logger;
         }
-
+        
         public MySqlConnection GetMySqlConnection()
         {
             return new MySqlConnection(_connectionString);
@@ -39,7 +35,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                var command = new CommandDefinition(spName, parameters,
+                var command = new CommandDefinition(spName, parameters, 
                     commandTimeout: commandTimeout,
                     commandType: commandType);
                 result = connection.Query<T>(command);
@@ -56,7 +52,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             _logger.LogDebug($"{spName} {sw.Elapsed:c}");
             return result.ToList();
         }
-
+        
         public T QueryFirst<T>(string name, object parameters)
         {
             T result;
@@ -99,7 +95,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
-
+        
         public async Task<IEnumerable<T>> QueryAsync<T>(string spName, CommandType commandType = CommandType.StoredProcedure, object parameters = null, int? commandTimeout = null)
         {
             IEnumerable<T> result;
@@ -140,7 +136,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
-
+        
         public async Task<T> QueryFirstOrDefaultAsync<T>(string name, IDbTransaction transaction, object parameters = null)
         {
             var sw = Stopwatch.StartNew();
@@ -148,8 +144,8 @@ namespace ThirdPartySeamlessWallet.Service.Library
             try
             {
                 result = await transaction.Connection.QueryFirstOrDefaultAsync<T>(
-                    name, parameters,
-                    transaction,
+                    name, parameters, 
+                    transaction, 
                     commandType: CommandType.StoredProcedure);
             }
             catch (Exception e)
@@ -162,7 +158,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
-
+        
         public async Task<T> QueryFirstAsync<T>(string name, DynamicParameters parameters = null)
         {
             var sw = Stopwatch.StartNew();
@@ -249,7 +245,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
-
+        
         public T ExecuteScalar<T>(string name, object parameters)
         {
             T result;
@@ -271,7 +267,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
-
+        
         public async Task<int> ExecuteAsync(string name, IDbTransaction transaction, object parameters = null)
         {
             var sw = Stopwatch.StartNew();
@@ -294,7 +290,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
         public async Task<T> QueryMultiple<T>(string spName, Func<SqlMapper.GridReader, T> func, object parameters = null)
         {
             T result;
-            var sw = Stopwatch.StartNew();
+            var sw = Stopwatch.StartNew();           
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
@@ -311,9 +307,9 @@ namespace ThirdPartySeamlessWallet.Service.Library
             _logger.LogDebug($"{spName} {sw.Elapsed:c}");
             return result;
         }
-
+        
         #endregion
-
+        
         public void CommitAndDisposeConnection(MySqlConnection conn, IDbTransaction trans)
         {
             trans.Commit();
@@ -321,7 +317,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             conn.Close();
             conn.Dispose();
         }
-
+        
         public void RollbackAndDisposeConnection(MySqlConnection conn, IDbTransaction trans)
         {
             trans.Rollback();
@@ -337,7 +333,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             await conn.CloseAsync();
             await conn.DisposeAsync();
         }
-
+        
         public async Task RollbackAndDisposeConnectionAsync(MySqlConnection conn, MySqlTransaction trans)
         {
             await trans.RollbackAsync();

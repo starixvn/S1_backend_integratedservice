@@ -1,9 +1,7 @@
 ﻿using System.IO.Compression;
 using System.Text;
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
-
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Model.SBSW;
@@ -35,8 +33,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     return new ReturnObj(ReturnCode.InvalidParameters);
                 }
-
-                var bodyText = string.Empty;
+         
+                var bodyText = string.Empty;               
                 if (GetHeaderValueAs<string>("Content-Encoding")?.Contains("gzip") ?? false)
                 {
                     using var ms = new MemoryStream(2048);

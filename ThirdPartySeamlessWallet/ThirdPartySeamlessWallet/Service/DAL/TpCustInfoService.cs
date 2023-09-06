@@ -1,7 +1,5 @@
-﻿using System.Data;
-
-using Dapper;
-
+﻿using Dapper;
+using System.Data;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;

@@ -1,9 +1,12 @@
 using NUnit.Framework;
-
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.IntegrationTest.Models;
 using ThirdPartySeamlessWallet.IntegrationTest.SandBox;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySettleWorker.Workers;
 
 namespace ThirdPartySeamlessWallet.IntegrationTest
 {

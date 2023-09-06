@@ -1,11 +1,8 @@
 ﻿using Newtonsoft.Json;
-
 using Serilog.Context;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -84,7 +81,7 @@ namespace ThirdPartySettleWorker.Workers
                             unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
                         }
 
-                        var isSettled = unsettled.BetStatus.Equals("Settled", StringComparison.OrdinalIgnoreCase)
+                        var isSettled = unsettled.BetStatus.Equals("Settled", StringComparison.OrdinalIgnoreCase) 
                             || unsettled.BetStatus.Equals("Voided", StringComparison.OrdinalIgnoreCase);
                         var betRecordInfo = new BetRecordInfo
                         {
@@ -109,7 +106,7 @@ namespace ThirdPartySettleWorker.Workers
                                 _tpUnSettledBLL.SetSettleFlag(spName, unsettled.TransId, dataBase: DataBase.Wager);
                             });
                         }
-                    }
+                    }             
                     catch (Exception ex)
                     {
                         Task.Run(() =>

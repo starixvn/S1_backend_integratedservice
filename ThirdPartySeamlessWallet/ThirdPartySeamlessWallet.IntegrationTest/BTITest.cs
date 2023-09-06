@@ -1,5 +1,6 @@
 using NUnit.Framework;
-
+using System;
+using ThirdPartySeamlessWallet.IntegrationTest.Models;
 using ThirdPartySeamlessWallet.IntegrationTest.SandBox;
 
 namespace ThirdPartySeamlessWallet.IntegrationTest

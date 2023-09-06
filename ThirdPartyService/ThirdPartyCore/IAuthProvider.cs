@@ -1,4 +1,8 @@
-﻿namespace ThirdPartyCore
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ThirdPartyCore
 {
     public interface IAuthProvider
     {

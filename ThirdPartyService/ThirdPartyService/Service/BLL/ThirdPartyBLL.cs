@@ -1,13 +1,10 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
-
 using Newtonsoft.Json;
-
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 using ThirdPartyCore.Model.TpMerchantBalance.Response;
-
 using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;

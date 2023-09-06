@@ -1,8 +1,8 @@
-﻿using FluentAssertions;
-
+﻿using System.Collections.Generic;
+using FluentAssertions;
 using NUnit.Framework;
-
 using ThirdPartyCore.Model;
+using ThirdParty.HB;
 using ThirdPartyCore.Model.enums;
 
 namespace ThirdParty.HB.Tests
@@ -13,7 +13,7 @@ namespace ThirdParty.HB.Tests
         private TpHelper _tpHelper;
         private TpCustInfo _tpCustInfo;
         private Dictionary<string, string> _inputs;
-
+        
         [SetUp]
         public void Setup()
         {
@@ -39,11 +39,11 @@ namespace ThirdParty.HB.Tests
             {
                 { "APIKey", "4797B756-8A77-4643-8DE5-2E4719203B46" },
                 { "APIUrl", "https://ws-test.insvr.com" },
-                { "BrandId", "11f9e966-8379-ea11-a94c-281878584619" },
+                { "BrandId", "11f9e966-8379-ea11-a94c-281878584619" },             
                 { "LaunchUrl", "https://app-test.insvr.com/go.ashx" },
             };
         }
-
+        
         [Test]
         public void CreateMemberTest()
         {
@@ -53,14 +53,14 @@ namespace ThirdParty.HB.Tests
             //Assert
             actual.ErrorCode.Should().Be(ErrorCode.Success);
         }
-
+        
         [Test]
         public void LoginTest()
         {
             //Arrange
             var appType = AppType.Desktop;
             var tpLangId = "cs";
-            _inputs.Add("gameId", "SGGoldRush");
+            _inputs.Add( "gameId", "SGGoldRush");
 
             //Act
             var actual = _tpHelper.Login(_tpCustInfo, appType, tpLangId, _inputs);
@@ -68,12 +68,12 @@ namespace ThirdParty.HB.Tests
             //Assert
             actual.ErrorCode.Should().Be(ErrorCode.Success);
         }
-
+        
         [Test]
         public void GetBalanceTest()
         {
             var actual = _tpHelper.GetBalance(_tpCustInfo, _inputs);
-
+            
             actual.ErrorCode.Should().Be(ErrorCode.Fail);
         }
     }

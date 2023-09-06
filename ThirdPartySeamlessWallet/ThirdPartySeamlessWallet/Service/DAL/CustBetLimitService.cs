@@ -1,7 +1,10 @@
-﻿using Dapper;
-
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using Dapper;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.DAL.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -24,7 +27,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = _sqlClient.QueryFirst<CustBetLimitData>("Service_CustBetLimitByCustId_Get", p);
             if (result == null || result.BetSetting == null || result.BetSetting == "null")
                 return null;
-
+            
             var custBetLimit = new CustBetLimit()
             {
                 CustId = result.CustId,

@@ -1,9 +1,11 @@
-﻿namespace ThirdPartyCore.Model.TpBetRecordDetail.Response
+﻿using System;
+
+namespace ThirdPartyCore.Model.TpBetRecordDetail.Response
 {
     public class VirtualSportsDetail : BaseDetail
     {
         public VirtualSportsDetail(TpGameTypeOption tpGameTypeOption) : base(tpGameTypeOption) { }
-
+        
         /// <summary>
         /// 關聯單號
         /// </summary>

@@ -1,4 +1,9 @@
-﻿namespace ThirdPartyCore.Model
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using ThirdPartyCore.Model.enums;
+
+namespace ThirdPartyCore.Model
 {
     public class TpListOption
     {

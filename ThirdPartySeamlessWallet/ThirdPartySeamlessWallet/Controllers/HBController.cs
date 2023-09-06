@@ -1,9 +1,9 @@
-﻿using System.Text;
-
+﻿using System.Dynamic;
+using System.IO;
+using System.Text;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Model;
 
@@ -22,7 +22,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpGet]
         [Route("Test")]
         public string Ping() => "ok";
-
+        
         /// <summary>
         /// 驗證授權
         /// </summary>
@@ -46,9 +46,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var content = await reader.ReadToEndAsync();
             var request = JsonConvert.DeserializeObject<dynamic>(content);
-            if ((bool)request.fundtransferrequest.isretry == false)
+            if ((bool) request.fundtransferrequest.isretry == false)
             {
-                var token = (string)request.fundtransferrequest.token;
+                var token = (string) request.fundtransferrequest.token;
                 if (_hbbll.Auth(token) == false)
                 {
                     return new HBFundTransferResponse()
@@ -70,7 +70,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 fundtransferresponse = await _hbbll.FundTransfer(request.fundtransferrequest)
             };
         }
-
+        
         /// <summary>
         /// 交易
         /// </summary>

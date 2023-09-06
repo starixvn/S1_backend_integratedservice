@@ -1,4 +1,7 @@
-﻿namespace ThirdPartyCore.Model.Exceptions
+﻿using System;
+
+
+namespace ThirdPartyCore.Model.Exceptions
 {
     public class BetDetailNotFoundException : Exception
     {

@@ -1,11 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Collections;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
+using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Extensions.ActionFilters
 {
-    public class KMHeaderFilter : ActionFilterAttribute
+    public class KMHeaderFilter: ActionFilterAttribute
     {
         private readonly IKMService _kmService;
         public KMHeaderFilter(IKMService kmService)

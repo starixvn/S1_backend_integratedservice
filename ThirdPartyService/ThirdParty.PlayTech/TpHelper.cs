@@ -1,13 +1,13 @@
-﻿using System.Text;
+﻿using Newtonsoft.Json;
+using System.Text;
 using System.Web;
-
-using Newtonsoft.Json;
-
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpBetRecordExtend;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 
 namespace ThirdParty.PlayTech
 {

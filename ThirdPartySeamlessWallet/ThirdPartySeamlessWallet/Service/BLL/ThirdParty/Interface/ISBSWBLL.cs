@@ -1,4 +1,5 @@
-﻿using ThirdPartySeamlessWallet.Service.Model.SBSW;
+﻿using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Service.Model.SBSW;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface
 {

@@ -1,10 +1,7 @@
 ﻿using System.Text;
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;

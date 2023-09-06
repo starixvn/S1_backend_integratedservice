@@ -1,6 +1,8 @@
-﻿using System.Web;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
 using System.Xml.Serialization;
-
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -420,8 +422,7 @@ namespace ThirdParty.SA
         /// <param name="config"></param>
         /// <param name="tpCustInfo"></param>
         /// <param name="inputs"></param>
-        private void SetBetLimit(SaConfig config, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {
+        private void SetBetLimit(SaConfig config, TpCustInfo tpCustInfo, Dictionary<string, string> inputs) {
             try
             {
                 var betLimitQueryString = GetBetLimitQueryString(tpCustInfo.TpCurrencyId, inputs);

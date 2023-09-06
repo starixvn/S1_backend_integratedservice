@@ -1,7 +1,9 @@
-﻿using System.Net;
-
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
 using Newtonsoft.Json;
-
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -11,7 +13,7 @@ using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.MG
 {
-    public class TpHelper : ThirdPartyHelperBase
+    public class TpHelper: ThirdPartyHelperBase
     {
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
@@ -28,9 +30,9 @@ namespace ThirdParty.MG
                     {"Authorization", $"Bearer {token}"}
                 };
                 var parameters = $"playerId={tpCustInfo.TpUserName}";
-                HttpPost($"{apiUrl}/agents/{agent.AgentCode}/players",
-                          parameters,
-                          "application/x-www-form-urlencoded",
+                HttpPost($"{apiUrl}/agents/{agent.AgentCode}/players", 
+                          parameters, 
+                          "application/x-www-form-urlencoded", 
                           header);
 
                 return new ApiResult
@@ -38,7 +40,7 @@ namespace ThirdParty.MG
                     ErrorCode = ErrorCode.Success
                 };
             }
-            catch (WebException e)
+            catch(WebException e)
             {
                 var (code, message) = GetMgError(e.Response);
                 if (string.IsNullOrEmpty(message))
@@ -65,7 +67,7 @@ namespace ThirdParty.MG
             var agent = mgAgents.SingleOrDefault(a => a.Currency == tpCustInfo.TpCurrencyId);
 
             var token = GetToken(inputs, tpCustInfo.TpCurrencyId);
-
+            
             try
             {
                 var tpGameType = (int)TpGameType.MG_RNG;
@@ -83,9 +85,9 @@ namespace ThirdParty.MG
                 };
                 var platform = appType == AppType.Desktop ? "Desktop" : "Mobile";
                 var parameters = $"contentType=Game&contentCode={gameId}&platform={platform}&homeUrl={homeUrl}&langCode={TpLangId}";
-                var result = HttpPost($"{apiUrl}/agents/{agent.AgentCode}/players/{tpCustInfo.TpUserName}/sessions",
-                                            parameters,
-                                            "application/x-www-form-urlencoded",
+                var result = HttpPost($"{apiUrl}/agents/{agent.AgentCode}/players/{tpCustInfo.TpUserName}/sessions", 
+                                            parameters, 
+                                            "application/x-www-form-urlencoded", 
                                             header);
                 var con = JsonConvert.DeserializeObject<Dictionary<string, string>>(result);
                 return new ApiResult()
@@ -138,7 +140,7 @@ namespace ThirdParty.MG
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             try
-            {
+            {            
                 var apiUrl = GetInputValue(inputs, "ApiUrl");
                 var strAgents = GetInputValue(inputs, "Agent");
                 var mgAgents = JsonConvert.DeserializeObject<List<MGAgents>>(strAgents);
@@ -180,8 +182,8 @@ namespace ThirdParty.MG
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
-            var detail = TpBetRecordProvider.DbQuery("Service_Bettrans_MG_Detail_Get",
-                new { betRecordInfo.TransId, GameType = tpGameType.Type, YYYYMM }, DataBase.Main);
+            var detail = TpBetRecordProvider.DbQuery("Service_Bettrans_MG_Detail_Get", 
+                new { betRecordInfo.TransId, GameType = tpGameType.Type , YYYYMM }, DataBase.Main);
 
             return tpGameType.CategoryId switch
             {
@@ -222,7 +224,7 @@ namespace ThirdParty.MG
 
         private DeviceType GetDeviceType(string device)
         {
-            if (device.Equals("Desktop", StringComparison.OrdinalIgnoreCase))
+            if (device.Equals("Desktop",StringComparison.OrdinalIgnoreCase))
             {
                 return DeviceType.Desktop;
             }
@@ -237,7 +239,7 @@ namespace ThirdParty.MG
 
         private string GetInputValue(Dictionary<string, string> inputs, string key)
         {
-            if (inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))
+            if(inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))
             {
                 return inputs[key];
             }
@@ -254,7 +256,7 @@ namespace ThirdParty.MG
             var parameters =
                 $"client_id={agent.AgentCode}&client_secret={agent.SecretKey}&grant_type=client_credentials";
             var tokenResult = HttpPost($"{tokenUrl}/connect/token", parameters, "application/x-www-form-urlencoded");
-
+            
             var dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(tokenResult);
             return dict["access_token"];
         }
@@ -262,7 +264,7 @@ namespace ThirdParty.MG
         private (string, string) GetMgError(WebResponse webResponse)
         {
             using var response = webResponse;
-            var httpResponse = (HttpWebResponse)response;
+            var httpResponse = (HttpWebResponse) response;
             if (httpResponse.StatusCode == HttpStatusCode.BadRequest)
             {
                 using var data = response.GetResponseStream();

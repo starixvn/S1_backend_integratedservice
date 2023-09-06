@@ -1,4 +1,6 @@
-﻿namespace ThirdPartyCore.Model.TpBetRecordDetail.Response
+﻿using System;
+
+namespace ThirdPartyCore.Model.TpBetRecordDetail.Response
 {
     public class LiveCasinoDetail : BaseDetail
     {

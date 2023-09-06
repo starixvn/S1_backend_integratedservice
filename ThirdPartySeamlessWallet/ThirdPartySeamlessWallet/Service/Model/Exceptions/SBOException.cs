@@ -1,4 +1,5 @@
-﻿using ThirdPartySeamlessWallet.Extensions;
+﻿using System;
+using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model.Exceptions
@@ -10,7 +11,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.Exceptions
 
         public SBOException()
         {
-
+            
         }
 
         public SBOException(SBOErrorCode errorCode)

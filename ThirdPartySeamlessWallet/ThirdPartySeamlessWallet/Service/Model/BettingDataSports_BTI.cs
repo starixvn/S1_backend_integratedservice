@@ -1,5 +1,6 @@
-﻿using System.Xml.Linq;
-
+﻿using System;
+using System.Linq;
+using System.Xml.Linq;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
@@ -11,7 +12,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string balance { get; set; }
 
         public BTIRefreshObj(bool result)
-        {
+        {          
             status = "failure";
             message = "fail.";
             balance = "0";
@@ -20,7 +21,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     }
 
-    public class BTIStatusObj
+    public class BTIStatusObj 
     {
         public string status { get; set; }
         public string message { get; set; }
@@ -28,7 +29,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string uid { get; set; }
         public string token { get; set; }
 
-        public BTIStatusObj(string token)
+        public BTIStatusObj(string token) 
         {
             this.token = token;
             uid = Guid.NewGuid().ToString();
@@ -169,7 +170,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal DebitAmount { get; set; }
 
         public decimal CreditAmount { get; set; }
-
+        
         public string CurrentStatus { get; set; }
 
         public string BodyData { get; set; }

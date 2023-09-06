@@ -1,7 +1,5 @@
 using System.Net;
-
 using StackExchange.Redis;
-
 using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Extensions.ActionFilters;
 using ThirdPartySeamlessWallet.Service.BLL;

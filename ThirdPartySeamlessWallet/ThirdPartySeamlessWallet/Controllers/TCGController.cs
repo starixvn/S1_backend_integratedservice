@@ -1,10 +1,19 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using System.Threading.Tasks;
+using System.Web;
+using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-
+using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Model;
+using static ThirdPartySeamlessWallet.Extensions.MethodExtension;
 
 namespace ThirdPartySeamlessWallet.Controllers
 {
@@ -22,7 +31,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             _tcgBLL = new TCGBLL(provider);
         }
 
-
+       
         [HttpPost]
         public async Task<dynamic> SeamlessWallet([FromForm] string merchant_code, [FromForm] string @params, [FromForm] string sign)
         {
@@ -36,8 +45,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return new TCGReturnObj()
                 {
                     status = TCGReturnCode.UnknownSystemError.ToString(),
-                    error_desc = "Unknown system error",
-                };
+                    error_desc= "Unknown system error",
+                };         
             }
         }
 

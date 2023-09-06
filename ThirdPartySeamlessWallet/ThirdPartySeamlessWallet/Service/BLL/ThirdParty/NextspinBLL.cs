@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json;
-
+using Serilog.Context;
 using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -40,7 +40,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 { NextspinTransferType.JackpotPayout, Payout},
             };
         }
-        public NextspinCommonResponse Handle(AuthorizeRequest request)
+        public NextspinCommonResponse Handle(AuthorizeRequest request) 
         {
             if (string.IsNullOrWhiteSpace(request.AcctId)) throw new NextspinException(NextspinErrorCode.InvalidAcctId);
 
@@ -103,7 +103,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public async Task<NextspinCommonResponse> Handle(TransferRequest request)
         {
             ValidateRequest(request);
-            if (TransferHandler.ContainsKey(request.Type))
+            if (TransferHandler.ContainsKey(request.Type)) 
             {
                 return await TransferHandler[request.Type].Invoke(request);
             }
@@ -159,16 +159,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (NextspinException ex)
             {
                 _logger.LogError(ex, $"AcctId:{request.AcctId} bettingData:{JsonConvert.SerializeObject(bettingData)}");
-                return new NextspinCommonResponse()
-                {
+                return new NextspinCommonResponse() 
+                { 
                     MerchantCode = request.MerchantCode,
-                    Code = (int)ex.NextspinErrorCode,
-                    Msg = ex.ErrorMessage,
-                    SerialNo = GenerateSerialNo()
+                    Code = (int)ex.NextspinErrorCode, Msg = ex.ErrorMessage,
+                    SerialNo = GenerateSerialNo() 
                 };
             }
         }
-        private async Task<NextspinCommonResponse> Payout(TransferRequest request)
+        private async Task<NextspinCommonResponse> Payout(TransferRequest request) 
         {
             var bettingData = new BettingDataRNG_Nextspin();
             try
@@ -176,7 +175,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, request.AcctId);
                 if (tpCustInfo == null)
                     throw new NextspinException(NextspinErrorCode.AcctNotFound);
-
+                
                 var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
                 if (tpCurrency == null || tpCurrency.ExchangeRate < 0)
                     throw new NextspinException(NextspinErrorCode.CurrencyInvalid);
@@ -231,7 +230,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
         }
-        public async Task<NextspinCommonResponse> CancelBet(TransferRequest request)
+        public async Task<NextspinCommonResponse> CancelBet(TransferRequest request) 
         {
             var bettingData = new BettingDataRNG_Nextspin();
             try
@@ -293,9 +292,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        public void ValidateBettrans(NextspinTransferType type, IEnumerable<BettingDataRNG_Nextspin> bettrans)
+        public void ValidateBettrans(NextspinTransferType type, IEnumerable<BettingDataRNG_Nextspin> bettrans) 
         {
-            if (type == NextspinTransferType.PlaceBet)
+            if (type == NextspinTransferType.PlaceBet) 
             {
                 // 已存在下注注單
                 if (bettrans.Any()) throw new NextspinException(NextspinErrorCode.DuplicatedReferenceId);

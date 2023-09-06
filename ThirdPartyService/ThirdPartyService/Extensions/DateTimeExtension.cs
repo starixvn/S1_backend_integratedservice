@@ -1,4 +1,6 @@
-﻿namespace ThirdPartyService.Extensions
+﻿using System;
+
+namespace ThirdPartyService.Extensions
 {
     public static class DateTimeExtension
     {

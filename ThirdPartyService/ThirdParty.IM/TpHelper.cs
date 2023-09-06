@@ -1,11 +1,8 @@
 ﻿using System.Net;
-
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-
 using Newtonsoft.Json;
-
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -46,7 +43,7 @@ namespace ThirdParty.IM
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var apiUrl = $"{inputs["ApiUrl"]}/Player/Register";
-
+            
             var signUp = new RegisterModel
             {
                 MerchantCode = inputs["Key"],
@@ -83,7 +80,7 @@ namespace ThirdParty.IM
 
             var tpGameType = inputs.ContainsKey("tpGameType") && !string.IsNullOrEmpty(inputs["tpGameType"]) ? Convert.ToInt32(inputs["tpGameType"]) : (int)TpGameType.IM_Sports;
             var productWallet = _productWallet[(TpGameType)tpGameType];
-
+            
             var signUp = new LaunchGameModel
             {
                 MerchantCode = inputs["Key"],
@@ -141,7 +138,7 @@ namespace ThirdParty.IM
             IReadOnlyDictionary<string, object>? wagerDetail = null;
             var detailSportModel = new WagerDetailSport();
             var detailESportModel = new WagerDetailESport();
-
+            
             switch (getBetDetail.TpGameTypeOption.CategoryId)
             {
                 case TpCategory.Sports:
@@ -150,21 +147,21 @@ namespace ThirdParty.IM
                     {
                         throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found.");
                     }
-
+                    
                     var wagerSportDetailsArray = JsonConvert.DeserializeObject<IEnumerable<WagerDetailSport>>(wagerDetail.GetValueOrDefault("DetailItems") as string);
                     if (wagerSportDetailsArray.Any())
                     {
                         detailSportModel = wagerSportDetailsArray.FirstOrDefault();
                     }
                     break;
-
+                
                 case TpCategory.Esports:
                     wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerESport_IM_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
                     if (wagerDetail == null)
                     {
                         throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found.");
                     }
-
+                    
                     var wagerESportDetailsArray = JsonConvert.DeserializeObject<IEnumerable<WagerDetailESport>>(wagerDetail.GetValueOrDefault("DetailItems") as string);
                     if (wagerESportDetailsArray.Any())
                     {
@@ -172,9 +169,9 @@ namespace ThirdParty.IM
                     }
                     break;
             }
-
+            
             var detail = ToJson(wagerDetail);
-
+            
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
                 TpCategory.Sports => new SportsDetail(getBetDetail.TpGameTypeOption)
@@ -232,7 +229,7 @@ namespace ThirdParty.IM
             IReadOnlyDictionary<string, object>? wagerDetail = null;
             var detailSportModel = new WagerDetailSport();
             var detailESportModel = new WagerDetailESport();
-
+            
             switch (tpGameType.CategoryId)
             {
                 case TpCategory.Sports:
@@ -241,21 +238,21 @@ namespace ThirdParty.IM
                     {
                         throw new BetDetailNotFoundException($"{betRecordInfo.TransId} bet detail not found.");
                     }
-
+                    
                     var wagerSportDetailsArray = JsonConvert.DeserializeObject<IEnumerable<WagerDetailSport>>(wagerDetail.GetValueOrDefault("DetailItems") as string);
                     if (wagerSportDetailsArray.Any())
                     {
                         detailSportModel = wagerSportDetailsArray.FirstOrDefault();
                     }
                     break;
-
+                
                 case TpCategory.Esports:
                     wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerESport_IM_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
                     if (wagerDetail == null)
                     {
                         throw new BetDetailNotFoundException($"{betRecordInfo.TransId} bet detail not found.");
                     }
-
+                    
                     var wagerESportDetailsArray = JsonConvert.DeserializeObject<IEnumerable<WagerDetailESport>>(wagerDetail.GetValueOrDefault("DetailItems") as string);
                     if (wagerESportDetailsArray.Any())
                     {
@@ -263,7 +260,7 @@ namespace ThirdParty.IM
                     }
                     break;
             }
-
+            
             return tpGameType.CategoryId switch
             {
                 TpCategory.Sports => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
@@ -299,7 +296,7 @@ namespace ThirdParty.IM
                     Live = detailESportModel?.MarketType,
                 }
             };
-
+        
         }
 
         private string GetTicketStatus(string resultStatus)
@@ -314,7 +311,7 @@ namespace ThirdParty.IM
                 _ => ""
             };
         }
-
+        
         private DeviceType GetDeviceType(string device)
         {
             return device switch
@@ -324,7 +321,7 @@ namespace ThirdParty.IM
                 _ => DeviceType.None,
             };
         }
-
+        
         private OddsTypeEnum GetOddsType(string oddsType)
         {
             return oddsType switch
@@ -336,6 +333,6 @@ namespace ThirdParty.IM
                 _ => OddsTypeEnum.None,
             };
         }
-
+        
     }
 }

@@ -1,9 +1,14 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Serilog.Context;
-
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -59,7 +64,7 @@ namespace ThirdPartySettleWorker.Workers
             var logName = $"SettleYGG";
             var getSP = $"Service_BettransRng_YGG_Unsettle_Get_V3";
             var setSP = $"Service_BettransRng_YGG_Settle_Set_V3";
-
+            
             try
             {
                 var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype);

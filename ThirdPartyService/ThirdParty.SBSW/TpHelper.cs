@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -79,7 +78,7 @@ namespace ThirdParty.SBSW
                 mintransfer = 1,
                 currency = tpCustInfo.IsTest ? 20 : Convert.ToInt32(tpCustInfo.TpCurrencyId),
                 oddsType = "1",
-            };
+            };   
             var dicP = FromJson<Dictionary<string, string>>(ToJson(input));
             var postdata = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}"))}";
             var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded");
@@ -385,16 +384,16 @@ namespace ThirdParty.SBSW
             var betNumberDetail = model?.BetNumberDetails?.First();
             var betVirtualSportDetail = model?.BetVirtualSportDetails?.First();
 
-            if (betDetail == null && betNumberDetail == null && betVirtualSportDetail == null)
+            if(betDetail == null && betNumberDetail == null && betVirtualSportDetail == null)
             {
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
             }
 
-            if (betDetail != null)
+            if(betDetail != null)
             {
                 int.TryParse(betDetail.odds_type, out int odds_type);
                 decimal.TryParse(betDetail.odds, out decimal odds);
-                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo) 
                 {
                     GameID = betDetail.sport_type.ToString(),
                     Game = betDetail.sportname?.FirstOrDefault(i => i.lang == "en")?.name ?? string.Empty,

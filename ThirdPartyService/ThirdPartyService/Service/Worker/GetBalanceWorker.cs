@@ -1,9 +1,17 @@
-﻿using Newtonsoft.Json;
-
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Serilog.Context;
-
+using ThirdPartyCore.Model;
 using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.BLL;
+using ThirdPartyService.Service.Library;
 using ThirdPartyService.Service.Model;
 
 namespace ThirdPartyService.Service.Worker
@@ -78,7 +86,7 @@ namespace ThirdPartyService.Service.Worker
 
                         foreach (var item in tpIdSiteIdList)
                         {
-                            if (!_thirdPartyBLL.GetBalance(firstRun, item.TpId, item.SiteId, out var data))
+                            if (!_thirdPartyBLL.GetBalance(firstRun,item.TpId, item.SiteId,out var data))
                             {
                                 failList.Add(item);
                                 success = false;
@@ -272,7 +280,7 @@ namespace ThirdPartyService.Service.Worker
 
             return false; //already run.
         }
-
+        
 
         #endregion
     }

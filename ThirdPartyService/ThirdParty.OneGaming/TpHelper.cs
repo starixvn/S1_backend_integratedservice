@@ -1,7 +1,11 @@
-﻿using System.Security.Cryptography;
-
-using Newtonsoft.Json;
-
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -238,7 +242,7 @@ namespace ThirdParty.OneGaming
                 GameID = game,
                 Game = game,
                 RefNo = detail.GetStringValue("ticket"),
-                Title = detail.GetStringValue("table"),
+                Title = detail.GetStringValue("table"),            
                 MatchID = detail.GetStringValue("period"),
                 BetType = string.Empty,
                 BetChoice = string.Empty,

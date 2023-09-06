@@ -1,22 +1,19 @@
-﻿using System.Net;
+﻿using Newtonsoft.Json;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Security;
+using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Xml.Serialization;
-
-using Microsoft.Extensions.Logging;
-
-using Newtonsoft.Json;
-
-using Serilog.Context;
-
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
-using ThirdPartyCore.Model.TpBetRecordExtend;
 using ThirdPartyCore.Model.TpMerchantBalance.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
+using Microsoft.Extensions.Logging;
+using Serilog.Context;
 
 namespace ThirdPartyCore
 {
@@ -57,7 +54,7 @@ namespace ThirdPartyCore
     }
 
     public abstract class ThirdPartyHelperBase : IThirdPartyHelper, IThirdPartyTpBetRecordDetail, IThirdPartyTpGetMerchantBalance
-    {
+    {  
         public static string proxyHost;
 
         public static int proxyPort;
@@ -121,7 +118,7 @@ namespace ThirdPartyCore
         protected string HttpPost(string url, string parameters, string contentType, Dictionary<string, string> headers = null, int timeOutTime = 0)
         {
             try
-            {
+            {           
                 var parametersLog = parameters;
                 if (headers != null)
                 {
@@ -185,10 +182,10 @@ namespace ThirdPartyCore
             }
         }
 
-        protected string HttpPostWithProxy(string url, string parameters, string contentType, WebProxy proxy, Dictionary<string, string> headers = null, int timeOutTime = 0)
+        protected string HttpPostWithProxy(string url, string parameters, string contentType, WebProxy proxy, Dictionary<string, string> headers = null,  int timeOutTime = 0)
         {
             try
-            {
+            {           
                 var parametersLog = parameters;
                 if (headers != null)
                 {
@@ -258,7 +255,7 @@ namespace ThirdPartyCore
                 return e.Message;
             }
         }
-
+        
         protected string HttpPostClient(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
         {
             var parametersLog = parameters;
@@ -338,7 +335,7 @@ namespace ThirdPartyCore
             {
                 handler.ClientCertificates.Add(certificate);
             }
-
+           
             //ignore Certificate
             handler.ServerCertificateCustomValidationCallback = delegate { return true; };
 
@@ -354,7 +351,7 @@ namespace ThirdPartyCore
                 }
                 var formData = new FormUrlEncodedContent(parameters);
                 var response = client.PostAsync(url, formData).Result;
-                var sb = response.Content.ReadAsStringAsync().Result;
+                var sb = response.Content.ReadAsStringAsync().Result;                
                 logger.LogInformation($"response: {sb}");
                 return sb;
             }
@@ -376,7 +373,7 @@ namespace ThirdPartyCore
             }
             catch (Exception e)
             {
-                logger.LogError(e, e.Message);
+                logger.LogError(e, e.Message);                
                 return e.Message;
             }
         }
@@ -384,7 +381,7 @@ namespace ThirdPartyCore
         protected string HttpGet(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
         {
             try
-            {
+            {            
                 InsertLog?.Invoke(url, parameters, "1");
                 WebRequest request = WebRequest.Create($"{url}?{parameters}");
                 if (!string.IsNullOrEmpty(proxyHost))

@@ -1,4 +1,5 @@
-﻿using ThirdPartyService.Extensions.Middlewares;
+﻿using Microsoft.AspNetCore.Builder;
+using ThirdPartyService.Extensions.Middlewares;
 
 namespace ThirdPartyService.Extensions
 {

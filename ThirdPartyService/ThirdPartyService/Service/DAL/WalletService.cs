@@ -1,9 +1,6 @@
-﻿using System.Data;
-
-using Dapper;
-
+﻿using Dapper;
+using System.Data;
 using ThirdPartyCore.Model.enums;
-
 using ThirdPartyService.Service.Library;
 
 namespace ThirdPartyService.Service.DAL
@@ -12,7 +9,7 @@ namespace ThirdPartyService.Service.DAL
     {
         private const int TypePosition = 2000;
         private readonly MySqlClient _mainDbClient;
-
+        
         public WalletService(IServiceProvider provider)
         {
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
@@ -24,11 +21,11 @@ namespace ThirdPartyService.Service.DAL
             var type = TypePosition + tpId;
             var p = new DynamicParameters(new
             {
-                CustId = custId,
-                SiteId = siteId,
-                UserName = userName,
-                Amount = amount,
-                Type = type,
+                CustId = custId, 
+                SiteId = siteId, 
+                UserName = userName, 
+                Amount = amount, 
+                Type = type, 
                 Memo = memo,
                 RefTransId = refTransId
             });
@@ -39,7 +36,7 @@ namespace ThirdPartyService.Service.DAL
             return afterAmount >= 0 ? 0 : -1;
         }
 
-        public int SetWithdrawalLimit(int custId, string userName, int siteId, decimal withdrawalLimit, int reasonId, string memo,
+        public int SetWithdrawalLimit(int custId, string userName, int siteId, decimal withdrawalLimit, int reasonId ,string memo,
             string refTransId, int createFrom, string creator, out decimal afterWithdrawalLimit, IDbTransaction trans)
         {
             var p = new DynamicParameters(new

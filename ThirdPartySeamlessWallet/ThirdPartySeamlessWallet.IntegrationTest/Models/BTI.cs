@@ -1,4 +1,8 @@
-﻿namespace ThirdPartySeamlessWallet.IntegrationTest.Models
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ThirdPartySeamlessWallet.IntegrationTest.Models
 {
     public class ReserveRecord
     {

@@ -1,10 +1,9 @@
-﻿using Newtonsoft.Json;
-
-using ThirdPartyCore;
-using ThirdPartyCore.Extensions;
+﻿using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model.TpBetRecordExtend;
+using Newtonsoft.Json;
 
 namespace ThirdParty.Nextspin
 {

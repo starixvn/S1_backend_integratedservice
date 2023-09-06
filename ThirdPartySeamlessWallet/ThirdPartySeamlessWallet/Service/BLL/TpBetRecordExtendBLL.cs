@@ -1,9 +1,13 @@
-﻿using System.Text;
-
-using Dapper;
-
+﻿using Dapper;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-
+using System;
+using System.Linq;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -67,7 +71,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         betRecordInfo.TicketKey,
                     });
                     parameters.AddDynamicParams(result.Data);
-
+                    
                     //減少全站維護時間，由程式判斷日期決定走哪支SP
                     var newDate = new DateTime(2023, 3, 9);
                     var spName = "Service_TpBetRecordExtend_Ins";
@@ -92,11 +96,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 {
                     msg.Append(innerException.Message);
                 }
-                _logger.LogError(ex, $"{msg} || {JsonConvert.SerializeObject(betRecordInfo)}");
+                _logger.LogError(ex, $"{msg} || { JsonConvert.SerializeObject(betRecordInfo)}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"{ex.Message} || {JsonConvert.SerializeObject(betRecordInfo)}");
+                _logger.LogError(ex, $"{ex.Message} || { JsonConvert.SerializeObject(betRecordInfo)}");
             }
         }
     }

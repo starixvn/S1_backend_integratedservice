@@ -1,14 +1,12 @@
 ﻿using System.Net.Http.Headers;
 using System.Text;
 using System.Web;
-
 using Microsoft.AspNetCore.Mvc;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.Library;
+using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Controllers

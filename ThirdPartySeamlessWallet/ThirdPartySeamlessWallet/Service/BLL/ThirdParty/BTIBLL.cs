@@ -1,7 +1,5 @@
-﻿using System.Text;
-
-using Newtonsoft.Json;
-
+﻿using Newtonsoft.Json;
+using System.Text;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -147,7 +145,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 request.amount *= tpCurrency.ExchangeRate;
 
                 var btiResult = await bettingService.Reserve_BTIAsync(tpCustInfo, request);
-
+               
                 if (btiResult.SPResult == -1)
                 {
                     return ReturnBTI(new Dictionary<string, string>
@@ -352,7 +350,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 { "error_message", "OK" },
                 { "balance", btiResult.AfterAmount.ToString() },
                 { "trx_id", btiResult.Trx_id.ToString()},
-            });
+            });       
         }
 
         private (string authToken, string sessionToken, string tpUserName) GetToken(string auth_token)

@@ -1,9 +1,7 @@
 ﻿using System.Net;
-
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -48,7 +46,7 @@ namespace ThirdParty.SPRIBE
         }
 
         #endregion
-
+        
         private const string ContentType = "application/json";
         private readonly WebProxy? _proxy;
 
@@ -67,7 +65,7 @@ namespace ThirdParty.SPRIBE
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var apiUrl = $"{inputs["ApiUrl"]}/Player/Register";
-
+            
             var signUp = new
             {
                 MerchantCode = inputs["Key"],
@@ -187,16 +185,16 @@ namespace ThirdParty.SPRIBE
                     Detail = detail,
                     TpCurrency = tpCurrency,
                 }
-            };
+            };  
         }
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerRng_SPRIBE_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
-
+            
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
-            {
-                GameID = wagerDetail.GetValueOrDefault("GameId")?.ToString(),
+            {             
+                GameID = wagerDetail.GetValueOrDefault("GameId")?.ToString(),              
                 Game = wagerDetail.GetValueOrDefault("GameName")?.ToString(),
                 RefNo = wagerDetail.GetValueOrDefault("RoundId")?.ToString(),
                 Title = tpGameType.TypeName,
@@ -208,7 +206,7 @@ namespace ThirdParty.SPRIBE
                 IP = string.Empty,
             };
         }
-
+        
         private DeviceType GetDeviceType(string device)
         {
             return device switch

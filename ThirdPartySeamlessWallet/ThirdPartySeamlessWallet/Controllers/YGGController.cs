@@ -1,10 +1,7 @@
 ﻿using System.Text;
 using System.Web;
-
 using Microsoft.AspNetCore.Mvc;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -374,7 +371,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         wagerData.balance = tpCustBalance.Balance;
                         statusCode = 1006;
                     }
-                    else if (result == -1)
+                    else if(result == -1)
                     {
                         var tpCustBalance = _tpCustInfoBll.GetBalance((int)_thisTp, wagerReq.playerid, _gameType);
                         wagerData.balance = tpCustBalance.Balance;

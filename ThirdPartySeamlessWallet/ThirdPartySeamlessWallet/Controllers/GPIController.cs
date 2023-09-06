@@ -1,9 +1,6 @@
 ﻿using System.Xml.Serialization;
-
 using Microsoft.AspNetCore.Mvc;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -495,7 +492,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Produces("application/xml")]
         public EditBetResp editResult([FromForm] EditBetReq editBetReq)
         {
-
+            
             string logName = $"{_thisTp}_editResult";
 
             EditBetResp editBetResp = new EditBetResp();

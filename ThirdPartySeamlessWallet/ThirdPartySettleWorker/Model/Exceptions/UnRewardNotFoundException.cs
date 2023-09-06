@@ -1,4 +1,8 @@
-﻿namespace ThirdPartySettleWorker.Model.Exceptions
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ThirdPartySettleWorker.Model.Exceptions
 {
     public class UnRewardNotFoundException : Exception
     {

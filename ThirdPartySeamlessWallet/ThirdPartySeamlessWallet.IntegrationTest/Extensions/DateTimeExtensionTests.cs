@@ -1,5 +1,9 @@
 ﻿using NUnit.Framework;
-
+using System;
+using Microsoft.Extensions.Logging;
+using NSubstitute;
+using ThirdPartySeamlessWallet.Service.Model;
+using System.Linq;
 using ThirdPartySeamlessWallet.Extensions;
 
 namespace ThirdPartySeamlessWallet.IntegrationTest.Extensions

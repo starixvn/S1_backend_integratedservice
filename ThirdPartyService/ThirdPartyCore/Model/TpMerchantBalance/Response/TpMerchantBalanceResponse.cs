@@ -20,6 +20,6 @@ namespace ThirdPartyCore.Model.TpMerchantBalance.Response
         /// 商戶名稱
         /// </summary>
         [JsonProperty("adminname")]
-        public string MerchantName { get; set; }
+        public string MerchantName { get; set; }      
     }
 }

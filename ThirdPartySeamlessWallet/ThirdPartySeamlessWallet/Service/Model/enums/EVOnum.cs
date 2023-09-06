@@ -1,4 +1,6 @@
-﻿namespace ThirdPartySeamlessWallet.Service.Model.enums
+﻿using System.ComponentModel;
+
+namespace ThirdPartySeamlessWallet.Service.Model.enums
 {
 
     public enum EVOStatus

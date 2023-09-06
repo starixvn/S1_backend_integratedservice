@@ -1,11 +1,8 @@
 ﻿using Newtonsoft.Json;
-
 using Serilog.Context;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
 using ThirdPartySettleWorker.Model.Interfaces;
 
 namespace ThirdPartySettleWorker.Workers
@@ -20,7 +17,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly ILogger<NetentWorker> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly string _tpName;
-
+     
 
         public NetentWorker(IServiceProvider provider)
         {

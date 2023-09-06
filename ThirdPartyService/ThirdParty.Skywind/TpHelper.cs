@@ -1,13 +1,17 @@
-﻿using System.Text;
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
-
-using Newtonsoft.Json;
-
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.Skywind
@@ -60,11 +64,11 @@ namespace ThirdParty.Skywind
 
             #region SetCustGotoGame
             var tpGameType = (int)TpGameType.Skywind_RNG;
-            if (gameId == "0")
+            if(gameId == "0")
             {
                 tpGameType = (int)TpGameType.Skywind_LiveCasino;
             }
-            else if (gameId == "sw_or" || gameId == "sw_fj" || gameId == "sw_cashdaha")
+            else if(gameId == "sw_or" || gameId == "sw_fj" || gameId == "sw_cashdaha")
             {
                 tpGameType = (int)TpGameType.Skywind_Fish;
             }
@@ -115,7 +119,7 @@ namespace ThirdParty.Skywind
                     }
                 }
                 return oApiResult;
-            }
+            }  
         }
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
@@ -237,7 +241,7 @@ namespace ThirdParty.Skywind
         {
             if (device == "web")
                 return DeviceType.Desktop;
-            else if (device == "mobile")
+            else if(device == "mobile")
                 return DeviceType.Mobile;
             else
                 return DeviceType.None;

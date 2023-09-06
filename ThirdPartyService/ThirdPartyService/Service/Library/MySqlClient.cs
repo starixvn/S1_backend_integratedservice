@@ -1,12 +1,8 @@
 ﻿using System.Data;
 using System.Diagnostics;
-
 using Dapper;
-
 using MySql.Data.MySqlClient;
-
 using Serilog.Context;
-
 using ThirdPartyCore.Model.enums;
 
 namespace ThirdPartyService.Service.Library
@@ -40,7 +36,7 @@ namespace ThirdPartyService.Service.Library
                 using var connection = new MySqlConnection(_connectionString);
 
                 var command = new CommandDefinition(name,
-                    parameters: null,
+                    parameters:null, 
                     commandTimeout: null,
                     commandType: CommandType.Text,
                     flags: CommandFlags.NoCache);
@@ -116,8 +112,8 @@ namespace ThirdPartyService.Service.Library
             {
                 var connectionString = $"{_connectionString}ProcedureCacheSize=0;";
                 using var connection = new MySqlConnection(connectionString);
-
-                var command = new CommandDefinition(name, parameters,
+                
+                var command = new CommandDefinition(name, parameters, 
                     commandTimeout: commandTimeout,
                     commandType: CommandType.StoredProcedure,
                     flags: CommandFlags.NoCache);
@@ -178,7 +174,7 @@ namespace ThirdPartyService.Service.Library
                 _logger.LogError(e, name);
                 throw;
             }
-
+            
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;

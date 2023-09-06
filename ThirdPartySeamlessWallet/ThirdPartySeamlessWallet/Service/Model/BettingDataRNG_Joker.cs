@@ -1,4 +1,11 @@
-﻿namespace ThirdPartySeamlessWallet.Service.Model
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
+using ThirdPartySeamlessWallet.Service.Model.enums;
+
+namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class BettingDataRNG_Joker
     {

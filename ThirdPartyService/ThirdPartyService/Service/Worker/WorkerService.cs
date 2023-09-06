@@ -1,10 +1,7 @@
 ﻿using Newtonsoft.Json;
-
 using Serilog.Context;
-
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-
 using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
@@ -21,17 +18,17 @@ namespace ThirdPartyService.Service.Worker
         private readonly ThirdPartyBLL _thirdPartyBll;
         private readonly Random _random;
 
-        public WorkerService(ILogger<WorkerService> logger, TpTransferInfo tpTransferInfo, ThirdPartyBLL thirdPartyBll)
+        public WorkerService(ILogger<WorkerService> logger,TpTransferInfo tpTransferInfo, ThirdPartyBLL thirdPartyBll)
         {
             _logger = logger;
             _tpTransferInfo = tpTransferInfo;
             _thirdPartyBll = thirdPartyBll;
             _random = new Random();
         }
-
+        
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
+             _timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
             _bonusTimer = new Timer(DoTaskForBonusTransfer, null, TimeSpan.Zero, TimeSpan.Zero);
             _remainingBonusTimer = new Timer(DoTaskRemainingBonusAmountTransfer, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
@@ -48,7 +45,7 @@ namespace ThirdPartyService.Service.Worker
             {
                 var tpTransferList = _tpTransferInfo.TpTransferPendingGet(_random.Next(950, 1000));// 避免 ORM 或 db execution plan cache
                 _logger.LogInformation($"TpTransferInfo Pending Data Count：{tpTransferList?.Count()}");
-
+                
                 if (tpTransferList != null)
                 {
                     foreach (var tpTransfer in tpTransferList)
@@ -86,9 +83,9 @@ namespace ThirdPartyService.Service.Worker
             {
                 var tpTransferList = _tpTransferInfo.TpBonusTransferPendingGet(_random.Next(950, 1000));
                 _logger.LogInformation($"PendingBonusList Pending Data Count：{tpTransferList?.Count()}");
-
+                
                 var statusList = new List<int> { (int)TransferStatus.Pending, (int)TransferStatus.PendingD };
-
+                
                 if (tpTransferList != null)
                 {
                     foreach (var tpTransfer in tpTransferList)
@@ -132,7 +129,7 @@ namespace ThirdPartyService.Service.Worker
             {
                 var tpTransferList = _tpTransferInfo.TpRemainingTransferBonusGet(_random.Next(950, 1000));
                 _logger.LogInformation($"RemainingTransferBonusPending Pending Data Count：{tpTransferList?.Count()}");
-
+                
                 foreach (var tpTransfer in tpTransferList)
                 {
                     Task.Run(() =>
@@ -152,8 +149,7 @@ namespace ThirdPartyService.Service.Worker
                         _thirdPartyBll.BonusCancelTransfer(tpBonusCancelTransfer);
                     });
                 }
-            }
-            catch (Exception ex)
+            }catch (Exception ex)
             {
                 _logger.LogError(ex, MethodExtension.GetCurrentMethod());
             }

@@ -1,10 +1,9 @@
-﻿using System.Reflection;
-
+﻿using Dapper;
 using MySql.Data.MySqlClient;
-
 using Newtonsoft.Json;
-
 using Serilog.Context;
+using System.Data;
+using System.Reflection;
 
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -41,7 +40,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 return 0;
             }
-
+            
             //用GameType取回PromoCategoryId，在新增到TpSeamlessBonus
             var tpGameType = _mainDbClient.QueryFirst<TpGameType>("Service_TpGameType_GetByType", new { GameType = gameType });
             var tpSeamlessBonus = new TpSeamlessBonus

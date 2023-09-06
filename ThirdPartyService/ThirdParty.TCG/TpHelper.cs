@@ -1,11 +1,13 @@
-﻿using System.Security.Cryptography;
+﻿using System;
+using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Text;
 using System.Web;
-
 using ThirdPartyCore;
-using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Extensions;
+using System.IO;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
@@ -140,7 +142,7 @@ namespace ThirdParty.TCG
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
             var gameType = (GameType)getBetDetail.TpGameTypeOption.Type;
-            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_TCG_Detail_Get", new { getBetDetail.TransId, GameType = (int)gameType }, DataBase.Wager);
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_TCG_Detail_Get", new { getBetDetail.TransId , GameType =(int)gameType }, DataBase.Wager);
             var detail = ToJson(wagerDetail);
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
@@ -151,18 +153,18 @@ namespace ThirdParty.TCG
                     TpCurrency = tpCurrency,
                     RefTransId = wagerDetail.GetValueOrDefault("orderNum")?.ToString(),
                     TpUserName = wagerDetail.GetValueOrDefault("username")?.ToString(),
-                    UTCBetTime = gameType == GameType.SEALottery
+                    UTCBetTime = gameType == GameType.SEALottery 
                     ? ToUTC(wagerDetail.GetValueOrDefault("betTime"))
                     : ToUTC(wagerDetail.GetValueOrDefault("bettingTime")),
                     UTCSettledTime = gameType == GameType.SEALottery
                     ? ToUTC(wagerDetail.GetValueOrDefault("settlementTime"))
                     : ToUTC(wagerDetail.GetValueOrDefault("drawTime")),
-                    Stake = gameType == GameType.SEALottery
-                    ? (decimal)wagerDetail.GetValueOrDefault("betAmount") * tpCurrency.ExchangeRate
+                    Stake = gameType == GameType.SEALottery 
+                    ? (decimal)wagerDetail.GetValueOrDefault("betAmount") * tpCurrency.ExchangeRate 
                     : (decimal)wagerDetail.GetValueOrDefault("actualBetAmount") * tpCurrency.ExchangeRate,
                     WinlostAmount = gameType == GameType.SEALottery
                     ? (decimal)wagerDetail.GetValueOrDefault("netPNL") * tpCurrency.ExchangeRate
-                    : ((decimal)wagerDetail.GetValueOrDefault("winAmount") - (decimal)wagerDetail.GetValueOrDefault("actualBetAmount")) * tpCurrency.ExchangeRate,
+                    : ((decimal)wagerDetail.GetValueOrDefault("winAmount") - (decimal)wagerDetail.GetValueOrDefault("actualBetAmount")) * tpCurrency.ExchangeRate,        
                 },
                 _ => new BaseDetail(getBetDetail.TpGameTypeOption)
                 {
@@ -175,7 +177,7 @@ namespace ThirdParty.TCG
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_TCG_Detail_Get", new { betRecordInfo.TransId, GameType = tpGameType.Type }, DataBase.Wager);
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_TCG_Detail_Get", new { betRecordInfo.TransId, GameType = tpGameType.Type }, DataBase.Wager);          
             if (detail == null)
             {
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
@@ -252,7 +254,7 @@ namespace ThirdParty.TCG
                 view = "lobby";
 
                 var gameType = GetGameType(tpCustInfo.TpCurrencyId);
-                var gameId = inputs.TryGetValue("gameId", out string output) ? output : "";
+                var gameId = inputs.TryGetValue("gameId", out string output) ? output :  "";
                 _launchGameHandler[gameType].Invoke(appType, gameId);
             }
 
@@ -331,7 +333,7 @@ namespace ThirdParty.TCG
             var resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
             return Convert.ToBase64String(resultArray, 0, resultArray.Length);
         }
-
+        
         /// <summary>
         /// DES解密
         /// </summary>
@@ -370,6 +372,6 @@ namespace ThirdParty.TCG
             }
 
             return new DateTimeOffset(DateTime.Parse(timeString), new TimeSpan(8, 0, 0)).UtcDateTime;
-        }
+        } 
     }
 }

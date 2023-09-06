@@ -1,4 +1,6 @@
-﻿using ThirdPartyCore.Model;
+﻿using System;
+using System.Collections.Generic;
+using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 
 namespace ThirdPartyCore

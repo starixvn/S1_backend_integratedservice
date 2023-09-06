@@ -1,18 +1,20 @@
-﻿using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
+﻿using System;
+using Microsoft.Extensions.DependencyInjection;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
-    public class SabaBLL : IThirdPartyBLL
+    public class SabaBLL: IThirdPartyBLL
     {
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly BettingService _bettingService;
         private readonly TpCustInfoService _tpCustInfoService;
         public Tp ThirdParty { get; set; }
         public GameType GameType { get; set; }
-
+        
         public SabaBLL(IServiceProvider provider)
         {
             ThirdParty = Tp.Saba;
@@ -25,7 +27,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             return _tpCustInfoService.UpdateOnline(custId, isOnline, token, ip);
         }
-
+        
         public TpCustInfo GetTpInfo(string tpUserName)
         {
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, tpUserName);

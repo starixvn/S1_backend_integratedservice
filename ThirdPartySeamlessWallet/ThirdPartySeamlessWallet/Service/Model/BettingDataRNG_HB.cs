@@ -1,4 +1,8 @@
-﻿namespace ThirdPartySeamlessWallet.Service.Model
+﻿using System;
+using System.Collections.Generic;
+
+
+namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class BettingDataRNG_HB
     {
@@ -123,7 +127,7 @@
         public Auth auth { get; set; }
         public Playerdetailrequest playerdetailrequest { get; set; }
     }
-
+    
     public class Basegame
     {
         public string brandgameid { get; set; }
@@ -149,7 +153,7 @@
     {
         public playerdetailresponse playerdetailresponse { get; set; }
     }
-
+    
     public class HBStatus
     {
         public bool success { get; set; }
@@ -165,10 +169,10 @@
         public decimal balance { get; set; }
         public string currencycode { get; set; }
     }
-
+    
     #endregion
 
-
+    
     public class Fundinfo
     {
         public int gamestatemode { get; set; }
@@ -230,7 +234,7 @@
         public Auth auth { get; set; }
         public dynamic fundtransferrequest { get; set; }
     }
-
+    
     public class Status
     {
         public bool success { get; set; }

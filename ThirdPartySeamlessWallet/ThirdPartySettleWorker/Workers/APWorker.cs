@@ -1,12 +1,9 @@
 using Newtonsoft.Json;
-
 using Serilog.Context;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -112,7 +109,7 @@ namespace ThirdPartySettleWorker.Workers
                             TicketStatus = winLostAmount > 0 ? TicketStatus.Win : winLostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost,
                             GameID = gameId,
                         };
-                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Slots);
+                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo,  TpCategory.Slots);
 
                         if (result == 1)
                         {

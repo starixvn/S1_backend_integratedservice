@@ -1,4 +1,6 @@
-﻿namespace ThirdPartySeamlessWallet.Service.Model
+﻿using ThirdPartySeamlessWallet.Service.Model.enums;
+
+namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class BettingDataRNG_MG
     {
@@ -49,7 +51,7 @@
     {
         public string playerId { get; set; }
     }
-
+    
     public class MGGetBalanceResponse
     {
         public string currency { get; set; }
@@ -82,7 +84,7 @@
         public decimal balance { get; set; }
         public string currency { get; set; }
     }
-
+    
     public class MGRollbackeRequest
     {
         public string playerId { get; set; }
@@ -117,7 +119,7 @@
         public int TicketStatus { get; set; }
         public int SettleFlag { get; set; }
     }
-
+    
     public class BettransLC_MG : BettransRng_MG
     {
         public long trx_id { get; set; }
@@ -131,7 +133,7 @@
 
         public decimal AfterAmount { get; set; }
     }
-
+    
     public class MGPayoutResult
     {
         public int Result { get; set; }
@@ -140,7 +142,7 @@
 
         public decimal AfterAmount { get; set; }
     }
-
+    
     public class MGCancelResult
     {
         public int Result { get; set; }

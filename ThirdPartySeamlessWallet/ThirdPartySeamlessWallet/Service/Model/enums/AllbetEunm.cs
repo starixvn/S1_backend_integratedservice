@@ -19,7 +19,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         InvalidParameters = 40000,
         SystemError = 50000
     }
-
+    
     public enum AllbetTransferType
     {
         Bet = 10,
