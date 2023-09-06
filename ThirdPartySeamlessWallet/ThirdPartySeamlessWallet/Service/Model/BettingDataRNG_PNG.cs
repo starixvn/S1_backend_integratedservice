@@ -29,10 +29,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string AccessToken { get; set; }
 
         /// <summary>
-        /// 游戏标识符。请参阅游戏、货币、国家/地区和语言附录。
+        /// 遊戲標識符。請參閱遊戲詳情表，與登入遊戲的 GID 並不相同
         /// </summary>
         [XmlElement(ElementName = "gameId")]
-        public int GameId { get; set; }
+        public string GameId { get; set; }
 
         /// <summary>
         /// 启动游戏所在的通道。
@@ -122,7 +122,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string Currency { get; set; }
 
         /// <summary>
-        /// 游戏标识符。请参阅游戏详情表
+        /// 遊戲標識符。請參閱遊戲詳情表，與登入遊戲的 GID 並不相同
         /// </summary>
         [XmlElement(ElementName = "gameId")]
         public int GameId { get; set; }
@@ -169,10 +169,16 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int Id { get; set; }
 
         /// <summary>
-        /// 累积大奖贡献金额
+        /// 累积大奖贡献金额，此欄位只有在 Reserve/CancelReserve(投注、取消投注)時，才會出現的欄位
         /// </summary>
         [XmlElement(ElementName = "loss")]
         public decimal Loss { get; set; }
+
+        /// <summary>
+        /// 贏得的累積大獎金額，此欄位只有在 Release(派彩)時，才會出現的欄位
+        /// </summary>
+        [XmlElement(ElementName = "win")]
+        public decimal Win { get; set; }
     }
 
     [XmlRoot(ElementName = "jackpots")]
@@ -219,7 +225,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string Currency { get; set; }
 
         /// <summary>
-        /// 游戏标识符。请参阅游戏详情表。
+        /// 遊戲標識符。請參閱遊戲詳情表，與登入遊戲的 GID 並不相同
         /// </summary>
         [XmlElement(ElementName = "gameId")]
         public string GameId { get; set; }
@@ -342,7 +348,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string Currency { get; set; }
 
         /// <summary>
-        /// 游戏标识符。请参阅游戏详情表。
+        /// 遊戲標識符。請參閱遊戲詳情表，與登入遊戲的 GID 並不相同
         /// </summary>
         [XmlElement(ElementName = "gameId")]
         public string GameId { get; set; }
@@ -419,6 +425,191 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// </summary>
         [XmlElement(ElementName = "externalTransactionId")]
         public string ExternalTransactionId { get; set; }
+    }
+
+    #endregion
+
+    #region Release Model
+
+    [XmlRoot(ElementName = "release")]
+    public class PNG_ReleaseRequest
+    {
+        /// <summary>
+        /// 唯一的客户 ID。区分大小写。
+        /// </summary>
+        [XmlElement(ElementName = "externalId")]
+        public string TpUserName { get; set; }
+
+        /// <summary>
+        /// 分配给提供商/产品的标识符。
+        /// </summary>
+        [XmlElement(ElementName = "productId")]
+        public string ProductId { get; set; }
+
+        /// <summary>
+        /// 唯一的交易 ID。
+        /// </summary>
+        [XmlElement(ElementName = "transactionId")]
+        public string TransactionId { get; set; }
+
+        /// <summary>
+        /// 转帐金额。
+        /// </summary>
+        [XmlElement(ElementName = "real")]
+        public decimal Real { get; set; }
+
+        /// <summary>
+        /// 3个字符的货币代码
+        /// </summary>
+        [XmlElement(ElementName = "currency")]
+        public string Currency { get; set; }
+
+        /// <summary>
+        /// 由 Play'n GO 生成的 游戏会话标识符。
+        /// </summary>
+        [XmlElement(ElementName = "gameSessionId")]
+        public string GameSessionId { get; set; }
+
+        /// <summary>
+        /// 0 = 游戏会话仍打开。 1 = 游戏会话已关闭。 请参阅第 0 节中的会话状态。
+        /// </summary>
+        [XmlElement(ElementName = "state")]
+        public int State { get; set; }
+
+        /// <summary>
+        /// 可选游戏会话的投注金额，不包括来自免费游戏的任何金额。
+        /// </summary>
+        [XmlElement(ElementName = "totalLoss")]
+        public decimal TotalLoss { get; set; }
+
+        /// <summary>
+        /// 可选游戏会话获得的奖金金额，包括来自免费游戏的任何金额。
+        /// </summary>
+        [XmlElement(ElementName = "totalGain")]
+        public decimal TotalGain { get; set; }
+
+        /// <summary>
+        /// 可选游戏会话中进行的总回合数。
+        /// </summary>
+        [XmlElement(ElementName = "numRounds")]
+        public int NumRounds { get; set; }
+
+        /// <summary>
+        /// OPEN 0 游戏会话仍打开。CLOSED 1 游戏会话已关闭。
+        /// </summary>
+        [XmlElement(ElementName = "type")]
+        public byte Type { get; set; }
+
+        /// <summary>
+        /// 遊戲標識符。請參閱遊戲詳情表，與登入遊戲的 GID 並不相同
+        /// </summary>
+        [XmlElement(ElementName = "gameId")]
+        public string GameId { get; set; }
+
+        /// <summary>
+        /// 应在每次调用时验证的私人访问令牌。
+        /// </summary>
+        [XmlElement(ElementName = "accessToken")]
+        public string AccessToken { get; set; }
+
+        /// <summary>
+        /// 已玩回合的 ID。 注意：如果在关闭会话时发送释 放， 则 roundID 设置为 0。
+        /// </summary>
+        [XmlElement(ElementName = "roundId")]
+        public long RoundId { get; set; }
+
+        /// <summary>
+        /// 从累积大奖赢得的金额。
+        /// </summary>
+        [XmlElement(ElementName = "jackpotGain")]
+        public decimal JackpotGain { get; set; }
+
+        /// <summary>
+        /// 贡献给累积大奖的金额。
+        /// </summary>
+        [XmlElement(ElementName = "jackpotLoss")]
+        public decimal JackpotLoss { get; set; }
+
+        /// <summary>
+        /// 累积大奖被赢走后重设的金额。
+        /// </summary>
+        [XmlElement(ElementName = "jackpotGainSeed")]
+        public decimal JackpotGainSeed { get; set; }
+
+        /// <summary>
+        /// 被赢走并重设的累积大奖 ID。
+        /// </summary>
+        [XmlElement(ElementName = "jackpotGainId")]
+        public int JackpotGainId { get; set; }
+
+        /// <summary>
+        /// 可选 免费游戏参考号 ID（在免费游戏赔付 的情况下发送，即 type = Promotional）。
+        /// </summary>
+        [XmlElement(ElementName = "freegameExternalId")]
+        public string FreeGameExternalId { get; set; }
+
+        /// <summary>
+        /// 可选来自免费游戏设置的投注额倍数（仅在最后一次免费游戏赔付时，即finished=1）。
+        /// </summary>
+        [XmlElement(ElementName = "turnover")]
+        public int Turnover { get; set; }
+
+        /// <summary>
+        /// 可选 表示释放是否为免费游戏中的最后一个 回合（finished=1 表示最后一个免费游 戏回合）。
+        /// </summary>
+        [XmlElement(ElementName = "freegameFinished")]
+        public byte FreeGameFinished { get; set; }
+
+        /// <summary>
+        /// 可选 在免费游戏中赢得的总金额。此金额 也包含在 totalGain 属性中。
+        /// </summary>
+        [XmlElement(ElementName = "freegameGain")]
+        public decimal FreeGameGain { get; set; }
+
+        /// <summary>
+        /// 可选 在免费游戏中输掉的总金额。此金额 不包含在 totalLoss 属性中。
+        /// </summary>
+        [XmlElement(ElementName = "freegameLoss")]
+        public decimal FreeGameLoss { get; set; }
+
+        /// <summary>
+        /// 启动游戏所在的通道。 1 = 桌面 2 = 移动 3 = 迷你游戏 5 = 嵌入本地应用程序
+        /// </summary>
+        [XmlElement(ElementName = "channel")]
+        public int Channel { get; set; }
+
+        /// <summary>
+        /// 免费游戏期间的总收益（如果是免费游戏回合）。
+        /// </summary>
+        [XmlElement(ElementName = "freegameTotalGain")]
+        public decimal FreeGameTotalGain { get; set; }
+
+        /// <summary>
+        /// 可选标记包含关于累积大奖的信息。
+        /// </summary>
+        [XmlElement(ElementName = "jackpots")]
+        public PNGJackpots PngJackpots { get; set; }
+    }
+
+    public class PNG_ReleaseResponse : PNG_BaseResponse
+    {
+        #region Constructor
+
+        public PNG_ReleaseResponse() { }
+
+        public PNG_ReleaseResponse(int statusCode, string statusMessage)
+        {
+            StatusCode = statusCode;
+            StatusMessage = statusMessage;
+        }
+
+        #endregion
+
+        [XmlElement(ElementName = "externalTransactionId")]
+        public string ExternalTransactionId { get; set; }
+
+        [XmlElement(ElementName = "real")]
+        public decimal AfterAmount { get; set; }
     }
 
     #endregion
@@ -506,6 +697,24 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// 服务因任何原因不可用但能够响应，类似于 MaxConcurrentCalls（Service UnAvailable 的特殊状况）。
         /// </summary>
         ServiceUnavailable = 12
+    }
+
+    public enum PNG_TicketType
+    {
+        /// <summary>
+        /// reserve
+        /// </summary>
+        Bet = 1,
+
+        /// <summary>
+        /// CancelReserve
+        /// </summary>
+        CancelBet = 2,
+
+        /// <summary>
+        /// Release
+        /// </summary>
+        Payout = 4
     }
 
     #endregion

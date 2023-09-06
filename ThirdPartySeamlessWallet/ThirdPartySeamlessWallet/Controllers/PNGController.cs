@@ -97,5 +97,24 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             return Content(xmlString, "application/xml");
         }
+
+        /// <summary>
+        /// 派彩結果
+        /// </summary>
+        /// <returns></returns>
+        [Route("[controller]/release")]
+        [Produces("application/xml")]
+        [HttpPost]
+        public async Task<dynamic> Release()
+        {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var body = await reader.ReadToEndAsync();
+
+            var releaseRequest = _tools.XMLDeserialize<PNG_ReleaseRequest>(body);
+            var releaseResponse = await _pngBll.Release(releaseRequest);
+            var xmlString = XmlHelper.SerializeToXmlString(releaseResponse);
+
+            return Content(xmlString, "application/xml");
+        }
     }
 }

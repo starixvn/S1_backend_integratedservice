@@ -21,6 +21,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         Task<PNG_ReserveResponse> Reserve(PNG_ReserveRequest reserveRequest);
 
         Task<PNG_CancelReserveResponse> CancelReserve(PNG_CancelReserveRequest cancelReserveRequest);
+
+        Task<PNG_ReleaseResponse> Release(PNG_ReleaseRequest releaseRequest);
     }
 
     public class PNGBLL : IPNGBLL
@@ -137,6 +139,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 if (!checkResult.IsVaild)
                     return new PNG_ReserveResponse(checkResult.response.StatusCode, checkResult.response.StatusMessage);
 
+                var betTransData = _bettingService.GetBettingDataRng_PNG(reserveRequest.TransactionId);
+                ValidateBetTrans(PNG_TicketType.Bet, betTransData);
+
                 bettingData = new BettingDataRNG_PNG()
                 {
                     TpUserName = reserveRequest.TpUserName,
@@ -182,6 +187,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 if (!checkResult.IsVaild)
                     return new PNG_CancelReserveResponse(checkResult.response.StatusCode, checkResult.response.StatusMessage);
 
+                // check BetTrans
+                var betTransData = _bettingService.GetBettingDataRng_PNG(cancelReserveRequest.TransactionId);
+                ValidateBetTrans(PNG_TicketType.CancelBet, betTransData);
+
                 bettingData = new BettingDataRNG_PNG()
                 {
                     TpUserName = cancelReserveRequest.TpUserName,
@@ -214,6 +223,56 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 _logger.LogError(ex, $"CancelReserve TpUserName:{cancelReserveRequest.TpUserName} bettingData:{JsonConvert.SerializeObject(bettingData)}");
                 return new PNG_CancelReserveResponse((int)PNG_StatsuCodeEnum.Internal, ex.ErrorMessage);
+            }
+        }
+
+        public async Task<PNG_ReleaseResponse> Release(PNG_ReleaseRequest releaseRequest)
+        {
+            var bettingData = new BettingDataRNG_PNG();
+            try
+            {
+                var checkResult = CheckTpUserWithAccessToken(releaseRequest.TpUserName, releaseRequest.AccessToken);
+                if (!checkResult.IsVaild)
+                    return new PNG_ReleaseResponse(checkResult.response.StatusCode, checkResult.response.StatusMessage);
+
+                // check BetTrans
+                var betTransData = _bettingService.GetBettingDataRng_PNG(releaseRequest.TransactionId);
+                ValidateBetTrans(PNG_TicketType.Payout, betTransData);
+
+                bettingData = new BettingDataRNG_PNG()
+                {
+                    TpUserName = releaseRequest.TpUserName,
+                    ProductId = releaseRequest.ProductId,
+                    TransactionId = releaseRequest.TransactionId,
+                    Amount = (releaseRequest.TotalGain - releaseRequest.TotalLoss),
+                    CurrencyIsoCode = releaseRequest.Currency,
+                    GameId = releaseRequest.GameId,
+                    GameSessionId = releaseRequest.GameSessionId ?? string.Empty,
+                    RoundId = releaseRequest.RoundId,
+                    Channel = releaseRequest.Channel,
+                    FreeGameExternalId = releaseRequest.FreeGameExternalId,
+                    ActualAmount = (releaseRequest.TotalGain - releaseRequest.TotalLoss),
+                    JackpotWin = GetJackpotsWinAmount(releaseRequest.PngJackpots),
+                    JackpotLoss = GetJackpotsLossAmount(releaseRequest.PngJackpots),
+                    TicketType = (int)BettransType.Payout
+                };
+
+                var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)TpId, releaseRequest.TpUserName);
+                var payOutResult = await _settledService.PayoutRNG_PNG(tpCustInfo, bettingData);
+
+                return new PNG_ReleaseResponse()
+                {
+                    StatusCode = (int)PNG_StatsuCodeEnum.Ok,
+                    StatusMessage = "Release Success",
+                    AfterAmount = payOutResult.AfterAmount,
+                    ExternalTransactionId = payOutResult.ExternalTransactionId
+                };
+
+            }
+            catch (PNGException ex)
+            {
+                _logger.LogError(ex, $"Release TpUserName:{releaseRequest.TpUserName} bettingData:{JsonConvert.SerializeObject(bettingData)}");
+                return new PNG_ReleaseResponse((int)PNG_StatsuCodeEnum.Internal, ex.ErrorMessage);
             }
         }
 
@@ -277,6 +336,55 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 : pngJackpots.PNGJackpot.Sum(r => r.Loss);
         }
 
+        public decimal GetJackpotsWinAmount(PNGJackpots pngJackpots)
+        {
+            if (pngJackpots == null) return 0;
+
+            return !pngJackpots.PNGJackpot.Any()
+                ? 0
+                : pngJackpots.PNGJackpot.Sum(r => r.Win);
+        }
+
+        public void ValidateBetTrans(PNG_TicketType ticketType, IEnumerable<BettingDataRNG_PNG> bettingData)
+        {
+
+            switch (ticketType)
+            {
+                case PNG_TicketType.Bet:
+
+                    // 檢查 BetTrans 是否有投注紀錄了，避免重複投注
+                    if (bettingData.Any(r => r.TicketType == (int)PNG_TicketType.Bet))
+                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "TransactionId Is Duplicated");
+
+                    break;
+
+                case PNG_TicketType.CancelBet:
+
+                    // 檢查 BetTrans 是否有這筆投注紀錄
+                    if (!bettingData.Any(r => r.TicketType == (int)PNG_TicketType.Bet))
+                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "TransactionId Is NotFound");
+
+                    // 檢查 BetTrans 是否已經有取消紀錄
+                    if (bettingData.Any(r => r.TicketType == (int)PNG_TicketType.CancelBet))
+                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "TransactionId Duplicated Cancel");
+
+                    break;
+
+                case PNG_TicketType.Payout:
+
+                    // 檢查 BetTrans 是否已存在取消投注紀錄
+                    if (bettingData.Any(r => r.TicketType == (int)PNG_TicketType.CancelBet))
+                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "TransactionId Is Cancel");
+
+                    // 檢查 BetTrans 是否已經有派彩過的紀錄
+                    if (bettingData.Any(r => r.TicketType == (int)PNG_TicketType.Payout))
+                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "Duplicated Release");
+
+                    break;
+                default:
+                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "PNG TicketType NotImplemented");
+            }
+        }
 
         #endregion
     }
