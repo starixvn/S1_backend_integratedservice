@@ -1,4 +1,5 @@
 ﻿using System.Net;
+
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model

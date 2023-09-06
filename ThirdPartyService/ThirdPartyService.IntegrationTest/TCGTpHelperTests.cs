@@ -1,12 +1,13 @@
-﻿using NUnit.Framework;
-using System.Collections.Generic;
-using ThirdPartyCore.Model;
+﻿using System.Web;
+
 using FluentAssertions;
-using ThirdPartyCore.Model.enums;
+
 using Newtonsoft.Json;
-using System.Web;
-using System.Diagnostics;
-using System;
+
+using NUnit.Framework;
+
+using ThirdPartyCore.Model;
+using ThirdPartyCore.Model.enums;
 
 namespace ThirdParty.TCG.Tests
 {

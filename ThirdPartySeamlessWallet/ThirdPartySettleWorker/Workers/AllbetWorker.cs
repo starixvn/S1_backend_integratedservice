@@ -1,16 +1,12 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+
 using Serilog.Context;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -42,7 +38,7 @@ namespace ThirdPartySettleWorker.Workers
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
-        {  
+        {
             timerLive = new Timer(DoSettle, GameType.Allbet_LiveCasino, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
@@ -62,7 +58,7 @@ namespace ThirdPartySettleWorker.Workers
             var tpCategory = TpCategory.LiveCasino;
             var logName = $"Settle_AllBet";
             var getSP = $"Service_TpWagerAllBet_Settle_Get_V2";
-            var setSP = $"Service_TpWagerAllBet_Settle_Set_V2";       
+            var setSP = $"Service_TpWagerAllBet_Settle_Set_V2";
             var checkSP = $"Service_BettransLC_Allbet_Settle_Get";
             var dueTimeSpan = TimeSpan.FromSeconds(30);
 
@@ -123,7 +119,7 @@ namespace ThirdPartySettleWorker.Workers
                                 _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gameType, transId, true, DataBase.Wager);
                             });
                         }
-                     }
+                    }
                     catch (Exception ex1)
                     {
                         Task.Run(() =>
@@ -150,7 +146,7 @@ namespace ThirdPartySettleWorker.Workers
     }
 
     public class CheckData
-    { 
+    {
         public decimal SettleAmount { get; set; }
         public decimal Stake { get; set; }
     }

@@ -1,7 +1,11 @@
 ﻿using System.Data;
+
 using Dapper;
+
 using MySql.Data.MySqlClient;
+
 using Newtonsoft.Json;
+
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -137,7 +141,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         tpCustInfo: tpCustInfo,
                         amount: Math.Abs(bet.Amount) * -1,
                         tpId: (int)tpId,
-                        tpTransId: gameType == GameType.SPRIBE_RNG ? bet.RoundId : bet.BetId ,
+                        tpTransId: gameType == GameType.SPRIBE_RNG ? bet.RoundId : bet.BetId,
                         gameType: (int)gameType,
                         refId: bet.TransactionId,
                         betData: null,
@@ -162,9 +166,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                         if (gameType != GameType.SPRIBE_RNG)
                         {
-                            _tpUnsettleService.InsertTpUnsettle(tpId, gameType, bet.BetId , trans);
+                            _tpUnsettleService.InsertTpUnsettle(tpId, gameType, bet.BetId, trans);
                         }
-                        
+
                         var betResult = new BetResultIM
                         {
                             Code = (int)IMResultCode.Success,
@@ -413,14 +417,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 TransactionId = data.TransactionId
             };
             resp = errorResponse;
-            
+
             var partitionTime = data.TimeStamp;
             var betData = _partitionService.Query<SettleTransactions_IMSlot>(partitionTime, "Service_BettransRng_SPRIBE_Round_Get", new { RoundId = transId }, 30).FirstOrDefault();
             if (betData is null)
             {
                 return -2;
             }
-            
+
             if (tpCurrency.ExchangeRate > 0)
             {
                 betData.Amount *= tpCurrency.ExchangeRate;
@@ -445,16 +449,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     Amount = betData.Amount,
                     TimeStamp = data.TimeStamp.ToUniversalTime(),
                     RoundId = data.RefTransactionId,
-                    RefTransactionId = JsonConvert.SerializeObject(new List<string>{data.RefTransactionId}),
+                    RefTransactionId = JsonConvert.SerializeObject(new List<string> { data.RefTransactionId }),
                     SpecialGame = JsonConvert.SerializeObject(betData.SpecialGame)
                 };
                 var p3 = new DynamicParameters(slotData);
                 p3.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_SPRIBE_Settle_Ins", p3, trans);
-                
+
                 if (result > 0)
                 {
-                    if ( betData.Amount > 0)
+                    if (betData.Amount > 0)
                     {
                         result = _settledService.PayoutV2(
                             tpCustInfo,
@@ -497,7 +501,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                         return result;
                     }
-                   
+
                 }
             }
             catch (MySqlException mySqlEx)
@@ -515,7 +519,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             return result;
         }
-        
+
         public int SetSettleFlag_BettransRng_IM(string spName, string transId, DateTime settleTime)
         {
             var partitionTime = settleTime;
@@ -542,7 +546,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var result = _mainDbClient.Execute(spName, parameters: new DynamicParameters(new { TransId = transId }));
             return result;
         }
-        
+
         public int SetSettleFlag_TpWager_IM(string spName, string transId)
         {
             var result = _wagerDbClient.Execute(spName, parameters: new DynamicParameters(new { TransId = transId }));

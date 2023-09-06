@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ThirdPartyCore.Model.enums
+﻿namespace ThirdPartyCore.Model.enums
 {
     /// <summary>
     /// 第三方ID 列舉

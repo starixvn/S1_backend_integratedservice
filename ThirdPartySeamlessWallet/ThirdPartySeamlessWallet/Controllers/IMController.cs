@@ -1,6 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text;
+
+using Microsoft.AspNetCore.Mvc;
+
 using Newtonsoft.Json;
-using System.Text;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -248,7 +251,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
 
                     var tpUserName = settle.PlayerId;
-                    
+
                     var result = _imBll.Settle_IM(settle, tpUserName, tpId, tpGameType, out var outData);
                     if (result == -1)
                     {
@@ -307,9 +310,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                         Message = "Error",
                         TransactionId = refundData.TransactionId
                     };
-                    
+
                     var tpUserName = refundData.PlayerId;
-                    
+
                     if (refundData.TransactionType != "Cancel")
                     {
                         errorResponse.Code = (int)IMResultCode.InvalidArgument;
@@ -318,7 +321,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         response.Results.Add(errorResponse);
                         continue;
                     }
-                    
+
                     var result = _imBll.Refund_SPRIBE(refundData, tpUserName, Tp.SPRIBE, GameType.SPRIBE_RNG, out var outData);
                     if (result == -1)
                     {
@@ -349,7 +352,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return response;
             }
         }
-        
+
         private Tp GetTpId(string productWallet)
         {
             if (_productWalletToTpId.ContainsKey(productWallet))

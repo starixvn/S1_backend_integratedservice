@@ -1,18 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace ThirdParty.AMB
 {
-    public class AMBSlot :AMB
+    public class AMBSlot : AMB
     {
         public AMBSlot(IReadOnlyDictionary<string, string> inputs, string tpCurrency)
         {
             Setting = new AMBSetting()
             {
-                ApiUrl = inputs[$"SlotApiUrl{tpCurrency}"], 
-                Agent = inputs[$"SlotAgent{tpCurrency}"], 
+                ApiUrl = inputs[$"SlotApiUrl{tpCurrency}"],
+                Agent = inputs[$"SlotAgent{tpCurrency}"],
                 SecretKey = inputs[$"SlotSecretKey{tpCurrency}"]
             };
         }
@@ -59,7 +56,7 @@ namespace ThirdParty.AMB
                 {"x-ambslot-signature", HMACSHA512(jsonParam, Setting.SecretKey)}
             };
 
-            
+
             try
             {
                 var content = callback(apiUrl, jsonParam, "application/json", header, 0);
@@ -100,7 +97,7 @@ namespace ThirdParty.AMB
                         {
                             url = game.demoUrl
                         };
-                        return response;   
+                        return response;
                     }
 
                     response.status = new Status()
@@ -108,7 +105,7 @@ namespace ThirdParty.AMB
                         code = 997,
                         message = "no this game"
                     };
-                    return response;   
+                    return response;
                 }
                 else
                 {
@@ -134,7 +131,7 @@ namespace ThirdParty.AMB
                 {
                     {"x-ambslot-signature", HMACSHA512(jsonParam, Setting.SecretKey)}
                 };
-                
+
                 try
                 {
                     var content = callback(apiUrl, jsonParam, "application/json", header, 0);
@@ -174,7 +171,7 @@ namespace ThirdParty.AMB
                 {"x-ambslot-signature", HMACSHA512(jsonParam, Setting.SecretKey)}
             };
             var result = callback(apiUrl, jsonParam, "application/json", header, 0);
-            
+
             try
             {
                 return JsonConvert.DeserializeObject<GameReportResponse>(result);

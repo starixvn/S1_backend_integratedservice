@@ -1,7 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Serilog.Context;
-using System;
+﻿using Serilog.Context;
 
 namespace ThirdPartySeamlessWallet.Service.Library
 {

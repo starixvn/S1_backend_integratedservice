@@ -1,5 +1,4 @@
-﻿using System;
-using ThirdPartySeamlessWallet.Service.Model.enums;
+﻿using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model.Exceptions
 {

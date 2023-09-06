@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-
-namespace ThirdPartySeamlessWallet.Service.Model.enums;
+﻿namespace ThirdPartySeamlessWallet.Service.Model.enums;
 
 
 /// <summary>
@@ -33,7 +31,7 @@ public enum BettransLC_BGTypeEnum
 
 public enum BGOrderStatusEnum
 {
-    NotExist = 0, 
+    NotExist = 0,
     UnSettle = 1,
     SettledWin = 2,
     SettledDraw = 3,

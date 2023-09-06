@@ -1,10 +1,13 @@
 ﻿using Newtonsoft.Json;
+
 using Serilog.Context;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -15,7 +18,7 @@ namespace ThirdPartySettleWorker.Workers
         public Tp Tp => Tp.IM;
         private Timer timerSport;
         private Timer timerESport;
-        
+
         private readonly SettledBLL _settledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
@@ -24,7 +27,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly ILogger<IMWorker> _logger;
         private readonly string _tpName;
         private readonly MySqlClient _mainDbClient;
-        
+
         public IMWorker(IServiceProvider provider)
         {
             _settledBLL = provider.GetRequiredService<SettledBLL>();
@@ -39,9 +42,9 @@ namespace ThirdPartySettleWorker.Workers
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
-        { 
-            timerSport = new Timer(DoSettleSportWork, GameType.IM_Sports, TimeSpan.Zero, TimeSpan.Zero); 
-            timerESport = new Timer(DoSettleESportWork, GameType.IM_ESports, TimeSpan.Zero, TimeSpan.Zero); 
+        {
+            timerSport = new Timer(DoSettleSportWork, GameType.IM_Sports, TimeSpan.Zero, TimeSpan.Zero);
+            timerESport = new Timer(DoSettleESportWork, GameType.IM_ESports, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -66,7 +69,7 @@ namespace ThirdPartySettleWorker.Workers
             var betTransSet = "Service_BettransSports_IM_Settle_BetId_Set";
             var tpWagerSet = "Service_TpWagerSports_IM_Settle_Set";
             var logName = "IMDoSettleSportsWork";
-            
+
             try
             {
                 var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
@@ -84,7 +87,7 @@ namespace ThirdPartySettleWorker.Workers
                         var betDetail = _mainDbClient.Query<SettleTransactions_IMSport>("Service_BettransSport_IM_Bet_Get", parameters: new { _BetId = unsettled.TransId }).FirstOrDefault();
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, betDetail.PlayerId);
                         var transId = betDetail.BetId;
-                        
+
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = thisTp,
@@ -97,32 +100,32 @@ namespace ThirdPartySettleWorker.Workers
                             TicketStatus = TicketStatus.UnSettled,
                             GameID = betDetail.GameId
                         };
-                        
+
                         if (settleBetTrans.Any())
                         {
                             // 最新一筆的Settle結果
                             var lastBetTransData = settleBetTrans.MaxBy(item => item.TimeStamp);
-                            
+
                             //多次結算結果的Sum為payoutAmount總額
                             var payoutAmount = settleBetTrans.Sum(x => x.PayoutAmount);
                             var stake = lastBetTransData.Stake;
                             var winLostAmount = payoutAmount - stake;
-                            
+
                             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
                             if (tpCurrency == null)
                             {
                                 _logger.LogError($"{logName} {lastBetTransData.PlayerId} TpCurrency not found.");
                                 continue;
                             }
-                            
+
                             var tpWagerData = _tpUnSettledBLL.GetTpUnsettleData<WagerDataIM>("Service_TpWagerSports_IM_Unsettle_Get", new { BetId = transId }, DataBase.Wager).FirstOrDefault();
-                            
+
                             betRecordInfo.WinlostAmount = winLostAmount;
                             betRecordInfo.SettledTime = new DateTimeOffset(lastBetTransData.TimeStamp).ToUnixTimeSeconds();
                             betRecordInfo.TransTime = new DateTimeOffset(tpWagerData.WagerCreationDateTime).ToUnixTimeSeconds();
-                            
-                            CalculateTicketStatusAndAmount(betRecordInfo , tpWagerData , lastBetTransData.ActionId , out var isRefund);
-                            
+
+                            CalculateTicketStatusAndAmount(betRecordInfo, tpWagerData, lastBetTransData.ActionId, out var isRefund);
+
                             if (tpWagerData.IsSettled == 1)
                             {
                                 var settleAmountDataIm = new SettleAmountDataIM
@@ -131,7 +134,7 @@ namespace ThirdPartySettleWorker.Workers
                                     ValidBet = betRecordInfo.ValidBet,
                                     WinLostAmount = betRecordInfo.WinlostAmount
                                 };
-                                if (!IsBetTransSameAsTpWager(settleAmountDataIm, tpWagerData, tpCurrency ,isRefund))
+                                if (!IsBetTransSameAsTpWager(settleAmountDataIm, tpWagerData, tpCurrency, isRefund))
                                 {
                                     _logger.LogError($"transId: {transId} is not equal " +
                                                      $"settle: {JsonConvert.SerializeObject(settleAmountDataIm)} " +
@@ -140,7 +143,7 @@ namespace ThirdPartySettleWorker.Workers
                                 }
                             }
                         }
-                        
+
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, category);
                         if (result == 1)
                         {
@@ -180,7 +183,7 @@ namespace ThirdPartySettleWorker.Workers
                 timerSport.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
-        
+
         private void DoSettleESportWork(object state)
         {
             LogContext.PushProperty("TP", _tpName);
@@ -195,7 +198,7 @@ namespace ThirdPartySettleWorker.Workers
             var settleBetTransSet = "Service_BettransESports_IM_Settle_BetId_Set";
             var tpWagerSet = "Service_TpWagerESports_IM_Settle_Set";
             var logName = "IMDoSettleSportsWork";
-            
+
             try
             {
                 var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
@@ -212,7 +215,7 @@ namespace ThirdPartySettleWorker.Workers
                         var betDetail = _mainDbClient.Query<SettleTransactions_IMSport>("Service_BettransESport_IM_Bet_Get", parameters: new { _BetId = unsettled.TransId }).FirstOrDefault();
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, betDetail.PlayerId);
                         var transId = betDetail.BetId;
-                        
+
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = thisTp,
@@ -225,34 +228,34 @@ namespace ThirdPartySettleWorker.Workers
                             TicketStatus = TicketStatus.UnSettled,
                             GameID = betDetail.GameId
                         };
-                        
+
                         var settleBetTrans = _mainDbClient.Query<SettleTransactions_IMESport>(settleBetTransGet, parameters: new { unsettled.TransId });
-                        
+
                         if (settleBetTrans.Any())
                         {
                             // 最新一筆的Settle結果
-                            var lastBetTransData = settleBetTrans.MaxBy(x=>x.TimeStamp);
-                        
+                            var lastBetTransData = settleBetTrans.MaxBy(x => x.TimeStamp);
+
                             //多次結算結果的Sum為payoutAmount總額
-                            var payoutAmount = settleBetTrans.Sum(x=>x.Amount);
+                            var payoutAmount = settleBetTrans.Sum(x => x.Amount);
                             var stake = lastBetTransData.Stake;
                             var winLostAmount = payoutAmount - stake;
-                            
+
                             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
                             if (tpCurrency == null)
                             {
                                 _logger.LogError($"{logName} {lastBetTransData.PlayerId} TpCurrency not found.");
                                 continue;
                             }
-                        
+
                             var tpWagerData = _tpUnSettledBLL.GetTpUnsettleData<WagerDataIM>("Service_TpWagerESports_IM_Unsettle_Get", new { BetId = transId }, DataBase.Wager).FirstOrDefault();
 
                             betRecordInfo.WinlostAmount = winLostAmount;
-                            betRecordInfo.SettledTime =new DateTimeOffset(lastBetTransData.TimeStamp).ToUnixTimeSeconds();
+                            betRecordInfo.SettledTime = new DateTimeOffset(lastBetTransData.TimeStamp).ToUnixTimeSeconds();
                             betRecordInfo.TransTime = new DateTimeOffset(tpWagerData.WagerCreationDateTime).ToUnixTimeSeconds();
-                            
-                            CalculateTicketStatusAndAmount(betRecordInfo , tpWagerData ,lastBetTransData.ActionId , out var isRefund);
-                        
+
+                            CalculateTicketStatusAndAmount(betRecordInfo, tpWagerData, lastBetTransData.ActionId, out var isRefund);
+
                             if (tpWagerData.IsSettled == 1)
                             {
                                 var settleAmountDataIm = new SettleAmountDataIM
@@ -261,7 +264,7 @@ namespace ThirdPartySettleWorker.Workers
                                     ValidBet = betRecordInfo.ValidBet,
                                     WinLostAmount = betRecordInfo.WinlostAmount
                                 };
-                                if (!IsBetTransSameAsTpWager(settleAmountDataIm, tpWagerData, tpCurrency , isRefund))
+                                if (!IsBetTransSameAsTpWager(settleAmountDataIm, tpWagerData, tpCurrency, isRefund))
                                 {
                                     _logger.LogError($"transId: {transId} is not equal " +
                                                      $"settle: {JsonConvert.SerializeObject(settleAmountDataIm)} " +
@@ -270,9 +273,9 @@ namespace ThirdPartySettleWorker.Workers
                                 }
                             }
                         }
-                        
+
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, category);
-                        
+
                         if (result == 1)
                         {
                             Task.Run(() =>
@@ -311,7 +314,7 @@ namespace ThirdPartySettleWorker.Workers
                 timerESport.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
-        
+
         private static TimeSpan GetDueTimeSpan(bool forContinue, bool isError)
         {
             var dueTimeSpan = TimeSpan.FromMinutes(1);
@@ -327,18 +330,18 @@ namespace ThirdPartySettleWorker.Workers
 
             return dueTimeSpan;
         }
-        
-        private bool IsBetTransSameAsTpWager(SettleAmountDataIM betTrans, WagerDataIM wager, TpCurrency tpCurrency , bool isRefund)
+
+        private bool IsBetTransSameAsTpWager(SettleAmountDataIM betTrans, WagerDataIM wager, TpCurrency tpCurrency, bool isRefund)
         {
             if (tpCurrency.ExchangeRate <= 0) return false;
 
             // 加入幣別匯率轉換，tpWager 是原始資料
             var wagerStake = wager.StakeAmount * tpCurrency.ExchangeRate;
-            decimal? wagerWinLostAmount = (isRefund ? wager.BetTradeBuybackAmount - wager.StakeAmount : wager.WinLoss ) 
+            decimal? wagerWinLostAmount = (isRefund ? wager.BetTradeBuybackAmount - wager.StakeAmount : wager.WinLoss)
                                           * tpCurrency.ExchangeRate;
             var fWagerStake = Math.Round(wagerStake);
-            var fWagerWinLostAmount = Math.Round((decimal) wagerWinLostAmount);
-            
+            var fWagerWinLostAmount = Math.Round((decimal)wagerWinLostAmount);
+
             var isSame = fWagerStake == betTrans.Stake
                          && fWagerWinLostAmount == betTrans.WinLostAmount;
 
@@ -351,10 +354,10 @@ namespace ThirdPartySettleWorker.Workers
             return isSame;
         }
 
-        private void CalculateTicketStatusAndAmount(BetRecordInfo betRecordInfo ,WagerDataIM tpWagerData ,int actionId , out bool isRefund)
+        private void CalculateTicketStatusAndAmount(BetRecordInfo betRecordInfo, WagerDataIM tpWagerData, int actionId, out bool isRefund)
         {
             isRefund = false;
-            
+
             if (tpWagerData.IsSettled == 1)
             {
                 var transType = _imBll.GetTransType(actionId);

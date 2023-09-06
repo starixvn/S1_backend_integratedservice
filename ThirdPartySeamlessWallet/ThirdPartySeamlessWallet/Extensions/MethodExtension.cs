@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -12,7 +11,7 @@ namespace ThirdPartySeamlessWallet.Extensions
         {
             return new StackTrace().GetFrame(1)?.GetMethod()?.Name;
         }
-        
+
         public static string GetCurrentAsyncMethod([CallerMemberName] string callerName = "")
         {
             return callerName;
