@@ -1,7 +1,10 @@
-﻿using Dapper;
-using System.Data;
+﻿using System.Data;
+
+using Dapper;
+
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+
 using ThirdPartyService.Service.Library;
 
 namespace ThirdPartyService.Service.DAL
@@ -9,7 +12,7 @@ namespace ThirdPartyService.Service.DAL
     public class TpCustBalanceService
     {
         #region Fields
-        
+
         private readonly MySqlClient _mainDbClient;
         private readonly MySqlClient _reportDbClient;
 

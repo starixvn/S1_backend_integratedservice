@@ -1,12 +1,16 @@
-﻿using Dapper;
+﻿using System.Data;
+using System.Globalization;
+
+using Dapper;
+
 using MySql.Data.MySqlClient;
+
 using Newtonsoft.Json;
-using System.Data;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
-using System.Globalization;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -5318,7 +5322,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         bettingData_Skywind.TicketType = (int)BettransType.EndRound;
                         break;
                 }
-                
+
                 result = _partitionService.Execute(partitionTime, "Service_Bettrans_Skywind_Ins", bettingData_Skywind, trans);
 
                 if (result > 0 && bettingData_Skywind.amount > 0)
@@ -5375,7 +5379,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 trx_id = cancelBetData_Skywind.trxid
             };
-            var bettransSkywind = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_Bettrans_Skywind_Check", query)?.FirstOrDefault(x=>x.TicketStatus == (int)TicketStatus.UnSettled);
+            var bettransSkywind = _partitionService.Query<BettransRng_Skywind>(partitionTime, "Service_Bettrans_Skywind_Check", query)?.FirstOrDefault(x => x.TicketStatus == (int)TicketStatus.UnSettled);
             if (bettransSkywind == null)
             {
                 return -2;

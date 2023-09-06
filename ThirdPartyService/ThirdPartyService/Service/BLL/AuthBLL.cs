@@ -1,4 +1,5 @@
 ﻿using ThirdPartyCore;
+
 using ThirdPartyService.Service.DAL;
 
 namespace ThirdPartyService.Service.BLL

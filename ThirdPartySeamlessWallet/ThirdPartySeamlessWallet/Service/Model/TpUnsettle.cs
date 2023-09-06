@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using ThirdPartySeamlessWallet.Extensions;
-
-namespace ThirdPartySeamlessWallet.Service.Model
+﻿namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class TpUnsettle
     {

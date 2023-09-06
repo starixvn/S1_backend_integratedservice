@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ThirdPartySeamlessWallet.Service.Model.Exceptions
+﻿namespace ThirdPartySeamlessWallet.Service.Model.Exceptions
 {
     public class NotSupportedGameTypeException : Exception
     {

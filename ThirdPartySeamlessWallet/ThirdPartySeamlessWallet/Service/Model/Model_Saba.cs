@@ -1,4 +1,5 @@
 ﻿using System.Xml.Serialization;
+
 using Newtonsoft.Json;
 
 namespace ThirdPartySeamlessWallet.Service.Model
@@ -12,7 +13,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         [JsonProperty("op")]
         public string Op { get; set; }
     }
-    
+
     public class CheckOnlineMemberOutput
     {
         public CheckOnlineMember CheckOnlineMember { get; set; }

@@ -1,9 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Xml;
+﻿using System.Xml;
+
+using Newtonsoft.Json;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -95,7 +93,7 @@ namespace ThirdParty.CF
                     {
                         url = $"{MobileUrl}/api/cash/auth";
                     }
-                   
+
                     oApiResult.ErrorCode = ErrorCode.Success;
                     oApiResult.Message = $"{url}?session_id={tpData.session_id}&lang={TpLangId}&login_id={tpCustInfo.TpUserName}";
                 }

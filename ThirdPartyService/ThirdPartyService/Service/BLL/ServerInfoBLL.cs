@@ -1,6 +1,8 @@
 ﻿using System.Collections.Concurrent;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
+
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Model;
 
@@ -34,7 +36,7 @@ namespace ThirdPartyService.Service.BLL
         /// <returns></returns>
         public ServerInfo GetServerInfo(int siteId)
         {
-            if(serverInfoCache.ContainsKey(siteId))
+            if (serverInfoCache.ContainsKey(siteId))
             {
                 return serverInfoCache[siteId];
             }

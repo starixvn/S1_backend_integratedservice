@@ -1,15 +1,11 @@
-﻿using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+
 using Serilog.Context;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -81,10 +77,10 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getBettransSp, new { TransId = transId }, DataBase.Main).FirstOrDefault();
                         var tpWagerData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getWagerSp, new { TransId = transId }, DataBase.Wager).FirstOrDefault();
-                        if(tpWagerData == null) continue;
+                        if (tpWagerData == null) continue;
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
-                        
+
                         if (!IsBettransSameAsTpWager(settleData, tpWagerData, tpCurrency))
                         {
                             _logger.LogError($"transId: {transId} is not equal " +
@@ -104,7 +100,7 @@ namespace ThirdPartySettleWorker.Workers
                             TpUserName = settleData.Account,
                             SettledTime = settleData.SettleTime,
                             TransTime = settleData.TransTime,
-                            SettlementType = SetSettlementType((TicketStatus)settleData.TicketStatus), // 判斷 TicketStatus，因為可能重新結算
+                            SettlementType = settlementType,
                             TicketStatus = (TicketStatus)settleData.TicketStatus,
                             GameID = tpWagerData.GameId,
                         };
@@ -190,10 +186,10 @@ namespace ThirdPartySettleWorker.Workers
             if (bettrans == null || tpWager == null || tpCurrency.ExchangeRate <= 0) return false;
             tpWager.Stake *= tpCurrency.ExchangeRate;
             tpWager.WinLostAmount *= tpCurrency.ExchangeRate;
-            
+
             var targetWinLost = tpWager.WinLostAmount;
             var targetStake = tpWager.Stake;
-            if (bettrans.TicketStatus == (int)SettlementType.UnSettled || 
+            if (bettrans.TicketStatus == (int)SettlementType.UnSettled ||
                 bettrans.TicketStatus == (int)TicketStatus.Refund)
             {
                 targetWinLost -= targetStake;

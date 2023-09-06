@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
-using Newtonsoft.Json;
+
 using ThirdPartyCore.Model.enums;
 
 namespace ThirdParty.AMB
@@ -44,7 +42,7 @@ namespace ThirdParty.AMB
             var salt = Encoding.UTF8.GetBytes(key);
             var HASH_SIZE = 64;
             var ITERATIONS = 1000;
-            
+
             // Generate the hash
             var pbkdf2 = new Rfc2898DeriveBytes(input, salt, ITERATIONS, HashAlgorithmName.SHA512);
             var data = pbkdf2.GetBytes(HASH_SIZE);

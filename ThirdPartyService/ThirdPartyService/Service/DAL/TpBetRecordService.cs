@@ -1,7 +1,9 @@
 ﻿using Dapper;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+
 using ThirdPartyService.Service.Library;
 
 namespace ThirdPartyService.Service.DAL
@@ -63,7 +65,7 @@ namespace ThirdPartyService.Service.DAL
                     DataBase.Wager => (IReadOnlyDictionary<string, object>)_wagerDbClient.QueryFirst(spName, parameters),
                     DataBase.Report => (IReadOnlyDictionary<string, object>)_reportDbClient.QueryFirst(spName, parameters),
                     DataBase.Main => (IReadOnlyDictionary<string, object>)_mainDbClient.QueryFirst(spName, parameters),
-                };            
+                };
             }
             catch (Exception)
             {

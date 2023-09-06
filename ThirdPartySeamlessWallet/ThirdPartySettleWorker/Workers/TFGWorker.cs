@@ -1,20 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc.RazorPages;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+
 using Serilog.Context;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 using ThirdPartySeamlessWallet.Service.BLL;
-using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
-using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
-using static ThirdPartySeamlessWallet.Controllers.APController;
 
 namespace ThirdPartySettleWorker.Workers
 {
@@ -111,7 +104,7 @@ namespace ThirdPartySettleWorker.Workers
                             winlostAmount = settleData.Sum(x => x.amount) - betData.amount;
                             settlementType = SettlementType.SettledForValid;
                             ticketStatus = GetTicketStatus(wagerData.result_status);
-                            if(wagerData.result_status == "CANCELLED")
+                            if (wagerData.result_status == "CANCELLED")
                             {
                                 settlementType = SettlementType.SettledForInvalid;
                             }

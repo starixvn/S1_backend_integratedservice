@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Linq;
-using ThirdPartySeamlessWallet.Extensions;
+﻿using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
@@ -21,7 +17,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     }
 
     public enum TCGTransType
-    { 
+    {
         Debit,
         Credit,
         Reserve,
@@ -115,7 +111,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
                 return;
             }
 
-            if (bettransLottery.TransType == TCGTransType.Credit.ToString() 
+            if (bettransLottery.TransType == TCGTransType.Credit.ToString()
                 || bettransLottery.TransType == TCGTransType.Debit.ToString())
             {
                 trans_status = "SUCCESS";
@@ -167,7 +163,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class TCGRequest
     {
         public string method { get; set; }
-        
+
         public string username { get; set; }
 
         public int product_type { get; set; }
@@ -192,14 +188,14 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string tx_type { get; set; }
         public string remarks { get; set; }
 
-        public string order_no 
-        { 
-            get 
+        public string order_no
+        {
+            get
             {
                 var result = additionalInformation["order_no"];
                 return result == null ? _order_no : result;
             }
-            set { _order_no = value; } 
+            set { _order_no = value; }
         }
         public dynamic additionalInformation { get; set; }
     }

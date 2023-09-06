@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ThirdPartyCore.Model
+﻿namespace ThirdPartyCore.Model
 {
     public class BaseDetail
     {
         public int TpId { get; }
 
-        public int TpCategoryId { get;  }
+        public int TpCategoryId { get; }
 
-        public int GameType { get;}
+        public int GameType { get; }
 
-        public string GameTypeName { get;}
+        public string GameTypeName { get; }
 
         /// <summary>
         /// 注单识别码

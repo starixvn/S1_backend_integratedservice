@@ -1,4 +1,5 @@
 ﻿using StackExchange.Redis;
+
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Library

@@ -1,14 +1,18 @@
-﻿using Newtonsoft.Json;
+﻿using System.ComponentModel;
+
+using Newtonsoft.Json;
+
 using Serilog.Context;
+
 using StackExchange.Redis;
-using System.ComponentModel;
+
 using ThirdPartySeamlessWallet.Service.BLL;
-using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 using ThirdPartySeamlessWallet.Service.Model.Options;
 using ThirdPartySeamlessWallet.Service.Model.SBSW;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -62,7 +66,7 @@ namespace ThirdPartySettleWorker.Workers
                 }
                 forContinue = tpUnsettleList.Count() == 200;
 
-                foreach (var tpUnsettle in tpUnsettleList.OrderBy(x=> x.TransId))
+                foreach (var tpUnsettle in tpUnsettleList.OrderBy(x => x.TransId))
                 {
                     try
                     {
@@ -112,7 +116,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             throw new SBSWException(ReturnCode.InvalidParameters, $"GameType:{(int)tpUnsettle.GameType} not supported.");
                         }
-                        
+
                         #region 匯率轉換
                         wagerData.stake *= tpCurrency.ExchangeRate;
                         wagerData.winlost_amount *= tpCurrency.ExchangeRate;
@@ -184,7 +188,7 @@ namespace ThirdPartySettleWorker.Workers
                             _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nStep6");
 
                             //住單狀態被改為cancel,走共用流判斷ValidBet & SettlementType & TicketStatus
-                            if (betData.ToList().Exists(x=> x.TicketType == (int)SBSWTransType.CancelBet))
+                            if (betData.ToList().Exists(x => x.TicketType == (int)SBSWTransType.CancelBet))
                             {
                                 CalculateAvailableBet(wagerData, betRecordInfo);
                             }
@@ -213,7 +217,7 @@ namespace ThirdPartySettleWorker.Workers
                                     _logger.LogWarning($"TransId:{tpUnsettle.TransId} waiting settleData");
                                     continue;
                                 }
-                            }                           
+                            }
                         }
 
                         _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nbetRecordInfo=\r\n{JsonConvert.SerializeObject(betRecordInfo)}");

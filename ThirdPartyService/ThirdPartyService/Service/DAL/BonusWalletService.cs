@@ -1,6 +1,9 @@
-﻿using Dapper;
-using System.Data;
+﻿using System.Data;
+
+using Dapper;
+
 using ThirdPartyCore.Model.enums;
+
 using ThirdPartyService.Service.Library;
 
 namespace ThirdPartyService.Service.DAL
@@ -55,17 +58,17 @@ namespace ThirdPartyService.Service.DAL
 
             return BonusId > 0;
         }
-        
+
         public bool BonusTransferRollback(int custId, int siteId, string userName, decimal Bonus, int tpId, string Memo, string RefTransId, int bonusId, out decimal afterBonus, IDbTransaction trans)
         {
             var type = typePosition + tpId;
             var p = new DynamicParameters(new
             {
-                BonusId = bonusId, 
-                CustId = custId, 
-                SiteId = siteId, 
+                BonusId = bonusId,
+                CustId = custId,
+                SiteId = siteId,
                 UserName = userName,
-                Bonus, 
+                Bonus,
                 Type = type,
                 Memo,
                 RefTransId
@@ -75,10 +78,10 @@ namespace ThirdPartyService.Service.DAL
             afterBonus = p.Get<decimal>("AfterBonus");
             return afterBonus >= 0;
         }
-        
+
         public int SetBonusStatus(int bonusId, int status, int forStatus, IDbTransaction trans)
         {
-            return _mainDbClient.Execute("Common_BonusStatus_Set",trans,
+            return _mainDbClient.Execute("Common_BonusStatus_Set", trans,
                 new
                 {
                     BonusId = bonusId,

@@ -1,9 +1,11 @@
 ﻿using System.Xml.Linq;
 
 using Serilog.Context;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -83,7 +85,7 @@ namespace ThirdPartySettleWorker.Workers
                         var validBet = CaculateValidBetAmount(unsettledList, debitList);
                         // 注單狀態是否完成
                         var isClosed = unsettledList.Any(i => i.CurrentStatus.Equals("Closed", StringComparison.OrdinalIgnoreCase));
-                       
+
                         //未結算預設值
                         var winlostAmount = 0m;
                         var settlementType = SettlementType.UnSettled;
@@ -192,13 +194,13 @@ namespace ThirdPartySettleWorker.Workers
                 };
             }
 
-            return validBetAmount;  
+            return validBetAmount;
         }
 
         private string FindGameId(IEnumerable<BTIDebitData> debitList)
         {
             try
-            {       
+            {
                 var bodyData = debitList.FirstOrDefault()?.BodyData;
                 if (bodyData == null)
                 {

@@ -1,6 +1,5 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
@@ -289,7 +288,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// Amount number that user bet (+) 
         /// </summary>
         public decimal bet { get; set; }
-        
+
         /// <summary>
         /// Amount that player win
         /// </summary>

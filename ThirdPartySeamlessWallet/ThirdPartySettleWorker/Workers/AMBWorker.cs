@@ -1,9 +1,12 @@
-using Serilog.Context;
 using Newtonsoft.Json;
+
+using Serilog.Context;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -148,7 +151,7 @@ namespace ThirdPartySettleWorker.Workers
             if (winLostAmount == 0) return TicketStatus.Draw;
 
             if (winLostAmount > 0) return TicketStatus.Win;
-            
+
             return TicketStatus.Lost;
         }
 

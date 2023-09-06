@@ -1,15 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
+﻿using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+
+using Microsoft.AspNetCore.Mvc;
+
+using Newtonsoft.Json;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -1151,7 +1147,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private string getTestHierarchy(string account, string tpCurrencyId, string password = null)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, account);
-            List<long> testHierarchyCustId = environment.IsDevelopment() ? new List<long> { 1288,1481 } : new List<long> { 90, 31909, 240129, 236358, 2071, 2072 };
+            List<long> testHierarchyCustId = environment.IsDevelopment() ? new List<long> { 1288, 1481 } : new List<long> { 90, 31909, 240129, 236358, 2071, 2072 };
             bool isTestHierarchy = testHierarchyCustId.Contains(tpCustInfo.CustId);
             if (isTestHierarchy)
             {

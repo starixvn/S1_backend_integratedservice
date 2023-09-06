@@ -1,7 +1,11 @@
-﻿using Newtonsoft.Json;
+﻿using System.Diagnostics;
+
+using Newtonsoft.Json;
+
 using Serilog.Context;
-using System.Diagnostics;
+
 using ThirdPartyCore.Model.enums;
+
 using ThirdPartyService.Service.BLL;
 
 namespace ThirdPartyService.Service.Worker
@@ -83,7 +87,7 @@ namespace ThirdPartyService.Service.Worker
                                                    $"result={JsonConvert.SerializeObject(result)}");
                         }
                     }
-                    Thread.Sleep(5 * 1000); //休息5秒
+                    Thread.Sleep(2 * 1000); //休息5秒
                 }
 
                 if (_failCustIdList.Any())

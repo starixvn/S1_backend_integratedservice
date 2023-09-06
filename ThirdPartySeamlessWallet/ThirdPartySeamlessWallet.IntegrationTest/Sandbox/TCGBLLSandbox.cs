@@ -1,11 +1,16 @@
-﻿using FluentAssertions;
+﻿using System.Data;
+
+using FluentAssertions;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using NSubstitute;
-using System.Data;
+
 using ThirdPartySeamlessWallet.Core.Extensions;
 using ThirdPartySeamlessWallet.IntegrationTest.Models;
 using ThirdPartySeamlessWallet.IntegrationTest.Stubs;
@@ -88,7 +93,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         }
 
         public TCGBLLSandbox GetBalance()
-        {        
+        {
             var sParam = new
             {
                 method = "sgb",
@@ -106,11 +111,11 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
 
         public TCGBLLSandbox Debit(Dictionary<string, string> inputs, decimal amount)
         {
-            SeamlessWallet(TCGApiMethod.Debit, inputs, amount,inputs["DebitID"]);
+            SeamlessWallet(TCGApiMethod.Debit, inputs, amount, inputs["DebitID"]);
             return this;
         }
 
-        
+
         public TCGBLLSandbox Credit(Dictionary<string, string> inputs, decimal amount)
         {
             SeamlessWallet(TCGApiMethod.Credit, inputs, amount, inputs["CreditID"]);
@@ -236,7 +241,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         public TCGBLLSandbox ResultShouldBe(int expected)
         {
             Result.status.Should().Be(expected.ToString());
-            return this; 
+            return this;
         }
 
         public TCGBLLSandbox ShouldBeHaveRecord(TCGTransType transType, Dictionary<string, string> inputs, decimal amount)
@@ -262,7 +267,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             return this;
         }
 
-        private TCGRecord CreateTCGRecord(TCGTransType transType, Dictionary<string, string> inputs, decimal amount) 
+        private TCGRecord CreateTCGRecord(TCGTransType transType, Dictionary<string, string> inputs, decimal amount)
         {
             var ref_no = string.Empty;
             switch (transType)

@@ -9,7 +9,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.Exceptions
         public NextspinErrorCode NextspinErrorCode { get; }
         public string ErrorMessage { get; }
 
-        public NextspinException() {}
+        public NextspinException() { }
 
         public NextspinException(NextspinErrorCode errorCode)
         {

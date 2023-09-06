@@ -1,14 +1,16 @@
 ﻿
 
-using ThirdPartyCore;
-using ThirdPartyCore.Model.enums;
-using ThirdPartyCore.Model;
-using ThirdPartyCore.Model.TpBetRecordExtend;
 using System.Text;
 using System.Web;
-using ThirdPartyCore.Extensions;
-using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+
 using Newtonsoft.Json;
+
+using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
+using ThirdPartyCore.Model;
+using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
+using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.TFG
 {
@@ -247,10 +249,10 @@ namespace ThirdParty.TFG
         {
             return device switch
             {
-                "desktop-browser"=> DeviceType.Desktop,
-                "mobile-browser"=> DeviceType.Mobile,
-                "mobile-app"=> DeviceType.Mobile,
-                _=> DeviceType.None
+                "desktop-browser" => DeviceType.Desktop,
+                "mobile-browser" => DeviceType.Mobile,
+                "mobile-app" => DeviceType.Mobile,
+                _ => DeviceType.None
             };
         }
     }
