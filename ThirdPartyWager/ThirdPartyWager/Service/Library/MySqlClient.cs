@@ -252,7 +252,7 @@ namespace ThirdPartyWager.Service.Library
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                result = connection.Execute(command, CommandType.StoredProcedure);
+                result = connection.Execute(command, commandType: CommandType.StoredProcedure);
                 connection.Close();
                 connection.Dispose();
             }
