@@ -336,9 +336,19 @@ namespace ThirdPartySettleWorker.Workers
             var wagerStake = wager.StakeAmount * tpCurrency.ExchangeRate;
             decimal? wagerWinLostAmount = (isRefund ? wager.BetTradeBuybackAmount - wager.StakeAmount : wager.WinLoss ) 
                                           * tpCurrency.ExchangeRate;
+            var fWagerStake = Math.Round(wagerStake);
+            var fWagerWinLostAmount = Math.Round((decimal) wagerWinLostAmount);
             
-            return Math.Round(wagerStake, 4) == betTrans.Stake
-                   && Math.Round((decimal) wagerWinLostAmount, 4) == betTrans.WinLostAmount;
+            var isSame = fWagerStake == betTrans.Stake
+                         && fWagerWinLostAmount == betTrans.WinLostAmount;
+
+            if (!isSame)
+            {
+                _logger.LogError(
+                    $"wagerStake={fWagerStake}, betTrans.Stake={betTrans.Stake}, wagerWinLostAmount={fWagerWinLostAmount}, betTrans.WinLostAmount={betTrans.WinLostAmount}");
+            }
+
+            return isSame;
         }
 
         private void CalculateTicketStatusAndAmount(BetRecordInfo betRecordInfo ,WagerDataIM tpWagerData ,int actionId , out bool isRefund)
