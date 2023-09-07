@@ -2,6 +2,7 @@
 using System.Text;
 using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 
@@ -10,15 +11,15 @@ namespace ThirdPartySeamlessWallet.Controllers
     [ApiController]
     public class PNGController : ControllerBase
     {
+        private readonly IPNGBLL _pngBll;
         private readonly Tools _tools;
         private readonly ILogger<PNGController> _logger;
-        private readonly IPNGBLL _pngBll;
-        
-        public PNGController(Tools tools, ILogger<PNGController> logger, IPNGBLL pngBll)
+
+        public PNGController(IPNGBLL pngBll, Tools tools, ILogger<PNGController> logger)
         {
+            _pngBll = pngBll;
             _tools = tools;
             _logger = logger;
-            _pngBll = pngBll;
         }
 
         /// <summary>
