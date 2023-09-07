@@ -4,6 +4,7 @@ using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
+using static ThirdPartySeamlessWallet.Controllers.N2LiveController;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
@@ -243,7 +244,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)TpId, releaseRequest.TpUserName);
                 var payOutResult = await _settledService.PayoutRNG_PNG(tpCustInfo, bettingData);
 
-                return new PNG_ReleaseResponse()
+                var response = new PNG_ReleaseResponse()
                 {
                     StatusCode = (int)PNG_StatsuCodeEnum.Ok,
                     StatusMessage = "Release Success",
@@ -251,6 +252,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     ExternalTransactionId = payOutResult.ExternalTransactionId
                 };
 
+                if (response.AfterAmount != 0) return response;
+
+                var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)TpId, releaseRequest.TpUserName, (int)TpGameType);
+                response.AfterAmount = tpCustBalance.Balance;
+
+                return response;
             }
             catch (PNGException ex)
             {
