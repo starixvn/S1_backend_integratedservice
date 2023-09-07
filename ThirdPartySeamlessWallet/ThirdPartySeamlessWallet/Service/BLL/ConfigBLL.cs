@@ -13,9 +13,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public ConfigBLL(IServiceProvider provider)
         {
             var siteConfigList = provider.GetServices<SiteConfig>();
-            _defaultSiteConfig = siteConfigList.First(i => i.SiteId == 0).Config;            
-            _siteNameConfigs = new Dictionary<string, SiteConfig>(siteConfigList.ToDictionary(i => i.SiteName, i => i), StringComparer.OrdinalIgnoreCase);
-            _siteIdConfigs = siteConfigList.ToDictionary(i => i.SiteId, i => i);
+            _defaultSiteConfig = siteConfigList.First(i => i.SiteId == 0).Config;
+
+            var siteConfigs = siteConfigList; //TPSW不排除0，第三方送過來無法辨識site的時候，需要從site=0拿config
+            _siteNameConfigs = new Dictionary<string, SiteConfig>(siteConfigs.ToDictionary(i => i.SiteName, i => i), StringComparer.OrdinalIgnoreCase);
+            _siteIdConfigs = siteConfigs.ToDictionary(i => i.SiteId, i => i);
         }
 
         public string GetConfigValue(string siteName, string configKey)
