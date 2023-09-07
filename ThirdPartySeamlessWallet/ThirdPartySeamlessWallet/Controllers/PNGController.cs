@@ -2,6 +2,7 @@
 using System.Text;
 using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 
@@ -10,16 +11,15 @@ namespace ThirdPartySeamlessWallet.Controllers
     [ApiController]
     public class PNGController : ControllerBase
     {
+        private readonly IPNGBLL _pngBll;
         private readonly Tools _tools;
         private readonly ILogger<PNGController> _logger;
-        private readonly IPNGBLL _pngBll;
-        
 
-        public PNGController(Tools tools, ILogger<PNGController> logger, IPNGBLL pngBll)
+        public PNGController(IPNGBLL pngBll, Tools tools, ILogger<PNGController> logger)
         {
+            _pngBll = pngBll;
             _tools = tools;
             _logger = logger;
-            _pngBll = pngBll;
         }
 
         /// <summary>
@@ -57,6 +57,63 @@ namespace ThirdPartySeamlessWallet.Controllers
             var balanceRequest = _tools.XMLDeserialize<PNG_BalanceRequest>(body);
             var balanceResponse = _pngBll.Balance(balanceRequest);
             var xmlString = XmlHelper.SerializeToXmlString(balanceResponse);
+
+            return Content(xmlString, "application/xml");
+        }
+
+        /// <summary>
+        /// 投注
+        /// </summary>
+        /// <returns></returns>
+        [Route("[controller]/reserve")]
+        [Produces("application/xml")]
+        [HttpPost]
+        public async Task<dynamic> Reserve()
+        {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var body = await reader.ReadToEndAsync();
+
+            var reserveRequest = _tools.XMLDeserialize<PNG_ReserveRequest>(body);
+            var reserveResponse = await _pngBll.Reserve(reserveRequest);
+            var xmlString = XmlHelper.SerializeToXmlString(reserveResponse);
+            return Content(xmlString, "application/xml");
+
+        }
+
+        /// <summary>
+        /// 取消投注
+        /// </summary>
+        /// <returns></returns>
+        [Route("[controller]/cancelReserve")]
+        [Produces("application/xml")]
+        [HttpPost]
+        public async Task<dynamic> CancelReserve()
+        {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var body = await reader.ReadToEndAsync();
+
+            var cancelReserveRequest = _tools.XMLDeserialize<PNG_CancelReserveRequest>(body);
+            var cancelReserveResponse = await _pngBll.CancelReserve(cancelReserveRequest);
+            var xmlString = XmlHelper.SerializeToXmlString(cancelReserveResponse);
+
+            return Content(xmlString, "application/xml");
+        }
+
+        /// <summary>
+        /// 派彩結果
+        /// </summary>
+        /// <returns></returns>
+        [Route("[controller]/release")]
+        [Produces("application/xml")]
+        [HttpPost]
+        public async Task<dynamic> Release()
+        {
+            using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+            var body = await reader.ReadToEndAsync();
+
+            var releaseRequest = _tools.XMLDeserialize<PNG_ReleaseRequest>(body);
+            var releaseResponse = await _pngBll.Release(releaseRequest);
+            var xmlString = XmlHelper.SerializeToXmlString(releaseResponse);
 
             return Content(xmlString, "application/xml");
         }

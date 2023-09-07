@@ -2015,5 +2015,72 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region PNG
+
+        public async Task<PNGResult> PlaceBetRNG_PNG(TpCustInfo tpCustInfo, BettingDataRNG_PNG bettingData)
+        {
+            await using var conn = _mainDbClient.GetMySqlConnection();
+            await conn.OpenAsync();
+            await using var trans = await conn.BeginTransactionAsync();
+
+            try
+            {
+                var partitionTime = DateTime.UtcNow;
+                var p = new DynamicParameters(bettingData);
+                var result = _partitionService.Execute(partitionTime, "Service_BettransRng_PNG_Ins", p, trans);
+
+                if (result == 0)
+                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "Reserve fail");
+
+                var bonusId = 0;
+                result = PlaceBetV2(
+                    tpCustInfo: tpCustInfo,
+                    amount: Math.Abs(bettingData.Amount) * -1,
+                    tpId: (int)Tp.PNG,
+                    tpTransId: bettingData.TransactionId,
+                    gameType: (int)GameType.PNG_RNG,
+                    refId: bettingData.TransactionId,
+                    betData: null,
+                    tpCategory: TpCategory.Slots,
+                    afterAmount: out var afterAmount,
+                    bonusId: ref bonusId,
+                    conn: conn,
+                    trans: trans);
+
+                if (result < 1)
+                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "Insufficient Balance");
+
+                await trans.CommitAsync();
+
+                return new PNGResult
+                {
+                    ExternalTransactionId = bettingData.TransactionId,
+                    AfterAmount = afterAmount
+                };
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "Duplicate Reserve");
+                }
+                throw;
+            }
+            catch (Exception ex)
+            {
+                await trans.RollbackAsync();
+                logger.LogError(ex, ex.Message);
+                throw new PNGException(PNG_StatsuCodeEnum.Internal, ex.Message);
+            }
+        }
+
+        public IEnumerable<BettingDataRNG_PNG> GetBettingDataRng_PNG(string transactionId)
+        {
+            var now = DateTime.UtcNow;
+            return _partitionService.Query<BettingDataRNG_PNG>(now, "Service_BettransRng_PNG_Get", new { _transactionId = transactionId });
+        }
+
+        #endregion
     }
 }
