@@ -6500,10 +6500,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     tpCustInfo,
                     bettingData.Amount,
                     (int)Tp.PNG,
-                    bettingData.TransactionId,
+                    bettingData.RoundId.ToString(),
                     (int)GameType.PNG_RNG,
                     TpCategory.Slots,
-                    bettingData.TransactionId,
+                    bettingData.RoundId.ToString(),
                     TransType.Refunds,
                     null,
                     out var afterAmount,
@@ -6555,16 +6555,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (result == 0)
                     throw new PNGException(PNG_StatsuCodeEnum.Internal, "Release Fail");
 
-                if (bettingData.Amount > 0)
+                if (bettingData.Amount > 0 && bettingData.RoundId != 0)
                 {
                     result = PayoutV2(
                         tpCustInfo,
                         bettingData.Amount,
                         (int)Tp.PNG,
-                        bettingData.TransactionId,
+                        bettingData.RoundId.ToString(),
                         (int)GameType.PNG_RNG,
                         TpCategory.Slots,
-                        bettingData.TransactionId,
+                        bettingData.RoundId.ToString(),
                         TransType.Payout,
                         null,
                         out afterAmount,
