@@ -24,7 +24,6 @@ namespace CommonService
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<Dictionary<string, SendGridConfig>>(Configuration.GetSection("SendGridConfig"));
             services.Configure<IovationServicesConfig>(Configuration.GetSection("IovationServicesConfig"));
             services.Configure<Dictionary<string, FPSServicesConfig>>(Configuration.GetSection("FPSServicesConfig"));
             services.Configure<Dictionary<string, LiveStreamingConfig>>(Configuration.GetSection("LiveStreamingConfig"));
