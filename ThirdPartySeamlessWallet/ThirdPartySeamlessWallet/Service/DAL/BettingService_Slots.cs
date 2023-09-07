@@ -2038,9 +2038,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     tpCustInfo: tpCustInfo,
                     amount: Math.Abs(bettingData.Amount) * -1,
                     tpId: (int)Tp.PNG,
-                    tpTransId: bettingData.TransactionId,
+                    tpTransId: bettingData.RoundId.ToString(),
                     gameType: (int)GameType.PNG_RNG,
-                    refId: bettingData.TransactionId,
+                    refId: bettingData.RoundId.ToString(),
                     betData: null,
                     tpCategory: TpCategory.Slots,
                     afterAmount: out var afterAmount,
@@ -2075,10 +2075,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
-        public IEnumerable<BettingDataRNG_PNG> GetBettingDataRng_PNG(string transactionId)
+        public IEnumerable<BettingDataRNG_PNG> GetBettingDataRng_PNG(long roundId)
         {
             var now = DateTime.UtcNow;
-            return _partitionService.Query<BettingDataRNG_PNG>(now, "Service_BettransRng_PNG_Get", new { _transactionId = transactionId });
+            return _partitionService.Query<BettingDataRNG_PNG>(now, "Service_BettransRng_PNG_Get", new { _RoundId = roundId });
         }
 
         #endregion

@@ -592,6 +592,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public PNGJackpots PngJackpots { get; set; }
     }
 
+    [XmlRoot(ElementName = "release")]
     public class PNG_ReleaseResponse : PNG_BaseResponse
     {
         #region Constructor
@@ -700,24 +701,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         ServiceUnavailable = 12
     }
 
-    public enum PNG_TicketType
-    {
-        /// <summary>
-        /// reserve
-        /// </summary>
-        Bet = 1,
-
-        /// <summary>
-        /// CancelReserve
-        /// </summary>
-        CancelBet = 2,
-
-        /// <summary>
-        /// Release
-        /// </summary>
-        Payout = 4
-    }
-
     #endregion
 
     #region Data Transfer Model
@@ -759,7 +742,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// </summary>
         public string GameSessionId { get; set; }
 
-
+        /// <summary>
+        /// 回合ID
+        /// </summary>
         public long RoundId { get; set; }
 
         /// <summary>
