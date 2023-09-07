@@ -453,7 +453,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string TransactionId { get; set; }
 
         /// <summary>
-        /// 转帐金额。
+        /// 派彩金額，如果輸則是 0 
         /// </summary>
         [XmlElement(ElementName = "real")]
         public decimal Real { get; set; }

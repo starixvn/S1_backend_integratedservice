@@ -1,9 +1,4 @@
-﻿using System.Net.NetworkInformation;
-using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
-using NuGet.Common;
-using Org.BouncyCastle.Crypto.Tls;
-using ThirdPartySeamlessWallet.Extensions;
+﻿using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -12,19 +7,6 @@ using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
-    public interface IPNGBLL
-    {
-        PNG_AuthenticateResponse Authenticate(PNG_AuthenticateRequest authenticateRequest);
-
-        PNG_BalanceResponse Balance(PNG_BalanceRequest balanceRequest);
-
-        Task<PNG_ReserveResponse> Reserve(PNG_ReserveRequest reserveRequest);
-
-        Task<PNG_CancelReserveResponse> CancelReserve(PNG_CancelReserveRequest cancelReserveRequest);
-
-        Task<PNG_ReleaseResponse> Release(PNG_ReleaseRequest releaseRequest);
-    }
-
     public class PNGBLL : IPNGBLL
     {
         public Tp TpId => Tp.PNG;
@@ -39,8 +21,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public PNGBLL(AuthBLL authBll, ThirdPartyBLL thirdPartyBLL,
             TpCustInfoBLL tpCustInfoBll,
-            ILogger<PNGBLL> logger,
-            BettingService bettingService, SettledService settledService)
+            BettingService bettingService,
+            SettledService settledService,
+            ILogger<PNGBLL> logger)
         {
             _authBll = authBll;
             _thirdPartyBLL = thirdPartyBLL;
@@ -244,7 +227,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     TpUserName = releaseRequest.TpUserName,
                     ProductId = releaseRequest.ProductId,
                     TransactionId = releaseRequest.TransactionId,
-                    Amount = (releaseRequest.TotalGain - releaseRequest.TotalLoss),
+                    Amount = releaseRequest.Real,
                     CurrencyIsoCode = releaseRequest.Currency,
                     GameId = releaseRequest.GameId,
                     GameSessionId = releaseRequest.GameSessionId ?? string.Empty,
