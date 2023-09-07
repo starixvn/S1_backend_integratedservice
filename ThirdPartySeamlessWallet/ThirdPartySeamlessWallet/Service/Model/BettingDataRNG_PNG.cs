@@ -1,5 +1,6 @@
 ﻿using K4os.Hash.xxHash;
 using Microsoft.AspNetCore.Http;
+using System.ComponentModel;
 using System.Xml.Serialization;
 
 namespace ThirdPartySeamlessWallet.Service.Model
@@ -406,7 +407,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     }
 
     [XmlRoot(ElementName = "cancelReserve")]
-    public class PNG_CancelReserveResponse :PNG_BaseResponse
+    public class PNG_CancelReserveResponse : PNG_BaseResponse
     {
         #region Constructor
 
@@ -498,7 +499,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// OPEN 0 游戏会话仍打开。CLOSED 1 游戏会话已关闭。
         /// </summary>
         [XmlElement(ElementName = "type")]
-        public byte Type { get; set; }
+        public int Type { get; set; }
 
         /// <summary>
         /// 遊戲標識符。請參閱遊戲詳情表，與登入遊戲的 GID 並不相同
@@ -558,7 +559,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// 可选 表示释放是否为免费游戏中的最后一个 回合（finished=1 表示最后一个免费游 戏回合）。
         /// </summary>
         [XmlElement(ElementName = "freegameFinished")]
-        public byte FreeGameFinished { get; set; }
+        public int FreeGameFinished { get; set; }
 
         /// <summary>
         /// 可选 在免费游戏中赢得的总金额。此金额 也包含在 totalGain 属性中。
@@ -582,7 +583,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// 免费游戏期间的总收益（如果是免费游戏回合）。
         /// </summary>
         [XmlElement(ElementName = "freegameTotalGain")]
-        public decimal FreeGameTotalGain { get; set; }
+        public string FreeGameTotalGain { get; set; }
 
         /// <summary>
         /// 可选标记包含关于累积大奖的信息。
@@ -741,7 +742,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// <summary>
         /// 投注中使用的"真錢"金額。如果是免費遊戲回合，則為 0
         /// </summary>
-        public decimal Amount { get;set; }
+        public decimal Amount { get; set; }
 
         /// <summary>
         /// 貨幣代碼
