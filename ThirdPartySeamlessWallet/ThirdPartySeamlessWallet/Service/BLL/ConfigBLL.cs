@@ -42,6 +42,34 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return defaultValue;
         }
 
+        public TItem GetConfigValue<TItem>(string siteName, string configKey)
+        {
+            var defaultItem = _defaultSiteConfig.TryGetValue(configKey, out var json)
+                ? JsonConvert.DeserializeObject<TItem>(json) : default;
+
+            if (_siteNameConfigs.TryGetValue(siteName, out var siteConfig))
+            {
+                return siteConfig.Config.TryGetValue(configKey, out var configValue)
+                    ? JsonConvert.DeserializeObject<TItem>(configValue) : defaultItem;
+            }
+
+            return defaultItem;
+        }
+
+        public TItem GetConfigValue<TItem>(int siteId, string configKey)
+        {
+            var defaultItem = _defaultSiteConfig.TryGetValue(configKey, out var json)
+                ? JsonConvert.DeserializeObject<TItem>(json) : default;
+
+            if (_siteIdConfigs.TryGetValue(siteId, out var siteConfig))
+            {
+                return siteConfig.Config.TryGetValue(configKey, out var configValue)
+                   ? JsonConvert.DeserializeObject<TItem>(configValue) : defaultItem;
+            }
+
+            return defaultItem;
+        }
+
         public Dictionary<int, TItem> GetConfigValuesBySiteId<TItem>(string configKey)
         {
             var defaultItem = _defaultSiteConfig.TryGetValue(configKey, out var json)

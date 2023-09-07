@@ -53,8 +53,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _processorCount = Environment.ProcessorCount;
 
             //用 SiteId = 0 取回預設Config
-            var config = provider.GetRequiredService<ConfigBLL>().GetConfigValue(0, ((int)ThirdParty).ToString());
-            defaultConfig = JsonConvert.DeserializeObject<Dictionary<string, string>>(config);
+            defaultConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(0, ((int)ThirdParty).ToString());
         }
 
         public async Task<TCGReturnObj> SeamlessWallet(string merchantCode, string @params, string sign)
