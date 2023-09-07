@@ -65,31 +65,6 @@ namespace CommonService.Service.BLL.Tests
             var actual = _configBLL.GetConfigValuesBySiteName<NxcloudSMSServiceTypeConfig>("NxCloud");
             return actual[siteName].OTP.Appkey;
         }
-        
-        [TestCase("Nova88", ExpectedResult = "noreply@nova88service.org")]
-        [TestCase("NOVA88", ExpectedResult = "noreply@nova88service.org")]
-        [TestCase("nova88", ExpectedResult = "noreply@nova88service.org")]
-        [TestCase("Goal123", ExpectedResult = "noreply@goal123service.com")]
-        [TestCase("Bwing", ExpectedResult = "noreply@bwingservice.com")]
-        [TestCase("Ivorysport", ExpectedResult = "noreply@nova88service.org")]
-        [TestCase("Leobet", ExpectedResult = "noreply@nova88service.org")]
-        public string SendGrid_GetConfigValuesBySiteNameTest(string siteName)
-        {
-            var actual = _configBLL.GetConfigValuesBySiteName<SendGridConfig>("SendGrid");
-            return actual[siteName].mailFrom.email;
-        }
-        
-        [TestCase(1, ExpectedResult = "https://www.nova88.net/Home/ResetPassword")]
-        [TestCase(2, ExpectedResult = "https://www.goal123.com/Home/ResetPassword")]
-        [TestCase(3, ExpectedResult = "https://www.bwing.com/Home/ResetPassword")]
-        [TestCase(5, ExpectedResult = "https://www.nova88.net/Home/ResetPassword")]
-        [TestCase(6, ExpectedResult = "https://www.nova88.net/Home/ResetPassword")]
-        public string SendGrid_GetConfigValuesBySiteIdTest(int siteId)
-        {
-            var actual = _configBLL.GetConfigValuesBySiteId<SendGridConfig>("SendGrid");
-            return actual[siteId].ResetPasswordUrl;
-        }
-        
 
         [TestCase(1, ExpectedResult = "svTUT8d0")]
         [TestCase(2, ExpectedResult = "RPQZO7FL")]
@@ -127,5 +102,87 @@ namespace CommonService.Service.BLL.Tests
             var actual = JsonConvert.DeserializeObject<NxcloudSMSServiceTypeConfig>(json);
             return actual.OTP.Appkey;
         }
+
+        #region SendGrid
+        [TestCase("Nova88", ExpectedResult = "noreply@nova88service.org")]
+        [TestCase("NOVA88", ExpectedResult = "noreply@nova88service.org")]
+        [TestCase("nova88", ExpectedResult = "noreply@nova88service.org")]
+        [TestCase("Goal123", ExpectedResult = "noreply@goal123service.com")]
+        [TestCase("Bwing", ExpectedResult = "noreply@bwingservice.com")]
+        [TestCase("Ivorysport", ExpectedResult = "noreply@nova88service.org")]
+        [TestCase("Leobet", ExpectedResult = "noreply@nova88service.org")]
+        public string SendGrid_GetConfigValuesBySiteNameTest(string siteName)
+        {
+            var actual = _configBLL.GetConfigValuesBySiteName<SendGridConfig>("SendGrid");
+            return actual[siteName].mailFrom.email;
+        }
+        
+        [TestCase(1, ExpectedResult = "https://www.nova88.net/Home/ResetPassword")]
+        [TestCase(2, ExpectedResult = "https://www.goal123.com/Home/ResetPassword")]
+        [TestCase(3, ExpectedResult = "https://www.bwing.com/Home/ResetPassword")]
+        [TestCase(5, ExpectedResult = "https://www.nova88.net/Home/ResetPassword")]
+        [TestCase(6, ExpectedResult = "https://www.nova88.net/Home/ResetPassword")]
+        public string SendGrid_GetConfigValuesBySiteIdTest(int siteId)
+        {
+            var actual = _configBLL.GetConfigValuesBySiteId<SendGridConfig>("SendGrid");
+            return actual[siteId].ResetPasswordUrl;
+        }
+        #endregion
+
+        #region FPS
+
+        [TestCase("Nova88", ExpectedResult = "N88")]
+        [TestCase("NOVA88", ExpectedResult = "N88")]
+        [TestCase("nova88", ExpectedResult = "N88")]
+        [TestCase("Goal123", ExpectedResult = "N8G")]
+        [TestCase("Bwing", ExpectedResult = "N8B")]
+        [TestCase("Ivorysport", ExpectedResult = "N88")]
+        [TestCase("Leobet", ExpectedResult = "N88")]
+        public string FPS_GetConfigValuesBySiteNameTest(string siteName)
+        {
+            var actual = _configBLL.GetConfigValuesBySiteName<FPSServicesConfig>("FPS");
+            return actual[siteName].Subscriber;
+        }
+        
+        [TestCase(1, ExpectedResult = "N88")]
+        [TestCase(2, ExpectedResult = "N8G")]
+        [TestCase(3, ExpectedResult = "N8B")]
+        [TestCase(5, ExpectedResult = "N88")]
+        [TestCase(6, ExpectedResult = "N88")]
+        public string FPS_GetConfigValuesBySiteIdTest(int siteId)
+        {
+            var actual = _configBLL.GetConfigValuesBySiteId<FPSServicesConfig>("FPS");
+            return actual[siteId].Subscriber;
+        }
+
+        #endregion
+
+        #region LiveStreaming
+
+        [TestCase("Nova88", ExpectedResult = "nvc")]
+        [TestCase("NOVA88", ExpectedResult = "nvc")]
+        [TestCase("nova88", ExpectedResult = "nvc")]
+        [TestCase("Goal123", ExpectedResult = "nvcg")]
+        [TestCase("Bwing", ExpectedResult = "nvcb")]
+        [TestCase("Ivorysport", ExpectedResult = "nvc")]
+        [TestCase("Leobet", ExpectedResult = "nvc")]
+        public string LiveStreaming_GetConfigValuesBySiteNameTest(string siteName)
+        {
+            var actual = _configBLL.GetConfigValuesBySiteName<LiveStreamingConfig>("LiveStreaming");
+            return actual[siteName].Apiuser;
+        }
+        
+        [TestCase(1, ExpectedResult = "nvc")]
+        [TestCase(2, ExpectedResult = "nvcg")]
+        [TestCase(3, ExpectedResult = "nvcb")]
+        [TestCase(5, ExpectedResult = "nvc")]
+        [TestCase(6, ExpectedResult = "nvc")]
+        public string LiveStreaming_GetConfigValuesBySiteIdTest(int siteId)
+        {
+            var actual = _configBLL.GetConfigValuesBySiteId<LiveStreamingConfig>("LiveStreaming");
+            return actual[siteId].Apiuser;
+        }
+
+        #endregion
     }
 }

@@ -25,8 +25,6 @@ namespace CommonService
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<IovationServicesConfig>(Configuration.GetSection("IovationServicesConfig"));
-            services.Configure<Dictionary<string, FPSServicesConfig>>(Configuration.GetSection("FPSServicesConfig"));
-            services.Configure<Dictionary<string, LiveStreamingConfig>>(Configuration.GetSection("LiveStreamingConfig"));
             services.Configure<Dictionary<string, SkyLineSMSServiceTypeConfig>>(Configuration.GetSection("SkyLineSMSServiceConfig"));
             services.Configure<Dictionary<string, YcSmsServiceTypeConfig>>(Configuration.GetSection("YcSMSServiceConfig"));
             services.Configure<AWSKeyConfig>(Configuration.GetSection("ailab-sns"));
