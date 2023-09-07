@@ -236,11 +236,31 @@ namespace ThirdPartyWager.Service.BLL
                     return true;
                 }
 
+                // 排除wager已存在的注單不用重新抓取
+                var unsettleOfTransId = execUnsettleData.Select(x => x.TransId).ToList();
+                var wagerData = await _wagerEVOService.GetTransIdList(JsonConvert.SerializeObject(unsettleOfTransId));
+                var reGetTransId = unsettleOfTransId;
+                if (wagerData.Any())
+                {
+                    var wagerOfTransId = wagerData.Select(x => x.TransId).ToList();
+                    reGetTransId = unsettleOfTransId.Except(wagerOfTransId).ToList();
+                }
+
                 // 準備以單號取得注單資料
                 foreach (var unsettled in execUnsettleData)
                 {
+                    if (!reGetTransId.Contains(unsettled.TransId))
+                    {
+                        msg = "DATA_EXIST";
+                        _logger.LogInformation($"{msg}\r\nTransId={unsettled.TransId}");
+                        continue;
+                    }
+                    // TooManyRequests:Please try again after 10 seconds
+                    Thread.Sleep(12000);
+
                     // get wager
                     var dataWager = await _apiEVOBLL.GetBetListByTransId(setting["ApiUrl"], setting["CasinoKey"], setting["gameHistoryApiToken"], setting["GameProvider"], unsettled.TransId);
+
                     // error condition
                     var error = dataWager.Select(x => x.error).FirstOrDefault();
 
