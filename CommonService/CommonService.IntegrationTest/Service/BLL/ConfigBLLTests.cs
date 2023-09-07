@@ -65,6 +65,31 @@ namespace CommonService.Service.BLL.Tests
             var actual = _configBLL.GetConfigValuesBySiteName<NxcloudSMSServiceTypeConfig>("NxCloud");
             return actual[siteName].OTP.Appkey;
         }
+        
+        [TestCase("Nova88", ExpectedResult = "noreply@nova88service.org")]
+        [TestCase("NOVA88", ExpectedResult = "noreply@nova88service.org")]
+        [TestCase("nova88", ExpectedResult = "noreply@nova88service.org")]
+        [TestCase("Goal123", ExpectedResult = "noreply@goal123service.com")]
+        [TestCase("Bwing", ExpectedResult = "noreply@bwingservice.com")]
+        [TestCase("Ivorysport", ExpectedResult = "noreply@nova88service.org")]
+        [TestCase("Leobet", ExpectedResult = "noreply@nova88service.org")]
+        public string SendGrid_GetConfigValuesBySiteNameTest(string siteName)
+        {
+            var actual = _configBLL.GetConfigValuesBySiteName<SendGridConfig>("SendGrid");
+            return actual[siteName].mailFrom.email;
+        }
+        
+        [TestCase(1, ExpectedResult = "https://www.nova88.net/Home/ResetPassword")]
+        [TestCase(2, ExpectedResult = "https://www.goal123.com/Home/ResetPassword")]
+        [TestCase(3, ExpectedResult = "https://www.bwing.com/Home/ResetPassword")]
+        [TestCase(5, ExpectedResult = "https://www.nova88.net/Home/ResetPassword")]
+        [TestCase(6, ExpectedResult = "https://www.nova88.net/Home/ResetPassword")]
+        public string SendGrid_GetConfigValuesBySiteIdTest(int siteId)
+        {
+            var actual = _configBLL.GetConfigValuesBySiteId<SendGridConfig>("SendGrid");
+            return actual[siteId].ResetPasswordUrl;
+        }
+        
 
         [TestCase(1, ExpectedResult = "svTUT8d0")]
         [TestCase(2, ExpectedResult = "RPQZO7FL")]
