@@ -6552,6 +6552,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public async Task<PNGResult> PayoutRNG_PNG(TpCustInfo tpCustInfo, BettingDataRNG_PNG bettingData)
         {
             var afterAmount = 0m;
+            long endRoundId = 0;
             await using var conn = _mainDbClient.GetMySqlConnection();
             await conn.OpenAsync();
             await using var trans = await conn.BeginTransactionAsync();
@@ -6565,7 +6566,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (result == 0)
                     throw new PNGException(PNG_StatsuCodeEnum.Internal, "Release Fail");
 
-                if (bettingData.Amount > 0 && bettingData.RoundId != 0)
+                if (bettingData.Amount > 0 && bettingData.RoundId != endRoundId)
                 {
                     result = PayoutV2(
                         tpCustInfo,
@@ -6587,7 +6588,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (result < 1)
                     throw new PNGException(PNG_StatsuCodeEnum.Internal, "Release Set Balance Fail");
 
-                result = _tpUnsettleService.InsertTpUnsettle(Tp.PNG, GameType.PNG_RNG, bettingData.TransactionId, trans, partitionTime);
+                if (bettingData.RoundId != endRoundId) //非endRound 才塞 TpUnsettle
+                {
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.PNG, GameType.PNG_RNG, bettingData.RoundId.ToString(), trans, partitionTime);
+                }
+
                 if (result < 1)
                     throw new PNGException(PNG_StatsuCodeEnum.Internal, "PNG TpUnsettle Fail");
 
@@ -6603,7 +6608,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 logger.LogError(ex, ex.Message);
                 await trans.RollbackAsync();
-                throw new PNGException(PNG_StatsuCodeEnum.Internal,ex.Message);
+                throw new PNGException(PNG_StatsuCodeEnum.Internal, ex.Message);
             }
         }
 
