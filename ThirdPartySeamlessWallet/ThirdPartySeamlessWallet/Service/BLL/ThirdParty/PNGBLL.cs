@@ -220,7 +220,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 // check BetTrans
                 var betTransData = _bettingService.GetBettingDataRng_PNG(releaseRequest.RoundId);
-
+                
                 // check ticketType
                 var pngTicketType = releaseRequest.RoundId == 0
                     ? BettransType.EndRound
@@ -247,7 +247,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
 
                 var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)TpId, releaseRequest.TpUserName);
-                var payOutResult = await _settledService.PayoutRNG_PNG(tpCustInfo, bettingData);
+                var finicalTransType = GetPayoutTransType(betTransData);
+                var payOutResult = await _settledService.PayoutRNG_PNG(tpCustInfo, bettingData, finicalTransType);
 
                 var response = new PNG_ReleaseResponse()
                 {
@@ -383,6 +384,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 default:
                     throw new PNGException(PNG_StatsuCodeEnum.Internal, "PNG RoundId TicketType NotImplemented");
             }
+        }
+
+        private TransType GetPayoutTransType(IEnumerable<BettingDataRNG_PNG> bettingData)
+        {
+            // 如果有下注紀錄，表示是一般派彩，如果沒有下注紀錄直接派彩，表示是免費旋轉贏錢
+            return bettingData.Any(r => r.TicketType == (int)BettransType.Bet)
+                ? TransType.Payout 
+                : TransType.Prize;
         }
 
         #endregion
