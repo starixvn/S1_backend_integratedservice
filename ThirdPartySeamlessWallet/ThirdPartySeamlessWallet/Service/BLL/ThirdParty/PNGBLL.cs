@@ -52,7 +52,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)TpId, tpCustInfoAuth.TpUserName, (int)TpGameType);
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)TpId, tpCustInfoAuth.TpUserName);
             var tpCountryCode = _tpCustInfoBll.GetTpCurrencyCode((int)TpId, tpCustInfo.CurrencyId);
-            var userCurrency = this.GetCurrencyIsoCode(tpCountryCode.TpCurrencyId);
+            var userCurrency = tpCountryCode.TpCurrencyId;
 
             return new PNG_AuthenticateResponse()
             {
@@ -93,8 +93,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             // check player currency 是否正確
-            var userCurrency = GetCurrencyIsoCode(tpCustInfo.TpCurrencyId);
-            if (userCurrency != balanceRequest.Currency)
+            if (tpCustInfo.TpCurrencyId != balanceRequest.Currency)
             {
                 return new PNG_BalanceResponse()
                 {
@@ -274,16 +273,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
 
         #region private method
-
-        private string GetCurrencyIsoCode(string tpCurrencyId)
-        {
-            var tpCurrencyOfIsoCode = _thirdPartyBLL.GeTpCurrencyOfIsoCode((int)TpId);
-
-            if (tpCurrencyOfIsoCode.ContainsKey(tpCurrencyId)) return tpCurrencyOfIsoCode[tpCurrencyId];
-
-            _logger.LogError("tpCurrencyOfIsoCode not found");
-            return string.Empty;
-        }
 
         private bool ValidToken(string inputAccessToken)
         {

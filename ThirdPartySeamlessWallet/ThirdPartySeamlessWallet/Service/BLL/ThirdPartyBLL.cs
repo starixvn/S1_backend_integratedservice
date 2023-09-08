@@ -365,19 +365,5 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return ServerInfoData.ContainsKey(key) ? ServerInfoData[key] : null;
         }
-
-        public Dictionary<string, string> GeTpCurrencyOfIsoCode(int tpId)
-        {
-            var key = $"TpCurrencyOfIsoCode_{tpId}";
-
-            var tpCurrencyOfIsoCode = cache.Get<IEnumerable<TpCurrencyOfIsoCode>>(key);
-            if (tpCurrencyOfIsoCode == null)
-            {
-                tpCurrencyOfIsoCode = thirdPartyService.GetTpCurrencyOfIsoCode(tpId);
-                cache.Set(key, tpCurrencyOfIsoCode, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(60)));
-            }
-
-            return tpCurrencyOfIsoCode.ToDictionary(k => k.TpCurrencyId.ToString(), v => v.IsoCode);
-        }
     }
 }
