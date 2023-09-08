@@ -13,7 +13,6 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class TCGBLL
     {
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ILogger<TCGBLL> _logger;
         private readonly MySqlClient _wagerDbClient;
         private readonly int _tpId = (int)Tp.TCG;
@@ -26,11 +25,13 @@ namespace ThirdPartyWager.Service.BLL
 
         public TCGBLL(IServiceProvider provider)
         {
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _logger = provider.GetRequiredService<ILogger<TCGBLL>>();
             LogContext.PushProperty("Tp", "TCG");
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
-            _setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+
+            //用 SiteId = 0 取回預設Config
+            _setting = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(0, _tpId.ToString());
+
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
