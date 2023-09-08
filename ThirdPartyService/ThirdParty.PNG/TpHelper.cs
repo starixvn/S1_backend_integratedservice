@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -33,7 +25,7 @@ namespace ThirdParty.PNG
 
             try
             {
-                var config = new PNGConfig(inputs);
+                var config = new PNGConfig(inputs, getRequired: false);
                 var token = ApplyToken(tpCustInfo);
                 var channel = appType == AppType.Desktop
                     ? "desktop"
@@ -45,7 +37,7 @@ namespace ThirdParty.PNG
                 {
                     { "gid", config.GameId },
                     { "lang", TpLangId },
-                    { "pid", config.Pid.ToString() }, 
+                    { "pid", config.Pid.ToString() },
                     { "practice","0"},// 0 真錢
                     { "ticket", token },
                     { "channel", channel },
@@ -68,6 +60,44 @@ namespace ThirdParty.PNG
             }
 
             return apiResult;
+        }
+
+        /// <summary>
+        /// 用三方 API 去拿 RoundId 內容連結
+        /// </summary>
+        /// <param name="getBetDetail"></param>
+        /// <param name="tpCustInfo"></param>
+        /// <param name="inputs"></param>
+        /// <returns></returns>
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var config = new PNGConfig(inputs);
+            var betDetailUrl = $"{config.RootUrl}{config.GameHistoryDesktop}{getBetDetail.TransId}";
+
+            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                DetailUrl = betDetailUrl,
+                TpCurrency = new TpCurrency()
+                {
+                    ExchangeRate = tpCustInfo.ExchangeRate,
+                    TpCurrencyId = tpCustInfo.TpCurrencyId,
+                },
+            };
+        }
+
+        /// <summary>
+        /// 沒有 Wager 拿 BetTrans 資料當細單
+        /// </summary>
+        /// <param name="betRecordInfo"></param>
+        /// <param name="tpGameType"></param>
+        /// <param name="tpCustInfo"></param>
+        /// <param name="inputs"></param>
+        /// <returns></returns>
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo,
+            Dictionary<string, string> inputs)
+        {
+            return null;
         }
 
         #region NotImplemented
@@ -94,16 +124,7 @@ namespace ThirdParty.PNG
             throw new NotImplementedException();
         }
 
-        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {
-            throw new NotImplementedException();
-        }
 
-        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo,
-            Dictionary<string, string> inputs)
-        {
-            throw new NotImplementedException();
-        }
 
         #endregion
     }
