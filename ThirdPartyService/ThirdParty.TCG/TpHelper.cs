@@ -2,7 +2,10 @@
 using System.Text;
 using System.Web;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -14,6 +17,12 @@ namespace ThirdParty.TCG
     public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular
     {
         private const string ContentType = "application/x-www-form-urlencoded";
+        private readonly Dictionary<int, Dictionary<string, string>> siteConfigDic;
+
+        public TpHelper(IServiceProvider provider)
+        {
+            siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(((int)TpEnum.TCG).ToString());
+        }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -22,7 +31,8 @@ namespace ThirdParty.TCG
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var config = new TCGConfig(inputs, tpCustInfo.TpCurrencyId);
+            var siteInputs = siteConfigDic[tpCustInfo.SiteId];
+            var config = new TCGConfig(siteInputs, tpCustInfo.TpCurrencyId);
             tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x").ToLower();
             var sParam = new
             {
@@ -76,7 +86,8 @@ namespace ThirdParty.TCG
                 };
             }
 
-            var config = new TCGConfig(inputs, tpCustInfo.TpCurrencyId);
+            var siteInputs = siteConfigDic[tpCustInfo.SiteId];
+            var config = new TCGConfig(siteInputs, tpCustInfo.TpCurrencyId);
             var sParam = new LaunchGameObj(tpCustInfo, appType, TpLangId, inputs, config);
 
             var json = HttpPost(config.ApiUrl, GetBody(sParam, config), ContentType);
@@ -106,7 +117,8 @@ namespace ThirdParty.TCG
 
         public ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var config = new TCGConfig(inputs, tpCustInfo.TpCurrencyId);
+            var siteInputs = siteConfigDic[tpCustInfo.SiteId];
+            var config = new TCGConfig(siteInputs, tpCustInfo.TpCurrencyId);
             var sParam = new
             {
                 method = "kom",
