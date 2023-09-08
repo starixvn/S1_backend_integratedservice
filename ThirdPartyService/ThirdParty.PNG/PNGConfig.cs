@@ -20,7 +20,7 @@
 
         public string GameId { get; set; }
 
-        public PNGConfig(Dictionary<string, string> inputs)
+        public PNGConfig(Dictionary<string, string> inputs, bool getRequired = true)
         {
             RootUrl = inputs.ContainsKey("RootUrl") && !string.IsNullOrEmpty(inputs["RootUrl"])
                 ? inputs["RootUrl"]
@@ -51,9 +51,12 @@
                 : throw new Exception("PlayNGo TpList not found GameHistoryDesktop Setting");
 
             Pid = inputs.ContainsKey("Pid") && !string.IsNullOrEmpty(inputs["Pid"])
-                ? int.Parse(inputs["Pid"]) 
+                ? int.Parse(inputs["Pid"])
                 : throw new Exception("PlayNGo TpList not found Pid Setting");
 
+            if (getRequired) return;
+            
+            // option欄位，登入時才會帶GameId
             GameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"])
                 ? inputs["gameId"]
                 : throw new Exception("Api Param inputs[gameId] not found");
