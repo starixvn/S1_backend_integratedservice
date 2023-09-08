@@ -6539,7 +6539,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
-        public async Task<PNGResult> PayoutRNG_PNG(TpCustInfo tpCustInfo, BettingDataRNG_PNG bettingData)
+        public async Task<PNGResult> PayoutRNG_PNG(TpCustInfo tpCustInfo, BettingDataRNG_PNG bettingData, TransType transType)
         {
             var afterAmount = 0m;
             long endRoundId = 0;
@@ -6566,7 +6566,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         (int)GameType.PNG_RNG,
                         TpCategory.Slots,
                         bettingData.RoundId.ToString(),
-                        TransType.Payout,
+                        transType,
                         null,
                         out afterAmount,
                         "Payout",
