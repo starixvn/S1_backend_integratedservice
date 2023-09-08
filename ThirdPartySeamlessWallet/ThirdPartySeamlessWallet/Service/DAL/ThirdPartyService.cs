@@ -61,10 +61,5 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             return _mainDbClient.QueryFirst<ServerInfo>("Service_ServerInfo_SiteName_Get", new { _SiteName = siteName });
         }
-
-        public IEnumerable<TpCurrencyOfIsoCode> GetTpCurrencyOfIsoCode(int tpId)
-        {
-            return _mainDbClient.Query<TpCurrencyOfIsoCode>("Service_TpCurrencyIsoCode_Get", commandType: CommandType.StoredProcedure, new { _TpId = tpId });
-        }
     }
 }
