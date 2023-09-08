@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -9,6 +10,13 @@ namespace ThirdParty.PNG
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly IReadOnlyDictionary<string, string> _gameNameList;
+
+        public TpHelper()
+        {
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList(54).ToDictionary(d => d.AppId, d => d.Name);
+        }
+
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             // PlayNGo 沒有提供會員註冊 API
@@ -97,7 +105,51 @@ namespace ThirdParty.PNG
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo,
             Dictionary<string, string> inputs)
         {
-            return null;
+            var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_PNG_Detail_Get", new { YYYYMM = YYYYMM, TransId = betRecordInfo.TransId }, DataBase.Main);
+
+            if (!detail.Any())
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+
+            var gameId = detail.GetStringValue("GameId");
+            var roundId  = detail.GetStringValue("RoundId");
+            var channel = detail.GetStringValue("Channel");
+
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = gameId,
+                Game = GetGameName(gameId),
+                RefNo = roundId,
+                Title = tpGameType.TypeName,
+                MatchID = roundId,
+                BetType = string.Empty,
+                BetChoice = string.Empty,
+                Result = string.Empty,
+                DeviceType = GetDeviceType(channel),
+                IP = string.Empty,
+            };
+        }
+
+        private string GetGameName(string gameId)
+        {
+            if (!_gameNameList.TryGetValue(gameId, out var name))
+            {
+                return string.Empty;
+            }
+            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
+            return dic != null && dic.TryGetValue("en", out var result) ? result : string.Empty;
+        }
+
+        private DeviceType GetDeviceType(string channel)
+        {
+            return channel switch
+            {
+                "1" => DeviceType.Desktop,
+                "2" => DeviceType.Mobile,
+                _ => DeviceType.None
+            };
         }
 
         #region NotImplemented
