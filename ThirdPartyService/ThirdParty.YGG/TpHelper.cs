@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel;
 using System.Text;
 using System.Web;
+
 using Newtonsoft.Json;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -27,7 +29,7 @@ namespace ThirdParty.YGG
             var config = new YggConfig(inputs);
             var channel = (appType == AppType.Desktop ? "pc" : "mobile");
             var sessionKey = GetSessionKey(tpCustInfo, inputs);
-            
+
             var apiUrl = config.GameUrl;
             string sParam;
             var fun = false;

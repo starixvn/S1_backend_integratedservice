@@ -1,14 +1,12 @@
-﻿using System;
-using System.Net;
-using Microsoft.AspNetCore.Http;
+﻿using System.Net;
+
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Extensions.ActionFilters
 {
-    public class MGExceptionFilter: IExceptionFilter
+    public class MGExceptionFilter : IExceptionFilter
     {
         private readonly ILogger<MGExceptionFilter> _logger;
 

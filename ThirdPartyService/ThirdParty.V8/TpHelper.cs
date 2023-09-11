@@ -1,7 +1,5 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -456,6 +454,15 @@ namespace ThirdParty.V8
                 "8600" => "Cat Te",
                 "930" => "Hundreds People Of Bull",
                 "8100" => "See Cards Bull",
+                "510" => "Fishing Wars",
+                "680" => "Fight the Landlord",
+                "920" => "Forest Dance",
+                "3101" => "See Cards Bull",
+                "3890" => "Four Cards Bull",
+                "8210" => "Tai Xiu",
+                "8910" => "Cai Shen Dao",
+                "1101" => "Ta La-Phom",
+                "1102" => "Whot",
                 _ => string.Empty,
             };
         }

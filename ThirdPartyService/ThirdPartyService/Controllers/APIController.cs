@@ -1,11 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+
 using Newtonsoft.Json;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
-using ThirdPartyCore.Model.TpMerchantBalance.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
+using ThirdPartyCore.Model.TpMerchantBalance.Response;
+
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
 
@@ -21,7 +24,7 @@ namespace ThirdPartyService.Controllers
         private readonly ILogger<APIController> _logger;
 
         public APIController(IServiceProvider provider)
-        {                   
+        {
             _env = provider.GetRequiredService<IHostEnvironment>();
             _tpCustInfoService = provider.GetRequiredService<TpCustInfoService>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
@@ -55,7 +58,7 @@ namespace ThirdPartyService.Controllers
             var apiResult = new ApiResult();
 
             try
-            {            
+            {
                 apiResult = _thirdPartyBLL.GotoGame(tpInfo);
                 _logger.LogInformation(apiResult.Message);
 
@@ -161,7 +164,7 @@ namespace ThirdPartyService.Controllers
 
             return apiResult;
         }
-        
+
         [HttpPost]
         public ActionResult<ApiResult> BonusCancelTransfer(TpBonusCancelTransfer tpBonusCancelTransfer)
         {
@@ -226,7 +229,7 @@ namespace ThirdPartyService.Controllers
 
             return apiResult;
         }
-        
+
         public ActionResult<ApiResult> SetBetLimit(SetBetLimit setBetLimit)
         {
             var apiResult = new ApiResult();
@@ -307,7 +310,7 @@ namespace ThirdPartyService.Controllers
                 };
             }
         }
-        
+
         [HttpPost]
         public ActionResult<ApiResult<TpBetRecordExtend>> GetTpBetRecordExtend([FromBody] GetTpBetRecordExtendRequest request)
         {

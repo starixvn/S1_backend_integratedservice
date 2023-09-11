@@ -1,12 +1,14 @@
-﻿using System.Text;
+﻿using System.Security.Cryptography;
+using System.Text;
+using System.Web;
+
+using Newtonsoft.Json;
+
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordExtend;
-using System.Security.Cryptography;
-using ThirdPartyCore.Extensions;
-using Newtonsoft.Json;
-using System.Web;
 
 namespace ThirdParty.END
 {

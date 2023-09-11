@@ -1,8 +1,11 @@
 ﻿using Newtonsoft.Json;
+
 using Serilog.Context;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Interfaces;
 
 namespace ThirdPartySettleWorker.Workers
@@ -74,7 +77,7 @@ namespace ThirdPartySettleWorker.Workers
 
                             // revenue games
                             GameType gameType;
-                            int[] kindId = { 220, 600, 610, 620, 630, 680, 830, 860, 890, 930, 3101, 3890, 8100, 8540, 8600, 8700 };
+                            int[] kindId = { 220, 600, 610, 620, 630, 680, 830, 860, 890, 930, 3101, 3890, 8100, 8540, 8600, 8700, 1101, 1102 };
                             if (kindId.Contains(unsettled.KindID))
                             {
                                 gameType = GameType.V8_Poker;
@@ -97,7 +100,7 @@ namespace ThirdPartySettleWorker.Workers
                                 SettledTime = unsettled.SettleTime,
                                 TransTime = unsettled.TransTime,
                                 SettlementType = SettlementType.SettledForValid,
-                                GameID = unsettled.KindID.ToString(),                                
+                                GameID = unsettled.KindID.ToString(),
                             };
                             var result = _settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
                             _settledBLL.SetSettleFlag_TpWagerPK_V8(unsettled.GameID);

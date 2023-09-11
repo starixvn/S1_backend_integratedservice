@@ -1,6 +1,8 @@
-﻿using Dapper;
+﻿using System.Data;
+
+using Dapper;
+
 using MySql.Data.MySqlClient;
-using System.Data;
 
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -69,10 +71,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var p = new DynamicParameters(new { GameType, CustId, SiteId, UserName, Amount, Type, Memo = $"{tp} {Memo}", RefTransId });
             p.Add("AfterBonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("BonusId", value: bonusId, dbType: DbType.Int32, direction: ParameterDirection.InputOutput);
-           
-            result = _mainDbClient.Execute("Service_BonusWallet_Set_V3", p, conn ,trans);
+
+            result = _mainDbClient.Execute("Service_BonusWallet_Set_V3", p, conn, trans);
             afterBonus = p.Get<decimal>("AfterBonus");
-            bonusId = p.Get<int?>("BonusId") ?? 0;           
+            bonusId = p.Get<int?>("BonusId") ?? 0;
             return result;
         }
 
@@ -98,7 +100,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var p = new DynamicParameters(bonusFulfill);
             p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
-            var result = _mainDbClient.Execute("Service_BonusSettle_Set_V2", p, conn ,trans);
+            var result = _mainDbClient.Execute("Service_BonusSettle_Set_V2", p, conn, trans);
 
             if (result > 0)
             {
@@ -110,11 +112,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
                 }
                 else
                 {
-                    _mainDbClient.RollbackAndDisposeConnection(conn,trans);
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                 }
             }
 

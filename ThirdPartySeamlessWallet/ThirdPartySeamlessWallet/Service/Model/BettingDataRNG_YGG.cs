@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace ThirdPartySeamlessWallet.Service.Model
+﻿namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class BettingDataRNG_YGG
     {
@@ -32,7 +27,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string org { get; set; }
     }
 
-    public class SettleData_YGG 
+    public class SettleData_YGG
     {
         /// <summary>
         /// 注單號碼

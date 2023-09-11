@@ -1,8 +1,9 @@
 using Serilog;
 using Serilog.Exceptions;
-using ThirdPartyService.Service.Worker;
+
 using ThirdPartyService;
 using ThirdPartyService.Extensions;
+using ThirdPartyService.Service.Worker;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
@@ -28,8 +29,9 @@ var serviceType = Environment.GetEnvironmentVariable("ServiceType");
 if (!string.IsNullOrEmpty(serviceType) && serviceType.Equals("worker", StringComparison.OrdinalIgnoreCase))
 {
     builder.Services
-        .AddHostedService<WorkerService>();
-       // .AddHostedService<GetBalanceWorker>();
+        .AddHostedService<WorkerService>()
+        .AddHostedService<SBSWCreateMemberWorker>();
+    //.AddHostedService<GetBalanceWorker>();
 }
 
 var app = builder.Build();

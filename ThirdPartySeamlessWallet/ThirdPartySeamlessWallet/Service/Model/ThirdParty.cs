@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
