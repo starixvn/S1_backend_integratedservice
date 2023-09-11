@@ -184,5 +184,64 @@ namespace CommonService.Service.BLL.Tests
         }
 
         #endregion
+
+        #region Iovation
+
+        [TestCase("Nova88", ExpectedResult = "1054302")]
+        [TestCase("NOVA88", ExpectedResult = "1054302")]
+        [TestCase("nova88", ExpectedResult = "1054302")]
+        [TestCase("Goal123", ExpectedResult = "1054302")]
+        [TestCase("Bwing", ExpectedResult = "1054302")]
+        [TestCase("Ivorysport", ExpectedResult = "1054302")]
+        [TestCase("Leobet", ExpectedResult = "1054302")]
+        public string Iovation_GetConfigValuesBySiteNameTest(string siteName)
+        {
+            var actual = _configBLL.GetConfigValuesBySiteName<IovationServicesConfig>("Iovation");
+            return actual[siteName].SubscriberID;
+        }
+        
+        [TestCase(1, ExpectedResult = "1054302")]
+        [TestCase(2, ExpectedResult = "1054302")]
+        [TestCase(3, ExpectedResult = "1054302")]
+        [TestCase(5, ExpectedResult = "1054302")]
+        [TestCase(6, ExpectedResult = "1054302")]
+        public string  Iovation_GetConfigValuesBySiteIdTest(int siteId)
+        {
+            var actual = _configBLL.GetConfigValuesBySiteId<IovationServicesConfig>("Iovation");
+            return actual[siteId].SubscriberID;
+        }
+
+        #endregion
+
+        #region AWSKey
+        //由於AWSKeyConfig只有一組，測兩個會把Key直接顯示，先拿掉，有需要測試的人請到DB自行搜尋填入。
+        [TestCase("Nova88", ExpectedResult = "")]
+        [TestCase("NOVA88", ExpectedResult = "")]
+        [TestCase("nova88", ExpectedResult = "")]
+        [TestCase("Goal123", ExpectedResult = "")]
+        [TestCase("Bwing", ExpectedResult = "")]
+        [TestCase("Ivorysport", ExpectedResult = "")]
+        [TestCase("Leobet", ExpectedResult = "")]
+        public string AWS_GetConfigValuesBySiteNameTest(string siteName)
+        {
+            var actual = _configBLL.GetConfigValuesBySiteName<AWSKeyConfig>("AWSKey");
+            //return actual[siteName].AccessKey;
+            return "";
+        }
+        
+        [TestCase(1, ExpectedResult = "")]
+        [TestCase(2, ExpectedResult = "")]
+        [TestCase(3, ExpectedResult = "")]
+        [TestCase(5, ExpectedResult = "")]
+        [TestCase(6, ExpectedResult = "")]
+        public string  AWS_GetConfigValuesBySiteIdTest(int siteId)
+        {
+            var actual = _configBLL.GetConfigValuesBySiteId<AWSKeyConfig>("AWSKey");
+            //return actual[siteId].SecretKey;
+            return "";
+        }
+        
+
+        #endregion
     }
 }

@@ -24,14 +24,11 @@ namespace CommonService
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<IovationServicesConfig>(Configuration.GetSection("IovationServicesConfig"));
-            services.Configure<Dictionary<string, SkyLineSMSServiceTypeConfig>>(Configuration.GetSection("SkyLineSMSServiceConfig"));
-            services.Configure<Dictionary<string, YcSmsServiceTypeConfig>>(Configuration.GetSection("YcSMSServiceConfig"));
-            services.Configure<AWSKeyConfig>(Configuration.GetSection("ailab-sns"));
             services.Configure<Dictionary<string, Dictionary<string, string>>>(Configuration.GetSection("SMSSupportConfig"));
             services.Configure<Dictionary<string, Dictionary<string, string>>>(Configuration.GetSection("Telegram"));
             services.Configure<Dictionary<string, Dictionary<string, string>>>(Configuration.GetSection("LetsTalk"));
 
+            services.AddLogging();
             services.AddMemoryCache();
             services.AddDatabaseConnection(Configuration);
             HttpHelper.proxyHost = Configuration.GetValue<string>("ProxyHost");
