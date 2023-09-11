@@ -50,13 +50,13 @@ namespace ThirdParty.FaChai
             var Sign = ToMD5(para).ToLower();
 
             var dicP = new Dictionary<string, string>();
-            dicP.Add("Params", Params);
-            dicP.Add("Sign", Sign);
             dicP.Add("AgentCode", siteInputs["AgentCode"]);
             dicP.Add("Currency", tpCustInfo.TpCurrencyId);
-
+            dicP.Add("Params", Params);
+            dicP.Add("Sign", Sign);
+                     
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            var result = HttpPost(
+            var result = HttpPostClient(
                 $"{siteInputs["ApiUrl"]}/AddMember",
                 sParam,
                 "application/x-www-form-urlencoded"
