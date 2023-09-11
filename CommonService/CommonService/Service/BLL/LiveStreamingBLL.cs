@@ -9,18 +9,20 @@ namespace CommonService.Service.BLL
 {
     public class LiveStreamingBLL
     {
-        private readonly IOptions<Dictionary<string, LiveStreamingConfig>> liveStreamingConfig;
+        private readonly Dictionary<string, LiveStreamingConfig> _liveStreamingConfig;
         private readonly HttpHelper httpHelper;
-
-        public LiveStreamingBLL(IOptions<Dictionary<string, LiveStreamingConfig>> liveStreamingConfig, HttpHelper httpHelper)
+        
+        public LiveStreamingBLL(IServiceProvider provider)
         {
-            this.liveStreamingConfig = liveStreamingConfig;
-            this.httpHelper = httpHelper;
+            httpHelper = provider.GetRequiredService<HttpHelper>();
+            var configBLL = provider.GetRequiredService<ConfigBLL>();
+            _liveStreamingConfig = configBLL.GetConfigValuesBySiteName<LiveStreamingConfig>("LiveStreaming");
         }
+        
         public async Task<ApiResult> GetLiveStreamingLink(LiveStreamingLinkReq liveStreamingLinkReq)
         {
             var apiResult = new ApiResult();
-            var config = liveStreamingConfig.Value[liveStreamingLinkReq.SiteName.Trim()];
+            var config = _liveStreamingConfig[liveStreamingLinkReq.SiteName.Trim()];
             var url = config.ApiURL;
             var liveStreaming = new Dictionary<string, string>
             {
