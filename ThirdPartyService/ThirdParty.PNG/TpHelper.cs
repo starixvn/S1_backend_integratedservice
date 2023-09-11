@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -11,10 +13,12 @@ namespace ThirdParty.PNG
     public class TpHelper : ThirdPartyHelperBase
     {
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
+        private readonly Dictionary<int, Dictionary<string, string>> siteConfigDic;
 
-        public TpHelper()
+        public TpHelper(IServiceProvider provider)
         {
             _gameNameList = TpBetRecordProvider.GetGameCasinoList(54).ToDictionary(d => d.AppId, d => d.Name);
+            siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(((int)TpEnum.PNG).ToString());
         }
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -33,7 +37,8 @@ namespace ThirdParty.PNG
 
             try
             {
-                var config = new PNGConfig(inputs, getRequired: false);
+                var siteInputs = siteConfigDic[tpCustInfo.SiteId];
+                var config = new PNGConfig(siteInputs);
                 var token = ApplyToken(tpCustInfo);
                 var channel = appType == AppType.Desktop
                     ? "desktop"
@@ -43,7 +48,7 @@ namespace ThirdParty.PNG
 
                 var dict = new Dictionary<string, string>()
                 {
-                    { "gid", config.GameId },
+                    { "gid", inputs["gameId"] },
                     { "lang", TpLangId },
                     { "pid", config.Pid.ToString() },
                     { "practice","0"},// 0 真錢
@@ -79,7 +84,8 @@ namespace ThirdParty.PNG
         /// <returns></returns>
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var config = new PNGConfig(inputs);
+            var siteInputs = siteConfigDic[tpCustInfo.SiteId];
+            var config = new PNGConfig(siteInputs);
             var betDetailUrl = $"{config.RootUrl}{config.GameHistoryDesktop}{getBetDetail.TransId}";
 
             return new BaseDetail(getBetDetail.TpGameTypeOption)
