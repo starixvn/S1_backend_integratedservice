@@ -115,7 +115,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.IM", "ThirdParty
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.SPRIBE", "ThirdParty.SPRIBE\ThirdParty.SPRIBE.csproj", "{185797B7-5D77-4ADC-B31A-D97D1481BE3F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.PNG", "ThirdParty.PNG\ThirdParty.PNG.csproj", "{9FB6072F-47C9-4CEA-91FB-F06215941F69}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.PNG", "ThirdParty.PNG\ThirdParty.PNG.csproj", "{9FB6072F-47C9-4CEA-91FB-F06215941F69}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

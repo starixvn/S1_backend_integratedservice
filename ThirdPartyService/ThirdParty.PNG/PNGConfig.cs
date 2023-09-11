@@ -18,48 +18,39 @@
 
         public int Pid { get; set; }
 
-        public string GameId { get; set; }
-
-        public PNGConfig(Dictionary<string, string> inputs, bool getRequired = true)
+        public PNGConfig(Dictionary<string, string> siteConfig)
         {
-            RootUrl = inputs.ContainsKey("RootUrl") && !string.IsNullOrEmpty(inputs["RootUrl"])
-                ? inputs["RootUrl"]
+            RootUrl = siteConfig.ContainsKey("RootUrl") && !string.IsNullOrEmpty(siteConfig["RootUrl"])
+                ? siteConfig["RootUrl"]
                 : throw new Exception("PlayNGo TpList not found RootUrl Setting");
 
-            Password = inputs.ContainsKey("Password") && !string.IsNullOrEmpty(inputs["Password"])
-                ? inputs["Password"]
+            Password = siteConfig.ContainsKey("Password") && !string.IsNullOrEmpty(siteConfig["Password"])
+                ? siteConfig["Password"]
                 : throw new Exception("PlayNGo TpList not found Password Setting");
 
-            UserName = inputs.ContainsKey("UserName") && !string.IsNullOrEmpty(inputs["UserName"])
-                ? inputs["UserName"]
+            UserName = siteConfig.ContainsKey("UserName") && !string.IsNullOrEmpty(siteConfig["UserName"])
+                ? siteConfig["UserName"]
                 : throw new Exception("PlayNGo TpList not found UserName Setting");
 
-            AccessToken = inputs.ContainsKey("AccessToken") && !string.IsNullOrEmpty(inputs["AccessToken"])
-                ? inputs["AccessToken"]
+            AccessToken = siteConfig.ContainsKey("AccessToken") && !string.IsNullOrEmpty(siteConfig["AccessToken"])
+                ? siteConfig["AccessToken"]
                 : throw new Exception("PlayNGo TpList not found AccessToken Setting");
 
-            GameLaunchUrl = inputs.ContainsKey("GameLaunchUrl") && !string.IsNullOrEmpty(inputs["GameLaunchUrl"])
-                ? inputs["GameLaunchUrl"]
+            GameLaunchUrl = siteConfig.ContainsKey("GameLaunchUrl") && !string.IsNullOrEmpty(siteConfig["GameLaunchUrl"])
+                ? siteConfig["GameLaunchUrl"]
                 : throw new Exception("PlayNGo TpList not found GameLaunchUrl Setting");
 
-            GameHistoryMobile = inputs.ContainsKey("GameHistoryMobile") && !string.IsNullOrEmpty(inputs["GameHistoryMobile"])
-                ? inputs["GameHistoryMobile"]
+            GameHistoryMobile = siteConfig.ContainsKey("GameHistoryMobile") && !string.IsNullOrEmpty(siteConfig["GameHistoryMobile"])
+                ? siteConfig["GameHistoryMobile"]
                 : throw new Exception("PlayNGo TpList not found GameHistoryMobile Setting");
 
-            GameHistoryDesktop = inputs.ContainsKey("GameHistoryDesktop") && !string.IsNullOrEmpty(inputs["GameHistoryDesktop"])
-                ? inputs["GameHistoryDesktop"]
+            GameHistoryDesktop = siteConfig.ContainsKey("GameHistoryDesktop") && !string.IsNullOrEmpty(siteConfig["GameHistoryDesktop"])
+                ? siteConfig["GameHistoryDesktop"]
                 : throw new Exception("PlayNGo TpList not found GameHistoryDesktop Setting");
 
-            Pid = inputs.ContainsKey("Pid") && !string.IsNullOrEmpty(inputs["Pid"])
-                ? int.Parse(inputs["Pid"])
+            Pid = siteConfig.ContainsKey("Pid") && !string.IsNullOrEmpty(siteConfig["Pid"])
+                ? int.Parse(siteConfig["Pid"])
                 : throw new Exception("PlayNGo TpList not found Pid Setting");
-
-            if (getRequired) return;
-            
-            // option欄位，登入時才會帶GameId
-            GameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"])
-                ? inputs["gameId"]
-                : throw new Exception("Api Param inputs[gameId] not found");
         }
     }
 }
