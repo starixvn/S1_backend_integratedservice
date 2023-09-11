@@ -42,7 +42,8 @@
         HB = 40,
         SBSW = 41,
         SimplePlay = 44,
-        Nextspin = 50
+        Nextspin = 50,
+        FaChai = 55
     }
 
     public enum TpGameType
@@ -129,5 +130,6 @@
         IM_ESports = 102,
         IM_Sports = 103,
         SPRIBE_RNG = 104,
+        FaChai_RNG = 106
     }
 }
