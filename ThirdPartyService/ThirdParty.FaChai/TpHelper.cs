@@ -70,21 +70,18 @@ namespace ThirdParty.FaChai
 
             var tpData = JsonConvert.DeserializeObject<FCResponse>(result);
 
-            //if (tpData.Result == "0")
-            //{
-            //    oApiResult.ErrorCode = ErrorCode.Success;
-            //    oApiResult.Message = "";
-            //}
-            //else
-            //{
-            //    oApiResult.RawMessage = ((FCErrorMessage)Int32.Parse(tpData.Result)).ToString();
-            //    oApiResult.RawErrorCode = tpData.Result;
-            //    oApiResult.Message = $"{tpData.Result}-{((FCErrorMessage)Int32.Parse(tpData.Result)).ToString()}";
-            //    oApiResult.ErrorCode = ErrorCode.Fail;
-            //}
-
-            oApiResult.ErrorCode = ErrorCode.Success;
-            oApiResult.Message = "";
+            if (tpData.Result == "0")
+            {
+                oApiResult.ErrorCode = ErrorCode.Success;
+                oApiResult.Message = "";
+            }
+            else
+            {
+                oApiResult.RawMessage = ((FCErrorMessage)Int32.Parse(tpData.Result)).ToString();
+                oApiResult.RawErrorCode = tpData.Result;
+                oApiResult.Message = $"{tpData.Result}-{((FCErrorMessage)Int32.Parse(tpData.Result)).ToString()}";
+                oApiResult.ErrorCode = ErrorCode.Fail;
+            }
 
             return oApiResult;
         }

@@ -187,7 +187,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Nextspin = 50,
         PlayTech = 51,
         IM = 52,
-        SPRIBE = 53
+        SPRIBE = 53,
+        FaChai = 55
     }
     public enum TransferType : int
     {
