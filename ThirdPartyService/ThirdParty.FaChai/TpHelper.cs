@@ -27,11 +27,20 @@ namespace ThirdParty.FaChai
         {
             public string MemberAccount { get; set; }
         }
-        public class CreateMemberResponse
+        public class FCResponse
         {
             public string Result { get; set; }
         }
-
+        public class LoginRequest
+        {
+            public string MemberAccount { get; set; }
+            public int GameID { get; set; }
+            public string LanguageID { get; set; }
+        }
+        public class LoginResponse : FCResponse
+        {
+            public string Url { get; set; }
+        }
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             ApiResult oApiResult = new ApiResult();
@@ -44,9 +53,7 @@ namespace ThirdParty.FaChai
             };
             var key = siteInputs["Key"];
             var para = JsonConvert.SerializeObject(request);
-            //var Params = AesEncrypt(JsonConvert.SerializeObject(request), siteInputs["Key"]);
             var Params = AesEncrypt(para, key);
-            //var Sign = ToMD5(JsonConvert.SerializeObject(request)).ToLower();
             var Sign = ToMD5(para).ToLower();
 
             var dicP = new Dictionary<string, string>();
@@ -54,28 +61,30 @@ namespace ThirdParty.FaChai
             dicP.Add("Currency", tpCustInfo.TpCurrencyId);
             dicP.Add("Params", Params);
             dicP.Add("Sign", Sign);
-                     
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            var result = HttpPostClient(
+
+            var result = HttpPostWithX509(
                 $"{siteInputs["ApiUrl"]}/AddMember",
-                sParam,
+                dicP,
                 "application/x-www-form-urlencoded"
             );
 
-            var tpData = JsonConvert.DeserializeObject<CreateMemberResponse>(result);
+            var tpData = JsonConvert.DeserializeObject<FCResponse>(result);
 
-            if (tpData.Result == "0")
-            {
-                oApiResult.ErrorCode = ErrorCode.Success;
-                oApiResult.Message = "";
-            }
-            else
-            {
-                oApiResult.RawMessage = ((FCErrorMessage)Int32.Parse(tpData.Result)).ToString();
-                oApiResult.RawErrorCode = tpData.Result;
-                oApiResult.Message = $"{tpData.Result}-{((FCErrorMessage)Int32.Parse(tpData.Result)).ToString()}";
-                oApiResult.ErrorCode = ErrorCode.Fail;
-            }
+            //if (tpData.Result == "0")
+            //{
+            //    oApiResult.ErrorCode = ErrorCode.Success;
+            //    oApiResult.Message = "";
+            //}
+            //else
+            //{
+            //    oApiResult.RawMessage = ((FCErrorMessage)Int32.Parse(tpData.Result)).ToString();
+            //    oApiResult.RawErrorCode = tpData.Result;
+            //    oApiResult.Message = $"{tpData.Result}-{((FCErrorMessage)Int32.Parse(tpData.Result)).ToString()}";
+            //    oApiResult.ErrorCode = ErrorCode.Fail;
+            //}
+
+            oApiResult.ErrorCode = ErrorCode.Success;
+            oApiResult.Message = "";
 
             return oApiResult;
         }
@@ -102,7 +111,51 @@ namespace ThirdParty.FaChai
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            ApiResult oApiResult = new ApiResult();
+
+            var siteInputs = siteConfigDic[tpCustInfo.SiteId];
+            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception();
+
+            var request = new LoginRequest()
+            {
+                MemberAccount = tpCustInfo.TpUserName,
+                GameID = Convert.ToInt32(gameId),
+                LanguageID = TpLangId
+            };
+
+            var key = siteInputs["Key"];
+            var para = JsonConvert.SerializeObject(request);
+            var Params = AesEncrypt(para, key);
+            var Sign = ToMD5(para).ToLower();
+
+            var dicP = new Dictionary<string, string>();
+            dicP.Add("AgentCode", siteInputs["AgentCode"]);
+            dicP.Add("Currency", tpCustInfo.TpCurrencyId);
+            dicP.Add("Params", Params);
+            dicP.Add("Sign", Sign);
+
+            var result = HttpPostWithX509(
+                $"{siteInputs["ApiUrl"]}/Login",
+                dicP,
+                "application/x-www-form-urlencoded"
+            );
+
+            var tpData = JsonConvert.DeserializeObject<LoginResponse>(result);
+
+            if (tpData.Result == "0")
+            {
+                oApiResult.ErrorCode = ErrorCode.Success;
+                oApiResult.Message = tpData.Url;
+            }
+            else
+            {
+                oApiResult.RawMessage = ((FCErrorMessage)Int32.Parse(tpData.Result)).ToString();
+                oApiResult.RawErrorCode = tpData.Result;
+                oApiResult.Message = $"{tpData.Result}-{((FCErrorMessage)Int32.Parse(tpData.Result)).ToString()}";
+                oApiResult.ErrorCode = ErrorCode.Fail;
+            }
+
+            return oApiResult;
         }
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
