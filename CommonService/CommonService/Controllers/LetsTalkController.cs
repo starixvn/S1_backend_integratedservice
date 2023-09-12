@@ -1,5 +1,7 @@
 ﻿using System.Net;
+using CommonService.Service.BLL;
 using CommonService.Service.Library;
+using CommonService.Service.Model;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -11,13 +13,14 @@ namespace CommonService.Controllers
     {
         private readonly HttpHelper _httpHelper;
         private readonly ILogger<LetsTalkController> _logger;
-        private static Dictionary<string, Dictionary<string, string>> _letsTalk;
+        private readonly Dictionary<string, LetsTalkConfig> _letsTalkConfig;
 
-        public LetsTalkController(IServiceProvider provider, IConfiguration configuration)
+        public LetsTalkController(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _logger = provider.GetService<ILogger<LetsTalkController>>();
-            _letsTalk = configuration.GetSection("LetsTalk").Get<Dictionary<string, Dictionary<string, string>>>();
+            var configBLL = provider.GetRequiredService<ConfigBLL>();
+            _letsTalkConfig = configBLL.GetConfigValuesBySiteName<LetsTalkConfig>("LetsTalk");
         }
 
         public class LetsTalkMsgParam
@@ -53,8 +56,11 @@ namespace CommonService.Controllers
         {
             try
             {
-                var url = _letsTalk["Common"]["SandMessageURL"];
-                var group = _letsTalk.ContainsKey(req.GroupName) ? _letsTalk[req.GroupName] : throw new Exception("GroupName");
+                var url = _letsTalkConfig.Values.FirstOrDefault()?.LetsTalkCommon.SignInURL;
+                var notificationGroup =
+                    _letsTalkConfig.Values.FirstOrDefault()?.LetsTalkNotification
+                        .FirstOrDefault(n => n.GroupName == req.GroupName) ?? throw new Exception("GroupName");
+                
                 var token = await GetLetsTalkToken(req.GroupName);
                 if (string.IsNullOrEmpty(token))
                 {
@@ -64,7 +70,7 @@ namespace CommonService.Controllers
                 var data = new LetsTalkMsgParam
                 {
                     msg = new LetsTalkMsgtext(),
-                    receiver = group["SandMessageRoomID"]
+                    receiver = notificationGroup.SandMessageRoomID
                 };
                 data.msg.type = "text";
                 data.msg.text = req.Message;
@@ -83,13 +89,15 @@ namespace CommonService.Controllers
         {
             try
             {
-                var url = _letsTalk["Common"]["SignInURL"];
-                var group = _letsTalk.ContainsKey(groupName) ? _letsTalk[groupName] : throw new Exception("GroupName");
+                var url = _letsTalkConfig.Values.FirstOrDefault()?.LetsTalkCommon.SignInURL;
+                var notificationGroup =
+                    _letsTalkConfig.Values.FirstOrDefault()?.LetsTalkNotification
+                        .FirstOrDefault(n => n.GroupName == groupName) ?? throw new Exception("GroupName");
 
                 var data = new Dictionary<string, string>
                 {
-                    {"id", group["SignInId"]},
-                    {"token", group["SignInToken"]}
+                    {"id", notificationGroup.SignInId.ToString()},
+                    {"token", notificationGroup.SignInToken}
                 };
 
                 var parameters = JsonConvert.SerializeObject(data);
