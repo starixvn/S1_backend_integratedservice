@@ -24,10 +24,6 @@ namespace CommonService
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<Dictionary<string, Dictionary<string, string>>>(Configuration.GetSection("SMSSupportConfig"));
-            services.Configure<Dictionary<string, Dictionary<string, string>>>(Configuration.GetSection("Telegram"));
-            services.Configure<Dictionary<string, Dictionary<string, string>>>(Configuration.GetSection("LetsTalk"));
-
             services.AddLogging();
             services.AddMemoryCache();
             services.AddDatabaseConnection(Configuration);
