@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 using Serilog.Context;
 
 using ThirdPartySeamlessWallet.Service.BLL;
