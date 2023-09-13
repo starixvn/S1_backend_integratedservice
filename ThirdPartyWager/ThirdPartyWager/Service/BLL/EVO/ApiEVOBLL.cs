@@ -41,12 +41,13 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task<List<WagerEVOModel>> GetBetListByTransId(string wagerUrl, string casinoKey, string gameHistoryApiToken, string gameProvider, string TransId)
+        public async Task<List<WagerEVOModel>> GetBetListByTransId(string wagerUrl, string casinoKey, string gameHistoryApiToken, string gameProvider, string TransId, string startTime)
         {
             // param
             var url = $"{wagerUrl}/api/gamehistory/v1/casino/games/stream";
             var param = new
             {
+                startDate = startTime,
                 transactionId = TransId,
                 gameProvider = gameProvider
             };
