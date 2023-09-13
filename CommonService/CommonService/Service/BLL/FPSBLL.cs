@@ -8,18 +8,20 @@ namespace CommonService.Service.BLL
 {
     public class FPSBLL
     {
-        private readonly IOptions<Dictionary<string, FPSServicesConfig>> fpsServicesConfig;
+        private readonly Dictionary<string, FPSServicesConfig> _fpsServicesConfig;
         private readonly HttpHelper httpHelper;
 
-        public FPSBLL(IOptions<Dictionary<string, FPSServicesConfig>> fpsServicesConfig, HttpHelper httpHelper)
+        public FPSBLL(IServiceProvider provider)
         {
-            this.fpsServicesConfig = fpsServicesConfig;
-            this.httpHelper = httpHelper;
+            httpHelper = provider.GetRequiredService<HttpHelper>();
+            var configBLL = provider.GetRequiredService<ConfigBLL>();
+            _fpsServicesConfig = configBLL.GetConfigValuesBySiteName<FPSServicesConfig>("FPS");
         }
+        
         public async Task<ApiResult> FPSChecksAsync(CustInfoProfile custInfo, FPSChecksRequest fpsChecksRequest)
         {
             var apiResult = new ApiResult();
-            var config = fpsServicesConfig.Value[custInfo.SiteName];
+            var config = _fpsServicesConfig[custInfo.SiteName];
             var url = config.ResourceURL;
 
             var sendIovationChecks = new Dictionary<string, string>
