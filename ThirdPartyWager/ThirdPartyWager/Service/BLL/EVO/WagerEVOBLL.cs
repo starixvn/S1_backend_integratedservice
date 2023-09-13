@@ -259,7 +259,8 @@ namespace ThirdPartyWager.Service.BLL
                     Thread.Sleep(12000);
 
                     // get wager
-                    var dataWager = await _apiEVOBLL.GetBetListByTransId(setting["ApiUrl"], setting["CasinoKey"], setting["gameHistoryApiToken"], setting["GameProvider"], unsettled.TransId);
+                    var settleTime = DateTimeOffset.FromUnixTimeSeconds(unsettled.SettleTime).DateTime.ToString(_timeFormat);
+                    var dataWager = await _apiEVOBLL.GetBetListByTransId(setting["ApiUrl"], setting["CasinoKey"], setting["gameHistoryApiToken"], setting["GameProvider"], unsettled.TransId, settleTime);
 
                     // error condition
                     var error = dataWager.Select(x => x.error).FirstOrDefault();
