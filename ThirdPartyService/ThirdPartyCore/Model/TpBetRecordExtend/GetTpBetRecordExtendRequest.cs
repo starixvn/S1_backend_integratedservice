@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ThirdPartyCore.Model.TpBetRecordExtend
+﻿namespace ThirdPartyCore.Model.TpBetRecordExtend
 {
     public class GetTpBetRecordExtendRequest
     {

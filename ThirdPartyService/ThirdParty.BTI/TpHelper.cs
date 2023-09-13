@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 using System.Web;
 using System.Xml.Linq;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -162,7 +160,7 @@ namespace ThirdParty.BTI
                 DeviceType = DeviceType.None,
                 IP = string.Empty,
                 Odds = decimal.TryParse(selection.Attribute("OddsInUserStyle").Value, out var odds) ? odds : 0,
-                OddsTypeEnum = GetOddsType(selection.Attribute("UserOddStyle").Value),  
+                OddsTypeEnum = GetOddsType(selection.Attribute("UserOddStyle").Value),
                 Live = selection.Attribute("IsLive").Value,
             };
         }

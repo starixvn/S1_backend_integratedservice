@@ -1,13 +1,16 @@
-﻿using Dapper;
+﻿using System.Data;
+
+using Dapper;
+
 using FluentAssertions;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Logging;
+
 using NSubstitute;
-using System.Data;
+
 using ThirdPartySeamlessWallet.Core.Extensions;
 using ThirdPartySeamlessWallet.IntegrationTest.Models;
 using ThirdPartySeamlessWallet.IntegrationTest.Stubs;
@@ -15,6 +18,7 @@ using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Workers;
 
 namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
@@ -28,7 +32,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         private IConfiguration _configuration;
 
         private readonly MySqlClient _mySqlClient;
-   
+
         private readonly TCGWorker _target;
 
         public decimal ActualWinlostAmount;
@@ -44,7 +48,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             var app = builder.Build();
             _configuration = app.Configuration;
             _serviceCollection.AddSingleton(_configuration);
-            
+
 
             _serviceCollection.AddTransient(p => Substitute.For<ILogger<SettledService>>());
             _serviceCollection.AddTransient(p => Substitute.For<ILogger<BettingService>>());
@@ -67,7 +71,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         }
 
         public SettleWorkerSandbox InsertWager(string spName, object wager)
-        {              
+        {
             _mySqlClient.Execute(spName, parameters: new DynamicParameters(wager));
             return this;
         }

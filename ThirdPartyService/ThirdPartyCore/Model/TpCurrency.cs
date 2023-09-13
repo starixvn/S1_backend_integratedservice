@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ThirdPartyCore.Model
+﻿namespace ThirdPartyCore.Model
 {
     public class TpCurrency
     {

@@ -1,10 +1,7 @@
-﻿using System;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using System.Text;
+
 using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
 
 namespace ThirdPartyService.Extensions.Middlewares
@@ -40,8 +37,8 @@ namespace ThirdPartyService.Extensions.Middlewares
             using (var requestBody = new StreamReader(requestBodyStream, Encoding.UTF8, true, 1024, true))
             {
                 var codePage = requestBody.CurrentEncoding.CodePage;
-                
-                content = !context.Request.Method.Equals("GET",StringComparison.OrdinalIgnoreCase)
+
+                content = !context.Request.Method.Equals("GET", StringComparison.OrdinalIgnoreCase)
                           && string.IsNullOrEmpty(content)
                     ? await requestBody.ReadToEndAsync()
                     : content;

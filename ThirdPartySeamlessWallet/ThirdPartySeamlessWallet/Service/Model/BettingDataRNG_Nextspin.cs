@@ -19,13 +19,13 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
     }
-    public class NextspinResult 
+    public class NextspinResult
     {
         public int Result { get; set; }
         public string SQ { get; set; }
-        public decimal AfterAmount { get; set; }    
+        public decimal AfterAmount { get; set; }
     }
-    public class NextspinHeader 
+    public class NextspinHeader
     {
         [FromHeader]
         public string API { get; set; }
@@ -44,7 +44,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string MerchantCode { get; set; }
         public string SerialNo { get; set; }
     }
-    public class AuthorizeRequest 
+    public class AuthorizeRequest
     {
         public string AcctId { get; set; }
         public string Token { get; set; }
@@ -88,7 +88,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public NextspinSpecialGame SpecialGame { get; set; }
     }
 
-    public class NextspinSpecialGame 
+    public class NextspinSpecialGame
     {
         public string Type { get; set; }
         public int Count { get; set; }
@@ -116,7 +116,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
     }
-    public enum NextspinTransferType 
+    public enum NextspinTransferType
     {
         PlaceBet = 1,
         CancelBet = 2,

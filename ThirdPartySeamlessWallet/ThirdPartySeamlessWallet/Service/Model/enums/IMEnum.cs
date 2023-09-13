@@ -1,18 +1,16 @@
-﻿using System.ComponentModel;
-
-namespace ThirdPartySeamlessWallet.Service.Model.enums
+﻿namespace ThirdPartySeamlessWallet.Service.Model.enums
 {
     public enum IMResultCode
     {
         Success = 0,
         PlayerDoesNotExist = 504,
-        NotEnoughBalance=510,
+        NotEnoughBalance = 510,
         PlayerIsInactive = 542,
         TransactionIdNotFound = 545,
         InvalidArgument = 612,
         Exception = 999
     }
-    
+
     public enum IMActionId
     {
         PlaceBetRefund = 1005,

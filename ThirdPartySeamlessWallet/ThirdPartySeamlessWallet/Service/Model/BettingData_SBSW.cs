@@ -3,8 +3,8 @@
     public class BettingData_SBSW
     {
     }
-    public class BetSBSW 
-    { 
+    public class BetSBSW
+    {
         public string userId { get; set; }
         public decimal betAmount { get; set; }
         public decimal actualAmount { get; set; }

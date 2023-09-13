@@ -14,34 +14,26 @@ namespace CommonService.Service.BLL
     {
         private readonly HttpHelper _httpHelper;
         private readonly OTPSMSService _sOtpSmsService;
-        private readonly IOptions<Dictionary<string, SkyLineSMSServiceTypeConfig>> _skyLineSmsServiceTypeConfig;
-        private readonly IOptions<Dictionary<string, YcSmsServiceTypeConfig>> _YcSmsServiceTypeConfig;
+        private readonly Dictionary<string, SkyLineSMSServiceTypeConfig> _skyLineSmsServiceTypeConfig;
+        private readonly Dictionary<string, YcSmsServiceTypeConfig> _YcSmsServiceTypeConfig;
         private readonly Tools _tools;
         private readonly SelLangBLL _selLangBll;
         private readonly ILogger<OTPSMSService> _logger;
         private readonly Log2File _log2File;
         private readonly AWSSNSHelper _awsSnsHelper;
-       
-        public OTPSMSBLL(
-            HttpHelper httpHelper, 
-            OTPSMSService sOtpSmsService, 
-            IOptions<Dictionary<string, SkyLineSMSServiceTypeConfig>> skyLineSmsServiceTypeConfig,
-            IOptions<Dictionary<string, YcSmsServiceTypeConfig>> ycSmsServiceTypeConfig, 
-            Tools tools, 
-            SelLangBLL selLangBll, 
-            ILogger<OTPSMSService> logger, 
-            Log2File log2File, AWSSNSHelper awsSnsHelper
-            )
+
+        public OTPSMSBLL(IServiceProvider provider)
         {
-            _httpHelper = httpHelper;
-            _sOtpSmsService = sOtpSmsService;
-            _skyLineSmsServiceTypeConfig = skyLineSmsServiceTypeConfig;
-            _YcSmsServiceTypeConfig = ycSmsServiceTypeConfig;
-            _tools = tools;
-            _selLangBll = selLangBll;
-            _logger = logger;
-            _log2File = log2File;
-            _awsSnsHelper = awsSnsHelper;
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _sOtpSmsService = provider.GetRequiredService<OTPSMSService>();
+            _tools = provider.GetRequiredService<Tools>();
+            _selLangBll = provider.GetRequiredService<SelLangBLL>();
+            _logger = provider.GetRequiredService<ILogger<OTPSMSService>>();
+            _log2File = provider.GetRequiredService<Log2File>();
+            _awsSnsHelper = provider.GetRequiredService<AWSSNSHelper>();
+            var configBLL = provider.GetRequiredService<ConfigBLL>();
+            _skyLineSmsServiceTypeConfig = configBLL.GetConfigValuesBySiteName<SkyLineSMSServiceTypeConfig>("SkyLineSMS");
+            _YcSmsServiceTypeConfig = configBLL.GetConfigValuesBySiteName<YcSmsServiceTypeConfig>("YcSMS");
         }
 
         #region Common
@@ -109,7 +101,7 @@ namespace CommonService.Service.BLL
             var apiResult = new ApiResult();
             var areaCode = custInfo.AreaCode;
             var dateTime = new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyyMMddHHmmss");
-            var Config = _skyLineSmsServiceTypeConfig.Value[custInfo.SiteName].OTP;
+            var Config = _skyLineSmsServiceTypeConfig[custInfo.SiteName].OTP;
             var sign = MakeSignString(Config.Account, Config.Password, dateTime);
             var url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
 
@@ -199,7 +191,7 @@ namespace CommonService.Service.BLL
         {
             var apiResult = new ApiResult();
             var dateTime = new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyyMMddHHmmss");
-            var Config = _skyLineSmsServiceTypeConfig.Value[custInfo.SiteName].SMS;
+            var Config = _skyLineSmsServiceTypeConfig[custInfo.SiteName].SMS;
             var sign = MakeSignString(Config.Account, Config.Password, dateTime);
             var url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
 
@@ -304,7 +296,7 @@ namespace CommonService.Service.BLL
         private async Task<ApiResult> SendToYcOTPSMSAsync(string phoneNo, string otpNum, CustInfoProfile custInfo, int custId, string userLang = "")
         {
             var apiResult = new ApiResult();
-            var config = _YcSmsServiceTypeConfig.Value[custInfo.SiteName].OTP;
+            var config = _YcSmsServiceTypeConfig[custInfo.SiteName].OTP;
             var siteName = custInfo.SiteName;
             var phone = $"86{phoneNo}";
             var postData = new Dictionary<string, string>

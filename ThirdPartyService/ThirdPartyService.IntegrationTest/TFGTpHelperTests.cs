@@ -1,29 +1,27 @@
-﻿using NUnit.Framework;
-using System.Collections.Generic;
-using ThirdPartyCore.Model;
-using FluentAssertions;
-using ThirdPartyCore.Model.enums;
-using Newtonsoft.Json;
-using System.Web;
-using System.Diagnostics;
-using System;
-using Microsoft.Extensions.DependencyInjection;
+﻿using FluentAssertions;
+
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+using NSubstitute;
+
+using NUnit.Framework;
+
+using ThirdPartyCore;
+using ThirdPartyCore.Model;
+using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordExtend;
+
 using ThirdPartyService.Extensions;
 using ThirdPartyService.IntegrationTest.Models;
-using Microsoft.Extensions.Hosting;
-using ThirdPartyCore;
-using Microsoft.AspNetCore.Hosting;
-using NSubstitute;
 using ThirdPartyService.IntegrationTest.Stubs;
-using Microsoft.Extensions.Logging;
-using ThirdPartyService.Service.Library;
-using Microsoft.Extensions.Configuration;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
-using ThirdParty.TFG;
-using static ThirdParty.TCG.TpHelper;
-using ThirdPartyCore.Model.TpBetRecordExtend;
+using ThirdPartyService.Service.Library;
 
 namespace ThirdParty.TFG.Tests
 {

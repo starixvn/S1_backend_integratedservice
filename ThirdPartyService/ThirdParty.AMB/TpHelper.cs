@@ -1,10 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using ThirdPartyCore;
+﻿using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -41,9 +35,9 @@ namespace ThirdParty.AMB
                     ok = true;
                 }
             }
-            
-            if (inputs.ContainsKey($"SlotApiUrl{tpCustInfo.TpCurrencyId}") && 
-                inputs.ContainsKey($"SlotAgent{tpCustInfo.TpCurrencyId}") && 
+
+            if (inputs.ContainsKey($"SlotApiUrl{tpCustInfo.TpCurrencyId}") &&
+                inputs.ContainsKey($"SlotAgent{tpCustInfo.TpCurrencyId}") &&
                 inputs.ContainsKey($"SlotSecretKey{tpCustInfo.TpCurrencyId}"))
             {
                 var ambSlot = AMBFactory.Create(TpGameType.AMB_RNG, inputs, tpCustInfo.TpCurrencyId);
@@ -58,9 +52,9 @@ namespace ThirdParty.AMB
                 ok = true;
             }
 
-            if(ok)
+            if (ok)
                 oApiResult.ErrorCode = ErrorCode.Success;
-            
+
             return oApiResult;
         }
 
@@ -116,16 +110,16 @@ namespace ThirdParty.AMB
             switch (tpGameType)
             {
                 case TpGameType.AMB_Poker:
-                    roundId = TpBetRecordProvider.DbQueryFirst("Service_BettransPK_AMB_Detail_Get", new {getBetDetail.TransId}, DataBase.Report).GetValueOrDefault("roundId").ToString();
+                    roundId = TpBetRecordProvider.DbQueryFirst("Service_BettransPK_AMB_Detail_Get", new { getBetDetail.TransId }, DataBase.Report).GetValueOrDefault("roundId").ToString();
                     break;
                 case TpGameType.AMB_RNG:
-                {
-                    var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_AMB_Detail_Get",
-                        new {YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId}, DataBase.Report);
-                    roundId = getBetDetail.TransId;
-                    gameId = detailList?.FirstOrDefault().GetValueOrDefault("gameId")?.ToString();
-                    break;
-                }
+                    {
+                        var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_AMB_Detail_Get",
+                            new { YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId }, DataBase.Report);
+                        roundId = getBetDetail.TransId;
+                        gameId = detailList?.FirstOrDefault().GetValueOrDefault("gameId")?.ToString();
+                        break;
+                    }
                 default:
                     throw new ArgumentOutOfRangeException(nameof(tpGameType), tpGameType, null);
             }
@@ -140,7 +134,7 @@ namespace ThirdParty.AMB
             if (string.IsNullOrEmpty(gameReport.data.url))
             {
                 var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_AMB_Detail_Get",
-                    new {YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId}, DataBase.Report);
+                    new { YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId }, DataBase.Report);
                 var tpCurrency = new TpCurrency()
                 {
                     ExchangeRate = tpCustInfo.ExchangeRate,
@@ -153,11 +147,11 @@ namespace ThirdParty.AMB
                     TpCurrency = tpCurrency,
                     RefTransId = string.Empty,
                     TpUserName = detailList.FirstOrDefault()?.GetValueOrDefault("username")?.ToString(),
-                    UTCBetTime = detailList.Min(i => (DateTime) i.GetValueOrDefault("timestamp", DateTime.MinValue)),
-                    UTCSettledTime = detailList.Max(i => (DateTime) i.GetValueOrDefault("timestamp", DateTime.MinValue)),
-                    Stake = detailList.Where(i => (sbyte) i.GetValueOrDefault("TicketType") == 1)
-                        .Sum(i => Math.Abs((decimal) i.GetValueOrDefault("amount"))) * tpCurrency.ExchangeRate,
-                    WinlostAmount = detailList.Sum(i => (decimal) i.GetValueOrDefault("amount")) * tpCurrency.ExchangeRate,
+                    UTCBetTime = detailList.Min(i => (DateTime)i.GetValueOrDefault("timestamp", DateTime.MinValue)),
+                    UTCSettledTime = detailList.Max(i => (DateTime)i.GetValueOrDefault("timestamp", DateTime.MinValue)),
+                    Stake = detailList.Where(i => (sbyte)i.GetValueOrDefault("TicketType") == 1)
+                        .Sum(i => Math.Abs((decimal)i.GetValueOrDefault("amount"))) * tpCurrency.ExchangeRate,
+                    WinlostAmount = detailList.Sum(i => (decimal)i.GetValueOrDefault("amount")) * tpCurrency.ExchangeRate,
                     GameCode = detailList.FirstOrDefault()?.GetValueOrDefault("gameId")?.ToString(),
                     GameName = detailList.FirstOrDefault()?.GetValueOrDefault("game")?.ToString(),
                 };
@@ -180,7 +174,7 @@ namespace ThirdParty.AMB
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
-            var detailList = TpBetRecordProvider.DbQuery("Service_Bettrans_AMB_Detail_Get", 
+            var detailList = TpBetRecordProvider.DbQuery("Service_Bettrans_AMB_Detail_Get",
                 new { betRecordInfo.TransId, GameType = tpGameType.Type, YYYYMM }, DataBase.Main);
 
             return tpGameType.CategoryId switch
@@ -217,7 +211,7 @@ namespace ThirdParty.AMB
 
         private string GetInputValue(Dictionary<string, string> inputs, string key, bool allowNull = false)
         {
-            if(inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))
+            if (inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))
             {
                 return inputs[key];
             }

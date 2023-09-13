@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -126,7 +124,7 @@ namespace ThirdParty.SBO
             else
             {
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
-            }      
+            }
         }
 
         #region 單一錢包不實作
@@ -193,7 +191,7 @@ namespace ThirdParty.SBO
             }
         }
 
-        private class BetLimit 
+        private class BetLimit
         {
             public int Min { get; set; }
             public int Max { get; set; }
@@ -399,8 +397,8 @@ namespace ThirdParty.SBO
         #endregion
 
         private class subBet
-        {         
-            public string match { get; set; }       
+        {
+            public string match { get; set; }
             public string betOption { get; set; }
             public string marketType { get; set; }
         }

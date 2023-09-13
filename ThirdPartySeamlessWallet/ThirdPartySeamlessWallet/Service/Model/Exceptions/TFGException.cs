@@ -1,8 +1,4 @@
-﻿using ThirdPartySeamlessWallet.Service.Model.enums;
-using static ThirdPartySeamlessWallet.Controllers.APController;
-using ThirdPartySeamlessWallet.Service.Model.SBSW;
-
-namespace ThirdPartySeamlessWallet.Service.Model.Exceptions
+﻿namespace ThirdPartySeamlessWallet.Service.Model.Exceptions
 {
     public class TFGException : Exception
     {

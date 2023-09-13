@@ -1,16 +1,11 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Linq;
-using System.Web;
-using System.Xml.Serialization;
+
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
-using ThirdPartyCore.Extensions;
 
 namespace ThirdParty.DG
 {
@@ -149,8 +144,8 @@ namespace ThirdParty.DG
             MD5Key = ToMD5($"{AgentName}{APIkey}{Random}").ToLower();
             SignUp.token = MD5Key;
             SignUp.random = Random;
-            SignUp.data = limitGroupNoMapping.ContainsKey(tpCustInfo.TpCurrencyId) 
-                ? limitGroupNoMapping[tpCustInfo.TpCurrencyId] 
+            SignUp.data = limitGroupNoMapping.ContainsKey(tpCustInfo.TpCurrencyId)
+                ? limitGroupNoMapping[tpCustInfo.TpCurrencyId]
                 : DefaultLimitGroup;
             SignUp.member.username = tpCustInfo.TpUserName;
             SignUp.member.password = tpCustInfo.TpPwd;
@@ -219,7 +214,7 @@ namespace ThirdParty.DG
             Login.member.username = tpCustInfo.TpUserName.ToUpper();
             Login.member.password = tpCustInfo.TpPwd;
             Login.data = GetLimitGroup(tpCustInfo.TpCurrencyId, tpCustInfo.CustId);
-            
+
             string InputJson = JsonConvert.SerializeObject(Login);
 
             var result = HttpPost(ApiUrl, InputJson, "application/json");
@@ -282,7 +277,7 @@ namespace ThirdParty.DG
                     UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("betTime", DateTime.MinValue),
                     UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("calTime", DateTime.MinValue),
                     Stake = (decimal)wagerDetail.GetValueOrDefault("betPoints") * tpCurrency.ExchangeRate,
-                    WinlostAmount = ((decimal)wagerDetail.GetValueOrDefault("winOrLoss") - (decimal)wagerDetail.GetValueOrDefault("betPoints"))* tpCurrency.ExchangeRate,
+                    WinlostAmount = ((decimal)wagerDetail.GetValueOrDefault("winOrLoss") - (decimal)wagerDetail.GetValueOrDefault("betPoints")) * tpCurrency.ExchangeRate,
                     GameCode = wagerDetail.GetValueOrDefault("gameId")?.ToString(),
                     GameName = string.Empty,
                 },
@@ -340,7 +335,7 @@ namespace ThirdParty.DG
                 if (dg != null)
                     return dg.LimitGroup;
             }
-            
+
             if (!IsDevelopment && custId == 477682)
             {
                 /* 

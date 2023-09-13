@@ -1,5 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
+
 using Newtonsoft.Json;
+
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -117,7 +119,7 @@ public class YeebetBLL : IYeebetBLL
 
         if (!PlaceData(partitionTime, data, trans, out int SQ, out message))
         {
-            await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+            await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
             return new DeductResponse_Yeebet(YeebetErrorCode.SystemError, request.serialnumber, "", message);
         }
 
@@ -127,7 +129,7 @@ public class YeebetBLL : IYeebetBLL
         {
             if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
             {
-                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 return new DeductResponse_Yeebet(YeebetErrorCode.SystemError, request.serialnumber, "", message);
             }
         }
@@ -136,11 +138,11 @@ public class YeebetBLL : IYeebetBLL
             || request.type == (int)typeEnum.ReEvaluation)       //Re_Payout需要重新結算
             if (!InsertUnsettleData(partitionTime, data.serialnumber, out message, trans))
             {
-                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 return new DeductResponse_Yeebet(YeebetErrorCode.SystemError, "", message);
             }
 
-        await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+        await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
         return new DeductResponse_Yeebet(YeebetErrorCode.Success, request.serialnumber, orderno, "", balance);
     }
 
@@ -201,7 +203,7 @@ public class YeebetBLL : IYeebetBLL
 
         if (!PlaceData(partitionTime, data, trans, out int SQ, out message))
         {
-            await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+            await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
             return new DepositResponse_Yeebet(YeebetErrorCode.SystemError, "", message);
         }
 
@@ -211,7 +213,7 @@ public class YeebetBLL : IYeebetBLL
         {
             if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
             {
-                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 return new DepositResponse_Yeebet(YeebetErrorCode.SystemError, "", message);
             }
         }
@@ -227,11 +229,11 @@ public class YeebetBLL : IYeebetBLL
             || request.type == (int)typeEnum.ReEvaluation)  //因為Refund Wager沒辦法抄單，所以不作帳
             if (!InsertUnsettleData(partitionTime, data.serialnumber, out message, trans))
             {
-                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 return new DepositResponse_Yeebet(YeebetErrorCode.SystemError, "", message);
             }
 
-        await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+        await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
 
         //Thread.Sleep(5 * 60 * 1000);  //Test Rollback, sleep 5 mins
 
@@ -291,7 +293,7 @@ public class YeebetBLL : IYeebetBLL
 
         if (!PlaceData(partitionTime, data, trans, out int SQ, out message))
         {
-            await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+            await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
             return new RollbackResponse_Yeebet(YeebetErrorCode.SystemError, message);
         }
 
@@ -299,7 +301,7 @@ public class YeebetBLL : IYeebetBLL
         {
             if (!SetBalance(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out balance, out int bonusId, conn, trans))
             {
-                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 return new RollbackResponse_Yeebet(YeebetErrorCode.SystemError, message);
             }
         }
@@ -314,11 +316,11 @@ public class YeebetBLL : IYeebetBLL
             || request.type == (int)typeEnum.ReEvaluation)
             if (!InsertUnsettleData(partitionTime, data.serialnumber, out message, trans))
             {
-                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn,trans);
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 return new RollbackResponse_Yeebet(YeebetErrorCode.SystemError, message);
             }
 
-        await _mainDbClient.CommitAndDisposeConnectionAsync(conn,trans);
+        await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
 
         return new RollbackResponse_Yeebet(YeebetErrorCode.Success, "", balance);
     }

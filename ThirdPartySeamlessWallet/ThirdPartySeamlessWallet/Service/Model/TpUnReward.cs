@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ThirdPartySeamlessWallet.Service.Model
+﻿namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class TpUnReward
     {

@@ -1,13 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
-using System;
-using System.IO;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
 using System.Xml;
 using System.Xml.Serialization;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 

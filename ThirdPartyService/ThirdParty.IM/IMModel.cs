@@ -9,7 +9,7 @@ public partial class TpHelper
         public string Currency { get; set; }
         public string Password { get; set; }
     }
-    
+
     public class LaunchGameModel
     {
         public string MerchantCode { get; set; }
@@ -20,14 +20,14 @@ public partial class TpHelper
         public int ProductWallet { get; set; }
         public string LobbyURL { get; set; }
     }
-    
+
     public class RegisterResponseModel
     {
         public int Code { get; set; }
         public string Message { get; set; }
         public string Currency { get; set; }
     }
-    
+
     public class LaunchGameResponseModel
     {
         public int Code { get; set; }
@@ -36,7 +36,7 @@ public partial class TpHelper
         public string SessionToken { get; set; }
         public int TTL { get; set; }
     }
-    
+
     public enum ProductWallet
     {
         SPRIBE = 101,
@@ -76,7 +76,7 @@ public partial class TpHelper
         public string EventId { get; set; }
         public string Specifier { get; set; }
     }
-    
+
     public class WagerDetailESport
     {
         public string Odds { get; set; }

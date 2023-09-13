@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -20,12 +19,12 @@ namespace ThirdParty.Allbet
             public string message { get; set; }
             public T data { get; set; }
         }
-        
+
         private class UserResult
         {
             public string player { get; set; }
         }
-        
+
         private class LoginResult
         {
             public string gameLoginUrl { get; set; }
@@ -49,7 +48,7 @@ namespace ThirdParty.Allbet
                 player = tpCustInfo.TpUserName
             });
             var header = GetAuthData(inputs, path, parameters, out var contentType);
-            
+
             var result = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
 
             var oApiResult = new ApiResult();
@@ -93,12 +92,12 @@ namespace ThirdParty.Allbet
             var apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
             var isFun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) && inputs["fun"] == "1";
             var path = isFun ? "LoginTrial" : "Login";
-                
+
             if (!tpCustInfo.TpUserName.EndsWith(inputs["Suffix"]))
             {
                 tpCustInfo.TpUserName = $"{tpCustInfo.TpUserName}{inputs["Suffix"]}";
             }
-            
+
             var parameters = ToJson(new
             {
                 player = isFun ? null : tpCustInfo.TpUserName,
@@ -107,7 +106,7 @@ namespace ThirdParty.Allbet
             var header = GetAuthData(inputs, path, parameters, out var contentType);
 
             var result = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
-            
+
             var oApiResult = new ApiResult();
             if (IsJSON(result))
             {
@@ -169,7 +168,7 @@ namespace ThirdParty.Allbet
                     Detail = detail,
                     TpCurrency = tpCurrency,
                 }
-            };  
+            };
         }
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -177,13 +176,13 @@ namespace ThirdParty.Allbet
             var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_Allbet_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
             var gameCode = wagerDetail.GetValueOrDefault("gameType")?.ToString();
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
-            {             
-                GameID = gameCode,                       
+            {
+                GameID = gameCode,
                 Game = GetGameName(gameCode),
                 RefNo = wagerDetail.GetStringValue("betNum"),
                 Title = wagerDetail.GetStringValue("tableName"),
                 MatchID = wagerDetail.GetStringValue("gameRoundId"),
-                BetType = wagerDetail.GetStringValue("betType"), 
+                BetType = wagerDetail.GetStringValue("betType"),
                 BetChoice = string.Empty,
                 Result = wagerDetail.GetStringValue("gameResult"),
                 DeviceType = GetDeviceType(wagerDetail.GetStringValue("appType")),
@@ -219,7 +218,7 @@ namespace ThirdParty.Allbet
                 _ => gameCode,
             };
         }
-        
+
         private Dictionary<string, string> GetAuthData(IReadOnlyDictionary<string, string> inputs, string path, string parameters, out string contentType)
         {
             var md5 = Base64Md5(parameters);
@@ -243,12 +242,12 @@ namespace ThirdParty.Allbet
 
             return Convert.ToBase64String(hash);
         }
-        
+
         private string Base64Md5(string data)
         {
             return Convert.ToBase64String(Md5(Encoding.UTF8.GetBytes(data)));
         }
-        
+
         private byte[] Md5(byte[] data)
         {
             using var md5Crp = new MD5CryptoServiceProvider();
