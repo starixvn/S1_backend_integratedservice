@@ -133,6 +133,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         IM_ESports = 102,
         IM_Sports = 103,
         SPRIBE_RNG = 104,
+        FaChai_RNG = 106
     }
     public enum Tp
     {
