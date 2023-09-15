@@ -18,7 +18,7 @@ namespace ThirdParty.PNG
         public TpHelper(IServiceProvider provider)
         {
             _gameNameList = TpBetRecordProvider.GetGameCasinoList(54).ToDictionary(d => d.AppId, d => d.Name);
-            siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(((int)TpEnum.PNG).ToString());
+            siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(TpEnum.PNG.ToString());
         }
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
