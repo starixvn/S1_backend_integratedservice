@@ -164,13 +164,6 @@ namespace ThirdPartyCore.Model.enums
         Month
     }
 
-    public enum SiteId
-    {
-        Nova88 = 1,
-        Goal123 = 2,
-        Bwing = 3
-    }
-
     public enum DeviceType
     {
         None,

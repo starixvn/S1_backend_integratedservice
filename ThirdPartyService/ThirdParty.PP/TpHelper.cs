@@ -1,5 +1,5 @@
 ﻿using System.Text.RegularExpressions;
-
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
 using ThirdPartyCore;
@@ -13,8 +13,7 @@ namespace ThirdParty.PP
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly Dictionary<int, string> _siteSuffixList = new()
-        { { 1, "nova" }, { 2, "goal123" }, { 3, "bwing" } };
+        
 
         public class UserReq
         {
@@ -49,7 +48,6 @@ namespace ThirdParty.PP
             //public string secureLogin { get; set; }  //运营商在 Pragmatic Play 侧的唯一标识符。
         }
 
-
         public class LoginResult
         {
             public int error { get; set; }
@@ -68,11 +66,13 @@ namespace ThirdParty.PP
 
             //"userId":"421", "currency":"USD", "cash": 99999.99, "bonus": 99.99, "error":0, "description":"Success"
         }
-
+        
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
+        private readonly Dictionary<int, string> _siteSuffixList;
 
-        public TpHelper()
+        public TpHelper(IServiceProvider provider)
         {
+            _siteSuffixList = provider.GetRequiredService<IEnumerable<ServerInfoObject>>().ToDictionary(k => k.SiteId, v => v.SiteName.ToLower());
             _gameNameList = TpBetRecordProvider.GetGameCasinoList(5).ToDictionary(d => d.GameId, d => d.Name);
         }
 
