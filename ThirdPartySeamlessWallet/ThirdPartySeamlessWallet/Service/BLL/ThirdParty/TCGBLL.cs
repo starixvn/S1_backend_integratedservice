@@ -49,11 +49,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 { TCGApiMethod.CheckTransactionStatus, CheckTransactionStatus},
             };
             _logger = provider.GetRequiredService<ILogger<TCGBLL>>();
-            LogContext.PushProperty("TP", "TCG");
+            LogContext.PushProperty("TP", ThirdParty.ToString());
             _processorCount = Environment.ProcessorCount;
 
             //用 SiteId = 0 取回預設Config
-            defaultConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(0, ((int)ThirdParty).ToString());
+            defaultConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(0, ThirdParty.ToString());
         }
 
         public async Task<TCGReturnObj> SeamlessWallet(string merchantCode, string @params, string sign)
