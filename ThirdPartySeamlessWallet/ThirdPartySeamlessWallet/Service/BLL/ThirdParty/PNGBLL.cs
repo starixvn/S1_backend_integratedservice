@@ -7,22 +7,25 @@ using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
-    public class PNGBLL : IPNGBLL
+    public class PNGBLL : IPNGBLL, IThirdPartyBLL
     {
-        public Tp TpId => Tp.PNG;
-        public GameType TpGameType => GameType.PNG_RNG;
+        public Tp ThirdParty { get; set; }
+        public GameType GameType { get; set; }
 
         private readonly AuthBLL _authBll;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBll;
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
+        private readonly ConfigBLL _configBll;
         private readonly ILogger<PNGBLL> _logger;
+        private readonly Dictionary<string, string> defaultConfig;
 
         public PNGBLL(AuthBLL authBll, ThirdPartyBLL thirdPartyBLL,
             TpCustInfoBLL tpCustInfoBll,
             BettingService bettingService,
             SettledService settledService,
+            ConfigBLL configBll,
             ILogger<PNGBLL> logger)
         {
             _authBll = authBll;
@@ -30,7 +33,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _tpCustInfoBll = tpCustInfoBll;
             _bettingService = bettingService;
             _settledService = settledService;
+            _configBll = configBll;
             _logger = logger;
+
+            ThirdParty = Tp.PNG;
+            GameType = GameType.PNG_RNG;
+            defaultConfig = _configBll.GetConfigValue<Dictionary<string, string>>(0, ((int)ThirdParty).ToString());
         }
 
         public PNG_AuthenticateResponse Authenticate(PNG_AuthenticateRequest authenticateRequest)
@@ -49,9 +57,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (!checkResult.IsVaild)
                 return new PNG_AuthenticateResponse(checkResult.response.StatusCode, checkResult.response.StatusMessage);
 
-            var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)TpId, tpCustInfoAuth.TpUserName, (int)TpGameType);
-            var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)TpId, tpCustInfoAuth.TpUserName);
-            var tpCountryCode = _tpCustInfoBll.GetTpCurrencyCode((int)TpId, tpCustInfo.CurrencyId);
+            var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfoAuth.TpUserName, (int)GameType);
+            var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, tpCustInfoAuth.TpUserName);
+            var tpCountryCode = _tpCustInfoBll.GetTpCurrencyCode((int)ThirdParty, tpCustInfo.CurrencyId);
             var userCurrency = tpCountryCode.TpCurrencyId;
 
             return new PNG_AuthenticateResponse()
@@ -81,7 +89,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             // check user exist
-            var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)TpId, balanceRequest.TpUserName);
+            var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, balanceRequest.TpUserName);
             if (tpCustInfo == null)
             {
                 return new PNG_BalanceResponse()
@@ -103,7 +111,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)TpId, balanceRequest.TpUserName, (int)TpGameType);
+            var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)ThirdParty, balanceRequest.TpUserName, (int)GameType);
             return new PNG_BalanceResponse
             {
                 StatusCode = (int)PNG_StatsuCodeEnum.Ok,
@@ -142,7 +150,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     TicketType = (int)BettransType.Bet,
                 };
 
-                var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)TpId, reserveRequest.TpUserName);
+                var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, reserveRequest.TpUserName);
                 var reserveResult = await _bettingService.PlaceBetRNG_PNG(tpCustInfo, bettingData);
 
                 return new PNG_ReserveResponse
@@ -191,7 +199,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     TicketType = (int)BettransType.CancelBet
                 };
 
-                var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)TpId, cancelReserveRequest.TpUserName);
+                var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, cancelReserveRequest.TpUserName);
                 var cancelBetResult = await _settledService.CancelBetRNG_PNG(tpCustInfo, bettingData);
 
                 return new PNG_CancelReserveResponse
@@ -245,7 +253,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     TicketType = (int)pngTicketType
                 };
 
-                var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)TpId, releaseRequest.TpUserName);
+                var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, releaseRequest.TpUserName);
                 var finicalTransType = GetPayoutTransType(betTransData);
                 var payOutResult = await _settledService.PayoutRNG_PNG(tpCustInfo, bettingData, finicalTransType);
 
@@ -259,7 +267,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 if (response.AfterAmount != 0) return response;
 
-                var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)TpId, releaseRequest.TpUserName, (int)TpGameType);
+                var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)ThirdParty, releaseRequest.TpUserName, (int)GameType);
                 response.AfterAmount = tpCustBalance.Balance;
 
                 return response;
@@ -276,12 +284,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         private bool ValidToken(string inputAccessToken)
         {
-            var tpListSetting = _thirdPartyBLL.GetThirdPartySetting((int)TpId);
-            var accessToken = tpListSetting.TpSetting.ContainsKey("AccessToken")
-                ? tpListSetting.TpSetting["AccessToken"]
-                : string.Empty;
-
-            if (!string.IsNullOrEmpty(accessToken)) return accessToken == inputAccessToken;
+            var pngConfig = new PNGConfig(defaultConfig);
+            if (!string.IsNullOrEmpty(pngConfig.AccessToken)) return pngConfig.AccessToken == inputAccessToken;
 
             _logger.LogError("thirdPartySetting not found");
             return false;
@@ -299,7 +303,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 });
             }
 
-            var tpCheck = _thirdPartyBLL.ThirdPartyCheck((int)TpId, tpUserName);
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheck((int)ThirdParty, tpUserName);
             if (tpCheck == null || tpCheck.Locked)
             {
                 return (false, new PNG_BaseResponse()
@@ -384,5 +388,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         }
 
         #endregion
+
+   
     }
 }
