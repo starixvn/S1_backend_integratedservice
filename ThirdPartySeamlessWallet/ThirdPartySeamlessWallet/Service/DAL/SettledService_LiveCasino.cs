@@ -362,7 +362,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
                 p.Add("CanPayout", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-                result = _mainDbClient.Execute("Service_BettransLC_AGV2_Payout_Ins", p, conn, trans);
+                result = _mainDbClient.Execute("Service_BettransLC_AGV2_Payout_Ins_V2", p, conn, trans);
 
                 if (p.Get<int>("CanPayout") == 1)
                 {
@@ -374,15 +374,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         result = PayoutV2(tpCustInfo, payoutAmount, (int)Tp.AG, payoutDataLC_AG.TransactionID, gameType, TpCategory.LiveCasino, payoutDataLC_AG.TransactionIDs.Count() > 1 ? payoutDataLC_AG.BillNo : payoutDataLC_AG.TransactionID, TransType.Payout, null, out afterAmount, "Payout", out bonusId, conn, trans);
                         if (result > 0)
                         {
-                            foreach (var transactionId in payoutDataLC_AG.TransactionIDs)
-                            {
-                                var resultIds = _tpUnsettleService.InsertTpUnsettle(Tp.AG, GameType.AG_LiveCasino, transactionId, trans);
-                                if (resultIds <= 0)
-                                {
-                                    result = 0;
-                                    break;
-                                }
-                            }
+                            result = _tpUnsettleService.InsertTpUnsettle(Tp.AG, GameType.AG_LiveCasino, payoutDataLC_AG.BillNo, trans);
                         }
                     }
                 }
@@ -468,6 +460,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public IEnumerable<SettleDataLC_AG> Get_PayoutList_AG(string transactionID)
         {
             return _mainDbClient.Query<SettleDataLC_AG>("Service_BettransLC_AGV2_Payout_Get", commandType: CommandType.StoredProcedure, new { transactionID = transactionID });
+        }
+        public IEnumerable<SettleDataLC_AG> Get_PayoutList_AGByBillNo(string billNo)
+        {
+            return _mainDbClient.Query<SettleDataLC_AG>("Service_BettransLC_AGV2_PayoutByBillNo_Get", commandType: CommandType.StoredProcedure, new { _BillNo = billNo });
         }
         public IEnumerable<BettingDataLC_AG> Get_BetList_AG(string transactionIDs)
         {

@@ -65,11 +65,12 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var payoutList = _settledBll.Get_PayoutList_AG(unsettled.TransId);
+                        var payoutList = _settledBll.Get_PayoutList_AGByBillNo(unsettled.TransId);
                         var betList = new List<BettingDataLC_AG>();
                         var transactionIDs = new List<string>();
                         if (payoutList != null)
                         {
+                            var transId = payoutList.FirstOrDefault().TransactionID;
                             var playName = payoutList.FirstOrDefault().Playname;
                             var agentCode = payoutList.FirstOrDefault().AgentCode;
                             
@@ -112,7 +113,7 @@ namespace ThirdPartySettleWorker.Workers
                                             Stake = wager.Stake,
                                             ValidBet = wager.ValidBet,
                                             WinlostAmount = wager.WinLostAmount,
-                                            TransId = unsettled.TransId,
+                                            TransId = transId,
                                             GameType = GameType.AG_LiveCasino,
                                             TpUserName = username,
                                             SettledTime = wager.SettleTime,
@@ -127,12 +128,9 @@ namespace ThirdPartySettleWorker.Workers
                                         {
                                             Task.Run(() =>
                                             {
-                                                foreach (var transactionId in transactionIDs)
-                                                {
-                                                    _tpUnSettledBll.SetTpUnsettle(Tp, gameType, transactionId, isSuccess: true);
-                                                }
+                                                _tpUnSettledBll.SetTpUnsettle(Tp, gameType, unsettled.TransId, isSuccess: true);
                                                 _settledBll.SetSettleFlag_TpWagerAG(JsonConvert.SerializeObject(billNoList));
-                                                _settledBll.SetSettleFlag_AG(unsettled.TransId, JsonConvert.SerializeObject(transactionIDs));
+                                                _settledBll.SetSettleFlag_AG(transId, JsonConvert.SerializeObject(transactionIDs));
                                             });
                                         }
                                     }
