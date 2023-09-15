@@ -38,7 +38,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             ThirdParty = Tp.PNG;
             GameType = GameType.PNG_RNG;
-            defaultConfig = _configBll.GetConfigValue<Dictionary<string, string>>(0, ((int)ThirdParty).ToString());
+            defaultConfig = _configBll.GetConfigValue<Dictionary<string, string>>(0, ThirdParty.ToString());
         }
 
         public PNG_AuthenticateResponse Authenticate(PNG_AuthenticateRequest authenticateRequest)
