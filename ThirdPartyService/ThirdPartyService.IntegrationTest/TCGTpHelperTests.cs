@@ -2,12 +2,31 @@
 
 using FluentAssertions;
 
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
+using NSubstitute;
 
 using NUnit.Framework;
 
+using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+
+using ThirdPartyService.Extensions;
+using ThirdPartyService.IntegrationTest.Models;
+
+using ThirdPartyService.IntegrationTest.Stubs;
+
+using ThirdPartyService.Service.BLL;
+using ThirdPartyService.Service.DAL;
+using ThirdPartyService.Service.Library;
 
 namespace ThirdParty.TCG.Tests
 {
@@ -18,11 +37,48 @@ namespace ThirdParty.TCG.Tests
         private TpCustInfo _tpCustInfo;
         private Dictionary<string, string> _inputs;
 
+        private IConfiguration _configuration;
+        private IServiceProvider _provider;
+
+  
+        public TCGTpHelperTests()
+        {
+            var services = new ServiceCollection();
+
+            var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
+            {
+                EnvironmentName = "Local",
+            });
+
+            builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
+            var app = builder.Build();
+            _configuration = app.Configuration;
+            services.AddSingleton(_configuration);
+
+            var env = new WebHostingEnvironment
+            {
+                EnvironmentName = Environments.Development,
+                ContentRootPath = AppDomain.CurrentDomain.BaseDirectory,
+            };
+            ThirdPartyHelperBase.IsDevelopment = env.IsDevelopment();
+
+            services.AddSingleton<IWebHostEnvironment>(env);
+            services.AddSingleton<IHostEnvironment>(env);
+
+            services.AddTransient(p => Substitute.For<ILogger<MySqlClient>>());
+            services.AddTransient(p => Substitute.For<ILogger<ThirdPartyHelper>>());
+
+            var startup = new StubStartUp(_configuration);
+
+            startup.ConfigureServices(services);
+            _provider = services.BuildServiceProvider();
+        }
+
         [SetUp]
         public void Setup()
         {
             //Arrange
-            _tpHelper = new TpHelper();
+            _tpHelper = new TpHelper(_provider);
 
             _tpCustInfo = new TpCustInfo()
             {
