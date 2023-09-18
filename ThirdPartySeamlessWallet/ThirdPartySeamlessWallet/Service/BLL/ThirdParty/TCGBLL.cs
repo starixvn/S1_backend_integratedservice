@@ -23,6 +23,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly ILogger<TCGBLL> _logger;
         public readonly ThirdPartySetting thirdPartySetting;
         private readonly Dictionary<string, Func<TCGRequest, TCGConfig, Task<TCGReturnObj>>> _requestHandler;
+        private readonly Dictionary<string, string> defaultConfig;
+
         private int _processorCount { get; set; }
 
         public Tp ThirdParty { get; set; }
@@ -47,15 +49,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 { TCGApiMethod.CheckTransactionStatus, CheckTransactionStatus},
             };
             _logger = provider.GetRequiredService<ILogger<TCGBLL>>();
-            LogContext.PushProperty("TP", "TCG");
+            LogContext.PushProperty("TP", ThirdParty.ToString());
             _processorCount = Environment.ProcessorCount;
+
+            //用 SiteId = 0 取回預設Config
+            defaultConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(0, ThirdParty.ToString());
         }
 
         public async Task<TCGReturnObj> SeamlessWallet(string merchantCode, string @params, string sign)
         {
             try
             {
-                var tcgConfig = new TCGConfig(thirdPartySetting.TpSetting, merchantCode);
+                var tcgConfig = new TCGConfig(defaultConfig, merchantCode);
                 var jsonString = DesDecrypt(@params, tcgConfig.DesKey);
                 _logger.LogInformation(jsonString);
                 var desEncrypt = DesEncrypt(jsonString, tcgConfig.DesKey);
@@ -91,7 +96,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             try
             {
-                var tcgConfig = new TCGConfig(thirdPartySetting.TpSetting, merchantCode);
+                var tcgConfig = new TCGConfig(defaultConfig, merchantCode);
                 return await _requestHandler[request.method].Invoke(request, tcgConfig);
             }
             catch (TCGException ex)

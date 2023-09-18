@@ -13,24 +13,26 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class TCGBLL
     {
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ILogger<TCGBLL> _logger;
         private readonly MySqlClient _wagerDbClient;
-        private readonly int _tpId = (int)Tp.TCG;
+        private readonly Tp _tp = Tp.TCG;
         private readonly Dictionary<string, string> _setting;
         private readonly HttpHelper _httpHelper;
         private readonly Common _common;
         private const int ErrorCount = 3; //容許錯誤次數
         private readonly ConcurrentDictionary<string, int> _errorCountr = new();
         private readonly CommonBLL _commonBLL;
+        
 
         public TCGBLL(IServiceProvider provider)
         {
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _logger = provider.GetRequiredService<ILogger<TCGBLL>>();
-            LogContext.PushProperty("Tp", "TCG");
+            LogContext.PushProperty("Tp", _tp.ToString());
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
-            _setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+
+            //用 SiteId = 0 取回預設Config
+            _setting = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(0, _tp.ToString());
+
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
@@ -90,7 +92,7 @@ namespace ThirdPartyWager.Service.BLL
                         {
                             _commonBLL.InsertTpWagerRedo(new TpWagerRedo()
                             {
-                                TpId = _tpId,
+                                TpId = (int)_tp,
                                 Time = batchTime.DateTime,
                                 Parameter = JsonConvert.SerializeObject(new TCGRedoObj
                                 {
