@@ -372,10 +372,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, payoutAmount, (int)Tp.AG, TransType.Payout, $"Payout: {payoutAmount.ToString("#,##0.##")}", payoutDataLC_AG.TransactionIDs.Count() > 1 ? payoutDataLC_AG.BillNo : payoutDataLC_AG.TransactionID, out afterAmount, conn, trans);
                         result = PayoutV2(tpCustInfo, payoutAmount, (int)Tp.AG, payoutDataLC_AG.TransactionID, gameType, TpCategory.LiveCasino, payoutDataLC_AG.TransactionIDs.Count() > 1 ? payoutDataLC_AG.BillNo : payoutDataLC_AG.TransactionID, TransType.Payout, null, out afterAmount, "Payout", out bonusId, conn, trans);
-                        if (result > 0)
-                        {
-                            result = _tpUnsettleService.InsertTpUnsettle(Tp.AG, GameType.AG_LiveCasino, payoutDataLC_AG.BillNo, trans);
-                        }
                     }
                 }
 
