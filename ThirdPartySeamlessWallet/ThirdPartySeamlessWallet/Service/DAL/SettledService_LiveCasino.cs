@@ -457,10 +457,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             return _mainDbClient.Query<SettleDataLC_AG>("Service_BettransLC_AGV2_Payout_Get", commandType: CommandType.StoredProcedure, new { transactionID = transactionID });
         }
-        public IEnumerable<SettleDataLC_AG> Get_PayoutList_AGByBillNo(string billNo)
-        {
-            return _mainDbClient.Query<SettleDataLC_AG>("Service_BettransLC_AGV2_PayoutByBillNo_Get", commandType: CommandType.StoredProcedure, new { _BillNo = billNo });
-        }
         public IEnumerable<BettingDataLC_AG> Get_BetList_AG(string transactionIDs)
         {
             return _mainDbClient.Query<BettingDataLC_AG>("Service_BettransLC_AGV2_Bet_Get", commandType: CommandType.StoredProcedure, new { transactionIDs = transactionIDs });

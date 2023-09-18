@@ -219,10 +219,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.Get_PayoutList_AG(transactionID);
         }
-        public IEnumerable<SettleDataLC_AG> Get_PayoutList_AGByBillNo(string billNo)
-        {
-            return settledService.Get_PayoutList_AGByBillNo(billNo);
-        }
         public IEnumerable<BettingDataLC_AG> Get_BetList_AG(string transactionIDs)
         {
             return settledService.Get_BetList_AG(transactionIDs);

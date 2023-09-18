@@ -32,7 +32,7 @@ namespace ThirdPartySettleWorker.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _timerLC = new Timer(DoSettleSportWork, GameType.AG_LiveCasino, TimeSpan.Zero, TimeSpan.Zero);
+            _timerLC = new Timer(DoSettleLC, GameType.AG_LiveCasino, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -42,16 +42,17 @@ namespace ThirdPartySettleWorker.Workers
             return Task.CompletedTask;
         }
 
-        private void DoSettleSportWork(object state)
+        private void DoSettleLC(object state)
         {
             LogContext.PushProperty("TP", _tpName);
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
 
+            
             var forContinue = false;
             var isError = false;
             var gameType = (GameType)state;
             var logName = "AGDoSettleLiveCasinoWork";
-
+            var wagerGet = "Service_BettransLC_AGV2_PayoutByBillNo_Get";
             try
             {
                 var tpUnsettleList = _tpUnSettledBll.GetTpUnsettleList(Tp, gameType);
@@ -65,7 +66,7 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var payoutList = _settledBll.Get_PayoutList_AGByBillNo(unsettled.TransId);
+                        var payoutList = _tpUnSettledBll.GetTpUnsettleData<SettleDataLC_AG>(wagerGet, new { _BillNo = unsettled.TransId }, DataBase.Wager);
                         var betList = new List<BettingDataLC_AG>();
                         var transactionIDs = new List<string>();
                         if (payoutList != null)
