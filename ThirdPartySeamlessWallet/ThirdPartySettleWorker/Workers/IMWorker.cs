@@ -340,15 +340,15 @@ namespace ThirdPartySettleWorker.Workers
             decimal? wagerWinLostAmount = (isRefund ? wager.BetTradeBuybackAmount - wager.StakeAmount : wager.WinLoss)
                                           * tpCurrency.ExchangeRate;
             //var fWagerStake = Math.Round(wagerStake);
-            //var fWagerWinLostAmount = Math.Round((decimal)wagerWinLostAmount);
+            var fWagerWinLostAmount = Math.Round((decimal)wagerWinLostAmount);
             
             var fWagerStake = Math.Truncate(wagerStake * 10) / 10;
-            var fWagerWinLostAmount = Math.Truncate((decimal)wagerWinLostAmount * 10) / 10;
+            //var fWagerWinLostAmount = Math.Truncate((decimal)wagerWinLostAmount * 10) / 10;
             betTrans.Stake = Math.Truncate(betTrans.Stake * 10) / 10;
-            betTrans.WinLostAmount = Math.Truncate(betTrans.WinLostAmount * 10) / 10;
+            //betTrans.WinLostAmount = Math.Truncate(betTrans.WinLostAmount * 10) / 10;
             
             var isSame = fWagerStake == betTrans.Stake
-                         && fWagerWinLostAmount == betTrans.WinLostAmount;
+                         && Math.Abs(fWagerWinLostAmount - betTrans.WinLostAmount) < Convert.ToDecimal(0.5);
 
             if (!isSame)
             {
