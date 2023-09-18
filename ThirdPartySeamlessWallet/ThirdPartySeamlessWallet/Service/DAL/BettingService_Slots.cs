@@ -2049,7 +2049,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     trans: trans);
 
                 if (result < 1)
-                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "Insufficient Balance");
+                    throw new PNGException(PNG_StatsuCodeEnum.NotEnoughMoney, "Insufficient Balance");
 
                 await trans.CommitAsync();
 
