@@ -51,12 +51,13 @@ namespace ThirdPartyService.Service.Worker
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             bool isError = false;
+            _failCustIdList = new List<int>();
 
             try
             {
                 var sw = Stopwatch.StartNew();
 
-                _logger.LogInformation($"SBSWCreateMemberWorker-Worker Start.");
+                _logger.LogInformation($"SBSWCreateMemberWorker Start.");
 
                 var custIdList = _tpCustInfoBll.GetCustIdWithoutSabaId(_tpId);
 
@@ -95,7 +96,7 @@ namespace ThirdPartyService.Service.Worker
                     _logger.LogInformation($"SBSWCreateMemberWorker-Create Member Fail List={JsonConvert.SerializeObject(_failCustIdList)}. ");
                 }
 
-                _logger.LogInformation($"SBSWCreateMemberWorker-Worker End.\r\n" +
+                _logger.LogInformation($"SBSWCreateMemberWorker End.\r\n" +
                     $"Finish Time(m: s.ms): {Math.Round(sw.Elapsed.TotalMinutes)}:{Math.Round(sw.Elapsed.TotalMinutes)}.{Math.Round(sw.Elapsed.TotalMilliseconds)}.");
 
             }
