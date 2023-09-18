@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.IM;
@@ -96,6 +96,11 @@ namespace ThirdPartyWager
             services.AddOptionListByDB<dynamic>("Service_TpWagerTimer_Get", new { TpId = 1, Type = 1 }, DataBase.Wager);
             services.AddOptionListByDB<dynamic>("Tp_Get", new { TpId = 1 }, DataBase.Main);
             services.AddOptionListByDB<CurrencyOption>("Common_Currency_Get");
+
+            //處理SiteConfig
+            services.AddOptionListByDB<ConfigObject>("SiteConfig_Get", new { ConfigGroup = "TP" });
+            services.AddSiteConfig();
+            services.AddSingleton<ConfigBLL>();
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
