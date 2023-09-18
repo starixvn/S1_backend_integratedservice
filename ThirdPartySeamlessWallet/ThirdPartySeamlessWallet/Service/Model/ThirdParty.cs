@@ -113,11 +113,4 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int SiteId { set; get; }
         public string SiteName { set; get; }
     }
-
-    public class TpCurrencyOfIsoCode
-    {
-        public int TpCurrencyId { get; set; }
-
-        public string IsoCode { get; set; }
-    }
 }
