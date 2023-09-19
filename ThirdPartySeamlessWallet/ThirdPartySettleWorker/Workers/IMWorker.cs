@@ -346,7 +346,7 @@ namespace ThirdPartySettleWorker.Workers
             betTrans.Stake = Math.Truncate(betTrans.Stake * 10) / 10;
             
             var isSame = fWagerStake == betTrans.Stake
-                         && Math.Abs(wagerWinLostAmount - betTrans.WinLostAmount) < Convert.ToDecimal(0.5);
+                         && Math.Abs(wagerWinLostAmount - betTrans.WinLostAmount) < Convert.ToDecimal(2);
 
             if (!isSame)
             {
