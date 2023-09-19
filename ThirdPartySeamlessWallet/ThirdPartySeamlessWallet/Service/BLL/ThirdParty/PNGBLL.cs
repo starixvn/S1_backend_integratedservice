@@ -347,9 +347,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             switch (ticketType)
             {
                 case BettransType.Bet:
-                    // 檢查 BetTrans 是否有投注紀錄了，避免重複投注
-                    if (bettingData.Any(r => r.TicketType == (int)BettransType.Bet))
-                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "RoundId Bet Is Duplicated");
+                    // 檢查 BetTrans 是否有取消或結算
+                    if (bettingData.Any(r => r.TicketType is (int)BettransType.CancelBet or (int)BettransType.EndRound))
+                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "RoundId Already Cancel OR Release");
                     break;
 
                 case BettransType.CancelBet:
