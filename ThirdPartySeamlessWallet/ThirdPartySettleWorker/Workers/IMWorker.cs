@@ -337,23 +337,21 @@ namespace ThirdPartySettleWorker.Workers
 
             // 加入幣別匯率轉換，tpWager 是原始資料
             var wagerStake = wager.StakeAmount * tpCurrency.ExchangeRate;
-            decimal? wagerWinLostAmount = (isRefund ? wager.BetTradeBuybackAmount - wager.StakeAmount : wager.WinLoss)
+            var wagerWinLostAmount = (isRefund ? wager.BetTradeBuybackAmount - wager.StakeAmount : wager.WinLoss)
                                           * tpCurrency.ExchangeRate;
-            //var fWagerStake = Math.Round(wagerStake);
-            var fWagerWinLostAmount = Math.Round((decimal)wagerWinLostAmount);
+            
+            //var fWagerWinLostAmount = Math.Round((decimal)wagerWinLostAmount);
             
             var fWagerStake = Math.Truncate(wagerStake * 10) / 10;
-            //var fWagerWinLostAmount = Math.Truncate((decimal)wagerWinLostAmount * 10) / 10;
             betTrans.Stake = Math.Truncate(betTrans.Stake * 10) / 10;
-            //betTrans.WinLostAmount = Math.Truncate(betTrans.WinLostAmount * 10) / 10;
             
             var isSame = fWagerStake == betTrans.Stake
-                         && Math.Abs(fWagerWinLostAmount - betTrans.WinLostAmount) < Convert.ToDecimal(0.5);
+                         && Math.Abs(wagerWinLostAmount - betTrans.WinLostAmount) < Convert.ToDecimal(0.5);
 
             if (!isSame)
             {
                 _logger.LogError(
-                    $"wagerStake={fWagerStake}, betTrans.Stake={betTrans.Stake}, wagerWinLostAmount={fWagerWinLostAmount}, betTrans.WinLostAmount={betTrans.WinLostAmount}");
+                    $"wagerStake={fWagerStake}, betTrans.Stake={betTrans.Stake}, wagerWinLostAmount={wagerWinLostAmount}, betTrans.WinLostAmount={betTrans.WinLostAmount}");
             }
 
             return isSame;
