@@ -12,7 +12,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public Tp ThirdParty { get; set; }
         public GameType GameType { get; set; }
 
-
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBll;
         private readonly BettingService _bettingService;
@@ -49,7 +48,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            var checkResult = CheckTpUserWithAccessToken(tpCustInfoAuth.TpUserName, authenticateRequest.AccessToken);
+            var checkResult = CheckTpUserWithAccessToken(tpCustInfoAuth.TpUserName, authenticateRequest.AccessToken, true);
             if (!checkResult.IsVaild)
                 return new PNG_AuthenticateResponse(checkResult.response.StatusCode, checkResult.response.StatusMessage);
 
@@ -73,15 +72,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public PNG_BalanceResponse Balance(PNG_BalanceRequest balanceRequest)
         {
             // check playNGo accessToken
-            if (!ValidToken(balanceRequest.AccessToken))
-            {
-                return new PNG_BalanceResponse()
-                {
-                    StatusCode = (int)PNG_StatsuCodeEnum.Internal,
-                    StatusMessage = "AccessToken not equal",
-                    Real = default
-                };
-            }
+            var checkResult = CheckTpUserWithAccessToken(balanceRequest.TpUserName, balanceRequest.AccessToken, true);
+            if (!checkResult.IsVaild)
+                return new PNG_BalanceResponse(checkResult.response.StatusCode, checkResult.response.StatusMessage);
 
             // check user exist
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, balanceRequest.TpUserName);
@@ -148,7 +141,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     TicketType = (int)BettransType.Bet,
                 };
 
-                
+
                 var reserveResult = await _bettingService.PlaceBetRNG_PNG(tpCustInfo, bettingData);
 
                 return new PNG_ReserveResponse
@@ -162,7 +155,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (PNGException ex)
             {
                 _logger.LogError(ex, $"Reserve TpUserName:{reserveRequest.TpUserName} bettingData:{JsonConvert.SerializeObject(bettingData)}");
-                return new PNG_ReserveResponse((int)PNG_StatsuCodeEnum.Internal, ex.ErrorMessage);
+                return new PNG_ReserveResponse((int)ex.StatsuCode, ex.ErrorMessage);
             }
         }
 
@@ -200,7 +193,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     TicketType = (int)BettransType.CancelBet
                 };
 
-             
+
                 var cancelBetResult = await _settledService.CancelBetRNG_PNG(tpCustInfo, bettingData);
                 return new PNG_CancelReserveResponse
                 {
@@ -212,7 +205,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (PNGException ex)
             {
                 _logger.LogError(ex, $"CancelReserve TpUserName:{cancelReserveRequest.TpUserName} bettingData:{JsonConvert.SerializeObject(bettingData)}");
-                return new PNG_CancelReserveResponse((int)PNG_StatsuCodeEnum.Internal, ex.ErrorMessage);
+                return new PNG_CancelReserveResponse((int)ex.StatsuCode, ex.ErrorMessage);
             }
         }
 
@@ -277,10 +270,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (PNGException ex)
             {
                 _logger.LogError(ex, $"Release TpUserName:{releaseRequest.TpUserName} bettingData:{JsonConvert.SerializeObject(bettingData)}");
-                return new PNG_ReleaseResponse((int)PNG_StatsuCodeEnum.Internal, ex.ErrorMessage);
+                return new PNG_ReleaseResponse((int)ex.StatsuCode, ex.ErrorMessage);
             }
         }
-
 
         #region private method
 
@@ -305,9 +297,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 });
             }
 
-            if (isTpCheck) // 下注才檢查
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, tpUserName);
+
+            if (isTpCheck) // 三方 Test Case 會驗證 Reserve & Authenticate & Balance 是否 在線 or 鎖定
             {
-                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, tpUserName);
                 if (tpCheck == null)
                 {
                     return (false, new PNG_BaseResponse()
@@ -347,32 +340,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             switch (ticketType)
             {
                 case BettransType.Bet:
-                    // 檢查 BetTrans 是否有取消或結算
-                    if (bettingData.Any(r => r.TicketType is (int)BettransType.CancelBet or (int)BettransType.EndRound))
-                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "RoundId Already Cancel OR Release");
+                    // 不檢查，相同 Round 需支援多次投注
                     break;
-
                 case BettransType.CancelBet:
-
-                    // 檢查 BetTrans 是否有這筆投注紀錄
+                    // 檢查 BetTrans 是否有這筆投注紀錄，三方測試案例要回成功
                     if (!bettingData.Any(r => r.TicketType == (int)BettransType.Bet))
-                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "RoundId Is NotFound");
+                        throw new PNGException(PNG_StatsuCodeEnum.Ok, "RoundId Is NotFound");
 
-                    // 檢查 BetTrans 是否已經有取消紀錄
+                    // 檢查 BetTrans 是否已經有取消紀錄，三方測試案例要回成功
                     if (bettingData.Any(r => r.TicketType == (int)BettransType.CancelBet))
-                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "RoundId Duplicated Cancel");
-
+                        throw new PNGException(PNG_StatsuCodeEnum.Ok, "RoundId Duplicated Cancel");
                     break;
                 case BettransType.Payout:
-
-                    // 檢查 BetTrans 是否已存在取消投注紀錄
-                    if (bettingData.Any(r => r.TicketType == (int)BettransType.CancelBet))
-                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "RoundId Already Cancel");
-
-                    // 檢查 BetTrans 是否已經有派彩過的紀錄
-                    if (bettingData.Any(r => r.TicketType == (int)BettransType.Payout))
-                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "RoundId Duplicated Release");
-
+                    // 不檢查 Payout，有可能沒投注直接 Payout 免費旋轉、相同 RoundId 支援多次派彩
                     break;
                 case BettransType.EndRound:
                     // RoundID = 0，無法檢查邏輯
@@ -396,7 +376,5 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         }
 
         #endregion
-
-
     }
 }

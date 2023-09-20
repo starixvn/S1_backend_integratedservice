@@ -2067,11 +2067,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 throw;
             }
-            catch (Exception ex)
+            catch (PNGException ex)
             {
                 await trans.RollbackAsync();
                 logger.LogError(ex, ex.Message);
-                throw new PNGException(PNG_StatsuCodeEnum.Internal, ex.Message);
+                throw;
             }
         }
 
