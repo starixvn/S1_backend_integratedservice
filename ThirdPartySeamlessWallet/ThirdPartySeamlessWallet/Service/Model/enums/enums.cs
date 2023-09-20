@@ -191,6 +191,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         IM = 52,
         SPRIBE = 53,
         PNG = 54,
+        Pegasus = 56
     }
     public enum TransferType : int
     {
