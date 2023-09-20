@@ -20,9 +20,9 @@
 
         public PNGConfig(Dictionary<string, string> siteConfig)
         {
-            ApiUrl = siteConfig.ContainsKey("RootUrl") && !string.IsNullOrEmpty(siteConfig["RootUrl"])
-                ? siteConfig["RootUrl"]
-                : throw new Exception("PlayNGo TpList not found RootUrl Setting");
+            ApiUrl = siteConfig.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(siteConfig["ApiUrl"])
+                ? siteConfig["ApiUrl"]
+                : throw new Exception("PlayNGo TpList not found ApiUrl Setting");
 
             Password = siteConfig.ContainsKey("Password") && !string.IsNullOrEmpty(siteConfig["Password"])
                 ? siteConfig["Password"]
@@ -36,8 +36,8 @@
                 ? siteConfig["AccessToken"]
                 : throw new Exception("PlayNGo TpList not found AccessToken Setting");
 
-            GameUrl = siteConfig.ContainsKey("GameLaunchUrl") && !string.IsNullOrEmpty(siteConfig["GameLaunchUrl"])
-                ? siteConfig["GameLaunchUrl"]
+            GameUrl = siteConfig.ContainsKey("GameUrl") && !string.IsNullOrEmpty(siteConfig["GameUrl"])
+                ? siteConfig["GameUrl"]
                 : throw new Exception("PlayNGo TpList not found GameLaunchUrl Setting");
 
             GameHistoryMobile = siteConfig.ContainsKey("GameHistoryMobile") && !string.IsNullOrEmpty(siteConfig["GameHistoryMobile"])
