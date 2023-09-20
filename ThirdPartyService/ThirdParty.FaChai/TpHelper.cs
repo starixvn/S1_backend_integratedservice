@@ -189,6 +189,8 @@ namespace ThirdParty.FaChai
             Wrong_code_for_deposit_and_withdrawal = 202,
             [Description("Your points balance not enough to withdraw")]
             Your_points_balance_not_enough_to_withdraw = 203,
+            [Description("Transaction ID number not exist")]
+            Transaction_ID_number_not_exist = 221,
             [Description("Unable to obtain API customer (agent) key")]
             Unable_to_obtain_API_customer_agent_key = 301,
             [Description("Data decryption failed")]
@@ -241,6 +243,8 @@ namespace ThirdParty.FaChai
             Points_obtain_is_not_in_numbers = 606,
             [Description("No points is returned")]
             No_points_is_returned = 607,
+            [Description("Revert Cancel Bet")]
+            Revert_Cancel_Bet = 799,
         }
     }
 }

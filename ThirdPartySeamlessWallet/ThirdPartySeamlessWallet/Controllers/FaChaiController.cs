@@ -6,7 +6,10 @@ using Org.BouncyCastle.Asn1.Cms;
 using System;
 using System.Text;
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
+using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Controllers
@@ -14,11 +17,9 @@ namespace ThirdPartySeamlessWallet.Controllers
     [ApiController]
     public class FaChaiController : ControllerBase
     {
-        private readonly AuthBLL authBLL;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly TpCustInfoBLL tpCustInfoBLL;
-        private readonly BettingBLL bettingBLL;
-        private readonly SettledBLL settledBLL;
+        private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly IFaChaiBLL _faChakiBLL;
         private readonly Tp thisTp;
         private readonly ILogger<FaChaiController> logger;
         private readonly IHostEnvironment environment;
@@ -32,31 +33,15 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             ThirdParty = Tp.FaChai;
             gameType = (int)GameType.FaChai_RNG;
-            authBLL = provider.GetRequiredService<AuthBLL>();
-            thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
-            bettingBLL = provider.GetRequiredService<BettingBLL>();
-            settledBLL = provider.GetRequiredService<SettledBLL>();
+            _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _faChakiBLL = provider.GetRequiredService<IFaChaiBLL>();
             logger = provider.GetRequiredService<ILogger<FaChaiController>>();
             thisTp = Tp.FaChai;
             environment = provider.GetRequiredService<IHostEnvironment>();
             siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(((int)ThirdParty).ToString());
         }
         #endregion
-        public class FCRequest
-        {
-            public string AgentCode { get; set; }
-            public string Currency { get; set; }
-            public string Params { get; set; }
-            public string Sign { get; set; }
-        }
-
-        public class FCResponse
-        {
-            public int Result { get; set; }
-            public double MainPoints { get; set; }
-            public string ErrorText { get; set; }
-        }
 
         public class GetBalanceData
         {
@@ -101,7 +86,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 };
             }
             var getBalanceReq = JsonConvert.DeserializeObject<GetBalanceData>(para);
-            var tpCustBalance = tpCustInfoBLL.GetBalance(Convert.ToInt32(siteConfig.Keys), getBalanceReq.MemberAccount, gameType);
+            var tpCustBalance = _tpCustInfoBLL.GetBalance(Convert.ToInt32(siteConfig.Keys), getBalanceReq.MemberAccount, gameType);
 
             return new FCResponse()
             {
@@ -113,7 +98,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("Fachai/betinfo")]
         [HttpPost]
 
-        public FCResponse Debit(FCRequest req)
+        public FCResponse Bet(FCRequest req)
         {
             var configList = siteConfigDic.Select(x => x.Value).ToList();
             var siteConfig = configList.Find(x => x["AgentCode"] == req.AgentCode);
@@ -127,20 +112,93 @@ namespace ThirdPartySeamlessWallet.Controllers
                 };
             }
 
-            var getDebitData = JsonConvert.DeserializeObject<GetDebitData>(para);
+            var bettingData = JsonConvert.DeserializeObject<BettingDataRNG_FaChai>(para);
 
-            var tpCustBalance = tpCustInfoBLL.GetBalance(Convert.ToInt32(siteConfig.Keys), getDebitData.MemberAccount, gameType);
+            var tpCustBalance = _tpCustInfoBLL.GetBalance(Convert.ToInt32(siteConfig.Keys), bettingData.MemberAccount, gameType);
 
-            if(tpCustBalance.Balance < getDebitData.RequireAmt)
+            if (tpCustBalance.Balance < bettingData.RequireAmt)
             {
                 return new FCResponse()
                 {
                     Result = 203
                 };
             }
+
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.FaChai, bettingData.MemberAccount);
+
+            var result = _faChakiBLL.Bet(tpCustInfo, bettingData, out decimal afterAmount);
+
+            if (result > 0)
+            {
+                return new FCResponse()
+                {
+                    Result = 0,
+                    MainPoints = decimal.ToSingle(afterAmount)
+                };
+            }
+            else
+            {
+                return new FCResponse()
+                {
+                    Result = 702,
+                };
+            }
         }
 
+        [Route("Fachai/cancelbetinfo")]
+        [HttpPost]
+        public FCResponse Cancel(FCRequest req)
+        {
+            var configList = siteConfigDic.Select(x => x.Value).ToList();
+            var siteConfig = configList.Find(x => x["AgentCode"] == req.AgentCode);
+            var para = AesDecrypt(req.Params, siteConfig["Key"]);
 
+            if (para == null)
+            {
+                return new FCResponse()
+                {
+                    Result = (int)FCErrorMessage.Verification_failed
+                };
+            }
+
+            var cancelData = JsonConvert.DeserializeObject<CnacelData_FaChai>(para);
+
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.FaChai, cancelData.MemberAccount);
+
+            if (tpCustInfo == null)
+            {
+                return new FCResponse()
+                {
+                    Result = (int)FCErrorMessage.Account_does_not_exist
+                };
+            }
+
+            var result = _faChakiBLL.Cancel(tpCustInfo, cancelData);
+
+            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp.FaChai, tpCustInfo.CurrencyId);
+
+            //if (result.Result == 0)
+            //{
+            //    if (afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            //    {
+            //        afterAmount /= tpCurrency.ExchangeRate;
+            //    }
+            //    else if (afterAmount == 0)
+            //    {
+            //        afterAmount = _tpCustInfoBLL.GetBalance((int)Tp.Skywind, cancelData.MemberAccount, (int)GameType.FaChai_RNG).Balance;
+            //    }
+
+            //    result.MainPoints = decimal.ToSingle(afterAmount);
+            //}
+            //else
+            //{
+            //    result.MainPoints = 0;
+            //}
+
+            result.MainPoints = 0;
+
+            return result;
+        }
         public static string AesDecrypt(string str, string key)
         {
             if (string.IsNullOrEmpty(str)) return null;
