@@ -6493,9 +6493,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                var partitionTime = DateTime.UtcNow;
                 var p = new DynamicParameters(bettingData);
-                var result = _partitionService.Execute(partitionTime, "Service_BettransRng_PNG_Ins", p, trans);
+                var result = _mainDbClient.Execute("Service_BettransRng_PNG_Ins", p, conn, trans);
 
                 if (result == 0)
                     throw new PNGException(PNG_StatsuCodeEnum.Internal, "CancelReserve Fail");
@@ -6553,9 +6552,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                var partitionTime = DateTime.UtcNow;
                 var p = new DynamicParameters(bettingData);
-                var result = _partitionService.Execute(partitionTime, "Service_BettransRng_PNG_Ins", p, trans);
+                var result = _mainDbClient.Execute("Service_BettransRng_PNG_Ins", p, conn, trans);
 
                 if (result == 0)
                     throw new PNGException(PNG_StatsuCodeEnum.Internal, "Release Fail");
@@ -6584,7 +6582,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (bettingData.RoundId != endRoundId) //非endRound 才塞 TpUnsettle
                 {
-                    result = _tpUnsettleService.InsertTpUnsettle(Tp.PNG, GameType.PNG_RNG, bettingData.RoundId.ToString(), trans, partitionTime);
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.PNG, GameType.PNG_RNG, bettingData.RoundId.ToString(), trans);
                 }
 
                 if (result < 1)

@@ -118,7 +118,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return new PNG_ReserveResponse(checkResult.response.StatusCode, checkResult.response.StatusMessage);
 
                 var betTransData = _bettingService.GetBettingDataRng_PNG(reserveRequest.RoundId);
-                ValidateBetTrans(BettransType.Bet, betTransData);
+                ValidateBetTrans(BettransType.Bet, betTransData, reserveRequest.TransactionId);
 
                 var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, reserveRequest.TpUserName);
                 var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
@@ -170,7 +170,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 // check BetTrans
                 var betTransData = _bettingService.GetBettingDataRng_PNG(cancelReserveRequest.RoundId);
-                ValidateBetTrans(BettransType.CancelBet, betTransData);
+                ValidateBetTrans(BettransType.CancelBet, betTransData, cancelReserveRequest.TransactionId);
 
                 var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, cancelReserveRequest.TpUserName);
                 var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
@@ -226,7 +226,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     ? BettransType.EndRound
                     : BettransType.Payout;
 
-                ValidateBetTrans(pngTicketType, betTransData);
+                ValidateBetTrans(pngTicketType, betTransData, releaseRequest.TransactionId);
 
                 var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, releaseRequest.TpUserName);
                 var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
@@ -335,24 +335,39 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return pngJackpots.PNGJackpot.Sum(r => r.Win);
         }
 
-        public void ValidateBetTrans(BettransType ticketType, IEnumerable<BettingDataRNG_PNG> bettingData)
+        public void ValidateBetTrans(BettransType ticketType, IEnumerable<BettingDataRNG_PNG> bettingData, string transactionId)
         {
             switch (ticketType)
             {
                 case BettransType.Bet:
-                    // 不檢查，相同 Round 需支援多次投注
-                    break;
-                case BettransType.CancelBet:
-                    // 檢查 BetTrans 是否有這筆投注紀錄，三方測試案例要回成功
-                    if (!bettingData.Any(r => r.TicketType == (int)BettransType.Bet))
-                        throw new PNGException(PNG_StatsuCodeEnum.Ok, "RoundId Is NotFound");
 
-                    // 檢查 BetTrans 是否已經有取消紀錄，三方測試案例要回成功
-                    if (bettingData.Any(r => r.TicketType == (int)BettransType.CancelBet))
-                        throw new PNGException(PNG_StatsuCodeEnum.Ok, "RoundId Duplicated Cancel");
+                    // 檢查 BetTrans 是否有相同 transactionId 的投注
+                    if (bettingData.Any(r => r.TransactionId == transactionId && r.TicketType == (int)BettransType.Bet))
+                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "TransactionId Bet Is Duplicated");
+
+                    break;
+
+                case BettransType.CancelBet:
+
+                    // 檢查 BetTrans 是否有相同 transactionId 的投注紀錄，同時變免 CancelBet 跑的筆 Bet 快
+                    if (!bettingData.Any(r => r.TransactionId == transactionId && r.TicketType == (int)BettransType.Bet))
+                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "TransactionId Bet Is NotFound");
+
+                    // 檢查 BetTrans 是否有相同 transactionId 是否Cancel 過
+                    if (bettingData.Any(r => r.TransactionId == transactionId && r.TicketType == (int)BettransType.CancelBet))
+                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "TransactionId Duplicated Cancel");
+
                     break;
                 case BettransType.Payout:
-                    // 不檢查 Payout，有可能沒投注直接 Payout 免費旋轉、相同 RoundId 支援多次派彩
+
+                    // 檢查 BetTrans 是否有相同 transactionId 的取消投注紀錄
+                    if (bettingData.Any(r => r.TransactionId == transactionId && r.TicketType == (int)BettransType.CancelBet))
+                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "TransactionId Already Cancel");
+
+                    //  檢查 BetTrans 是否有相同 transactionId 的派彩過紀錄
+                    if (bettingData.Any(r => r.TransactionId == transactionId && r.TicketType == (int)BettransType.Payout))
+                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "TransactionId Duplicated Release");
+
                     break;
                 case BettransType.EndRound:
                     // RoundID = 0，無法檢查邏輯
@@ -363,7 +378,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 case BettransType.Jackpot:
                 case BettransType.ConfirmReserve:
                 default:
-                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "PNG RoundId TicketType NotImplemented");
+                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "PNG TicketType NotImplemented");
             }
         }
 
