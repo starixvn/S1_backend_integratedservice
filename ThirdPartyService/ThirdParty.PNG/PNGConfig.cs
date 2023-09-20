@@ -2,7 +2,7 @@
 {
     internal class PNGConfig
     {
-        public string RootUrl { get; set; }
+        public string ApiUrl { get; set; }
 
         public string Password { get; set; }
 
@@ -10,7 +10,7 @@
 
         public string AccessToken { get; set; }
 
-        public string GameLaunchUrl { get; set; }
+        public string GameUrl { get; set; }
 
         public string GameHistoryMobile { get; set; }
 
@@ -20,7 +20,7 @@
 
         public PNGConfig(Dictionary<string, string> siteConfig)
         {
-            RootUrl = siteConfig.ContainsKey("RootUrl") && !string.IsNullOrEmpty(siteConfig["RootUrl"])
+            ApiUrl = siteConfig.ContainsKey("RootUrl") && !string.IsNullOrEmpty(siteConfig["RootUrl"])
                 ? siteConfig["RootUrl"]
                 : throw new Exception("PlayNGo TpList not found RootUrl Setting");
 
@@ -36,7 +36,7 @@
                 ? siteConfig["AccessToken"]
                 : throw new Exception("PlayNGo TpList not found AccessToken Setting");
 
-            GameLaunchUrl = siteConfig.ContainsKey("GameLaunchUrl") && !string.IsNullOrEmpty(siteConfig["GameLaunchUrl"])
+            GameUrl = siteConfig.ContainsKey("GameLaunchUrl") && !string.IsNullOrEmpty(siteConfig["GameLaunchUrl"])
                 ? siteConfig["GameLaunchUrl"]
                 : throw new Exception("PlayNGo TpList not found GameLaunchUrl Setting");
 

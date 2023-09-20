@@ -12,29 +12,24 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public Tp ThirdParty { get; set; }
         public GameType GameType { get; set; }
 
-        private readonly AuthBLL _authBll;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBll;
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
+        private readonly AuthBLL _authBll;
         private readonly ConfigBLL _configBll;
         private readonly ILogger<PNGBLL> _logger;
         private readonly Dictionary<string, string> defaultConfig;
 
-        public PNGBLL(AuthBLL authBll, ThirdPartyBLL thirdPartyBLL,
-            TpCustInfoBLL tpCustInfoBll,
-            BettingService bettingService,
-            SettledService settledService,
-            ConfigBLL configBll,
-            ILogger<PNGBLL> logger)
+        public PNGBLL(IServiceProvider provider)
         {
-            _authBll = authBll;
-            _thirdPartyBLL = thirdPartyBLL;
-            _tpCustInfoBll = tpCustInfoBll;
-            _bettingService = bettingService;
-            _settledService = settledService;
-            _configBll = configBll;
-            _logger = logger;
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _tpCustInfoBll = provider.GetRequiredService<TpCustInfoBLL>();
+            _bettingService = provider.GetRequiredService<BettingService>();
+            _settledService = provider.GetRequiredService<SettledService>();
+            _authBll = provider.GetRequiredService<AuthBLL>();
+            _configBll = provider.GetRequiredService<ConfigBLL>();
+            _logger = provider.GetRequiredService<ILogger<PNGBLL>>();
 
             ThirdParty = Tp.PNG;
             GameType = GameType.PNG_RNG;
@@ -53,13 +48,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            var checkResult = CheckTpUserWithAccessToken(tpCustInfoAuth.TpUserName, authenticateRequest.AccessToken);
+            var checkResult = CheckTpUserWithAccessToken(tpCustInfoAuth.TpUserName, authenticateRequest.AccessToken, true);
             if (!checkResult.IsVaild)
                 return new PNG_AuthenticateResponse(checkResult.response.StatusCode, checkResult.response.StatusMessage);
 
             var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfoAuth.TpUserName, (int)GameType);
-            var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, tpCustInfoAuth.TpUserName);
-            var tpCountryCode = _tpCustInfoBll.GetTpCurrencyCode((int)ThirdParty, tpCustInfo.CurrencyId);
+            var tpCountryCode = _tpCustInfoBll.GetTpCurrencyCodeByCurrencyId((int)ThirdParty, tpCustInfoAuth.TpCurrencyId);
             var userCurrency = tpCountryCode.TpCurrencyId;
 
             return new PNG_AuthenticateResponse()
@@ -78,15 +72,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public PNG_BalanceResponse Balance(PNG_BalanceRequest balanceRequest)
         {
             // check playNGo accessToken
-            if (!ValidToken(balanceRequest.AccessToken))
-            {
-                return new PNG_BalanceResponse()
-                {
-                    StatusCode = (int)PNG_StatsuCodeEnum.Internal,
-                    StatusMessage = "AccessToken not equal",
-                    Real = default
-                };
-            }
+            var checkResult = CheckTpUserWithAccessToken(balanceRequest.TpUserName, balanceRequest.AccessToken, true);
+            if (!checkResult.IsVaild)
+                return new PNG_BalanceResponse(checkResult.response.StatusCode, checkResult.response.StatusMessage);
 
             // check user exist
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, balanceRequest.TpUserName);
@@ -125,32 +113,35 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var bettingData = new BettingDataRNG_PNG();
             try
             {
-                var checkResult = CheckTpUserWithAccessToken(reserveRequest.TpUserName, reserveRequest.AccessToken);
+                var checkResult = CheckTpUserWithAccessToken(reserveRequest.TpUserName, reserveRequest.AccessToken, isTpCheck: true);
                 if (!checkResult.IsVaild)
                     return new PNG_ReserveResponse(checkResult.response.StatusCode, checkResult.response.StatusMessage);
 
                 var betTransData = _bettingService.GetBettingDataRng_PNG(reserveRequest.RoundId);
                 ValidateBetTrans(BettransType.Bet, betTransData);
 
+                var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, reserveRequest.TpUserName);
+                var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
+
                 bettingData = new BettingDataRNG_PNG()
                 {
                     TpUserName = reserveRequest.TpUserName,
                     ProductId = reserveRequest.ProductId,
                     TransactionId = reserveRequest.TransactionId,
-                    Amount = reserveRequest.Real,
+                    Amount = reserveRequest.Real *= tpCurrency.ExchangeRate,
                     CurrencyIsoCode = reserveRequest.Currency,
                     GameId = reserveRequest.GameId,
                     GameSessionId = reserveRequest.GameSessionId,
                     RoundId = reserveRequest.RoundId,
                     Channel = reserveRequest.Channel,
                     FreeGameExternalId = reserveRequest.FreeGameExternalId,
-                    ActualAmount = reserveRequest.ActualAmount,
-                    JackpotWin = GetJackpotsWinAmount(reserveRequest.PngJackpots),
-                    JackpotLoss = GetJackpotsLossAmount(reserveRequest.PngJackpots),
+                    ActualAmount = reserveRequest.ActualAmount *= tpCurrency.ExchangeRate,
+                    JackpotWin = GetJackpotsWinAmount(reserveRequest.PngJackpots) * tpCurrency.ExchangeRate,
+                    JackpotLoss = GetJackpotsLossAmount(reserveRequest.PngJackpots) * tpCurrency.ExchangeRate,
                     TicketType = (int)BettransType.Bet,
                 };
 
-                var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, reserveRequest.TpUserName);
+
                 var reserveResult = await _bettingService.PlaceBetRNG_PNG(tpCustInfo, bettingData);
 
                 return new PNG_ReserveResponse
@@ -158,13 +149,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     StatusCode = (int)PNG_StatsuCodeEnum.Ok,
                     StatusMessage = "Reserve Success",
                     ExternalTransactionId = reserveResult.ExternalTransactionId,
-                    AfterAmount = reserveResult.AfterAmount
+                    AfterAmount = reserveResult.AfterAmount *= tpCurrency.ExchangeRate,
                 };
             }
             catch (PNGException ex)
             {
                 _logger.LogError(ex, $"Reserve TpUserName:{reserveRequest.TpUserName} bettingData:{JsonConvert.SerializeObject(bettingData)}");
-                return new PNG_ReserveResponse((int)PNG_StatsuCodeEnum.Internal, ex.ErrorMessage);
+                return new PNG_ReserveResponse((int)ex.StatsuCode, ex.ErrorMessage);
             }
         }
 
@@ -181,27 +172,29 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var betTransData = _bettingService.GetBettingDataRng_PNG(cancelReserveRequest.RoundId);
                 ValidateBetTrans(BettransType.CancelBet, betTransData);
 
+                var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, cancelReserveRequest.TpUserName);
+                var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
+
                 bettingData = new BettingDataRNG_PNG()
                 {
                     TpUserName = cancelReserveRequest.TpUserName,
                     ProductId = cancelReserveRequest.ProductId,
                     TransactionId = cancelReserveRequest.TransactionId,
-                    Amount = cancelReserveRequest.Real,
+                    Amount = cancelReserveRequest.Real *= tpCurrency.ExchangeRate,
                     CurrencyIsoCode = cancelReserveRequest.Currency,
                     GameId = cancelReserveRequest.GameId,
                     GameSessionId = cancelReserveRequest.GameSessionId ?? string.Empty,
                     RoundId = cancelReserveRequest.RoundId,
                     Channel = cancelReserveRequest.Channel,
                     FreeGameExternalId = cancelReserveRequest.FreeGameExternalId,
-                    ActualAmount = cancelReserveRequest.ActualAmount,
-                    JackpotWin = GetJackpotsWinAmount(cancelReserveRequest.PngJackpots),
-                    JackpotLoss = GetJackpotsLossAmount(cancelReserveRequest.PngJackpots),
+                    ActualAmount = cancelReserveRequest.ActualAmount *= tpCurrency.ExchangeRate,
+                    JackpotWin = GetJackpotsWinAmount(cancelReserveRequest.PngJackpots) * tpCurrency.ExchangeRate,
+                    JackpotLoss = GetJackpotsLossAmount(cancelReserveRequest.PngJackpots) * tpCurrency.ExchangeRate,
                     TicketType = (int)BettransType.CancelBet
                 };
 
-                var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, cancelReserveRequest.TpUserName);
-                var cancelBetResult = await _settledService.CancelBetRNG_PNG(tpCustInfo, bettingData);
 
+                var cancelBetResult = await _settledService.CancelBetRNG_PNG(tpCustInfo, bettingData);
                 return new PNG_CancelReserveResponse
                 {
                     ExternalTransactionId = cancelBetResult.ExternalTransactionId,
@@ -212,7 +205,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (PNGException ex)
             {
                 _logger.LogError(ex, $"CancelReserve TpUserName:{cancelReserveRequest.TpUserName} bettingData:{JsonConvert.SerializeObject(bettingData)}");
-                return new PNG_CancelReserveResponse((int)PNG_StatsuCodeEnum.Internal, ex.ErrorMessage);
+                return new PNG_CancelReserveResponse((int)ex.StatsuCode, ex.ErrorMessage);
             }
         }
 
@@ -227,7 +220,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 // check BetTrans
                 var betTransData = _bettingService.GetBettingDataRng_PNG(releaseRequest.RoundId);
-                
+
                 // check ticketType
                 var pngTicketType = releaseRequest.RoundId == 0
                     ? BettransType.EndRound
@@ -235,12 +228,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 ValidateBetTrans(pngTicketType, betTransData);
 
+                var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, releaseRequest.TpUserName);
+                var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)ThirdParty, tpCustInfo.CurrencyId);
+
                 bettingData = new BettingDataRNG_PNG()
                 {
                     TpUserName = releaseRequest.TpUserName,
                     ProductId = releaseRequest.ProductId,
                     TransactionId = releaseRequest.TransactionId,
-                    Amount = releaseRequest.Real,
+                    Amount = releaseRequest.Real *= tpCurrency.ExchangeRate,
                     CurrencyIsoCode = releaseRequest.Currency,
                     GameId = releaseRequest.GameId,
                     GameSessionId = releaseRequest.GameSessionId ?? string.Empty,
@@ -248,12 +244,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     Channel = releaseRequest.Channel,
                     FreeGameExternalId = releaseRequest.FreeGameExternalId,
                     ActualAmount = decimal.Zero,
-                    JackpotWin = GetJackpotsWinAmount(releaseRequest.PngJackpots),
-                    JackpotLoss = GetJackpotsLossAmount(releaseRequest.PngJackpots),
+                    JackpotWin = GetJackpotsWinAmount(releaseRequest.PngJackpots) * tpCurrency.ExchangeRate,
+                    JackpotLoss = GetJackpotsLossAmount(releaseRequest.PngJackpots) * tpCurrency.ExchangeRate,
                     TicketType = (int)pngTicketType
                 };
 
-                var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)ThirdParty, releaseRequest.TpUserName);
                 var finicalTransType = GetPayoutTransType(betTransData);
                 var payOutResult = await _settledService.PayoutRNG_PNG(tpCustInfo, bettingData, finicalTransType);
 
@@ -275,10 +270,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (PNGException ex)
             {
                 _logger.LogError(ex, $"Release TpUserName:{releaseRequest.TpUserName} bettingData:{JsonConvert.SerializeObject(bettingData)}");
-                return new PNG_ReleaseResponse((int)PNG_StatsuCodeEnum.Internal, ex.ErrorMessage);
+                return new PNG_ReleaseResponse((int)ex.StatsuCode, ex.ErrorMessage);
             }
         }
-
 
         #region private method
 
@@ -291,7 +285,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return false;
         }
 
-        private (bool IsVaild, PNG_BaseResponse response) CheckTpUserWithAccessToken(string tpUserName, string accessToken)
+        private (bool IsVaild, PNG_BaseResponse response) CheckTpUserWithAccessToken(string tpUserName, string accessToken, bool isTpCheck = false)
         {
             // 檢查 PlayNGo AccessToken
             if (!ValidToken(accessToken))
@@ -303,14 +297,27 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 });
             }
 
-            var tpCheck = _thirdPartyBLL.ThirdPartyCheck((int)ThirdParty, tpUserName);
-            if (tpCheck == null || tpCheck.Locked)
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, tpUserName);
+
+            if (isTpCheck) // 三方 Test Case 會驗證 Reserve & Authenticate & Balance 是否 在線 or 鎖定
             {
-                return (false, new PNG_BaseResponse()
+                if (tpCheck == null)
                 {
-                    StatusCode = (int)PNG_StatsuCodeEnum.AccountLocked,
-                    StatusMessage = "User Account Locked"
-                });
+                    return (false, new PNG_BaseResponse()
+                    {
+                        StatusCode = (int)PNG_StatsuCodeEnum.SessionExpired,
+                        StatusMessage = "SessionExpired"
+                    });
+                }
+
+                if (tpCheck.Locked)
+                {
+                    return (false, new PNG_BaseResponse()
+                    {
+                        StatusCode = (int)PNG_StatsuCodeEnum.AccountLocked,
+                        StatusMessage = "User Account Locked"
+                    });
+                }
             }
 
             return (true, null);
@@ -318,20 +325,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         private decimal GetJackpotsLossAmount(PNGJackpots pngJackpots)
         {
-            if (pngJackpots == null) return 0;
-
-            return !pngJackpots.PNGJackpot.Any()
-                ? 0
-                : pngJackpots.PNGJackpot.Sum(r => r.Loss);
+            if (pngJackpots == null || !pngJackpots.PNGJackpot.Any()) return 0;
+            return pngJackpots.PNGJackpot.Sum(r => r.Loss);
         }
 
         public decimal GetJackpotsWinAmount(PNGJackpots pngJackpots)
         {
-            if (pngJackpots == null) return 0;
-
-            return !pngJackpots.PNGJackpot.Any()
-                ? 0
-                : pngJackpots.PNGJackpot.Sum(r => r.Win);
+            if (pngJackpots == null || !pngJackpots.PNGJackpot.Any()) return 0;
+            return pngJackpots.PNGJackpot.Sum(r => r.Win);
         }
 
         public void ValidateBetTrans(BettransType ticketType, IEnumerable<BettingDataRNG_PNG> bettingData)
@@ -339,32 +340,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             switch (ticketType)
             {
                 case BettransType.Bet:
-                    // 檢查 BetTrans 是否有投注紀錄了，避免重複投注
-                    if (bettingData.Any(r => r.TicketType == (int)BettransType.Bet))
-                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "RoundId Bet Is Duplicated");
+                    // 不檢查，相同 Round 需支援多次投注
                     break;
-
                 case BettransType.CancelBet:
-
-                    // 檢查 BetTrans 是否有這筆投注紀錄
+                    // 檢查 BetTrans 是否有這筆投注紀錄，三方測試案例要回成功
                     if (!bettingData.Any(r => r.TicketType == (int)BettransType.Bet))
-                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "RoundId Is NotFound");
+                        throw new PNGException(PNG_StatsuCodeEnum.Ok, "RoundId Is NotFound");
 
-                    // 檢查 BetTrans 是否已經有取消紀錄
+                    // 檢查 BetTrans 是否已經有取消紀錄，三方測試案例要回成功
                     if (bettingData.Any(r => r.TicketType == (int)BettransType.CancelBet))
-                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "RoundId Duplicated Cancel");
-
+                        throw new PNGException(PNG_StatsuCodeEnum.Ok, "RoundId Duplicated Cancel");
                     break;
                 case BettransType.Payout:
-
-                    // 檢查 BetTrans 是否已存在取消投注紀錄
-                    if (bettingData.Any(r => r.TicketType == (int)BettransType.CancelBet))
-                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "RoundId Already Cancel");
-
-                    // 檢查 BetTrans 是否已經有派彩過的紀錄
-                    if (bettingData.Any(r => r.TicketType == (int)BettransType.Payout))
-                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "RoundId Duplicated Release");
-
+                    // 不檢查 Payout，有可能沒投注直接 Payout 免費旋轉、相同 RoundId 支援多次派彩
                     break;
                 case BettransType.EndRound:
                     // RoundID = 0，無法檢查邏輯
@@ -383,12 +371,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             // 如果有下注紀錄，表示是一般派彩，如果沒有下注紀錄直接派彩，表示是免費旋轉贏錢
             return bettingData.Any(r => r.TicketType == (int)BettransType.Bet)
-                ? TransType.Payout 
+                ? TransType.Payout
                 : TransType.Prize;
         }
 
         #endregion
-
-   
     }
 }

@@ -2049,7 +2049,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     trans: trans);
 
                 if (result < 1)
-                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "Insufficient Balance");
+                    throw new PNGException(PNG_StatsuCodeEnum.NotEnoughMoney, "Insufficient Balance");
 
                 await trans.CommitAsync();
 
@@ -2067,11 +2067,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 throw;
             }
-            catch (Exception ex)
+            catch (PNGException ex)
             {
                 await trans.RollbackAsync();
                 logger.LogError(ex, ex.Message);
-                throw new PNGException(PNG_StatsuCodeEnum.Internal, ex.Message);
+                throw;
             }
         }
 

@@ -58,9 +58,7 @@ namespace ThirdParty.PNG
                 };
 
                 var queryString = dict.ToQueryString();
-                var launcherGameUrlResult = $"{config.RootUrl}{config.GameLaunchUrl}?{queryString}";
-
-                logger.LogInformation($"launcherGameUrlResult:{launcherGameUrlResult}");
+                var launcherGameUrlResult = $"{config.ApiUrl}{config.GameUrl}?{queryString}";
 
                 apiResult.ErrorCode = ErrorCode.Success;
                 apiResult.Message = launcherGameUrlResult;
@@ -86,7 +84,7 @@ namespace ThirdParty.PNG
         {
             var siteInputs = siteConfigDic[tpCustInfo.SiteId];
             var config = new PNGConfig(siteInputs);
-            var betDetailUrl = $"{config.RootUrl}{config.GameHistoryDesktop}{getBetDetail.TransId}";
+            var betDetailUrl = $"{config.ApiUrl}{config.GameHistoryDesktop}{getBetDetail.TransId}";
 
             return new BaseDetail(getBetDetail.TpGameTypeOption)
             {
@@ -162,7 +160,11 @@ namespace ThirdParty.PNG
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var oApiResult = new ApiResult<UserBalance>
+            {
+                ErrorCode = ErrorCode.Fail
+            };
+            return oApiResult;
         }
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID,

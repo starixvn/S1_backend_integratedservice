@@ -21,20 +21,15 @@ namespace ThirdPartySettleWorker.Workers
         private readonly ILogger<PNGWorker> _logger;
         private readonly string _tpName;
 
-        public PNGWorker(SettledBLL settledBll, 
-            TpUnSettledBLL tpUnSettledBll,
-            TpCustInfoBLL tpCustInfoBll, 
-            ILogger<PNGWorker> logger,
-            PartitionService partitionService,
-            ThirdPartyBLL thirdPartyBll)
+        public PNGWorker(IServiceProvider provider)
         {
-            _settledBLL = settledBll;
-            _tpUnSettledBLL = tpUnSettledBll;
-            _tpCustInfoBLL = tpCustInfoBll;
-            _logger = logger;
-            _partitionService = partitionService;
-            _thirdPartyBLL = thirdPartyBll;
-
+            _settledBLL = provider.GetRequiredService<SettledBLL>();
+            _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
+            _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _partitionService = provider.GetRequiredService<PartitionService>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _logger = provider.GetRequiredService<ILogger<PNGWorker>>();
+            
             _tpName = Enum.GetName(typeof(Tp), Tp);
             LogContext.PushProperty("TP", _tpName);
         }
