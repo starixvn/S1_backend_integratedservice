@@ -2026,9 +2026,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                var partitionTime = DateTime.UtcNow;
                 var p = new DynamicParameters(bettingData);
-                var result = _partitionService.Execute(partitionTime, "Service_BettransRng_PNG_Ins", p, trans);
+                var result = _mainDbClient.Execute("Service_BettransRng_PNG_Ins", p, conn, trans);
 
                 if (result == 0)
                     throw new PNGException(PNG_StatsuCodeEnum.Internal, "Reserve fail");
@@ -2049,6 +2048,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     trans: trans);
 
                 if (result < 1)
+                    throw new PNGException(PNG_StatsuCodeEnum.Internal, $"TransactionId:{bettingData.TransactionId} Reserve Fail");
+
+                if (afterAmount < 0)
                     throw new PNGException(PNG_StatsuCodeEnum.NotEnoughMoney, "Insufficient Balance");
 
                 await trans.CommitAsync();
@@ -2077,8 +2079,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public IEnumerable<BettingDataRNG_PNG> GetBettingDataRng_PNG(long roundId)
         {
-            var now = DateTime.UtcNow;
-            return _partitionService.Query<BettingDataRNG_PNG>(now, "Service_BettransRng_PNG_Get", new { _RoundId = roundId });
+            using var conn = _mainDbClient.GetMySqlConnection();
+            return conn.Query<BettingDataRNG_PNG>("Service_BettransRng_PNG_Get", new { _RoundId = roundId }, commandType: CommandType.StoredProcedure);
         }
 
         #endregion

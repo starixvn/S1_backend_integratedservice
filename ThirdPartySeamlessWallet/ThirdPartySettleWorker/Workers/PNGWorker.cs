@@ -16,7 +16,6 @@ namespace ThirdPartySettleWorker.Workers
         private readonly SettledBLL _settledBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
-        private readonly PartitionService _partitionService;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ILogger<PNGWorker> _logger;
         private readonly string _tpName;
@@ -26,7 +25,6 @@ namespace ThirdPartySettleWorker.Workers
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
-            _partitionService = provider.GetRequiredService<PartitionService>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _logger = provider.GetRequiredService<ILogger<PNGWorker>>();
             
@@ -69,7 +67,7 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var unsettleData = _partitionService.GetUnsettleDataList<SettleDataRNG_PNG>("Service_BettransRng_PNG_Unsettle_Get", tpUnsettle)
+                        var unsettleData = _tpUnSettledBLL.GetTpUnsettleData<SettleDataRNG_PNG>("Service_BettransRng_PNG_Unsettle_Get", tpUnsettle, DataBase.Main)
                             .FirstOrDefault();
 
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettleData.TpUserName);
