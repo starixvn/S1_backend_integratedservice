@@ -37,7 +37,7 @@ namespace ThirdParty.Pegasus
             var config = new PegasusConfig(siteInputs, tpCustInfo.TpCurrencyId);
 
             var token = ApplyToken(tpCustInfo);
-            var sessionKeyArr = new string[] { token, gameCode };
+            var sessionKeyArr = new[] { token, tpCustInfo.CustId.ToString(), tpCustInfo.TpUserName, gameCode };
             var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
             var sessionKey = Convert.ToBase64String(bytes);
 

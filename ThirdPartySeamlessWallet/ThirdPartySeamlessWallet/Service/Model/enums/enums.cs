@@ -134,6 +134,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         IM_Sports = 103,
         SPRIBE_RNG = 104,
         PNG_RNG = 105,
+        Pegasus_RNG = 107
     }
     public enum Tp
     {
