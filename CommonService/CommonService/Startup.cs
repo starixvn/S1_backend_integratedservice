@@ -54,11 +54,17 @@ namespace CommonService
             services.AddSingleton<ConfigService>();
             services.AddControllers();
 
-            //處理SiteConfig
+
             services.AddOptionListByDB<ServerInfo>("ServerInfoList_Get");
+            //處理SiteConfig
             services.AddOptionListByDB<Config>("SiteConfig_Get", new { ConfigGroup = "CommonService" });
-            services.AddSiteConfig();
+            services.AddSiteConfig();            
             services.AddSingleton<ConfigBLL>();
+
+            // 處理SiteLanguage
+            services.AddOptionListByDB<SiteLanguageObject>("SiteLanguage_Get", new { LanguageGroup = "CommonService" });
+            services.AddSiteLanguage();
+            services.AddSingleton<SiteLanguageBLL>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
