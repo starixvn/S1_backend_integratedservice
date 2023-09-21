@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Text.Json.Serialization;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -46,8 +47,11 @@ namespace ThirdPartySeamlessWallet.Service.Model
     }
     public class FCResponse
     {
+        [JsonPropertyName("Result")]
         public int Result { get; set; }
+        [JsonPropertyName("MainPoints")]
         public double MainPoints { get; set; }
+        [JsonPropertyName("ErrorText")]
         public string ErrorText { get; set; }
     }
     public enum FCErrorMessage
