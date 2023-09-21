@@ -219,7 +219,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return new PNG_ReleaseResponse(checkResult.response.StatusCode, checkResult.response.StatusMessage);
 
                 // check BetTrans
-                var betTransData = _bettingService.GetBettingDataRng_PNG(releaseRequest.RoundId);
+                 var betTransData = _bettingService.GetBettingDataRng_PNG(releaseRequest.RoundId);
 
                 // check ticketType
                 var pngTicketType = releaseRequest.RoundId == 0
@@ -353,7 +353,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 case BettransType.CancelBet:
 
-                    // 檢查 BetTrans 是否有相同 transactionId 是否Cancel 過
+                    // 檢查 BetTrans 是否有相同 transactionId 是否Cancel 過，測試案例要回 OK
                     if (bettingData.Any(r => r.TransactionId == transactionId && r.TicketType == (int)BettransType.CancelBet))
                         throw new PNGException(PNG_StatsuCodeEnum.Ok, "TransactionId Duplicated Cancel");
 
