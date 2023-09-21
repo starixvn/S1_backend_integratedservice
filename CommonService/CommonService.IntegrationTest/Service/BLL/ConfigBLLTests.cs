@@ -243,5 +243,91 @@ namespace CommonService.Service.BLL.Tests
         
 
         #endregion
+
+        #region Telegram
+
+        [TestCase("Nova88", ExpectedResult = "https://api.telegram.org")]
+        [TestCase("NOVA88", ExpectedResult = "https://api.telegram.org")]
+        [TestCase("nova88", ExpectedResult = "https://api.telegram.org")]
+        [TestCase("Goal123", ExpectedResult = "https://api.telegram.org")]
+        [TestCase("Bwing", ExpectedResult = "https://api.telegram.org")]
+        [TestCase("Ivorysport", ExpectedResult = "https://api.telegram.org")]
+        [TestCase("Leobet", ExpectedResult = "https://api.telegram.org")]
+        public string Telegram_GetConfigValuesBySiteNameTest(string siteName)
+        {
+            var actual = _configBLL.GetConfigValuesBySiteName<TelegramConfig>("Telegram");
+            return actual[siteName].TelegramCommon.Url;
+        }
+        
+        [TestCase(1, ExpectedResult = -594288926)]
+        [TestCase(2, ExpectedResult = -594288926)]
+        [TestCase(3, ExpectedResult = -594288926)]
+        [TestCase(5, ExpectedResult = -594288926)]
+        [TestCase(6, ExpectedResult = -594288926)]
+        public long Telegram_GetConfigValuesBySiteIdTest(int siteId)
+        {
+            var actual = _configBLL.GetConfigValuesBySiteId<TelegramConfig>("Telegram");
+            return actual[siteId].TelegramNotification.FirstOrDefault().ChatId;
+        }
+        
+
+        #endregion
+
+        #region LetsTalk
+
+        [TestCase("Nova88", ExpectedResult = "https://message.biatalk.cc/bot/v3/sign-token")]
+        [TestCase("NOVA88", ExpectedResult = "https://message.biatalk.cc/bot/v3/sign-token")]
+        [TestCase("nova88", ExpectedResult = "https://message.biatalk.cc/bot/v3/sign-token")]
+        [TestCase("Goal123", ExpectedResult = "https://message.biatalk.cc/bot/v3/sign-token")]
+        [TestCase("Bwing", ExpectedResult = "https://message.biatalk.cc/bot/v3/sign-token")]
+        [TestCase("Ivorysport", ExpectedResult = "https://message.biatalk.cc/bot/v3/sign-token")]
+        [TestCase("Leobet", ExpectedResult = "https://message.biatalk.cc/bot/v3/sign-token")]
+        public string LetsTalk_GetConfigValuesBySiteNameTest(string siteName)
+        {
+            var actual = _configBLL.GetConfigValuesBySiteName<LetsTalkConfig>("LetsTalk");
+            return actual[siteName].LetsTalkCommon.SignInURL;
+        }
+        
+        [TestCase(1, ExpectedResult = 100044)]
+        [TestCase(2, ExpectedResult = 100044)]
+        [TestCase(3, ExpectedResult = 100044)]
+        [TestCase(5, ExpectedResult = 100044)]
+        [TestCase(6, ExpectedResult = 100044)]
+        public int LetsTalk_GetConfigValuesBySiteIdTest(int siteId)
+        {
+            var actual = _configBLL.GetConfigValuesBySiteId<LetsTalkConfig>("LetsTalk");
+            return actual[siteId].LetsTalkNotification.FirstOrDefault().SignInId;
+        }
+
+        #endregion
+
+        #region SMSSupport
+        
+        [TestCase("Nova88", ExpectedResult = "NxCloud")]
+        [TestCase("NOVA88", ExpectedResult = "NxCloud")]
+        [TestCase("nova88", ExpectedResult = "NxCloud")]
+        [TestCase("Goal123", ExpectedResult = "NxCloud")]
+        [TestCase("Bwing", ExpectedResult = "NxCloud")]
+        [TestCase("Ivorysport", ExpectedResult = "NxCloud")]
+        [TestCase("Leobet", ExpectedResult = "NxCloud")]
+        public string SMSSupport_GetConfigValuesBySiteNameTest(string siteName)
+        {
+            var actual = _configBLL.GetConfigValuesBySiteName<SMSSupportConfig>("SMSSupport");
+            return actual[siteName].SMSSupport["Default"];
+        }
+        
+        [TestCase(1, ExpectedResult = "NxCloud")]
+        [TestCase(2, ExpectedResult = "NxCloud")]
+        [TestCase(3, ExpectedResult = "NxCloud")]
+        [TestCase(5, ExpectedResult = "NxCloud")]
+        [TestCase(6, ExpectedResult = "NxCloud")]
+        public string SMSSupport_GetConfigValuesBySiteIdTest(int siteId)
+        {
+            var actual = _configBLL.GetConfigValuesBySiteId<SMSSupportConfig>("SMSSupport");
+            return actual[siteId].SMSSupport["Default"];
+        }
+        
+
+        #endregion
     }
 }
