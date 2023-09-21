@@ -6493,50 +6493,58 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public async Task<PNGResult> CancelBetRNG_PNG(TpCustInfo tpCustInfo, BettingDataRNG_PNG bettingData)
         {
+            decimal afterAmount = 0;
             await using var conn = _mainDbClient.GetMySqlConnection();
             await conn.OpenAsync();
             await using var trans = await conn.BeginTransactionAsync();
 
             try
             {
-                var p = new DynamicParameters(bettingData);
-                var result = _mainDbClient.Execute("Service_BettransRng_PNG_Ins", p, conn, trans);
+                // update
+                var result = _mainDbClient.Execute("Service_BettransRng_PNG_CancelBet_Set", new { _TransactionId = bettingData.TransactionId }, conn, trans);
+                if (result > 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        bettingData.Amount,
+                        (int)Tp.PNG,
+                        bettingData.RoundId.ToString(),
+                        (int)GameType.PNG_RNG,
+                        TpCategory.Slots,
+                        bettingData.RoundId.ToString(),
+                        TransType.Refunds,
+                        null,
+                        out afterAmount,
+                        "Cancel",
+                        out var bonusId,
+                        conn,
+                        trans);
 
-                if (result == 0)
-                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "CancelReserve Fail");
+                    if (result < 1)
+                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "CancelReserve Set Balance Fail");
+                }
+                else
+                {
+                    // Insert
+                    var p = new DynamicParameters(bettingData);
+                    result = _mainDbClient.Execute("Service_BettransRng_PNG_Ins", p, conn, trans);
 
-                result = PayoutV2(
-                    tpCustInfo,
-                    bettingData.Amount,
-                    (int)Tp.PNG,
-                    bettingData.RoundId.ToString(),
-                    (int)GameType.PNG_RNG,
-                    TpCategory.Slots,
-                    bettingData.RoundId.ToString(),
-                    TransType.Refunds,
-                    null,
-                    out var afterAmount,
-                    "Cancel",
-                    out var bonusId,
-                    conn,
-                    trans);
-
-                if (result < 1)
-                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "CancelReserve Set Balance Fail");
+                    if (result < 1)
+                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "CancelReserve Insert Fail");
+                }
 
                 await trans.CommitAsync();
                 return new PNGResult
                 {
                     ExternalTransactionId = bettingData.TransactionId,
-                    AfterAmount = afterAmount
+                    AfterAmount = afterAmount //沒有退款的話 afterAmount 會是 0，有需要可以在外層判斷 = 0 重取餘額一次
                 };
-
             }
             catch (MySqlException mySqlEx)
             {
                 if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
                 {
-                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "Duplicate CancelReserve");
+                    throw new PNGException(PNG_StatsuCodeEnum.Ok, "Duplicate CancelReserve");
                 }
                 throw;
             }
