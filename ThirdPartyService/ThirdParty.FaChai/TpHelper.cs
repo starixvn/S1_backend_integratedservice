@@ -16,7 +16,7 @@ namespace ThirdParty.FaChai
 
         public TpHelper(IServiceProvider provider)
         {
-            siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(((int)TpEnum.FaChai).ToString());
+            siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>((TpEnum.FaChai).ToString());
         }
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {

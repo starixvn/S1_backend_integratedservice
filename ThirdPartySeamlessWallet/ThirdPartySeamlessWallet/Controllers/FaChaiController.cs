@@ -39,7 +39,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             logger = provider.GetRequiredService<ILogger<FaChaiController>>();
             thisTp = Tp.FaChai;
             environment = provider.GetRequiredService<IHostEnvironment>();
-            siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(((int)ThirdParty).ToString());
+            siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>((ThirdParty).ToString());
         }
         #endregion
 
