@@ -322,11 +322,11 @@ namespace ThirdPartyCore
 
         protected string HttpPostWithX509(string url, Dictionary<string, string> parameters, string contentType, Dictionary<string, string> headers = null, X509Certificate2 certificate = null)
         {
-            LogContext.PushProperty("url", url);
-            LogContext.PushProperty("contentType", contentType);
-            logger.LogInformation($"headers: {JsonConvert.SerializeObject(headers)} " +
-                $"| parameters: {JsonConvert.SerializeObject(parameters)}" +
-                $"| certificate: {certificate.SubjectName} ");
+            //LogContext.PushProperty("url", url);
+            //LogContext.PushProperty("contentType", contentType);
+            //logger.LogInformation($"headers: {JsonConvert.SerializeObject(headers)} " +
+            //    $"| parameters: {JsonConvert.SerializeObject(parameters)}" +
+            //    $"| certificate: {certificate.SubjectName} ");
 
             using var handler = new HttpClientHandler();
             //if (!string.IsNullOrEmpty(proxyHost))
