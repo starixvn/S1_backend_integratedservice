@@ -72,7 +72,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [Route("Fachai/getbalance")]
         [HttpPost]
-        public FCResponse GetBalance(FCRequest req)
+        public FCResponse GetBalance([FromForm] FCRequest req)
         {
             var configList = siteConfigDic.Select(x => x.Value).ToList();
             var siteConfig = configList.Find(x => x["AgentCode"] == req.AgentCode);
@@ -86,7 +86,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 };
             }
             var getBalanceReq = JsonConvert.DeserializeObject<GetBalanceData>(para);
-            var tpCustBalance = _tpCustInfoBLL.GetBalance(Convert.ToInt32(siteConfig.Keys), getBalanceReq.MemberAccount, gameType);
+            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)Tp.FaChai, getBalanceReq.MemberAccount, gameType);
 
             return new FCResponse()
             {
@@ -98,7 +98,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("Fachai/betinfo")]
         [HttpPost]
 
-        public FCResponse Bet(FCRequest req)
+        public FCResponse Bet([FromForm] FCRequest req)
         {
             var configList = siteConfigDic.Select(x => x.Value).ToList();
             var siteConfig = configList.Find(x => x["AgentCode"] == req.AgentCode);
@@ -114,7 +114,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             var bettingData = JsonConvert.DeserializeObject<BettingDataRNG_FaChai>(para);
 
-            var tpCustBalance = _tpCustInfoBLL.GetBalance(Convert.ToInt32(siteConfig.Keys), bettingData.MemberAccount, gameType);
+            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)Tp.FaChai, bettingData.MemberAccount, gameType);
 
             if (tpCustBalance.Balance < bettingData.RequireAmt)
             {
@@ -147,7 +147,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [Route("Fachai/cancelbetinfo")]
         [HttpPost]
-        public FCResponse Cancel(FCRequest req)
+        public FCResponse Cancel([FromForm] FCRequest req)
         {
             var configList = siteConfigDic.Select(x => x.Value).ToList();
             var siteConfig = configList.Find(x => x["AgentCode"] == req.AgentCode);
