@@ -93,6 +93,7 @@ namespace ThirdPartySeamlessWallet
             services.AddTransient<IKMService, KMService>();
             services.AddTransient<IMGBLL, MGBLL>();
             services.AddSingleton<IHBBLL, HBBLL>();
+            services.AddSingleton<IPegasusBLL, PegasusBLL>();
             services.AddSingleton<IIMBLL, IMBLL>();
             services.AddTransient<IAMBBLL, AMBBLL>();
             services.AddTransient<ISBOBLL, SBOBLL>();
