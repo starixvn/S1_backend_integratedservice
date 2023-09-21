@@ -109,8 +109,7 @@ namespace ThirdParty.PNG
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo,
             Dictionary<string, string> inputs)
         {
-            var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
-            var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_PNG_Detail_Get", new { YYYYMM = YYYYMM, TransId = betRecordInfo.TransId }, DataBase.Main);
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_PNG_Detail_Get", new { TransId = betRecordInfo.TransId }, DataBase.Main);
 
             if (!detail.Any())
             {
