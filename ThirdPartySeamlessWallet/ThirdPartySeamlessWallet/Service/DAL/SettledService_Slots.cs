@@ -6561,7 +6561,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 var p = new DynamicParameters(bettingData);
-                var result = _mainDbClient.Execute("Service_BettransRng_PNG_Ins", p, conn, trans);
+                var result = bettingData.RoundId != endRoundId
+                    ? _mainDbClient.Execute("Service_BettransRng_PNG_Ins", p, conn, trans) // 正常投注、取消、派彩
+                    : _mainDbClient.Execute("Service_BettransRng_PNG_END_Ins", p, conn, trans); // EndRound 紀錄
 
                 if (result == 0)
                     throw new PNGException(PNG_StatsuCodeEnum.Internal, "Release Fail");
