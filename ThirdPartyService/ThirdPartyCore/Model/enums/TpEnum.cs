@@ -42,7 +42,8 @@
         HB = 40,
         SBSW = 41,
         SimplePlay = 44,
-        Nextspin = 50
+        Nextspin = 50,
+        Pegasus = 56
     }
 
     public enum TpGameType
