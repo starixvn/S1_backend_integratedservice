@@ -1,6 +1,5 @@
 ﻿using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL;
-using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySettleWorker.Model.Exceptions;
@@ -72,7 +71,7 @@ namespace ThirdPartySettleWorker.Workers
 
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettleData.TpUserName);
                         CheckTpCustInfoExist(tpCustInfo, unsettleData);
-                        checkUnSettleDataExist(unsettleData, tpUnsettle);
+                        CheckUnSettleDataExist(unsettleData, tpUnsettle);
                         
                         var betRecordInfo = new BetRecordInfo
                         {
@@ -145,7 +144,7 @@ namespace ThirdPartySettleWorker.Workers
             }
         }
 
-        private static void checkUnSettleDataExist(SettleDataRNG_PNG unsettleData, TpUnsettle tpUnsettle)
+        private static void CheckUnSettleDataExist(SettleDataRNG_PNG unsettleData, TpUnsettle tpUnsettle)
         {
             if (unsettleData == null)
             {
