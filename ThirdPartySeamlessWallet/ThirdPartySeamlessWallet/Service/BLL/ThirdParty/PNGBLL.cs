@@ -345,17 +345,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     if (bettingData.Any(r => r.TransactionId == transactionId && r.TicketType == (int)BettransType.Bet))
                         throw new PNGException(PNG_StatsuCodeEnum.Internal, "TransactionId Bet Is Duplicated");
 
+                    // 檢查 BetTrans 已存在 CancelBet，不能投注成功
+                    if (bettingData.Any(r => r.TransactionId == transactionId && r.TicketType == (int)BettransType.CancelBet))
+                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "TransactionId CancelBet Already Exist");
+
                     break;
 
                 case BettransType.CancelBet:
 
-                    // 檢查 BetTrans 是否有相同 transactionId 的投注紀錄，同時變免 CancelBet 跑的筆 Bet 快
-                    if (!bettingData.Any(r => r.TransactionId == transactionId && r.TicketType == (int)BettransType.Bet))
-                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "TransactionId Bet Is NotFound");
-
                     // 檢查 BetTrans 是否有相同 transactionId 是否Cancel 過
                     if (bettingData.Any(r => r.TransactionId == transactionId && r.TicketType == (int)BettransType.CancelBet))
-                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "TransactionId Duplicated Cancel");
+                        throw new PNGException(PNG_StatsuCodeEnum.Ok, "TransactionId Duplicated Cancel");
 
                     break;
                 case BettransType.Payout:
