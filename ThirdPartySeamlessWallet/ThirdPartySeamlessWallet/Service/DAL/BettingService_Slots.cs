@@ -2047,11 +2047,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     conn: conn,
                     trans: trans);
 
-                if (result < 1)
-                    throw new PNGException(PNG_StatsuCodeEnum.Internal, $"TransactionId:{bettingData.TransactionId} Reserve Fail");
-
                 if (afterAmount < 0)
                     throw new PNGException(PNG_StatsuCodeEnum.NotEnoughMoney, "Insufficient Balance");
+
+                if (result < 1)
+                    throw new PNGException(PNG_StatsuCodeEnum.Internal, $"TransactionId:{bettingData.TransactionId} Reserve Fail");
 
                 await trans.CommitAsync();
 
