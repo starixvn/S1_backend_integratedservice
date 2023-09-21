@@ -47,6 +47,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var result = settledService.DoTpRewardTicket(tpCustInfo, tpRewardRecordInfo, tpCategory, checkBonus);
             return result;
         }
+
         public TpBetRecordDetail GetTpBetRecordDetail(int TpId, int GameType, string TransId, DateTime SettledTime)
         {
             return settledService.GetTpBetRecordDetail(TpId, GameType, TransId, SettledTime);
@@ -2325,6 +2326,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.SetSettleFlag_BettransRng_AP_Mini(spName, transId, settleTime);
         }
+
 
         #endregion
 

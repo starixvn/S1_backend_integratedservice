@@ -736,7 +736,7 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 decimal validBet = unsettled.Stake;
                                 decimal winLostAmount = unsettled.WinLostAmount;
 
-                                if (wager.Stake == stake)
+                                if ((Math.Truncate(wager.Stake * 10) / 10) == (Math.Truncate(stake * 10) / 10))
                                 {
                                     var betRecordInfo = new BetRecordInfo
                                     {

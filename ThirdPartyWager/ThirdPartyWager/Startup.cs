@@ -340,7 +340,7 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceSexy>();
             services.AddHostedService<FinanceCQ9>();
             services.AddHostedService<WagerSkywind>();
-            services.AddHostedService<WagerUnsettleCheckSkywind>();
+            //services.AddHostedService<WagerUnsettleCheckSkywind>();
             services.AddHostedService<WagerGPI>();
             services.AddHostedService<WagerRedoGPI>();
             services.AddHostedService<FinanceGPI>();
@@ -357,6 +357,9 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerSPRIBE>();
             services.AddHostedService<FinanceIM>();
             services.AddHostedService<FinanceSPRIBE>();
+
+            // health check use
+            services.AddControllers();
 
             /*******************closed tp*************************/
             //services.AddHostedService<WagerOneGaming>();
@@ -382,6 +385,17 @@ namespace ThirdPartyWager
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseRouting();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapGet("/health", async context =>
+                {
+                    await context.Response.WriteAsync($"{env.EnvironmentName}-{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}");
+                });
+
+                endpoints.MapControllers();
+            });
         }
     }
 }

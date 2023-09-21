@@ -67,7 +67,6 @@ builder.Services
     .AddHostedService<BTIWorker>()
     .AddHostedService<NineWWorker>()
     .AddHostedService<One789Worker>()
-    .AddHostedService<GPIWorker>()
     .AddHostedService<YeebetWorker>()
     .AddHostedService<BGWorker>()
     .AddHostedService<TFGWorker>()
@@ -75,7 +74,8 @@ builder.Services
     .AddHostedService<ENDWorker>()
     .AddHostedService<IMWorker>()
     .AddHostedService<SPRIBEWorker>()
-    .AddHostedService<SBSWWorker>();
+    .AddHostedService<SBSWWorker>()
+    .AddHostedService<PNGWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);

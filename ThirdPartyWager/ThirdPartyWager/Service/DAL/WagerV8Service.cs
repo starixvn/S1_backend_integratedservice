@@ -18,9 +18,14 @@ namespace ThirdPartyWager.Service.DAL
             return _wagerDbClient.Execute("Service_TpWagerPK_V8_Ins", bet);
         }
 
+        public int InsertWager_V2(BetV8 bet)
+        {
+            return _wagerDbClient.Execute("Service_TpWagerPK_V8_Ins_V2", bet);
+        }
+
         public WagerV8Total GetWagerTotal(long beginTime, long endTime)
         {
-            return _wagerDbClient.QueryFirst<WagerV8Total>("Service_TpWagerPK_V8_Total_Get", new { BeginTime = beginTime, EndTime = endTime});
+            return _wagerDbClient.QueryFirst<WagerV8Total>("Service_TpWagerPK_V8_Total_Get", new { BeginTime = beginTime, EndTime = endTime });
         }
     }
 }

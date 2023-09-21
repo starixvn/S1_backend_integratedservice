@@ -43,7 +43,9 @@
         SBSW = 41,
         SimplePlay = 44,
         Nextspin = 50,
-        FaChai = 55
+        PNG = 54,
+        FaChai = 55,
+        Pegasus = 56
     }
 
     public enum TpGameType

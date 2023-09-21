@@ -54,8 +54,10 @@
     <ProjectReference Include="..\ThirdParty.Mega\ThirdParty.Mega.csproj" />
     <ProjectReference Include="..\ThirdParty.MG\ThirdParty.MG.csproj" />
     <ProjectReference Include="..\ThirdParty.OneGaming\ThirdParty.OneGaming.csproj" />
+    <ProjectReference Include="..\ThirdParty.Pegasus\ThirdParty.Pegasus.csproj" />
     <ProjectReference Include="..\ThirdParty.PG\ThirdParty.PG.csproj" />
     <ProjectReference Include="..\ThirdParty.PlayTech\ThirdParty.PlayTech.csproj" />
+    <ProjectReference Include="..\ThirdParty.PNG\ThirdParty.PNG.csproj" />
     <ProjectReference Include="..\ThirdParty.PP\ThirdParty.PP.csproj" />
     <ProjectReference Include="..\ThirdParty.RedTiger\ThirdParty.RedTiger.csproj" />
     <ProjectReference Include="..\ThirdParty.SA\ThirdParty.SA.csproj" />

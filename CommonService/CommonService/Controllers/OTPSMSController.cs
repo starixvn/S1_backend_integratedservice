@@ -16,24 +16,26 @@ namespace CommonService.Controllers
         private readonly Log2File log2File;
         private readonly CustInfoBLL custInfoBLL;
         private readonly SelLangBLL selLangBLL;
-        private readonly IOptions<Dictionary<string, Dictionary<string, string>>> supportOTPConfig;
-
-        public OTPSMSController(OTPSMSBLL sOTPSMSBLL, CustInfoBLL custInfoBLL, Log2File log2File, SelLangBLL selLangBLL, NxCloudSMSBLL nxCloudSMSBLL, IOptions<Dictionary<string, Dictionary<string, string>>> supportOTPConfig)
+        private readonly Dictionary<string, SMSSupportConfig> _supportOTPConfig;
+        
+        public OTPSMSController(IServiceProvider provider)
         {
-            this.sOTPSMSBLL = sOTPSMSBLL;
-            this.nxCloudSMSBLL = nxCloudSMSBLL;
-            this.custInfoBLL = custInfoBLL;
-            this.log2File = log2File;
-            this.selLangBLL = selLangBLL;
-            this.supportOTPConfig = supportOTPConfig;
+            sOTPSMSBLL = provider.GetRequiredService<OTPSMSBLL>();
+            nxCloudSMSBLL = provider.GetRequiredService<NxCloudSMSBLL>();
+            custInfoBLL = provider.GetRequiredService<CustInfoBLL>();
+            log2File = provider.GetRequiredService<Log2File>();
+            selLangBLL = provider.GetRequiredService<SelLangBLL>();
+            var configBLL = provider.GetRequiredService<ConfigBLL>();
+            _supportOTPConfig = configBLL.GetConfigValuesBySiteName<SMSSupportConfig>("SMSSupport");
         }
+        
         private string GetSupportOTP(CustInfoProfile custInfo)
         {
-            var otpConfig = supportOTPConfig.Value[custInfo.SiteName];
-            var supportOtp = otpConfig["Default"]; 
-            if(otpConfig.ContainsKey(custInfo.AreaCode))
-                otpConfig.TryGetValue(custInfo.AreaCode, out supportOtp);
-            return supportOtp;
+            var otpConfig = _supportOTPConfig[custInfo.SiteName];
+            var supportOTP = otpConfig.SMSSupport["Default"];
+            if(otpConfig.SMSSupport.ContainsKey(custInfo.AreaCode))
+                otpConfig.SMSSupport.TryGetValue(custInfo.AreaCode, out supportOTP);
+            return supportOTP;
         }
         public class Req
         {
@@ -43,46 +45,54 @@ namespace CommonService.Controllers
         public async Task<ApiResult<SendOTPSMSResult>> SendOTPSMSAsync(Req req)
         {
             var apiResult = new ApiResult<SendOTPSMSResult>();
-            var custInfo = custInfoBLL.GetCustInfoProfile(req.CustId);
-
-            if (custInfo != null && !string.IsNullOrEmpty(custInfo.PhoneNo))
+            try
             {
-                var phoneNo = custInfo.PhoneNo.StartsWith("0") ? custInfo.PhoneNo.Substring(1) : custInfo.PhoneNo;
-                var areaCode = custInfo.AreaCode.StartsWith("+") ? custInfo.AreaCode.Substring(1) : custInfo.AreaCode;
-                var phone = $"{areaCode}{phoneNo}";
-                apiResult = sOTPSMSBLL.GetOTPVerifyInfo(req.CustId);
-                if (apiResult.ErrorCode != 0)//OTP not Exist   send SMS
+                var custInfo = custInfoBLL.GetCustInfoProfile(req.CustId);
+
+                if (custInfo != null && !string.IsNullOrEmpty(custInfo.PhoneNo))
                 {
-                    var supportOTP = GetSupportOTP(custInfo);
-                    apiResult.Message = supportOTP;
-                    
-                    if (supportOTP.Equals("AWS", StringComparison.OrdinalIgnoreCase))
+                    var phoneNo = custInfo.PhoneNo.StartsWith("0") ? custInfo.PhoneNo.Substring(1) : custInfo.PhoneNo;
+                    var areaCode = custInfo.AreaCode.StartsWith("+") ? custInfo.AreaCode.Substring(1) : custInfo.AreaCode;
+                    var phone = $"{areaCode}{phoneNo}";
+                    apiResult = sOTPSMSBLL.GetOTPVerifyInfo(req.CustId);
+                    if (apiResult.ErrorCode != 0)//OTP not Exist   send SMS
                     {
-                        apiResult = await sOTPSMSBLL.SendAwsOtpAsync(phone, custInfo, req.CustId, custInfo.UserLang);
-                    }
-                    else if (supportOTP.Equals("SkyLine", StringComparison.OrdinalIgnoreCase))
-                    {
-                        apiResult = await sOTPSMSBLL.SendSkyLineOTPSMSAsync(phone, custInfo, req.CustId, custInfo.UserLang);
-                    } else if (supportOTP.Equals("YC", StringComparison.OrdinalIgnoreCase))
-                    {
-                        apiResult = await sOTPSMSBLL.SendYcOTPMSAsync(phoneNo, custInfo, req.CustId, custInfo.UserLang); // CNY OTP
-                    }
-                    else //default NxCloud
-                    {
-                        apiResult = await nxCloudSMSBLL.SendOTPSMSAsync(phone, custInfo, req.CustId, custInfo.UserLang);
+                        var supportOTP = GetSupportOTP(custInfo);
+                        apiResult.Message = supportOTP;
+
+                        if (supportOTP.Equals("AWS", StringComparison.OrdinalIgnoreCase))
+                        {
+                            apiResult = await sOTPSMSBLL.SendAwsOtpAsync(phone, custInfo, req.CustId, custInfo.UserLang);
+                        }
+                        else if (supportOTP.Equals("SkyLine", StringComparison.OrdinalIgnoreCase))
+                        {
+                            apiResult = await sOTPSMSBLL.SendSkyLineOTPSMSAsync(phone, custInfo, req.CustId, custInfo.UserLang);
+                        }
+                        else if (supportOTP.Equals("YC", StringComparison.OrdinalIgnoreCase))
+                        {
+                            apiResult = await sOTPSMSBLL.SendYcOTPMSAsync(phoneNo, custInfo, req.CustId, custInfo.UserLang); // CNY OTP
+                        }
+                        else //default NxCloud
+                        {
+                            apiResult = await nxCloudSMSBLL.SendOTPSMSAsync(phone, custInfo, req.CustId, custInfo.UserLang);
+                        }
                     }
                 }
+                else if (custInfo != null && string.IsNullOrEmpty(custInfo.PhoneNo))
+                {
+                    apiResult.ErrorCode = ErrorCode.InvalidParameter;
+                }
+                else
+                {
+                    apiResult.ErrorCode = ErrorCode.UserNotExist;
+                }
             }
-            else if (custInfo != null && string.IsNullOrEmpty(custInfo.PhoneNo))
+            catch(Exception ex)
             {
-                apiResult.ErrorCode = ErrorCode.InvalidParameter;
+                apiResult.RawMessage = ex.ToString();
+                log2File.Error(ex.ToString(), "SendOTPSMSA", ex);
             }
-            else
-            {
-                apiResult.ErrorCode = ErrorCode.UserNotExist;
-            }
-
-
+            
             return apiResult;
         }
         [HttpPost]

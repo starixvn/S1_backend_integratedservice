@@ -104,7 +104,7 @@ namespace ThirdPartySettleWorker.Workers
                         if (betData.Sum(x => x.amount) == wager.debit || betData.Sum(x => x.amount) == wager.Stake)
                         {
                             var stake = wager.Stake;
-                            var winLostAmount = wager.WinLostAmount - stake;
+                            var winLostAmount = wager.WinLostAmount + wager.ProgressiveWin - stake;
                             var settledTime = wager.SettleTime;
                             var betTime = wager.TransTime;
                             var gameCode = settleData.FirstOrDefault().gamecode;
@@ -219,7 +219,7 @@ namespace ThirdPartySettleWorker.Workers
                         if (betData.Sum(x => x.amount) == wager.debit || betData.Sum(x => x.amount) == wager.Stake)
                         {
                             var stake = wager.Stake;
-                            var winLostAmount = wager.WinLostAmount - stake;
+                            var winLostAmount = wager.WinLostAmount + wager.ProgressiveWin - stake;
                             var settledTime = wager.SettleTime;
                             var betTime = wager.TransTime;
                             var gameCode = settleData.FirstOrDefault().gamecode;
@@ -334,7 +334,7 @@ namespace ThirdPartySettleWorker.Workers
                         if (betData.Sum(x => x.amount) == wager.debit || betData.Sum(x => x.amount) == wager.Stake)
                         {
                             var stake = wager.Stake;
-                            var winLostAmount = wager.WinLostAmount - stake;
+                            var winLostAmount = wager.WinLostAmount + wager.ProgressiveWin - stake;
                             var settledTime = wager.SettleTime;
                             var betTime = wager.TransTime;
                             var gameCode = settleData.FirstOrDefault().gamecode;

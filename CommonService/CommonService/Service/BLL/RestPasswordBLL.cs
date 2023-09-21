@@ -10,26 +10,28 @@ namespace CommonService.Service.BLL
 {
     public class RestPasswordBLL
     {
-        private readonly IOptions<Dictionary<string, SendGridConfig>> sendGridConfig;
+        private readonly Dictionary<string, SendGridConfig> _sendGridConfig;
         private readonly HttpHelper httpHelper;
         private readonly AuthBLL authBLL;
-
-        public RestPasswordBLL(IOptions<Dictionary<string, SendGridConfig>> sendGridConfig, HttpHelper httpHelper, AuthBLL authBLL)
+        
+        public RestPasswordBLL(IServiceProvider provider)
         {
-            this.sendGridConfig = sendGridConfig;
-            this.httpHelper = httpHelper;
-            this.authBLL = authBLL;
+            httpHelper = provider.GetRequiredService<HttpHelper>();
+            authBLL = provider.GetRequiredService<AuthBLL>();
+            var configBLL = provider.GetRequiredService<ConfigBLL>();
+            _sendGridConfig = configBLL.GetConfigValuesBySiteName<SendGridConfig>("SendGrid");
         }
+        
         public async Task<ApiResult> SendMailAsync(CustInfoProfile custInfo, string resetPasswordUrl)
         {
             var apiResult = new ApiResult();
 
-            if (!sendGridConfig.Value.ContainsKey(custInfo.SiteName))
+            if (!_sendGridConfig.ContainsKey(custInfo.SiteName))
             {
                 apiResult.ErrorCode = ErrorCode.Fail;
             }
 
-            var config = sendGridConfig.Value[custInfo.SiteName];
+            var config = _sendGridConfig[custInfo.SiteName];
 
             var headerParams = new Dictionary<string, string> {
                 { "Authorization", $"Bearer {config.ApiKey}"}

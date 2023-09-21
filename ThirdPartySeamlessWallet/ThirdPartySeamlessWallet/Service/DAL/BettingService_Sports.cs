@@ -93,7 +93,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 await using var conn = _mainDbClient.GetMySqlConnection();
                 await conn.OpenAsync();
                 await using var trans = await conn.BeginTransactionAsync();
-
+                
                 var p = new DynamicParameters(debitReserve);
                 p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
                 _ = await _mainDbClient.ExecuteAsync("Service_BettransSports_BTI_DebitReserve_Ins", trans, p);
@@ -143,8 +143,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 dto.TicketType = (int)BettransType.Bet;
                 dto.TicketStatus = (int)TicketStatus.UnSettled;
                 var p = new DynamicParameters(dto);
-                var result = await _mainDbClient.ExecuteAsync("Service_BettransSports_SBO_Deduct_Ins", transaction: trans, p);
-
+                var result = await _mainDbClient.ExecuteAsync("Service_BettransSports_SBO_Deduct_Ins", trans , p );
+                
                 if (result < 1)
                 {
                     logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode}" +
