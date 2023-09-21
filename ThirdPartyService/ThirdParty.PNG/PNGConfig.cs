@@ -38,7 +38,7 @@
 
             GameUrl = siteConfig.ContainsKey("GameUrl") && !string.IsNullOrEmpty(siteConfig["GameUrl"])
                 ? siteConfig["GameUrl"]
-                : throw new Exception("PlayNGo TpList not found GameLaunchUrl Setting");
+                : throw new Exception("PlayNGo TpList not found GameUrl Setting");
 
             GameHistoryMobile = siteConfig.ContainsKey("GameHistoryMobile") && !string.IsNullOrEmpty(siteConfig["GameHistoryMobile"])
                 ? siteConfig["GameHistoryMobile"]
