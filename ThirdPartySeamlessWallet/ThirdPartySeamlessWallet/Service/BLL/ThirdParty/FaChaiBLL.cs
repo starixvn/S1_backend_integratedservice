@@ -57,7 +57,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             var result = 0;
 
-            result = _partitionService.Execute(partitionTime, "Service_Bettrans_Skywind_Ins", bettingData, trans);
+            result = _partitionService.Execute(partitionTime, "Service_BettransRng_FaChai_Ins", bettingData, trans);
 
             if (result > 0 && bettingData.Bet != 0)
             {
