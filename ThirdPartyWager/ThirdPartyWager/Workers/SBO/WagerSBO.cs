@@ -1,6 +1,5 @@
 ﻿using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.BLL.SBO;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -79,7 +78,7 @@ namespace ThirdPartyWager.Workers
                 var nextTimeSpan = doQuickly ? TimeSpan.FromSeconds(intervalSec) : TimeSpan.FromMinutes(intervalMins);
                 switch (portfolio)
                 {
-                    case SBOPortfolio.SportsBook :
+                    case SBOPortfolio.SportsBook:
                         _sportsBookWagerTimer.Change(nextTimeSpan, TimeSpan.Zero);
                         break;
                     case SBOPortfolio.VirtualSports:

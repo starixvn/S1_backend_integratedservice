@@ -103,7 +103,7 @@ public class FinanceBG : BackgroundService
                 _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, reportTime.endUnix);
 
             var diffDay = (int)(DateTime.Now.Date - reportDate.Date).TotalDays;
-            
+
             if (diffDay >= _beyond)
                 quick = true;
 

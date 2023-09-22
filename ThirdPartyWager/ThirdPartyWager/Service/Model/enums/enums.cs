@@ -98,7 +98,6 @@
         IM_Sports = 103
     }
 
-
     public enum SettlementType
     {
         UnSettled = 0,

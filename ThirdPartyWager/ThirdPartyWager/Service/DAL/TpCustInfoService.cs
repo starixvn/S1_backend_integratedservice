@@ -8,7 +8,7 @@ using ThirdPartyWager.Service.Model;
 
 namespace ThirdPartyWager.Service.DAL
 {
-   public class TpCustInfoService
+    public class TpCustInfoService
     {
         private readonly IConfiguration configuration;
         private readonly MySqlClient _mainDbClient;
@@ -19,6 +19,7 @@ namespace ThirdPartyWager.Service.DAL
             var mySqlLogger = provider.GetRequiredService<ILogger<MySqlClient>>();
             _mainDbClient = new MySqlClient(configuration.GetConnectionString("ConnectionString"), mySqlLogger);
         }
+
         public TpCustInfo GetTpCustInfo(int TpId, string TpUserName)
         {
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Net;
-using System.Net.Http;
+﻿using System.Net;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -79,7 +77,6 @@ namespace ThirdPartyWager.Manual
             services.AddSingleton<WagerOneGamingService>();
             services.AddSingleton<WagerV8Service>();
             services.AddSingleton<WagerN2LiveService>();
-            services.AddSingleton<WagerPTService>();
             services.AddSingleton<LiveStreamingService>();
             services.AddSingleton<LatestHighlightVideoService>();
             services.AddSingleton<SabaOddsService>();

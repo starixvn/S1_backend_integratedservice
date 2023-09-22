@@ -13,9 +13,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly CommonBLL _commonBLL;
         private readonly ApiAPBLL _apiAPBLL;
         private readonly DateTimeHelper _dateTimeHelper;
-        private readonly WagerAPService _wagerAPService;
         private readonly int _timeZone = 0;
-        private readonly List<int> _siteList = new List<int>() { 1, 2, 3 };
 
         public FinanceAPBLL(IServiceProvider provider)
         {
@@ -24,7 +22,6 @@ namespace ThirdPartyWager.Service.BLL
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _apiAPBLL = provider.GetRequiredService<ApiAPBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
-            _wagerAPService = provider.GetRequiredService<WagerAPService>();
         }
 
         public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
@@ -67,11 +64,11 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
         {
             var reportData = new List<dynamic>();
-            foreach (var siteId in _siteList)
+            var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+            foreach (var siteData in siteList)
             {
                 // 分Site取得TpList
-                setting = _thirdPartyBLL.GetThirdPartyBySite(tpId, siteId);
-
+                setting = _thirdPartyBLL.GetThirdPartyBySite(tpId, siteData.SiteId);
                 foreach (var type in new List<string> { "slot", "mini" })
                 {
                     switch (type)
@@ -82,14 +79,14 @@ namespace ThirdPartyWager.Service.BLL
                             {
                                 var msg = "THIRD_PARTY_ERROR";
                                 _logger.LogError($"{msg}\r\nSiteId=\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                                SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
+                                SystemException systemException = new($"{msg} - GetReport({tpId})");
                                 throw systemException;
                             }
 
                             if (getWagerSummary.ErrorCode == 0 && getWagerSummary.Results == null)
                             {
                                 var msg = "NO_DATA";
-                                _logger.LogInformation($"{msg}\r\nSiteId={siteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                                _logger.LogInformation($"{msg}\r\nSiteId={siteData.SiteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
                                 continue;
                             }
 
@@ -104,14 +101,14 @@ namespace ThirdPartyWager.Service.BLL
                             {
                                 var msg = "THIRD_PARTY_ERROR";
                                 _logger.LogError($"{msg}\r\nSiteId=\r\n{JsonConvert.SerializeObject(getWagerSummaryOfMini)}");
-                                SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
+                                SystemException systemException = new($"{msg} - GetReport({tpId})");
                                 throw systemException;
                             }
 
                             if (getWagerSummaryOfMini.httpStatus == 0 && getWagerSummaryOfMini.result.Count == 0)
                             {
                                 var msg = "NO_DATA";
-                                _logger.LogInformation($"{msg}\r\nSiteId={siteId}\r\n{JsonConvert.SerializeObject(getWagerSummaryOfMini)}");
+                                _logger.LogInformation($"{msg}\r\nSiteId={siteData.SiteId}\r\n{JsonConvert.SerializeObject(getWagerSummaryOfMini)}");
                                 continue;
                             }
 

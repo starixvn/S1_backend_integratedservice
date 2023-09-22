@@ -19,9 +19,7 @@ namespace ThirdPartyWager.Workers
         private readonly int _beyond = 2;
         private Timer timer;
 
-        public FinanceSA(
-            IServiceProvider provider
-        )
+        public FinanceSA(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceSA>>();
             _financeSABLL = provider.GetRequiredService<FinanceSABLL>();
@@ -78,7 +76,7 @@ namespace ThirdPartyWager.Workers
 
                 // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
-                
+
                 // default time
                 var execTime = new ThirdPartyTimerModel()
                 {
