@@ -6585,18 +6585,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         out var bonusId,
                         conn,
                         trans);
-                }
 
-                if (result < 1)
-                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "Release Set Balance Fail");
+                    if (result < 1)
+                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "Release Set Balance Fail");
+                }
 
                 if (bettingData.RoundId != endRoundId) //非endRound 才塞 TpUnsettle
                 {
                     result = _tpUnsettleService.InsertTpUnsettle(Tp.PNG, GameType.PNG_RNG, bettingData.RoundId.ToString(), trans);
-                }
 
-                if (result < 1)
-                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "PNG TpUnsettle Fail");
+                    if (result < 1)
+                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "PNG TpUnsettle Fail");
+                }
 
                 await trans.CommitAsync();
 
@@ -6606,6 +6606,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     AfterAmount = afterAmount
                 };
             }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    throw new PNGException(PNG_StatsuCodeEnum.Ok, $"TransactionId:{bettingData.TransactionId},RoundId:{bettingData.RoundId} Duplicate Release");
+                }
+                throw;
+            }
             catch (PNGException ex)
             {
                 logger.LogError(ex, ex.Message);
@@ -6614,8 +6622,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
-
         #endregion
-
     }
 }
