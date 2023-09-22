@@ -108,7 +108,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 return new FCResponse()
                 {
-                    Result = 604
+                    Result = (int)FCErrorMessage.Verification_failed
                 };
             }
 
@@ -116,11 +116,11 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             var tpCustBalance = _tpCustInfoBLL.GetBalance((int)Tp.FaChai, bettingData.MemberAccount, gameType);
 
-            if (tpCustBalance.Balance < bettingData.RequireAmt)
+            if (tpCustBalance.Balance < bettingData.Bet)
             {
                 return new FCResponse()
                 {
-                    Result = 203
+                    Result = (int)FCErrorMessage.Your_points_balance_not_enough_to_withdraw
                 };
             }
 
@@ -128,7 +128,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             var result = _faChakiBLL.Bet(tpCustInfo, bettingData, out decimal afterAmount);
 
-            if (result > 0)
+            if (result.Result == (int)FCErrorMessage.Success)
             {
                 return new FCResponse()
                 {
@@ -136,13 +136,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     MainPoints = decimal.ToSingle(afterAmount)
                 };
             }
-            else
-            {
-                return new FCResponse()
-                {
-                    Result = 702,
-                };
-            }
+
+            return result;
         }
 
         [Route("Fachai/cancelbetinfo")]
@@ -175,7 +170,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             var result = _faChakiBLL.Cancel(tpCustInfo, cancelData);
 
-            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp.FaChai, tpCustInfo.CurrencyId);
+            //var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp.FaChai, tpCustInfo.CurrencyId);
 
             //if (result.Result == 0)
             //{
@@ -195,7 +190,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             //    result.MainPoints = 0;
             //}
 
-            result.MainPoints = 0;
+            //result.MainPoints = 0;
 
             return result;
         }

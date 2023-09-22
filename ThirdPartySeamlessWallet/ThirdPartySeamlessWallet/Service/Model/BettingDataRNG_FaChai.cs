@@ -66,6 +66,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         Wrong_code_for_deposit_and_withdrawal = 202,
         [Description("Your points balance not enough to withdraw")]
         Your_points_balance_not_enough_to_withdraw = 203,
+        [Description("Duplicate Transaction ID number")]
+        Duplicate_Transaction_ID_number = 205,
         [Description("Transaction ID number not exist")]
         Transaction_ID_number_not_exist = 221,
         [Description("Unable to obtain API customer (agent) key")]
@@ -122,6 +124,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         No_points_is_returned = 607,
         [Description("Revert Cancel Bet")]
         Revert_Cancel_Bet = 799,
+        [Description("Write transaction order is failed")]
+        Write_transaction_order_is_failed = 702,
         [Description("Unknown errors")]
         Unknown_errors = 999,
     }

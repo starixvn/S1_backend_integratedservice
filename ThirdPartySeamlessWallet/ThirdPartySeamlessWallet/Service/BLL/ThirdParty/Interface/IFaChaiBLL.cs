@@ -5,7 +5,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface
 {
     public interface IFaChaiBLL
     {
-        int Bet(TpCustInfo tpCustInfo, BettingDataRNG_FaChai bettingData, out decimal afterAmount);
+        FCResponse Bet(TpCustInfo tpCustInfo, BettingDataRNG_FaChai bettingData, out decimal afterAmount);
         FCResponse Cancel(TpCustInfo tpCustInfo, CnacelData_FaChai cancelData);
     }
 }
