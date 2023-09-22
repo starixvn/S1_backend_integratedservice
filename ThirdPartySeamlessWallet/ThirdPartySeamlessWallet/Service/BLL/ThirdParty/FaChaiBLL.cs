@@ -13,6 +13,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly PartitionService _partitionService;
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
+        private readonly TpUnsettleService _tpUnsettleService;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         public FaChaiBLL(IServiceProvider provider)
@@ -22,13 +23,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _partitionService = provider.GetRequiredService<PartitionService>();
             _bettingService = provider.GetRequiredService<BettingService>();
             _settledService = provider.GetRequiredService<SettledService>();
+            _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
         }
 
-        public int Bet(TpCustInfo tpCustInfo, BettingDataRNG_FaChai bettingData, out decimal afterAmount)
+        public FCResponse Bet(TpCustInfo tpCustInfo, BettingDataRNG_FaChai bettingData, out decimal afterAmount)
         {
+            FCResponse result = new FCResponse();
+            var tempResult = 0;
             bettingData.TicketType = (int)BettransType.Bet;
+            bettingData.TicketStatus = bettingData.NetWin > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             var trans = conn.BeginTransaction();
@@ -36,12 +41,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             int bonusId = 0;
             afterAmount = 0; 
 
-            var partitionTime = DateTimeOffset.FromUnixTimeSeconds(bettingData.Ts).DateTime;
+            var partitionTime = ConvertLongToDateTime(bettingData.Ts);
 
             var check = _partitionService.Query<BettransRng_FaChai>(partitionTime, "Service_BettransRng_FaChai_Check", new { bettingData.BankID });
             if (check.Any())
             {
-                return -1;
+                return new FCResponse()
+                {
+                    Result = (int)FCErrorMessage.Duplicate_Transaction_ID_number
+                };
             }
 
             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp.FaChai, tpCustInfo.CurrencyId);
@@ -55,22 +63,23 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 bettingData.RequireAmt *= tpCurrency.ExchangeRate;
             }
 
-            var result = 0;
+            tempResult = _partitionService.Execute(partitionTime, "Service_BettransRng_FaChai_Ins", bettingData, trans);
 
-            result = _partitionService.Execute(partitionTime, "Service_BettransRng_FaChai_Ins", bettingData, trans);
-
-            if (result > 0 && bettingData.Bet != 0)
+            if (tempResult > 0 && bettingData.Bet != 0)
             {
-                result = _bettingService.PlaceBetV2(tpCustInfo, Math.Abs(bettingData.Bet) * -1, (int)Tp.FaChai, bettingData.RecordID, (int)GameType.FaChai_RNG, bettingData.RecordID, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+                tempResult = _bettingService.PlaceBetV2(tpCustInfo, Math.Abs(bettingData.Bet) * -1, (int)Tp.FaChai, bettingData.RecordID, (int)GameType.FaChai_RNG, bettingData.RecordID, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
             }
             else
             {
-                return -1;
+                return new FCResponse()
+                {
+                    Result = (int)FCErrorMessage.Write_transaction_order_is_failed
+                };
             }
 
-            if (result > 0 && bettingData.Win > 0)
+            if (tempResult > 0 && bettingData.Win > 0)
             {
-                result = _settledService.PayoutV2(
+                tempResult = _settledService.PayoutV2(
                         tpCustInfo,
                         bettingData.Win,
                         (int)Tp.FaChai,
@@ -87,8 +96,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         trans);
             }
 
-            if (result > 0)
+            if (tempResult > 0)
             {
+                _ = _tpUnsettleService.InsertTpUnsettle(Tp.FaChai, GameType.FaChai_RNG, bettingData.BankID, trans);
                 _mainDbClient.CommitAndDisposeConnection(conn, trans);
 
                 if (afterAmount > 0 && tpCurrency.ExchangeRate > 0)
@@ -103,20 +113,28 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             else
             {
                 _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+
+                return new FCResponse()
+                {
+                    Result = (int)FCErrorMessage.Write_transaction_order_is_failed
+                };
             }
 
-            return result;
+            return new FCResponse()
+            {
+                Result = (int)FCErrorMessage.Success
+            };
         }
 
         public FCResponse Cancel(TpCustInfo tpCustInfo, CnacelData_FaChai cancelData)
         {
             var result = new FCResponse();
-            var partitionTime = DateTimeOffset.FromUnixTimeSeconds(cancelData.Ts).DateTime;
+            var partitionTime = ConvertLongToDateTime(cancelData.Ts);
 
             var check = _partitionService.Query<BettransRng_FaChai>(partitionTime, "Service_BettransRng_FaChai_Check", new { cancelData.BankID });
-            if (!check.Any())
+            if (check.Any())
             {
-                result.Result = (int)FCErrorMessage.Transaction_ID_number_not_exist;
+                result.Result = (int)FCErrorMessage.Revert_Cancel_Bet;
             }
             else
             {
@@ -124,6 +142,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             return result;
+        }
+        private DateTime ConvertLongToDateTime(long d)
+        {
+            DateTime dtStart = new DateTime(1970, 1, 1);
+            long lTime = long.Parse(d + "0000");
+            TimeSpan toNow = new TimeSpan(lTime);
+            //轉成-4時區
+            DateTime dtResult = dtStart.Add(toNow).AddHours(-4);
+            return dtResult;
         }
     }
 }
