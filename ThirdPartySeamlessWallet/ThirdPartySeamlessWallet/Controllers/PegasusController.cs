@@ -141,7 +141,8 @@ public class PegasusController : ControllerBase
 
         var response = new Response_Pegasus<ResultPegasus>
         {
-            Code = (int)PegasusResultCode.Exception
+            Code = (int)PegasusResultCode.Exception,
+            Message = "Unknown Error"
         };
 
         try
@@ -167,7 +168,7 @@ public class PegasusController : ControllerBase
                 _log2File.Info($"{content}\r\n{JsonConvert.SerializeObject(response)}", logName);
                 return response;
             }
-            if (result == -1)
+            if (result == -3)
             {
                 response.Code = (int)PegasusResultCode.InvalidArgument;
                 response.Message = "Already accepted";
@@ -182,7 +183,6 @@ public class PegasusController : ControllerBase
         }
         catch (Exception ex)
         {
-            response.Message = "Unknown Error";
             _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(response)}", logName, ex);
             return response;
         }
