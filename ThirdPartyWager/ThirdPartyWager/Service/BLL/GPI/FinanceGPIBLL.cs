@@ -8,7 +8,6 @@ namespace ThirdPartyWager.Service.BLL
     public class FinanceGPIBLL : ITpReportBLL
     {
         private readonly ILogger<FinanceGPIBLL> _logger;
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly CommonBLL _commonBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = 0;
@@ -19,7 +18,6 @@ namespace ThirdPartyWager.Service.BLL
         public FinanceGPIBLL(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceGPIBLL>>();
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _tpCurrencyList = _commonBLL.GetTpCurrencyList(_tpId);

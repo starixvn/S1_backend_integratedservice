@@ -98,7 +98,7 @@
         IM_Sports = 103
     }
 
-	 public enum SettlementType
+    public enum SettlementType
     {
         UnSettled = 0,
         SettledForValid = 1,
@@ -118,7 +118,7 @@
         Related = 5,
         FreeBetWin = 6
     }
-    
+
     public enum DataBase
     {
         Main, //ConnectionString

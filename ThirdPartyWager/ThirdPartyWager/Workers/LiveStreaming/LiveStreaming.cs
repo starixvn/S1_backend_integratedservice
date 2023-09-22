@@ -11,7 +11,7 @@ namespace ThirdPartyWager.Workers
     public class LiveStreaming : BackgroundService
     {
         private readonly IHostEnvironment _environment;
-        private readonly ILogger<LiveStreaming> _logger; 
+        private readonly ILogger<LiveStreaming> _logger;
         private readonly HttpHelper _httpHelper;
         private readonly LiveStreamingBLL _liveStreamingBll;
         private Timer _timerLiveStreaming;
@@ -59,7 +59,7 @@ namespace ThirdPartyWager.Workers
                 {
                     _liveStreamingBll.TruncateLiveStreaming();
                     var resultModel = JsonSerializer.Deserialize<GetLiveStreaming>(result.Content.ReadAsStringAsync().Result);
-                        await _liveStreamingBll.SetLiveStreaming(resultModel.Match);
+                    await _liveStreamingBll.SetLiveStreaming(resultModel.Match);
                 }
             }
             catch (Exception ex)

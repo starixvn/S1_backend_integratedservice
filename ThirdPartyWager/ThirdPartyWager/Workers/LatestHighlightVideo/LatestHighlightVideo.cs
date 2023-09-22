@@ -45,7 +45,9 @@ namespace ThirdPartyWager.Workers
             {
                 var url = "https://glombi.accordde.com/video/soccerList.json";
                 var timestamp = DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
-                var SiteId = 1;
+                // get first site to run
+                var serverList = _commonBll.GetSiteList();
+                int SiteId = serverList.First().SiteId;
                 var builder = new UriBuilder(url)
                 {
                     Port = -1
@@ -57,7 +59,7 @@ namespace ThirdPartyWager.Workers
                 var data = new HttpRequestMessage(HttpMethod.Get, newurl);
                 using var client = _httpHelper.GetClientWithHandler(CreateHandler());
                 var result = await client.SendAsync(data);
-                
+
                 if (result.StatusCode == HttpStatusCode.OK)
                 {
                     var siteList = _commonBll.GetSiteList().Where(x => x.SiteId == SiteId);

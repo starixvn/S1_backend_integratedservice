@@ -31,7 +31,6 @@
     }
 
 
-
     public class MGPlayerGameAnalysis
     {
         public DateTime time { get; set; }
@@ -66,6 +65,4 @@
         public decimal payout { get; set; }
         public string referenceTransactionId { get; set; }
     }
-
-
 }

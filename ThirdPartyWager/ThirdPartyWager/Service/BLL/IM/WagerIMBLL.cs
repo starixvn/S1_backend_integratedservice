@@ -3,7 +3,7 @@ using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Service.BLL.IM;
+namespace ThirdPartyWager.Service.BLL;
 
 public class WagerIMBLL
 {
@@ -14,23 +14,23 @@ public class WagerIMBLL
     private readonly DateTimeHelper _dateTimeHelper;
     private readonly ILogger<WagerIMBLL> _logger;
     private readonly Tp _tp = Tp.IM;
-    private const int TpId = (int) Tp.IM;
+    private const int TpId = (int)Tp.IM;
     private const int TimeZone = 8; // Report/GetBetLog時區為+8
     private const string TimeFormat = "yyyy-MM-dd HH.mm.ss";
 
     private readonly Dictionary<IMProductWalletEnum, Func<GetBetListByTimeParam, Task<bool>>> _getWagersHandlerMapper;
     private readonly Dictionary<int, IMProductWalletEnum> _gameTypeMapper = new()
     {
-        {1, IMProductWalletEnum.IMSportsbook},
-        {11, IMProductWalletEnum.IMESports}
+        { 1, IMProductWalletEnum.IMSportsbook },
+        { 11, IMProductWalletEnum.IMESports }
     };
-    
+
     private class IMErrorCode
     {
         public const string Success = "0";
         public const string NoData = "558";
     }
-    
+
     public WagerIMBLL(IServiceProvider provider)
     {
         _apiIMBll = provider.GetRequiredService<ApiIMBLL>();
@@ -39,14 +39,14 @@ public class WagerIMBLL
         _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
         _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         _logger = provider.GetRequiredService<ILogger<WagerIMBLL>>();
-        
+
         _getWagersHandlerMapper = new Dictionary<IMProductWalletEnum, Func<GetBetListByTimeParam, Task<bool>>>
         {
             {IMProductWalletEnum.IMSportsbook, IMSportsGetWagersHandlerAsync},
             {IMProductWalletEnum.IMESports, IMESportsGetWagersHandlerAsync}
         };
     }
-    
+
     public async Task<int> ExecWagerWorker(TpListModel siteData, int type)
     {
         var siteId = siteData.SiteId;
@@ -56,16 +56,16 @@ public class WagerIMBLL
         const int excess = 120; // min
         const int dataDelayTime = 5; // min，體育類資料更新最大延遲5分
         var timeRange = 10; // min，最大可拉24HR
-        
+
         foreach (var (gameType, productWallet) in _gameTypeMapper)
         {
             var workerTime = GetWorkerTime(type, dataDelayTime * -60, siteId, gameType);
-            
+
             quick = CheckQuick(workerTime, excess);
 
             if (quick)
                 timeRange = excess;
-            
+
             var time = _dateTimeHelper.GetTimeByMinute(timeRange - 1, TimeZone, TimeFormat, workerTime);
             var cvTime = DateTimeOffset.Now
                 .ToOffset(new TimeSpan(TimeZone, 0, 0))
@@ -73,7 +73,7 @@ public class WagerIMBLL
 
             if (time.startUnix >= cvTime)
                 continue;
-            
+
             var result = await GetWagersAsync(time, siteData, productWallet);
             if (result)
                 _thirdPartyBll.SetThirdPartyTimerByReference(TpId, type, time.endUnix, gameType, siteId.ToString());
@@ -83,7 +83,7 @@ public class WagerIMBLL
     }
 
     #region Private
-    
+
     private async Task<bool> GetWagersAsync(TimeCast wagerTime, TpListModel tpInfo, IMProductWalletEnum productWallet)
     {
         const string workerName = "IM_GetWagers";
@@ -97,11 +97,11 @@ public class WagerIMBLL
                 StartTime = wagerTime.startTime,
                 EndTime = wagerTime.endTime
             };
-            
+
             var success = await _getWagersHandlerMapper[productWallet].Invoke(param);
             if (!success)
                 return false;
-            
+
             msg = "FINISH";
             _logger.LogInformation($"{workerName} {msg}\r\n, ProductWallet={productWallet}\r\n{wagerTime.startTime}~{wagerTime.endTime}");
             return true;
@@ -124,9 +124,9 @@ public class WagerIMBLL
             param.Page = page;
             param.DateFilterType = 4; // IM Sportsbook 最後更新時間
             param.Product = null;
-            
+
             var resp = await _apiIMBll.GetSportsBetListByTime<IMSportsbookModel>(param, _tp);
-            
+
             if (resp.Code == IMErrorCode.NoData)
             {
                 _logger.LogInformation($"{workerName} NO_DATA");
@@ -160,7 +160,7 @@ public class WagerIMBLL
                     GameType = GameType.IM_Sports,
                     Infos = wagers
                         .Where(x => x.IsSettled == "1")
-                        .Select(x => new TpUnsettleInfo{TransId = x.BetId})
+                        .Select(x => new TpUnsettleInfo { TransId = x.BetId })
                 }, workerName);
             }
             catch (Exception ex)
@@ -171,18 +171,18 @@ public class WagerIMBLL
 
             page++;
         }
-        
+
         return true;
     }
-    
-    
+
+
     // 1: 電競 eSportsBulls, 2: ESports Virtual, 3: PK10
     private readonly Dictionary<string, int> _eSportsProduct = new()
     {
-        {"eSportsBulls", 1},
-        {"ESportsVirtual", 2}
+        { "eSportsBulls", 1 },
+        { "ESportsVirtual", 2 }
     };
-    
+
     private async Task<bool> IMESportsGetWagersHandlerAsync(GetBetListByTimeParam param)
     {
         foreach (var (productName, product) in _eSportsProduct)
@@ -195,7 +195,7 @@ public class WagerIMBLL
                 param.Page = page;
                 param.DateFilterType = 3; // IM ESports 最後更新時間
                 param.Product = product;
-            
+
                 var resp = await _apiIMBll.GetSportsBetListByTime<IMESportsModel>(param, _tp);
 
                 if (resp.Code == IMErrorCode.NoData)
@@ -223,14 +223,14 @@ public class WagerIMBLL
                         _logger.LogInformation(
                             $"{workerName} INSERT_WAGER COUNT_NOT_MATCH: affected={result}, data count={count}");
                     }
-                
+
                     BatchInsertTpUnsettle(new BatchTpUnsettleModel
                     {
                         Tp = _tp,
                         GameType = GameType.IM_ESports,
                         Infos = wagers
                             .Where(x => x.IsSettled == "1")
-                            .Select(x => new TpUnsettleInfo{TransId = x.BetId})
+                            .Select(x => new TpUnsettleInfo { TransId = x.BetId })
                     }, workerName);
                 }
                 catch (Exception ex)
@@ -242,7 +242,7 @@ public class WagerIMBLL
                 page++;
             }
         }
-        
+
         return true;
     }
 
@@ -250,7 +250,7 @@ public class WagerIMBLL
     {
         var count = input.Infos.Count();
         var result = _tpUnsettleService.BatchInsertTpUnsettle(input);
-                
+
         if (result != count)
         {
             _logger.LogInformation(
@@ -262,7 +262,7 @@ public class WagerIMBLL
     {
         var lastTime =
             _thirdPartyBll.GetThirdPartyTimerReferenceByReference(TpId, type, gameType, siteId.ToString());
-        
+
         return lastTime == null
             ? DateTimeOffset.UtcNow.DateTime.AddHours(-8)
             : lastTime.StartTime.AddSeconds(vary);
@@ -272,7 +272,7 @@ public class WagerIMBLL
     {
         var now = DateTimeOffset.UtcNow.DateTime;
         var diff = now - workTime;
-        
+
         return now > workTime && diff.TotalMinutes > excess;
     }
 

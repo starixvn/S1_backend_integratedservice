@@ -2,7 +2,7 @@
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Service.BLL.Nextspin
+namespace ThirdPartyWager.Service.BLL
 {
     public interface INextspinBLL
     {
@@ -12,18 +12,22 @@ namespace ThirdPartyWager.Service.BLL.Nextspin
     public class NextspinBLL : INextspinBLL
     {
         private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly CommonBLL _commonBLL;
         private readonly INextspinApi _apiNextspinBll;
         private readonly IWagerNextspinService _wagerService;
         private readonly ILogger<NextspinBLL> _logger;
         private readonly List<int> _siteList;
-        public NextspinBLL(ThirdPartyBLL thirdPartyBLL, INextspinApi apiNextspinBll, IWagerNextspinService wagerService, CommonBLL commonBLL, ILogger<NextspinBLL> logger)
+
+        public NextspinBLL(IServiceProvider provider)
         {
-            _thirdPartyBLL = thirdPartyBLL;
-            _apiNextspinBll = apiNextspinBll;
-            _wagerService = wagerService;
-            _logger = logger;
-            _siteList = commonBLL.GetSiteByTpGameType((int)GameType.Nextspin_RNG).ToList();
+            _logger = provider.GetRequiredService<ILogger<NextspinBLL>>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _wagerService = provider.GetRequiredService<IWagerNextspinService>();
+            _apiNextspinBll = provider.GetRequiredService<INextspinApi>();
+            _commonBLL = provider.GetRequiredService<CommonBLL>();
+            _siteList = _commonBLL.GetSiteByTpGameType((int)GameType.Nextspin_RNG).ToList();
         }
+
         public async Task<bool> GetWagersAsync(string startTime, string endTime)
         {
             try

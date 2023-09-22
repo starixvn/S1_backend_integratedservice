@@ -37,7 +37,6 @@ namespace ThirdPartyWager.Workers
             var quick = false;
             try
             {
-
                 var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
                 foreach (var siteData in siteList)
                 {

@@ -13,10 +13,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiGPIBLL _apiGPIBLL;
         private readonly CommonBLL _commonBLL;
         private readonly WagerGPIService _wagerGPIService;
-        private readonly TpUnsettleService _tpUnsettleService;
         private readonly ILogger<WagerGPIBLL> _logger;
-        private readonly MySqlClient _wagerDbClient;
-
 
         private readonly int _tpId = (int)Tp.GPI;
         private readonly int _timeZone = 8;
@@ -34,10 +31,8 @@ namespace ThirdPartyWager.Service.BLL
             _apiGPIBLL = provider.GetRequiredService<ApiGPIBLL>();
             _wagerGPIService = provider.GetRequiredService<WagerGPIService>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
-            _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _logger = provider.GetRequiredService<ILogger<WagerGPIBLL>>();
-            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
         }
 
         public async Task<bool> ExecWagerWorker(int type, int gameType, int timeRange)

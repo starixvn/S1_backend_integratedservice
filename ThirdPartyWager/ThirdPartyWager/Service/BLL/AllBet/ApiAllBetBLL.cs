@@ -13,9 +13,7 @@ namespace ThirdPartyWager.Service.BLL
     public class ApiAllBetBLL
     {
         private readonly string _seamlessUrl;
-        private readonly byte[] NULL_IV = Convert.FromBase64String("AAAAAAAAAAA=");
         private readonly HttpHelper _httpHelper;
-        private readonly Common _common;
         private readonly Log2File _log2File;
         private readonly ILogger<ApiAllBetBLL> _logger;
         private readonly string _tpName = Tp.Allbet.ToString();
@@ -24,7 +22,6 @@ namespace ThirdPartyWager.Service.BLL
         public ApiAllBetBLL(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
-            _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<ApiAllBetBLL>>();
             _configuration = provider.GetRequiredService<IConfiguration>();
@@ -162,7 +159,6 @@ namespace ThirdPartyWager.Service.BLL
             return JsonConvert.DeserializeObject<CurrencyStats_AllBet>(r);
         }
 
-
         public async Task<string> CallEventSettleApi(RewardAllBet reward)
         {
             try
@@ -178,7 +174,7 @@ namespace ThirdPartyWager.Service.BLL
                     isRetry = true,
                     currency = reward.currency,
                     details = new List<RewardAllBet>() { reward },
-                };            
+                };
                 var param = JsonConvert.SerializeObject(rewardAllBetRequest);
 
                 var request = new HttpRequestMessage(HttpMethod.Post, url)

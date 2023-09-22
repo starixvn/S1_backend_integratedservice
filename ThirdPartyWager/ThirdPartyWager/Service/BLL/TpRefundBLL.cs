@@ -1,4 +1,5 @@
-﻿using ThirdPartyWager.Service.Model.enums;
+﻿using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -46,6 +47,13 @@ namespace ThirdPartyWager.Service.BLL
                 }
 
                 // get list
+                var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+                // check tp status and only get first site to run
+                if (siteList.First(x => x.Status == 1) == null)
+                {
+                    return false;
+                }
+
                 var pendingList = _bll.GetPendingList(gameType);
                 if (pendingList == null)
                 {

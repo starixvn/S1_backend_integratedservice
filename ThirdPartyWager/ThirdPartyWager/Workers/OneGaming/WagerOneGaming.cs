@@ -31,7 +31,7 @@ namespace ThirdPartyWager.Workers
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _environment = provider.GetRequiredService<IHostEnvironment>();
         }
-        
+
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);

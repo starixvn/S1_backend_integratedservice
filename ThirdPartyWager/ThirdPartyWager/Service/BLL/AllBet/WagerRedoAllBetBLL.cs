@@ -44,11 +44,11 @@ namespace ThirdPartyWager.Service.BLL
                 foreach (var currency in _currencyList)
                 {
                     try
-                    {                 
+                    {
                         // pagination
                         var pageIndex = 1;
                         var pageRowCnt = 1;
-                    
+
                         var agent = setting[$"{currency.TpCurrencyId}Agent"];
                         while (pageRowCnt >= 1)
                         {
