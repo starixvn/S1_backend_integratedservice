@@ -153,9 +153,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
           
             try
             {
-                var partitionTime = DateTime.Now.ToUniversalTime();
+                var partitionTime = settle.SettlementTime;
                 // check exists
-                var checkExits = _partitionService.Query<BetTransaction_Pegasus>(partitionTime, "Service_BettransRng_Pegasus_Bet_Get", new { TransactionNo = settle.TransactionNo }, 30);
+                var checkExits = _partitionService.Query<BetTransaction_Pegasus>(partitionTime, "Service_BettransRng_Pegasus_Bet_Get", new { TransactionNo = settle.TransactionNo }, 2);
                 if (!checkExits.Any())
                 {
                     return -2;
@@ -171,7 +171,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     SettlementTime = settle.SettlementTime,
                     PlayerUniqueID = settle.PlayerUniqueID,
                     ExtraInfo = JsonConvert.SerializeObject(settle.ExtraInfo),
-                    CreateTime = partitionTime
+                    CreateTime = DateTime.UtcNow
                 };
                 var p = new DynamicParameters(settleData);
                 p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
@@ -233,7 +233,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
                 {
-                    result = -1;
+                    result = -3;
                 }
             }
             catch (Exception ex)
