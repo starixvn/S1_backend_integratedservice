@@ -19,9 +19,7 @@ namespace ThirdPartyWager.Workers
         private readonly int _beyond = 2;
         private Timer timer;
 
-        public FinanceAMB(
-            IServiceProvider provider
-        )
+        public FinanceAMB(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceAMB>>();
             _financeAMBBLL = provider.GetRequiredService<FinanceAMBBLL>();

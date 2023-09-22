@@ -19,9 +19,7 @@ namespace ThirdPartyWager.Workers
         private readonly int _beyond = 2;
         private Timer timer;
 
-        public FinanceSexy(
-            IServiceProvider provider
-        )
+        public FinanceSexy(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceSexy>>();
             _financeSexyBLL = provider.GetRequiredService<FinanceSexyBLL>();

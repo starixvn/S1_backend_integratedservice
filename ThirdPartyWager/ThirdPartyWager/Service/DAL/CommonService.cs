@@ -27,9 +27,9 @@ namespace ThirdPartyWager.Service.DAL
         {
             return _reportDbClient.Query<TpCurrency>("Service_TpCurrency_Get", new { TpId = tpId });
         }
-        public IEnumerable<int> GetSiteByTpGameType(int gameType) 
+        public IEnumerable<int> GetSiteByTpGameType(int gameType)
         {
-            return _reportDbClient.Query<int>("Service_SiteByTpGameType_Get", new { TpGameType = gameType });  
+            return _reportDbClient.Query<int>("Service_SiteByTpGameType_Get", new { TpGameType = gameType });
         }
         public Task<IEnumerable<FincanceDailySummary>> GetWagerSummary(string spName, long beginTime, long endTime)
         {

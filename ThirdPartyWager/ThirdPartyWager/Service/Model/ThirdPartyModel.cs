@@ -36,7 +36,7 @@ namespace ThirdPartyWager.Service.Model
         public string AgentAccount { get; set; }
 
     }
-    
+
     public class TpGameCasino
     {
         public int TpId { set; get; }

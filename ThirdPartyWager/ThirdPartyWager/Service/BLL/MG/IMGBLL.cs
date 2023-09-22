@@ -1,4 +1,4 @@
-﻿namespace ThirdPartyWager.Service.BLL.MG
+﻿namespace ThirdPartyWager.Service.BLL
 {
     public interface IMGBLL
     {

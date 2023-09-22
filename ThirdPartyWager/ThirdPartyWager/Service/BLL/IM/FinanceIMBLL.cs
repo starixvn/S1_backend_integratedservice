@@ -10,7 +10,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly CommonBLL _commonBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = 0;
-        private readonly int _tpId = (int)Tp.IM;
 
         public FinanceIMBLL(IServiceProvider provider)
         {
@@ -25,9 +24,9 @@ namespace ThirdPartyWager.Service.BLL
             {
                 return dailyData;
             }
-            
+
             var getReportData = JsonConvert.DeserializeObject<List<FincanceDailySummary>>(JsonConvert.SerializeObject(reportData));
-            
+
             foreach (var item in getReportData)
             {
                 dailyData.Add(new FincanceDailySummary()
@@ -62,10 +61,10 @@ namespace ThirdPartyWager.Service.BLL
             {
                 reportData.AddRange(item.Result);
             }
-            
+
             return reportData;
         }
-        
+
         public TimeCast GetReportTime(DateTime startTime, int day)
         {
             var reportTime = _dateTimeHelper.GetTimeByDay(1440, _timeZone, "yyyy-MM-dd HH:mm:ss", startTime);
