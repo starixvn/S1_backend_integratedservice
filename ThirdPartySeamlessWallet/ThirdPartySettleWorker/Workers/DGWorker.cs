@@ -118,6 +118,7 @@ namespace ThirdPartySettleWorker.Workers
                             {
                                 _settledBLL.SetSettleFlag_TpWagerDG(tpUnsettle.TransId);
                                 _settledBLL.SetSettleFlag_DG(tpUnsettle.TransId);
+                                _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, true);
                             });
                         }
                     }
