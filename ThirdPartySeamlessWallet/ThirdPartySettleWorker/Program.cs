@@ -76,6 +76,7 @@ builder.Services
     .AddHostedService<SPRIBEWorker>()
     .AddHostedService<SBSWWorker>()
     .AddHostedService<PNGWorker>();
+    .AddHostedService<DGWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
