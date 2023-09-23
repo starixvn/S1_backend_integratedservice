@@ -8,8 +8,6 @@ using Elastic.Apm.AspNetCore;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.SqlClient;
 
-using PaymentService.Service.Library;
-
 namespace CommonService
 {
     public class Startup
@@ -32,7 +30,6 @@ namespace CommonService
 
             services.AddSingleton<HttpHelper>();
             services.AddSingleton<AWSSNSHelper>();
-            services.AddSingleton<Log2File>();
 
             services.AddSingleton<CustInfoService>();
             services.AddSingleton<AuthService>();
@@ -44,8 +41,7 @@ namespace CommonService
             services.AddSingleton<SendGridBLL>();
             services.AddSingleton<RestPasswordBLL>();
             services.AddSingleton<IovationBLL>();
-            services.AddSingleton<OTPSMSBLL>();
-            services.AddSingleton<NxCloudSMSBLL>();
+           
             services.AddSingleton<SelLangBLL>();
             services.AddSingleton<FPSBLL>();
             services.AddSingleton<LiveStreamingBLL>();
@@ -54,6 +50,12 @@ namespace CommonService
             services.AddSingleton<ConfigService>();
             services.AddControllers();
 
+            //OTP與SMS
+            services.AddSingleton<OTPSMSBLL>();
+            services.AddSingleton<NxCloudSMSBLL>();
+            services.AddSingleton<SkyLineBLL>();
+            services.AddSingleton<YCBLL>();
+            services.AddSingleton<AWSBLL>();
 
             services.AddOptionListByDB<ServerInfo>("ServerInfoList_Get");
             //處理SiteConfig

@@ -1,7 +1,9 @@
 ﻿using System.Data;
+
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
+
 using Dapper;
 
 namespace CommonService.Service.DAL
@@ -9,12 +11,12 @@ namespace CommonService.Service.DAL
     public class OTPSMSService
     {
         private readonly MySqlClient _mainDbClient;
-      
+
         public OTPSMSService(IServiceProvider provider)
         {
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
-        
+
         public SendOTPSMSResult GetOTPVerifyinfo(int custId, int type = 0)
         {
             var result = new SendOTPSMSResult();
@@ -35,15 +37,13 @@ namespace CommonService.Service.DAL
         {
             string requestId = null;
             var result = new SendOTPSMSResult();
-            var p = new DynamicParameters(
-                new
-                {
-                    CustId = custId,
-                    _OTPType = type,
-                    OTPNum = sOtpNum,
-                    TimeOutMin = 5
-                }
-                );
+            var p = new DynamicParameters(new
+            {
+                CustId = custId,
+                _OTPType = type,
+                OTPNum = sOtpNum,
+                TimeOutMin = 5
+            });
 
             p.Add("Request_id", requestId, dbType: DbType.String, direction: ParameterDirection.InputOutput);
             p.Add("StartUnixTime", dbType: DbType.Int64, direction: ParameterDirection.Output);
@@ -59,13 +59,12 @@ namespace CommonService.Service.DAL
 
         public int VerifyOTP(VerifyOTPReq verifyOTPReq, int type = 0)
         {
-            var p = new DynamicParameters(
-                new
-                {
-                    verifyOTPReq.CustId,
-                    _OTPType = type,
-                    OTPNumInput = verifyOTPReq.InputOTP
-                });
+            var p = new DynamicParameters(new
+            {
+                verifyOTPReq.CustId,
+                _OTPType = type,
+                OTPNumInput = verifyOTPReq.InputOTP
+            });
 
             p.Add("OTPResult", dbType: DbType.Int32, direction: ParameterDirection.Output);
             _mainDbClient.Execute("Service_VerifyOTPinfo_Get", p);
