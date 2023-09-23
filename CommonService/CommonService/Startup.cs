@@ -13,7 +13,7 @@ namespace CommonService
     public class Startup
     {
         public IConfiguration Configuration { get; }
-        
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -41,7 +41,7 @@ namespace CommonService
             services.AddSingleton<SendGridBLL>();
             services.AddSingleton<RestPasswordBLL>();
             services.AddSingleton<IovationBLL>();
-           
+
             services.AddSingleton<SelLangBLL>();
             services.AddSingleton<FPSBLL>();
             services.AddSingleton<LiveStreamingBLL>();
@@ -60,7 +60,7 @@ namespace CommonService
             services.AddOptionListByDB<ServerInfo>("ServerInfoList_Get");
             //處理SiteConfig
             services.AddOptionListByDB<Config>("SiteConfig_Get", new { ConfigGroup = "CommonService" });
-            services.AddSiteConfig();            
+            services.AddSiteConfig();
             services.AddSingleton<ConfigBLL>();
 
             // 處理SiteLanguage

@@ -1,9 +1,11 @@
 ﻿using System.Net;
+
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-using Microsoft.Extensions.Options;
+
 using Newtonsoft.Json;
+
 using static CommonService.Service.Model.SendGridResetPassword;
 
 namespace CommonService.Service.BLL
@@ -13,7 +15,7 @@ namespace CommonService.Service.BLL
         private readonly Dictionary<string, SendGridConfig> _sendGridConfig;
         private readonly HttpHelper httpHelper;
         private readonly AuthBLL authBLL;
-        
+
         public RestPasswordBLL(IServiceProvider provider)
         {
             httpHelper = provider.GetRequiredService<HttpHelper>();
@@ -21,7 +23,7 @@ namespace CommonService.Service.BLL
             var configBLL = provider.GetRequiredService<ConfigBLL>();
             _sendGridConfig = configBLL.GetConfigValuesBySiteName<SendGridConfig>("SendGrid");
         }
-        
+
         public async Task<ApiResult> SendMailAsync(CustInfoProfile custInfo, string resetPasswordUrl)
         {
             var apiResult = new ApiResult();

@@ -1,6 +1,8 @@
 using CommonService;
 using CommonService.Extensions;
+
 using Elastic.Apm.SerilogEnricher;
+
 using Serilog;
 using Serilog.Exceptions;
 

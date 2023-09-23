@@ -1,8 +1,8 @@
 ﻿using System.Net;
+
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-using Microsoft.Extensions.Options;
 
 namespace CommonService.Service.BLL
 {
@@ -17,7 +17,7 @@ namespace CommonService.Service.BLL
             var configBLL = provider.GetRequiredService<ConfigBLL>();
             _fpsServicesConfig = configBLL.GetConfigValuesBySiteName<FPSServicesConfig>("FPS");
         }
-        
+
         public async Task<ApiResult> FPSChecksAsync(CustInfoProfile custInfo, FPSChecksRequest fpsChecksRequest)
         {
             var apiResult = new ApiResult();

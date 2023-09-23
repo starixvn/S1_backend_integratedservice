@@ -11,7 +11,7 @@ namespace CommonService.Service.DAL
         {
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
-        
+
         public int ApplyToken(string Key, string Value, int Expiry)
         {
             return _mainDbClient.Execute("Common_AuthToken_Ins", new { Token = Key, PermissionData = Value, Expiry });

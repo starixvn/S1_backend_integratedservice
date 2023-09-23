@@ -1,25 +1,21 @@
-﻿using NUnit.Framework;
-using CommonService.Service.BLL;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using CommonService.Extensions;
 using CommonService.IntegrationTest.Models;
 using CommonService.IntegrationTest.Stubs;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
-using CommonService.Extensions;
-using NSubstitute;
+using CommonService.Service.DAL;
 using CommonService.Service.Library;
-using Microsoft.Extensions.Logging;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-using CommonService.Service.DAL;
+
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+using NSubstitute;
+
+using NUnit.Framework;
 
 namespace CommonService.Service.BLL.Tests
 {
@@ -83,6 +79,6 @@ namespace CommonService.Service.BLL.Tests
             var actual = await _skyLineBLL.SendOTP(otp);
             return actual.ErrorCode;
         }
-    }                                                                                                                                                                               
+    }
 }
 

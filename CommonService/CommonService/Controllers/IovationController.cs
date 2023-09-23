@@ -1,5 +1,6 @@
 ﻿using CommonService.Service.BLL;
 using CommonService.Service.Model;
+
 using Microsoft.AspNetCore.Mvc;
 
 namespace CommonService.Controllers
