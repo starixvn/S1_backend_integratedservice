@@ -34,6 +34,7 @@ namespace ThirdPartySettleWorker.Workers
         
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            _logger.LogWarning($"DG Worker Start running at: {DateTimeOffset.Now}.");
             _timerLC = new Timer(DoSettleDGWork, GameType.DG_LiveCasino, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
@@ -58,7 +59,7 @@ namespace ThirdPartySettleWorker.Workers
             try
             {
                 var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
-                _logger.LogInformation($"TpUnsettleList :{JsonConvert.SerializeObject(tpUnsettleList)}");
+                _logger.LogWarning($"DG TpUnsettleList :{JsonConvert.SerializeObject(tpUnsettleList)}");
                 if (!tpUnsettleList.Any())
                 {
                     throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
@@ -71,7 +72,7 @@ namespace ThirdPartySettleWorker.Workers
                     try
                     {
                         var wager = _settledBLL.GetSettle_TpWagerDG(tpUnsettle.TransId);
-                        _logger.LogInformation($"TpWagerDG :{JsonConvert.SerializeObject(wager)}");
+                        _logger.LogWarning($"TpWagerDG :{JsonConvert.SerializeObject(wager)}");
                         if (wager != null)
                         {
                             //会员发红包、会员抢红包、主播小费、公司发红包、博饼记录、荷官小费
@@ -86,7 +87,7 @@ namespace ThirdPartySettleWorker.Workers
                             }
 
                             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(tpId, wager.Account);
-                            _logger.LogInformation($"TpCustInfo : TpId{tpId}, Account:{wager.Account}, CustId:{tpCustInfo.CustId}");
+                            _logger.LogWarning($"TpCustInfo : TpId{tpId}, Account:{wager.Account}, CustId:{tpCustInfo.CustId}");
                             var tpCurrency = _thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
 
                             if (tpCurrency.ExchangeRate > 1)
@@ -134,7 +135,7 @@ namespace ThirdPartySettleWorker.Workers
             }
             catch (UnsettleNotFoundException ex)
             {
-                _logger.LogInformation(ex, ex.Message);
+                _logger.LogWarning(ex, ex.Message);
             }
             catch (Exception ex)
             {
