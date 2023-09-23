@@ -17,6 +17,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
         private readonly TpUnsettleService _tpUnsettleService;
+        private readonly TpUnRewardService _tpUnRewardService;
         private readonly ILogger<IMBLL> _logger;
         private readonly MySqlClient _mainDbClient;
         private readonly MySqlClient _wagerDbClient;
@@ -29,6 +30,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _bettingService = provider.GetService<BettingService>();
             _settledService = provider.GetRequiredService<SettledService>();
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
+            _tpUnRewardService = provider.GetRequiredService<TpUnRewardService>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
             _partitionService = provider.GetRequiredService<PartitionService>();
@@ -352,5 +354,108 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             return result;
         }
+        
+        public int Bonus_Pegasus(BonusRequest_Pegasus bonus, string tpUserName, Tp tpId, GameType gameType,
+            out BonusResultPegasus resp)
+        {
+            var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)tpId, tpUserName);
+            var tpCurrency = _thirdPartyBll.GetTpCurrency((int)tpId, tpCustInfo.CurrencyId);
+            var custBalance = _tpCustInfoBll.GetBalance((int)tpId, tpUserName, (int)gameType);
+            
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            if (tpCurrency.ExchangeRate > 0) 
+            { 
+                bonus.Amount *= tpCurrency.ExchangeRate;
+                custBalance.Balance *= tpCurrency.ExchangeRate;
+            }
+            
+            var result = -1;
+            resp = new BonusResultPegasus
+            {
+                TransactionNo = bonus.TransactionNo,
+                MerchantOrderNo = bonus.TransactionNo,
+                BeforeAmount = custBalance.Balance,
+                AfterAmount = 0
+            };
+          
+            try
+            {
+                var settleData = new BonusTransaction_Pegasus
+                {
+                    TransactionNo = bonus.TransactionNo,
+                    Amount = bonus.Amount,
+                    PlayerUniqueID = bonus.PlayerUniqueID,
+                    EventDetailInfo = JsonConvert.SerializeObject(bonus.eventDetailInfo)
+                };
+                var p = new DynamicParameters(settleData);
+                result = _mainDbClient.Execute( "Service_RewardRNG_Pegasus_Ins", trans , p);
+                
+                if (result > 0)
+                {
+                    result = _settledService.PayoutV2(
+                        tpCustInfo,
+                        bonus.Amount,
+                        (int)tpId,
+                        bonus.TransactionNo,
+                        (int)gameType,
+                        TpCategory.Slots,
+                        bonus.TransactionNo,
+                        TransType.Prize,
+                        null,
+                        out var afterAmount,
+                        $"{bonus.TransactionNo} Event Bonus",
+                        out var bonusId,
+                        conn,
+                        trans,
+                        AllowNegative.Allow
+                    );
+
+                    if (result > 0)
+                    {
+                        result = _tpUnRewardService.InsertTpUnReward(tpId, gameType, bonus.TransactionNo, bonus.PlayerUniqueID, trans);
+                    }
+                    
+                    if (result > 0)
+                    {
+                        if (afterAmount == 0)
+                        {
+                            afterAmount = _tpCustInfoBll.GetBalance((int)tpId, tpUserName, (int)gameType).Balance;
+                        }
+                        else
+                        {
+                            if (tpCurrency.ExchangeRate > 0)
+                                afterAmount /= tpCurrency.ExchangeRate;
+                        }
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+
+                        resp.AfterAmount = afterAmount;
+                        return result;
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                        return result;
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -3;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return result;
+            }
+
+            return result;
+        }
+        
     }
 }
