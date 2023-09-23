@@ -232,6 +232,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, bettingDataLC_DG.Amount, (int)Tp.DG, TransType.Payout, $"Payout: {bettingDataLC_DG.Amount.ToString("#,##0.##")}", bettingDataLC_DG.TransId, out afterAmount, conn, trans);
                         result = PayoutV2(tpCustInfo, bettingDataLC_DG.Amount, (int)Tp.DG, bettingDataLC_DG.TransId, gameType, TpCategory.LiveCasino, bettingDataLC_DG.TransId, TransType.Payout, null, out afterAmount, "Payout", out bonusId, conn, trans);
+                    }
+
+                    if (result > 0)
+                    {
+                        _mainDbClient.Execute("Service_BettransLC_DGV2_Set", new { TransId = bettingDataLC_DG.TransId, SettleFlag = 2 }, conn, trans);
                         logger.LogInformation($"DG Payout result: {result}, bettingDataLC : {JsonConvert.SerializeObject(bettingDataLC_DG)}");
                         var insertTpResults = _tpUnsettleService.InsertTpUnsettle(Tp.DG, GameType.DG_LiveCasino, bettingDataLC_DG.TransId, trans);
                         logger.LogInformation($"DG InsertTpResults result: {insertTpResults}");
@@ -239,11 +244,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         {
                             result = 0;
                         }
-                    }
-
-                    if (result > 0)
-                    {
-                        _mainDbClient.Execute("Service_BettransLC_DGV2_Set", new { TransId = bettingDataLC_DG.TransId, SettleFlag = 2 }, conn, trans);
                         _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     }
                     else
