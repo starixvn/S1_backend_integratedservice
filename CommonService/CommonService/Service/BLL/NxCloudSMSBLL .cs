@@ -17,6 +17,7 @@ namespace CommonService.Service.BLL
         private readonly Tools tools;
         private readonly SelLangBLL selLangBLL;
         private readonly ILogger<OTPSMSService> logger;
+        private readonly SiteLanguageBLL _siteLanguageBLL;
 
         public NxCloudSMSBLL(IServiceProvider provider)
         {
@@ -27,6 +28,7 @@ namespace CommonService.Service.BLL
             logger = provider.GetRequiredService<ILogger<OTPSMSService>>();
             var configBLL = provider.GetRequiredService<ConfigBLL>();
             NxcloudSMSServiceTypeConfig = configBLL.GetConfigValuesBySiteName<NxcloudSMSServiceTypeConfig>("NxCloud");
+            _siteLanguageBLL = provider.GetRequiredService<SiteLanguageBLL>();
         }
 
         public ApiResult<SendOTPSMSResult> OTPVerifyinfoInsAsync(int custId, string sOTPNum)
@@ -57,7 +59,6 @@ namespace CommonService.Service.BLL
             if (apiResultSendOTP.ErrorCode == ErrorCode.Success)
             {
                 apiResult = OTPVerifyinfoInsAsync(custId, OTPNum);
-                //apiResult.ErrorCode = 0;
             }
             else
             {
@@ -138,13 +139,18 @@ namespace CommonService.Service.BLL
                         }
                         else
                         {
-                            apiResult.ErrorCode = ErrorCode.Fail;
+                            logger.LogInformation($"NxCloud - {PhoneNo},{custInfo.UserName},{OTPNum},status:{code},reason:{result},messageid:{messageid}", $"{custInfo.SiteName}_OTP");
+
                             if (code.Equals("6"))
                             {
                                 apiResult.ErrorCode = ErrorCode.PhoneError;
                                 oTPLog.OTPResponse = ErrorCode.PhoneError.ToString();
                             }
-                            logger.LogInformation($"NxCloud - {PhoneNo},{custInfo.UserName},{OTPNum},status:{code},reason:{result},messageid:{messageid}", $"{custInfo.SiteName}_OTP");
+                            else
+                            {
+                                apiResult.ErrorCode = ErrorCode.SMSProviderFail;
+                                apiResult.Message = _siteLanguageBLL.GetLanguageValue(custInfo.SiteId, ErrorCode.SMSProviderFail.ToString(), userLang);
+                            }                            
                         }
                     }
                     else
@@ -152,11 +158,14 @@ namespace CommonService.Service.BLL
                         var msg = $"NxCloud - Error HttpStatus:{httpResponse.StatusCode} || {content}";
                         logger.LogInformation(msg);
                         oTPLog.OTPResponse = msg;
+                        apiResult.ErrorCode = ErrorCode.SMSProviderFail;
+                        apiResult.Message = _siteLanguageBLL.GetLanguageValue(custInfo.SiteId, ErrorCode.SMSProviderFail.ToString(), userLang);
                     }
                 }
                 else
                 {
-                    apiResult.ErrorCode = ErrorCode.Fail;
+                    apiResult.ErrorCode = ErrorCode.SMSProviderFail;
+                    apiResult.Message = _siteLanguageBLL.GetLanguageValue(custInfo.SiteId, ErrorCode.SMSProviderFail.ToString(), userLang);
                     var httpErrorMsg = $"NxCloud - Http error code :{httpResponse.StatusCode}|| {httpResponse.ReasonPhrase}";
                     logger.LogInformation(httpErrorMsg);
                     oTPLog.OTPResponse = httpErrorMsg;
@@ -165,7 +174,8 @@ namespace CommonService.Service.BLL
             catch (Exception ex)
             {
                 var exMsg = $"NxCloud - Exception error :{ex}";
-                apiResult.ErrorCode = ErrorCode.Fail;
+                apiResult.ErrorCode = ErrorCode.SMSProviderFail;
+                apiResult.Message = _siteLanguageBLL.GetLanguageValue(custInfo.SiteId, ErrorCode.SMSProviderFail.ToString(), userLang);
                 apiResult.RawMessage = exMsg;
                 logger.LogError(ex, exMsg);
                 oTPLog.OTPResponse = exMsg;

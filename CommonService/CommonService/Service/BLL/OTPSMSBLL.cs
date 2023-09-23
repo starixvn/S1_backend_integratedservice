@@ -21,6 +21,8 @@ namespace CommonService.Service.BLL
         private readonly ILogger<OTPSMSService> _logger;
         private readonly Log2File _log2File;
         private readonly AWSSNSHelper _awsSnsHelper;
+        private readonly SiteLanguageBLL _siteLanguageBLL;
+
 
         public OTPSMSBLL(IServiceProvider provider)
         {
@@ -34,6 +36,7 @@ namespace CommonService.Service.BLL
             var configBLL = provider.GetRequiredService<ConfigBLL>();
             _skyLineSmsServiceTypeConfig = configBLL.GetConfigValuesBySiteName<SkyLineSMSServiceTypeConfig>("SkyLineSMS");
             _YcSmsServiceTypeConfig = configBLL.GetConfigValuesBySiteName<YcSmsServiceTypeConfig>("YcSMS");
+            _siteLanguageBLL = provider.GetRequiredService<SiteLanguageBLL>();
         }
 
         #region Common
@@ -173,12 +176,15 @@ namespace CommonService.Service.BLL
                     else
                     {
                         _logger.LogInformation($"SkyLine - Error HttpStatus = {result.StatusCode}\r\nRespstatus ={resultResp.status}\r\nRespMsg = {resultResp.reason}");
-                        apiResult.ErrorCode = ErrorCode.Fail;
+                        apiResult.ErrorCode = ErrorCode.SMSProviderFail;
+                        apiResult.Message = _siteLanguageBLL.GetLanguageValue(custInfo.SiteId, ErrorCode.SMSProviderFail.ToString(), userLang);
                     }
                 }
             }
             else
             {
+                apiResult.ErrorCode = ErrorCode.SMSProviderFail;
+                apiResult.Message = _siteLanguageBLL.GetLanguageValue(custInfo.SiteId, ErrorCode.SMSProviderFail.ToString(), userLang);
                 _log2File.Info($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_OTP");
                 oTPLog.OTPResponse = $"SkyLine - Error HttpStatusCode : {result.StatusCode} || {result.ReasonPhrase}";
             }
@@ -244,12 +250,15 @@ namespace CommonService.Service.BLL
                     else
                     {
                         _logger.LogInformation($"SkyLine - Error HttpStatus = {result.StatusCode}\r\nRespstatus ={resultResp.status}\r\nRespMsg = {resultResp.reason}");
-                        apiResult.ErrorCode = ErrorCode.Fail;
+                        apiResult.ErrorCode = ErrorCode.SMSProviderFail;
+                        apiResult.Message = _siteLanguageBLL.GetLanguageValue(custInfo.SiteId, ErrorCode.SMSProviderFail.ToString(), userLang);
                     }
                 }
             }
             else
             {
+                apiResult.ErrorCode = ErrorCode.SMSProviderFail;
+                apiResult.Message = _siteLanguageBLL.GetLanguageValue(custInfo.SiteId, ErrorCode.SMSProviderFail.ToString(), userLang);
                 _log2File.Info($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_DepositRejectSMS");
                 oTPLog.OTPResponse = $"SkyLine - Error HttpStatus :{result.StatusCode} || {result.ReasonPhrase}";
             }
@@ -293,7 +302,7 @@ namespace CommonService.Service.BLL
             return apiResult;
         }
 
-        private async Task<ApiResult> SendToYcOTPSMSAsync(string phoneNo, string otpNum, CustInfoProfile custInfo, int custId, string userLang = "")
+        private async Task<ApiResult> SendToYcOTPSMSAsync(string phoneNo, string otpNum, CustInfoProfile custInfo, int custId, string userLang)
         {
             var apiResult = new ApiResult();
             var config = _YcSmsServiceTypeConfig[custInfo.SiteName].OTP;
@@ -336,12 +345,14 @@ namespace CommonService.Service.BLL
                 else
                 {
                     _logger.LogInformation($"YCOTP Fail - {phoneNo},{custInfo.UserName},{otpNum}, responseBody：{responseBody}, {siteName}_OTP");
-                    apiResult.ErrorCode = ErrorCode.Fail;
+                    apiResult.ErrorCode = ErrorCode.SMSProviderFail;
+                    apiResult.Message = _siteLanguageBLL.GetLanguageValue(custInfo.SiteId, ErrorCode.SMSProviderFail.ToString(), userLang);
                 }
             }
             else
             {
-                apiResult.ErrorCode = ErrorCode.Fail;
+                apiResult.ErrorCode = ErrorCode.SMSProviderFail;
+                apiResult.Message = _siteLanguageBLL.GetLanguageValue(custInfo.SiteId, ErrorCode.SMSProviderFail.ToString(), userLang);
                 _logger.LogInformation($"YCOTP HttpRequest Fail -{phoneNo},{custInfo.UserName},{otpNum}, HttpStatusCode：{responseResult.StatusCode} , responseBody：{responseBody}, {siteName}_OTP");
                 oTPLog.OTPResponse = $"{responseResult.StatusCode} || {responseResult.ReasonPhrase}";
             }
@@ -378,7 +389,8 @@ namespace CommonService.Service.BLL
         {
             var apiResult = new ApiResult
             {
-                ErrorCode = ErrorCode.Fail
+                ErrorCode = ErrorCode.SMSProviderFail,
+                Message = _siteLanguageBLL.GetLanguageValue(custInfo.SiteId, ErrorCode.SMSProviderFail.ToString(), custInfo.UserLang)
             };
             
             var request = new PublishRequest
@@ -406,6 +418,7 @@ namespace CommonService.Service.BLL
                 if (response.HttpStatusCode == HttpStatusCode.OK)
                 {
                     apiResult.ErrorCode = ErrorCode.Success;
+                    apiResult.Message= ErrorCode.Success.ToString();
                     oTpLog.OTPStatus = (int)OTPStatus.SendToProvider;
                 }
                 
@@ -415,8 +428,7 @@ namespace CommonService.Service.BLL
                                        $"MessageId={response.MessageId}, StatusCode={response.HttpStatusCode}");
             }
             catch (Exception ex)
-            {
-                
+            {   
                 _logger.LogError(ex, $"AWS OTP Fail - {request.PhoneNumber},{custInfo.UserName},{request.Message}");
             }
             

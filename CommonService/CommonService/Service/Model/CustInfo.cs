@@ -2,6 +2,7 @@
 {
     public class CustInfoProfile
     {
+        public int SiteId { get; set; }
         public string UserName { get; set; }
         public int CurrencyId { get; set; }
         public int UserLevel { get; set; }

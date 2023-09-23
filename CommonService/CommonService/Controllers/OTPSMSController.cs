@@ -1,8 +1,10 @@
 ﻿using CommonService.Service.BLL;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+
 using PaymentService.Service.Library;
 
 namespace CommonService.Controllers
@@ -17,7 +19,7 @@ namespace CommonService.Controllers
         private readonly CustInfoBLL custInfoBLL;
         private readonly SelLangBLL selLangBLL;
         private readonly Dictionary<string, SMSSupportConfig> _supportOTPConfig;
-        
+
         public OTPSMSController(IServiceProvider provider)
         {
             sOTPSMSBLL = provider.GetRequiredService<OTPSMSBLL>();
@@ -28,12 +30,12 @@ namespace CommonService.Controllers
             var configBLL = provider.GetRequiredService<ConfigBLL>();
             _supportOTPConfig = configBLL.GetConfigValuesBySiteName<SMSSupportConfig>("SMSSupport");
         }
-        
+
         private string GetSupportOTP(CustInfoProfile custInfo)
         {
             var otpConfig = _supportOTPConfig[custInfo.SiteName];
             var supportOTP = otpConfig.SMSSupport["Default"];
-            if(otpConfig.SMSSupport.ContainsKey(custInfo.AreaCode))
+            if (otpConfig.SMSSupport.ContainsKey(custInfo.AreaCode))
                 otpConfig.SMSSupport.TryGetValue(custInfo.AreaCode, out supportOTP);
             return supportOTP;
         }
@@ -53,11 +55,12 @@ namespace CommonService.Controllers
                 var areaCode = custInfo.AreaCode.StartsWith("+") ? custInfo.AreaCode.Substring(1) : custInfo.AreaCode;
                 var phone = $"{areaCode}{phoneNo}";
                 apiResult = sOTPSMSBLL.GetOTPVerifyInfo(req.CustId);
+
                 if (apiResult.ErrorCode != 0)//OTP not Exist   send SMS
                 {
                     var supportOTP = GetSupportOTP(custInfo);
                     apiResult.Message = supportOTP;
-                    
+
                     if (supportOTP.Equals("AWS", StringComparison.OrdinalIgnoreCase))
                     {
                         apiResult = await sOTPSMSBLL.SendAwsOtpAsync(phone, custInfo, req.CustId, custInfo.UserLang);
@@ -65,7 +68,8 @@ namespace CommonService.Controllers
                     else if (supportOTP.Equals("SkyLine", StringComparison.OrdinalIgnoreCase))
                     {
                         apiResult = await sOTPSMSBLL.SendSkyLineOTPSMSAsync(phone, custInfo, req.CustId, custInfo.UserLang);
-                    } else if (supportOTP.Equals("YC", StringComparison.OrdinalIgnoreCase))
+                    }
+                    else if (supportOTP.Equals("YC", StringComparison.OrdinalIgnoreCase))
                     {
                         apiResult = await sOTPSMSBLL.SendYcOTPMSAsync(phoneNo, custInfo, req.CustId, custInfo.UserLang); // CNY OTP
                     }
@@ -83,10 +87,9 @@ namespace CommonService.Controllers
             {
                 apiResult.ErrorCode = ErrorCode.UserNotExist;
             }
-
-
             return apiResult;
         }
+
         [HttpPost]
         public ApiResult VerifyOTP(VerifyOTPReq verifyOTPReq)
         {
@@ -95,7 +98,7 @@ namespace CommonService.Controllers
             try
             {
                 var custInfo = custInfoBLL.GetCustInfoProfile(verifyOTPReq.CustId);
-                
+
                 log2File.Info($"UserName: {custInfo.UserName}\r\nPhoneNo: {custInfo.PhoneNo}\r\nInput: {verifyOTPReq.InputOTP}", $"{custInfo.SiteName}_Verify");
 
                 if (verifyOTPReq.InputOTP.Length >= 10)
@@ -112,7 +115,8 @@ namespace CommonService.Controllers
                     if (supportOTP.Equals("NxCloud", StringComparison.OrdinalIgnoreCase))
                     {
                         apiResult = nxCloudSMSBLL.VerifyOPT(verifyOTPReq);
-                    }else
+                    }
+                    else
                     {
                         apiResult = sOTPSMSBLL.VerifyOPT(verifyOTPReq);
                     }
@@ -183,6 +187,6 @@ namespace CommonService.Controllers
             }
             return apiResult;
         }
-        
+
     }
 }

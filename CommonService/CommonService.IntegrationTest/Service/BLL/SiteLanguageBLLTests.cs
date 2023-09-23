@@ -54,16 +54,18 @@ namespace CommonService.Service.BLL.Tests
         }
 
 
-        [TestCase("Nova88", "SMSProviderFail", "en", ExpectedResult = "Request OTP failed , please contact customer support")]
-        [TestCase("Nova88", "SMSProviderFail", "jp", ExpectedResult = "Request OTP failed , please contact customer support")]
-        [TestCase("Nova88", "SMSProviderFail", "cs", ExpectedResult = "无法获取OTP，请联系在线客服")]
-        [TestCase("Nova88", "SMSProviderFail", "id", ExpectedResult = "Permintaan OTP gagal, silakan hubungi layanan pelanggan")]
-        [TestCase("X", "SMSProviderFail", "en", ExpectedResult = "Request OTP failed , please contact customer support")]
-        [TestCase("X", "x", "en", ExpectedResult = "")]
+        [TestCase(1, "SMSProviderFail", "en", ExpectedResult = "Request OTP failed , please contact customer support")]
+        [TestCase(1, "SMSProviderFail", "jp", ExpectedResult = "Request OTP failed , please contact customer support")]
+        [TestCase(1, "SMSProviderFail", "cs", ExpectedResult = "无法获取OTP，请联系在线客服")]
+        [TestCase(1, "SMSProviderFail", "id", ExpectedResult = "Permintaan OTP gagal, silakan hubungi layanan pelanggan")]
+        [TestCase(2, "SMSProviderFail", "en", ExpectedResult = "Request OTP failed , please contact customer support")]
+        [TestCase(-1, "SMSProviderFail", "test", ExpectedResult = "Request OTP failed , please contact customer support")]
+        [TestCase(-1, "x", "en", ExpectedResult = "")]
+        [TestCase(-1, "x", "test", ExpectedResult = "")]
 
-        public string GetLanguageValueBySiteNameAndlanguageKeyTest(string siteName, string languageKey, string langId)
+        public string GetLanguageValueTest(int siteId, string languageKey, string langId)
         {
-            return _siteLanguageBLL.GetLanguageValue(siteName, languageKey, langId);
+            return _siteLanguageBLL.GetLanguageValue(siteId, languageKey, langId);
         }
 
        

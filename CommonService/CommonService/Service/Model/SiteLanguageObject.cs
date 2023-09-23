@@ -4,7 +4,6 @@
     {
         public int SiteId { get; set; }
         public string LanguageKey { get; set; }
-        public int LanguageCode { get; set; }        
         public string LangId { get; set; }
         public string LanguageValue { get; set; }
     }
