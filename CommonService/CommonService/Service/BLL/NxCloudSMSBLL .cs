@@ -11,7 +11,7 @@ namespace CommonService.Service.BLL
 {
     public class NxCloudSMSBLL
     {
-        private readonly HttpHelper _httpHelper;       
+        private readonly HttpHelper _httpHelper;
         private readonly Dictionary<string, NxcloudSMSServiceTypeConfig> _config;
         private readonly SelLangBLL _selLangBLL;
         private readonly ILogger<OTPSMSService> _logger;
@@ -20,7 +20,7 @@ namespace CommonService.Service.BLL
 
         public NxCloudSMSBLL(IServiceProvider provider)
         {
-            _httpHelper = provider.GetRequiredService<HttpHelper>();          
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
             _selLangBLL = provider.GetRequiredService<SelLangBLL>();
             _logger = provider.GetRequiredService<ILogger<OTPSMSService>>();
             _config = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<NxcloudSMSServiceTypeConfig>("NxCloud");
@@ -83,7 +83,7 @@ namespace CommonService.Service.BLL
                     {"secretkey", Config.Secretkey},
                     {"phone", PhoneNo},
                     {"content", smsMessage},
-                };              
+                };
 
                 using var httpResponse = await _httpHelper.HttpFromPostAsync(Config.ResourceURL, null, data, "application/x-www-form-urlencoded");
                 if (httpResponse is { StatusCode: HttpStatusCode.OK })
@@ -95,7 +95,7 @@ namespace CommonService.Service.BLL
                     {
                         responsjson.TryGetValue("messageid", out var messageid);
                         responsjson.TryGetValue("result", out var result);
-                        
+
                         oTPLog.Request_id = messageid.ToString();
                         oTPLog.OTPResponse = $"{code} || {result}";
 
@@ -118,7 +118,7 @@ namespace CommonService.Service.BLL
                             {
                                 apiResult.ErrorCode = ErrorCode.SMSProviderFail;
                                 apiResult.Message = _siteLanguageBLL.GetLanguageValue(custInfo.SiteId, ErrorCode.SMSProviderFail.ToString(), userLang);
-                            }                            
+                            }
                         }
                     }
                     else
@@ -152,6 +152,6 @@ namespace CommonService.Service.BLL
             _oTPSMSBLL.InsertOTPLog(oTPLog);
             return apiResult;
         }
-        
+
     }
 }

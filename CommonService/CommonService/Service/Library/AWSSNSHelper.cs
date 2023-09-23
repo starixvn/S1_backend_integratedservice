@@ -1,6 +1,7 @@
 ﻿using Amazon;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
+
 using CommonService.Service.BLL;
 using CommonService.Service.Model;
 
@@ -48,7 +49,7 @@ public class AWSSNSHelper
             };
             request.MessageAttributes.Add("AWS.SNS.SMS.SenderID", senderId);
         }
-        
+
         return await _client.PublishAsync(request);
     }
 }

@@ -12,7 +12,7 @@ namespace CommonService.Service.BLL
         {
             _sOtpSmsService = provider.GetRequiredService<OTPSMSService>();
         }
-     
+
         public ApiResult<SendOTPSMSResult> GetOTPVerifyInfo(int custId)
         {
             var apiResult = new ApiResult<SendOTPSMSResult>();
@@ -38,7 +38,7 @@ namespace CommonService.Service.BLL
 
             return apiResult;
         }
-        
+
         public ApiResult VerifyOPT(VerifyOTPReq verifyOtpReq)
         {
             var apiResult = new ApiResult();

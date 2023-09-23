@@ -18,7 +18,7 @@ namespace CommonService.Service.BLL
 
         public YCBLL(IServiceProvider provider)
         {
-            _httpHelper = provider.GetRequiredService<HttpHelper>();            
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
             _logger = provider.GetRequiredService<ILogger<YCBLL>>();
             _config = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<YcSmsServiceTypeConfig>("YcSMS");
             _siteLanguageBLL = provider.GetRequiredService<SiteLanguageBLL>();

@@ -1,8 +1,4 @@
-﻿using System.Security.Policy;
-
-using CommonService.Service.Model;
-
-using static Elastic.Apm.Config.ConfigConsts;
+﻿using CommonService.Service.Model;
 
 namespace CommonService.Service.BLL
 {
@@ -16,7 +12,7 @@ namespace CommonService.Service.BLL
             var siteLanguageList = provider.GetServices<SiteLanguage>();
             _defaultLanguage = siteLanguageList.First(i => i.SiteId == 0).SiteLanguageKeys;
 
-            var siteLanguages = siteLanguageList.Where(i => i.SiteId != 0);            
+            var siteLanguages = siteLanguageList.Where(i => i.SiteId != 0);
             _siteIdLanguages = siteLanguages.ToDictionary(i => i.SiteId, i => i);
         }
 
@@ -37,7 +33,7 @@ namespace CommonService.Service.BLL
             catch
             {
                 return string.Empty;
-            }         
+            }
         }
     }
 }

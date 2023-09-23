@@ -12,7 +12,7 @@
             SiteName = serverinfo.SiteName;
 
             SiteLanguageKeys = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
-            
+
             foreach (var siteLanguage in siteLanguageObjects.GroupBy(i => i.LanguageKey))
             {
                 var dictionary = siteLanguage.ToDictionary(i => i.LangId, i => i.LanguageValue);

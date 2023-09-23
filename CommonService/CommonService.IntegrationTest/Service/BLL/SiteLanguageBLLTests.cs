@@ -1,17 +1,18 @@
-﻿using NUnit.Framework;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
-using CommonService.Extensions;
+﻿using CommonService.Extensions;
 using CommonService.IntegrationTest.Models;
 using CommonService.IntegrationTest.Stubs;
-using NSubstitute;
-using CommonService.Service.Model;
 using CommonService.Service.Library;
+
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+
+using NSubstitute;
+
+using NUnit.Framework;
 
 namespace CommonService.Service.BLL.Tests
 {
@@ -68,6 +69,6 @@ namespace CommonService.Service.BLL.Tests
             return _siteLanguageBLL.GetLanguageValue(siteId, languageKey, langId);
         }
 
-       
+
     }
 }

@@ -9,7 +9,7 @@ using CommonService.Service.Model.enums;
 namespace CommonService.Service.BLL
 {
     public class AWSBLL
-    {       
+    {
         private readonly SelLangBLL _selLangBll;
         private readonly ILogger<AWSBLL> _logger;
         private readonly SiteLanguageBLL _siteLanguageBLL;
@@ -17,9 +17,9 @@ namespace CommonService.Service.BLL
         private readonly AWSSNSHelper _awsSnsHelper;
 
         public AWSBLL(IServiceProvider provider)
-        {    
+        {
             _selLangBll = provider.GetRequiredService<SelLangBLL>();
-            _logger = provider.GetRequiredService<ILogger<AWSBLL>>();        
+            _logger = provider.GetRequiredService<ILogger<AWSBLL>>();
             _siteLanguageBLL = provider.GetRequiredService<SiteLanguageBLL>();
             _oTPSMSBLL = provider.GetRequiredService<OTPSMSBLL>();
             _awsSnsHelper = provider.GetRequiredService<AWSSNSHelper>();

@@ -1,8 +1,9 @@
 ﻿using System.Net;
+
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-using Microsoft.Extensions.Options;
+
 using Newtonsoft.Json;
 
 namespace CommonService.Service.BLL
@@ -11,7 +12,7 @@ namespace CommonService.Service.BLL
     {
         private readonly Dictionary<string, SendGridConfig> _sendGridConfig;
         private readonly HttpHelper _httpHelper;
-        
+
         public SendGridBLL(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
@@ -50,7 +51,7 @@ namespace CommonService.Service.BLL
             var (verify, template) = CreateTemplate(type, config, GetUserLang(custInfo.UserLang));
             var sendGridResetPasswordBody = new SendGridTemplateBody
             {
-                from = new NameEmail {name = config.mailFrom.name, email = config.mailFrom.email},
+                from = new NameEmail { name = config.mailFrom.name, email = config.mailFrom.email },
                 personalizations = new List<TemplatePersonalization>
                 {
                     new TemplatePersonalization
@@ -71,7 +72,7 @@ namespace CommonService.Service.BLL
                 apiResult.Message = template;
                 return apiResult;
             }
-            
+
             using var result = await _httpHelper.HttpPost1Async(apiUrl, headerParams, JsonConvert.SerializeObject(sendGridResetPasswordBody), "application/json");
             if (result.StatusCode == HttpStatusCode.Accepted)
             {

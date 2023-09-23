@@ -5,22 +5,20 @@ using CommonService.Service.Model.enums;
 
 using Microsoft.AspNetCore.Mvc;
 
-using static System.Net.WebRequestMethods;
-
 namespace CommonService.Controllers
 {
     [Route("Common/[controller]/[action]")]
     [ApiController]
     public class OTPSMSController
-    {    
+    {
         private readonly ILogger<OTPSMSController> _logger;
         private readonly CustInfoBLL _custInfoBLL;
         private readonly Dictionary<string, SMSSupportConfig> _supportOTPConfig;
         private readonly OTPSMSBLL _oTPSMSBLL;
         private readonly Tools _tools;
-      
+
         private readonly SkyLineBLL _skyLineBLL;
-        private readonly Dictionary<OTPProvider, Func<OTPRequestObject, Task<ApiResult>>> _requestHandler;         
+        private readonly Dictionary<OTPProvider, Func<OTPRequestObject, Task<ApiResult>>> _requestHandler;
 
         public OTPSMSController(IServiceProvider provider)
         {
@@ -34,17 +32,17 @@ namespace CommonService.Controllers
             _requestHandler = new Dictionary<OTPProvider, Func<OTPRequestObject, Task<ApiResult>>>()
             {
                 { OTPProvider.SkyLine, _skyLineBLL.SendOTP},
-                { OTPProvider.NxCloud, provider.GetRequiredService<NxCloudSMSBLL>().SendOTP},                
+                { OTPProvider.NxCloud, provider.GetRequiredService<NxCloudSMSBLL>().SendOTP},
                 { OTPProvider.YC, provider.GetRequiredService<YCBLL>().SendOTP},
-                { OTPProvider.AWS, provider.GetRequiredService<AWSBLL>().SendOTP},                                                
+                { OTPProvider.AWS, provider.GetRequiredService<AWSBLL>().SendOTP},
             };
-        }       
+        }
 
         [HttpPost]
         public async Task<ApiResult<SendOTPSMSResult>> SendOTPSMSAsync(RequestObject req)
         {
             var custInfo = _custInfoBLL.GetCustInfoProfile(req.CustId);
-            
+
             // check User
             if (custInfo == null)
             {
@@ -186,7 +184,7 @@ namespace CommonService.Controllers
         private OTPProvider GetSupportOTP(CustInfoProfile custInfo)
         {
             var sMSSupport = _supportOTPConfig[custInfo.SiteName].SMSSupport;
-            var otpProvider = sMSSupport.TryGetValue(custInfo.AreaCode, out var areaSupportOTP) ? areaSupportOTP : sMSSupport["Default"];          
+            var otpProvider = sMSSupport.TryGetValue(custInfo.AreaCode, out var areaSupportOTP) ? areaSupportOTP : sMSSupport["Default"];
             return Enum.TryParse(otpProvider, out OTPProvider oTPProvider) ? oTPProvider : OTPProvider.NxCloud;
         }
     }
