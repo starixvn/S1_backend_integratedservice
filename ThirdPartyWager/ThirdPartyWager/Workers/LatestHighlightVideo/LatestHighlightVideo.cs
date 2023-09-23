@@ -31,13 +31,19 @@ namespace ThirdPartyWager.Workers
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            // DEV 暫時不使用
+            if (_environment.IsDevelopment())
+            {
+                return Task.CompletedTask;
+            }
 
             _timerLatestHighlightVideo = new Timer(DoLatestHighlightVideoAsync, null, TimeSpan.Zero, TimeSpan.Zero);
-
             return Task.CompletedTask;
         }
         private async void DoLatestHighlightVideoAsync(object state)
         {
+
+
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var isError = false;
@@ -108,17 +114,10 @@ namespace ThirdPartyWager.Workers
             finally
             {
                 var dueTimeSpan = TimeSpan.FromMinutes(10);
-                if (_environment.IsDevelopment())
-                {
-                    //dueTimeSpan = TimeSpan.FromMinutes(1);
-                    dueTimeSpan = TimeSpan.FromSeconds(30);
-                }
-
                 if (isError)
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(5);
                 }
-
                 _timerLatestHighlightVideo.Change(dueTimeSpan, TimeSpan.Zero);
             }
 
