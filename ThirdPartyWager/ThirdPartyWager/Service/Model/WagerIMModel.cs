@@ -142,7 +142,7 @@ public class IMESportsModel
 
 public class IMSlotWager
 {
-    public IMSlotWager() {}
+    public IMSlotWager() { }
 
     public IMSlotWager(IMSlotModel m)
     {
@@ -195,8 +195,8 @@ public class IMSlotWager
 
 public class IMESportsWager
 {
-    public IMESportsWager() {}
-    
+    public IMESportsWager() { }
+
     public IMESportsWager(IMESportsModel m)
     {
         Provider = m.Provider;
@@ -225,7 +225,7 @@ public class IMESportsWager
         FlagCategory = m.FlagCategory;
         DetailItems = m.DetailItems;
     }
-    
+
     public string Provider { get; set; }
     public string GameId { get; set; }
     public string BetId { get; set; }
@@ -255,8 +255,8 @@ public class IMESportsWager
 
 public class IMSportsWager
 {
-    public IMSportsWager() {}
-    
+    public IMSportsWager() { }
+
     public IMSportsWager(IMSportsbookModel m)
     {
         Provider = m.Provider;
@@ -290,7 +290,7 @@ public class IMSportsWager
         betTradeSuccessDateTime = DateTimeOffset.Parse(m.betTradeSuccessDateTime).UtcDateTime;
         DetailItems = m.DetailItems;
     }
-    
+
     public string Provider { get; set; }
     public string GameId { get; set; }
     public string BetId { get; set; }

@@ -20,25 +20,25 @@ public class WagerIMService
     {
         var json = JsonConvert.SerializeObject(wagers);
         _logger.LogInformation(json);
-        
+
         return _wagerDbClient.Execute("Service_TpWagerRng_SPRIBE_Batch_Ins",
             new { _Infos = json });
     }
-    
+
     public int InsertSportsWager(IEnumerable<IMSportsWager> wagers)
     {
         var json = JsonConvert.SerializeObject(wagers);
         _logger.LogInformation(json);
-        
+
         return _wagerDbClient.Execute("Service_TpWagerSports_IM_Batch_Ins",
             new { _Infos = json });
     }
-    
+
     public int InsertESportsWager(IEnumerable<IMESportsWager> wagers)
     {
         var json = JsonConvert.SerializeObject(wagers);
         _logger.LogInformation(json);
-        
+
         return _wagerDbClient.Execute("Service_TpWagerESports_IM_Batch_Ins",
             new { _Infos = json });
     }

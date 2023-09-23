@@ -23,7 +23,7 @@ namespace ThirdPartyWager.Service.Model
             ApiUrl = inputs.GetValue("ApiUrl");
             MerchantCode = inputs.GetValue($"MerchantCode_{tpCurrencyId}");
             DesKey = inputs.GetValue($"DESKey_{tpCurrencyId}");
-            SignKey = inputs.GetValue($"SHA256Key_{tpCurrencyId}");           
+            SignKey = inputs.GetValue($"SHA256Key_{tpCurrencyId}");
         }
     }
 
@@ -121,12 +121,12 @@ namespace ThirdPartyWager.Service.Model
             playName = unSettleData.playName;
             gameGroupName = unSettleData.gameGroupName;
             winAmount = 0;
-            netPNL = 0; 
+            netPNL = 0;
             betStatus = "0";
             settlementTime = default;
             actualBetAmount = 0;
             exceedWinAmount = 0;
-            details = ""; 
+            details = "";
             winningNumber = "";
             clientIp = "";
             playBonus = 0;

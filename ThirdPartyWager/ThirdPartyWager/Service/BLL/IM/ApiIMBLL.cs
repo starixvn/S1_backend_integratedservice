@@ -5,7 +5,7 @@ using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Service.BLL.IM;
+namespace ThirdPartyWager.Service.BLL;
 
 public class ApiIMBLL
 {
@@ -22,14 +22,14 @@ public class ApiIMBLL
         _env = provider.GetRequiredService<IWebHostEnvironment>();
         _configuration = provider.GetRequiredService<IConfiguration>();
     }
-    
+
     public async Task<IMWagerModel<T>> GetBetListByTime<T>(GetBetListByTimeParam param, Tp tp)
     {
         var wagerUrl = param.Setting["WagerUrl"];
         var merchantCode = param.Setting["Key"];
         const string uri = "/Report/GetBetLog";
         const int pageSize = 1000; // MAX: 50000
-        
+
         var req = new IMGetBetLogReq
         {
             MerchantCode = merchantCode,
@@ -40,13 +40,13 @@ public class ApiIMBLL
             Currency = param.Currency,
             ProductWallet = (int)param.ProductWallet
         };
-       
+
         var resp = await DoHttpClientAsync($"{wagerUrl}{uri}", req, tp);
         var result = JsonConvert.DeserializeObject<IMWagerModel<T>>(resp);
-        
+
         return result;
     }
-    
+
     /// <summary>
     /// For Sportsbook & ESports
     /// </summary>
@@ -55,7 +55,7 @@ public class ApiIMBLL
         var wagerUrl = param.Setting["WagerUrl"];
         var merchantCode = param.Setting["Key"];
         const string uri = "/Report/GetBetLog";
-        
+
         var req = new IMGetSportsBetLogReq
         {
             MerchantCode = merchantCode,
@@ -67,10 +67,10 @@ public class ApiIMBLL
             Language = "EN",
             Product = param.Product
         };
-       
+
         var resp = await DoHttpClientAsync($"{wagerUrl}{uri}", req, tp);
         var result = JsonConvert.DeserializeObject<IMWagerModel<T>>(resp);
-        
+
         return result;
     }
 
@@ -84,7 +84,7 @@ public class ApiIMBLL
         {
             using var client = _httpHelper.GetClientWithHandler(CreateHandler());
             var response = await client.PostAsJsonAsync(url, param);
-        
+
             using var sr = new StreamReader(await response.Content.ReadAsStreamAsync(), Encoding.UTF8);
             result = await sr.ReadToEndAsync();
 
@@ -98,7 +98,7 @@ public class ApiIMBLL
         catch (Exception ex)
         {
             _logger.LogError(ex, $"POST {url} throw Exception");
-            
+
             throw;
         }
         finally
@@ -106,33 +106,33 @@ public class ApiIMBLL
             _log2File.InsertRequestLog(tpName, url, JsonConvert.SerializeObject(param), result);
         }
     }
-    
+
     private HttpClientHandler CreateHandler()
     {
         var handler = new HttpClientHandler();
         string proxyHost;
         int proxyPort;
-        
+
         if (_env.EnvironmentName == "Development")
         {
             handler.UseProxy = true;
             proxyHost = _configuration.GetValue<string>("configProxyHost");
             proxyPort = _configuration.GetValue<int>("configProxyPort");
             handler.Proxy = new WebProxy(proxyHost, proxyPort);
-            
+
             _logger.LogInformation($"use proxy, host:{proxyHost}, port:{proxyPort}");
-            
+
             return handler;
         }
-        
+
         proxyHost = _configuration.GetValue<string>("ProxyHost");
         proxyPort = _configuration.GetValue<int>("ProxyPort");
-        
+
         if (!string.IsNullOrEmpty(proxyHost))
         {
             handler.UseProxy = true;
             handler.Proxy = new WebProxy(proxyHost, proxyPort);
-            
+
             _logger.LogInformation($"use proxy, host:{proxyHost}, port:{proxyPort}");
         }
 

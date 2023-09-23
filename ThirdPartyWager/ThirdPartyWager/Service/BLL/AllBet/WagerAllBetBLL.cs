@@ -90,7 +90,7 @@ namespace ThirdPartyWager.Service.BLL
                             pageIndex++;
                         }
 
-                        
+
                         // modified bet
                         var modifyWager = await _apiAllBetBLL.GetModifiedBetListByTime(setting, agent, startTime, endTime);
                         if (modifyWager.resultCode != "OK")

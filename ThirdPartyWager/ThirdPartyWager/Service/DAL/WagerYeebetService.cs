@@ -1,21 +1,19 @@
-﻿using Dapper;
-using MySql.Data.MySqlClient;
-using System.Data;
+﻿using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.DAL;
 public class WagerYeebetService
 {
-    private readonly IConfiguration configuration;
+    private readonly MySqlClient _wagerDbClient;
 
-    public WagerYeebetService(IConfiguration configuration)
+    public WagerYeebetService(IServiceProvider provider)
     {
-        this.configuration = configuration;
+        _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
     }
 
     public Task<int> InsertWager(WagerYeebetModel data)
     {
-        using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-        return conn.ExecuteAsync("Service_TpWagerLC_Yeebet_Ins", new DynamicParameters(data), commandType: CommandType.StoredProcedure);
+        return _wagerDbClient.ExecuteAsync("Service_TpWagerLC_Yeebet_Ins", data);
     }
 }

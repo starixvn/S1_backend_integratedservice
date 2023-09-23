@@ -84,8 +84,8 @@ namespace ThirdPartyWager.Service.BLL
                 if (getWagerSummary.error != "0")
                 {
                     var msg = "THIRD_PARTY_ERROR";
-                    _logger.LogError($"{msg}\r\nSiteId=\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                    SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
+                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                    SystemException systemException = new($"{msg} - GetReport({tpId})");
                     throw systemException;
                 }
 

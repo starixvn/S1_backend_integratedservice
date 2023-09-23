@@ -1,9 +1,8 @@
 using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.BLL.IM;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Workers.IM
+namespace ThirdPartyWager.Workers
 {
     public class WagerIM : BackgroundService
     {
@@ -35,7 +34,6 @@ namespace ThirdPartyWager.Workers.IM
             var sec = 120;
             try
             {
-
                 var siteList = _thirdPartyBLL.GetTpListByTpId(TpId);
                 foreach (var siteData in siteList)
                 {
@@ -60,4 +58,3 @@ namespace ThirdPartyWager.Workers.IM
         }
     }
 }
-    

@@ -22,7 +22,6 @@ namespace ThirdPartyWager.Service.BLL
         private IEnumerable<TpCurrency> _currencyList;
         private readonly IWebHostEnvironment _env;
 
-
         public RewardAllBetBLL(IServiceProvider provider)
         {
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
@@ -68,8 +67,8 @@ namespace ThirdPartyWager.Service.BLL
                 }
                 foreach (var currency in _currencyList)
                 {
-                    try 
-                    {                
+                    try
+                    {
                         // pagination
                         var pageIndex = 1;
                         var pageRowCnt = 1;

@@ -22,12 +22,11 @@ namespace ThirdPartyWager.Service.BLL
         private const int ErrorCount = 3; //容許錯誤次數
         private readonly ConcurrentDictionary<string, int> _errorCountr = new();
         private readonly CommonBLL _commonBLL;
-        
 
         public TCGBLL(IServiceProvider provider)
         {
-            _logger = provider.GetRequiredService<ILogger<TCGBLL>>();
             LogContext.PushProperty("Tp", _tp.ToString());
+            _logger = provider.GetRequiredService<ILogger<TCGBLL>>();
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
 
             //用 SiteId = 0 取回預設Config
@@ -99,7 +98,7 @@ namespace ThirdPartyWager.Service.BLL
                                     TpCurrencyId = config.TpCurrencyId
                                 })
                             });
-                        }                     
+                        }
                         return new List<T>();
                     }
 

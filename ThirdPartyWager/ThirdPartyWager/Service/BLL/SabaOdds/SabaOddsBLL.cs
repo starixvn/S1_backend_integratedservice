@@ -31,12 +31,12 @@ namespace ThirdPartyWager.Service.BLL
             try
             {
                 foreach (var group in GetSabaOddsMatchId().GroupBy(i => i.GameId.ToString()))//用GameId分類
-                {         
+                {
                     foreach (var marketType in new List<string>() { "d", "l" })
                     {
                         var apiUrl = $"{_configModel.ApiUrl}/api/GetMarkets";
                         var httpContent = CreateFormData(
-                            marketType, 
+                            marketType,
                             group.Key,
                             string.Join(",", group.Select(i => i.MatchId)));
 

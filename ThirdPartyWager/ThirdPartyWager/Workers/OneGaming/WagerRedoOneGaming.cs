@@ -77,7 +77,7 @@ namespace ThirdPartyWager.Workers
                 }
                 var t = Task.WhenAll(tasks);
                 t.Wait();
-                
+
             }
             catch (Exception ex)
             {

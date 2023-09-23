@@ -217,7 +217,7 @@ namespace ThirdPartyWager.Workers
                 foreach (var redo in _commonBLL.GetTpWagerRedo(tpId))
                 {
                     var time = redo.Time;
-                    var currency = JsonConvert.DeserializeObject<TCGRedoObj>(redo.Parameter).TpCurrencyId;                    
+                    var currency = JsonConvert.DeserializeObject<TCGRedoObj>(redo.Parameter).TpCurrencyId;
                     var isSuccess = currency == "VNDK" ?
                          await _tcgBLL.GetWagersAsync<TCGVNWagerData>(time, currency, timerType) :
                          await _tcgBLL.GetWagersAsync<TCGSEAWagerData>(time, currency, timerType);
