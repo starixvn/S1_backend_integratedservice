@@ -24,10 +24,39 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int GameType { get; set; }
     }
     
+    public class EventDetailInfo
+    {
+        public int PlayerID { get; set; }
+        public string PlayerName { get; set; }
+        public int GameID { get; set; }
+        public int EventID { get; set; }
+        public int EventPrizeType { get; set; }
+        public int Status { get; set; }
+        public string Memo { get; set; }
+        public DateTime CreateTime { get; set; }
+        public DateTime ReceiveTime { get; set; }
+        public int EventPrizeRecordID { get; set; }
+        public string EventName { get; set; }
+        public string EventPrizeTypeText { get; set; }
+        public decimal QuantityOrReferenceRatio { get; set; }
+        public decimal PrizeCashAmount { get; set; }
+        public string StatusText { get; set; }
+        public string PrizeRecordTransactionNo { get; set; }
+        public string GameName { get; set; }
+    }
+    
     public class ResultPegasus
     {
         public decimal Balance { get; set; }
         public string TransactionNo { get; set; }
+    }
+    
+    public class BonusResultPegasus
+    {
+        public string TransactionNo { get; set; }
+        public string MerchantOrderNo { get; set; }
+        public decimal BeforeAmount { get; set; }
+        public decimal AfterAmount { get; set; }
     }
     
     #endregion
@@ -116,6 +145,26 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string GameID { get; set; }
         public string PlayerUniqueID { get; set; }
         public string SessionToken { get; set; }
+    }
+
+    #endregion
+
+    #region Bonus
+
+    public class BonusRequest_Pegasus
+    {
+        public string TransactionNo { get; set; }
+        public decimal Amount { get; set; }
+        public string PlayerUniqueID { get; set; }
+        public EventDetailInfo eventDetailInfo { get; set; }
+    }
+    
+    public class BonusTransaction_Pegasus
+    {
+        public string TransactionNo { get; set; }
+        public decimal Amount { get; set; }
+        public string PlayerUniqueID { get; set; }
+        public string EventDetailInfo { get; set; }
     }
 
     #endregion
