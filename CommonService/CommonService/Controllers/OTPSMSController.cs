@@ -3,7 +3,6 @@ using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
 
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 
 using PaymentService.Service.Library;
 
@@ -17,7 +16,6 @@ namespace CommonService.Controllers
         private readonly NxCloudSMSBLL nxCloudSMSBLL;
         private readonly Log2File log2File;
         private readonly CustInfoBLL custInfoBLL;
-        private readonly SelLangBLL selLangBLL;
         private readonly Dictionary<string, SMSSupportConfig> _supportOTPConfig;
 
         public OTPSMSController(IServiceProvider provider)
@@ -26,19 +24,16 @@ namespace CommonService.Controllers
             nxCloudSMSBLL = provider.GetRequiredService<NxCloudSMSBLL>();
             custInfoBLL = provider.GetRequiredService<CustInfoBLL>();
             log2File = provider.GetRequiredService<Log2File>();
-            selLangBLL = provider.GetRequiredService<SelLangBLL>();
             var configBLL = provider.GetRequiredService<ConfigBLL>();
             _supportOTPConfig = configBLL.GetConfigValuesBySiteName<SMSSupportConfig>("SMSSupport");
         }
 
         private string GetSupportOTP(CustInfoProfile custInfo)
         {
-            var otpConfig = _supportOTPConfig[custInfo.SiteName];
-            var supportOTP = otpConfig.SMSSupport["Default"];
-            if (otpConfig.SMSSupport.ContainsKey(custInfo.AreaCode))
-                otpConfig.SMSSupport.TryGetValue(custInfo.AreaCode, out supportOTP);
-            return supportOTP;
+            var sMSSupport = _supportOTPConfig[custInfo.SiteName].SMSSupport;
+            return sMSSupport.TryGetValue(custInfo.AreaCode, out var areaSupportOTP) ? areaSupportOTP : sMSSupport["Default"];
         }
+
         public class Req
         {
             public int CustId { get; set; }
