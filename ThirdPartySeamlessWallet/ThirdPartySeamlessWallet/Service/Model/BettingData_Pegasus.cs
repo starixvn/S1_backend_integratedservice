@@ -1,4 +1,6 @@
-﻿namespace ThirdPartySeamlessWallet.Service.Model
+﻿using ThirdPartySeamlessWallet.Service.Model.enums;
+
+namespace ThirdPartySeamlessWallet.Service.Model
 {
     #region Base
 
@@ -100,9 +102,22 @@
         public DateTime SettlementTime { get; set; }
         public string PlayerUniqueID { get; set; }
         public string ExtraInfo { get; set; }
+        public TicketStatus TicketStatus { get; set; }
         public DateTime CreateTime { get; set; }
     }
     
+    #endregion
+
+    #region Cancel
+
+    public class CancelRequest_Pegasus
+    {
+        public string TransactionNo { get; set; }
+        public string GameID { get; set; }
+        public string PlayerUniqueID { get; set; }
+        public string SessionToken { get; set; }
+    }
+
     #endregion
 }
 

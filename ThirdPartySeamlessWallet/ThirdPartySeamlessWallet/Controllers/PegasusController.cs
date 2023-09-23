@@ -189,6 +189,64 @@ public class PegasusController : ControllerBase
         return response;
     }
     
+     [HttpPost]
+    [Route("[controller]/pgs/bet/cancel")]
+    public async Task<Response_Pegasus<ResultPegasus>> Cancel()
+    {
+        var logName = $"{_tpGameName}cancel";
+        using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+        var content = await reader.ReadToEndAsync();
+
+        var response = new Response_Pegasus<ResultPegasus>
+        {
+            Code = (int)PegasusResultCode.Exception,
+            Message = "Unknown Error"
+        };
+
+        try
+        {
+            var getReq = JsonConvert.DeserializeObject<CancelRequest_Pegasus>(content);
+            
+            var tokenInfo = GetTokenInfo(getReq.SessionToken);
+            if (tokenInfo.TpUserName != getReq.PlayerUniqueID)
+            {
+                response.Code = (int)PegasusResultCode.PlayerDoesNotExist;
+                response.Message = "Player is different between PlayerUniqueID and SessionToken";
+                _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(response)}", logName);
+                return response;
+            }
+            
+            var result = _pegasusBll.Cancel_Pegasus(getReq, tokenInfo.TpUserName, Tp.Pegasus, GameType.Pegasus_RNG, out var outData);
+
+            if (result > 0)
+            {
+                response.Code = (int)PegasusResultCode.Success;
+                response.Message = "Success";
+                response.Data = outData;
+                _log2File.Info($"{content}\r\n{JsonConvert.SerializeObject(response)}", logName);
+                return response;
+            }
+            if (result == -2)
+            {
+                response.Code = (int)PegasusResultCode.Success;
+                response.Message = "TransactionNo Not Found";
+                _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(response)}", logName);
+            }
+            if (result == -3)
+            {
+                response.Code = (int)PegasusResultCode.Success;
+                response.Message = "Already accepted";
+                _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(response)}", logName);
+            }
+        }
+        catch (Exception ex)
+        {
+            _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(response)}", logName, ex);
+            return response;
+        }
+        return response;
+    }
+    
     private PegasusTokenInfo GetTokenInfo(string token)
     {
         var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(token));

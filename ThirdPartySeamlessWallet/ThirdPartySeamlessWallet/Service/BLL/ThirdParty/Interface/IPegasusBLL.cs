@@ -9,4 +9,7 @@ public interface IPegasusBLL
 
     int Settle_Pegasus(SettleRequest_Pegasus settle, string tpUserName, Tp tpId, GameType gameType,
         out ResultPegasus resp);
+    
+    int Cancel_Pegasus(CancelRequest_Pegasus settle, string tpUserName, Tp tpId, GameType gameType,
+        out ResultPegasus resp);
 }

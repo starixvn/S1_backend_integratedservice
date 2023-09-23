@@ -22,7 +22,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly MySqlClient _wagerDbClient;
         private readonly PartitionService _partitionService;
         
-
         public PegasusBLL(IServiceProvider provider)
         {
             _thirdPartyBll = provider.GetService<ThirdPartyBLL>();
@@ -160,6 +159,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     return -2;
                 }
+                
+                var ticketStatus = (settle.PayoutAmount - settle.BetAmount) switch
+                {
+                    > 0 => TicketStatus.Win,
+                    < 0 => TicketStatus.Lost,
+                    _ => TicketStatus.Draw
+                };
+
                 var settleData = new SettleTransaction_Pegasus
                 {
                     TransactionNo = settle.TransactionNo,
@@ -171,6 +178,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     SettlementTime = settle.SettlementTime,
                     PlayerUniqueID = settle.PlayerUniqueID,
                     ExtraInfo = JsonConvert.SerializeObject(settle.ExtraInfo),
+                    TicketStatus = ticketStatus,
                     CreateTime = DateTime.UtcNow
                 };
                 var p = new DynamicParameters(settleData);
@@ -226,6 +234,106 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                             return result;
                         }
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -3;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                return result;
+            }
+
+            return result;
+        }
+        
+        public int Cancel_Pegasus(CancelRequest_Pegasus cancel, string tpUserName, Tp tpId, GameType gameType, out ResultPegasus resp)
+        {
+            var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)tpId, tpUserName);
+            var tpCurrency = _thirdPartyBll.GetTpCurrency((int)tpId, tpCustInfo.CurrencyId);
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            var result = -1;
+            resp = new ResultPegasus();
+          
+            try
+            {
+                var partitionTime = DateTime.UtcNow;
+                // check exists
+                var betTransaction = _partitionService.Query<BetTransaction_Pegasus>(partitionTime, "Service_BettransRng_Pegasus_Bet_Get", new { TransactionNo = cancel.TransactionNo }, 2).FirstOrDefault();
+                if (betTransaction is null)
+                {
+                    return -2;
+                }
+                
+                var settleData = new SettleTransaction_Pegasus
+                {
+                    TransactionNo = cancel.TransactionNo,
+                    GameID = cancel.GameID,
+                    BetAmount = betTransaction.BetAmount,
+                    TaxAmount = 0,
+                    PayoutAmount = betTransaction.BetAmount,
+                    ValidAmount = 0,
+                    SettlementTime = partitionTime,
+                    PlayerUniqueID = cancel.PlayerUniqueID,
+                    ExtraInfo = "{}",
+                    TicketStatus = TicketStatus.Refund,
+                    CreateTime = partitionTime
+                };
+                var p = new DynamicParameters(settleData);
+                p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
+                result = _partitionService.Execute(partitionTime, "Service_BettransRng_Pegasus_Settle_Ins", p, trans);
+
+                if (result > 0)
+                {
+                    result = _settledService.PayoutV2(
+                        tpCustInfo,
+                        betTransaction.BetAmount,
+                        (int)tpId,
+                        cancel.TransactionNo,
+                        (int)gameType,
+                        TpCategory.Slots,
+                        cancel.TransactionNo,
+                        TransType.Refunds,
+                        null,
+                        out var afterAmount,
+                        "CancelBet",
+                        out var bonusId,
+                        conn,
+                        trans,
+                        AllowNegative.Allow
+                    );
+
+                    if (result > 0)
+                    {
+                        if (afterAmount == 0)
+                        {
+                            afterAmount = _tpCustInfoBll.GetBalance((int)tpId, tpUserName, (int)gameType).Balance;
+                        }
+                        else
+                        {
+                            if (tpCurrency.ExchangeRate > 0)
+                                afterAmount /= tpCurrency.ExchangeRate;
+                        }
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+
+                        resp.Balance = afterAmount;
+                        resp.TransactionNo = cancel.TransactionNo;
+                        return result;
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                        return result;
                     }
                 }
             }
