@@ -65,21 +65,25 @@ namespace CommonService.Service.BLL.Tests
             _nxCloudSMSBLL = provider.GetRequiredService<NxCloudSMSBLL>();
         }
 
-        [TestCase("+886912345678", ExpectedResult = ErrorCode.Success)] //使用要測試的號碼
+        [TestCase("+86", "15880083230", ExpectedResult = ErrorCode.Success)]
         [Ignore("需要測試時在註解")]
-        public async Task<ErrorCode> SendOTPSMSAsyncTest(string PhoneNo)
+        public async Task<ErrorCode> SendOTPSMSAsyncTest(string areaCode, string PhoneNo)
         {
-            var custInfoProfile = new CustInfoProfile
+            var otp = new OTPRequestObject
             {
-                CurrencyId = 2,
-                UserName = "Test",
-                SiteName = "Nova88",
-                UserLang ="en",
-                AreaCode = "886"
+                CustInfoProfile = new CustInfoProfile
+                {
+                    CustId = 250713,
+                    CurrencyId = 2,
+                    UserName = "Test",
+                    SiteName = "Nova88",
+                    UserLang = "en",
+                    AreaCode = areaCode,
+                    PhoneNo = PhoneNo,
+                },
+                OTPNum = "test123"
             };
-            var custId = 250713;
-            var userLang = "en";
-            var actual = await _nxCloudSMSBLL.SendOTPSMSAsync(PhoneNo, "test", custInfoProfile, userLang, custId);
+            var actual = await _nxCloudSMSBLL.SendOTP(otp);
             return actual.ErrorCode;
         }
     }

@@ -3,7 +3,6 @@ using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using CommonService.Service.BLL;
 using CommonService.Service.Model;
-using Microsoft.Extensions.Options;
 
 namespace CommonService.Service.Library;
 

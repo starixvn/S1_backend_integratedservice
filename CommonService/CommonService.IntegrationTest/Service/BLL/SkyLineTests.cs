@@ -27,7 +27,7 @@ namespace CommonService.Service.BLL.Tests
     public class SkyLineSMSTests
     {
         private IConfiguration _configuration;
-        private readonly OTPSMSBLL _otpSMSBLL;
+        private readonly SkyLineBLL _skyLineBLL;
 
         public SkyLineSMSTests()
         {
@@ -59,25 +59,28 @@ namespace CommonService.Service.BLL.Tests
             startup.ConfigureServices(services);
             var provider = services.BuildServiceProvider();
 
-            _otpSMSBLL = provider.GetRequiredService<OTPSMSBLL>();
+            _skyLineBLL = provider.GetRequiredService<SkyLineBLL>();
         }
-        
-        [TestCase("+886912345678", ExpectedResult = ErrorCode.Success)]
-        [Ignore("要測試再註解掉，")]
-        public async Task<ErrorCode> SendSkyLineOTPSMSAsyncTest(string PhoneNo)
-        {
-            var custInfoProfile = new CustInfoProfile
-            {
-                CurrencyId = 2,
-                UserName = "Test",
-                SiteName = "Nova88",
-                UserLang ="en",
-                AreaCode = "886"
-            };
-            var custId = 250713;
-            var userLang = "en";
 
-            var actual = await _otpSMSBLL.SendSkyLineOTPSMSAsync(PhoneNo,custInfoProfile, custId , userLang);
+        [TestCase("+86", "15880083230", ExpectedResult = ErrorCode.Success)]
+        [Ignore("要測試再註解掉，")]
+        public async Task<ErrorCode> SkyLineSendOTPTest(string areaCode, string PhoneNo)
+        {
+            var otp = new OTPRequestObject
+            {
+                CustInfoProfile = new CustInfoProfile
+                {
+                    CustId = 250713,
+                    CurrencyId = 2,
+                    UserName = "Test",
+                    SiteName = "Nova88",
+                    UserLang = "en",
+                    AreaCode = areaCode,
+                    PhoneNo = PhoneNo,
+                },
+                OTPNum = "test123"
+            };
+            var actual = await _skyLineBLL.SendOTP(otp);
             return actual.ErrorCode;
         }
     }                                                                                                                                                                               

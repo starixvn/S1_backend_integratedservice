@@ -27,7 +27,7 @@ namespace CommonService.Service.BLL.Tests
     public class YcOTPSMSTests
     {
         private IConfiguration _configuration;
-        private readonly OTPSMSBLL _otpSMSBLL;
+        private readonly YCBLL _yCBLL;
 
         public YcOTPSMSTests()
         {
@@ -59,27 +59,29 @@ namespace CommonService.Service.BLL.Tests
             startup.ConfigureServices(services);
             var provider = services.BuildServiceProvider();
 
-            _otpSMSBLL = provider.GetRequiredService<OTPSMSBLL>();
+            _yCBLL = provider.GetRequiredService<YCBLL>();
         }
         
-        [TestCase("+886912345678", ExpectedResult = ErrorCode.Success)]
+        [TestCase("+86", "15880083230", ExpectedResult = ErrorCode.Success)]
         [Ignore("要測試再註解掉，")]
-        public async Task<ErrorCode> YcOTPSMSSendAsyncTest(string PhoneNo)
+        public async Task<ErrorCode> YcSendOTPTest(string areaCode, string PhoneNo)
         {
-            //沒在正式找到相關參數
-            //有空再找找
-            var custInfoProfile = new CustInfoProfile
+            var otp = new OTPRequestObject
             {
-                CurrencyId = 2,
-                UserName = "Test",
-                SiteName = "Nova88",
-                UserLang ="en",
-                AreaCode = "886"
+                CustInfoProfile = new CustInfoProfile
+                {
+                    CustId = 250713,
+                    CurrencyId = 2,
+                    UserName = "Test",
+                    SiteName = "Nova88",
+                    UserLang = "en",
+                    AreaCode = areaCode,
+                    PhoneNo = PhoneNo,
+                },
+                OTPNum = "test123"
             };
-            var custId = 250713;
-            var userLang = "en";
 
-            var actual = await _otpSMSBLL.SendYcOTPMSAsync(PhoneNo,custInfoProfile, custId , userLang);
+            var actual = await _yCBLL.SendOTP(otp);
             return actual.ErrorCode;
         }
     }
