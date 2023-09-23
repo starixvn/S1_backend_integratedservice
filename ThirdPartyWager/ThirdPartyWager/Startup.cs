@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.BLL.FaChai;
 using ThirdPartyWager.Service.BLL.IM;
 using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.BLL.MG;
@@ -13,6 +14,7 @@ using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
+using ThirdPartyWager.Workers.FaChai;
 using ThirdPartyWager.Workers.IM;
 using ThirdPartyWager.Workers.Nextspin;
 using ThirdPartyWager.Workers.SPRIBE;
@@ -91,6 +93,7 @@ namespace ThirdPartyWager
             services.AddSingleton<FincanceService>();
             services.AddSingleton<WagerTFGService>();
             services.AddSingleton<WagerIMService>();
+            services.AddSingleton<WagerFaChaiService>();
 
             services.AddOptionListByDB<ServerInfo>("Admin_ServerInfoList_Get");
             services.AddOptionListByDB<dynamic>("Service_TpWagerTimer_Get", new { TpId = 1, Type = 1 }, DataBase.Wager);
@@ -272,6 +275,10 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerSPRIBEBLL>();
             services.AddSingleton<FinanceSPRIBEBLL>();
 
+            //FaChai
+            services.AddSingleton<ApiFaChaiBLL>();
+            services.AddSingleton<WagerFaChaiBLL>();
+
             //Worker
             services.AddHostedService<WagerDG>();
             services.AddHostedService<WagerRedoDG>();
@@ -357,6 +364,7 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerSPRIBE>();
             services.AddHostedService<FinanceIM>();
             services.AddHostedService<FinanceSPRIBE>();
+            services.AddHostedService<WagerFaChai>();
 
             /*******************closed tp*************************/
             //services.AddHostedService<WagerOneGaming>();
