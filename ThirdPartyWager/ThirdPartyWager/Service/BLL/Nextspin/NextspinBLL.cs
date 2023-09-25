@@ -40,14 +40,14 @@ namespace ThirdPartyWager.Service.BLL
                     int count;
                     do
                     {
-                        var betHishory = await _apiNextspinBll.GetBetHistory(startTime, endTime, page, setting);
+                        var betHistory = await _apiNextspinBll.GetBetHistory(startTime, endTime, page, setting);
 
-                        if (betHishory == null) return false;
+                        if (betHistory == null) return false;
 
-                        count = betHishory.PageCount - page;
-                        if (betHishory.List != null && betHishory.List.Count > 0)
+                        count = betHistory.PageCount - page;
+                        if (betHistory.List != null && betHistory.List.Count > 0)
                         {
-                            var result = await _wagerService.InsertWager(betHishory.List);
+                            var result = await _wagerService.InsertWager(betHistory.List);
                             page++;
                         }
                     }

@@ -41,7 +41,7 @@ namespace ThirdPartyWager.Workers
                 foreach (var siteData in siteList)
                 {
                     var res = await _wagerPlayTechBLL.ExecWagerWorker(siteData, tpType, timeRange);
-                    if (res == true)
+                    if (res)
                     {
                         quick = true;
                     }

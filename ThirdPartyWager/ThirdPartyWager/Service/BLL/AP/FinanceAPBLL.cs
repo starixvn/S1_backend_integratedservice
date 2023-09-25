@@ -13,7 +13,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly CommonBLL _commonBLL;
         private readonly ApiAPBLL _apiAPBLL;
         private readonly DateTimeHelper _dateTimeHelper;
-        private readonly WagerAPService _wagerAPService;
         private readonly int _timeZone = 0;
 
         public FinanceAPBLL(IServiceProvider provider)
@@ -23,7 +22,6 @@ namespace ThirdPartyWager.Service.BLL
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _apiAPBLL = provider.GetRequiredService<ApiAPBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
-            _wagerAPService = provider.GetRequiredService<WagerAPService>();
         }
 
         public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)

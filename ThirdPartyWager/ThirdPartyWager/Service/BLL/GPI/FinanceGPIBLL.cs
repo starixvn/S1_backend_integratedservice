@@ -34,17 +34,6 @@ namespace ThirdPartyWager.Service.BLL
             var _currencyId = _tpCurrencyList.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
             var getReportData = JsonConvert.DeserializeObject<List<FincanceDailySummary>>(JsonConvert.SerializeObject(reportData));
 
-            var data = getReportData.GroupBy(i => i.TpCurrencyId).Select(g => new
-            {
-                TpCurrencyId = g.Key,
-                Stake = g.Sum(s => s.Stake),
-                ValidBet = g.Sum(s => s.ValidBet),
-                Payout = g.Sum(s => s.Payout),
-                WinlostAmount = g.Sum(s => s.WinlostAmount),
-                ProgressiveBet = g.Sum(s => s.ProgressiveBet),
-                ProgressiveWin = g.Sum(s => s.ProgressiveWin),
-            });
-
             foreach (var item in getReportData)
             {
                 dailyData.Add(new FincanceDailySummary()

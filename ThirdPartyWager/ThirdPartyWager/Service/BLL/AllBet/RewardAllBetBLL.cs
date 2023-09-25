@@ -77,7 +77,7 @@ namespace ThirdPartyWager.Service.BLL
                         while (pageRowCnt >= 1)
                         {
                             // get reward
-                            var rewardData = await _apiAllBetBLL.GetRewardByTime(setting, agent, startTime, endTime, pageIndex);
+                            var rewardData = _apiAllBetBLL.GetRewardByTime(setting, agent, startTime, endTime, pageIndex);
 
                             // error condition
                             if (rewardData == null)

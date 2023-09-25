@@ -53,7 +53,7 @@ namespace ThirdPartyWager.Service.BLL
                         while (pageRowCnt >= 1)
                         {
                             // bet 
-                            var dataWager = await _apiAllBetBLL.GetBetListByTime(setting, agent, startTime, endTime, pageIndex);
+                            var dataWager = _apiAllBetBLL.GetBetListByTime(setting, agent, startTime, endTime, pageIndex);
                             if (dataWager == null)
                             {
                                 msg = "THIRD_PARTY_ERROR";

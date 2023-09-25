@@ -13,7 +13,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly CommonBLL _commonBLL;
         private readonly ApiPlayTechBLL _apiPlayTechBLL;
         private readonly DateTimeHelper _dateTimeHelper;
-        private readonly WagerPlayTechService _wagerPlayTechService;
         private readonly int _timeZone = 0;
 
         public FinancePlayTechBLL(IServiceProvider provider)
@@ -23,7 +22,6 @@ namespace ThirdPartyWager.Service.BLL
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _apiPlayTechBLL = provider.GetRequiredService<ApiPlayTechBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
-            _wagerPlayTechService = provider.GetRequiredService<WagerPlayTechService>();
         }
 
         public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)

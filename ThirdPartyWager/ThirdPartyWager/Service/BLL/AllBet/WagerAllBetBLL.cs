@@ -49,7 +49,7 @@ namespace ThirdPartyWager.Service.BLL
                         while (pageRowCnt >= 1)
                         {
                             // bet                     
-                            var dataWager = await _apiAllBetBLL.GetBetListByTime(setting, agent, startTime, endTime, pageIndex);
+                            var dataWager = _apiAllBetBLL.GetBetListByTime(setting, agent, startTime, endTime, pageIndex);
                             if (dataWager == null)
                             {
                                 msg = "THIRD_PARTY_ERROR";
@@ -92,7 +92,7 @@ namespace ThirdPartyWager.Service.BLL
 
 
                         // modified bet
-                        var modifyWager = await _apiAllBetBLL.GetModifiedBetListByTime(setting, agent, startTime, endTime);
+                        var modifyWager = _apiAllBetBLL.GetModifiedBetListByTime(setting, agent, startTime, endTime);
                         if (modifyWager.resultCode != "OK")
                         {
                             msg = "THIRD_PARTY_ERROR";
@@ -153,7 +153,7 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     try
                     {
-                        var result = await _apiAllBetBLL.GetBetByBetNum(setting, chcek.betNum);
+                        var result = _apiAllBetBLL.GetBetByBetNum(setting, chcek.betNum);
                         if (result.resultCode == "OK")
                         {
                             _wagerAllBetService.InsertWager(result.data);

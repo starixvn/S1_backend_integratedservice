@@ -52,7 +52,7 @@ namespace ThirdPartyWager.Workers
                 var url = "https://glombi.accordde.com/video/soccerList.json";
                 var timestamp = DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
                 // get first site to run
-                var serverList = _commonBll.GetSiteList();
+                var serverList = _commonBll.GetSiteList().OrderBy(x => x.SiteId);
                 int SiteId = serverList.First().SiteId;
                 var builder = new UriBuilder(url)
                 {

@@ -37,9 +37,9 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> ExecWagerWorker(int type, int gameType, int timeRange)
         {
-            var wokerTime = GetWorkerTime(type, -60, gameType);
-            var quick = CheckQuick(wokerTime, 5);
-            TimeCast time = _dateTimeHelper.GetTimeByMinute(timeRange, _timeZone, _timeFormat, wokerTime);
+            var workerTime = GetWorkerTime(type, -60, gameType);
+            var quick = CheckQuick(workerTime, 5);
+            TimeCast time = _dateTimeHelper.GetTimeByMinute(timeRange, _timeZone, _timeFormat, workerTime);
 
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
@@ -56,9 +56,9 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> ExecWagerRedoWorker(int type, int gameType, int timeRange)
         {
-            var wokerTime = GetWorkerTime(type, 0, gameType);
-            var quick = CheckQuick(wokerTime, 120);
-            var time = _dateTimeHelper.GetTimeByHour(timeRange, _timeZone, _timeFormat, wokerTime, 1);
+            var workerTime = GetWorkerTime(type, 0, gameType);
+            var quick = CheckQuick(workerTime, 120);
+            var time = _dateTimeHelper.GetTimeByHour(timeRange, _timeZone, _timeFormat, workerTime, 1);
 
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
