@@ -9,7 +9,6 @@ namespace ThirdPartyWager.Workers
 {
     public class FinanceOneGaming : BackgroundService
     {
-        private readonly IHostEnvironment _environment;
         private readonly ILogger<FinanceOneGaming> _logger;
         private readonly FinanceOneGamingBLL _financeOneGamingBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
@@ -26,7 +25,6 @@ namespace ThirdPartyWager.Workers
             _financeOneGamingBLL = provider.GetRequiredService<FinanceOneGamingBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _fincanceService = provider.GetRequiredService<FincanceService>();
-            _environment = provider.GetRequiredService<IHostEnvironment>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)

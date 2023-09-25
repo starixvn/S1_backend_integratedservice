@@ -8,7 +8,6 @@ namespace ThirdPartyWager.Service.BLL
     public class FinanceNetentBLL : ITpReportBLL
     {
         private readonly ILogger<FinanceNetentBLL> _logger;
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly CommonBLL _commonBLL;
         private readonly ApiNetentBLL _apiNetentBLL;
         private readonly DateTimeHelper _dateTimeHelper;
@@ -17,7 +16,6 @@ namespace ThirdPartyWager.Service.BLL
         public FinanceNetentBLL(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceNetentBLL>>();
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _apiNetentBLL = provider.GetRequiredService<ApiNetentBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();

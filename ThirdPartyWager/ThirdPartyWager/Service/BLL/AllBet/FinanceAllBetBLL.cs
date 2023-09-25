@@ -62,7 +62,7 @@ namespace ThirdPartyWager.Service.BLL
             {
                 var currency = item.TpCurrencyId;
                 var agent = setting[$"{currency}Agent"];
-                var getWagerSummary = await _apiAllBetBLL.GetBetSummaryByTime(setting, agent, reportTime.startTime);
+                var getWagerSummary = _apiAllBetBLL.GetBetSummaryByTime(setting, agent, reportTime.startTime);
                 Thread.Sleep(150000);
 
                 if (getWagerSummary == null)
