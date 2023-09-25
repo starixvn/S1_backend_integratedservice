@@ -28,17 +28,55 @@ namespace ThirdPartyWager.Service.BLL
             var timestamp = current.ToUnixTimeMilliseconds();
             // param
             var url = wagerUrl;
-            var param = new
+            var dicP = new Dictionary<string, string>()
             {
-                s = 6,
-                startTime = startUnix * 1000,
-                endTime = endUnix * 1000
+                { "s", "6"},
+                { "startTime", (startUnix * 1000).ToString()},
+                { "endTime", (endUnix * 1000).ToString()}
             };
-            var dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(param));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}"));
             // log
-            _logger.LogInformation(JsonConvert.SerializeObject(param));
+            _logger.LogInformation(JsonConvert.SerializeObject(sParam));
+
+            var wager = new
+            {
+                agent = agent,
+                timestamp = timestamp,
+                param = _common.AesEncrypt(sParam, deskey),
+                key = _common.ToMD5($"{agent}{timestamp}{md5key}").ToLower()
+            };
+            dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(wager));
+            sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+            // request
+            var r = await DoHttpClientAsync(url, sParam);
+            var result = JsonConvert.DeserializeObject<WagerV8Model>(r);
+            return result;
+        }
+
+        public async Task<WagerV8Model> GetBetListByTimeV2(dynamic setting, long startUnix, long endUnix)
+        {
+            var wagerUrl = setting["WagerUrl_SW"];
+            var deskey = setting["Deskey_SW"];
+            var md5key = setting["Md5key_SW"];
+            var agent = setting["Agent_SW"];
+
+            var current = new DateTimeOffset(DateTime.UtcNow);
+            var timestamp = current.ToUnixTimeMilliseconds();
+
+            // param
+            var url = wagerUrl;
+            var dicP = new Dictionary<string, string>()
+            {
+                { "s", "6"},
+                { "startTime", (startUnix * 1000).ToString()},
+                { "endTime", (endUnix * 1000).ToString()}
+            };
+
+            var sParam = string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}"));
+            // log
+            _logger.LogInformation(JsonConvert.SerializeObject(sParam));
 
             var wager = new
             {

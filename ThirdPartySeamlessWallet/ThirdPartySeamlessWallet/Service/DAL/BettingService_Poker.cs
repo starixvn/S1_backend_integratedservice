@@ -421,5 +421,68 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region V8
+
+        public int PlaceBetPK_V8(TpCustInfo tpCustInfo, BettingDataPK_V8 bettingDataPK_V8, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            var result = 0;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                var p = new DynamicParameters(bettingDataPK_V8);
+                p.Add("TicketType", (int)BettransType.Bet);
+                p.Add("TicketStatus", (int)TicketStatus.UnSettled);
+                p.Add("SettleFlag", (int)SettleFlag.Running);
+
+                var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataPK_V8.timestamp).DateTime;
+                result = _partitionService.Execute(partitionTime, "Service_BettransPK_V8_Ins", p, trans);
+
+                if (result > 0 && bettingDataPK_V8.money != 0)
+                {
+                    result = walletService.SetBalance(
+                        tpCustInfo.CustId,
+                        tpCustInfo.SiteId,
+                        tpCustInfo.UserName,
+                        Math.Abs(bettingDataPK_V8.money) * -1,
+                        (int)Tp.V8,
+                        TransType.Wagers,
+                        $"Stake: {bettingDataPK_V8.money:#,##0.##} {bettingDataPK_V8.orderId}",
+                        bettingDataPK_V8.gameNo,
+                        out afterAmount,
+                        conn,
+                        trans
+                    );
+                }
+
+                if (result > 0)
+                {
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    return result;
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                result = 0;
+                logger.LogError(mySqlEx.Message);
+                _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+                throw;
+            }
+
+            _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+            return result;
+        }
+
+        #endregion
     }
 }
