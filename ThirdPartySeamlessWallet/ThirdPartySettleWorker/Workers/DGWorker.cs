@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Serilog.Context;
 
 using ThirdPartySeamlessWallet.Service.BLL;
@@ -34,7 +34,6 @@ namespace ThirdPartySettleWorker.Workers
         
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogWarning($"DG Worker Start running at: {DateTimeOffset.Now}.");
             _timerLC = new Timer(DoSettleDGWork, GameType.DG_LiveCasino, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
@@ -59,7 +58,6 @@ namespace ThirdPartySettleWorker.Workers
             try
             {
                 var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
-                _logger.LogWarning($"DG TpUnsettleList :{JsonConvert.SerializeObject(tpUnsettleList)}");
                 if (!tpUnsettleList.Any())
                 {
                     throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
@@ -71,8 +69,9 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
+                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<BettingDataLC_DG>("Service_BettransLC_DG_Get_V2",
+                            new { tpUnsettle.TransId }, DataBase.Main);
                         var wager = _settledBLL.GetSettle_TpWagerDG(tpUnsettle.TransId);
-                        _logger.LogWarning($"TpWagerDG :{JsonConvert.SerializeObject(wager)}");
                         if (wager != null)
                         {
                             //会员发红包、会员抢红包、主播小费、公司发红包、博饼记录、荷官小费
@@ -87,7 +86,6 @@ namespace ThirdPartySettleWorker.Workers
                             }
 
                             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(tpId, wager.Account);
-                            _logger.LogWarning($"TpCustInfo : TpId{tpId}, Account:{wager.Account}, CustId:{tpCustInfo.CustId}");
                             var tpCurrency = _thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
 
                             if (tpCurrency.ExchangeRate > 1)
@@ -111,8 +109,20 @@ namespace ThirdPartySettleWorker.Workers
                                 SettlementType = SettlementType.SettledForValid,
                                 GameID = wager.GameId.ToString(),
                             };
+                            
+                            var betTransAmount = settleData.Select(t => t.Amount).ToList();
+                            var betTransWinLossAmount = betTransAmount[0] - betTransAmount[1];
+                            
 
-                            var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
+                            //比對Bettrans及TpWager的輸贏金額
+                            _logger.LogWarning($"DG WinLossAmount Comparison Wager : {wager.WinLostAmount}, betTrans : {betTransWinLossAmount}");
+                            if (wager.WinLostAmount != betTransWinLossAmount)
+                            {
+                                _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, isSuccess: false);
+                                break;
+                            }
+
+                            _ = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
 
                             Task.Run(() =>
                             {
