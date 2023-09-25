@@ -18,7 +18,7 @@ namespace ThirdPartyWager.Service.BLL.FaChai
         }
 
 
-        public async Task<RecordListData> GetRecordListasync(Dictionary<string, string> setting, string startTime, string endTime, string currency)
+        public async Task<RecordListData> GetRecordListAsync(Dictionary<string, string> setting, string startTime, string endTime, string currency)
         {
             var request = new GetRecordListRequest()
             {
@@ -39,6 +39,36 @@ namespace ThirdPartyWager.Service.BLL.FaChai
 
             var result = await HttpPostWithX509(
                 $"{setting["ApiUrl"]}/GetRecordList",
+                dicP,
+                "application/x-www-form-urlencoded"
+            );
+
+            var tpData = JsonConvert.DeserializeObject<RecordListData>(result);
+
+            return tpData;
+        }
+
+        public async Task<RecordListData> GetHistoryRecordListAsync(Dictionary<string, string> setting, string startTime, string endTime, string currency)
+        {
+            var request = new GetRecordListRequest()
+            {
+                StartDate = startTime,
+                EndDate = endTime
+            };
+
+            var key = setting["Key"];
+            var para = JsonConvert.SerializeObject(request);
+            var Params = AesEncrypt(para, key);
+            var Sign = _common.ToMD5(para).ToLower();
+
+            var dicP = new Dictionary<string, string>();
+            dicP.Add("AgentCode", setting["AgentCode"]);
+            dicP.Add("Currency", currency);
+            dicP.Add("Params", Params);
+            dicP.Add("Sign", Sign);
+
+            var result = await HttpPostWithX509(
+                $"{setting["ApiUrl"]}/GetHistoryRecordList",
                 dicP,
                 "application/x-www-form-urlencoded"
             );

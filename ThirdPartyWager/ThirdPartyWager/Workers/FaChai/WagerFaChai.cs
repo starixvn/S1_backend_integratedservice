@@ -48,14 +48,12 @@ namespace ThirdPartyWager.Workers.FaChai
             {
                 var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
                 var TpCurrencyList = _commonBLL.GetTpCurrencyList((int)Tp.FaChai).Select(x => x.TpCurrencyId).Distinct();
-                int last;
-                last = iRangMins - 1;
-                var time = _dateTimeHelper.GetTimeByMinuteRevert(last, timeZone, _timeFormat, DateTime.UtcNow);
+                var time = _dateTimeHelper.GetTimeByMinuteRevert(iRangMins, timeZone, _timeFormat, DateTime.UtcNow);
                 foreach (var siteData in siteList)
                 {
                     foreach(var currency in TpCurrencyList)
                     {
-                        await _wagerFaChaiBLL.GetWagerasync(_siteConfigDic[siteData.SiteId], time.startTime, time.endTime, currency);
+                        await _wagerFaChaiBLL.GetWagerAsync(_siteConfigDic[siteData.SiteId], time.startTime, time.endTime, currency);
                     }
                 }
             }

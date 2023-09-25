@@ -20,24 +20,50 @@ namespace ThirdPartyWager.Service.BLL.FaChai
             _wagerFaChaiService = provider.GetRequiredService<WagerFaChaiService>();
         }
 
-        public async Task GetWagerasync(Dictionary<string, string> setting, string startTime, string endTime, string currency)
+        public async Task GetWagerAsync(Dictionary<string, string> setting, string startTime, string endTime, string currency)
         {
             string msg;
-            var recordList = await _apiFaChaiBLL.GetRecordListasync(setting, startTime, endTime, currency);
+            var recordList = await _apiFaChaiBLL.GetRecordListAsync(setting, startTime, endTime, currency);
 
             if (recordList.Records != null)
             {
-                foreach(var record in recordList.Records)
+                foreach (var record in recordList.Records)
                 {
-                    var result = _wagerFaChaiService.InsertWager(record);
-
-                    if (result.IsFaulted)
+                    try
+                    {
+                        await _wagerFaChaiService.InsertWager(record);
+                    }
+                    catch (Exception ex)
                     {
                         msg = $"INSERT_WAGER(recordID: {record.recordID} )";
-                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(record)}");
+                        _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(record)}\r\n{ex.Message}");
                     }
                 }
             }
+        }
+
+        public async Task<bool> GetWagerRedoAsync(Dictionary<string, string> setting, string startTime, string endTime, string currency)
+        {
+            string msg;
+            var recordList = await _apiFaChaiBLL.GetHistoryRecordListAsync(setting, startTime, endTime, currency);
+
+            if (recordList.Records != null)
+            {
+                foreach (var record in recordList.Records)
+                {
+                    try
+                    {
+                        await _wagerFaChaiService.InsertWager(record);
+                    }
+                    catch(Exception ex)
+                    {
+                        msg = $"INSERT_WAGER(recordID: {record.recordID} )";
+                        _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(record)}\r\n{ex.Message}");
+                    }
+                }
+            }
+
+            return true;
         }
     }
 }

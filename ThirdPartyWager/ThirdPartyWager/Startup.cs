@@ -365,6 +365,7 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceIM>();
             services.AddHostedService<FinanceSPRIBE>();
             services.AddHostedService<WagerFaChai>();
+            services.AddHostedService<WagerRedoFaChai>();
 
             /*******************closed tp*************************/
             //services.AddHostedService<WagerOneGaming>();
