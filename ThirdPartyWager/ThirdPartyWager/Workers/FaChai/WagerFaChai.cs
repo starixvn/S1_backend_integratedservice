@@ -1,14 +1,9 @@
 ﻿using Serilog.Context;
-using System.Collections.Generic;
-using System;
-using System.Threading.Tasks;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.BLL.FaChai;
 using ThirdPartyWager.Service.Library;
-using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Workers.FaChai
+namespace ThirdPartyWager.Workers
 {
     public class WagerFaChai : BackgroundService
     {

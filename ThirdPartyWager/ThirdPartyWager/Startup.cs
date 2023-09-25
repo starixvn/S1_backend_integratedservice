@@ -1,7 +1,6 @@
 ﻿using System.Net;
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.BLL.FaChai;
 using ThirdPartyWager.Service.BLL.IM;
 using ThirdPartyWager.Service.BLL.KM;
 using ThirdPartyWager.Service.BLL.MG;
@@ -14,7 +13,6 @@ using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
-using ThirdPartyWager.Workers.FaChai;
 using ThirdPartyWager.Workers.IM;
 using ThirdPartyWager.Workers.Nextspin;
 using ThirdPartyWager.Workers.SPRIBE;

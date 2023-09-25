@@ -1,12 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
-using Org.BouncyCastle.Crypto.Agreement.JPake;
-using Org.BouncyCastle.Math.EC.Multiplier;
-using ThirdPartyWager.Service.BLL.IM;
+﻿using Newtonsoft.Json;
 using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Workers;
 
-namespace ThirdPartyWager.Service.BLL.FaChai
+namespace ThirdPartyWager.Service.BLL
 {
     public class WagerFaChaiBLL
     {

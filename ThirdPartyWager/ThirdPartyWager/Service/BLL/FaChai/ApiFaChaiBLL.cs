@@ -1,11 +1,9 @@
 ﻿using Newtonsoft.Json;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
-using Ubiety.Dns.Core;
 
-namespace ThirdPartyWager.Service.BLL.FaChai
+namespace ThirdPartyWager.Service.BLL
 {
     public class ApiFaChaiBLL
     {
