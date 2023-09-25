@@ -9,7 +9,6 @@ namespace ThirdPartyWager.Service.BLL
     public class WagerV8BLL
     {
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly CommonBLL _commonBLL;
         private readonly ApiV8BLL _apiV8BLL;
         private readonly WagerV8Service _wagerV8Service;
         private readonly ILogger<WagerV8BLL> _logger;
@@ -22,7 +21,6 @@ namespace ThirdPartyWager.Service.BLL
         public WagerV8BLL(IServiceProvider provider)
         {
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _commonBLL = provider.GetRequiredService<CommonBLL>();
             _apiV8BLL = provider.GetRequiredService<ApiV8BLL>();
             _wagerV8Service = provider.GetRequiredService<WagerV8Service>();
             _logger = provider.GetRequiredService<ILogger<WagerV8BLL>>();
@@ -39,21 +37,10 @@ namespace ThirdPartyWager.Service.BLL
             if (time.endUnix < cvTime)
             {
 
-                //// 正式切換後版本
-                //var result = await GetWagersAsync(time);
-                //if (result)
-                //{
-                //    _thirdPartyBLL.SetThirdPartyTimer(_tpId, type, time.endUnix);
-                //}
-
                 var result = await GetWagersAsync(time);
                 if (result)
                 {
-                    var resultSW = await GetWagersV2Async(time);
-                    if (resultSW)
-                    {
-                        _thirdPartyBLL.SetThirdPartyTimer(_tpId, type, time.endUnix);
-                    }
+                    _thirdPartyBLL.SetThirdPartyTimer(_tpId, type, time.endUnix);
                 }
             }
 
@@ -69,129 +56,20 @@ namespace ThirdPartyWager.Service.BLL
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
             {
-                //// 正式切換後版本
-                //var result = await GetWagersAsync(time, true);
-                //if (result)
-                //{
-                //    _thirdPartyBLL.SetThirdPartyTimer(_tpId, type, time.endUnix);
-                //}
-
                 var result = await GetWagersAsync(time, true);
                 if (result)
                 {
-                    var resultSW = await GetWagersV2Async(time, true);
-                    if (resultSW)
-                    {
-                        _thirdPartyBLL.SetThirdPartyTimer(_tpId, type, time.endUnix);
-                    }
+                    _thirdPartyBLL.SetThirdPartyTimer(_tpId, type, time.endUnix);
                 }
             }
 
             return quick;
         }
 
-        //// 正式切換後版本移除
         public async Task<bool> GetWagersAsync(TimeCast wagerTime, bool compare = false)
         {
             var msg = "FATAL_ERROR";
             var workerName = compare ? "GetRedoWagersAsync" : "GetWagersAsync";
-            try
-            {
-                // get api info
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
-
-                // get wager
-                var dataWager = await _apiV8BLL.GetBetListByTime(setting["WagerUrl"], setting["Agent"], setting["Deskey"], setting["Md5key"], wagerTime.startUnix, wagerTime.endUnix);
-
-                // error condition
-                var errorCode = dataWager.d.code;
-                var errorMsg = dataWager.d.code.ToString();
-
-                if (errorCode != 0 && errorCode != 16)
-                {
-                    msg = "THIRD_PARTY_ERROR";
-                    _logger.LogError($"{workerName} {msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                    return false;
-                }
-
-                if (errorCode == 16 || (errorCode == 0 && dataWager.d.count == 0))
-                {
-                    msg = "NO_DATA";
-                    _logger.LogInformation($"{workerName} {msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                    return true;
-                }
-
-                if (compare)
-                {
-                    bool check = CompareSummary(wagerTime, dataWager);
-                    if (check)
-                    {
-                        msg = "MATCH";
-                        _logger.LogInformation($"{workerName} {msg}");
-                        return true;
-                    }
-                }
-
-                var field = new List<string>();
-                for (var i = 0; i < dataWager.d.count; i++)
-                {
-                    var chairId = (dataWager.d.list.ChairID[i] == null) ? 0 : dataWager.d.list.ChairID[i];
-                    var keyValuePairs = new Dictionary<string, dynamic>
-                    {
-                        { "GameID", dataWager.d.list.GameID[i] },
-                        { "Accounts", dataWager.d.list.Accounts[i] },
-                        { "ServerID", dataWager.d.list.ServerID[i] },
-                        { "KindID", dataWager.d.list.KindID[i] },
-                        { "TableID", dataWager.d.list.TableID[i] },
-                        { "ChairID", chairId },
-                        { "UserCount", dataWager.d.list.UserCount[i] },
-                        { "CellScore", dataWager.d.list.CellScore[i] },
-                        { "AllBet", dataWager.d.list.AllBet[i] },
-                        { "Profit", dataWager.d.list.Profit[i] },
-                        { "Revenue", dataWager.d.list.Revenue[i] },
-                        { "GameStartTime", dataWager.d.list.GameStartTime[i] },
-                        { "GameEndTime", dataWager.d.list.GameEndTime[i] },
-                        { "CardValue", dataWager.d.list.CardValue[i] },
-                        { "ChannelID", dataWager.d.list.ChannelID[i] },
-                        { "LineCode", dataWager.d.list.LineCode[i] }
-                    };
-                    field.Add(JsonConvert.SerializeObject(keyValuePairs));
-                }
-
-                foreach (var item in field)
-                {
-
-                    var bet = JsonConvert.DeserializeObject<BetV8>(item);
-                    try
-                    {
-                        _wagerV8Service.InsertWager(bet);
-                    }
-                    catch (Exception ex)
-                    {
-                        msg = $"INSERT_WAGER(WAGERID: {bet.GameID} )";
-                        _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
-                        return false;
-                    }
-                }
-
-                msg = "FINISH";
-                _logger.LogInformation($"{workerName} {msg}\r\n{wagerTime.startTime} ~ {wagerTime.endTime}");
-                return true;
-            }
-            catch (Exception ex)
-            {
-                msg = "FATAL_ERROR";
-                _logger.LogError(ex, $"{workerName} {msg}\r\n{ex.Message}");
-                return false;
-            }
-        }
-
-        //// 正式切換後版本
-        //public async Task<bool> GetWagersAsync(TimeCast wagerTime, bool compare = false)
-        public async Task<bool> GetWagersV2Async(TimeCast wagerTime, bool compare = false)
-        {
-            var msg = "FATAL_ERROR";
-            var workerName = compare ? "GetRedoWagersV2Async" : "GetWagersV2Async";
             try
             {
                 // get api info
