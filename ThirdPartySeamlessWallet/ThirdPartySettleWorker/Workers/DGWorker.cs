@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Serilog.Context;
 
 using ThirdPartySeamlessWallet.Service.BLL;
@@ -69,6 +69,8 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
+                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<BettingDataLC_DG>("Service_BettransLC_DG_Get_V2",
+                            new { tpUnsettle.TransId }, DataBase.Main);
                         var wager = _settledBLL.GetSettle_TpWagerDG(tpUnsettle.TransId);
                         if (wager != null)
                         {
@@ -107,8 +109,20 @@ namespace ThirdPartySettleWorker.Workers
                                 SettlementType = SettlementType.SettledForValid,
                                 GameID = wager.GameId.ToString(),
                             };
+                            
+                            var betTransAmount = settleData.Select(t => t.Amount).ToList();
+                            var betTransWinLossAmount = betTransAmount[0] - betTransAmount[1];
+                            
 
-                            var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
+                            //比對Bettrans及TpWager的輸贏金額
+                            _logger.LogWarning($"DG WinLossAmount Comparison Wager : {wager.WinLostAmount}, betTrans : {betTransWinLossAmount}");
+                            if (wager.WinLostAmount != betTransWinLossAmount)
+                            {
+                                _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, isSuccess: false);
+                                break;
+                            }
+
+                            _ = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
 
                             Task.Run(() =>
                             {

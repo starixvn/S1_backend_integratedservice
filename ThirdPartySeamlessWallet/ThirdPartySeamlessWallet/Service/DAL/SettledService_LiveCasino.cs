@@ -236,10 +236,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        _mainDbClient.Execute("Service_BettransLC_DGV2_Set", new { TransId = bettingDataLC_DG.TransId, SettleFlag = 2 }, conn, trans);
-                        logger.LogInformation($"DG Payout result: {result}, bettingDataLC : {JsonConvert.SerializeObject(bettingDataLC_DG)}");
+                        //_mainDbClient.Execute("Service_BettransLC_DGV2_Set", new { TransId = bettingDataLC_DG.TransId, SettleFlag = 2 }, conn, trans);
                         var insertTpResults = _tpUnsettleService.InsertTpUnsettle(Tp.DG, GameType.DG_LiveCasino, bettingDataLC_DG.TransId, trans);
-                        logger.LogInformation($"DG InsertTpResults result: {insertTpResults}");
                         if (insertTpResults <= 0)
                         {
                             result = 0;
