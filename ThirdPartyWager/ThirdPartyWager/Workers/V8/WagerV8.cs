@@ -1,38 +1,27 @@
 ﻿using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers
 {
     public class WagerV8 : BackgroundService
     {
-        private readonly ILogger<WagerV8> logger;
-        private readonly WagerV8BLL wagerV8BLL;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly DateTimeHelper dateTimeHelper;
+        private readonly ILogger<WagerV8> _logger;
+        private readonly WagerV8BLL _wagerV8BLL;
         private Timer timer;
-        private readonly int intervalMins = 3;
-        private readonly int iRangMins = 20;
-        private readonly int tpId = (int)Tp.V8;
-        private readonly string _tpName = Tp.V8.ToString();
         private readonly int tpType = (int)WagerTimerType.Wager;
-        private int quick = 0;
-        private readonly int beyond = 5;
-        private readonly int timeZone = 0;
+        private readonly int timeRange = 20; //in minutes
+        private readonly int quickTime = 45; // in seconds
+        private readonly int runTime = 120;  // in seconds
+        private readonly string _tpName = Tp.V8.ToString();
 
-        public WagerV8(
-            ILogger<WagerV8> logger,
-            WagerV8BLL wagerV8BLL,
-            ThirdPartyBLL thirdPartyBLL,
-            DateTimeHelper dateTimeHelper
-        )
+        public WagerV8(IServiceProvider provider)
         {
-            this.logger = logger;
-            this.wagerV8BLL = wagerV8BLL;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.dateTimeHelper = dateTimeHelper;
+            _logger = provider.GetRequiredService<ILogger<WagerV8>>();
+            _wagerV8BLL = provider.GetRequiredService<WagerV8BLL>();
         }
+
+
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
@@ -43,58 +32,19 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
+            var quick = false;
             try
             {
-                quick = 0;
-                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimer(tpId, tpType);
-                DateTime timerTime;
-                int last;
-                if (dataTpTimer == null)
-                {
-                    last = iRangMins - 1;
-                    timerTime = DateTime.Now.AddMinutes(-1 * last);
-                }
-                else
-                {
-                    timerTime = dataTpTimer.StartTime.AddMinutes(-3);
-                    last = iRangMins - 1;
-                }
-                if (timerTime < DateTime.Now)
-                {
-                    var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
-                    //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
-                    //if (time.endUnix < cvTime)
-                    //{
-                    var result = await wagerV8BLL.GetWagersAsync(tpId, time.startUnix, time.endUnix);
-                    if (result)
-                    {
-                        thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
-                    }
-                }
-                var ts = DateTime.Now - timerTime;
-                var diffMin = (int)ts.TotalMinutes;
-                if (diffMin > beyond)
-                {
-                    quick = 1;
-                }
-
+                quick = await _wagerV8BLL.ExecWagerWorker(tpType, timeRange);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
             }
             finally
             {
-                if (quick == 1)
-                {
-                    var dueTimeSpan = TimeSpan.FromSeconds(45);
-                    timer.Change(dueTimeSpan, TimeSpan.Zero);
-                }
-                else
-                {
-                    var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                    timer.Change(dueTimeSpan, TimeSpan.Zero);
-                }
+                var dueTimeSpan = quick ? TimeSpan.FromSeconds(quickTime) : TimeSpan.FromSeconds(runTime);
+                timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 
