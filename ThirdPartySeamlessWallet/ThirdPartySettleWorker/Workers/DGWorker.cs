@@ -114,11 +114,10 @@ namespace ThirdPartySettleWorker.Workers
                             var betTransWinLossAmount = betTransAmount[0] - betTransAmount[1];
                             
 
-                            //比對Bettrans及TpWager的輸贏金額
-                            _logger.LogWarning($"DG WinLossAmount Comparison Wager : {wager.WinLostAmount}, betTrans : {betTransWinLossAmount}");
+                            //比對BetTrans及TpWager的輸贏金額
+                            _logger.LogWarning($"DG WinLossAmount Comparison Wager {tpUnsettle.TransId}: {wager.WinLostAmount}, betTrans : {betTransWinLossAmount}");
                             if (wager.WinLostAmount != betTransWinLossAmount)
                             {
-                                _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, isSuccess: false);
                                 continue;
                             }
 
