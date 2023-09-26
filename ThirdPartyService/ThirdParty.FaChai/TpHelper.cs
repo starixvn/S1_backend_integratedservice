@@ -41,6 +41,15 @@ namespace ThirdParty.FaChai
         {
             public string Url { get; set; }
         }
+        public class GetBetDetailRequest
+        {
+            public string MemberAccount { get; set; }
+            public string RecordID { get; set; }
+        }
+        public class GetBetDetailResponse : FCResponse
+        {
+            public string Url { get; set; }
+        }
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             ApiResult oApiResult = new ApiResult();
@@ -93,7 +102,43 @@ namespace ThirdParty.FaChai
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var siteInputs = siteConfigDic[tpCustInfo.SiteId];
+            var request = new GetBetDetailRequest()
+            {
+                MemberAccount = tpCustInfo.TpUserName,
+                RecordID = getBetDetail.TransId
+            };
+
+            var key = siteInputs["Key"];
+            var para = JsonConvert.SerializeObject(request);
+            var Params = AesEncrypt(para, key);
+            var Sign = ToMD5(para).ToLower();
+
+            var dicP = new Dictionary<string, string>();
+            dicP.Add("AgentCode", siteInputs["AgentCode"]);
+            dicP.Add("Currency", tpCustInfo.TpCurrencyId);
+            dicP.Add("Params", Params);
+            dicP.Add("Sign", Sign);
+
+            var result = HttpPostWithX509(
+                $"{siteInputs["ApiUrl"]}/GetPlayerReport",
+                dicP,
+                "application/x-www-form-urlencoded"
+            );
+
+            var tpData = JsonConvert.DeserializeObject<GetBetDetailResponse>(result);
+
+            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                DetailUrl = tpData.Url,
+                TpCurrency = new TpCurrency()
+                {
+                    ExchangeRate = tpCustInfo.ExchangeRate,
+                    TpCurrencyId = tpCustInfo.TpCurrencyId,
+                },
+            };
+
         }
 
         public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)

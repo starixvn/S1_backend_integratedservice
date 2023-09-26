@@ -43,7 +43,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             var partitionTime = ConvertLongToDateTime(bettingData.Ts);
 
-            var check = _partitionService.Query<BettransRng_FaChai>(partitionTime, "Service_BettransRng_FaChai_Check", new { TransId = bettingData.BankID });
+            var check = _partitionService.Query<BettransRng_FaChai>(partitionTime, "Service_BettransRng_FaChai_Check", new { bettingData.BankID });
             if (check.Any())
             {
                 return new FCResponse()
@@ -98,7 +98,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (tempResult > 0)
             {
-                _ = _tpUnsettleService.InsertTpUnsettle(Tp.FaChai, GameType.FaChai_RNG, bettingData.BankID, trans);
+                _ = _tpUnsettleService.InsertTpUnsettle(Tp.FaChai, GameType.FaChai_RNG, bettingData.RecordID, trans);
                 _mainDbClient.CommitAndDisposeConnection(conn, trans);
 
                 if (afterAmount > 0 && tpCurrency.ExchangeRate > 0)
@@ -131,7 +131,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var result = new FCResponse();
             var partitionTime = ConvertLongToDateTime(cancelData.Ts);
 
-            var check = _partitionService.Query<BettransRng_FaChai>(partitionTime, "Service_BettransRng_FaChai_Check", new { TransId = cancelData.BankID });
+            var check = _partitionService.Query<BettransRng_FaChai>(partitionTime, "Service_BettransRng_FaChai_Check", new { cancelData.BankID });
             if (check.Any())
             {
                 result.Result = (int)FCErrorMessage.Revert_Cancel_Bet;

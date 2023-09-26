@@ -49,7 +49,7 @@ namespace ThirdPartySettleWorker.Workers
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
 
             var forContinue = false;
-            const string getBettransSp = "Service_BettransRng_FaChai_Check"; // 取得下注紀錄
+            const string getBettransSp = "Service_BettransRng_FaChai_Get"; // 取得下注紀錄
             const string getWagerSp = "Service_TpWager_FaChai_Get"; // 取得Wager資料
 
             try
@@ -67,7 +67,7 @@ namespace ThirdPartySettleWorker.Workers
                     try
                     {
                         var betData = _partitionService.GetUnsettleDataList<BettransRng_FaChai>(getBettransSp, tpUnsettle).FirstOrDefault();
-                        var wagerData = _tpUnSettledBLL.GetTpUnsettleData<FCWager>(getWagerSp, new { recordID = betData.RecordID }, DataBase.Wager).FirstOrDefault();
+                        var wagerData = _tpUnSettledBLL.GetTpUnsettleData<FCWager>(getWagerSp, new { recordID = tpUnsettle.TransId }, DataBase.Wager).FirstOrDefault();
 
                         if (wagerData == null)
                             continue;
