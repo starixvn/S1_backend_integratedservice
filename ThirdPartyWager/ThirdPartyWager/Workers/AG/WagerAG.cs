@@ -48,7 +48,7 @@ namespace ThirdPartyWager.Workers
             {
                 return;
             }
-            
+
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
 

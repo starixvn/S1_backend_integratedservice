@@ -3,7 +3,7 @@ using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.DAL;
 
-namespace ThirdPartyWager.Service.BLL.Nextspin
+namespace ThirdPartyWager.Service.BLL
 {
     public interface INextspinFinancBLL
     {
