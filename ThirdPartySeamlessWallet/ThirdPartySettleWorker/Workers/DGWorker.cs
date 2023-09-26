@@ -69,7 +69,7 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<BettingDataLC_DG>("Service_BettransLC_DG_Get_V2",
+                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData_DG>("Service_BettransLC_DG_Get_V2",
                             new { tpUnsettle.TransId }, DataBase.Main);
                         var wager = _settledBLL.GetSettle_TpWagerDG(tpUnsettle.TransId);
                         if (wager != null)
