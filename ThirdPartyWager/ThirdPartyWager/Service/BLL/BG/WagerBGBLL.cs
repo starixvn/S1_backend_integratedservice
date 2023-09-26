@@ -150,7 +150,7 @@ public class WagerBGBLL
 
         if (diff.TotalMinutes <= beforeMin)
             dEndTime = dEndTime.AddMinutes(-1 * beforeMin);
-   
+
         var beginAt = new DateTimeOffset(timeBase);
         var endAt = new DateTimeOffset(dEndTime);
         var startTime = beginAt.ToOffset(new TimeSpan(timezone, utcMinute, 0)).ToString(format);

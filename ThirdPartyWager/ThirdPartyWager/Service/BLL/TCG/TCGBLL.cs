@@ -20,14 +20,13 @@ namespace ThirdPartyWager.Service.BLL
         private readonly HttpHelper _httpHelper;
         private readonly Common _common;
         private const int ErrorCount = 3; //容許錯誤次數
-        private readonly ConcurrentDictionary<string, int> _errorCountr = new();
+        private readonly ConcurrentDictionary<string, int> _errorCounter = new();
         private readonly CommonBLL _commonBLL;
-        
 
         public TCGBLL(IServiceProvider provider)
         {
-            _logger = provider.GetRequiredService<ILogger<TCGBLL>>();
             LogContext.PushProperty("Tp", _tp.ToString());
+            _logger = provider.GetRequiredService<ILogger<TCGBLL>>();
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
 
             //用 SiteId = 0 取回預設Config
@@ -73,7 +72,7 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        private async Task<List<T>> QuerySettleBetHistoryAsync<T>(TCGConfig config, DateTimeOffset batchTime, WagerTimerType timerType)
+        private Task<List<T>> QuerySettleBetHistoryAsync<T>(TCGConfig config, DateTimeOffset batchTime, WagerTimerType timerType)
         {
             var result = new List<T>();
             var reportType = config.WagerTypeList.Split(",").Where(i => i != string.Empty);
@@ -99,8 +98,8 @@ namespace ThirdPartyWager.Service.BLL
                                     TpCurrencyId = config.TpCurrencyId
                                 })
                             });
-                        }                     
-                        return new List<T>();
+                        }
+                        return Task.FromResult(new List<T>());
                     }
 
                     if (queryReuslt.list.Count > 0)
@@ -111,7 +110,7 @@ namespace ThirdPartyWager.Service.BLL
                     totalPage = 1 + (queryReuslt.page.total / queryReuslt.page.pageSize);
                 }
             }
-            return result;
+            return Task.FromResult(result);
         }
 
         private TCGQueryWagerObj<T> DownloadFTPFile<T>(TCGConfig config, string fileUrl)
@@ -153,22 +152,22 @@ namespace ThirdPartyWager.Service.BLL
         /// </summary>
         private bool FTPErrorHandler(string fileUrl)
         {
-            if (_errorCountr.TryGetValue(fileUrl, out var count))
+            if (_errorCounter.TryGetValue(fileUrl, out var count))
             {
                 var newCount = count + 1;
                 if (newCount >= ErrorCount) // 超過容許次數另外存放
                 {
-                    _errorCountr.Remove(fileUrl, out var _);
+                    _errorCounter.Remove(fileUrl, out var _);
                     return true;
                 }
                 else
                 {
-                    _errorCountr.TryUpdate(fileUrl, newCount, count);
+                    _errorCounter.TryUpdate(fileUrl, newCount, count);
                 }
             }
             else
             {
-                _errorCountr.TryAdd(fileUrl, 1);
+                _errorCounter.TryAdd(fileUrl, 1);
             }
             return false;
         }

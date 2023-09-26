@@ -17,7 +17,7 @@ namespace ThirdPartyWager.Service.DAL
 
         public int SetFinanceTpDailySummary(IEnumerable<FincanceDailySummary> dailySummary)
         {
-           return _mainDbClient.Execute("Finance_Tp_DailySummary_Set", dailySummary);
+            return _mainDbClient.Execute("Finance_Tp_DailySummary_Set", dailySummary);
         }
     }
 }

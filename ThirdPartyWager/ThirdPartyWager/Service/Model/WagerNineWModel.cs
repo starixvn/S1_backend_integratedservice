@@ -80,7 +80,7 @@ namespace ThirdPartyWager.Service.Model.NineW
             }
         }
         private DateTime? _betPlaced { get; set; }
-        public DateTime matchSettledDate { get; set; } = new DateTime(1970,1,1);
+        public DateTime matchSettledDate { get; set; } = new DateTime(1970, 1, 1);
         public string marketName { get; set; } = string.Empty;
         public string selectionName { get; set; } = string.Empty;
         public string matchType { get; set; } = string.Empty;
@@ -167,9 +167,9 @@ namespace ThirdPartyWager.Service.Model.NineW
             betStatus = unSettleBet.betStatus;
             selectionName = unSettleBet.selectionName;
             selectionId = unSettleBet.selectionId;
-            matchType = unSettleBet.matchType;     
+            matchType = unSettleBet.matchType;
             matchSettledDate = new DateTime(1970, 1, 1);
-            profitLoss = default;          
+            profitLoss = default;
             oddsType = unSettleBet.oddsType;
             betPlaced = unSettleBet.betPlaced;
             site = unSettleBet.site;
@@ -181,7 +181,7 @@ namespace ThirdPartyWager.Service.Model.NineW
                 throw new Exception($"NineW ReSettleBet to  SettleBet Exception：transactionData is null.");
             }
             matchStake = detail.txStake;
-            matchOddsReq = detail.txOddsMatched;           
+            matchOddsReq = detail.txOddsMatched;
         }
 
         public SettleBet(UnmatchedResult unSettleBet)

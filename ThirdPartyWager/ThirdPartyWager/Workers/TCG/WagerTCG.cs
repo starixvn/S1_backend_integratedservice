@@ -37,7 +37,7 @@ namespace ThirdPartyWager.Workers
             _redoTimer = new Timer(DoRedo, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
-        private async void DoTask(object state)
+        private void DoTask(object state)
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
@@ -115,7 +115,7 @@ namespace ThirdPartyWager.Workers
             return quick;
         }
 
-        private async void DoUnsettle(object state)
+        private void DoUnsettle(object state)
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
@@ -217,7 +217,7 @@ namespace ThirdPartyWager.Workers
                 foreach (var redo in _commonBLL.GetTpWagerRedo(tpId))
                 {
                     var time = redo.Time;
-                    var currency = JsonConvert.DeserializeObject<TCGRedoObj>(redo.Parameter).TpCurrencyId;                    
+                    var currency = JsonConvert.DeserializeObject<TCGRedoObj>(redo.Parameter).TpCurrencyId;
                     var isSuccess = currency == "VNDK" ?
                          await _tcgBLL.GetWagersAsync<TCGVNWagerData>(time, currency, timerType) :
                          await _tcgBLL.GetWagersAsync<TCGSEAWagerData>(time, currency, timerType);

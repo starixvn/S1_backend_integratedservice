@@ -1,10 +1,9 @@
-using ThirdPartyWager.Service.BLL.IM;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Service.BLL.SPRIBE;
+namespace ThirdPartyWager.Service.BLL;
 
 public class WagerSPRIBEBLL
 {
@@ -15,7 +14,7 @@ public class WagerSPRIBEBLL
     private readonly DateTimeHelper _dateTimeHelper;
     private readonly ILogger<WagerSPRIBEBLL> _logger;
     private readonly Tp _tp = Tp.SPRIBE;
-    private const int TpId = (int) Tp.SPRIBE;
+    private const int TpId = (int)Tp.SPRIBE;
     private const int TimeZone = 8; // Report/GetBetLog時區為+8
     private const string TimeFormat = "yyyy-MM-dd HH.mm.ss";
 
@@ -24,7 +23,7 @@ public class WagerSPRIBEBLL
         public const string Success = "0";
         public const string NoData = "558";
     }
-    
+
     public WagerSPRIBEBLL(IServiceProvider provider)
     {
         _apiIMBll = provider.GetRequiredService<ApiIMBLL>();
@@ -34,7 +33,7 @@ public class WagerSPRIBEBLL
         _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         _logger = provider.GetRequiredService<ILogger<WagerSPRIBEBLL>>();
     }
-    
+
     public async Task<int> ExecWagerWorker(TpListModel siteData, int type)
     {
         var siteId = siteData.SiteId;
@@ -43,10 +42,10 @@ public class WagerSPRIBEBLL
         const int dataDelayTime = 15; // SPRIBE GetBetLog 資料更新最大延遲15分
         const int timeRange = 10; // min，SPRIBE GetBetLog 時間區間最大10分鐘，資料更新最大延遲15分
         const int gameType = 2;
-        
-        var workerTime = GetWorkerTime(type, runTime * -1 , siteId, gameType);
+
+        var workerTime = GetWorkerTime(type, runTime * -1, siteId, gameType);
         var quick = CheckQuick(workerTime, excess);
-        
+
         var time = _dateTimeHelper.GetTimeByMinute(timeRange - 1, TimeZone, TimeFormat, workerTime);
         var cvTime = DateTimeOffset.Now
             .ToOffset(new TimeSpan(TimeZone, 0, 0))
@@ -55,7 +54,7 @@ public class WagerSPRIBEBLL
 
         if (time.endUnix >= cvTime)
             return runTime;
-        
+
         var result = await GetWagersAsync(time, siteData, IMProductWalletEnum.IMSlot);
         if (result)
             _thirdPartyBll.SetThirdPartyTimerByReference(TpId, type, time.endUnix, gameType, siteId.ToString());
@@ -65,7 +64,7 @@ public class WagerSPRIBEBLL
     }
 
     #region Private
-    
+
     private async Task<bool> GetWagersAsync(TimeCast wagerTime, TpListModel tpInfo, IMProductWalletEnum productWallet)
     {
         const string workerName = "SPRIBE_GetWagers";
@@ -79,11 +78,11 @@ public class WagerSPRIBEBLL
                 StartTime = wagerTime.startTime,
                 EndTime = wagerTime.endTime
             };
-            
+
             var success = await SPRIBEGetWagersAsync(param);
             if (!success)
                 return false;
-            
+
             msg = "FINISH";
             _logger.LogInformation($"{workerName} {msg}\r\n, ProductWallet={productWallet}\r\n{wagerTime.startTime}~{wagerTime.endTime}");
             return true;
@@ -103,7 +102,7 @@ public class WagerSPRIBEBLL
         var tpCurrencyList = _commonService.GetTpCurrencyList(TpId)
             .Select(x => x.TpCurrencyId)
             .Distinct();
-        
+
         foreach (var tpCurrency in tpCurrencyList)
         {
             param.Currency = tpCurrency;
@@ -114,7 +113,7 @@ public class WagerSPRIBEBLL
             {
                 param.Page = page;
                 var resp = await _apiIMBll.GetBetListByTime<IMSlotModel>(param, _tp);
-                
+
                 if (resp.Code == SPRIBEErrorCode.NoData)
                 {
                     _logger.LogInformation($"{workerName} {tpCurrency} NO_DATA");
@@ -155,12 +154,12 @@ public class WagerSPRIBEBLL
 
         return true;
     }
-    
+
     private DateTime GetWorkerTime(int type, int vary, int siteId, int gameType)
     {
         var lastTime =
             _thirdPartyBll.GetThirdPartyTimerReferenceByReference(TpId, type, gameType, siteId.ToString());
-        
+
         return lastTime == null
             ? DateTimeOffset.UtcNow.DateTime.AddHours(-8)
             : lastTime.StartTime.AddSeconds(vary);
@@ -170,15 +169,15 @@ public class WagerSPRIBEBLL
     {
         var now = DateTimeOffset.UtcNow.DateTime;
         var diff = now - workTime;
-        
+
         return now > workTime && diff.TotalMinutes > excess;
     }
-    
+
     private int GetQuickSec()
     {
         var tpCurrencyList = _commonService.GetTpCurrencyList(TpId);
         return DelaySec * (tpCurrencyList.Count() + 1);
     }
-    
+
     #endregion
 }

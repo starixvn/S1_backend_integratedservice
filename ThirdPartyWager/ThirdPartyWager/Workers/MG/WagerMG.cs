@@ -1,5 +1,5 @@
 ﻿using Serilog.Context;
-using ThirdPartyWager.Service.BLL.MG;
+using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers
@@ -16,6 +16,7 @@ namespace ThirdPartyWager.Workers
             _logger = provider.GetRequiredService<ILogger<WagerMG>>();
             _mgBll = provider.GetRequiredService<IMGBLL>();
         }
+
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
@@ -29,7 +30,6 @@ namespace ThirdPartyWager.Workers
             try
             {
                 await _mgBll.ReSettle();
-                
             }
             catch (Exception ex)
             {
@@ -40,6 +40,7 @@ namespace ThirdPartyWager.Workers
                 _timer.Change(TimeSpan.FromMinutes(10), TimeSpan.Zero);
             }
         }
+
         public override Task StopAsync(CancellationToken cancellationToken)
         {
             _timer?.Change(Timeout.Infinite, 0);
