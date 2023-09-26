@@ -19,9 +19,7 @@ namespace ThirdPartyWager.Workers
         private readonly int _beyond = 2;
         private Timer timer;
 
-        public FinanceEVO(
-            IServiceProvider provider
-        )
+        public FinanceEVO(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceEVO>>();
             _financeEVOBLL = provider.GetRequiredService<FinanceEVOBLL>();

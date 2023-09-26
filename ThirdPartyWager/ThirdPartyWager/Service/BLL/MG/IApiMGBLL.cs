@@ -1,6 +1,6 @@
 ﻿using ThirdPartyWager.Service.Model;
 
-namespace ThirdPartyWager.Service.BLL.MG
+namespace ThirdPartyWager.Service.BLL
 {
     public interface IApiMGBLL
     {

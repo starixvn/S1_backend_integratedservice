@@ -143,7 +143,7 @@ namespace ThirdPartyWager.Service.BLL
                     var response = await _httpHelper.GetClient().PostAsync(config.WagerUrl, httpContent);
                     if (!response.IsSuccessStatusCode)
                     {
-                         throw new Exception($"StatusCode:{response.StatusCode} | Reason:{response.ReasonPhrase}");
+                        throw new Exception($"StatusCode:{response.StatusCode} | Reason:{response.ReasonPhrase}");
                     }
 
                     var json = await response.Content.ReadAsStringAsync();
@@ -186,7 +186,7 @@ namespace ThirdPartyWager.Service.BLL
                     var response = await _httpHelper.GetClient().PostAsync(apiurl, httpContent);
                     if (!response.IsSuccessStatusCode)
                     {
-                         throw new Exception($"StatusCode:{response.StatusCode} | Reason:{response.ReasonPhrase}");
+                        throw new Exception($"StatusCode:{response.StatusCode} | Reason:{response.ReasonPhrase}");
                     }
 
                     var json = await response.Content.ReadAsStringAsync();
@@ -211,7 +211,7 @@ namespace ThirdPartyWager.Service.BLL
             var result = new List<SettleBet>();
             var apiurl = $"{config.ApiUrl}/{config.WebSite}/queryCurrentBetsByLastUpdateDate";
             var agents = getAgents();
-            
+
             foreach (var type in _reportType)
             {
                 var page = 1;
@@ -244,8 +244,8 @@ namespace ThirdPartyWager.Service.BLL
 
                     var matchedList = queryReuslt.matched.resultList.Where(d => agents.Contains(d.agentId))?.Select(resettle => new SettleBet(resettle));
                     result.AddRange(matchedList);
-                    
-                    var unmatchedList = queryReuslt.unmatched.resultList.Where(d => agents.Contains(d.agentId))?.Select(resettle => new SettleBet(resettle));                  
+
+                    var unmatchedList = queryReuslt.unmatched.resultList.Where(d => agents.Contains(d.agentId))?.Select(resettle => new SettleBet(resettle));
                     result.AddRange(unmatchedList);
 
                     page++;
@@ -297,7 +297,7 @@ namespace ThirdPartyWager.Service.BLL
                             throw new Exception($"NineW CountSummaryTransactionByHourAsync fail. status is {queryReuslt.status}.");
                         }
 
-                        checkDataList.AddRange(queryReuslt.checkData);                       
+                        checkDataList.AddRange(queryReuslt.checkData);
                     }
                 }
 
@@ -354,8 +354,8 @@ namespace ThirdPartyWager.Service.BLL
                     var json = await response.Content.ReadAsStringAsync();
                     _logger.LogInformation(json);
                     var queryReuslt = _common.FromJson<QuerySettleBetHistoryObj<SummaryTransaction>>(json);
-                    
-                    
+
+
                     if (queryReuslt.status == "1014")//no data.
                     {
                         continue;
@@ -382,7 +382,7 @@ namespace ThirdPartyWager.Service.BLL
         {
             return _wagerDbClient.ExecuteAsync("Service_TpReport9W_Ins", data);
         }
-    
+
         private List<string> getAgents()
         {
             var data = new List<string>();

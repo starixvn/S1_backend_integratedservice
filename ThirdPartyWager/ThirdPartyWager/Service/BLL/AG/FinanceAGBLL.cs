@@ -34,7 +34,7 @@ namespace ThirdPartyWager.Service.BLL
             var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
             var _currencyId = tpCurrencyList.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
 
-            foreach(var item in reportData)
+            foreach (var item in reportData)
             {
                 dailyData.Add(new FincanceDailySummary()
                 {

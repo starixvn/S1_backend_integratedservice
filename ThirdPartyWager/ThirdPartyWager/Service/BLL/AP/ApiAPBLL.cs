@@ -15,7 +15,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Log2File _log2File;
         private readonly ILogger<ApiAPBLL> _logger;
         private readonly string _tpName = Tp.AP.ToString();
-        private readonly int _timeZone = 0;
 
         public ApiAPBLL(IServiceProvider provider)
         {

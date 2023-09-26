@@ -17,7 +17,7 @@ namespace ThirdPartyWager.Service.DAL
         {
             return await _mySqlClient.ExecuteAsync("Service_SabaOdds_Set_V3", sabaOdds);
         }
-        
+
         public IEnumerable<HotEventInfo> GetSabaOddsMatchId()
         {
             return _mySqlClient.Query<HotEventInfo>("Service_SabaOddsMatchId_Get_V3");

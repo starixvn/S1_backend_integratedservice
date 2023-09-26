@@ -17,6 +17,5 @@
         public string Currency { get; set; }
 
     }
-    
-}
 
+}
