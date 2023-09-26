@@ -31,6 +31,11 @@ namespace ThirdPartyWager.Service.BLL
             var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
             foreach (var siteData in siteList)
             {
+                if (siteData.SiteId == 1)
+                {
+                    continue;
+                }
+
                 var dictSetting = _thirdPartyBLL.GetThirdPartyBySite((int)Tp.SBO, siteData.SiteId);
                 var sboSetting = GetSboSetting(dictSetting);
                 var sboWagers = await _apiSboBll.GetBetListByModifyDateAsync(startTime, endTime, portfolio, sboSetting);
