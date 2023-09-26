@@ -16,7 +16,7 @@ namespace ThirdPartyWager.Service.DAL
         }
         public Task<int> InsertWager(Record data)
         {
-            return _wagerDbClient.ExecuteAsync("Service_TpWager_Fachai_Ins", new DynamicParameters(data));
+            return _wagerDbClient.ExecuteAsync("Service_TpWager_FaChai_Ins", new DynamicParameters(data));
         }
     }
 }

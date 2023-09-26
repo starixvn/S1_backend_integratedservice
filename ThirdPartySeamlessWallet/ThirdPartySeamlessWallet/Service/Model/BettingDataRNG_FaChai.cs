@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using Org.BouncyCastle.Asn1.Cms;
+using System.ComponentModel;
 using System.Text.Json.Serialization;
 
 namespace ThirdPartySeamlessWallet.Service.Model
@@ -28,7 +29,15 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class BettransRng_FaChai
     {
         public long SQ { get; set; }
+        public string RecordID { get; set; }
         public int TicketStatus { get; set; }
+        public string Currency { get; set; }
+        public decimal Bet { get; set; }
+        public decimal Win { get; set; }
+        public decimal NetWin { get; set; }
+        public string MemberAccount { get; set; }
+        public long Ts { get; set; }
+        public int GameID { get; set; }
     }
     public class CnacelData_FaChai
     {
@@ -53,6 +62,26 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public double MainPoints { get; set; }
         [JsonPropertyName("ErrorText")]
         public string ErrorText { get; set; }
+    }
+    public class FCWager
+    {
+        public decimal bet { get; set; }
+        public decimal validBet { get; set; }
+        public decimal prize { get; set; }
+        public decimal refund { get; set; }
+        public decimal winlose { get; set; }
+        public decimal commission { get; set; }
+        public decimal before { get; set; }
+        public decimal after { get; set; }
+        public decimal jptax { get; set; }
+        public decimal jppoints { get; set; }
+        public string recordID { get; set; }
+        public string account { get; set; }
+        public int gameID { get; set; }
+        public int gametype { get; set; }
+        public int jpmode { get; set; }
+        public DateTime bdate { get; set; }
+        public bool isBuyFeature { get; set; }
     }
     public enum FCErrorMessage
     {
