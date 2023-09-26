@@ -119,7 +119,7 @@ namespace ThirdPartySettleWorker.Workers
                             if (wager.WinLostAmount != betTransWinLossAmount)
                             {
                                 _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, isSuccess: false);
-                                break;
+                                continue;
                             }
 
                             _ = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
