@@ -19,8 +19,19 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal JPPrize { get; set; }
         public decimal NetWin { get; set; }
         public decimal RequireAmt { get; set; }
-        public DateTime GameDate { get; set; }
-        public DateTime CreateDate { get; set; }
+        private DateTime _gameDate { get; set; }
+        //FaChai傳過來的時區固定為-4轉為+0
+        public DateTime GameDate
+        {
+            get => _gameDate;
+            set => _gameDate = value.AddHours(4);
+        }
+        private DateTime _createDate { get; set; }
+        public DateTime CreateDate 
+        {
+            get => _createDate;
+            set => _createDate = value.AddHours(4);
+        }
         public long Ts { get; set; }
         public int TicketStatus { get; set; }
         public int TicketType { get; set; }

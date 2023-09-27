@@ -170,28 +170,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             var result = _faChakiBLL.Cancel(tpCustInfo, cancelData);
 
-            //var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp.FaChai, tpCustInfo.CurrencyId);
-
-            //if (result.Result == 0)
-            //{
-            //    if (afterAmount > 0 && tpCurrency.ExchangeRate > 0)
-            //    {
-            //        afterAmount /= tpCurrency.ExchangeRate;
-            //    }
-            //    else if (afterAmount == 0)
-            //    {
-            //        afterAmount = _tpCustInfoBLL.GetBalance((int)Tp.Skywind, cancelData.MemberAccount, (int)GameType.FaChai_RNG).Balance;
-            //    }
-
-            //    result.MainPoints = decimal.ToSingle(afterAmount);
-            //}
-            //else
-            //{
-            //    result.MainPoints = 0;
-            //}
-
-            //result.MainPoints = 0;
-
             return result;
         }
         public static string AesDecrypt(string str, string key)

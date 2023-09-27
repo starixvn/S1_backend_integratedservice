@@ -149,7 +149,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             long lTime = long.Parse(d + "0000");
             TimeSpan toNow = new TimeSpan(lTime);
             //轉成-4時區
-            DateTime dtResult = dtStart.Add(toNow).AddHours(-4);
+            DateTime dtResult = dtStart.Add(toNow);
             return dtResult;
         }
     }

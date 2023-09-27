@@ -30,7 +30,12 @@
         public int gameID { get; set; }
         public int gametype { get; set; }
         public int jpmode { get; set; }
-        public DateTime bdate { get; set; }
+        private DateTime _bdate { get; set; }
+        public DateTime bdate 
+        {
+            get => _bdate;
+            set => _bdate = value.AddHours(4);
+        }
         public bool isBuyFeature { get; set; }
     }
 }
