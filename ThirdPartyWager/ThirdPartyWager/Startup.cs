@@ -81,7 +81,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerTFGService>();
             services.AddSingleton<WagerIMService>();
             services.AddSingleton<WagerFaChaiService>();
-
+            services.AddSingleton<WagerPegasusService>();
             services.AddOptionListByDB<ServerInfo>("Admin_ServerInfoList_Get");
             services.AddOptionListByDB<dynamic>("Service_TpWagerTimer_Get", new { TpId = 1, Type = 1 }, DataBase.Wager);
             services.AddOptionListByDB<dynamic>("Tp_Get", new { TpId = 1 }, DataBase.Main);
@@ -263,6 +263,10 @@ namespace ThirdPartyWager
             services.AddSingleton<ApiFaChaiBLL>();
             services.AddSingleton<WagerFaChaiBLL>();
 
+            //Pegasus
+            services.AddSingleton<ApiPegasusBLL>();
+            services.AddSingleton<WagerPegasusBLL>();
+            
             //Worker
             services.AddHostedService<WagerDG>();
             services.AddHostedService<WagerRedoDG>();
@@ -350,10 +354,10 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceSPRIBE>();
             services.AddHostedService<WagerFaChai>();
             services.AddHostedService<WagerRedoFaChai>();
-
+  			services.AddHostedService<WagerPegasus>();
+  			
             // health check use
             services.AddControllers();
-
             /*******************closed tp*************************/
             //services.AddHostedService<WagerOneGaming>();
             //services.AddHostedService<WagerRedoOneGaming>();
