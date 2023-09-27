@@ -1,0 +1,146 @@
+﻿using Newtonsoft.Json;
+using Serilog.Context;
+using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySettleWorker.Model.Exceptions;
+using ThirdPartySettleWorker.Model.Interfaces;
+
+namespace ThirdPartySettleWorker.Workers
+{
+    public class SexyWorker : BackgroundService, ISettleWorker
+    {
+        public Tp Tp => Tp.Sexy;
+        private Timer _timerLC;
+
+        private readonly SettledBLL _settledBLL;
+        private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly TpUnSettledBLL _tpUnSettledBLL;
+        private readonly ILogger<SexyWorker> _logger;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly string _tpName;
+
+        public SexyWorker(IServiceProvider provider)
+        {
+            _settledBLL = provider.GetRequiredService<SettledBLL>();
+            _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
+            _logger = provider.GetRequiredService<ILogger<SexyWorker>>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _tpName = Enum.GetName(typeof(Tp), Tp);
+            LogContext.PushProperty("TP", _tpName);
+        }
+
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            _timerLC = new Timer(DoSettleSexyWork, GameType.Sexy_LiveCasino, TimeSpan.Zero, TimeSpan.Zero);
+            return Task.CompletedTask;
+        }
+
+        public override Task StopAsync(CancellationToken cancellationToken)
+        {
+            _timerLC?.Change(Timeout.Infinite, 0);
+            return Task.CompletedTask;
+        }
+
+        private void DoSettleSexyWork(object state)
+        {
+            LogContext.PushProperty("TP", _tpName);
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+
+            var forContinue = false;
+            var isError = false;
+            var gameType = (GameType)state;
+            var tpId = (int)Tp.Sexy;
+            var category = TpCategory.LiveCasino;
+            var logName = "SexyDoSettleLiveCasinoWork";
+
+            try
+            {
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
+                if (!tpUnsettleList.Any())
+                {
+                    throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
+                }
+
+                forContinue = tpUnsettleList.Count() == 200;
+                foreach (var tpUnsettle in tpUnsettleList)
+                {
+                    try
+                    {
+                        _logger.LogWarning($"tpUnsettle TransId : {tpUnsettle.TransId}");
+                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>("Service_BettransLC_AWC_Sexy_Unsettle_Get",
+                            new {}, DataBase.Main);
+                        _logger.LogWarning($"Sexy Settle Data :{JsonConvert.SerializeObject(settleData)}");
+                        var unSettledData = settleData.Where(x => x.TransId == tpUnsettle.TransId).ToList().FirstOrDefault();
+                        _logger.LogWarning($"unsettledList TransId : {unSettledData.TransId} & Account {unSettledData.TransId} ");
+                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(tpId, unSettledData.Account);
+
+                        var stake = unSettledData.Stake;
+                        var validBet = unSettledData.ValidBet;
+                        var winLostAmount = unSettledData.WinLostAmount;
+                        
+                        var betRecordInfo = new BetRecordInfo
+                        {
+                            TpId = tpId,
+                            Stake = stake,
+                            ValidBet = validBet,
+                            WinlostAmount = winLostAmount,
+                            TransId = unSettledData.TransId,
+                            GameType = gameType,
+                            TpUserName = unSettledData.Account,
+                            SettledTime = unSettledData.SettleTime,
+                            TransTime = unSettledData.TransTime,
+                            SettlementType = unSettledData.TicketStatus == 0 ? SettlementType.UnSettled : SettlementType.SettledForValid,
+                            TicketStatus = (TicketStatus)unSettledData.TicketStatus,
+                            GameID = unSettledData.GameId,
+                        };
+                        
+                        _ = _settledBLL.Settled(tpCustInfo, betRecordInfo, category);
+
+                        Task.Run(() =>
+                        {
+                            _settledBLL.SetSettleFlag_BettransLC_AWC_Sexy(unSettledData.TransId);
+                            _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, true);
+                        });
+
+                    }
+                    catch (Exception ex)
+                    {
+                        Task.Run(() =>
+                        {
+                            _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, isSuccess: false);
+                        });
+                        isError = true;
+                        _logger.LogError(ex, $"exMessage:{ex.Message}");
+                    }
+                }
+
+            }
+            catch (UnsettleNotFoundException ex)
+            {
+                _logger.LogInformation(ex, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                isError = true;
+            }
+            finally
+            {
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(5);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                }
+
+                _timerLC?.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
+
+    }
+}

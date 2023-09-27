@@ -75,7 +75,8 @@ builder.Services
     .AddHostedService<ENDWorker>()
     .AddHostedService<IMWorker>()
     .AddHostedService<SPRIBEWorker>()
-    .AddHostedService<SBSWWorker>();
+    .AddHostedService<SBSWWorker>()
+    .AddHostedService<SexyWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
