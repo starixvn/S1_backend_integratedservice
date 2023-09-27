@@ -77,7 +77,7 @@ builder.Services
     .AddHostedService<SBSWWorker>()
     .AddHostedService<PNGWorker>()
     .AddHostedService<DGWorker>()
-    .AddHostedService<FaChaiWorker>();
+    .AddHostedService<FaChaiWorker>()
     .AddHostedService<SexyWorker>();
 
 var app = builder.Build();
