@@ -96,7 +96,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             return new AMBSlotGetBalanceResponse()
             {
-                status = new AMBSlotStatusModel() { code = AMBErrorCode.Success, message = message },
+                status = new AMBSlotStatusModel() { code = AMBErrorCode.Success, message = "Success" },
                 data = new AMBSlotDataModelForBalance() { balance = tpCustBalance.Balance }
             };
         }
@@ -228,7 +228,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             return new AMBSlotBetResponse()
             {
-                status = new AMBSlotStatusModel() { code = AMBErrorCode.Success, message = message },
+                status = new AMBSlotStatusModel() { code = AMBErrorCode.Success, message = "Success" },
                 data = new AMBSlotDataModelForBetPayoutCancel()
                 {
                     username = request.username,
@@ -386,7 +386,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             return new AMBSlotPayoutResponse()
             {
-                status = new AMBSlotStatusModel() { code = AMBErrorCode.Success, message = message },
+                status = new AMBSlotStatusModel() { code = AMBErrorCode.Success, message = "Success" },
                 data = new AMBSlotDataModelForBetPayoutCancel()
                 {
                     username = request.username,
@@ -495,7 +495,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             return new AMBSlotCancelResponse()
             {
-                status = new AMBSlotStatusModel() { code = AMBErrorCode.Success, message = message },
+                status = new AMBSlotStatusModel() { code = AMBErrorCode.Success, message = "Success" },
                 data = new AMBSlotDataModelForBetPayoutCancel()
                 {
                     username = request.username,
