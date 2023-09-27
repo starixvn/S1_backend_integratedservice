@@ -1,12 +1,4 @@
-<<<<<<< HEAD
-﻿using System.Web;
-
-using Newtonsoft.Json;
-
-=======
 ﻿using Newtonsoft.Json;
-using System.Web;
->>>>>>> PRD
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
