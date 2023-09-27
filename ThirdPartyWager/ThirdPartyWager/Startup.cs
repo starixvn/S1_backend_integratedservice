@@ -276,6 +276,7 @@ namespace ThirdPartyWager
             //FaChai
             services.AddSingleton<ApiFaChaiBLL>();
             services.AddSingleton<WagerFaChaiBLL>();
+            services.AddSingleton<FinanceFaChaiBLL>();
 
             //Worker
             services.AddHostedService<WagerDG>();
@@ -364,6 +365,7 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceSPRIBE>();
             services.AddHostedService<WagerFaChai>();
             services.AddHostedService<WagerRedoFaChai>();
+            services.AddHostedService<FinanceFaChai>();
 
             /*******************closed tp*************************/
             //services.AddHostedService<WagerOneGaming>();
