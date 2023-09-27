@@ -262,6 +262,7 @@ namespace ThirdPartyWager
             //FaChai
             services.AddSingleton<ApiFaChaiBLL>();
             services.AddSingleton<WagerFaChaiBLL>();
+            services.AddSingleton<FinanceFaChaiBLL>();
 
             //Pegasus
             services.AddSingleton<ApiPegasusBLL>();
@@ -355,7 +356,8 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerFaChai>();
             services.AddHostedService<WagerRedoFaChai>();
   			services.AddHostedService<WagerPegasus>();
-  			
+            services.AddHostedService<FinanceFaChai>();
+
             // health check use
             services.AddControllers();
             /*******************closed tp*************************/
