@@ -35,7 +35,7 @@ namespace ThirdParty.FaChai
         {
             public string MemberAccount { get; set; }
             public int GameID { get; set; }
-            public string LanguageID { get; set; }
+            public int LanguageID { get; set; }
         }
         public class LoginResponse : FCResponse
         {
@@ -50,6 +50,12 @@ namespace ThirdParty.FaChai
         {
             public string Url { get; set; }
         }
+        public class GetDemoUrlRequest
+        {
+            public int GameID { get; set; }
+            public int LanguageID { get; set; }
+        }
+
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             ApiResult oApiResult = new ApiResult();
@@ -157,27 +163,45 @@ namespace ThirdParty.FaChai
 
             var siteInputs = siteConfigDic[tpCustInfo.SiteId];
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception();
+            string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
+            bool FunPlay = fun == "1" ? true : false;
+            string para = string.Empty;
 
-            var request = new LoginRequest()
+            if (FunPlay)
             {
-                MemberAccount = tpCustInfo.TpUserName,
-                GameID = Convert.ToInt32(gameId),
-                LanguageID = TpLangId
-            };
+                var request = new GetDemoUrlRequest()
+                {
+                    GameID = Convert.ToInt32(gameId),
+                    LanguageID = Convert.ToInt32(TpLangId)
+                };
+                para = JsonConvert.SerializeObject(request);
+            }
+            else
+            {
+                var request = new LoginRequest()
+                {
+                    MemberAccount = tpCustInfo.TpUserName,
+                    GameID = Convert.ToInt32(gameId),
+                    LanguageID = Convert.ToInt32(TpLangId)
+                };
+                para = JsonConvert.SerializeObject(request);
+            }
 
             var key = siteInputs["Key"];
-            var para = JsonConvert.SerializeObject(request);
             var Params = AesEncrypt(para, key);
             var Sign = ToMD5(para).ToLower();
 
             var dicP = new Dictionary<string, string>();
             dicP.Add("AgentCode", siteInputs["AgentCode"]);
-            dicP.Add("Currency", tpCustInfo.TpCurrencyId);
+            //試玩隨便寫死一個currency
+            dicP.Add("Currency", FunPlay ? "MYR" : tpCustInfo.TpCurrencyId);
             dicP.Add("Params", Params);
             dicP.Add("Sign", Sign);
 
+            string action = FunPlay ? "GetDemoUrl" : "Login";
+
             var result = HttpPostWithX509(
-                $"{siteInputs["ApiUrl"]}/Login",
+                $"{siteInputs["ApiUrl"]}/{action}",
                 dicP,
                 "application/x-www-form-urlencoded"
             );
