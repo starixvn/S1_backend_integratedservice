@@ -96,18 +96,14 @@ namespace ThirdPartySettleWorker.Workers
                             wager.ProgressiveWin *= tpCurrency.ExchangeRate;
                         }
 
-                        if (wager.Stake == unsettled.Stake && Math.Round(wager.WinLostAmount, 2) == unsettled.WinLostAmount)
+                        if (SettleAmountCheck(unsettled, wager))
                         {
-                            var stake = unsettled.Stake;
-                            var validBet = unsettled.Stake;
-                            var winLostAmount = unsettled.WinLostAmount;
-
                             var betRecordInfo = new BetRecordInfo
                             {
                                 TpId = (int)Tp,
-                                Stake = stake,
-                                ValidBet = validBet,
-                                WinlostAmount = winLostAmount,
+                                Stake = wager.Stake,
+                                ValidBet = wager.Stake,
+                                WinlostAmount = wager.WinLostAmount,
                                 TransId = unsettled.TransId,
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
@@ -238,6 +234,16 @@ namespace ThirdPartySettleWorker.Workers
             {
                 timerFish?.Change(dueTimeSpan, TimeSpan.Zero);
             }
+        }
+
+        private bool SettleAmountCheck(SettleData unsettled, SettleData_SG wager)
+        {
+            if (wager.GameId.StartsWith("C-", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            return wager.Stake == unsettled.Stake && Math.Round(wager.WinLostAmount, 2) == unsettled.WinLostAmount;
         }
     }
 }
