@@ -168,5 +168,25 @@ namespace ThirdPartySeamlessWallet.Service.Model
     }
 
     #endregion
+
+    #region SettleWorker
+
+    public class WagerPegasus
+    {
+        public string TransactionNo { get; set; }
+        public string PlayerName { get; set; }
+        public string GameID { get; set; }
+        public decimal WinLossAmount { get; set; }
+        public string RoundID { get; set; }
+        public DateTime BetTime { get; set; }
+        public decimal BetAmount { get; set; }
+        public decimal PayoutAmount { get; set; }
+        public decimal TaxAmount { get; set; }
+        public decimal ValidAmount { get; set; }
+        public string ExtraInfo { get; set; }
+        public DateTime CreateTime { get; set; }
+    }
+
+    #endregion
 }
 
