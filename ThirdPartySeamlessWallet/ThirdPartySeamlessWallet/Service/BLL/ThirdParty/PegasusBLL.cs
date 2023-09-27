@@ -457,5 +457,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return result;
         }
         
+        public int SetSettleFlag_TpWager_Pegasus(string spName, string transId)
+        {
+            var result = _wagerDbClient.Execute(spName, parameters: new DynamicParameters(new { TransId = transId }));
+            return result;
+        }
     }
 }

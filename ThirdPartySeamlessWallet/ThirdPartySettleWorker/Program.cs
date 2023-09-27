@@ -75,6 +75,7 @@ builder.Services
     .AddHostedService<ENDWorker>()
     .AddHostedService<IMWorker>()
     .AddHostedService<SPRIBEWorker>()
+    .AddHostedService<PegasusWorker>()
     .AddHostedService<SBSWWorker>();
 
 var app = builder.Build();

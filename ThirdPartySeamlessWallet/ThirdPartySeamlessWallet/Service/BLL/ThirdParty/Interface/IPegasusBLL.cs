@@ -15,4 +15,6 @@ public interface IPegasusBLL
     
     int Bonus_Pegasus(BonusRequest_Pegasus settle, string tpUserName, Tp tpId, GameType gameType,
         out BonusResultPegasus resp);
+    
+    int SetSettleFlag_TpWager_Pegasus(string spName, string transId);
 }
