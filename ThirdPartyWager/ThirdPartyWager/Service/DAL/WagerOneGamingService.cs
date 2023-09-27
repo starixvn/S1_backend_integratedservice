@@ -19,6 +19,5 @@ namespace ThirdPartyWager.Service.DAL
             using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
             return conn.Execute("Service_TpWagerPK_OneGaming_Ins", bet, commandType: CommandType.StoredProcedure);
         }
-
     }
 }
