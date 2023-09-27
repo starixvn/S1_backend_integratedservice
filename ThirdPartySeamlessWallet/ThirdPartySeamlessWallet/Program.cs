@@ -6,7 +6,6 @@ using ThirdPartySeamlessWallet.Core.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//test
 var excludesMessage = builder.Configuration.GetSection("ExcludesMessage").Get<string[]>();
 var excludesApiEndpoints = builder.Configuration.GetSection("ExcludesApiEndpoint").Get<string[]>();
 builder.Host.UseSerilog((context, Configuration) =>
