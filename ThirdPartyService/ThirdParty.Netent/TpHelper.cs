@@ -1,8 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
+
+using Newtonsoft.Json;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -78,7 +77,7 @@ namespace ThirdParty.Netent
             string countryCode = !string.IsNullOrEmpty(tpCountryCode.CountryCode) ? tpCountryCode.CountryCode : throw new Exception("CountryCode");
 
             bool mobile = appType != AppType.Desktop;
-            var siteName = ServerInfoProvider.getSiteName(tpCustInfo.SiteId);
+            var siteName = ServerInfoProvider.GetSiteName(tpCustInfo.SiteId);
 
             ApiResult oApiResult = new ApiResult();
 

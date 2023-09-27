@@ -1,12 +1,10 @@
-﻿using System;
-using System.Security.AccessControl;
-using ThirdPartySeamlessWallet.Service.Model.enums;
+﻿using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class BettingDataSports_SBO
     {
-        
+
     }
 
     public class SBOResult
@@ -26,7 +24,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int GameType { get; set; }
         public int Gpid { get; set; }
     }
-    
+
     public class SBOBalanceResponse
     {
         public string AccountName { get; set; }
@@ -34,7 +32,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int ErrorCode { get; set; }
         public string ErrorMessage { get; set; }
     }
-    
+
     public class SBODeductRequest
     {
         public string CompanyKey { get; set; }
@@ -52,7 +50,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int Gpid { get; set; }
         public int GameId { get; set; }
     }
-    
+
     public class SBODeductResponse
     {
         public string AccountName { get; set; }
@@ -61,7 +59,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string ErrorMessage { get; set; }
         public decimal BetAmount { get; set; }
     }
-    
+
     public class PlaceBetSportDto_SBO
     {
         public string CompanyKey { get; set; }
@@ -82,7 +80,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketStatus { get; set; }
         public GameType TpGameType { get; set; }
     }
-    
+
     public class SBOSettleRequest
     {
         public string CompanyKey { get; set; }
@@ -97,7 +95,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal CommissionStake { get; set; }
         public int Gpid { get; set; }
     }
-    
+
     public class SBOSettleResponse
     {
         public string AccountName { get; set; }
@@ -105,7 +103,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int ErrorCode { get; set; }
         public string ErrorMessage { get; set; }
     }
-    
+
     public class PayoutSportDto_SBO
     {
         public string Username { get; set; }
@@ -122,7 +120,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketStatus { get; set; }
         public GameType TpGameType { get; set; }
     }
-    
+
     public class SBOGetBetStatusRequest
     {
         public string CompanyKey { get; set; }
@@ -143,7 +141,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int ErrorCode { get; set; }
         public string ErrorMessage { get; set; }
     }
-    
+
     public class SBOGetBetStatusData
     {
         public string TransferCode { get; set; }
@@ -154,7 +152,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public DateTime? ResultTime { get; set; }
         public int TicketStatus { get; set; }
     }
-    
+
     public class SBOCancelRequest
     {
         public string CompanyKey { get; set; }
@@ -172,7 +170,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int ErrorCode { get; set; }
         public string ErrorMessage { get; set; }
     }
-    
+
     public class CancelSportDto_SBO
     {
         public string Username { get; set; }
@@ -182,7 +180,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int Status { get; set; }
         public GameType TpGameType { get; set; }
     }
-    
+
     public class SBORollbackRequest
     {
         public string CompanyKey { get; set; }
@@ -208,7 +206,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int Status { get; set; }
         public GameType TpGameType { get; set; }
     }
-    
+
     public class SBOLiveCoinTransactionRequest
     {
         public string CompanyKey { get; set; }
@@ -220,7 +218,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public SBOProductType ProductType { get; set; }
         public string Selection { get; set; }
     }
-    
+
     public class SBOLiveCoinTransactionResponse
     {
         public string AccountName { get; set; }
@@ -228,7 +226,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int ErrorCode { get; set; }
         public string ErrorMessage { get; set; }
     }
-    
+
     public class LiveCoinTransactionDto_SBO
     {
         public string CompanyKey { get; set; }
@@ -242,7 +240,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
     }
-    
+
     public class SBOLiveCoinTransactionData
     {
         public string Username { get; set; }

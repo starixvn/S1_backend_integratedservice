@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Builder;
+
 using Serilog;
 using Serilog.Exceptions;
+
 using ThirdPartySeamlessWallet;
 using ThirdPartySeamlessWallet.Core.Extensions;
 using ThirdPartySeamlessWallet.Service.Workers;
+
 using ThirdPartySettleWorker.Workers;
 
 var builder = WebApplication.CreateBuilder(args);

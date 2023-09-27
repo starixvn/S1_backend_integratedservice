@@ -1,6 +1,4 @@
-﻿using System;
-using Org.BouncyCastle.Asn1.Esf;
-using ThirdPartySeamlessWallet.Extensions;
+﻿using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model.Exceptions

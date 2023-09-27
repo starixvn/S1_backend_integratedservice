@@ -1,8 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -113,7 +109,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class WithHoldingListEbet
     {
         public long betType { get; set; }
-        
+
         public decimal withHolding { get; set; }
 
         public decimal refund { get; set; }
@@ -123,7 +119,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public int status { get; set; } // 1: 成功、0: 失败或没有金额需要返还、11:退款、13:退款失败
-        
+
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string withHoldingId { get; set; }
     }

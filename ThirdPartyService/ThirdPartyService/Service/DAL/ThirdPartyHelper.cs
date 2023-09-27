@@ -1,11 +1,14 @@
 ﻿using System.Collections.Concurrent;
-using ThirdPartyCore;
-using ThirdPartyService.Service.Model;
-using System.Reflection;
 using System.Data;
+using System.Reflection;
+
 using Serilog.Context;
+
+using ThirdPartyCore;
 using ThirdPartyCore.Model.enums;
+
 using ThirdPartyService.Service.Library;
+using ThirdPartyService.Service.Model;
 
 namespace ThirdPartyService.Service.DAL
 {
@@ -75,12 +78,12 @@ namespace ThirdPartyService.Service.DAL
         {
             return _mainDbClient.Query<ThirdPartyModel>("Service_TpList_WalletType_Get", new { WalletType = walletType, SiteId = siteId }, commandType: CommandType.StoredProcedure);
         }
-        
+
         public IEnumerable<ThirdPartyModel> GetThirdPartyByWalletTypeByCustId(int walletType, int siteId, int custId)
         {
             return _mainDbClient.Query<ThirdPartyModel>("Service_TpList_WalletType_ByCustId_Get_V2", new { WalletType = walletType, SiteId = siteId, CustId = custId }, commandType: CommandType.StoredProcedure);
         }
-        
+
         public BonusWallet CheckBonusWallet(int custid, int tpId)
         {
             return _mainDbClient.QueryFirst<BonusWallet>("Service_CustBonus_Check", new { CustId = custid, TpId = tpId });

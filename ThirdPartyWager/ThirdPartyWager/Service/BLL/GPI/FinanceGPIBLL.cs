@@ -8,7 +8,6 @@ namespace ThirdPartyWager.Service.BLL
     public class FinanceGPIBLL : ITpReportBLL
     {
         private readonly ILogger<FinanceGPIBLL> _logger;
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly CommonBLL _commonBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = 0;
@@ -19,7 +18,6 @@ namespace ThirdPartyWager.Service.BLL
         public FinanceGPIBLL(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceGPIBLL>>();
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _tpCurrencyList = _commonBLL.GetTpCurrencyList(_tpId);
@@ -35,17 +33,6 @@ namespace ThirdPartyWager.Service.BLL
 
             var _currencyId = _tpCurrencyList.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
             var getReportData = JsonConvert.DeserializeObject<List<FincanceDailySummary>>(JsonConvert.SerializeObject(reportData));
-
-            var data = getReportData.GroupBy(i => i.TpCurrencyId).Select(g => new
-            {
-                TpCurrencyId = g.Key,
-                Stake = g.Sum(s => s.Stake),
-                ValidBet = g.Sum(s => s.ValidBet),
-                Payout = g.Sum(s => s.Payout),
-                WinlostAmount = g.Sum(s => s.WinlostAmount),
-                ProgressiveBet = g.Sum(s => s.ProgressiveBet),
-                ProgressiveWin = g.Sum(s => s.ProgressiveWin),
-            });
 
             foreach (var item in getReportData)
             {

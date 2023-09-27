@@ -1,9 +1,4 @@
-﻿using Dapper;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ThirdPartySeamlessWallet.Service.Model;
+﻿using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.BLL

@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Text;
-using System.Threading.Tasks;
 using System.Web;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -21,18 +14,6 @@ namespace ThirdPartySeamlessWallet.Controllers
     [ApiController]
     public class V8Controller : ControllerBase
     {
-        #region Request
-
-        public class ApiReq
-        {
-            public string agent { get; set; }
-            public long timestamp { get; set; }
-            public string param { get; set; }
-            public string key { get; set; }
-        }
-
-        #endregion
-
         #region Response
 
         public class GetApiResp
@@ -52,39 +33,45 @@ namespace ThirdPartySeamlessWallet.Controllers
             public int code { get; set; }
             public decimal money { get; set; }
         }
+
         #endregion
 
-        private readonly ILogger<V8Controller> logger;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly TpCustInfoBLL tpCustInfoBLL;
-        private readonly BettingBLL bettingBLL;
-        private readonly Log2File log2File;
-        private readonly Tools tools;
-        private readonly Tp thisTp;
-        private readonly IHttpClientFactory clientFactory;
-        private readonly string apiUrl;
+        private readonly ILogger<V8Controller> _logger;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly BettingBLL _bettingBLL;
+        private readonly SettledBLL _settledBLL;
+        private readonly V8BLL _v8BLL;
+        private readonly Log2File _log2File;
+        private readonly Tools _tools;
+        private readonly Tp _thisTp;
+        private readonly IHttpClientFactory _clientFactory;
+        private readonly string _apiUrl;
+        private readonly int _gameType = (int)GameType.V8_Poker;
 
         public V8Controller(
             ILogger<V8Controller> logger,
-            ThirdPartyBLL thirdPartyBLL,
-            TpCustInfoBLL tpCustInfoBLL,
-            BettingBLL bettingBLL,
-            Log2File log2File,
-            Tools tools,
+            IServiceProvider provider,
             IHttpClientFactory clientFactory,
             IConfiguration configuration
         )
         {
-            this.logger = logger;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.tpCustInfoBLL = tpCustInfoBLL;
-            this.bettingBLL = bettingBLL;
-            this.log2File = log2File;
-            this.tools = tools;
-            thisTp = Tp.V8;
-            this.clientFactory = clientFactory;
-            apiUrl = configuration.GetValue<string>("TpService");
+            _logger = logger;
+            _log2File = provider.GetRequiredService<Log2File>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _bettingBLL = provider.GetRequiredService<BettingBLL>();
+            _settledBLL = provider.GetRequiredService<SettledBLL>();
+            _v8BLL = provider.GetRequiredService<V8BLL>();
+            _tools = provider.GetRequiredService<Tools>();
+            _thisTp = Tp.V8;
+            _apiUrl = configuration.GetValue<string>("TpService");
+            _clientFactory = clientFactory;
+
         }
+
+        #region Transfer
+
         public class ApiResult<TData>
         {
             public ApiResult()
@@ -114,7 +101,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/channelHandle")]
         public async Task<GetApiResp> channelHandleAsync([FromQuery] Dictionary<string, string> getReq)
         {
-            string logName = $"{thisTp}";
+            string logName = $"{_thisTp}";
             var subName = "";
             var json = JsonConvert.SerializeObject(getReq);
             var apiReq = JsonConvert.DeserializeObject<ApiReq>(json);
@@ -130,14 +117,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             };
             try
             {
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                var param = tools.AesDecrypt(HttpUtility.UrlEncode(apiReq.param), thirdPartySetting.TpSetting["Deskey"]);
+                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)_thisTp);
+                var param = _tools.AesDecrypt(HttpUtility.UrlEncode(apiReq.param), thirdPartySetting.TpSetting["Deskey"]);
                 var s = HttpUtility.ParseQueryString(param).Get("s");
 
                 if (s == "11")
                 {
                     subName = "notify";
-                    log2File.Info($"{json}\r\n{param}", $"{logName}_{subName}");
+                    _log2File.Info($"{json}\r\n{param}", $"{logName}_{subName}");
 
                     string account = HttpUtility.ParseQueryString(param).Get("account");
 
@@ -146,17 +133,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                         account = account[(account.IndexOf("_") + 1)..];
                     }
 
-                    var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, account);
+                    var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, account);
 
                     /*Transfer In*/
-                    var client = clientFactory.CreateClient();
+                    var client = _clientFactory.CreateClient();
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                     Dictionary<string, string> input = new Dictionary<string, string>();
                     input.Add("AllOut", null);
 
                     var fooJSON = JsonConvert.SerializeObject(new
                     {
-                        TpId = (int)thisTp,
+                        TpId = (int)_thisTp,
                         CustId = tpCustInfo.CustId,
                         Amount = 1,
                         direction = 2,
@@ -164,7 +151,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     });
 
                     var fooContent = new StringContent(fooJSON, Encoding.UTF8, "application/json");
-                    var myUrl = $"{apiUrl}Transfer";
+                    var myUrl = $"{_apiUrl}Transfer";
                     HttpResponseMessage response = await client.PostAsync(myUrl, fooContent);
                     ApiResult<TransferResult> oApiResult = new ApiResult<TransferResult>();
 
@@ -177,22 +164,22 @@ namespace ThirdPartySeamlessWallet.Controllers
                     if (oApiResult.ErrorCode == 0)
                     {
                         getApiResponse.d.code = 0;
-                        log2File.Info($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(oApiResult)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", $"{logName}_{subName}");
+                        _log2File.Info($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(oApiResult)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", $"{logName}_{subName}");
                     }
                     else
                     {
-                        log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(oApiResult)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", $"{logName}_{subName}");
+                        _log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(oApiResult)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", $"{logName}_{subName}");
                     }
 
                     return getApiResponse;
                 }
 
-                log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getApiResponse)}", $"{logName}_{subName}");
+                _log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getApiResponse)}", $"{logName}_{subName}");
                 return getApiResponse;
             }
             catch (Exception ex)
             {
-                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex.Message}", logName, ex);
+                _log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex.Message}", logName, ex);
             }
             return getApiResponse;
         }
@@ -201,7 +188,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]")]
         public async Task<GetBalanceResp> SeamlessWalletAsync([FromQuery] Dictionary<string, string> getReq)
         {
-            string logName = $"{thisTp}";
+            string logName = $"{_thisTp}";
             var subName = "";
             var json = JsonConvert.SerializeObject(getReq);
             var apiReq = JsonConvert.DeserializeObject<ApiReq>(json);
@@ -209,32 +196,32 @@ namespace ThirdPartySeamlessWallet.Controllers
             GetBalanceResp getBalanceResponse = new GetBalanceResp();
             getBalanceResponse.code = 999;
 
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            var param = tools.AesDecrypt(HttpUtility.UrlEncode(apiReq.param), thirdPartySetting.TpSetting["Deskey"]);
+            var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)_thisTp);
+            var param = _tools.AesDecrypt(HttpUtility.UrlEncode(apiReq.param), thirdPartySetting.TpSetting["Deskey"]);
             var s = HttpUtility.ParseQueryString(param).Get("s");
 
             if (s == "12")
             {
                 subName = "balance";
                 var account = HttpUtility.ParseQueryString(param).Get("account");
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, account);
+                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, account);
                 if (tpCheck == null || tpCheck.Locked)
                 {
                     getBalanceResponse.code = 4;
-                    log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}", $"{logName}_{subName}");
+                    _log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}", $"{logName}_{subName}");
                     return getBalanceResponse;
                 }
 
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, account);
+                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, account);
                 if (tpCustBalance != null)
                 {
                     getBalanceResponse.code = 0;
                     getBalanceResponse.money = tpCustBalance.Balance;
-                    log2File.Info($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}", $"{logName}_{subName}");
+                    _log2File.Info($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}", $"{logName}_{subName}");
                 }
                 else
                 {
-                    log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}", $"{logName}_{subName}");
+                    _log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}", $"{logName}_{subName}");
                 }
                 return getBalanceResponse;
             }
@@ -243,31 +230,31 @@ namespace ThirdPartySeamlessWallet.Controllers
                 subName = "TransferOut";
                 var account = HttpUtility.ParseQueryString(param).Get("account");
                 var money = HttpUtility.ParseQueryString(param).Get("money");
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, account);
+                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, account);
                 if (tpCheck == null || tpCheck.Locked)
                 {
                     getBalanceResponse.code = 4;
-                    log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}", $"{logName}_{subName}");
+                    _log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}", $"{logName}_{subName}");
                     return getBalanceResponse;
                 }
 
                 try
                 {
-                    var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, account);
+                    var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, account);
                     /*Transfer Out*/
 
-                    var client = clientFactory.CreateClient();
+                    var client = _clientFactory.CreateClient();
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                     var fooJSON = JsonConvert.SerializeObject(new
                     {
-                        TpId = (int)thisTp,
+                        TpId = (int)_thisTp,
                         CustId = tpCustInfo.CustId,
                         Amount = Convert.ToDecimal(money),
                         direction = 1
                     });
 
                     var fooContent = new StringContent(fooJSON, Encoding.UTF8, "application/json");
-                    var myUrl = $"{apiUrl}Transfer";
+                    var myUrl = $"{_apiUrl}Transfer";
                     HttpResponseMessage response = await client.PostAsync(myUrl, fooContent);
                     ApiResult<TransferResult> oApiResult = new ApiResult<TransferResult>();
 
@@ -280,32 +267,164 @@ namespace ThirdPartySeamlessWallet.Controllers
                     if (oApiResult.ErrorCode == 0)
                     {
                         getBalanceResponse.code = 0;
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, account);
+                        var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, account);
                         getBalanceResponse.money = tpCustBalance.Balance;
-                        log2File.Info($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}\r\n{JsonConvert.SerializeObject(oApiResult)}", $"{logName}_{subName}");
+                        _log2File.Info($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}\r\n{JsonConvert.SerializeObject(oApiResult)}", $"{logName}_{subName}");
                     }
                     else if (oApiResult.Data.Difference != 0)
                     {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, account);
+                        var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, account);
                         getBalanceResponse.code = 1005;
                         getBalanceResponse.money = tpCustBalance.Balance;
-                        log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}\r\n{JsonConvert.SerializeObject(oApiResult)}", $"{logName}_{subName}");
+                        _log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}\r\n{JsonConvert.SerializeObject(oApiResult)}", $"{logName}_{subName}");
                     }
                     else
                     {
-                        log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}\r\n{response.ReasonPhrase}", $"{logName}_{subName}");
+                        _log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}\r\n{response.ReasonPhrase}", $"{logName}_{subName}");
                     }
                     return getBalanceResponse;
                 }
                 catch (Exception ex)
                 {
-                    log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}\r\n{ex.Message}", $"{logName}_{subName}", ex);
+                    _log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}\r\n{ex.Message}", $"{logName}_{subName}", ex);
                     return getBalanceResponse;
                 }
             }
 
-            log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}", $"{logName}_{subName}");
+            _log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}", $"{logName}_{subName}");
             return getBalanceResponse;
         }
+
+        #endregion
+
+        #region Seamless
+
+        [HttpGet]
+        [Route("[controller]/seamlesswallet")]
+        public dynamic SeamlessWalletAsync([FromQuery] ApiReq getReq)
+        {
+            string logName = $"{_thisTp}";
+            GetApiResp getApiResponse = new GetApiResp
+            {
+                s = 0,
+                m = "/channelHandle",
+                d = new info
+                {
+                    code = 999
+                }
+            };
+            try
+            {
+                if (string.IsNullOrEmpty(getReq.agent))
+                {
+                    getApiResponse.d.code = (int)ErrorCodeOfV8.Agent;
+                    _log2File.Error($"Agent Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+
+                if (string.IsNullOrEmpty(getReq.param))
+                {
+                    getApiResponse.d.code = (int)ErrorCodeOfV8.Decryption;
+                    _log2File.Error($"Decryption Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+
+                var param = DecryptParam(getReq.param);
+
+                if (string.IsNullOrEmpty(param))
+                {
+                    getApiResponse.d.code = (int)ErrorCodeOfV8.Decryption;
+                    _log2File.Error($"Decryption Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+
+                var query = HttpUtility.ParseQueryString(param);
+                var json = JsonConvert.SerializeObject(query.AllKeys.ToDictionary(y => y, y => query[y]));
+                _log2File.Info($"{json}", logName);
+                var req = JsonConvert.DeserializeObject<CommonP>(json);
+                getApiResponse.s = req.s;
+
+                if (!Enum.IsDefined(typeof(SubTypeOfV8), req.s))
+                {
+                    getApiResponse.d.code = (int)ErrorCodeOfV8.Subtype;
+                    _log2File.Error($"Subtype Error {req.s}", logName);
+                    return getApiResponse;
+                }
+
+                var verifyKey = false;
+                if (!string.IsNullOrEmpty(getReq.key))
+                {
+                    verifyKey = CheckKey(getReq.key, getReq.timestamp);
+                }
+                if (!verifyKey)
+                {
+                    getApiResponse.d.code = (int)ErrorCodeOfV8.Md5;
+                    _log2File.Error($"CheckKey Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+
+                switch (req.s)
+                {
+                    case (int)SubTypeOfV8.GetBalance:
+                        return _v8BLL.GetBalance(json);
+                    case (int)SubTypeOfV8.RequestBet:
+                        return _v8BLL.PlaceBet(getReq, json);
+                    case (int)SubTypeOfV8.ReturnBalance:
+                        return _v8BLL.Payout(getReq, json);
+                    case (int)SubTypeOfV8.GetOrderStatus:
+                        return _v8BLL.GetOrderStatus(getReq, json);
+                    case (int)SubTypeOfV8.CancelBet:
+                        return _v8BLL.CancelBet(getReq, json);
+                    default:
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                _log2File.Error($"{ex.Message}", logName, ex);
+            }
+
+            _log2File.Error($"Unknow Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
+            return getApiResponse;
+        }
+
+        private string DecryptParam(string getReq)
+        {
+            var param = getReq;
+
+            try
+            {
+                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)_thisTp);
+                var deskey = thirdPartySetting.TpSetting["Deskey_SW"];
+
+                param = _tools.AesDecrypt(HttpUtility.UrlEncode(getReq), deskey);
+
+                _logger.LogInformation(param);
+            }
+            catch (Exception)
+            {
+                _logger.LogError($"DecryptParam Error\r\nkey={getReq}");
+            }
+
+            return param;
+        }
+
+        private bool CheckKey(string key, long timestamp)
+        {
+            var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)_thisTp);
+            var md5key = thirdPartySetting.TpSetting["Md5key_SW"];
+            var agent = thirdPartySetting.TpSetting["Agent_SW"];
+
+            var encryptKey = _tools.ToMD5($"{agent}{timestamp}{md5key}").ToLower();
+            if (key.ToLower() == encryptKey)
+            {
+                return true;
+            }
+
+            _logger.LogError($"CheckKey Error\r\nkey={key}\r\nencryptKey={encryptKey}");
+            return false;
+        }
+
+        #endregion
     }
 }

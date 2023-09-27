@@ -11,7 +11,7 @@ namespace ThirdPartyWager.Workers
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly WagerYGGBLL _wagerYGGBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-       
+
         private readonly string _tpName = Tp.YGG.ToString();
 
         private Timer _timer;

@@ -1,12 +1,10 @@
 ﻿using Serilog.Context;
-using System;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.BLL.Nextspin;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Workers.Nextspin
+namespace ThirdPartyWager.Workers
 {
     public class FinanceNextspin : BackgroundService
     {

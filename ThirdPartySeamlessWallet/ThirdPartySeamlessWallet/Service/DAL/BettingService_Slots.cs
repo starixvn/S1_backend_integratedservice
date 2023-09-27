@@ -1,10 +1,14 @@
-﻿using Dapper;
+﻿using System.Data;
+using System.Globalization;
+
+using Dapper;
+
 using MySql.Data.MySqlClient;
+
 using Newtonsoft.Json;
-using System.Data;
+
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-using System.Globalization;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
@@ -138,11 +142,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        _mainDbClient.CommitAndDisposeConnection(conn,trans);
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     }
                     else
                     {
-                        _mainDbClient.RollbackAndDisposeConnection(conn,trans);
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                     }
                 }
             }

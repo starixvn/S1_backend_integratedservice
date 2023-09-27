@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ThirdPartySeamlessWallet.IntegrationTest.Models
+﻿namespace ThirdPartySeamlessWallet.IntegrationTest.Models
 {
     public class TCGRecord
     {
         public string username { get; set; }
-        public string ref_no { get; set; }     
-        public decimal amount { get; set; }  
+        public string ref_no { get; set; }
+        public decimal amount { get; set; }
         public string TransType { get; set; }
     }
 

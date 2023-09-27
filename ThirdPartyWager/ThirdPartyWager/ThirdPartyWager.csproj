@@ -13,39 +13,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Storage\**" />
+    <Content Remove="Storage\**" />
+    <EmbeddedResource Remove="Storage\**" />
+    <None Remove="Storage\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Dapper" Version="2.0.123" />
     <PackageReference Include="MySql.Data" Version="8.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="Serilog.AspNetCore" Version="6.0.0" />
     <PackageReference Include="Serilog.Exceptions" Version="8.3.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Storage\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Storage\PT\CNY.p12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\IDR.p12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\INR.p12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\MYR.p12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\THB.p12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\USD.p12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\VND.p12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
 </Project>

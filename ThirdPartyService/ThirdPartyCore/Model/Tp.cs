@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Text;
+﻿using System.ComponentModel;
+
 using ThirdPartyCore.Model.enums;
 
 namespace ThirdPartyCore.Model
@@ -30,6 +28,7 @@ namespace ThirdPartyCore.Model
         public string Remarks { set; get; }
         public int Category { set; get; }
         public int DepositId { set; get; }
+        public bool IsDepositId { set; get; }
     }
 
     public class TransferResult

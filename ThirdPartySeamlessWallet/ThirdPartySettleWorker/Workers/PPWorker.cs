@@ -1,15 +1,9 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Serilog.Context;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -86,7 +80,7 @@ namespace ThirdPartySettleWorker.Workers
                         var stake = settleData.Stake;
                         var validBet = settleData.Stake;
                         var winLostAmount = settleData.WinLostAmount;
-                        
+
                         if (gametype == GameType.PP_LiveCasino)
                         {
                             if (winLostAmount >= 0 && winLostAmount < stake)
@@ -98,7 +92,7 @@ namespace ThirdPartySettleWorker.Workers
                                 validBet = Math.Abs(winLostAmount);
                             }
                         }
-                        
+
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
                         var betRecordInfo = new BetRecordInfo
                         {
@@ -122,7 +116,7 @@ namespace ThirdPartySettleWorker.Workers
                             betRecordInfo.TicketStatus = TicketStatus.Draw;
                         }
                         // check refund
-                        if(settleData.TicketStatus > 0)
+                        if (settleData.TicketStatus > 0)
                         {
                             betRecordInfo.TicketStatus = TicketStatus.Refund;
                         }
@@ -140,7 +134,7 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         Task.Run(() =>
                         {
-                            _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gametype, transId,false);
+                            _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gametype, transId, false);
                         });
                         isError = true;
                         _logger.LogError(ex1, $"{logName} exMessage:{ex1.Message} || TransId : {transId}");

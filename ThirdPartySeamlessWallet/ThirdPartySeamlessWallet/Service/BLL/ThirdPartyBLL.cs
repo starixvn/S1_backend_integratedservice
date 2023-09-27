@@ -1,5 +1,7 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
+
+using Microsoft.Extensions.Caching.Memory;
+
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -125,7 +127,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 }
                 return gameType;
             }
-            
+
             var casino = GetGameCasinoWithCache((int)Tp.PP);
             var check = casino.FirstOrDefault(x => x.GameId == gameId);
             if (check == null)
@@ -200,7 +202,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     if (int.TryParse(gameId, out int tempGameId))
                     {
                         gameType = GameType.PP_LiveCasino;
-                        
+
                         // Spaceman 
                         if (tempGameId == 1302)
                         {
@@ -208,7 +210,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         }
                         return gameType;
                     }
-                    
+
                     var pp = GetGameCasinoWithCache(tpId);
                     var checkPP = pp.FirstOrDefault(x => x.GameId == gameId);
                     if (checkPP == null)

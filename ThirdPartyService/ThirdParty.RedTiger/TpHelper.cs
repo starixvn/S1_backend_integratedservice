@@ -1,8 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
+
+using Newtonsoft.Json;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -71,13 +70,13 @@ namespace ThirdParty.RedTiger
             string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
             string GameUrl = ApiUrl;
             ApiUrl = $"{ApiUrl}/ua/v1/{CasinoKey}/{Ua2Token}";
-            
+
             var tpId = (int)TpEnum.RedTiger;
             var tpCountryCode = TpCustInfoProvider.GetTpCurrencyCodeByCurrencyId(tpId, tpCustInfo.TpCurrencyId);
             string countryCode = !string.IsNullOrEmpty(tpCountryCode.CountryCode) ? tpCountryCode.CountryCode : throw new Exception("CountryCode");
 
             bool mobile = appType != AppType.Desktop;
-            var siteName = ServerInfoProvider.getSiteName(tpCustInfo.SiteId);
+            var siteName = ServerInfoProvider.GetSiteName(tpCustInfo.SiteId);
 
             ApiResult oApiResult = new ApiResult();
 

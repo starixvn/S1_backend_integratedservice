@@ -16,24 +16,26 @@ namespace CommonService.Controllers
         private readonly Log2File log2File;
         private readonly CustInfoBLL custInfoBLL;
         private readonly SelLangBLL selLangBLL;
-        private readonly IOptions<Dictionary<string, Dictionary<string, string>>> supportOTPConfig;
-
-        public OTPSMSController(OTPSMSBLL sOTPSMSBLL, CustInfoBLL custInfoBLL, Log2File log2File, SelLangBLL selLangBLL, NxCloudSMSBLL nxCloudSMSBLL, IOptions<Dictionary<string, Dictionary<string, string>>> supportOTPConfig)
+        private readonly Dictionary<string, SMSSupportConfig> _supportOTPConfig;
+        
+        public OTPSMSController(IServiceProvider provider)
         {
-            this.sOTPSMSBLL = sOTPSMSBLL;
-            this.nxCloudSMSBLL = nxCloudSMSBLL;
-            this.custInfoBLL = custInfoBLL;
-            this.log2File = log2File;
-            this.selLangBLL = selLangBLL;
-            this.supportOTPConfig = supportOTPConfig;
+            sOTPSMSBLL = provider.GetRequiredService<OTPSMSBLL>();
+            nxCloudSMSBLL = provider.GetRequiredService<NxCloudSMSBLL>();
+            custInfoBLL = provider.GetRequiredService<CustInfoBLL>();
+            log2File = provider.GetRequiredService<Log2File>();
+            selLangBLL = provider.GetRequiredService<SelLangBLL>();
+            var configBLL = provider.GetRequiredService<ConfigBLL>();
+            _supportOTPConfig = configBLL.GetConfigValuesBySiteName<SMSSupportConfig>("SMSSupport");
         }
+        
         private string GetSupportOTP(CustInfoProfile custInfo)
         {
-            var otpConfig = supportOTPConfig.Value[custInfo.SiteName];
-            var supportOtp = otpConfig["Default"]; 
-            if(otpConfig.ContainsKey(custInfo.AreaCode))
-                otpConfig.TryGetValue(custInfo.AreaCode, out supportOtp);
-            return supportOtp;
+            var otpConfig = _supportOTPConfig[custInfo.SiteName];
+            var supportOTP = otpConfig.SMSSupport["Default"];
+            if(otpConfig.SMSSupport.ContainsKey(custInfo.AreaCode))
+                otpConfig.SMSSupport.TryGetValue(custInfo.AreaCode, out supportOTP);
+            return supportOTP;
         }
         public class Req
         {

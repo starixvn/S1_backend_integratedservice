@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Text;
+using System.Web;
+
+using Newtonsoft.Json;
+
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-using System.Text;
-using System.Web;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
-using System.Linq;
-using Newtonsoft.Json;
 using ThirdPartyCore.Model.TpBetRecordExtend;
-using ThirdPartyCore.Extensions;
 
 namespace ThirdParty.SG
 {
@@ -118,7 +117,7 @@ namespace ThirdParty.SG
                     UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("ticketTime", DateTime.MinValue),
                     Stake = (decimal)wagerDetail.GetValueOrDefault("betAmount") * tpCurrency.ExchangeRate,
                     WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("winLoss") * tpCurrency.ExchangeRate,
-                },       
+                },
                 _ => new BaseDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
@@ -197,8 +196,8 @@ namespace ThirdParty.SG
                 _ => gameCode,
             };
         }
-         
- 
+
+
 
 
     }

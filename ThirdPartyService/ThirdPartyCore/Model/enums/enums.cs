@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Text;
+﻿using System.ComponentModel;
 
 namespace ThirdPartyCore.Model.enums
 {
@@ -165,13 +162,6 @@ namespace ThirdPartyCore.Model.enums
         Day,
         Week,
         Month
-    }
-
-    public enum SiteId
-    {
-        Nova88 = 1,
-        Goal123 = 2,
-        Bwing = 3
     }
 
     public enum DeviceType

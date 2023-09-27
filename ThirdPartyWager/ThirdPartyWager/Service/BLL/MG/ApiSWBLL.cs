@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 
-namespace ThirdPartyWager.Service.BLL.MG
+namespace ThirdPartyWager.Service.BLL
 {
     public class ApiSWBLL : IApiSWBLL
     {
@@ -12,7 +12,7 @@ namespace ThirdPartyWager.Service.BLL.MG
         private readonly ILogger<ApiSWBLL> _logger;
         private readonly IConfiguration _configuration;
         private readonly HttpClient _client;
-        
+
         public ApiSWBLL(IServiceProvider provider, IConfiguration configuration)
         {
             _configuration = configuration;
@@ -20,9 +20,8 @@ namespace ThirdPartyWager.Service.BLL.MG
             _logger = provider.GetRequiredService<ILogger<ApiSWBLL>>();
             var httpHelper = provider.GetRequiredService<HttpHelper>();
             _client = httpHelper.GetClientWithHandler(CreateHandler());
-            
-            
         }
+
         public async Task<bool> MgUpdateBalance(MGUpdatebalanceRequest request)
         {
             try
@@ -40,7 +39,7 @@ namespace ThirdPartyWager.Service.BLL.MG
                 var response = await _client.SendAsync(httpRequest);
                 return response.IsSuccessStatusCode;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, $"mg sw updatebalance failed, request{JsonConvert.SerializeObject(request)}");
                 return false;

@@ -6,7 +6,6 @@ namespace ThirdPartyWager.Service.DAL
 {
     public class ThirdPartyHelper
     {
-
         private readonly MySqlClient _mainDbClient;
         private readonly MySqlClient _reportDbClient;
         private readonly MySqlClient _wagerDbClient;

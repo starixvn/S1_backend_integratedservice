@@ -1,8 +1,9 @@
 using Serilog;
 using Serilog.Exceptions;
-using ThirdPartyService.Service.Worker;
+
 using ThirdPartyService;
 using ThirdPartyService.Extensions;
+using ThirdPartyService.Service.Worker;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +30,7 @@ if (!string.IsNullOrEmpty(serviceType) && serviceType.Equals("worker", StringCom
     builder.Services
         .AddHostedService<WorkerService>()
         .AddHostedService<SBSWCreateMemberWorker>();
-        //.AddHostedService<GetBalanceWorker>();
+    //.AddHostedService<GetBalanceWorker>();
 }
 
 var app = builder.Build();

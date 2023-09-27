@@ -1,10 +1,14 @@
-﻿using FluentAssertions;
+﻿using System.Data;
+
+using FluentAssertions;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using NSubstitute;
-using System.Data;
+
 using ThirdPartySeamlessWallet.Core.Extensions;
 using ThirdPartySeamlessWallet.IntegrationTest.Models;
 using ThirdPartySeamlessWallet.IntegrationTest.Stubs;

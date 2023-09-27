@@ -8,7 +8,6 @@ namespace ThirdPartyWager.Service.BLL
     public class FinanceRedTigerBLL : ITpReportBLL
     {
         private readonly ILogger<FinanceRedTigerBLL> _logger;
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly CommonBLL _commonBLL;
         private readonly ApiRedTigerBLL _apiRedTigerBLL;
         private readonly DateTimeHelper _dateTimeHelper;
@@ -17,7 +16,6 @@ namespace ThirdPartyWager.Service.BLL
         public FinanceRedTigerBLL(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceRedTigerBLL>>();
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _apiRedTigerBLL = provider.GetRequiredService<ApiRedTigerBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
@@ -88,7 +86,7 @@ namespace ThirdPartyWager.Service.BLL
             if (error != null && error != "nodata")
             {
                 var msg = "THIRD_PARTY_ERROR";
-                _logger.LogError($"{msg}\r\nSiteId=\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
                 SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
                 throw systemException;
             }

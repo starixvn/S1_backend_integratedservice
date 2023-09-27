@@ -13,15 +13,11 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiSimplePlayBLL _apiSimplePlayBLL;
         private readonly CommonBLL _commonBLL;
         private readonly WagerSimplePlayService _wagerSimplePlayService;
-        private readonly TpUnsettleService _tpUnsettleService;
         private readonly ILogger<WagerSimplePlayBLL> _logger;
-        private readonly MySqlClient _wagerDbClient;
-
 
         private readonly int _tpId = (int)Tp.SimplePlay;
         private readonly int _timeZone = 8;
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
-
 
         public WagerSimplePlayBLL(IServiceProvider provider)
         {
@@ -29,10 +25,8 @@ namespace ThirdPartyWager.Service.BLL
             _apiSimplePlayBLL = provider.GetRequiredService<ApiSimplePlayBLL>();
             _wagerSimplePlayService = provider.GetRequiredService<WagerSimplePlayService>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
-            _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _logger = provider.GetRequiredService<ILogger<WagerSimplePlayBLL>>();
-            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
         }
 
         public async Task<bool> ExecWagerWorker(int type, int timeRange)

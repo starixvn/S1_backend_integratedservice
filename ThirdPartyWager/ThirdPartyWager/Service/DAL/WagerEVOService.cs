@@ -35,5 +35,10 @@ namespace ThirdPartyWager.Service.DAL
         {
             return _mainDbClient.QueryAsync<SettleData>("Service_BettransLC_EVO_Unsettle_Get", null);
         }
+
+        public Task<IEnumerable<SettleData>> GetTransIdList(string transId)
+        {
+            return _wagerDbClient.QueryAsync<SettleData>("Service_TpWagerLC_EVO_TransId_Get", new DynamicParameters(new { _TransIds = transId }));
+        }
     }
 }

@@ -1,12 +1,14 @@
-﻿using Serilog.Context;
+﻿using Newtonsoft.Json;
+
+using Serilog.Context;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
-using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
-using Newtonsoft.Json;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace ThirdPartySettleWorker.Workers;
 
