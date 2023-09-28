@@ -46,3 +46,18 @@ public class PegasusGameLaunchData
     /// </summary>
     public string link { get; set; }
 }
+
+public class PegasusGameHistoryResult
+{
+    public int code { get; set; }
+    public string message { get; set; }
+    public PegasusGameHistory Data { get; set; }
+}
+
+public class PegasusGameHistory
+{
+    /// <summary>
+    /// 网址/链结
+    /// </summary>
+    public string Url { get; set; }
+}
