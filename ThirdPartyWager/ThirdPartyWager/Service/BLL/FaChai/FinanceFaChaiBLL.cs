@@ -11,6 +11,12 @@ namespace ThirdPartyWager.Service.BLL
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = 0;
         private readonly int _tpId = (int)Tp.FaChai;
+        public FinanceFaChaiBLL(IServiceProvider provider)
+        {
+            _commonBLL = provider.GetRequiredService<CommonBLL>();
+            _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+        }
+
         public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
         {
             var dailyData = new List<FincanceDailySummary>();
