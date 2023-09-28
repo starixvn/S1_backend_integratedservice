@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-using FluentAssertions;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,7 +7,6 @@ using NSubstitute;
 using NUnit.Framework;
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.BLL.MG;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 

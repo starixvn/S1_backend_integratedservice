@@ -44,7 +44,7 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     msg = "NO_DATA";
                     _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                    return true;
+                    return false;
                 }
 
                 // insert wager to db

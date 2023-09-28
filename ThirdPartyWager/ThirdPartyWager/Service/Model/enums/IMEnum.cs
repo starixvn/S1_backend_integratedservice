@@ -6,12 +6,12 @@ public enum IMProductWalletEnum
     /// SPRIBE
     /// </summary>
     IMSlot = 101,
-    
+
     /// <summary>
     /// IMSB
     /// </summary>
     IMSportsbook = 301,
-    
+
     /// <summary>
     /// ESportsbull
     /// </summary>

@@ -77,7 +77,9 @@
         SG_Fish = 31,
         SBO_Sports = 77,
         SBO_VirtualSports = 81,
+        V8_Poker = 42,
         PT_RNG = 46,
+        V8_Poker_None = 47, // without revenue games
         PT_LiveCasino = 48,
         YGG_RNG = 14,
         AMB_RNG = 76,
@@ -97,7 +99,6 @@
         IM_Sports = 103,
         FaChai_RNG = 106
     }
-
 
     public enum SettlementType
     {

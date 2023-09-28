@@ -49,7 +49,7 @@ namespace ThirdPartyWager.Service.BLL
 
             if (_siteNameConfigs.TryGetValue(siteName, out var siteConfig))
             {
-                return siteConfig.Config.TryGetValue(configKey, out var configValue) 
+                return siteConfig.Config.TryGetValue(configKey, out var configValue)
                     ? JsonConvert.DeserializeObject<TItem>(configValue) : defaultItem;
             }
 

@@ -17,12 +17,12 @@ namespace ThirdPartyWager.Service.Model
         /// <summary>
         /// 玩家所属的商户集团名称
         /// </summary>
-        public string TopOrg { get;set; }
+        public string TopOrg { get; set; }
 
         /// <summary>
         /// 商戶加密Key，新的值，以前沒有，升級 Api 後第三方需要提供
         /// </summary>
-        public string Key {get; set; }
+        public string Key { get; set; }
 
         public string ContentType => "application/x-www-form-urlencoded";
 

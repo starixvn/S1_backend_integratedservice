@@ -4,7 +4,7 @@ namespace ThirdPartyCore
 {
     public interface IServerInfoProvider
     {
-        string getSiteName(int siteId);
+        string GetSiteName(int siteId);
 
         DefTpCurrencyId GetDefaultTpCurrencyIdByTpId(int siteId, int tpId);
     }

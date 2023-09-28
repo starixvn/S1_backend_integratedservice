@@ -3,7 +3,7 @@ using System.Text;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 
-namespace ThirdPartyWager.Service.BLL.TFG
+namespace ThirdPartyWager.Service.BLL
 {
     public class ApiTFGBLL
     {

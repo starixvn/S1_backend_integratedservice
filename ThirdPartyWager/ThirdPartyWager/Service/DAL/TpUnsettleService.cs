@@ -13,13 +13,13 @@ namespace ThirdPartyWager.Service.DAL
         {
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
-        
+
         public int InsertTpUnsettle(Tp tp, GameType gameType, string transId, DateTime? partitionTime = null)
         {
             return _mainDbClient.Execute("Service_TpUnsettle_Ins_V2",
                 new { TpId = (int)tp, GameType = (int)gameType, TransId = transId, PartitionTime = partitionTime });
         }
-        
+
         public int BatchInsertTpUnsettle(BatchTpUnsettleModel input)
         {
             return _mainDbClient.Execute("Service_TpUnsettle_Batch_Ins",
@@ -31,7 +31,5 @@ namespace ThirdPartyWager.Service.DAL
                     _PartitionTime = input.PartitionTime
                 });
         }
-            
-
     }
 }

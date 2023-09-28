@@ -83,10 +83,10 @@ namespace ThirdPartyWager.Service.BLL
                     _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                     return true;
                 }
-                
+
                 var groups = dataWager.GetAllBetDetailsForTimeIntervalResponse.BetDetailList.BetDetail.GroupBy(i =>
                     (i.Username, i.GameID));
-                
+
                 // insert wager to db
                 foreach (var group in groups)
                 {

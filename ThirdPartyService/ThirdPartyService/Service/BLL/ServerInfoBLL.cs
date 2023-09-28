@@ -57,7 +57,7 @@ namespace ThirdPartyService.Service.BLL
             return _serverInfoService.GetServiceInfoList();
         }
 
-        public string getSiteName(int siteId)
+        public string GetSiteName(int siteId)
         {
             var data = GetServerInfo(siteId);
             return data.SiteName;

@@ -11,16 +11,18 @@ namespace CommonService.Service.BLL
 {
     public class IovationBLL
     {
-        private readonly IOptions<IovationServicesConfig> iovationServicesConfig;
+        private readonly Dictionary<string, IovationServicesConfig> _iovationServicesConfig;
         private readonly IovationService iovationService;
         private readonly HttpHelper httpHelper;
-
-        public IovationBLL(IOptions<IovationServicesConfig> iovationServicesConfig, IovationService iovationService, HttpHelper httpHelper)
+        
+        public IovationBLL(IServiceProvider provider)
         {
-            this.iovationServicesConfig = iovationServicesConfig;
-            this.iovationService = iovationService;
-            this.httpHelper = httpHelper;
+            httpHelper = provider.GetRequiredService<HttpHelper>();
+            iovationService = provider.GetRequiredService<IovationService>();
+            var configBLL = provider.GetRequiredService<ConfigBLL>();
+            _iovationServicesConfig = configBLL.GetConfigValuesBySiteName<IovationServicesConfig>("Iovation");
         }
+        
         public async Task<ApiResult<IovationCheckResult>> IovationChecksAsync(IovationChecksRequest iovationChecksRequest)
         {
             var apiResult = new ApiResult<IovationCheckResult>();
@@ -33,8 +35,10 @@ namespace CommonService.Service.BLL
                 { "transactionInsight",iovationChecksRequest.transactionInsight},
                 { "type",iovationChecksRequest.type}
             };
-
-            var Authtoken = $"{iovationServicesConfig.Value.SubscriberID}/{iovationServicesConfig.Value.SubscriberAccount}:{iovationServicesConfig.Value.Password}";
+            
+            //Iovation沒有分組別，故直接使用第一筆資料。
+            var iovationData = _iovationServicesConfig.FirstOrDefault();
+            var Authtoken = $"{iovationData.Value.SubscriberID}/{iovationData.Value.SubscriberAccount}:{iovationData.Value.Password}";
             var bytes = Encoding.GetEncoding("utf-8").GetBytes(Authtoken);
             //編成 Base64 字串
             var Base64Authtoken = Convert.ToBase64String(bytes);
@@ -45,7 +49,7 @@ namespace CommonService.Service.BLL
             };
 
             var parameters = JsonConvert.SerializeObject(sendIovationChecks);
-            using var result = await httpHelper.HttpPost1Async(iovationServicesConfig.Value.ResourceURL, Authorization, parameters, "application/json");
+            using var result = await httpHelper.HttpPost1Async(iovationData.Value.ResourceURL, Authorization, parameters, "application/json");
             var resultResp = JsonConvert.DeserializeObject<IovationResult>(await result.Content.ReadAsStringAsync());
             var resultIns = iovationService.IovationResultIns(resultResp);
 

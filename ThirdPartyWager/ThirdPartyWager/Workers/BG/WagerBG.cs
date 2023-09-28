@@ -10,6 +10,7 @@ public class WagerBG : BackgroundService
     private readonly ILogger<WagerBG> _logger;
     private readonly WagerBGBLL _wagerBGBLL;
     private readonly CommonBLL _commonBLL;
+    private readonly ThirdPartyBLL _thirdPartyBLL;
 
     private readonly int tpId = (int)Tp.BG;
     private readonly WagerTimerType tpType = WagerTimerType.Wager;
@@ -20,13 +21,13 @@ public class WagerBG : BackgroundService
     private readonly int needQuickTime = 20; // in minutes
     private Timer _timer;
 
-    public WagerBG(ILogger<WagerBG> logger,
-                       WagerBGBLL wagerBGBLL,
-                       CommonBLL commonBll)
+
+    public WagerBG(IServiceProvider provider)
     {
-        _logger = logger;
-        _wagerBGBLL = wagerBGBLL;
-        _commonBLL = commonBll;
+        _logger = provider.GetRequiredService<ILogger<WagerBG>>();
+        _wagerBGBLL = provider.GetRequiredService<WagerBGBLL>();
+        _commonBLL = provider.GetRequiredService<CommonBLL>();
+        _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -42,12 +43,13 @@ public class WagerBG : BackgroundService
         try
         {
             isFast = false;
-            var siteList = _commonBLL.GetSiteList().Where(x => x.SiteId != 4 && x.SiteId != 5);
+            var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+            var serverList = _commonBLL.GetSiteList();
             var TpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
             var quick = false;
             foreach (var siteInfo in siteList)
             {
-                var currencyList = JsonSerializer.Deserialize<IEnumerable<int>>(siteInfo.CurrencyList);
+                var currencyList = JsonSerializer.Deserialize<IEnumerable<int>>(serverList.First(x => x.SiteId == siteInfo.SiteId).CurrencyList);
                 foreach (var item in TpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
                 {
                     quick = await _wagerBGBLL.ExecWagerWorker(siteInfo.SiteId, item.TpCurrencyId, tpType, timeRange, needQuickTime);

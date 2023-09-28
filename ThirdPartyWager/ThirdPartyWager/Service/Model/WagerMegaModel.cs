@@ -32,13 +32,6 @@
         public string jsonrpc { get; set; }
     }
 
-    //public class SettleDataMega : ReportListMega
-    //{
-    //    public long TransId { get; set; }
-    //    public long StartAt { get; set; }
-    //    public int AddSecond { get; set; }
-    //}
-
     public class SettleDataMega
     {
         public string loginId { get; set; }
@@ -89,7 +82,6 @@
             }
         }
     }
-
 
     public class SummaryMega
     {

@@ -57,6 +57,7 @@
 
             return timeCast;
         }
+
         public TimeCast GetTimeByHour(int period, int utc, string format, DateTime timerTime, int addEndSecond = -1)
         {
             var current = timerTime;
@@ -87,6 +88,7 @@
 
             return timeCast;
         }
+
         public TimeCast GetTimeByDay(int period, int utc, string format, DateTime timerTime, int utcMinute = 0, int addEndSecond = -1)
         {
             var current = timerTime;
@@ -117,7 +119,7 @@
 
             return timeCast;
         }
-        
+
         public TimeCast GetTimeByMinuteRevert(int period, int timezone, string format, DateTime timerTime, int utcMinute = 0)
         {
             var current = timerTime;
