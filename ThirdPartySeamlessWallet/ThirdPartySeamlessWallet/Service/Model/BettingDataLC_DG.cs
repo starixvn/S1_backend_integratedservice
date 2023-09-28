@@ -20,5 +20,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public new int GameId { get; set; }
         public new string Account { get; set; }
         public decimal Amount { get; set; }
+        public new TransferType TicketType { get; set; }
     }
 }
