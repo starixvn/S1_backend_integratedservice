@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json.Linq;
 using System.Text;
-using System.Text.Json.Nodes;
+using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Model;
@@ -13,11 +12,13 @@ namespace ThirdParty.Pegasus
     internal class TpHelper : ThirdPartyHelperBase
     {
         private const string ContentType = "application/json";
-        private readonly Dictionary<int, Dictionary<string, string>> siteConfigDic;
-
+        private readonly Dictionary<int, Dictionary<string, string>> _siteConfigDic;
+        private readonly IReadOnlyDictionary<string, string> _gameNameList;
+        
         public TpHelper(IServiceProvider provider)
         {
-            siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(TpEnum.Pegasus.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(TpEnum.Pegasus.ToString());
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList(32).ToDictionary(d => d.AppId, d => d.Name);
         }
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -33,7 +34,7 @@ namespace ThirdParty.Pegasus
             var homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
             var gameCode = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
 
-            var siteInputs = siteConfigDic[tpCustInfo.SiteId];
+            var siteInputs = _siteConfigDic[tpCustInfo.SiteId];
             var config = new PegasusConfig(siteInputs, tpCustInfo.TpCurrencyId);
 
             var token = ApplyToken(tpCustInfo);
@@ -81,7 +82,35 @@ namespace ThirdParty.Pegasus
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var siteInputs = _siteConfigDic[tpCustInfo.SiteId];
+            var config = new PegasusConfig(siteInputs, tpCustInfo.TpCurrencyId);
+            
+            var request = new
+            {
+                merchantSecretKey = config.SecretKey,
+                merchantID = config.MerchantID,
+                TransactionNo = getBetDetail.TransId,
+                version = "v1"
+            };
+
+            var dicRequest = FromJson<Dictionary<string, string>>(ToJson(request));
+            var parameters = string.Join("&", dicRequest.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+            var gameUrl = config.ApiUrl + "/game-records/screenshot-history/link";
+            var json = HttpGet(gameUrl, parameters, ContentType);
+            var result = FromJson<PegasusGameHistoryResult>(json);
+            
+            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                DetailUrl = result.Data.Url,
+                TpCurrency = new TpCurrency()
+                {
+                    ExchangeRate = tpCustInfo.ExchangeRate,
+                    TpCurrencyId = tpCustInfo.TpCurrencyId,
+                },
+            };
+            
         }
 
         public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -91,7 +120,28 @@ namespace ThirdParty.Pegasus
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerRng_Pegasus_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
+            if (!wagerDetail.Any())
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+
+            var gameID = wagerDetail.GetValueOrDefault("GameId")?.ToString();
+            var result = new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = gameID,
+                Game = GetGameName(gameID),
+                RefNo = "",
+                Title = tpGameType.TypeName,
+                MatchID = wagerDetail.GetValueOrDefault("RoundID")?.ToString(),
+                BetType = string.Empty,
+                BetChoice = string.Empty,
+                Result = string.Empty,
+                DeviceType = DeviceType.None,
+                IP = string.Empty,
+            };
+            
+            return result;
         }
 
         #region Transfer Methods
@@ -109,6 +159,20 @@ namespace ThirdParty.Pegasus
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
+        }
+
+        #endregion
+
+        #region private
+
+        private string GetGameName(string gameCode)
+        {
+            if (!_gameNameList.TryGetValue(gameCode, out var name))
+            {
+                return string.Empty;
+            }
+            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
+            return dic.TryGetValue("en", out var result) ? result : string.Empty;
         }
 
         #endregion
