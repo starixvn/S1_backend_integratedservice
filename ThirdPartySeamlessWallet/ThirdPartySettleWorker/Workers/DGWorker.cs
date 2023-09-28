@@ -100,12 +100,12 @@ namespace ThirdPartySettleWorker.Workers
                                 SettlementType = SettlementType.SettledForValid,
                                 GameID = wager.GameId.ToString(),
                             };
-                            
+                            _logger.LogWarning($"DG Wager:{wager.TransId}, tpUnSettle:{tpUnsettle.TransId},betRecordInfo:{betRecordInfo.TransId}");
                             var winLossAmountComparison = DG_WinLossAmountComparison(wager.WinLostAmount, settleData);
-                            _logger.LogWarning($"DG WinLossAmount Comparison TransId : {wager.TransId} - WagerWinLossAmount {wager.WinLostAmount}, betTrans : {winLossAmountComparison.WinLossAmount}");
+                            _logger.LogWarning($"DG WinLossAmount Comparison TransId : {betRecordInfo.TransId} - WagerWinLossAmount {wager.WinLostAmount:F2}, betTrans : {winLossAmountComparison.WinLossAmount}");
                             if (!winLossAmountComparison.Comparison)
                             {
-                                _logger.LogWarning($"DG WinLossAmount Comparison Incompatible TransId : {wager.TransId} - WagerWinLossAmount {wager.WinLostAmount}, betTrans : {winLossAmountComparison.WinLossAmount}");
+                                _logger.LogWarning($"DG WinLossAmount Comparison Incompatible TransId : {betRecordInfo.TransId} - WagerWinLossAmount {wager.WinLostAmount:F2}, betTrans : {winLossAmountComparison.WinLossAmount}");
                                 continue;
                             }
 
@@ -172,6 +172,7 @@ namespace ThirdPartySettleWorker.Workers
             var totalBetAmount = betAmount.Sum();
             var totalWinLossAmount = winLossAmount.Sum();
             var totalWinLossAmountComparison = totalWinLossAmount - totalBetAmount;
+            _logger.LogWarning($"DG_WinLossAmountComparison : totalBetAmount:{totalBetAmount:F2} ,totalWinLossAmount:{totalWinLossAmount:F2} ,totalWinLossAmountComparison:{totalWinLossAmountComparison:F2}");
 
             var result = new WinLossAmountModel()
             {
