@@ -126,7 +126,7 @@ namespace ThirdParty.Pegasus
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
             }
 
-            var gameID = wagerDetail.GetValueOrDefault("GameId")?.ToString();
+            var gameID = wagerDetail.GetValueOrDefault("GameID")?.ToString();
             var result = new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
                 GameID = gameID,
