@@ -1,10 +1,7 @@
-using Newtonsoft.Json;
 using Serilog.Context;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -37,13 +34,7 @@ namespace ThirdPartySettleWorker.Workers
             _timerLC = new Timer(DoSettleDGWork, GameType.DG_LiveCasino, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
-
-        public override Task StopAsync(CancellationToken cancellationToken)
-        {
-            _timerLC?.Change(Timeout.Infinite, 0);
-            return Task.CompletedTask;
-        }
-
+        
         private void DoSettleDGWork(object state)
         {
             LogContext.PushProperty("TP", _tpName);
@@ -69,7 +60,7 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<BettingDataLC_DG>("Service_BettransLC_DG_Get_V2",
+                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData_DG>("Service_BettransLC_DG_Get_V2",
                             new { tpUnsettle.TransId }, DataBase.Main);
                         var wager = _settledBLL.GetSettle_TpWagerDG(tpUnsettle.TransId);
                         if (wager != null)
@@ -110,16 +101,12 @@ namespace ThirdPartySettleWorker.Workers
                                 GameID = wager.GameId.ToString(),
                             };
                             
-                            var betTransAmount = settleData.Select(t => t.Amount).ToList();
-                            var betTransWinLossAmount = betTransAmount[0] - betTransAmount[1];
-                            
-
-                            //比對Bettrans及TpWager的輸贏金額
-                            _logger.LogWarning($"DG WinLossAmount Comparison Wager : {wager.WinLostAmount}, betTrans : {betTransWinLossAmount}");
-                            if (wager.WinLostAmount != betTransWinLossAmount)
+                            var winLossAmountComparison = DG_WinLossAmountComparison(wager.WinLostAmount, settleData);
+                            _logger.LogWarning($"DG WinLossAmount Comparison TransId : {wager.TransId} - WagerWinLossAmount {wager.WinLostAmount}, betTrans : {winLossAmountComparison.WinLossAmount}");
+                            if (!winLossAmountComparison.Comparison)
                             {
-                                _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, isSuccess: false);
-                                break;
+                                _logger.LogWarning($"DG WinLossAmount Comparison Incompatible TransId : {wager.TransId} - WagerWinLossAmount {wager.WinLostAmount}, betTrans : {winLossAmountComparison.WinLossAmount}");
+                                continue;
                             }
 
                             _ = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
@@ -168,5 +155,33 @@ namespace ThirdPartySettleWorker.Workers
                 _timerLC?.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
+        
+        #region private
+        
+        private class WinLossAmountModel
+        {
+            public bool Comparison { get; set; }
+            public decimal WinLossAmount { get; set; }
+        }
+        private WinLossAmountModel DG_WinLossAmountComparison(decimal wagerWinLossAmount, IEnumerable<SettleData_DG> settleData)
+        {
+            var settleDataDgs = settleData.ToList();
+            var betAmount = settleDataDgs.Where(t => t.TicketType == TransferType.PlaceBet).Select(t => t.Amount);
+            var winLossAmount = settleDataDgs.Where(t => t.TicketType == TransferType.Payout).Select(t => t.Amount);
+            
+            var totalBetAmount = betAmount.Sum();
+            var totalWinLossAmount = winLossAmount.Sum();
+            var totalWinLossAmountComparison = totalWinLossAmount - totalBetAmount;
+
+            var result = new WinLossAmountModel()
+            {
+                Comparison = wagerWinLossAmount == totalWinLossAmountComparison,
+                WinLossAmount = totalWinLossAmountComparison
+            };
+            
+            return result;
+        }
+        
+        #endregion
     }
 }
