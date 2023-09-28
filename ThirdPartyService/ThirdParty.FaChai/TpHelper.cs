@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Text;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordExtend;
@@ -18,10 +19,7 @@ namespace ThirdParty.FaChai
         {
             siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>((TpEnum.FaChai).ToString());
         }
-        public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
-        {
-            throw new NotImplementedException();
-        }
+        
 
         public class CreateMemberRequest
         {
@@ -54,6 +52,11 @@ namespace ThirdParty.FaChai
         {
             public int GameID { get; set; }
             public int LanguageID { get; set; }
+        }
+
+        public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
+        {
+            throw new NotImplementedException();
         }
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -154,7 +157,25 @@ namespace ThirdParty.FaChai
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_FaChai_Get", new { recordID = betRecordInfo.TransId }, DataBase.Wager);
+            if (detail == null)
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = detail.GetStringValue("gameID"),
+                Game = tpGameType.TypeName,
+                RefNo = string.Empty,
+                Title = tpGameType.TypeName,
+                MatchID = betRecordInfo.TransId,
+                BetType = detail.GetStringValue("gametype"),
+                BetChoice = string.Empty,
+                Result = string.Empty,
+                DeviceType = DeviceType.None,
+                IP = string.Empty,
+            };
         }
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
