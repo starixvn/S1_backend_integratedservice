@@ -405,7 +405,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     result.ErrorCode = (int)ErrorCode.TokenInvalid;
                     result.ErrorDescription = ErrorCode.TokenInvalid.ToString();
-                    logger.LogError($"{Content}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex.ToString()}");
+                    logger.LogError($"{Content}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex}");
                 }
 
                 var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, TpUserName);
@@ -926,7 +926,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpGet]
         [Route("[controller]/{sitename}/api/v1/{game}/wallet/balance")]
-        public async Task<dynamic> GetBalanceOfMiniAsync(string sitename, string game, string payload, string signature)
+        public dynamic GetBalanceOfMini(string sitename, string game, string payload, string signature)
         {
             string logName = $"{_tpName}_GetBalanceOfMini";
             Response.StatusCode = (int)HttpStatusCode.INVALID_DATA;
@@ -1604,32 +1604,14 @@ namespace ThirdPartySeamlessWallet.Controllers
         private string DecrypeRequest(string payload, string sitename)
         {
             var serverInfo = thirdPartyBLL.GetServerInfoBySiteName(sitename);
-            var siteId = (serverInfo != null) ? serverInfo.SiteId : 1;
+            if (serverInfo == null || serverInfo.SiteId <= 0)
+            {
+                throw new Exception("DecrypeRequest SiteName empty");
+            }
+            var siteId = serverInfo.SiteId;
             var thirdPartySetting = thirdPartyBLL.GetThirdPartyBySite((int)thisTp, siteId);
             string SecretKey = thirdPartySetting.TpSetting["SecretKey_MiniGame"];
             return tools.AesDecryptV2(payload, SecretKey);
-        }
-
-        private SplitTransactionReferenceId splitTransactionReferenceId(string transactionReferenceId)
-        {
-            var split = transactionReferenceId.Split("_");
-            var p = new SplitTransactionReferenceId();
-            if (split.Count() == 2)
-            {
-                p.GameId = split[0];
-                p.SessionId = split[1];
-                return p;
-
-            }
-
-            if (split.Count() == 3)
-            {
-                p.GameId = split[0];
-                p.SessionId = split[1];
-                p.UserReferenceId = split[2];
-                return p;
-            }
-            throw new Exception("splitTransactionReferenceId failed");
         }
 
         #endregion
