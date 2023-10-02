@@ -37,12 +37,6 @@ namespace ThirdPartySettleWorker.Workers
             return Task.CompletedTask;
         }
 
-        public override Task StopAsync(CancellationToken cancellationToken)
-        {
-            _timerLC?.Change(Timeout.Infinite, 0);
-            return Task.CompletedTask;
-        }
-
         private void DoSettleSexyWork(object state)
         {
             LogContext.PushProperty("TP", _tpName);
@@ -68,12 +62,12 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        _logger.LogWarning($"tpUnsettle TransId : {tpUnsettle.TransId}");
-                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>("Service_BettransLC_AWC_Sexy_Unsettle_Get",
-                            new {}, DataBase.Main);
-                        _logger.LogWarning($"Sexy Settle Data :{JsonConvert.SerializeObject(settleData)}");
+                        _logger.LogWarning($"tpUnsettle TransId : {tpUnsettle.TransId}",logName);
+                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData_Sexy>("Service_BettransLC_AWC_Sexy_Unsettle_Get_V2",
+                            new { TransId = tpUnsettle.TransId }, DataBase.Main);
+                        _logger.LogWarning($"Sexy Settle Data :{JsonConvert.SerializeObject(settleData)}",logName);
                         var unSettledData = settleData.Where(x => x.TransId == tpUnsettle.TransId).ToList().FirstOrDefault();
-                        _logger.LogWarning($"unsettledList TransId : {unSettledData.TransId} & Account {unSettledData.TransId} ");
+                        _logger.LogWarning($"unsettledList TransId : {unSettledData.TransId} & Account {unSettledData.TransId}",logName);
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(tpId, unSettledData.Account);
 
                         var stake = unSettledData.Stake;
@@ -93,7 +87,7 @@ namespace ThirdPartySettleWorker.Workers
                             TransTime = unSettledData.TransTime,
                             SettlementType = unSettledData.TicketStatus == 0 ? SettlementType.UnSettled : SettlementType.SettledForValid,
                             TicketStatus = (TicketStatus)unSettledData.TicketStatus,
-                            GameID = unSettledData.GameId,
+                            GameID = unSettledData.GameId
                         };
                         
                         _ = _settledBLL.Settled(tpCustInfo, betRecordInfo, category);
@@ -112,7 +106,7 @@ namespace ThirdPartySettleWorker.Workers
                             _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, isSuccess: false);
                         });
                         isError = true;
-                        _logger.LogError(ex, $"exMessage:{ex.Message}");
+                        _logger.LogError(ex, $"exMessage:{ex.Message}" , logName);
                     }
                 }
 
