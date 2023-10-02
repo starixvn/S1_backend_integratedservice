@@ -262,7 +262,7 @@ namespace ThirdPartyWager
             //Pegasus
             services.AddSingleton<ApiPegasusBLL>();
             services.AddSingleton<WagerPegasusBLL>();
-            
+            services.AddSingleton<FinancePegasusBLL>();
             
             //Worker
             services.AddHostedService<WagerDG>();
@@ -350,6 +350,7 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceIM>();
             services.AddHostedService<FinanceSPRIBE>();
             services.AddHostedService<WagerPegasus>();
+            services.AddHostedService<FinancePegasus>();
             
             /*******************closed tp*************************/
             //services.AddHostedService<WagerOneGaming>();

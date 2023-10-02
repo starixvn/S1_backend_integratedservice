@@ -10,7 +10,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly HttpHelper _httpHelper;
         private readonly Common _common;
         private readonly Log2File _log2File;
-        private readonly ILogger<ApiPegasusBLL> _logger;
         private readonly string _tpName = Tp.Pegasus.ToString();
 
         public ApiPegasusBLL(IServiceProvider provider)
@@ -18,10 +17,9 @@ namespace ThirdPartyWager.Service.BLL
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
-            _logger = provider.GetRequiredService<ILogger<ApiPegasusBLL>>();
         }
 
-        public async Task<WagerData_Pegasus> GetBetListByTime(string apiUrl, string secretKey, string merchantId, string startTime, string endTime, int page)
+        public async Task<WagerData_Pegasus<PegasusData>> GetBetListByTime(string apiUrl, string secretKey, string merchantId, string startTime, string endTime, int page)
         {
             // param
             var request = new
@@ -41,10 +39,32 @@ namespace ThirdPartyWager.Service.BLL
          
             // request
             var r = await DoHttpClientAsync(url, parameters);
-            var result = JsonConvert.DeserializeObject<WagerData_Pegasus>(r);
+            var result = JsonConvert.DeserializeObject<WagerData_Pegasus<PegasusData>>(r);
             return result;
         }
        
+        public async Task<WagerData_Pegasus<WagerSummary_Pegasus>> GetBetSummaryByTime(string apiUrl, string secretKey, string merchantId, string startTime, string endTime)
+        {
+            // param
+            var request = new
+            {
+                MerchantSecretKey = secretKey,
+                MerchantID = merchantId,
+                StartTime = startTime,
+                EndTime = endTime,
+                version = "v1",
+            };
+            
+            var dicRequest = _common.FromJson<Dictionary<string, string>>(_common.ToJson(request));
+            var parameters = string.Join("&", dicRequest.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var url = apiUrl + "/game-records/report";
+         
+            // request
+            var r = await DoHttpClientAsync(url, parameters);
+            var result = JsonConvert.DeserializeObject<WagerData_Pegasus<WagerSummary_Pegasus>>(r);
+            return result;
+        }
+        
         private async Task<string> DoHttpClientAsync(string url, string param)
         {
             _log2File.InsertRequestLog(_tpName, url, param, "1");
