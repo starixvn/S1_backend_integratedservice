@@ -61,13 +61,12 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         // SexyLC沒有TpWager，都是從BettransLC取得資料並且同一張表更新。
                         var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData_Sexy>("Service_BettransLC_AWC_Sexy_Unsettle_Get_V2",
-                            new { TransId = tpUnsettle.TransId }, DataBase.Main);
-                        var unSettledData = settleData.Where(x => x.TransId == tpUnsettle.TransId).ToList().FirstOrDefault();
-                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(tpId, unSettledData.Account);
+                            new { TransId = tpUnsettle.TransId }, DataBase.Main).FirstOrDefault();
+                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(tpId, settleData.Account);
 
-                        var stake = unSettledData.Stake;
-                        var validBet = unSettledData.ValidBet;
-                        var winLostAmount = unSettledData.WinLostAmount;
+                        var stake = settleData.Stake;
+                        var validBet = settleData.ValidBet;
+                        var winLostAmount = settleData.WinLostAmount;
                         
                         var betRecordInfo = new BetRecordInfo
                         {
@@ -75,20 +74,21 @@ namespace ThirdPartySettleWorker.Workers
                             Stake = stake,
                             ValidBet = validBet,
                             WinlostAmount = winLostAmount,
-                            TransId = unSettledData.TransId,
+                            TransId = settleData.TransId,
                             GameType = gameType,
-                            TpUserName = unSettledData.Account,
-                            SettledTime = unSettledData.SettleTime,
-                            TransTime = unSettledData.TransTime,
-                            SettlementType = unSettledData.TicketStatus == 0 ? SettlementType.UnSettled : SettlementType.SettledForValid,
-                            TicketStatus = (TicketStatus)unSettledData.TicketStatus,
-                            GameID = unSettledData.GameId
+                            TpUserName = settleData.Account,
+                            SettledTime = settleData.SettleTime,
+                            TransTime = settleData.TransTime,
+                            SettlementType = settleData.TicketStatus == 0 ? SettlementType.UnSettled : SettlementType.SettledForValid,
+                            TicketStatus = (TicketStatus)settleData.TicketStatus,
+                            GameID = settleData.GameId
                         };
+                        
+                        _ = _settledBLL.Settled(tpCustInfo, betRecordInfo, category);
 
                         Task.Run(() =>
                         {
-                            _settledBLL.Settled(tpCustInfo, betRecordInfo, category);
-                            _settledBLL.SetSettleFlag_BettransLC_AWC_Sexy(unSettledData.TransId);
+                            _settledBLL.SetSettleFlag_BettransLC_AWC_Sexy(settleData.TransId);
                             _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, true);
                         });
 
