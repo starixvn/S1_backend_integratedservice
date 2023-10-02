@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json;
-
-namespace ThirdPartyWager.Service.Model
+﻿namespace ThirdPartyWager.Service.Model
 {
     public class TpCurrencyConfig
     {
@@ -10,13 +8,16 @@ namespace ThirdPartyWager.Service.Model
         public string HeaderIdentity { get; set; }
     }
     
-    public class WagerData_Pegasus
+    public class WagerData_Pegasus<T>
     {
         public int Code { get; set; }
         public string Message { get; set; }
-        public PegasusData Data { get; set; }
+        public T Data { get; set; }
+        public string Currency { get; set; }
     }
-
+    
+    #region Wager
+    
     public class PegasusData
     {
         public List<WagerDataDetail_Pegasus> Items { get; set; }
@@ -47,5 +48,33 @@ namespace ThirdPartyWager.Service.Model
         public int GameType { get; set; }
     }
     
+    #endregion
+
+    #region WagerSummary
+    
+    public class WagerSummary_Pegasus
+    {
+        public List<WagerSummaryDetail> GameSummary { get; set; }
+        public decimal TotalPromotionBonus { get; set; }
+        public int TotalRound { get; set; }
+        public decimal TotalWinLossAmount { get; set; }
+        public decimal TotalValidAmount { get; set; }
+        public decimal TotalPayoutAmount { get; set; }
+        public decimal TotalBetAmount { get; set; }
+        public decimal TotalTaxAmount { get; set; }
+    }
+    
+    public class WagerSummaryDetail
+    {
+        public int GameID { get; set; }
+        public int TotalRound { get; set; }
+        public decimal TotalWinLossAmount { get; set; }
+        public decimal TotalValidAmount { get; set; }
+        public decimal TotalPayoutAmount { get; set; }
+        public decimal TotalBetAmount { get; set; }
+        public decimal TotalTaxAmount { get; set; }
+    }
+    
+    #endregion
 }
 
