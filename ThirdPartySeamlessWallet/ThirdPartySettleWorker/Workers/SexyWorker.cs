@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using Serilog.Context;
+﻿using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -17,7 +16,6 @@ namespace ThirdPartySettleWorker.Workers
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly ILogger<SexyWorker> _logger;
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly string _tpName;
 
         public SexyWorker(IServiceProvider provider)
@@ -26,7 +24,6 @@ namespace ThirdPartySettleWorker.Workers
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
             _logger = provider.GetRequiredService<ILogger<SexyWorker>>();
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
             LogContext.PushProperty("TP", _tpName);
         }
@@ -62,6 +59,7 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
+                        // SexyLC沒有TpWager，都是從BettransLC取得資料並且同一張表更新。
                         var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData_Sexy>("Service_BettransLC_AWC_Sexy_Unsettle_Get_V2",
                             new { TransId = tpUnsettle.TransId }, DataBase.Main);
                         var unSettledData = settleData.Where(x => x.TransId == tpUnsettle.TransId).ToList().FirstOrDefault();
