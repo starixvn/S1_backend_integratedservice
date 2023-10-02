@@ -44,7 +44,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
             timerSettleWM = new Timer(DoSettleWMWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleN2Live = new Timer(DoSettleN2LiveWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleN2LiveLC_Smart = new Timer(DoSettleN2LiveLC_SmartWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            //timerSettleSexy = new Timer(DoSettleSexyWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleEVO = new Timer(DoSettleEVOWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleRewardEVO = new Timer(DoSettleRewardEVOWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
@@ -621,80 +620,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 }
 
                 timerSettleN2LiveLC_Smart.Change(dueTimeSpan, TimeSpan.Zero);
-            }
-        }
-
-        private void DoSettleSexyWork(object state)
-        {
-            bool forContinue = false;
-            bool isError = false;
-            int thisTp = (int)Tp.Sexy;
-            var gameType = GameType.Sexy_LiveCasino;
-            var category = TpCategory.LiveCasino;
-            string logName = "Settle_AWC_Sexy";
-            try
-            {
-                var unsettledList = settledBLL.GetUnsettledListLC_AWC_Sexy();
-
-                if (unsettledList != null)
-                {
-                    forContinue = unsettledList.Count() == 200;
-                    foreach (var unsettled in unsettledList)
-                    {
-                        try
-                        {
-                            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
-
-                            decimal stake = unsettled.Stake;
-                            decimal validBet = unsettled.ValidBet;
-                            decimal winLostAmount = unsettled.WinLostAmount;
-
-                            var betRecordInfo = new BetRecordInfo
-                            {
-                                TpId = thisTp,
-                                Stake = stake,
-                                ValidBet = validBet,
-                                WinlostAmount = winLostAmount,
-                                TransId = unsettled.TransId,
-                                GameType = gameType,
-                                TpUserName = unsettled.Account,
-                                SettledTime = unsettled.SettleTime,
-                                TransTime = unsettled.TransTime,
-                                SettlementType = unsettled.TicketStatus == 0 ? SettlementType.UnSettled : SettlementType.SettledForValid,
-                                TicketStatus = (TicketStatus)unsettled.TicketStatus,
-                                GameID = unsettled.GameId,
-                            };
-
-                            settledBLL.Settled(tpCustInfo, betRecordInfo, category);
-                            settledBLL.SetSettleFlag_BettransLC_AWC_Sexy(unsettled.TransId);
-                        }
-                        catch (Exception ex1)
-                        {
-                            isError = true;
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                log2File.Error(ex.ToString(), logName);
-                isError = true;
-            }
-            finally
-            {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
-
-                if (forContinue)
-                {
-                    dueTimeSpan = TimeSpan.FromSeconds(1);
-                }
-                else if (isError)
-                {
-                    dueTimeSpan = TimeSpan.FromMinutes(1);
-                }
-
-                timerSettleSexy.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 
