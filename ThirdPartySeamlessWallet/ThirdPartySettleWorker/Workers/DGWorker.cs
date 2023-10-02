@@ -104,7 +104,7 @@ namespace ThirdPartySettleWorker.Workers
                             var winLossAmountComparison = DG_WinLossAmountComparison(wager.WinLostAmount, settleData);
                             if (!winLossAmountComparison.Comparison)
                             {
-                                _logger.LogWarning($"DG WinLossAmount Comparison Incompatible TransId : {betRecordInfo.TransId} - WagerWinLossAmount {wager.WinLostAmount:F2}, betTrans : {winLossAmountComparison.WinLossAmount}");
+                                _logger.LogWarning($"DG WinLossAmount Comparison Incompatible TransId : {betRecordInfo.TransId} - WagerWinLossAmount {wager.WinLostAmount:F2}, betTrans : {winLossAmountComparison.WinLossAmount}", logName);
                                 continue;
                             }
 
@@ -125,7 +125,7 @@ namespace ThirdPartySettleWorker.Workers
                             _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, isSuccess: false);
                         });
                         isError = true;
-                        _logger.LogError(ex1, $"exMessage:{ex1.Message}");
+                        _logger.LogError(ex1, $"exMessage:{ex1.Message}",logName);
                     }
 
                 }
