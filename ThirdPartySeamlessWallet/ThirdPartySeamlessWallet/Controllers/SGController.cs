@@ -82,7 +82,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             public decimal balance { get; set; }
             public string userName { get; set; }
             public string currency { get; set; }
-            //public string siteId { get; set; }
         }
 
         public class AuthorizeResp : Resp
