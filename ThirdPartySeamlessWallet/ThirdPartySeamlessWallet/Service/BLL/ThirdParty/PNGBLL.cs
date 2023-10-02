@@ -43,8 +43,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 return new PNG_AuthenticateResponse()
                 {
-                    StatusCode = (int)PNG_StatsuCodeEnum.NoUser,
-                    StatusMessage = "AuthToken Expired",
+                    StatusCode = (int)PNG_StatsuCodeEnum.WrongUserNamePassword,
+                    StatusMessage = "WrongUserNamePassword",
                 };
             }
 
