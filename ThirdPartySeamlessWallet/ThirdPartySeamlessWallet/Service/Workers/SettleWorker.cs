@@ -869,36 +869,39 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                                 decimal validBet = unsettled.Stake;
                                 decimal winLostAmount = unsettled.WinLostAmount;
 
-                                if ((Math.Truncate(wager.Stake * 10) / 10) == (Math.Truncate(stake * 10) / 10))
-                                {
-                                    var betRecordInfo = new BetRecordInfo
-                                    {
-                                        TpId = thisTp,
-                                        Stake = stake,
-                                        ValidBet = validBet,
-                                        WinlostAmount = winLostAmount,
-                                        TransId = unsettled.TransId.ToString(),
-                                        GameType = gameType,
-                                        TpUserName = unsettled.Account,
-                                        SettledTime = wager.SettleTime,
-                                        TransTime = wager.TransTime,
-                                        SettlementType = SettlementType.SettledForValid,
-                                        GameID = wager.GameId,
-                                    };
+                                var dWagerStake = Math.Truncate(wager.Stake * 10) / 10;
+                                var dBettransStake = Math.Truncate(stake * 10) / 10;
+                                var dDiffStake = Math.Abs(dWagerStake - dBettransStake);
 
-                                    if (betRecordInfo.WinlostAmount == 0)
-                                    {
-                                        betRecordInfo.TicketStatus = TicketStatus.Draw;
-                                    }
-
-                                    settledBLL.Settled(tpCustInfo, betRecordInfo, category);
-                                    settledBLL.SetSettleFlag_EVO(unsettled.TransId);
-                                }
-                                else
+                                if (dDiffStake > 0.5m)
                                 {
                                     LogContext.PushProperty("TP", Tp.EVO);
-                                    _logger.LogError($"amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}\r\n", logName);
+                                    _logger.LogError($"amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}", logName);
+                                    continue;
                                 }
+
+                                var betRecordInfo = new BetRecordInfo
+                                {
+                                    TpId = thisTp,
+                                    Stake = stake,
+                                    ValidBet = validBet,
+                                    WinlostAmount = winLostAmount,
+                                    TransId = unsettled.TransId.ToString(),
+                                    GameType = gameType,
+                                    TpUserName = unsettled.Account,
+                                    SettledTime = wager.SettleTime,
+                                    TransTime = wager.TransTime,
+                                    SettlementType = SettlementType.SettledForValid,
+                                    GameID = wager.GameId,
+                                };
+
+                                if (betRecordInfo.WinlostAmount == 0)
+                                {
+                                    betRecordInfo.TicketStatus = TicketStatus.Draw;
+                                }
+
+                                settledBLL.Settled(tpCustInfo, betRecordInfo, category);
+                                settledBLL.SetSettleFlag_EVO(unsettled.TransId);
                             }
                             catch (Exception ex1)
                             {
