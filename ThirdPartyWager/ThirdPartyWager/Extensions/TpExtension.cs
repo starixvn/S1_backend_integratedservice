@@ -24,6 +24,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.Allbet, AddAllbet},
                 { Tp.OneGaming, AddOneGaming},
                 { Tp.Sexy, AddSexy},
+                { Tp.CQ9, AddCQ9},
                 { Tp.NineW, AddNineW},
                 { Tp.EVO, AddEVO},
                 { Tp.BG, AddBG}
@@ -187,6 +188,15 @@ namespace ThirdPartyWager.Extensions
             return services;
         }
 
+        private IServiceCollection AddCQ9(IServiceCollection services)
+        {
+            services.AddSingleton<ApiCQ9BLL>();
+            services.AddSingleton<FinanceCQ9BLL>();
+
+            services.AddHostedService<FinanceCQ9>();
+
+            return services;
+        }
 
         private IServiceCollection AddNineW(IServiceCollection services)
         {
