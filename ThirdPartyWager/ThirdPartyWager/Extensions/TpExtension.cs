@@ -47,6 +47,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.SBO, AddSBO},
                 { Tp.Skywind, AddSkywind},
                 { Tp.SimplePlay, AddSimplePlay},
+                { Tp.Yeebet, AddYeebet},
                 { Tp.BG, AddBG}
             };
         }
@@ -493,6 +494,21 @@ namespace ThirdPartyWager.Extensions
 
             return services;
         }
+
+        private IServiceCollection AddYeebet(IServiceCollection services)
+        {
+            services.AddSingleton<WagerYeebetService>();
+
+            services.AddSingleton<WagerYeebetBLL>();
+            services.AddSingleton<ApiYeebetBLL>();
+            services.AddSingleton<FinanceYeebetBLL>();
+
+            services.AddHostedService<WagerYeebet>();
+            services.AddHostedService<FinanceYeebet>();
+
+            return services;
+        }
+
 
         private IServiceCollection AddBG(IServiceCollection services)
         {
