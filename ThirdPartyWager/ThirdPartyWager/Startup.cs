@@ -48,10 +48,6 @@ namespace ThirdPartyWager
             services.AddSingleton<ThirdPartyHelper>();
             services.AddSingleton<TpCustInfoService>();
             services.AddSingleton<CommonService>();
-            services.AddSingleton<LiveStreamingService>();
-            services.AddSingleton<LatestHighlightVideoService>();
-            services.AddSingleton<SabaOddsService>();
-            
             services.AddSingleton<TpUnsettleService>();
             services.AddSingleton<ConfigService>();
             services.AddSingleton<FincanceService>();
@@ -69,21 +65,49 @@ namespace ThirdPartyWager
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
             services.AddSingleton<CommonBLL>();
-            services.AddSingleton<TpRefundBLL>();
 
-            // LiveStreaming
-            services.AddSingleton<LiveStreamingBLL>();
-            // LatestHighlightVideo
-            services.AddSingleton<LatestHighlightVideoBLL>();
-            
-            //SabaOdds
+
+            #region SabaOdds
+
+            // DAL
+            services.AddSingleton<SabaOddsService>();
+            // BLL
             services.AddSingleton<SabaOddsBLL>();
 
-            services.AddHostedService<LiveStreaming>();
-            services.AddHostedService<LatestHighlightVideo>();
             services.AddHostedService<SabaOdds>();
-            
-            services.AddHostedService<TpRefundWorker>();          
+
+            #endregion
+
+            #region LiveStreaming
+
+            // DAL
+            services.AddSingleton<LiveStreamingService>();
+            // BLL
+            services.AddSingleton<LiveStreamingBLL>();
+
+            services.AddHostedService<LiveStreaming>();
+
+            #endregion
+
+            #region LatestHighlightVideo
+
+            // DAL
+            services.AddSingleton<LatestHighlightVideoService>();
+            // BLL
+            services.AddSingleton<LatestHighlightVideoBLL>();
+
+            services.AddHostedService<LatestHighlightVideo>();
+
+            #endregion
+
+            #region TpRefundWorker
+
+            //BLL
+            services.AddSingleton<TpRefundBLL>();
+
+            services.AddHostedService<TpRefundWorker>();
+
+            #endregion
 
             services.AddTpList();
         }
