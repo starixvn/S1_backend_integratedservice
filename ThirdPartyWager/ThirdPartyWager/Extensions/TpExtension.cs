@@ -46,6 +46,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.AP, AddAP},
                 { Tp.SBO, AddSBO},
                 { Tp.Skywind, AddSkywind},
+                { Tp.SimplePlay, AddSimplePlay},
                 { Tp.BG, AddBG}
             };
         }
@@ -478,6 +479,20 @@ namespace ThirdPartyWager.Extensions
             return services;
         }
 
+        private IServiceCollection AddSimplePlay(IServiceCollection services)
+        {
+            services.AddSingleton<WagerSimplePlayService>();
+
+            services.AddSingleton<ApiSimplePlayBLL>();
+            services.AddSingleton<WagerSimplePlayBLL>();
+            services.AddSingleton<FinanceSimplePlayBLL>();
+
+            services.AddHostedService<WagerSimplePlay>();
+            services.AddHostedService<WagerRedoSimplePlay>();
+            services.AddHostedService<FinanceSimplePlay>();
+
+            return services;
+        }
 
         private IServiceCollection AddBG(IServiceCollection services)
         {
