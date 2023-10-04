@@ -114,9 +114,6 @@ namespace ThirdPartyWager
             services.AddSingleton<TCGBLL>();
             services.AddSingleton<FinanceTCGBLL>();
 
-            //JILI
-            services.AddSingleton<ApiJILIBLL>();
-            services.AddSingleton<FinanceJILIBLL>();
             //AP
             services.AddSingleton<ApiAPBLL>();
             services.AddSingleton<FinanceAPBLL>();
@@ -175,7 +172,6 @@ namespace ThirdPartyWager
             services.AddHostedService<TpRefundWorker>();
             services.AddHostedService<FinanceMG>();
   
-            services.AddHostedService<FinanceJILI>();
             services.AddHostedService<FinanceAP>();
             services.AddHostedService<WagerAP>();
             services.AddHostedService<WagerRedoAP>();

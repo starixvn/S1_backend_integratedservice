@@ -36,6 +36,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.N2Live, AddN2Live},
                 { Tp.AMB, AddAMB},
                 { Tp.NineW, AddNineW},
+                { Tp.JILI, AddJILI},
                 { Tp.EVO, AddEVO},
                 { Tp.BG, AddBG}
             };
@@ -342,13 +343,22 @@ namespace ThirdPartyWager.Extensions
             return services;
         }
 
-
         private IServiceCollection AddNineW(IServiceCollection services)
         {
             services.AddSingleton<NineWBLL>();
             services.AddHostedService<WagerNineW>();
             return services;
         }
+
+        private IServiceCollection AddJILI(IServiceCollection services)
+        {
+            services.AddSingleton<ApiJILIBLL>();
+            services.AddSingleton<FinanceJILIBLL>();
+
+            services.AddHostedService<FinanceJILI>();
+            return services;
+        }
+
 
         private IServiceCollection AddEVO(IServiceCollection services)
         {
