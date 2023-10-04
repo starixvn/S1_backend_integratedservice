@@ -41,6 +41,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.MG, AddMG},
                 { Tp.MP, AddMP},
                 { Tp.EVO, AddEVO},
+                { Tp.Netent, AddNetent},
                 { Tp.BG, AddBG}
             };
         }
@@ -397,7 +398,6 @@ namespace ThirdPartyWager.Extensions
             return services;
         }
 
-
         private IServiceCollection AddEVO(IServiceCollection services)
         {
             services.AddSingleton<WagerEVOService>();
@@ -413,6 +413,17 @@ namespace ThirdPartyWager.Extensions
 
             return services;
         }
+
+        private IServiceCollection AddNetent(IServiceCollection services)
+        {
+            services.AddSingleton<ApiNetentBLL>();
+            services.AddSingleton<FinanceNetentBLL>();
+
+            services.AddHostedService<FinanceNetent>();
+
+            return services;
+        }
+
 
         private IServiceCollection AddBG(IServiceCollection services)
         {

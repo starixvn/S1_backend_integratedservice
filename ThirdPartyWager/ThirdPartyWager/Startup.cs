@@ -105,9 +105,6 @@ namespace ThirdPartyWager
             services.AddSingleton<ApiAPBLL>();
             services.AddSingleton<FinanceAPBLL>();
             services.AddSingleton<WagerAPBLL>();
-            //Netent
-            services.AddSingleton<ApiNetentBLL>();
-            services.AddSingleton<FinanceNetentBLL>();
             //RedTiger
             services.AddSingleton<ApiRedTigerBLL>();
             services.AddSingleton<FinanceRedTigerBLL>();
@@ -155,7 +152,6 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceAP>();
             services.AddHostedService<WagerAP>();
             services.AddHostedService<WagerRedoAP>();
-            services.AddHostedService<FinanceNetent>();
             services.AddHostedService<FinanceRedTiger>();
             services.AddHostedService<WagerSkywind>();
             services.AddHostedService<WagerUnsettleCheckSkywind>();
