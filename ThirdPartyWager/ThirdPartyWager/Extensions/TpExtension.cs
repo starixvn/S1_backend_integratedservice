@@ -20,6 +20,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.YL, AddYL},
                 { Tp.YGG, AddYGG},
                 { Tp.SG, AddSG},
+                { Tp.KM, AddKM},
                 { Tp.NineW, AddNineW},
                 { Tp.EVO, AddEVO},
                 { Tp.BG, AddBG}
@@ -120,6 +121,20 @@ namespace ThirdPartyWager.Extensions
 
             services.AddHostedService<WagerSG>();
             services.AddHostedService<FinanceSG>();
+
+            return services;
+        }
+
+        private IServiceCollection AddKM(IServiceCollection services)
+        {
+            services.AddSingleton<WagerKMService>();
+
+            services.AddSingleton<ApiKMBLL>();
+            services.AddSingleton<KMBLL>();
+            services.AddSingleton<FinanceKMBLL>();
+
+            services.AddHostedService<WagerKM>();
+            services.AddHostedService<FinanceKM>();
 
             return services;
         }
