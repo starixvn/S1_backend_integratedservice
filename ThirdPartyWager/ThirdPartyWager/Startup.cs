@@ -50,7 +50,6 @@ namespace ThirdPartyWager
             services.AddSingleton<CommonService>();
             services.AddSingleton<WagerDGService>();
             services.AddSingleton<WagerAllBetService>();
-            services.AddSingleton<WagerSAService>();
             services.AddSingleton<WagerSimplePlayService>();
             services.AddSingleton<WagerAGService>();
             //services.AddSingleton<WagerCFService>();
@@ -104,11 +103,6 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerRedoAllBetBLL>();
             services.AddSingleton<RewardAllBetBLL>();
             services.AddSingleton<FinanceAllBetBLL>();
-            // SA
-            services.AddSingleton<WagerSABLL>();
-            services.AddSingleton<ApiSABLL>();
-            services.AddSingleton<WagerRedoSABLL>();
-            services.AddSingleton<FinanceSABLL>();
             //SimplePlay
             services.AddSingleton<ApiSimplePlayBLL>();
             services.AddSingleton<WagerSimplePlayBLL>();
@@ -250,9 +244,6 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceAllBet>();
             services.AddHostedService<CheckRewardAllBet>();
             services.AddHostedService<WagerUnsettleCheckAllBet>();
-            services.AddHostedService<WagerSA>();
-            services.AddHostedService<WagerRedoSA>();
-            services.AddHostedService<FinanceSA>();
             services.AddHostedService<WagerSimplePlay>();
             services.AddHostedService<WagerRedoSimplePlay>();
             services.AddHostedService<FinanceSimplePlay>();
