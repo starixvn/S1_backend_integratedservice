@@ -15,6 +15,7 @@ namespace ThirdPartyWager.Extensions
             {
                 { Tp.BG, AddBG},
                 { Tp.NineW, AddNineW},
+                { Tp.YGG, AddYGG}
             };
         }
 
@@ -36,8 +37,19 @@ namespace ThirdPartyWager.Extensions
         private IServiceCollection AddNineW(IServiceCollection services)
         {
             services.AddSingleton<NineWBLL>();
-
             services.AddHostedService<WagerNineW>();
+            return services;
+        }
+
+        private IServiceCollection AddYGG(IServiceCollection services)
+        {
+
+            services.AddSingleton<WagerYGGBLL>();
+            services.AddSingleton<FinanceYGGBLL>();
+
+            services.AddHostedService<WagerYGG>();
+            services.AddHostedService<FinanceYGG>();
+
             return services;
         }
     }
