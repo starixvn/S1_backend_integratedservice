@@ -79,7 +79,8 @@ builder.Services
     .AddHostedService<DGWorker>()
     .AddHostedService<FaChaiWorker>()
     .AddHostedService<PegasusWorker>()
-    .AddHostedService<SexyWorker>();
+    .AddHostedService<SexyWorker>()
+    .AddHostedService<AGWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
