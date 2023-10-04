@@ -1508,9 +1508,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public IEnumerable<SettleData_WM> GetUnsettledList_WM()
+        public SettleData_WM GetUnsettled_WM(string transId)
         {
-            return settledService.GetUnsettledList_WM();
+            return settledService.GetUnsettled_WM(transId);
         }
 
         public SettleData GetSettle_TpWagerWM(string TransId)
