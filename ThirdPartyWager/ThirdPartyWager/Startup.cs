@@ -48,7 +48,6 @@ namespace ThirdPartyWager
             services.AddSingleton<ThirdPartyHelper>();
             services.AddSingleton<TpCustInfoService>();
             services.AddSingleton<CommonService>();
-            services.AddSingleton<WagerAllBetService>();
             services.AddSingleton<WagerSimplePlayService>();
             //services.AddSingleton<WagerCFService>();
             services.AddSingleton<WagerWMService>();
@@ -89,12 +88,7 @@ namespace ThirdPartyWager
             services.AddSingleton<CommonBLL>();
             services.AddSingleton<TpRefundBLL>();
 
-            // AllBet
-            services.AddSingleton<WagerAllBetBLL>();
-            services.AddSingleton<ApiAllBetBLL>();
-            services.AddSingleton<WagerRedoAllBetBLL>();
-            services.AddSingleton<RewardAllBetBLL>();
-            services.AddSingleton<FinanceAllBetBLL>();
+
             //SimplePlay
             services.AddSingleton<ApiSimplePlayBLL>();
             services.AddSingleton<WagerSimplePlayBLL>();
@@ -213,11 +207,6 @@ namespace ThirdPartyWager
             services.AddSingleton<FinanceSPRIBEBLL>();
 
             //Worker
-            services.AddHostedService<WagerAllBet>();
-            services.AddHostedService<WagerRedoAllBet>();
-            services.AddHostedService<FinanceAllBet>();
-            services.AddHostedService<CheckRewardAllBet>();
-            services.AddHostedService<WagerUnsettleCheckAllBet>();
             services.AddHostedService<WagerSimplePlay>();
             services.AddHostedService<WagerRedoSimplePlay>();
             services.AddHostedService<FinanceSimplePlay>();

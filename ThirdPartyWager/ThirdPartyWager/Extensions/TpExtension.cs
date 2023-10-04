@@ -21,6 +21,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.YGG, AddYGG},
                 { Tp.SG, AddSG},
                 { Tp.KM, AddKM},
+                { Tp.Allbet, AddAllbet},
                 { Tp.NineW, AddNineW},
                 { Tp.EVO, AddEVO},
                 { Tp.BG, AddBG}
@@ -138,6 +139,26 @@ namespace ThirdPartyWager.Extensions
 
             return services;
         }
+
+        private IServiceCollection AddAllbet(IServiceCollection services)
+        {
+            services.AddSingleton<WagerAllBetService>();
+
+            services.AddSingleton<WagerAllBetBLL>();
+            services.AddSingleton<ApiAllBetBLL>();
+            services.AddSingleton<WagerRedoAllBetBLL>();
+            services.AddSingleton<RewardAllBetBLL>();
+            services.AddSingleton<FinanceAllBetBLL>();
+
+            services.AddHostedService<WagerAllBet>();
+            services.AddHostedService<WagerRedoAllBet>();
+            services.AddHostedService<FinanceAllBet>();
+            services.AddHostedService<CheckRewardAllBet>();
+            services.AddHostedService<WagerUnsettleCheckAllBet>();
+
+            return services;
+        }
+
 
         private IServiceCollection AddNineW(IServiceCollection services)
         {
