@@ -943,7 +943,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return errResponse;
                 }
 
-                var Decrypt = DecrypeRequest(payload, sitename);
+                var Decrypt = DecryptRequest(payload, sitename);
                 log2File.Info($"{Decrypt}", logName);
                 var getReq = JsonConvert.DeserializeObject<GetBalanceMiniReq>(Decrypt);
 
@@ -994,7 +994,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 var getCommReq = JsonConvert.DeserializeObject<CommonMiniReq>(Content);
 
-                var Decrypt = DecrypeRequest(getCommReq.payload, sitename);
+                var Decrypt = DecryptRequest(getCommReq.payload, sitename);
                 log2File.Info($"{Decrypt}", logName);
 
                 var getReq = JsonConvert.DeserializeObject<BettingData_AdvantPlayMini>(Decrypt);
@@ -1076,7 +1076,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 var getCommReq = JsonConvert.DeserializeObject<CommonMiniReq>(Content);
 
-                var Decrypt = DecrypeRequest(getCommReq.payload, sitename);
+                var Decrypt = DecryptRequest(getCommReq.payload, sitename);
                 log2File.Info($"{Decrypt}", logName);
                 var getReq = JsonConvert.DeserializeObject<PayoutData_AdvantPlayMini>(Decrypt);
 
@@ -1145,7 +1145,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 var getCommReq = JsonConvert.DeserializeObject<CommonMiniReq>(Content);
 
-                var Decrypt = DecrypeRequest(getCommReq.payload, sitename);
+                var Decrypt = DecryptRequest(getCommReq.payload, sitename);
                 log2File.Info($"{Decrypt}", logName);
                 var getReq = JsonConvert.DeserializeObject<ResultData_AdvantPlayMini>(Decrypt);
 
@@ -1219,7 +1219,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 var getCommReq = JsonConvert.DeserializeObject<CommonMiniReq>(Content);
 
-                var Decrypt = DecrypeRequest(getCommReq.payload, sitename);
+                var Decrypt = DecryptRequest(getCommReq.payload, sitename);
                 log2File.Info($"{Decrypt}", logName);
                 var getReq = JsonConvert.DeserializeObject<PayoutData_AdvantPlayMini>(Decrypt);
 
@@ -1367,7 +1367,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 RefundMiniResp response = new RefundMiniResp();
                 var getCommReq = JsonConvert.DeserializeObject<CommonMiniReq>(Content);
 
-                var Decrypt = DecrypeRequest(getCommReq.payload, sitename);
+                var Decrypt = DecryptRequest(getCommReq.payload, sitename);
                 log2File.Info($"{Decrypt}", logName);
                 var getReq = JsonConvert.DeserializeObject<CancelBetData_AdvantPlayMini>(Decrypt);
 
@@ -1601,17 +1601,22 @@ namespace ThirdPartySeamlessWallet.Controllers
             return _gameOfMiniList.Contains(game, StringComparer.OrdinalIgnoreCase);
         }
 
-        private string DecrypeRequest(string payload, string sitename)
+        private string DecryptRequest(string payload, string siteName)
         {
-            var serverInfo = thirdPartyBLL.GetServerInfoBySiteName(sitename);
-            if (serverInfo == null || serverInfo.SiteId <= 0)
+            var serverInfo = thirdPartyBLL.GetServerInfoBySiteName(siteName);
+            if (serverInfo is not { SiteId: > 0 })
             {
                 throw new Exception("DecrypeRequest SiteName empty");
             }
             var siteId = serverInfo.SiteId;
             var thirdPartySetting = thirdPartyBLL.GetThirdPartyBySite((int)thisTp, siteId);
-            string SecretKey = thirdPartySetting.TpSetting["SecretKey_MiniGame"];
-            return tools.AesDecryptV2(payload, SecretKey);
+            if (thirdPartySetting == null || !thirdPartySetting.TpSetting.ContainsKey("SecretKey_MiniGame"))
+            {
+                throw new Exception("SecretKey_MiniGame NotFound TpSetting");
+            }
+
+            var secretKey = thirdPartySetting.TpSetting["SecretKey_MiniGame"];
+            return tools.AesDecryptV2(payload, secretKey);
         }
 
         #endregion
