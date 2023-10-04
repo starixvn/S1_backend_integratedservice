@@ -34,6 +34,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.Iconic, AddIconic},
                 { Tp.V8, AddV8},
                 { Tp.N2Live, AddN2Live},
+                { Tp.AMB, AddAMB},
                 { Tp.NineW, AddNineW},
                 { Tp.EVO, AddEVO},
                 { Tp.BG, AddBG}
@@ -327,6 +328,16 @@ namespace ThirdPartyWager.Extensions
             services.AddHostedService<WagerN2Live>();
             services.AddHostedService<WagerRedoN2Live>();
             services.AddHostedService<FinanceN2Live>();
+
+            return services;
+        }
+
+        private IServiceCollection AddAMB(IServiceCollection services)
+        {
+            services.AddSingleton<ApiAMBBLL>();
+            services.AddSingleton<FinanceAMBBLL>();
+
+            services.AddHostedService<FinanceAMB>();
 
             return services;
         }
