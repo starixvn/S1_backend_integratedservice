@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 
 using StackExchange.Redis;
 
@@ -11,6 +11,7 @@ using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.DAL.Interface;
 using ThirdPartySeamlessWallet.Service.DAL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.Library;
+using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.Options;
 
 namespace ThirdPartySeamlessWallet
@@ -101,6 +102,7 @@ namespace ThirdPartySeamlessWallet
             services.AddTransient<IYeebetBLL, YeebetBLL>();
             services.AddTransient<IBGBLL, BGBLL>();
             services.AddTransient<ITFGBLL, TFGBLL>();
+            services.AddTransient<V8BLL>();
             services.AddSingleton<TpUnSettledBLL>();
             services.AddSingleton<TpBetRecordExtendBLL>();
             services.AddSingleton<TpRequestFailBLL>();
@@ -111,6 +113,11 @@ namespace ThirdPartySeamlessWallet
             services.AddControllers();
 
             services.AddOptionListByDB<SabaSportTypeOption>("Service_SabaSportType_Get");
+            //處理SiteConfig
+            services.AddOptionListByDB<ServerInfo>("ServerInfoList_Get");
+            services.AddOptionListByDB<ConfigObject>("SiteConfig_Get", new { ConfigGroup = "TP" });
+            services.AddSiteConfig();
+            services.AddSingleton<ConfigBLL>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

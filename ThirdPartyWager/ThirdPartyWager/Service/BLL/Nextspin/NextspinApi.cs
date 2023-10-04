@@ -5,7 +5,7 @@ using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using static System.Net.Mime.MediaTypeNames;
 
-namespace ThirdPartyWager.Service.BLL.Nextspin
+namespace ThirdPartyWager.Service.BLL
 {
     public interface INextspinApi
     {
@@ -56,7 +56,7 @@ namespace ThirdPartyWager.Service.BLL.Nextspin
                     return null;
                 }
                 var nextspinBetHistory = JsonConvert.DeserializeObject<NextspinBetHistory>(content);
-                if (nextspinBetHistory.Code != 0) 
+                if (nextspinBetHistory.Code != 0)
                 {
                     _logger.LogError($"failed, request:{JsonConvert.SerializeObject(request)} response:{nextspinBetHistory.Msg}");
                     return null;

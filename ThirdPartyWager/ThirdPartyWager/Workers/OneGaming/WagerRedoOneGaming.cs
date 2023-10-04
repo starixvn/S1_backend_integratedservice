@@ -38,7 +38,7 @@ namespace ThirdPartyWager.Workers
             return Task.CompletedTask;
         }
 
-        private async void DoTask(object state)
+        private void DoTask(object state)
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
@@ -77,7 +77,7 @@ namespace ThirdPartyWager.Workers
                 }
                 var t = Task.WhenAll(tasks);
                 t.Wait();
-                
+
             }
             catch (Exception ex)
             {

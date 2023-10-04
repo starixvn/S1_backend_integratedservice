@@ -165,7 +165,7 @@ namespace ThirdPartyWager.Workers
         private async void GetReportByDate(object state)
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-            LogContext.PushProperty("Tp", _tpName);         
+            LogContext.PushProperty("Tp", _tpName);
             var timerType = (int)WagerTimerType.UserReport;
             var intervalDays = 1;
             var nextTimeSpan = TimeSpan.FromHours(4);
@@ -175,8 +175,8 @@ namespace ThirdPartyWager.Workers
                 var date = lastTime?.StartTime ?? DateTime.UtcNow.BeginningOfTheDay();
                 var endTime = date.AddDays(1).AddMilliseconds(-1);
                 if (endTime < DateTime.UtcNow)
-                {         
-                    var summaryTransaction =  _nineWService.GetSummaryTransactionReportAsync(date);//querySummaryTransaction
+                {
+                    var summaryTransaction = _nineWService.GetSummaryTransactionReportAsync(date);//querySummaryTransaction
                     if (await summaryTransaction)
                     {
                         _logger.LogInformation($"NineW Get {date:yyyy-MM-dd} Report");
@@ -195,7 +195,7 @@ namespace ThirdPartyWager.Workers
                 nextTimeSpan = TimeSpan.FromHours(1);
             }
             finally
-            {     
+            {
                 _reportTimer.Change(nextTimeSpan, TimeSpan.Zero);
             }
         }

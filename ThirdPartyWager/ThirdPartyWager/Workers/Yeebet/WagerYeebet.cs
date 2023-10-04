@@ -10,17 +10,17 @@ public class WagerYeebet : BackgroundService
     private readonly ILogger<WagerYeebet> _logger;
     private readonly WagerYeebetBLL _wagerYeebetBLL;
     private readonly CommonBLL _commonBLL;
+    private readonly ThirdPartyBLL _thirdPartyBLL;
 
     private readonly int tpId = (int)Tp.Yeebet;
     private Timer _timer;
 
-    public WagerYeebet(ILogger<WagerYeebet> logger,
-                       WagerYeebetBLL wagerYeebetBLL,
-                       CommonBLL commonBll)
+    public WagerYeebet(IServiceProvider provider)
     {
-        _logger = logger;
-        _wagerYeebetBLL = wagerYeebetBLL;
-        _commonBLL = commonBll;
+        _logger = provider.GetRequiredService<ILogger<WagerYeebet>>();
+        _wagerYeebetBLL = provider.GetRequiredService<WagerYeebetBLL>();
+        _commonBLL = provider.GetRequiredService<CommonBLL>();
+        _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -35,11 +35,12 @@ public class WagerYeebet : BackgroundService
         LogContext.PushProperty("Tp", Tp.Yeebet.ToString());
         try
         {
-            var siteList = _commonBLL.GetSiteList().Where(x => x.SiteId != 4 && x.SiteId != 5);
-            var TpCurrencyList = _commonBLL.GetTpCurrencyList((int)Tp.Yeebet);
+            var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+            var serverList = _commonBLL.GetSiteList();
+            var TpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
             foreach (var siteInfo in siteList)
             {
-                var currencyList = JsonSerializer.Deserialize<IEnumerable<int>>(siteInfo.CurrencyList);
+                var currencyList = JsonSerializer.Deserialize<IEnumerable<int>>(serverList.First(x => x.SiteId == siteInfo.SiteId).CurrencyList);
                 foreach (var item in TpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
                 {
                     var isSuccess = true;

@@ -50,7 +50,7 @@ public class ApiBGBLL
         return result;
     }
 
-    public async Task<WagerBG_ApiResponseModel<object>> OrderSum(string apiUrl, 
+    public async Task<WagerBG_ApiResponseModel<object>> OrderSum(string apiUrl,
         string sn, string secrectKey, string agentLoginId, string startTime, string endTime)
     {
         // param

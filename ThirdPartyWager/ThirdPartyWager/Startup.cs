@@ -1,21 +1,11 @@
-using System.Net;
+﻿using System.Net;
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.BLL.IM;
-using ThirdPartyWager.Service.BLL.KM;
-using ThirdPartyWager.Service.BLL.MG;
-using ThirdPartyWager.Service.BLL.Nextspin;
-using ThirdPartyWager.Service.BLL.SBO;
-using ThirdPartyWager.Service.BLL.SPRIBE;
-using ThirdPartyWager.Service.BLL.TFG;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
-using ThirdPartyWager.Workers.IM;
-using ThirdPartyWager.Workers.Nextspin;
-using ThirdPartyWager.Workers.SPRIBE;
 
 namespace ThirdPartyWager
 {
@@ -73,7 +63,6 @@ namespace ThirdPartyWager
             //services.AddSingleton<WagerOneGamingService>();
             services.AddSingleton<WagerV8Service>();
             services.AddSingleton<WagerN2LiveService>();
-            //services.AddSingleton<WagerPTService>();
             services.AddSingleton<WagerPlayTechService>();
             services.AddSingleton<LiveStreamingService>();
             services.AddSingleton<LatestHighlightVideoService>();
@@ -96,6 +85,11 @@ namespace ThirdPartyWager
             services.AddOptionListByDB<dynamic>("Service_TpWagerTimer_Get", new { TpId = 1, Type = 1 }, DataBase.Wager);
             services.AddOptionListByDB<dynamic>("Tp_Get", new { TpId = 1 }, DataBase.Main);
             services.AddOptionListByDB<CurrencyOption>("Common_Currency_Get");
+
+            //處理SiteConfig
+            services.AddOptionListByDB<ConfigObject>("SiteConfig_Get", new { ConfigGroup = "TP" });
+            services.AddSiteConfig();
+            services.AddSingleton<ConfigBLL>();
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
@@ -172,10 +166,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerN2LiveBLL>();
             services.AddSingleton<ApiN2LiveBLL>();
             services.AddSingleton<FinanceN2LiveBLL>();
-            // PT
-            //services.AddSingleton<WagerPTBLL>();
-            //services.AddSingleton<ApiPTBLL>();
-            //services.AddSingleton<FinancePTBLL>();
+            // PlayTech
             services.AddSingleton<WagerPlayTechBLL>();
             services.AddSingleton<ApiPlayTechBLL>();
             services.AddSingleton<FinancePlayTechBLL>();
@@ -259,7 +250,7 @@ namespace ThirdPartyWager
             services.AddSingleton<INextspinApi, NextspinApi>();
             services.AddSingleton<INextspinBLL, NextspinBLL>();
             services.AddSingleton<INextspinFinancBLL, NextspinFinancBLL>();
-            
+
             //IM
             services.AddSingleton<ApiIMBLL>();
             services.AddSingleton<WagerIMBLL>();
@@ -363,10 +354,6 @@ namespace ThirdPartyWager
             //services.AddHostedService<WagerAT>();
             //services.AddHostedService<WagerRedoAT>();
             //services.AddHostedService<FinanceAT>();
-            //services.AddHostedService<WagerPT>();
-            //services.AddHostedService<WagerRedoPT>();
-            //services.AddHostedService<FinancePT>();
-            //services.AddHostedService<WagerReSettlePT>();
             //services.AddHostedService<WagerKiss918>();
             //services.AddHostedService<WagerRedoKiss918>();
         }

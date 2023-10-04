@@ -183,7 +183,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #endregion
 
-        #region V8
+        #region V8 Transfer
 
         public IEnumerable<SettleDataPK_V8> GetUnsettledListPK_V8()
         {
@@ -994,6 +994,159 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             return _wagerDbClient.Execute("Service_TpWagerPK_MP_Settle_Set", parameters: new DynamicParameters(new { TransId = TransId }));
         }
+        #endregion
+
+        #region V8
+
+        public int PayoutPK_V8(TpCustInfo tpCustInfo, BettingDataPK_V8 bettingDataPK_V8, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            var result = 0;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                var p = new DynamicParameters(bettingDataPK_V8);
+                p.Add("TicketType", (int)BettransType.Payout);
+                p.Add("TicketStatus", (int)TicketStatus.UnSettled);
+                p.Add("SettleFlag", (int)SettleFlag.Running);
+
+                var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataPK_V8.timestamp).DateTime;
+
+                var bettrans = _partitionService.Query<BettransDataPK_V8>(partitionTime, "Service_BettransPK_V8_gameNo_Get", new { gameNo = bettingDataPK_V8.gameNo});
+                if (!bettrans.Any(i => (i.TicketType == BettransType.Bet)))
+                {
+                    // 檢查是否有下注該round
+                    return -2;
+                }
+
+                result = _partitionService.Execute(partitionTime, "Service_BettransPK_V8_Ins", p, trans);
+
+                if (result > 0 && bettingDataPK_V8.money != 0)
+                {
+                    result = walletService.SetBalance(
+                        tpCustInfo.CustId,
+                        tpCustInfo.SiteId,
+                        tpCustInfo.UserName,
+                        bettingDataPK_V8.money,
+                        (int)Tp.V8,
+                        TransType.Payout,
+                        $"Payout: {bettingDataPK_V8.money:#,##0.##} {bettingDataPK_V8.orderId}",
+                        bettingDataPK_V8.gameNo,
+                        out afterAmount,
+                        conn,
+                        trans
+                    );
+                }
+                
+                if (result > 0)
+                {
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    return result;
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                result = 0;
+                logger.LogError(mySqlEx.Message);
+                _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+                throw;
+            }
+
+            _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+            return result;
+        }
+
+        public int CancelBetPK_V8(TpCustInfo tpCustInfo, BettingDataPK_V8 bettingDataPK_V8, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            int result = 0;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                var p = new DynamicParameters(bettingDataPK_V8);
+                p.Add("TicketType", (int)BettransType.CancelBet);
+                p.Add("TicketStatus", (int)TicketStatus.Refund);
+                p.Add("SettleFlag", (int)SettleFlag.Settled);
+
+                var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataPK_V8.timestamp).DateTime;
+                result = _partitionService.Execute(partitionTime, "Service_BettransPK_V8_CancelBet_Set", p, trans);
+                /*
+                 贵方收到通知后需先判断原始订单状态是否成功
+                 若原始订单为成功状态时，方能取消下注並修改訂單狀態
+                 若订单不存在，请先塞入资料库并记录为取消订单，此订单状态将不可再修改。
+                */
+                if (result > 0)
+                {
+                    // cancel update
+                    result = walletService.SetBalance(
+                        tpCustInfo.CustId,
+                        tpCustInfo.SiteId,
+                        tpCustInfo.UserName,
+                        bettingDataPK_V8.money,
+                        (int)Tp.V8,
+                        TransType.Refunds,
+                        $"Cancel: {bettingDataPK_V8.money:#,##0.##} {bettingDataPK_V8.orderId}",
+                        bettingDataPK_V8.gameNo,
+                        out afterAmount,
+                        conn,
+                        trans
+                    );
+
+                    if (result > 0)
+                    {
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                        return result;
+                    }
+                }
+                else
+                {
+                    // insert cancel
+                    var cancelInsert = _partitionService.Execute(partitionTime, "Service_BettransPK_V8_Ins", p, trans);
+                    if (cancelInsert > 0)
+                    {
+                        // insert cancel record
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                        return -1;
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                result = 0;
+                logger.LogError(mySqlEx.Message);
+                _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+                throw;
+            }
+
+            _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+            return result;
+        }
+
+        public IEnumerable<BettransDataPK_V8> GetRecordPK_V8(OrderDataPK_V8 orderDataPK_V8)
+        {
+            var p = new DynamicParameters(orderDataPK_V8);
+            var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(orderDataPK_V8.timestamp).DateTime;
+            return _partitionService.Query<BettransDataPK_V8>(partitionTime, "Service_BettransPK_V8_orderId_Get", p);
+        }
+
         #endregion
     }
 }

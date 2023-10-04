@@ -13,24 +13,25 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class TCGBLL
     {
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ILogger<TCGBLL> _logger;
         private readonly MySqlClient _wagerDbClient;
-        private readonly int _tpId = (int)Tp.TCG;
+        private readonly Tp _tp = Tp.TCG;
         private readonly Dictionary<string, string> _setting;
         private readonly HttpHelper _httpHelper;
         private readonly Common _common;
         private const int ErrorCount = 3; //容許錯誤次數
-        private readonly ConcurrentDictionary<string, int> _errorCountr = new();
+        private readonly ConcurrentDictionary<string, int> _errorCounter = new();
         private readonly CommonBLL _commonBLL;
 
         public TCGBLL(IServiceProvider provider)
         {
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            LogContext.PushProperty("Tp", _tp.ToString());
             _logger = provider.GetRequiredService<ILogger<TCGBLL>>();
-            LogContext.PushProperty("Tp", "TCG");
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
-            _setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+
+            //用 SiteId = 0 取回預設Config
+            _setting = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(0, _tp.ToString());
+
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
@@ -71,7 +72,7 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        private async Task<List<T>> QuerySettleBetHistoryAsync<T>(TCGConfig config, DateTimeOffset batchTime, WagerTimerType timerType)
+        private Task<List<T>> QuerySettleBetHistoryAsync<T>(TCGConfig config, DateTimeOffset batchTime, WagerTimerType timerType)
         {
             var result = new List<T>();
             var reportType = config.WagerTypeList.Split(",").Where(i => i != string.Empty);
@@ -90,15 +91,15 @@ namespace ThirdPartyWager.Service.BLL
                         {
                             _commonBLL.InsertTpWagerRedo(new TpWagerRedo()
                             {
-                                TpId = _tpId,
+                                TpId = (int)_tp,
                                 Time = batchTime.DateTime,
                                 Parameter = JsonConvert.SerializeObject(new TCGRedoObj
                                 {
                                     TpCurrencyId = config.TpCurrencyId
                                 })
                             });
-                        }                     
-                        return new List<T>();
+                        }
+                        return Task.FromResult(new List<T>());
                     }
 
                     if (queryReuslt.list.Count > 0)
@@ -109,7 +110,7 @@ namespace ThirdPartyWager.Service.BLL
                     totalPage = 1 + (queryReuslt.page.total / queryReuslt.page.pageSize);
                 }
             }
-            return result;
+            return Task.FromResult(result);
         }
 
         private TCGQueryWagerObj<T> DownloadFTPFile<T>(TCGConfig config, string fileUrl)
@@ -151,22 +152,22 @@ namespace ThirdPartyWager.Service.BLL
         /// </summary>
         private bool FTPErrorHandler(string fileUrl)
         {
-            if (_errorCountr.TryGetValue(fileUrl, out var count))
+            if (_errorCounter.TryGetValue(fileUrl, out var count))
             {
                 var newCount = count + 1;
                 if (newCount >= ErrorCount) // 超過容許次數另外存放
                 {
-                    _errorCountr.Remove(fileUrl, out var _);
+                    _errorCounter.Remove(fileUrl, out var _);
                     return true;
                 }
                 else
                 {
-                    _errorCountr.TryUpdate(fileUrl, newCount, count);
+                    _errorCounter.TryUpdate(fileUrl, newCount, count);
                 }
             }
             else
             {
-                _errorCountr.TryAdd(fileUrl, 1);
+                _errorCounter.TryAdd(fileUrl, 1);
             }
             return false;
         }

@@ -34,7 +34,6 @@
         public IList<string> GameEndTime { get; set; }
         public IList<int> ChannelID { get; set; }
         public IList<string> LineCode { get; set; }
-        // public IList<string> CreateTime { get; set; }
     }
 
     public class BetV8
@@ -69,6 +68,8 @@
                 return new DateTimeOffset(GameEndTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
             }
         }
+        public int TpId { get; set; }
+        public int TpGameType { get; set; }
     }
 
     public class WagerV8Total
