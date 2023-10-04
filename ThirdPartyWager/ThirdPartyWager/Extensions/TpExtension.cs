@@ -31,6 +31,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.Kiss918, AddKiss918},
                 { Tp.Mega, AddMega},
                 { Tp.One789, AddOne789},
+                { Tp.Iconic, AddIconic},
                 { Tp.NineW, AddNineW},
                 { Tp.EVO, AddEVO},
                 { Tp.BG, AddBG}
@@ -283,6 +284,19 @@ namespace ThirdPartyWager.Extensions
             return services;
         }
 
+        //closed tp
+        private IServiceCollection AddIconic(IServiceCollection services)
+        {
+            //services.AddSingleton<WagerIconicService>();
+
+            //services.AddSingleton<WagerIconicBLL>();
+            //services.AddSingleton<ApiIconicBLL>();
+            //services.AddSingleton<FinanceATBLL>();
+
+            //services.AddHostedService<JwtIconic>();
+
+            return services;
+        }
 
         private IServiceCollection AddNineW(IServiceCollection services)
         {
