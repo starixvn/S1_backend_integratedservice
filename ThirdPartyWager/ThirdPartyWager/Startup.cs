@@ -152,9 +152,6 @@ namespace ThirdPartyWager
             services.AddSingleton<TCGBLL>();
             services.AddSingleton<FinanceTCGBLL>();
 
-            //Ebet
-            services.AddSingleton<ApiEbetBLL>();
-            services.AddSingleton<FinanceEbetBLL>();
             //JILI
             services.AddSingleton<ApiJILIBLL>();
             services.AddSingleton<FinanceJILIBLL>();
@@ -227,7 +224,6 @@ namespace ThirdPartyWager
             services.AddHostedService<TpRefundWorker>();
             services.AddHostedService<FinanceMG>();
   
-            services.AddHostedService<FinanceEbet>();
             services.AddHostedService<FinanceJILI>();
             services.AddHostedService<FinanceAP>();
             services.AddHostedService<WagerAP>();
