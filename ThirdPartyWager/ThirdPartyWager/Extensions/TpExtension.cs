@@ -30,6 +30,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.WM, AddWM},
                 { Tp.Kiss918, AddKiss918},
                 { Tp.Mega, AddMega},
+                { Tp.One789, AddOne789},
                 { Tp.NineW, AddNineW},
                 { Tp.EVO, AddEVO},
                 { Tp.BG, AddBG}
@@ -268,6 +269,19 @@ namespace ThirdPartyWager.Extensions
             return services;
         }
 
+        private IServiceCollection AddOne789(IServiceCollection services)
+        {
+            services.AddSingleton<WagerOne789Service>();
+
+            services.AddSingleton<WagerOne789BLL>();
+            services.AddSingleton<ApiOne789BLL>();
+            services.AddSingleton<FinanceOne789BLL>();
+
+            services.AddHostedService<WagerOne789>();
+            services.AddHostedService<FinanceOne789>();
+
+            return services;
+        }
 
 
         private IServiceCollection AddNineW(IServiceCollection services)

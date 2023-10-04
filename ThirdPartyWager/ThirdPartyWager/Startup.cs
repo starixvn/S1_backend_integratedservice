@@ -49,7 +49,6 @@ namespace ThirdPartyWager
             services.AddSingleton<TpCustInfoService>();
             services.AddSingleton<CommonService>();
             services.AddSingleton<WagerSimplePlayService>();
-            services.AddSingleton<WagerOne789Service>();
             //services.AddSingleton<WagerIconicService>();
             services.AddSingleton<WagerV8Service>();
             services.AddSingleton<WagerN2LiveService>();
@@ -93,11 +92,6 @@ namespace ThirdPartyWager
             services.AddSingleton<ISBOBLL, SBOBLL>();
             services.AddSingleton<IApiSBOBLL, ApiSBOBLL>();
             services.AddSingleton<FinanceSBOBLL>();
-            
-            // One789
-            services.AddSingleton<WagerOne789BLL>();
-            services.AddSingleton<ApiOne789BLL>();
-            services.AddSingleton<FinanceOne789BLL>();
           
             // Iconic(AT)
             //services.AddSingleton<WagerIconicBLL>();
@@ -184,8 +178,6 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceSimplePlay>();
             services.AddHostedService<WagerSBO>();
             services.AddHostedService<FinanceSBO>();
-            services.AddHostedService<WagerOne789>();
-            services.AddHostedService<FinanceOne789>();
             services.AddHostedService<WagerV8>();
             services.AddHostedService<WagerRedoV8>();
             services.AddHostedService<FinanceV8>();
