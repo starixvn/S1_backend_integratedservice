@@ -73,7 +73,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerGPIService>();
             services.AddSingleton<WagerAPService>();
             services.AddSingleton<WagerYeebetService>();
-            services.AddSingleton<WagerBGService>();
+            
             services.AddSingleton<IWagerSBOService, WagerSBOService>();
             services.AddSingleton<TpUnsettleService>();
             services.AddSingleton<ConfigService>();
@@ -174,8 +174,7 @@ namespace ThirdPartyWager
             services.AddSingleton<LiveStreamingBLL>();
             // LatestHighlightVideo
             services.AddSingleton<LatestHighlightVideoBLL>();
-            //9W
-            services.AddSingleton<NineWBLL>();
+            
             //SabaOdds
             services.AddSingleton<SabaOddsBLL>();
             //KM
@@ -236,11 +235,7 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerYeebetBLL>();
             services.AddSingleton<ApiYeebetBLL>();
             services.AddSingleton<FinanceYeebetBLL>();
-            //BG
-            services.AddSingleton<CommonBGBLL>();
-            services.AddSingleton<WagerBGBLL>();
-            services.AddSingleton<ApiBGBLL>();
-            services.AddSingleton<FinanceBGBLL>();
+
             //TFG
             services.AddSingleton<ApiTFGBLL>();
             services.AddSingleton<WagerTFGBLL>();
@@ -302,7 +297,7 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceKM>();
             services.AddHostedService<FinanceAMB>();
             services.AddHostedService<WagerMG>();
-            services.AddHostedService<WagerNineW>();
+            
             services.AddHostedService<WagerTCG>();
             services.AddHostedService<FinanceTCG>();
             services.AddHostedService<WagerMP>();
@@ -332,9 +327,8 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceGPI>();
             services.AddHostedService<WagerYeebet>();
             services.AddHostedService<FinanceYeebet>();
-            services.AddHostedService<WagerBG>();
-            services.AddHostedService<WagerRedoBG>();
-            services.AddHostedService<FinanceBG>();
+            
+           
             services.AddHostedService<WagerTFG>();
             services.AddHostedService<WagerUnsettleCheckTFG>();
             services.AddHostedService<WagerNextspin>();
@@ -359,6 +353,8 @@ namespace ThirdPartyWager
             //services.AddHostedService<FinanceAT>();
             //services.AddHostedService<WagerKiss918>();
             //services.AddHostedService<WagerRedoKiss918>();
+
+            services.AddTpList();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
