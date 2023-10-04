@@ -52,6 +52,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.TFG, AddTFG},
                 { Tp.Nextspin, AddNextspin},
                 { Tp.PlayTech, AddPlayTech},
+                { Tp.IM, AddIM},
             };
         }
         private IServiceCollection AddSA(IServiceCollection services)
@@ -308,9 +309,14 @@ namespace ThirdPartyWager.Extensions
 
             //services.AddSingleton<WagerIconicBLL>();
             //services.AddSingleton<ApiIconicBLL>();
+
             //services.AddSingleton<FinanceATBLL>();
 
             //services.AddHostedService<JwtIconic>();
+
+            //services.AddHostedService<WagerAT>();
+            //services.AddHostedService<WagerRedoAT>();
+            //services.AddHostedService<FinanceAT>();
 
             return services;
         }
@@ -564,6 +570,20 @@ namespace ThirdPartyWager.Extensions
             services.AddHostedService<WagerPlayTech>();
             services.AddHostedService<WagerRedoPlayTech>();
             services.AddHostedService<FinancePlayTech>();
+
+            return services;
+        }
+
+        private IServiceCollection AddIM(IServiceCollection services)
+        {
+            services.AddSingleton<WagerIMService>();
+
+            services.AddSingleton<ApiIMBLL>();
+            services.AddSingleton<WagerIMBLL>();
+            services.AddSingleton<FinanceIMBLL>();
+
+            services.AddHostedService<WagerIM>();
+            services.AddHostedService<FinanceIM>();
 
             return services;
         }
