@@ -22,6 +22,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.SG, AddSG},
                 { Tp.KM, AddKM},
                 { Tp.Allbet, AddAllbet},
+                { Tp.OneGaming, AddOneGaming},
                 { Tp.NineW, AddNineW},
                 { Tp.EVO, AddEVO},
                 { Tp.BG, AddBG}
@@ -155,6 +156,22 @@ namespace ThirdPartyWager.Extensions
             services.AddHostedService<FinanceAllBet>();
             services.AddHostedService<CheckRewardAllBet>();
             services.AddHostedService<WagerUnsettleCheckAllBet>();
+
+            return services;
+        }
+
+        //closed tp
+        private IServiceCollection AddOneGaming(IServiceCollection services)
+        {
+            //services.AddSingleton<WagerOneGamingService>();
+
+            //services.AddSingleton<WagerOneGamingBLL>();
+            //services.AddSingleton<ApiOneGamingBLL>();
+            //services.AddSingleton<FinanceOneGamingBLL>();
+
+            //services.AddHostedService<WagerOneGaming>();
+            //services.AddHostedService<WagerRedoOneGaming>();
+            //services.AddHostedService<FinanceOneGaming>();
 
             return services;
         }
