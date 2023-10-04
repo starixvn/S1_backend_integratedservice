@@ -53,7 +53,6 @@ namespace ThirdPartyWager
             services.AddSingleton<LiveStreamingService>();
             services.AddSingleton<LatestHighlightVideoService>();
             services.AddSingleton<SabaOddsService>();
-            services.AddSingleton<WagerMPService>();
             services.AddSingleton<WagerAPService>();
             services.AddSingleton<WagerYeebetService>();
             
@@ -101,11 +100,6 @@ namespace ThirdPartyWager
             
             //SabaOdds
             services.AddSingleton<SabaOddsBLL>();
-
-            //MP
-            services.AddSingleton<WagerMPBLL>();
-            services.AddSingleton<ApiMPBLL>();
-            services.AddSingleton<FinanceMPBLL>();
 
             //AP
             services.AddSingleton<ApiAPBLL>();
@@ -156,9 +150,6 @@ namespace ThirdPartyWager
             services.AddHostedService<LatestHighlightVideo>();
             services.AddHostedService<SabaOdds>();
             
-            services.AddHostedService<WagerMP>();
-            services.AddHostedService<WagerRedoMP>();
-            services.AddHostedService<FinanceMP>();
             services.AddHostedService<TpRefundWorker>();
   
             services.AddHostedService<FinanceAP>();
