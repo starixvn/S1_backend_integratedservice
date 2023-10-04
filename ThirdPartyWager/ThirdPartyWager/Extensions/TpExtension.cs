@@ -45,6 +45,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.RedTiger, AddRedTiger},
                 { Tp.AP, AddAP},
                 { Tp.SBO, AddSBO},
+                { Tp.Skywind, AddSkywind},
                 { Tp.BG, AddBG}
             };
         }
@@ -465,6 +466,18 @@ namespace ThirdPartyWager.Extensions
 
             return services;
         }
+
+        private IServiceCollection AddSkywind(IServiceCollection services)
+        {
+            services.AddSingleton<ApiSkywindBLL>();
+            services.AddSingleton<WagerSkywindBLL>();
+
+            services.AddHostedService<WagerSkywind>();
+            services.AddHostedService<WagerUnsettleCheckSkywind>();
+
+            return services;
+        }
+
 
         private IServiceCollection AddBG(IServiceCollection services)
         {

@@ -94,9 +94,6 @@ namespace ThirdPartyWager
             //SabaOdds
             services.AddSingleton<SabaOddsBLL>();
 
-            //Skywind
-            services.AddSingleton<ApiSkywindBLL>();
-            services.AddSingleton<WagerSkywindBLL>();
             //Yeebet
             services.AddSingleton<WagerYeebetBLL>();
             services.AddSingleton<ApiYeebetBLL>();
@@ -133,8 +130,6 @@ namespace ThirdPartyWager
             
             services.AddHostedService<TpRefundWorker>();
   
-            services.AddHostedService<WagerSkywind>();
-            services.AddHostedService<WagerUnsettleCheckSkywind>();
             services.AddHostedService<WagerYeebet>();
             services.AddHostedService<FinanceYeebet>();
             
