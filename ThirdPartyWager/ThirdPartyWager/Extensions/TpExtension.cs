@@ -32,6 +32,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.Mega, AddMega},
                 { Tp.One789, AddOne789},
                 { Tp.Iconic, AddIconic},
+                { Tp.V8, AddV8},
                 { Tp.NineW, AddNineW},
                 { Tp.EVO, AddEVO},
                 { Tp.BG, AddBG}
@@ -294,6 +295,22 @@ namespace ThirdPartyWager.Extensions
             //services.AddSingleton<FinanceATBLL>();
 
             //services.AddHostedService<JwtIconic>();
+
+            return services;
+        }
+
+        private IServiceCollection AddV8(IServiceCollection services)
+        {
+            services.AddSingleton<WagerV8Service>();
+
+            services.AddSingleton<WagerV8BLL>();
+            services.AddSingleton<ApiV8BLL>();
+            services.AddSingleton<WagerRedoV8BLL>();
+            services.AddSingleton<FinanceV8BLL>();
+
+            services.AddHostedService<WagerV8>();
+            services.AddHostedService<WagerRedoV8>();
+            services.AddHostedService<FinanceV8>();
 
             return services;
         }
