@@ -43,6 +43,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.EVO, AddEVO},
                 { Tp.Netent, AddNetent},
                 { Tp.RedTiger, AddRedTiger},
+                { Tp.AP, AddAP},
                 { Tp.BG, AddBG}
             };
         }
@@ -431,6 +432,21 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<FinanceRedTigerBLL>();
 
             services.AddHostedService<FinanceRedTiger>();
+
+            return services;
+        }
+
+        private IServiceCollection AddAP(IServiceCollection services)
+        {
+            services.AddSingleton<WagerAPService>();
+
+            services.AddSingleton<ApiAPBLL>();
+            services.AddSingleton<FinanceAPBLL>();
+            services.AddSingleton<WagerAPBLL>();
+
+            services.AddHostedService<FinanceAP>();
+            services.AddHostedService<WagerAP>();
+            services.AddHostedService<WagerRedoAP>();
 
             return services;
         }
