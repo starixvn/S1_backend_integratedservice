@@ -80,7 +80,8 @@ builder.Services
     .AddHostedService<FaChaiWorker>()
     .AddHostedService<PegasusWorker>()
     .AddHostedService<SexyWorker>()
-    .AddHostedService<AGWorker>();
+    .AddHostedService<AGWorker>()
+    .AddHostedService<EBetWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
