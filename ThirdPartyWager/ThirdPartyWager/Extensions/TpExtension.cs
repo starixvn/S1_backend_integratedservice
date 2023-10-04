@@ -37,6 +37,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.AMB, AddAMB},
                 { Tp.NineW, AddNineW},
                 { Tp.JILI, AddJILI},
+                { Tp.TCG, AddTCG},
                 { Tp.EVO, AddEVO},
                 { Tp.BG, AddBG}
             };
@@ -356,6 +357,16 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<FinanceJILIBLL>();
 
             services.AddHostedService<FinanceJILI>();
+            return services;
+        }
+
+        private IServiceCollection AddTCG(IServiceCollection services)
+        {
+            services.AddSingleton<TCGBLL>();
+            services.AddSingleton<FinanceTCGBLL>();
+
+            services.AddHostedService<WagerTCG>();
+            services.AddHostedService<FinanceTCG>();
             return services;
         }
 

@@ -110,9 +110,7 @@ namespace ThirdPartyWager
             services.AddTransient<IApiMGBLL, ApiMGBLL>();
             services.AddTransient<IApiSWBLL, ApiSWBLL>();
             services.AddTransient<IMGBLL, MGBLL>();
-            //TCG
-            services.AddSingleton<TCGBLL>();
-            services.AddSingleton<FinanceTCGBLL>();
+
 
             //AP
             services.AddSingleton<ApiAPBLL>();
@@ -164,8 +162,6 @@ namespace ThirdPartyWager
             services.AddHostedService<SabaOdds>();
             services.AddHostedService<WagerMG>();
             
-            services.AddHostedService<WagerTCG>();
-            services.AddHostedService<FinanceTCG>();
             services.AddHostedService<WagerMP>();
             services.AddHostedService<WagerRedoMP>();
             services.AddHostedService<FinanceMP>();
