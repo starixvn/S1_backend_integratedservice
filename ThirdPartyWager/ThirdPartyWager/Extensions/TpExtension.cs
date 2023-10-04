@@ -29,6 +29,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.EBet, AddEBet},
                 { Tp.WM, AddWM},
                 { Tp.Kiss918, AddKiss918},
+                { Tp.Mega, AddMega},
                 { Tp.NineW, AddNineW},
                 { Tp.EVO, AddEVO},
                 { Tp.BG, AddBG}
@@ -252,6 +253,21 @@ namespace ThirdPartyWager.Extensions
 
             return services;
         }
+
+        //closed tp
+        private IServiceCollection AddMega(IServiceCollection services)
+        {
+            //services.AddSingleton<WagerMegaService>();
+
+            //services.AddSingleton<WagerMegaBLL>();
+            //services.AddSingleton<ApiMegaBLL>();
+
+            //services.AddHostedService<ReportMega>();
+            //services.AddHostedService<ReportRedoMega>();
+
+            return services;
+        }
+
 
 
         private IServiceCollection AddNineW(IServiceCollection services)
