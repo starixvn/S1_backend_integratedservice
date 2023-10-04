@@ -79,19 +79,11 @@ namespace ThirdPartyWager
             //SabaOdds
             services.AddSingleton<SabaOddsBLL>();
 
-            //IM
-            services.AddSingleton<WagerSPRIBEBLL>();
-            services.AddSingleton<FinanceSPRIBEBLL>();
-
             services.AddHostedService<LiveStreaming>();
             services.AddHostedService<LatestHighlightVideo>();
             services.AddHostedService<SabaOdds>();
             
             services.AddHostedService<TpRefundWorker>();          
-           
-            services.AddHostedService<WagerIM>();
-            services.AddHostedService<WagerSPRIBE>();
-            services.AddHostedService<FinanceSPRIBE>();
 
             services.AddTpList();
         }

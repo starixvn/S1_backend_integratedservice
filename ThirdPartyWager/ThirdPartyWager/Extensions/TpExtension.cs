@@ -53,6 +53,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.Nextspin, AddNextspin},
                 { Tp.PlayTech, AddPlayTech},
                 { Tp.IM, AddIM},
+                { Tp.SPRIBE, AddSPRIBE},
             };
         }
         private IServiceCollection AddSA(IServiceCollection services)
@@ -584,6 +585,19 @@ namespace ThirdPartyWager.Extensions
 
             services.AddHostedService<WagerIM>();
             services.AddHostedService<FinanceIM>();
+
+            return services;
+        }
+
+        private IServiceCollection AddSPRIBE(IServiceCollection services)
+        {
+            services.AddSingleton<WagerIMService>();
+
+            services.AddSingleton<WagerSPRIBEBLL>();
+            services.AddSingleton<FinanceSPRIBEBLL>();
+
+            services.AddHostedService<WagerSPRIBE>();
+            services.AddHostedService<FinanceSPRIBE>();
 
             return services;
         }
