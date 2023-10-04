@@ -1,9 +1,6 @@
 ﻿using System.Text;
-
 using Microsoft.AspNetCore.Mvc;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -19,27 +16,19 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly BettingBLL _bettingBLL;
         private readonly SettledBLL _settledBLL;
-        private readonly ILogger<JILIController> _logger;
         private readonly Log2File _log2File;
-        private readonly Tools _tools;
         private readonly Tp _thisTp;
         private readonly IHostEnvironment _environment;
 
-        public JILIController(
-            IServiceProvider provider,
-            ILogger<JILIController> logger,
-            IHostEnvironment environment
-        )
+        public JILIController(IServiceProvider provider)
         {
-            _logger = logger;
             _log2File = provider.GetRequiredService<Log2File>();
-            _environment = environment;
+            _environment = provider.GetRequiredService<IHostEnvironment>();
             _authBLL = provider.GetRequiredService<AuthBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _bettingBLL = provider.GetRequiredService<BettingBLL>();
             _settledBLL = provider.GetRequiredService<SettledBLL>();
-            _tools = provider.GetRequiredService<Tools>();
             _thisTp = Tp.JILI;
         }
 
@@ -90,10 +79,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/auth")]
-        [Route("[controller]/goal123/auth")]
-        [Route("[controller]/bwing/auth")]
-        [Route("[controller]/nova_stream/auth")]
-        public async Task<dynamic> authAsync()
+        [Route("[controller]/{sitename}/auth")]
+        public async Task<dynamic> AuthAsync(string sitename = "")
         {
             string logName = $"{_thisTp}_auth";
 
@@ -105,13 +92,19 @@ namespace ThirdPartySeamlessWallet.Controllers
             getErrorResponse.errorCode = 5;
             getErrorResponse.message = "Error";
 
+            // check SiteName
+            if (!CheckSiteName(sitename))
+            {
+                return GetSiteError(Content, logName);
+            }
+
             // check authorization
             Request.Headers.TryGetValue("Authorization", out var authorization);
             string sAuthorization = authorization.ToString();
 
             #region GetToken
 
-            var tokenInfo = getTokenInfo(getReq.token);
+            var tokenInfo = GetTokenInfo(getReq.token);
             var verify = _authBLL.Authenticate(tokenInfo.shortTimeToken, out TpCustInfoAuth tpCustInfoAuth);
             if (!verify)
             {
@@ -123,7 +116,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             #endregion
 
-            var check = checkAuthorization(tpCustInfoAuth?.MemberType == 3, sAuthorization);
+            var check = CheckAuthorization(tpCustInfoAuth?.MemberType == 3, sAuthorization);
             if (check.errorCode != 0)
             {
                 _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(check)}", logName);
@@ -163,7 +156,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
-
             }
             catch (Exception ex)
             {
@@ -173,16 +165,12 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
             return getErrorResponse;
-
-
         }
 
         [HttpPost]
         [Route("[controller]/bet")]
-        [Route("[controller]/goal123/bet")]
-        [Route("[controller]/bwing/bet")]
-        [Route("[controller]/nova_stream/bet")]
-        public async Task<dynamic> betAsync([FromQuery] Dictionary<string, string> getQuery)
+        [Route("[controller]/{sitename}/bet")]
+        public async Task<dynamic> BetAsync([FromQuery] Dictionary<string, string> getQuery, string sitename = "")
         {
             string logName = $"{_thisTp}_bet";
 
@@ -193,6 +181,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             ErrorResp getErrorResponse = new ErrorResp();
             getErrorResponse.errorCode = 5;
             getErrorResponse.message = "Error";
+
+            // check siteName
+            if (!CheckSiteName(sitename))
+            {
+                return GetSiteError(Content, logName);
+            }
 
             // check authorization
             Request.Headers.TryGetValue("Authorization", out var authorization);
@@ -207,7 +201,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getErrorResponse;
             }
 
-            var check = checkAuthorization(custInfo.MemberType == 3, sAuthorization);
+            var check = CheckAuthorization(custInfo.MemberType == 3, sAuthorization);
             if (check.errorCode != 0)
             {
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(check)}", logName);
@@ -215,9 +209,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             try
             {
-                var tokenInfo = getTokenInfo(getReq.token);
+                var tokenInfo = GetTokenInfo(getReq.token);
                 // offline payment no need to check online
-                var logToken = "";
                 if (!getReq.isFreeRound)
                 {
                     var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, getReq.userId);
@@ -232,7 +225,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         getErrorResponse.errorCode = 4;
                         getErrorResponse.message = "Wrong token";
-                        _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\n{JsonConvert.SerializeObject(tokenInfo)}\r\n{JsonConvert.SerializeObject(tpCheck)}", logName);
+                        _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\n{tpCheck.Token}\r\n{tokenInfo.longTimeToken}", logName);
                         return getErrorResponse;
                     }
                     else if (tpCheck.Locked)
@@ -242,8 +235,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                         _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
                         return getErrorResponse;
                     }
-
-                    logToken = $"\r\n{JsonConvert.SerializeObject(tokenInfo)}\r\n{JsonConvert.SerializeObject(tpCheck)}";
                 }
 
                 if (_environment.IsDevelopment() && getReq.betAmount == 90)
@@ -278,7 +269,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.currency = tpCustBalance.TpCurrencyId;
                     getApiResponse.balance = tpAffterAmount;
                     getApiResponse.token = getReq.token;
-                    _log2File.Info($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}{logToken}", logName);
+                    _log2File.Info($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
                 else if (result == -1)
@@ -290,7 +281,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.currency = tpCustBalance.TpCurrencyId;
                     getApiResponse.balance = tpCustBalance.Balance;
                     getApiResponse.token = getReq.token;
-                    _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}{logToken}", logName);
+                    _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
                 else if (tpAffterAmount < 0)
@@ -302,7 +293,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.currency = tpCustBalance.TpCurrencyId;
                     getApiResponse.balance = tpCustBalance.Balance;
                     getApiResponse.token = getReq.token;
-                    _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}{logToken}", logName);
+                    _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
             }
@@ -319,13 +310,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpPost]
         [Route("[controller]/cancelBet")]
         [Route("[controller]/cancelSessionBet")]
-        [Route("[controller]/goal123/cancelBet")]
-        [Route("[controller]/goal123/cancelSessionBet")]
-        [Route("[controller]/bwing/cancelBet")]
-        [Route("[controller]/bwing/cancelSessionBet")]
-        [Route("[controller]/nova_stream/cancelBet")]
-        [Route("[controller]/nova_stream/cancelSessionBet")]
-        public async Task<dynamic> cancelBetAsync([FromQuery] Dictionary<string, string> getQuery)
+        [Route("[controller]/{sitename}/cancelBet")]
+        [Route("[controller]/{sitename}/cancelSessionBet")]
+        public async Task<dynamic> CancelBetAsync([FromQuery] Dictionary<string, string> getQuery, string sitename = "")
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
@@ -336,6 +323,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             ErrorResp getErrorResponse = new ErrorResp();
             getErrorResponse.errorCode = 5;
             getErrorResponse.message = "Error";
+
+            // check sitName
+            if (!CheckSiteName(sitename))
+            {
+                return GetSiteError(Content, logName);
+            }
 
             // check authorization
             Request.Headers.TryGetValue("Authorization", out var authorization);
@@ -350,7 +343,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getErrorResponse;
             }
 
-            var check = checkAuthorization(custInfo.MemberType == 3, sAuthorization);
+            var check = CheckAuthorization(custInfo.MemberType == 3, sAuthorization);
             if (check.errorCode != 0)
             {
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(check)}", logName);
@@ -406,10 +399,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/sessionBet")]
-        [Route("[controller]/goal123/sessionBet")]
-        [Route("[controller]/bwing/sessionBet")]
-        [Route("[controller]/nova_stream/sessionBet")]
-        public async Task<dynamic> sessionBetAsync([FromQuery] Dictionary<string, string> getQuery)
+        [Route("[controller]/{sitename}/sessionBet")]
+        public async Task<dynamic> SessionBetAsync([FromQuery] Dictionary<string, string> getQuery, string sitename = "")
         {
             string logName = $"{_thisTp}_sessionBet";
 
@@ -420,6 +411,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             ErrorResp getErrorResponse = new ErrorResp();
             getErrorResponse.errorCode = 5;
             getErrorResponse.message = "Error";
+
+            // check siteName
+            if (!CheckSiteName(sitename))
+            {
+                return GetSiteError(Content, logName);
+            }
 
             // check authorization
             Request.Headers.TryGetValue("Authorization", out var authorization);
@@ -434,7 +431,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getErrorResponse;
             }
 
-            var check = checkAuthorization(custInfo.MemberType == 3, sAuthorization);
+            var check = CheckAuthorization(custInfo.MemberType == 3, sAuthorization);
             if (check.errorCode != 0)
             {
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(check)}", logName);
@@ -450,8 +447,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var logToken = "";
-                var tokenInfo = getTokenInfo(getReq.token);
+                var tokenInfo = GetTokenInfo(getReq.token);
                 var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, getReq.game.ToString());
                 var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getReq.userId, (int)gameType);
                 var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, getReq.userId);
@@ -470,7 +466,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         getErrorResponse.errorCode = 4;
                         getErrorResponse.message = "Wrong token";
-                        _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\n{JsonConvert.SerializeObject(tokenInfo)}\r\n{JsonConvert.SerializeObject(tpCheck)}", logName);
+                        _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}\r\n{tpCheck.Token}\r\n{tokenInfo.longTimeToken}", logName);
                         return getErrorResponse;
                     }
                     else if (tpCheck.Locked)
@@ -480,7 +476,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                         _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
                         return getErrorResponse;
                     }
-                    logToken = $"\r\n{JsonConvert.SerializeObject(tokenInfo)}\r\n{JsonConvert.SerializeObject(tpCheck)}";
                 }
 
                 decimal tpAffterAmount = 0;
@@ -498,7 +493,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.currency = tpCustBalance.TpCurrencyId;
                     getApiResponse.balance = tpAffterAmount;
                     getApiResponse.token = getReq.token;
-                    _log2File.Info($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}{logToken}", logName);
+                    _log2File.Info($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
                 else if (result == -1)
@@ -510,7 +505,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.currency = tpCustBalance.TpCurrencyId;
                     getApiResponse.balance = tpCustBalance.Balance;
                     getApiResponse.token = getReq.token;
-                    _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}{logToken}", logName);
+                    _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
                 else if (tpAffterAmount < 0)
@@ -522,7 +517,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.currency = tpCustBalance.TpCurrencyId;
                     getApiResponse.balance = tpAffterAmount;
                     getApiResponse.token = getReq.token;
-                    _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}{logToken}", logName);
+                    _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
             }
@@ -536,7 +531,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             return getErrorResponse;
         }
 
-        private ErrorResp checkAuthorization(bool isLiveStreaming, string authorization = null)
+        private ErrorResp CheckAuthorization(bool isLiveStreaming, string authorization = null)
         {
             ErrorResp getErrorResponse = new ErrorResp();
             byte[] authTmp = null;
@@ -575,7 +570,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             return getErrorResponse;
         }
 
-        private TokenInfo getTokenInfo(string token)
+        private static TokenInfo GetTokenInfo(string token)
         {
             string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(token));
             var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
@@ -586,6 +581,35 @@ namespace ThirdPartySeamlessWallet.Controllers
                 tpUserName = sessionKeyArr[2],
                 gameId = sessionKeyArr[3]
             };
+        }
+
+        private bool CheckSiteName(string siteName)
+        {
+            // "" : nova || stream
+            if (siteName == "" || siteName.Contains("_stream"))
+            {
+                return true;
+            }
+
+            var serverInfo = _thirdPartyBLL.GetServerInfoBySiteName(siteName);
+            if (serverInfo == null || serverInfo.SiteId <= 0)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private ErrorResp GetSiteError(string content,string logName)
+        {
+            var  errorResponse = new ErrorResp
+            {
+                errorCode = 5,
+                message = "Site error"
+            };
+
+            _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(errorResponse)}", logName);
+            return errorResponse;
         }
     }
 }
