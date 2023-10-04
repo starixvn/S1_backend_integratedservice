@@ -48,7 +48,8 @@ namespace ThirdPartyWager.Extensions
                 { Tp.Skywind, AddSkywind},
                 { Tp.SimplePlay, AddSimplePlay},
                 { Tp.Yeebet, AddYeebet},
-                { Tp.BG, AddBG}
+                { Tp.BG, AddBG},
+                { Tp.TFG, AddTFG},
             };
         }
         private IServiceCollection AddSA(IServiceCollection services)
@@ -522,6 +523,18 @@ namespace ThirdPartyWager.Extensions
             services.AddHostedService<WagerBG>();
             services.AddHostedService<WagerRedoBG>();
             services.AddHostedService<FinanceBG>();
+            return services;
+        }
+
+        private IServiceCollection AddTFG(IServiceCollection services)
+        {
+            services.AddSingleton<WagerTFGService>();
+
+            services.AddSingleton<ApiTFGBLL>();
+            services.AddSingleton<WagerTFGBLL>();
+
+            services.AddHostedService<WagerTFG>();
+            services.AddHostedService<WagerUnsettleCheckTFG>();
             return services;
         }
     }

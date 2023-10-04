@@ -56,7 +56,6 @@ namespace ThirdPartyWager
             services.AddSingleton<TpUnsettleService>();
             services.AddSingleton<ConfigService>();
             services.AddSingleton<FincanceService>();
-            services.AddSingleton<WagerTFGService>();
             services.AddSingleton<WagerIMService>();
 
             services.AddOptionListByDB<ServerInfo>("Admin_ServerInfoList_Get");
@@ -86,11 +85,6 @@ namespace ThirdPartyWager
             //SabaOdds
             services.AddSingleton<SabaOddsBLL>();
 
-
-            //TFG
-            services.AddSingleton<ApiTFGBLL>();
-            services.AddSingleton<WagerTFGBLL>();
-
             //Nextspin
             services.AddSingleton<IWagerNextspinService, WagerNextspinService>();
             services.AddSingleton<INextspinApi, NextspinApi>();
@@ -113,8 +107,6 @@ namespace ThirdPartyWager
             
             services.AddHostedService<TpRefundWorker>();          
            
-            services.AddHostedService<WagerTFG>();
-            services.AddHostedService<WagerUnsettleCheckTFG>();
             services.AddHostedService<WagerNextspin>();
             services.AddHostedService<FinanceNextspin>();
             services.AddHostedService<WagerIM>();
