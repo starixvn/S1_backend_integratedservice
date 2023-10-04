@@ -191,9 +191,6 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceSimplePlay>();
             services.AddHostedService<WagerSBO>();
             services.AddHostedService<FinanceSBO>();
-            services.AddHostedService<WagerWM>();
-            services.AddHostedService<WagerRedoWM>();
-            services.AddHostedService<FinanceWM>();
             services.AddHostedService<WagerOne789>();
             services.AddHostedService<FinanceOne789>();
             services.AddHostedService<WagerV8>();
