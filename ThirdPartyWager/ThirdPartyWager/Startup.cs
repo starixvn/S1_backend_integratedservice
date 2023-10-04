@@ -55,7 +55,6 @@ namespace ThirdPartyWager
             services.AddSingleton<SabaOddsService>();
             services.AddSingleton<WagerYeebetService>();
             
-            services.AddSingleton<IWagerSBOService, WagerSBOService>();
             services.AddSingleton<TpUnsettleService>();
             services.AddSingleton<ConfigService>();
             services.AddSingleton<FincanceService>();
@@ -83,11 +82,6 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerSimplePlayBLL>();
             services.AddSingleton<FinanceSimplePlayBLL>();
 
-            //SBO
-            services.AddSingleton<ISBOBLL, SBOBLL>();
-            services.AddSingleton<IApiSBOBLL, ApiSBOBLL>();
-            services.AddSingleton<FinanceSBOBLL>();
-            
             // PlayTech
             services.AddSingleton<WagerPlayTechBLL>();
             services.AddSingleton<ApiPlayTechBLL>();
@@ -129,8 +123,6 @@ namespace ThirdPartyWager
             services.AddHostedService<WagerSimplePlay>();
             services.AddHostedService<WagerRedoSimplePlay>();
             services.AddHostedService<FinanceSimplePlay>();
-            services.AddHostedService<WagerSBO>();
-            services.AddHostedService<FinanceSBO>();
 
             services.AddHostedService<WagerPlayTech>();
             services.AddHostedService<WagerRedoPlayTech>();
