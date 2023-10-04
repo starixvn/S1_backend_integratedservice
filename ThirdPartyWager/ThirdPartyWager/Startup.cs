@@ -48,7 +48,6 @@ namespace ThirdPartyWager
             services.AddSingleton<ThirdPartyHelper>();
             services.AddSingleton<TpCustInfoService>();
             services.AddSingleton<CommonService>();
-            services.AddSingleton<WagerPlayTechService>();
             services.AddSingleton<LiveStreamingService>();
             services.AddSingleton<LatestHighlightVideoService>();
             services.AddSingleton<SabaOddsService>();
@@ -73,10 +72,6 @@ namespace ThirdPartyWager
             services.AddSingleton<CommonBLL>();
             services.AddSingleton<TpRefundBLL>();
 
-            // PlayTech
-            services.AddSingleton<WagerPlayTechBLL>();
-            services.AddSingleton<ApiPlayTechBLL>();
-            services.AddSingleton<FinancePlayTechBLL>();
             // LiveStreaming
             services.AddSingleton<LiveStreamingBLL>();
             // LatestHighlightVideo
@@ -92,9 +87,6 @@ namespace ThirdPartyWager
             services.AddSingleton<WagerSPRIBEBLL>();
             services.AddSingleton<FinanceSPRIBEBLL>();
 
-            services.AddHostedService<WagerPlayTech>();
-            services.AddHostedService<WagerRedoPlayTech>();
-            services.AddHostedService<FinancePlayTech>();
             services.AddHostedService<LiveStreaming>();
             services.AddHostedService<LatestHighlightVideo>();
             services.AddHostedService<SabaOdds>();
