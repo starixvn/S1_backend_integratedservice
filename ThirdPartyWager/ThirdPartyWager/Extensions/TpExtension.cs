@@ -16,6 +16,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.SA, AddSA},
                 { Tp.AG, AddAG},
                 { Tp.DG, AddDG},
+                { Tp.GPI, AddGPI},
                 { Tp.YGG, AddYGG},
                 { Tp.SG, AddSG},
                 { Tp.NineW, AddNineW},
@@ -71,6 +72,20 @@ namespace ThirdPartyWager.Extensions
             return services;
         }
 
+        private IServiceCollection AddGPI(IServiceCollection services)
+        {
+            services.AddSingleton<WagerGPIService>();
+
+            services.AddSingleton<WagerGPIBLL>();
+            services.AddSingleton<ApiGPIBLL>();
+            services.AddSingleton<FinanceGPIBLL>();
+
+            services.AddHostedService<WagerGPI>();
+            services.AddHostedService<WagerRedoGPI>();
+            services.AddHostedService<FinanceGPI>();
+
+            return services;
+        }
 
         private IServiceCollection AddYGG(IServiceCollection services)
         {

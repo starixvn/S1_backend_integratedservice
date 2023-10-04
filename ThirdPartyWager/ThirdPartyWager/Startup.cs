@@ -65,7 +65,6 @@ namespace ThirdPartyWager
             services.AddSingleton<SabaOddsService>();
             services.AddSingleton<WagerKMService>();
             services.AddSingleton<WagerMPService>();
-            services.AddSingleton<WagerGPIService>();
             services.AddSingleton<WagerAPService>();
             services.AddSingleton<WagerYeebetService>();
             
@@ -198,10 +197,6 @@ namespace ThirdPartyWager
             //Skywind
             services.AddSingleton<ApiSkywindBLL>();
             services.AddSingleton<WagerSkywindBLL>();
-            //GPI
-            services.AddSingleton<WagerGPIBLL>();
-            services.AddSingleton<ApiGPIBLL>();
-            services.AddSingleton<FinanceGPIBLL>();
             //Yeebet
             services.AddSingleton<WagerYeebetBLL>();
             services.AddSingleton<ApiYeebetBLL>();
@@ -277,9 +272,6 @@ namespace ThirdPartyWager
             services.AddHostedService<FinanceCQ9>();
             services.AddHostedService<WagerSkywind>();
             services.AddHostedService<WagerUnsettleCheckSkywind>();
-            services.AddHostedService<WagerGPI>();
-            services.AddHostedService<WagerRedoGPI>();
-            services.AddHostedService<FinanceGPI>();
             services.AddHostedService<WagerYeebet>();
             services.AddHostedService<FinanceYeebet>();
             
