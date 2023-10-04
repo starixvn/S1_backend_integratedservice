@@ -36,8 +36,24 @@ namespace ThirdPartyWager.Extensions
                 { Tp.N2Live, AddN2Live},
                 { Tp.AMB, AddAMB},
                 { Tp.NineW, AddNineW},
+                { Tp.JILI, AddJILI},
+                { Tp.TCG, AddTCG},
+                { Tp.MG, AddMG},
+                { Tp.MP, AddMP},
                 { Tp.EVO, AddEVO},
-                { Tp.BG, AddBG}
+                { Tp.Netent, AddNetent},
+                { Tp.RedTiger, AddRedTiger},
+                { Tp.AP, AddAP},
+                { Tp.SBO, AddSBO},
+                { Tp.Skywind, AddSkywind},
+                { Tp.SimplePlay, AddSimplePlay},
+                { Tp.Yeebet, AddYeebet},
+                { Tp.BG, AddBG},
+                { Tp.TFG, AddTFG},
+                { Tp.Nextspin, AddNextspin},
+                { Tp.PlayTech, AddPlayTech},
+                { Tp.IM, AddIM},
+                { Tp.SPRIBE, AddSPRIBE},
             };
         }
         private IServiceCollection AddSA(IServiceCollection services)
@@ -294,9 +310,14 @@ namespace ThirdPartyWager.Extensions
 
             //services.AddSingleton<WagerIconicBLL>();
             //services.AddSingleton<ApiIconicBLL>();
+
             //services.AddSingleton<FinanceATBLL>();
 
             //services.AddHostedService<JwtIconic>();
+
+            //services.AddHostedService<WagerAT>();
+            //services.AddHostedService<WagerRedoAT>();
+            //services.AddHostedService<FinanceAT>();
 
             return services;
         }
@@ -342,11 +363,54 @@ namespace ThirdPartyWager.Extensions
             return services;
         }
 
-
         private IServiceCollection AddNineW(IServiceCollection services)
         {
             services.AddSingleton<NineWBLL>();
             services.AddHostedService<WagerNineW>();
+            return services;
+        }
+
+        private IServiceCollection AddJILI(IServiceCollection services)
+        {
+            services.AddSingleton<ApiJILIBLL>();
+            services.AddSingleton<FinanceJILIBLL>();
+
+            services.AddHostedService<FinanceJILI>();
+            return services;
+        }
+
+        private IServiceCollection AddTCG(IServiceCollection services)
+        {
+            services.AddSingleton<TCGBLL>();
+            services.AddSingleton<FinanceTCGBLL>();
+
+            services.AddHostedService<WagerTCG>();
+            services.AddHostedService<FinanceTCG>();
+            return services;
+        }
+
+        private IServiceCollection AddMG(IServiceCollection services)
+        {
+            services.AddTransient<IApiMGBLL, ApiMGBLL>();
+            services.AddTransient<IApiSWBLL, ApiSWBLL>();
+            services.AddTransient<IMGBLL, MGBLL>();
+
+            services.AddHostedService<WagerMG>();
+            services.AddHostedService<FinanceMG>();
+            return services;
+        }
+
+        private IServiceCollection AddMP(IServiceCollection services)
+        {
+            services.AddSingleton<WagerMPService>();
+
+            services.AddSingleton<WagerMPBLL>();
+            services.AddSingleton<ApiMPBLL>();
+            services.AddSingleton<FinanceMPBLL>();
+
+            services.AddHostedService<WagerMP>();
+            services.AddHostedService<WagerRedoMP>();
+            services.AddHostedService<FinanceMP>();
             return services;
         }
 
@@ -366,6 +430,96 @@ namespace ThirdPartyWager.Extensions
             return services;
         }
 
+        private IServiceCollection AddNetent(IServiceCollection services)
+        {
+            services.AddSingleton<ApiNetentBLL>();
+            services.AddSingleton<FinanceNetentBLL>();
+
+            services.AddHostedService<FinanceNetent>();
+
+            return services;
+        }
+
+        private IServiceCollection AddRedTiger(IServiceCollection services)
+        {
+            services.AddSingleton<ApiRedTigerBLL>();
+            services.AddSingleton<FinanceRedTigerBLL>();
+
+            services.AddHostedService<FinanceRedTiger>();
+
+            return services;
+        }
+
+        private IServiceCollection AddAP(IServiceCollection services)
+        {
+            services.AddSingleton<WagerAPService>();
+
+            services.AddSingleton<ApiAPBLL>();
+            services.AddSingleton<FinanceAPBLL>();
+            services.AddSingleton<WagerAPBLL>();
+
+            services.AddHostedService<FinanceAP>();
+            services.AddHostedService<WagerAP>();
+            services.AddHostedService<WagerRedoAP>();
+
+            return services;
+        }
+
+        private IServiceCollection AddSBO(IServiceCollection services)
+        {
+            services.AddSingleton<IWagerSBOService, WagerSBOService>();
+
+            services.AddSingleton<ISBOBLL, SBOBLL>();
+            services.AddSingleton<IApiSBOBLL, ApiSBOBLL>();
+            services.AddSingleton<FinanceSBOBLL>();
+
+            services.AddHostedService<WagerSBO>();
+            services.AddHostedService<FinanceSBO>();
+
+            return services;
+        }
+
+        private IServiceCollection AddSkywind(IServiceCollection services)
+        {
+            services.AddSingleton<ApiSkywindBLL>();
+            services.AddSingleton<WagerSkywindBLL>();
+
+            services.AddHostedService<WagerSkywind>();
+            services.AddHostedService<WagerUnsettleCheckSkywind>();
+
+            return services;
+        }
+
+        private IServiceCollection AddSimplePlay(IServiceCollection services)
+        {
+            services.AddSingleton<WagerSimplePlayService>();
+
+            services.AddSingleton<ApiSimplePlayBLL>();
+            services.AddSingleton<WagerSimplePlayBLL>();
+            services.AddSingleton<FinanceSimplePlayBLL>();
+
+            services.AddHostedService<WagerSimplePlay>();
+            services.AddHostedService<WagerRedoSimplePlay>();
+            services.AddHostedService<FinanceSimplePlay>();
+
+            return services;
+        }
+
+        private IServiceCollection AddYeebet(IServiceCollection services)
+        {
+            services.AddSingleton<WagerYeebetService>();
+
+            services.AddSingleton<WagerYeebetBLL>();
+            services.AddSingleton<ApiYeebetBLL>();
+            services.AddSingleton<FinanceYeebetBLL>();
+
+            services.AddHostedService<WagerYeebet>();
+            services.AddHostedService<FinanceYeebet>();
+
+            return services;
+        }
+
+
         private IServiceCollection AddBG(IServiceCollection services)
         {
             services.AddSingleton<WagerBGService>();
@@ -378,6 +532,73 @@ namespace ThirdPartyWager.Extensions
             services.AddHostedService<WagerBG>();
             services.AddHostedService<WagerRedoBG>();
             services.AddHostedService<FinanceBG>();
+            return services;
+        }
+
+        private IServiceCollection AddTFG(IServiceCollection services)
+        {
+            services.AddSingleton<WagerTFGService>();
+
+            services.AddSingleton<ApiTFGBLL>();
+            services.AddSingleton<WagerTFGBLL>();
+
+            services.AddHostedService<WagerTFG>();
+            services.AddHostedService<WagerUnsettleCheckTFG>();
+            return services;
+        }
+
+        private IServiceCollection AddNextspin(IServiceCollection services)
+        {
+            services.AddSingleton<IWagerNextspinService, WagerNextspinService>();
+
+            services.AddSingleton<INextspinApi, NextspinApi>();
+            services.AddSingleton<INextspinBLL, NextspinBLL>();
+            services.AddSingleton<INextspinFinancBLL, NextspinFinancBLL>();
+
+            services.AddHostedService<WagerNextspin>();
+            services.AddHostedService<FinanceNextspin>();
+            return services;
+        }
+
+        private IServiceCollection AddPlayTech(IServiceCollection services)
+        {
+            services.AddSingleton<WagerPlayTechService>();
+
+            services.AddSingleton<WagerPlayTechBLL>();
+            services.AddSingleton<ApiPlayTechBLL>();
+            services.AddSingleton<FinancePlayTechBLL>();
+
+            services.AddHostedService<WagerPlayTech>();
+            services.AddHostedService<WagerRedoPlayTech>();
+            services.AddHostedService<FinancePlayTech>();
+
+            return services;
+        }
+
+        private IServiceCollection AddIM(IServiceCollection services)
+        {
+            services.AddSingleton<WagerIMService>();
+
+            services.AddSingleton<ApiIMBLL>();
+            services.AddSingleton<WagerIMBLL>();
+            services.AddSingleton<FinanceIMBLL>();
+
+            services.AddHostedService<WagerIM>();
+            services.AddHostedService<FinanceIM>();
+
+            return services;
+        }
+
+        private IServiceCollection AddSPRIBE(IServiceCollection services)
+        {
+            services.AddSingleton<WagerIMService>();
+
+            services.AddSingleton<WagerSPRIBEBLL>();
+            services.AddSingleton<FinanceSPRIBEBLL>();
+
+            services.AddHostedService<WagerSPRIBE>();
+            services.AddHostedService<FinanceSPRIBE>();
+
             return services;
         }
     }

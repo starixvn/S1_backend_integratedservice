@@ -48,21 +48,9 @@ namespace ThirdPartyWager
             services.AddSingleton<ThirdPartyHelper>();
             services.AddSingleton<TpCustInfoService>();
             services.AddSingleton<CommonService>();
-            services.AddSingleton<WagerSimplePlayService>();
-            services.AddSingleton<WagerPlayTechService>();
-            services.AddSingleton<LiveStreamingService>();
-            services.AddSingleton<LatestHighlightVideoService>();
-            services.AddSingleton<SabaOddsService>();
-            services.AddSingleton<WagerMPService>();
-            services.AddSingleton<WagerAPService>();
-            services.AddSingleton<WagerYeebetService>();
-            
-            services.AddSingleton<IWagerSBOService, WagerSBOService>();
             services.AddSingleton<TpUnsettleService>();
             services.AddSingleton<ConfigService>();
             services.AddSingleton<FincanceService>();
-            services.AddSingleton<WagerTFGService>();
-            services.AddSingleton<WagerIMService>();
 
             services.AddOptionListByDB<ServerInfo>("Admin_ServerInfoList_Get");
             services.AddOptionListByDB<dynamic>("Service_TpWagerTimer_Get", new { TpId = 1, Type = 1 }, DataBase.Wager);
@@ -77,132 +65,51 @@ namespace ThirdPartyWager
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
             services.AddSingleton<CommonBLL>();
-            services.AddSingleton<TpRefundBLL>();
 
+            #region SabaOdds
 
-            //SimplePlay
-            services.AddSingleton<ApiSimplePlayBLL>();
-            services.AddSingleton<WagerSimplePlayBLL>();
-            services.AddSingleton<FinanceSimplePlayBLL>();
-
-            //SBO
-            services.AddSingleton<ISBOBLL, SBOBLL>();
-            services.AddSingleton<IApiSBOBLL, ApiSBOBLL>();
-            services.AddSingleton<FinanceSBOBLL>();
-            
-            // PlayTech
-            services.AddSingleton<WagerPlayTechBLL>();
-            services.AddSingleton<ApiPlayTechBLL>();
-            services.AddSingleton<FinancePlayTechBLL>();
-            // LiveStreaming
-            services.AddSingleton<LiveStreamingBLL>();
-            // LatestHighlightVideo
-            services.AddSingleton<LatestHighlightVideoBLL>();
-            
-            //SabaOdds
+            // DAL
+            services.AddSingleton<SabaOddsService>();
+            // BLL
             services.AddSingleton<SabaOddsBLL>();
 
-            //MP
-            services.AddSingleton<WagerMPBLL>();
-            services.AddSingleton<ApiMPBLL>();
-            services.AddSingleton<FinanceMPBLL>();
-            //MG
-            services.AddTransient<IApiMGBLL, ApiMGBLL>();
-            services.AddTransient<IApiSWBLL, ApiSWBLL>();
-            services.AddTransient<IMGBLL, MGBLL>();
-            //TCG
-            services.AddSingleton<TCGBLL>();
-            services.AddSingleton<FinanceTCGBLL>();
-
-            //JILI
-            services.AddSingleton<ApiJILIBLL>();
-            services.AddSingleton<FinanceJILIBLL>();
-            //AP
-            services.AddSingleton<ApiAPBLL>();
-            services.AddSingleton<FinanceAPBLL>();
-            services.AddSingleton<WagerAPBLL>();
-            //Netent
-            services.AddSingleton<ApiNetentBLL>();
-            services.AddSingleton<FinanceNetentBLL>();
-            //RedTiger
-            services.AddSingleton<ApiRedTigerBLL>();
-            services.AddSingleton<FinanceRedTigerBLL>();
-            //Skywind
-            services.AddSingleton<ApiSkywindBLL>();
-            services.AddSingleton<WagerSkywindBLL>();
-            //Yeebet
-            services.AddSingleton<WagerYeebetBLL>();
-            services.AddSingleton<ApiYeebetBLL>();
-            services.AddSingleton<FinanceYeebetBLL>();
-
-            //TFG
-            services.AddSingleton<ApiTFGBLL>();
-            services.AddSingleton<WagerTFGBLL>();
-
-            //Nextspin
-            services.AddSingleton<IWagerNextspinService, WagerNextspinService>();
-            services.AddSingleton<INextspinApi, NextspinApi>();
-            services.AddSingleton<INextspinBLL, NextspinBLL>();
-            services.AddSingleton<INextspinFinancBLL, NextspinFinancBLL>();
-
-            //IM
-            services.AddSingleton<ApiIMBLL>();
-            services.AddSingleton<WagerIMBLL>();
-            services.AddSingleton<FinanceIMBLL>();
-            services.AddSingleton<WagerSPRIBEBLL>();
-            services.AddSingleton<FinanceSPRIBEBLL>();
-
-            //Worker
-            services.AddHostedService<WagerSimplePlay>();
-            services.AddHostedService<WagerRedoSimplePlay>();
-            services.AddHostedService<FinanceSimplePlay>();
-            services.AddHostedService<WagerSBO>();
-            services.AddHostedService<FinanceSBO>();
-
-            services.AddHostedService<WagerPlayTech>();
-            services.AddHostedService<WagerRedoPlayTech>();
-            services.AddHostedService<FinancePlayTech>();
-            services.AddHostedService<LiveStreaming>();
-            services.AddHostedService<LatestHighlightVideo>();
             services.AddHostedService<SabaOdds>();
-            services.AddHostedService<WagerMG>();
-            
-            services.AddHostedService<WagerTCG>();
-            services.AddHostedService<FinanceTCG>();
-            services.AddHostedService<WagerMP>();
-            services.AddHostedService<WagerRedoMP>();
-            services.AddHostedService<FinanceMP>();
+
+            #endregion
+
+            #region LiveStreaming
+
+            // DAL
+            services.AddSingleton<LiveStreamingService>();
+            // BLL
+            services.AddSingleton<LiveStreamingBLL>();
+
+            services.AddHostedService<LiveStreaming>();
+
+            #endregion
+
+            #region LatestHighlightVideo
+
+            // DAL
+            services.AddSingleton<LatestHighlightVideoService>();
+            // BLL
+            services.AddSingleton<LatestHighlightVideoBLL>();
+
+            services.AddHostedService<LatestHighlightVideo>();
+
+            #endregion
+
+            #region TpRefundWorker
+
+            //BLL
+            services.AddSingleton<TpRefundBLL>();
+
             services.AddHostedService<TpRefundWorker>();
-            services.AddHostedService<FinanceMG>();
-  
-            services.AddHostedService<FinanceJILI>();
-            services.AddHostedService<FinanceAP>();
-            services.AddHostedService<WagerAP>();
-            services.AddHostedService<WagerRedoAP>();
-            services.AddHostedService<FinanceNetent>();
-            services.AddHostedService<FinanceRedTiger>();
-            services.AddHostedService<WagerSkywind>();
-            services.AddHostedService<WagerUnsettleCheckSkywind>();
-            services.AddHostedService<WagerYeebet>();
-            services.AddHostedService<FinanceYeebet>();
-            
-           
-            services.AddHostedService<WagerTFG>();
-            services.AddHostedService<WagerUnsettleCheckTFG>();
-            services.AddHostedService<WagerNextspin>();
-            services.AddHostedService<FinanceNextspin>();
-            services.AddHostedService<WagerIM>();
-            services.AddHostedService<WagerSPRIBE>();
-            services.AddHostedService<FinanceIM>();
-            services.AddHostedService<FinanceSPRIBE>();
+
+            #endregion
 
             // health check use
             services.AddControllers();
-
-            /*******************closed tp*************************/
-            //services.AddHostedService<WagerAT>();
-            //services.AddHostedService<WagerRedoAT>();
-            //services.AddHostedService<FinanceAT>();
 
             services.AddTpList();
         }
