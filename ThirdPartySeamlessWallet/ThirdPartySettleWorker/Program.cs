@@ -74,7 +74,8 @@ builder.Services
     .AddHostedService<ENDWorker>()
     .AddHostedService<IMWorker>()
     .AddHostedService<SPRIBEWorker>()
-    .AddHostedService<SBSWWorker>();
+    .AddHostedService<SBSWWorker>()
+    .AddHostedService<DGWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);

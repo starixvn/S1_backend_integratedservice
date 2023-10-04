@@ -39,7 +39,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             timerSettleAG = new Timer(DoSettleAGWork, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerSettleDG = new Timer(DoSettleDGWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleEBet = new Timer(DoSettleEBetWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleWM = new Timer(DoSettleWMWork, null, TimeSpan.Zero, TimeSpan.Zero);
             timerSettleN2Live = new Timer(DoSettleN2LiveWork, null, TimeSpan.Zero, TimeSpan.Zero);
@@ -172,106 +171,6 @@ namespace ThirdPartySeamlessWallet.Service.Workers
                 }
 
                 timerSettleAG.Change(dueTimeSpan, TimeSpan.Zero);
-            }
-        }
-
-        private void DoSettleDGWork(object state)
-        {
-            bool forContinue = false;
-            bool isError = false;
-            int thisTp = (int)Tp.DG;
-            var tpName = Enum.GetName(typeof(Tp), thisTp);
-
-            try
-            {
-                var unsettledList = settledBLL.GetUnsettledListLC_DG();
-
-                if (unsettledList != null)
-                {
-                    forContinue = unsettledList.Count() == 200;
-                    foreach (var unsettled in unsettledList)
-                    {
-                        try
-                        {
-                            var wager = settledBLL.GetSettle_TpWagerDG(unsettled.TransId);
-
-                            if (wager != null)
-                            {
-                                //会员发红包、会员抢红包、主播小费、公司发红包、博饼记录、荷官小费
-                                if (wager.GameType == 2)
-                                {
-                                    Task.Run(() =>
-                                    {
-                                        settledBLL.SetSettleFlag_TpWagerDG(unsettled.TransId);
-                                        settledBLL.SetSettleFlag_DG(unsettled.TransId);
-                                    });
-                                    continue;
-                                }
-
-                                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Username);
-                                var tpCurrency = thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
-
-                                if (tpCurrency.ExchangeRate > 1)
-                                {
-                                    wager.Stake *= tpCurrency.ExchangeRate;
-                                    wager.ValidBet *= tpCurrency.ExchangeRate;
-                                    wager.WinLostAmount *= tpCurrency.ExchangeRate;
-                                }
-
-                                var betRecordInfo = new BetRecordInfo
-                                {
-                                    TpId = thisTp,
-                                    Stake = wager.Stake,
-                                    ValidBet = wager.ValidBet,
-                                    WinlostAmount = wager.WinLostAmount,
-                                    TransId = unsettled.TransId,
-                                    GameType = GameType.DG_LiveCasino,
-                                    TpUserName = unsettled.Username,
-                                    SettledTime = wager.SettleTime,
-                                    TransTime = wager.TransTime,
-                                    SettlementType = SettlementType.SettledForValid,
-                                    GameID = wager.GameId.ToString(),
-                                };
-
-                                var result = settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
-
-                                Task.Run(() =>
-                                {
-                                    settledBLL.SetSettleFlag_TpWagerDG(unsettled.TransId);
-                                    settledBLL.SetSettleFlag_DG(unsettled.TransId);
-                                });
-                            }
-
-                        }
-                        catch (Exception ex1)
-                        {
-                            LogContext.PushProperty("TP", tpName);
-                            isError = true;
-                            log2File.Error($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleDG");
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                LogContext.PushProperty("TP", tpName);
-                log2File.Error(ex.ToString(), "SettleDG");
-                isError = true;
-            }
-            finally
-            {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
-
-                if (forContinue)
-                {
-                    dueTimeSpan = TimeSpan.FromSeconds(1);
-                }
-                else if (isError)
-                {
-                    dueTimeSpan = TimeSpan.FromMinutes(1);
-                }
-
-                timerSettleDG.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 
