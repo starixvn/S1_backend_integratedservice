@@ -27,6 +27,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.CQ9, AddCQ9},
                 { Tp.CF, AddCF},
                 { Tp.EBet, AddEBet},
+                { Tp.WM, AddWM},
                 { Tp.NineW, AddNineW},
                 { Tp.EVO, AddEVO},
                 { Tp.BG, AddBG}
@@ -220,6 +221,23 @@ namespace ThirdPartyWager.Extensions
 
             return services;
         }
+
+        private IServiceCollection AddWM(IServiceCollection services)
+        {
+            services.AddSingleton<WagerWMService>();
+
+            services.AddSingleton<WagerWMBLL>();
+            services.AddSingleton<ApiWMBLL>();
+            services.AddSingleton<WagerRedoWMBLL>();
+            services.AddSingleton<FinanceWMBLL>();
+
+            services.AddHostedService<WagerWM>();
+            services.AddHostedService<WagerRedoWM>();
+            services.AddHostedService<FinanceWM>();
+
+            return services;
+        }
+
 
         private IServiceCollection AddNineW(IServiceCollection services)
         {
