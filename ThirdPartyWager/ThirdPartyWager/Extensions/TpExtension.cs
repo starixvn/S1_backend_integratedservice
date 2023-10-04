@@ -50,6 +50,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.Yeebet, AddYeebet},
                 { Tp.BG, AddBG},
                 { Tp.TFG, AddTFG},
+                { Tp.Nextspin, AddNextspin},
             };
         }
         private IServiceCollection AddSA(IServiceCollection services)
@@ -535,6 +536,19 @@ namespace ThirdPartyWager.Extensions
 
             services.AddHostedService<WagerTFG>();
             services.AddHostedService<WagerUnsettleCheckTFG>();
+            return services;
+        }
+
+        private IServiceCollection AddNextspin(IServiceCollection services)
+        {
+            services.AddSingleton<IWagerNextspinService, WagerNextspinService>();
+
+            services.AddSingleton<INextspinApi, NextspinApi>();
+            services.AddSingleton<INextspinBLL, NextspinBLL>();
+            services.AddSingleton<INextspinFinancBLL, NextspinFinancBLL>();
+
+            services.AddHostedService<WagerNextspin>();
+            services.AddHostedService<FinanceNextspin>();
             return services;
         }
     }

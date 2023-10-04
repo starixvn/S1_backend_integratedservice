@@ -85,12 +85,6 @@ namespace ThirdPartyWager
             //SabaOdds
             services.AddSingleton<SabaOddsBLL>();
 
-            //Nextspin
-            services.AddSingleton<IWagerNextspinService, WagerNextspinService>();
-            services.AddSingleton<INextspinApi, NextspinApi>();
-            services.AddSingleton<INextspinBLL, NextspinBLL>();
-            services.AddSingleton<INextspinFinancBLL, NextspinFinancBLL>();
-
             //IM
             services.AddSingleton<ApiIMBLL>();
             services.AddSingleton<WagerIMBLL>();
@@ -107,8 +101,6 @@ namespace ThirdPartyWager
             
             services.AddHostedService<TpRefundWorker>();          
            
-            services.AddHostedService<WagerNextspin>();
-            services.AddHostedService<FinanceNextspin>();
             services.AddHostedService<WagerIM>();
             services.AddHostedService<WagerSPRIBE>();
             services.AddHostedService<FinanceIM>();
