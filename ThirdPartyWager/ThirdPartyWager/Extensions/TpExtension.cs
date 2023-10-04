@@ -38,6 +38,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.NineW, AddNineW},
                 { Tp.JILI, AddJILI},
                 { Tp.TCG, AddTCG},
+                { Tp.MG, AddMG},
                 { Tp.EVO, AddEVO},
                 { Tp.BG, AddBG}
             };
@@ -370,6 +371,17 @@ namespace ThirdPartyWager.Extensions
             return services;
         }
 
+        private IServiceCollection AddMG(IServiceCollection services)
+        {
+            //MG
+            services.AddTransient<IApiMGBLL, ApiMGBLL>();
+            services.AddTransient<IApiSWBLL, ApiSWBLL>();
+            services.AddTransient<IMGBLL, MGBLL>();
+
+            services.AddHostedService<WagerMG>();
+            services.AddHostedService<FinanceMG>();
+            return services;
+        }
 
         private IServiceCollection AddEVO(IServiceCollection services)
         {
