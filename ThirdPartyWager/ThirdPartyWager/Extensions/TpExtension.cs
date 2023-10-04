@@ -25,6 +25,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.OneGaming, AddOneGaming},
                 { Tp.Sexy, AddSexy},
                 { Tp.CQ9, AddCQ9},
+                { Tp.CF, AddCF},
                 { Tp.NineW, AddNineW},
                 { Tp.EVO, AddEVO},
                 { Tp.BG, AddBG}
@@ -197,6 +198,18 @@ namespace ThirdPartyWager.Extensions
 
             return services;
         }
+
+        //closed tp
+        private IServiceCollection AddCF(IServiceCollection services)
+        {
+            //services.AddSingleton<WagerCFService>();
+
+            //services.AddSingleton<WagerCFBLL>();
+            //services.AddSingleton<ApiCFBLL>();
+
+            return services;
+        }
+
 
         private IServiceCollection AddNineW(IServiceCollection services)
         {
