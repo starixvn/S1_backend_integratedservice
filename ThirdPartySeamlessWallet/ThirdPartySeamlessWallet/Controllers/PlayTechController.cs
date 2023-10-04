@@ -161,7 +161,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 AuthReq getReq = JsonConvert.DeserializeObject<AuthReq>(Content);
                 errorResponse.requestId = getReq.requestId;
 
-                var tokenInfo = getTokenInfo(getReq.token, logName, out bool verifyToken);
+                var tokenInfo = GetTokenInfo(getReq.token, logName, out bool verifyToken);
                 if (!verifyToken)
                 {
                     errorResponse.error = "P_06";
@@ -619,7 +619,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             return errorResponse;
         }
 
-        private TokenInfo getTokenInfo(string token, string logName, out bool verifyToken)
+        private TokenInfo GetTokenInfo(string token, string logName, out bool verifyToken)
         {
             try
             {
