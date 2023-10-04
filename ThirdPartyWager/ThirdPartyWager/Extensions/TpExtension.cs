@@ -13,10 +13,46 @@ namespace ThirdPartyWager.Extensions
         {
             TpFuncDictionary = new Dictionary<Tp, Func<IServiceCollection, IServiceCollection>>
             {
-                { Tp.BG, AddBG},
+                { Tp.YGG, AddYGG},
                 { Tp.NineW, AddNineW},
-                { Tp.YGG, AddYGG}
+                { Tp.EVO, AddEVO},
+                { Tp.BG, AddBG}
             };
+        }
+
+        private IServiceCollection AddYGG(IServiceCollection services)
+        {
+
+            services.AddSingleton<WagerYGGBLL>();
+            services.AddSingleton<FinanceYGGBLL>();
+
+            services.AddHostedService<WagerYGG>();
+            services.AddHostedService<FinanceYGG>();
+
+            return services;
+        }
+
+        private IServiceCollection AddNineW(IServiceCollection services)
+        {
+            services.AddSingleton<NineWBLL>();
+            services.AddHostedService<WagerNineW>();
+            return services;
+        }
+
+        private IServiceCollection AddEVO(IServiceCollection services)
+        {
+            services.AddSingleton<WagerEVOService>();
+
+            services.AddSingleton<WagerEVOBLL>();
+            services.AddSingleton<ApiEVOBLL>();
+            services.AddSingleton<FinanceEVOBLL>();
+
+            services.AddHostedService<WagerEVO>();
+            services.AddHostedService<WagerRedoEVO>();
+            services.AddHostedService<WagerUnsettleEVO>();
+            services.AddHostedService<FinanceEVO>();
+
+            return services;
         }
 
         private IServiceCollection AddBG(IServiceCollection services)
@@ -31,25 +67,6 @@ namespace ThirdPartyWager.Extensions
             services.AddHostedService<WagerBG>();
             services.AddHostedService<WagerRedoBG>();
             services.AddHostedService<FinanceBG>();
-            return services;
-        }
-
-        private IServiceCollection AddNineW(IServiceCollection services)
-        {
-            services.AddSingleton<NineWBLL>();
-            services.AddHostedService<WagerNineW>();
-            return services;
-        }
-
-        private IServiceCollection AddYGG(IServiceCollection services)
-        {
-
-            services.AddSingleton<WagerYGGBLL>();
-            services.AddSingleton<FinanceYGGBLL>();
-
-            services.AddHostedService<WagerYGG>();
-            services.AddHostedService<FinanceYGG>();
-
             return services;
         }
     }
