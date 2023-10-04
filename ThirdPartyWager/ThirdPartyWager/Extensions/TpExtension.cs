@@ -14,6 +14,7 @@ namespace ThirdPartyWager.Extensions
             TpFuncDictionary = new Dictionary<Tp, Func<IServiceCollection, IServiceCollection>>
             {
                 { Tp.YGG, AddYGG},
+                { Tp.SG, AddSG},
                 { Tp.NineW, AddNineW},
                 { Tp.EVO, AddEVO},
                 { Tp.BG, AddBG}
@@ -28,6 +29,20 @@ namespace ThirdPartyWager.Extensions
 
             services.AddHostedService<WagerYGG>();
             services.AddHostedService<FinanceYGG>();
+
+            return services;
+        }
+
+        private IServiceCollection AddSG(IServiceCollection services)
+        {
+            services.AddSingleton<WagerSGService>();
+
+            services.AddSingleton<WagerSGBLL>();
+            services.AddSingleton<ApiSGBLL>();
+            services.AddSingleton<FinanceSGBLL>();
+
+            services.AddHostedService<WagerSG>();
+            services.AddHostedService<FinanceSG>();
 
             return services;
         }
