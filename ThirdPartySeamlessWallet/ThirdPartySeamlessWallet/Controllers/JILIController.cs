@@ -1,9 +1,6 @@
 ﻿using System.Text;
-
 using Microsoft.AspNetCore.Mvc;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -95,14 +92,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             getErrorResponse.errorCode = 5;
             getErrorResponse.message = "Error";
 
-            // check sitename
-            var verifySiteName = CheckSiteName(sitename);
-            if (!verifySiteName)
+            // check SiteName
+            if (!CheckSiteName(sitename))
             {
-                getErrorResponse.errorCode = 5;
-                getErrorResponse.message = "Site error";
-                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
-                return getErrorResponse;
+                return GetSiteError(Content, logName);
             }
 
             // check authorization
@@ -189,14 +182,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             getErrorResponse.errorCode = 5;
             getErrorResponse.message = "Error";
 
-            // check sitename
-            var verifySiteName = CheckSiteName(sitename);
-            if (!verifySiteName)
+            // check siteName
+            if (!CheckSiteName(sitename))
             {
-                getErrorResponse.errorCode = 5;
-                getErrorResponse.message = "Site error";
-                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
-                return getErrorResponse;
+                return GetSiteError(Content, logName);
             }
 
             // check authorization
@@ -335,14 +324,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             getErrorResponse.errorCode = 5;
             getErrorResponse.message = "Error";
 
-            // check sitename
-            var verifySiteName = CheckSiteName(sitename);
-            if (!verifySiteName)
+            // check sitName
+            if (!CheckSiteName(sitename))
             {
-                getErrorResponse.errorCode = 5;
-                getErrorResponse.message = "Site error";
-                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
-                return getErrorResponse;
+                return GetSiteError(Content, logName);
             }
 
             // check authorization
@@ -427,14 +412,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             getErrorResponse.errorCode = 5;
             getErrorResponse.message = "Error";
 
-            // check sitename
-            var verifySiteName = CheckSiteName(sitename);
-            if (!verifySiteName)
+            // check siteName
+            if (!CheckSiteName(sitename))
             {
-                getErrorResponse.errorCode = 5;
-                getErrorResponse.message = "Site error";
-                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName);
-                return getErrorResponse;
+                return GetSiteError(Content, logName);
             }
 
             // check authorization
@@ -602,21 +583,33 @@ namespace ThirdPartySeamlessWallet.Controllers
             };
         }
 
-        private bool CheckSiteName(string sitename)
+        private bool CheckSiteName(string siteName)
         {
             // "" : nova || stream
-            if (sitename == "" || sitename.Contains("_stream"))
+            if (siteName == "" || siteName.Contains("_stream"))
             {
                 return true;
             }
 
-            var serverInfo = _thirdPartyBLL.GetServerInfoBySiteName(sitename);
+            var serverInfo = _thirdPartyBLL.GetServerInfoBySiteName(siteName);
             if (serverInfo == null || serverInfo.SiteId <= 0)
             {
                 return false;
             }
 
             return true;
+        }
+
+        private ErrorResp GetSiteError(string content,string logName)
+        {
+            var  errorResponse = new ErrorResp
+            {
+                errorCode = 5,
+                message = "Site error"
+            };
+
+            _log2File.Error($"{content}\r\n{JsonConvert.SerializeObject(errorResponse)}", logName);
+            return errorResponse;
         }
     }
 }
