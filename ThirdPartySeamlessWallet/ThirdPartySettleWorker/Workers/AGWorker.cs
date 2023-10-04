@@ -52,7 +52,7 @@ namespace ThirdPartySettleWorker.Workers
             var isError = false;
             var gameType = (GameType)state;
             var logName = "AGDoSettleLiveCasinoWork";
-            var wagerGet = "Service_BettransLC_AGV2_PayoutByBillNo_Get";
+            var bettransGet = "Service_BettransLC_AGV2_Payout_ByBillNo_Get";
             try
             {
                 var tpUnsettleList = _tpUnSettledBll.GetTpUnsettleList(Tp, gameType);
@@ -66,7 +66,7 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var payoutList = _tpUnSettledBll.GetTpUnsettleData<SettleDataLC_AG>(wagerGet, new { _BillNo = unsettled.TransId }, DataBase.Wager);
+                        var payoutList = _tpUnSettledBll.GetTpUnsettleData<SettleDataLC_AG>(bettransGet, new { _BillNo = unsettled.TransId }, DataBase.Main);
                         var betList = new List<BettingDataLC_AG>();
                         var transactionIDs = new List<string>();
                         if (payoutList != null)
