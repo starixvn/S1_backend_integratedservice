@@ -82,6 +82,7 @@ builder.Services
     .AddHostedService<SexyWorker>()
     .AddHostedService<AGWorker>()
     .AddHostedService<EBetWorker>();
+    .AddHostedService<WMWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
