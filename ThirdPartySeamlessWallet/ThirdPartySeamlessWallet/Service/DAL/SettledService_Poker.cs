@@ -1016,7 +1016,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataPK_V8.timestamp).DateTime;
 
-                var bettrans = _partitionService.Query<BettransDataPK_V8>(partitionTime, "Service_BettransPK_V8_gameNo_Get", new { gameNo = bettingDataPK_V8.gameNo});
+                var bettrans = _partitionService.Query<BettransDataPK_V8>(partitionTime, "Service_BettransPK_V8_gameNo_Get", new { gameNo = bettingDataPK_V8.gameNo });
                 if (!bettrans.Any(i => (i.TicketType == BettransType.Bet)))
                 {
                     // 檢查是否有下注該round
@@ -1041,7 +1041,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         trans
                     );
                 }
-                
+
                 if (result > 0)
                 {
                     _mainDbClient.CommitAndDisposeConnection(conn, trans);
