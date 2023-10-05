@@ -1,11 +1,8 @@
 ﻿using Newtonsoft.Json;
-
 using Serilog.Context;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -50,7 +47,7 @@ namespace ThirdPartySettleWorker.Workers
             LogContext.PushProperty("TP", _tpName);
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
 
-
+            
             var forContinue = false;
             var isError = false;
             var gameType = (GameType)state;
@@ -77,7 +74,7 @@ namespace ThirdPartySettleWorker.Workers
                             var transId = payoutList.FirstOrDefault().TransactionID;
                             var playName = payoutList.FirstOrDefault().Playname;
                             var agentCode = payoutList.FirstOrDefault().AgentCode;
-
+                            
                             foreach (var payout in payoutList)
                             {
                                 transactionIDs.AddRange(JsonConvert.DeserializeObject<IEnumerable<string>>(payout.TransactionIDs));
@@ -186,6 +183,6 @@ namespace ThirdPartySettleWorker.Workers
 
             return dueTimeSpan;
         }
-
+    
     }
 }

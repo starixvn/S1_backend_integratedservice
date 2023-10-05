@@ -1,9 +1,7 @@
 using Serilog.Context;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -30,13 +28,13 @@ namespace ThirdPartySettleWorker.Workers
             _tpName = Enum.GetName(typeof(Tp), Tp);
             LogContext.PushProperty("TP", _tpName);
         }
-
+        
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _timerLC = new Timer(DoSettleDGWork, GameType.DG_LiveCasino, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
-
+        
         private void DoSettleDGWork(object state)
         {
             LogContext.PushProperty("TP", _tpName);
@@ -102,7 +100,7 @@ namespace ThirdPartySettleWorker.Workers
                                 SettlementType = SettlementType.SettledForValid,
                                 GameID = wager.GameId.ToString(),
                             };
-
+                            
                             var winLossAmountComparison = DG_WinLossAmountComparison(wager.WinLostAmount, settleData);
                             if (!winLossAmountComparison.Comparison)
                             {
@@ -127,7 +125,7 @@ namespace ThirdPartySettleWorker.Workers
                             _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, isSuccess: false);
                         });
                         isError = true;
-                        _logger.LogError(ex1, $"exMessage:{ex1.Message}", logName);
+                        _logger.LogError(ex1, $"exMessage:{ex1.Message}",logName);
                     }
 
                 }
@@ -156,9 +154,9 @@ namespace ThirdPartySettleWorker.Workers
                 _timerLC?.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
-
+        
         #region private
-
+        
         private class WinLossAmountModel
         {
             public bool Comparison { get; set; }
@@ -169,7 +167,7 @@ namespace ThirdPartySettleWorker.Workers
             var settleDataDgs = settleData.ToList();
             var betAmount = settleDataDgs.Where(t => t.TicketType == TransferType.PlaceBet).Select(t => t.Amount);
             var winLossAmount = settleDataDgs.Where(t => t.TicketType == TransferType.Payout).Select(t => t.Amount);
-
+            
             var totalBetAmount = betAmount.Sum();
             var totalWinLossAmount = winLossAmount.Sum();
             var totalWinLossAmountComparison = totalWinLossAmount - totalBetAmount;
@@ -179,10 +177,10 @@ namespace ThirdPartySettleWorker.Workers
                 Comparison = wagerWinLossAmount == totalWinLossAmountComparison,
                 WinLossAmount = totalWinLossAmountComparison
             };
-
+            
             return result;
         }
-
+        
         #endregion
     }
 }

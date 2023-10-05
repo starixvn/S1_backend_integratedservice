@@ -1,6 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using ThirdPartySeamlessWallet.Service.Model;
 
-using ThirdPartySeamlessWallet.Service.Model;
+using Newtonsoft.Json;
 
 namespace ThirdPartySeamlessWallet.Service.BLL
 {
