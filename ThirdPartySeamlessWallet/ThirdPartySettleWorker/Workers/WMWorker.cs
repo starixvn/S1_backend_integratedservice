@@ -68,7 +68,7 @@ namespace ThirdPartySettleWorker.Workers
                 foreach (var tpUnsettle in tpUnsettleList)
                 {
                     var unsettledData = _settledBLL.GetUnsettled_WM(tpUnsettle.TransId);
-                    var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData_WM>("Service_TpWagerWM_Settle_Get",
+                    var wagerData = _tpUnSettledBLL.GetTpUnsettleData<SettleData_WM>("Service_TpWagerWM_Settle_Get",
                         new { TransId = tpUnsettle.TransId }, DataBase.Wager).FirstOrDefault();
                         if (settleData != null)
                         {
