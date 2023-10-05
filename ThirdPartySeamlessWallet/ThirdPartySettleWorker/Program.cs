@@ -81,7 +81,7 @@ builder.Services
     .AddHostedService<PegasusWorker>()
     .AddHostedService<SexyWorker>()
     .AddHostedService<AGWorker>()
-    .AddHostedService<EBetWorker>();
+    .AddHostedService<EBetWorker>()
     .AddHostedService<WMWorker>();
 
 var app = builder.Build();
