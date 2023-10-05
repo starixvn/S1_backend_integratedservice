@@ -114,7 +114,7 @@ namespace ThirdPartySettleWorker.Workers
                             catch (Exception ex1)
                             {
                                 isError = true;
-                                _logger.LogError($"{JsonConvert.SerializeObject(unsettledData)}\r\n{ex1.ToString()}", logName);
+                                _logger.LogError(ex1, $"WMDoSettleLiveCasinoWork:{JsonConvert.SerializeObject(unsettledData)});
                             }
                         }
                 }
