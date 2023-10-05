@@ -1,6 +1,9 @@
 ﻿using System.Text;
+
 using Microsoft.AspNetCore.Mvc;
+
 using Newtonsoft.Json;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -600,9 +603,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             return true;
         }
 
-        private ErrorResp GetSiteError(string content,string logName)
+        private ErrorResp GetSiteError(string content, string logName)
         {
-            var  errorResponse = new ErrorResp
+            var errorResponse = new ErrorResp
             {
                 errorCode = 5,
                 message = "Site error"
