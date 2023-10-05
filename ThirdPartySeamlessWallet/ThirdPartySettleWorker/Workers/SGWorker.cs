@@ -98,12 +98,16 @@ namespace ThirdPartySettleWorker.Workers
 
                         if (SettleAmountCheck(unsettled, wager))
                         {
+                            var stake = unsettled.Stake;
+                            var validBet = unsettled.Stake;
+                            var winLostAmount = unsettled.WinLostAmount;
+
                             var betRecordInfo = new BetRecordInfo
                             {
                                 TpId = (int)Tp,
-                                Stake = wager.Stake,
-                                ValidBet = wager.Stake,
-                                WinlostAmount = wager.WinLostAmount,
+                                Stake = stake,
+                                ValidBet = validBet,
+                                WinlostAmount = winLostAmount,
                                 TransId = unsettled.TransId,
                                 GameType = gameType,
                                 TpUserName = unsettled.Account,
