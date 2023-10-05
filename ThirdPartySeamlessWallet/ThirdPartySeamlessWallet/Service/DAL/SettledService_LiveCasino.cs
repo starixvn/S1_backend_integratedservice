@@ -367,7 +367,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
                 p.Add("CanPayout", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-                result = _mainDbClient.Execute("Service_BettransLC_AGV2_Payout_Ins", p, conn, trans);
+                result = _mainDbClient.Execute("Service_BettransLC_AGV2_Payout_Ins_V2", p, conn, trans);
 
                 if (p.Get<int>("CanPayout") == 1)
                 {
