@@ -67,36 +67,37 @@ namespace ThirdPartySettleWorker.Workers
                 forContinue = tpUnsettleList.Count() == 200;
                 foreach (var tpUnsettle in tpUnsettleList)
                 {
-                    var unsettledData = _settledBLL.GetUnsettled_WM(tpUnsettle.TransId);
+                    var unsettledData = _tpUnSettledBLL.GetTpUnsettleData<SettleData_WM>("Service_BettransLC_WM_Unsettle_Get_V3",
+                        new { TransId = tpUnsettle.TransId }, DataBase.Main).FirstOrDefault();
                     var wagerData = _tpUnSettledBLL.GetTpUnsettleData<SettleData_WM>("Service_TpWagerWM_Settle_Get",
                         new { TransId = tpUnsettle.TransId }, DataBase.Wager).FirstOrDefault();
-                        if (settleData != null)
+                        if (wagerData != null)
                         {
                             try
                             {
-                                var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(tpId, settleData.Account);
+                                var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(tpId, wagerData.Account);
                                 var tpCurrency = _thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
                                 if (tpCurrency.ExchangeRate > 1)
                                 {
-                                    settleData.Stake *= tpCurrency.ExchangeRate;
-                                    settleData.ValidBet *= tpCurrency.ExchangeRate;
-                                    settleData.WinLostAmount *= tpCurrency.ExchangeRate;
+                                    wagerData.Stake *= tpCurrency.ExchangeRate;
+                                    wagerData.ValidBet *= tpCurrency.ExchangeRate;
+                                    wagerData.WinLostAmount *= tpCurrency.ExchangeRate;
                                 }
-                                if (settleData.Stake == unsettledData.RealBetAmount && settleData.WinLostAmount == unsettledData.WinLostAmount)
+                                if (wagerData.Stake == unsettledData.RealBetAmount && wagerData.WinLostAmount == unsettledData.WinLostAmount)
                                 {
                                     var betRecordInfo = new BetRecordInfo
                                     {
                                         TpId = tpId,
-                                        Stake = settleData.Stake,
-                                        ValidBet = settleData.ValidBet,
-                                        WinlostAmount = settleData.WinLostAmount,
-                                        TransId = settleData.TransId,
+                                        Stake = wagerData.Stake,
+                                        ValidBet = wagerData.ValidBet,
+                                        WinlostAmount = wagerData.WinLostAmount,
+                                        TransId = wagerData.TransId,
                                         GameType = GameType.WM_LiveCasino,
-                                        TpUserName = settleData.Account,
-                                        SettledTime = settleData.SettleTime,
-                                        TransTime = settleData.TransTime,
+                                        TpUserName = wagerData.Account,
+                                        SettledTime = wagerData.SettleTime,
+                                        TransTime = wagerData.TransTime,
                                         SettlementType = SettlementType.SettledForValid,
-                                        GameID = settleData.GameId,
+                                        GameID = wagerData.GameId,
                                     };
 
                                     _ = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
@@ -114,7 +115,8 @@ namespace ThirdPartySettleWorker.Workers
                             catch (Exception ex1)
                             {
                                 isError = true;
-                                _logger.LogError(ex1, $"WMDoSettleLiveCasinoWork:{JsonConvert.SerializeObject(unsettledData)});
+                                _logger.LogError(ex1,
+                                    $"WMDoSettleLiveCasinoWork:{JsonConvert.SerializeObject(unsettledData)}",logName);
                             }
                         }
                 }
