@@ -1,6 +1,8 @@
-﻿using Newtonsoft.Json;
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using System.Text;
+
+using Newtonsoft.Json;
+
 using ThirdPartyBetHistory.Service.Model.enums;
 
 namespace ThirdPartyBetHistory.Service.Model

@@ -1,54 +1,40 @@
-﻿using Newtonsoft.Json;
+﻿using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.DAL;
-using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.Model;
 using ThirdPartyBetHistory.Service.Model.enums;
-using ThirdPartyBetHistory.Service.Model.Interfaces;
-using ThirdPartyBetHistory.Service.Library;
 
 namespace ThirdPartyBetHistory.Service.TpBetHistory
 {
     public class SabaBetHelper : ThirdPartyBetHelperBase
     {
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly Dictionary<int, TpGameTypeOption> _tpGameTypeConfig;
         private readonly List<int> _kenoGameTypeList;
-        private readonly MySqlClient _mainDbClient;
 
         public SabaBetHelper(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<ThirdPartyBetHelperBase>>();
             _thirdPartyService = provider.GetRequiredService<ThirdPartyService>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            var tpGameTypeOptions = provider.GetRequiredService<IEnumerable<TpGameTypeOption>>();
-            var tpList = provider.GetRequiredService<IEnumerable<TpListOption>>().ToDictionary(d => d.Id, d => d);
-            foreach (var tpGameType in tpGameTypeOptions)
-            {
-                tpGameType.TpName = tpList.TryGetValue(tpGameType.TpId, out var result) ? result.TpName : string.Empty;
-            }
-            _tpGameTypeConfig = tpGameTypeOptions.ToDictionary(i => i.Type, i => i);
             _kenoGameTypeList = new List<int>
             {
                 (int)GameType.SBSW_Keno,  // 202 OW Keno
                 (int)GameType.SBSW_Lottery, // 220 OW Lottery
                 (int)GameType.SBSW_TableGame, // 222 OW TableGame
             };
-            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
 
         public override async Task UpdateBetRecordByTransId(WorkerType workerType, DateTime startTime, DateTime endTime, IEnumerable<SettlementType> settlementTypeList)
         {
-            var tpSetting = thirdPartyModel.TpSetting;
-            var tickets = _thirdPartyService.GetTpBetRecordReSettleTicket(Tp.SBSW, SiteId, settlementTypeList, startTime, endTime);
+            var tickets = _thirdPartyService.GetTpBetRecordReSettleTicket(Tp, SiteId, settlementTypeList, startTime, endTime);
             foreach (var ticket in tickets.OrderBy(i => i.SettledTime).ThenBy(i => i.TransId))
             {
                 try
                 {
                     var api = _kenoGameTypeList.Contains(ticket.GameType) ? "GetKenoDetailByTransID" : "GetBetDetailByTransID";
-                    var url = $"{tpSetting["ApiUrl"]}/{api}";
+                    var url = $"{SBSWConfig.ApiUrl}/{api}";
                     var parameters = new Dictionary<string, string>
                     {
-                        { "vendor_id", tpSetting["VendorId"] },
+                        { "vendor_id", SBSWConfig.VendorId },
                         { "trans_id", ticket.TransId}
                     };
 
@@ -62,29 +48,47 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 
                     if (!DataNotExists(getBetDetail))
                     {
-                        var betDetail = getBetDetail.Data?.BetDetails?.First();
-                        var betNumberDetail = getBetDetail.Data?.BetNumberDetails?.First();
-                        var betVirtualSportDetail = getBetDetail.Data?.BetVirtualSportDetails?.First();
                         var gameType = (GameType)ticket.GameType;
+
+                        var betDetail = getBetDetail.Data?.BetDetails?.First();
                         if (betDetail != null)
                         {
-                            List<BetDetail> tempBetDetails = new List<BetDetail>();
-                            tempBetDetails.Add(betDetail);
-                            var tpBetRecordDetail = new BetDetailsModel() { last_version_key = getBetDetail.Data.last_version_key, BetDetails = tempBetDetails };
+                            var tpBetRecordDetail = new BetDetailsModel()
+                            {
+                                last_version_key = getBetDetail.Data.last_version_key,
+                                BetDetails = new List<BetDetail>()
+                                {
+                                    betDetail
+                                }
+                            };
                             ProcessTpBetRecordDetailData(betDetail.vendor_member_id, betDetail.trans_id.ToString(), betDetail.transaction_time, gameType, tpBetRecordDetail);
                         }
+
+                        var betNumberDetail = getBetDetail.Data?.BetNumberDetails?.First();
                         if (betNumberDetail != null)
                         {
-                            List<BetNumberDetail> tempBetNumberDetails = new List<BetNumberDetail>();
-                            tempBetNumberDetails.Add(betNumberDetail);
-                            var tpBetRecordDetail = new BetNumberDetailModel() { last_version_key = getBetDetail.Data.last_version_key, BetNumberDetails = tempBetNumberDetails };
+                            var tpBetRecordDetail = new BetNumberDetailModel()
+                            {
+                                last_version_key = getBetDetail.Data.last_version_key,
+                                BetNumberDetails = new List<BetNumberDetail>()
+                                {
+                                    betNumberDetail
+                                }
+                            };
                             ProcessTpBetRecordDetailData(betNumberDetail.vendor_member_id, betNumberDetail.trans_id.ToString(), betNumberDetail.transaction_time, gameType, tpBetRecordDetail);
                         }
-                        if(betVirtualSportDetail != null)
+
+                        var betVirtualSportDetail = getBetDetail.Data?.BetVirtualSportDetails?.First();
+                        if (betVirtualSportDetail != null)
                         {
-                            List<BetVirtualSportDetail> tempBetVirtualSportDetails = new List<BetVirtualSportDetail>();
-                            tempBetVirtualSportDetails.Add(betVirtualSportDetail);
-                            var tpBetRecordDetail = new BetVirtualSportDetailModel() { last_version_key = getBetDetail.Data.last_version_key, BetVirtualSportDetails = tempBetVirtualSportDetails };
+                            var tpBetRecordDetail = new BetVirtualSportDetailModel()
+                            {
+                                last_version_key = getBetDetail.Data.last_version_key,
+                                BetVirtualSportDetails = new List<BetVirtualSportDetail>()
+                                {
+                                    betVirtualSportDetail
+                                }
+                            };
                             ProcessTpBetRecordDetailData(betVirtualSportDetail.vendor_member_id, betVirtualSportDetail.trans_id.ToString(), betVirtualSportDetail.transaction_time, gameType, tpBetRecordDetail);
                         }
                     }
@@ -102,16 +106,6 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                    && getBetDetail.Data?.BetNumberDetails == null
                    && getBetDetail.Data?.BetVirtualSportDetails == null
                    && getBetDetail.Data?.BetCasinoDetails == null;
-        }
-
-        public override SyncParams InitialSyncParams()
-        {
-            var syncParams = new SyncParams();
-            syncParams.key = thirdPartyModel.TicketKey;
-            syncParams.Offsets = -4;
-            syncParams.timeOfFrequency = 3;
-            //syncParams.DoneTime=DateT
-            return syncParams;
         }
 
         private GameType GetBetDetailGameType(int? sport_type)
@@ -134,10 +128,9 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 
         public override async Task<long> AddTpBetRecordDetail(WorkerType workerType, long siteTicketKey)
         {
-            var tpSetting = thirdPartyModel.TpSetting;
             var parameters = new Dictionary<string, string>
             {
-                { "vendor_id", tpSetting["VendorId"] },
+                { "vendor_id", SBSWConfig.VendorId },
                 { "version_key", siteTicketKey.ToString()}
             };
 
@@ -150,10 +143,10 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 return await GetTpBetRecordDetailToAdd(parameters);
             }
         }
+
         private async Task<long> GetTpBetRecordDetailToAdd(Dictionary<string, string> parameters)
         {
-            var tpSetting = thirdPartyModel.TpSetting;
-            var getBetDetailUrl = $"{tpSetting["ApiUrl"]}/GetBetDetail";
+            var getBetDetailUrl = $"{SBSWConfig.ApiUrl}/GetBetDetail";
             var p = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
 
             var result = await HttpPostAsync(getBetDetailUrl, p, "application/x-www-form-urlencoded");
@@ -174,14 +167,19 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 foreach (var betDetail in getBetDetail.Data?.BetDetails)
                 {
                     var gameType = GetBetDetailGameType(betDetail.sport_type);
-
-                    //VG的資料由GetRNGBetDetailToAdd取得，這邊不重複塞入資料
+                    //Vgaming的資料由GetRNGBetDetailToAdd取得，這邊不重複塞入資料
                     if (gameType == GameType.SBSW_Vgaming)
+                    {
                         continue;
-                    List<BetDetail> tempBetDetails = new List<BetDetail>();
-                    tempBetDetails.Add(betDetail);
-                    var tpBetRecordDetail = new BetDetailsModel() { last_version_key = getBetDetail.Data.last_version_key, BetDetails = tempBetDetails };
-
+                    }
+                    var tpBetRecordDetail = new BetDetailsModel()
+                    {
+                        last_version_key = getBetDetail.Data.last_version_key,
+                        BetDetails = new List<BetDetail>()
+                        {
+                            betDetail
+                        }
+                    };
                     ProcessTpBetRecordDetailData(betDetail.vendor_member_id, betDetail.trans_id.ToString(), betDetail.transaction_time, gameType, tpBetRecordDetail);
                 }
             }
@@ -190,10 +188,14 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 foreach (var betDetail in getBetDetail.Data?.BetNumberDetails)
                 {
                     var gameType = GameType.SBSW_NumberGame;
-                    List<BetNumberDetail> tempBetNumberDetails = new List<BetNumberDetail>();
-                    tempBetNumberDetails.Add(betDetail);
-                    var tpBetRecordDetail = new BetNumberDetailModel() { last_version_key = getBetDetail.Data.last_version_key, BetNumberDetails = tempBetNumberDetails };
-
+                    var tpBetRecordDetail = new BetNumberDetailModel()
+                    {
+                        last_version_key = getBetDetail.Data.last_version_key,
+                        BetNumberDetails = new List<BetNumberDetail>()
+                        {
+                            betDetail
+                        }
+                    };
                     ProcessTpBetRecordDetailData(betDetail.vendor_member_id, betDetail.trans_id.ToString(), betDetail.transaction_time, gameType, tpBetRecordDetail);
                 }
             }
@@ -206,19 +208,23 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                     {
                         gameType = GameType.SBSW_VirtualSports2;
                     }
-                    List<BetVirtualSportDetail> tempBetVirtualSportDetails = new List<BetVirtualSportDetail>();
-                    tempBetVirtualSportDetails.Add(betDetail);
-                    var tpBetRecordDetail = new BetVirtualSportDetailModel() { last_version_key = getBetDetail.Data.last_version_key , BetVirtualSportDetails  = tempBetVirtualSportDetails };
-
+                    var tpBetRecordDetail = new BetVirtualSportDetailModel()
+                    {
+                        last_version_key = getBetDetail.Data.last_version_key,
+                        BetVirtualSportDetails = new List<BetVirtualSportDetail>()
+                        {
+                            betDetail
+                        }
+                    };
                     ProcessTpBetRecordDetailData(betDetail.vendor_member_id, betDetail.trans_id.ToString(), betDetail.transaction_time, gameType, tpBetRecordDetail);
                 }
             }
             return getBetDetail.Data.last_version_key;
         }
+
         private async Task<long> GetRNGBetDetailToAdd(Dictionary<string, string> parameters)
         {
-            var tpSetting = thirdPartyModel.TpSetting;
-            var getBetDetailUrl = $"{tpSetting["ApiUrl"]}/GetRNGBetDetail";
+            var getBetDetailUrl = $"{SBSWConfig.ApiUrl}/GetRNGBetDetail";
             var p = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
 
             var result = await HttpPostAsync(getBetDetailUrl, p, "application/x-www-form-urlencoded");
@@ -234,10 +240,9 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 return GetRNGBetDetail.Data.last_version_key;
             }
 
-
-            foreach (var betDetail in GetRNGBetDetail.Data.BetRNGDetails.Where(x=> x.transaction_time > DateTime.Today.AddDays(-10)))
+            foreach (var betDetail in GetRNGBetDetail.Data.BetRNGDetails.Where(x => x.transaction_time > DateTime.Today.AddDays(-10)))
             {
-                var tempBetDetail = new BetDetail()
+                var rngBetDetail = new BetDetail()
                 {
                     trans_id = betDetail.trans_id,
                     vendor_member_id = betDetail.vendor_member_id,
@@ -250,15 +255,20 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                     currency = betDetail.currency,
                     version_key = betDetail.version_key
                 };
-                List<BetDetail> tempBetDetails = new List<BetDetail>();
-                tempBetDetails.Add(tempBetDetail);
-                var tpBetRecordDetail = new BetDetailsModel() { last_version_key = GetRNGBetDetail.Data.last_version_key, BetDetails = tempBetDetails };
-                
+                var tpBetRecordDetail = new BetDetailsModel()
+                {
+                    last_version_key = GetRNGBetDetail.Data.last_version_key,
+                    BetDetails = new List<BetDetail>()
+                    {
+                        rngBetDetail
+                    }
+                };
                 ProcessTpBetRecordDetailData(betDetail.vendor_member_id, betDetail.trans_id.ToString(), betDetail.transaction_time, GameType.SBSW_Vgaming, tpBetRecordDetail);
             }
 
             return GetRNGBetDetail.Data.last_version_key;
         }
+
         private void ProcessTpBetRecordDetailData<T>(string tpUserName, string transId, DateTime settledTime, GameType gameType, T betDetail)
         {
             try
@@ -271,7 +281,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 
                 _thirdPartyBLL.AddTpBetRecordDetail(tpBetRecordDetail, settledTime);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, $"AddTpBetRecordDetail, TransId={transId}");
             }

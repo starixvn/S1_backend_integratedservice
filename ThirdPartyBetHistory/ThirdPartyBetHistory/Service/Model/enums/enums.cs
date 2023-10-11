@@ -37,14 +37,6 @@ namespace ThirdPartyBetHistory.Service.Model.enums
         SBSW = 41
     }
 
-    public enum SiteId
-    {
-        Nova88 = 1,
-        Goal123 = 2,
-        Bwing = 3,
-        Ivorysport = 5
-    }
-
     public enum BetType
     {
         [Description("串关(其他)")] Parlay = 29,
@@ -78,30 +70,5 @@ namespace ThirdPartyBetHistory.Service.Model.enums
         Poker = 8,
     }
 
-    public enum DeviceType
-    {
-        None,
-        Desktop,
-        Mobile,
-        iOS,
-        Android
-    }
 
-    public enum OddsTypeEnum
-    {
-        [Description("不属于任何一种市场盘口(仅出现于 sport_type=245，165，200，168，bet_type=468，469)")]
-        None = 0,
-        [Description("马来盘")]
-        MalayOdds = 1,
-        [Description("中国盘")]
-        ChinaOdds = 2,
-        [Description("欧洲盘")]
-        DecimalOdds = 3,
-        [Description("印度尼西亚盘")]
-        IndoOdds = 4,
-        [Description("美国盘")]
-        AmericanOdds = 5,
-        [Description("香港盘")]
-        HongKong = 6
-    }
 }
