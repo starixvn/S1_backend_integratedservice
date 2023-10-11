@@ -76,6 +76,9 @@ builder.Services
     .AddHostedService<IMWorker>()
     .AddHostedService<SPRIBEWorker>()
     .AddHostedService<SBSWWorker>()
+    .AddHostedService<DGWorker>()
+    .AddHostedService<AGWorker>()
+    .AddHostedService<EBetWorker>()
     .AddHostedService<FaChaiWorker>();
 
 var app = builder.Build();
