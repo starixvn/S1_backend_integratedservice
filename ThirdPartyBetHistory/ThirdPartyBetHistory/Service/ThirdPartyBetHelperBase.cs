@@ -15,7 +15,7 @@ namespace ThirdPartyBetHistory.Service
         int SiteId { set; get; }
         Tp Tp { set; get; }
         string TpName { get; }
-        SBSWConfig SBSWConfig { set; get; }
+        SabaConfig SabaConfig { set; get; }
         Task UpdateBetRecordByTransId(WorkerType workerType, DateTime startTime, DateTime endTime, IEnumerable<SettlementType> settlementTypeList);             
         Task<long> AddTpBetRecordDetail(WorkerType workerType, long siteTicketKey);
     }
@@ -34,7 +34,7 @@ namespace ThirdPartyBetHistory.Service
             }
         }
 
-        public SBSWConfig SBSWConfig { set; get; }
+        public SabaConfig SabaConfig { set; get; }
 
         protected ILogger<ThirdPartyBetHelperBase> _logger;
 

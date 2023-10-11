@@ -35,7 +35,7 @@ namespace ThirdPartyBetHistory.Extensions
                     var TpBetHelper = (IThirdPartyBetHelper)Activator.CreateInstance(type, new object[] { provider });
                     TpBetHelper.Tp = tp;                 
                     TpBetHelper.SiteId = siteConfig.SiteId;
-                    TpBetHelper.SBSWConfig = JsonConvert.DeserializeObject<SBSWConfig>(siteConfig.ConfigValue);
+                    TpBetHelper.SabaConfig = JsonConvert.DeserializeObject<SabaConfig>(siteConfig.ConfigValue);
                     return TpBetHelper;
                 });
             }
