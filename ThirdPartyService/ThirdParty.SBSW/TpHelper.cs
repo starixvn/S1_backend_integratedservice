@@ -17,11 +17,11 @@ namespace ThirdParty.SBSW
     public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular, IThirdPartyBetLimitParticular
     {
         private const string ContentType = "application/x-www-form-urlencoded";
-        private readonly Dictionary<int, Dictionary<string, string>> siteConfigDic;
+        private readonly Dictionary<int, SabaConfig> siteSabaConfigs;
 
         public TpHelper(IServiceProvider provider)
         {
-            siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(TpEnum.SBSW.ToString());
+            siteSabaConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SabaConfig>(TpEnum.SBSW.ToString());
         }
 
         private class Result
@@ -76,8 +76,7 @@ namespace ThirdParty.SBSW
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var siteInputs = siteConfigDic[tpCustInfo.SiteId];
-            var config = new SabaConfig(siteInputs);
+            var config = siteSabaConfigs[tpCustInfo.SiteId];
             var ApiUrl = $"{config.ApiUrl}/CreateMember";
             var input = new CreateMemberReq
             {
@@ -130,8 +129,7 @@ namespace ThirdParty.SBSW
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var siteInputs = siteConfigDic[tpCustInfo.SiteId];
-            var config = new SabaConfig(siteInputs);
+            var config = siteSabaConfigs[tpCustInfo.SiteId];
             var platform = (int)appType;
             if (inputs.TryGetValue("device", out var device) && device.Equals("wap", StringComparison.OrdinalIgnoreCase))
             {
@@ -163,10 +161,8 @@ namespace ThirdParty.SBSW
         }
 
         public ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {
-            var siteInputs = siteConfigDic[tpCustInfo.SiteId];
-            var config = new SabaConfig(siteInputs);
-
+        {   
+            var config = siteSabaConfigs[tpCustInfo.SiteId];
             var input = new Req
             {
                 vendor_id = config.VendorId,
@@ -214,9 +210,7 @@ namespace ThirdParty.SBSW
 
         public ApiResult SetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, string betSetting)
         {
-            var siteInputs = siteConfigDic[tpCustInfo.SiteId];
-            var config = new SabaConfig(siteInputs);
-
+            var config = siteSabaConfigs[tpCustInfo.SiteId];
             var req = new SetMemberBetSettingReq
             {
                 vendor_id = config.VendorId,
@@ -268,13 +262,6 @@ namespace ThirdParty.SBSW
             public string ApiUrl { get; set; }
             public string VendorId { get; set; }
             public string OperatorId { get; set; }
-
-            public SabaConfig(Dictionary<string, string> inputs)
-            {
-                ApiUrl = inputs.GetValue("ApiUrl");
-                VendorId = inputs.GetValue("VendorId");
-                OperatorId = inputs.GetValue("OperatorId");
-            }
         }
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
