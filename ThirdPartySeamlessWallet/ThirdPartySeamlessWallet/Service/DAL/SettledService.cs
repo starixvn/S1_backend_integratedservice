@@ -31,6 +31,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly PartitionService _partitionService;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpBetRecordExtendBLL _tpBetRecordExtendBLL;
+        private readonly TpUnSettledBLL _tpUnSettledBLL;
 
         public SettledService(IServiceProvider provider)
         {
@@ -43,6 +44,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpBetRecordExtendBLL = provider.GetRequiredService<TpBetRecordExtendBLL>();
             _tpUnRewardService = provider.GetRequiredService<TpUnRewardService>();
+            _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
 
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
