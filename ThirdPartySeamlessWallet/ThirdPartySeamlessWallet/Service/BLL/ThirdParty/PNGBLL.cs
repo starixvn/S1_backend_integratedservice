@@ -4,7 +4,6 @@ using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
-using static ThirdPartySeamlessWallet.Controllers.N2LiveController;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
