@@ -114,7 +114,7 @@ public class N2LiveWorker : BackgroundService, ISettleWorker
                         {
                             _settledBLL.SetSettleFlag_TpSmartWagerLC_N2Live(TransId);
                         }
-                        //_tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, true);
+                        _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, true);
                     });
 
                 }
@@ -155,13 +155,6 @@ public class N2LiveWorker : BackgroundService, ISettleWorker
 
     private bool CheckTransId(string transId)
     {
-        // 檢查字符串是否為null或空，避免NullReferenceException
-        if (string.IsNullOrEmpty(transId))
-        {
-            return false;
-        }
-
-        // 檢查字符串的長度是否大於10
         return transId.Length > 10;
     }
     
@@ -169,7 +162,6 @@ public class N2LiveWorker : BackgroundService, ISettleWorker
     {
         return _tpUnSettledBLL.GetTpUnsettleData<T>(serviceName, parameters, database);
     }
-    
 
     #endregion
 }

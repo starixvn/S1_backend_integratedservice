@@ -77,7 +77,7 @@ builder.Services
     .AddHostedService<SPRIBEWorker>()
     .AddHostedService<SBSWWorker>()
     .AddHostedService<DGWorker>()
-    .AddHostedService<AGWorker>();
+    .AddHostedService<AGWorker>()
     .AddHostedService<N2LiveWorker>();
 
 var app = builder.Build();
