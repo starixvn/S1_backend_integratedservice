@@ -103,7 +103,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// </summary>
         [HttpPost]
         [Route("balance")]
-        public async Task<BaseResult> Balance(KMBalanceRequest request)
+        public BaseResult Balance(KMBalanceRequest request)
         {
             try
             {
