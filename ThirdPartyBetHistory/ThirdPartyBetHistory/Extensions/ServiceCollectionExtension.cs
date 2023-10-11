@@ -1,7 +1,10 @@
-﻿using ThirdPartyBetHistory.Service;
+﻿using Newtonsoft.Json;
+
+using ThirdPartyBetHistory.Service;
 using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.DAL;
 using ThirdPartyBetHistory.Service.Library;
+using ThirdPartyBetHistory.Service.Model;
 using ThirdPartyBetHistory.Service.Model.enums;
 
 namespace ThirdPartyBetHistory.Extensions
@@ -22,18 +25,17 @@ namespace ThirdPartyBetHistory.Extensions
         {
             var tp = Tp.SBSW;
             var provider = services.BuildServiceProvider();
-            var sabaSiteList = provider.GetRequiredService<ThirdPartyBLL>().GetTpList().Where(item => item.Id == (int)tp);
+            var sabaSiteConfigList = provider.GetRequiredService<ThirdPartyBLL>().GetTpConfigList(tp.ToString());
             var type = Type.GetType($"ThirdPartyBetHistory.Service.TpBetHistory.SabaBetHelper");
 
-            foreach (var site in sabaSiteList)
-            {        
+            foreach (var siteConfig in sabaSiteConfigList)
+            {
                 services.AddSingleton(provider =>
                 {
                     var TpBetHelper = (IThirdPartyBetHelper)Activator.CreateInstance(type, new object[] { provider });
-                    TpBetHelper.Tp = tp;
-                    TpBetHelper.thirdPartyModel = site;
-                    TpBetHelper.syncParams = TpBetHelper.InitialSyncParams();
-                    TpBetHelper.SiteId = site.SiteId == 0 ? SiteId.Nova88 : (SiteId)site.SiteId;
+                    TpBetHelper.Tp = tp;                 
+                    TpBetHelper.SiteId = siteConfig.SiteId;
+                    TpBetHelper.SBSWConfig = JsonConvert.DeserializeObject<SBSWConfig>(siteConfig.ConfigValue);
                     return TpBetHelper;
                 });
             }

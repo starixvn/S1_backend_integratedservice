@@ -27,11 +27,8 @@ namespace ThirdPartyBetHistory
             services.AddSingleton<ThirdPartyBLL>();
             services.AddSingleton<SettledBLL>();
 
+            services.AddOptionListByDB<ConfigObject>("SiteConfig_Get", new { ConfigGroup = "TP" });
             services.RegisterSabaSiteHelper();
-
-            services.AddOptionListByDB<TpGameTypeOption>("Admin_TpGameType_Get");
-            services.AddOptionListByDB<TpListOption>("Common_TpList_Get");
-            services.AddOptionListByDB<CurrencyOption>("Common_Currency_Get");
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

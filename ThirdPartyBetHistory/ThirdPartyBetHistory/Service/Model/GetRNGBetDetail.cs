@@ -6,6 +6,7 @@
         public string message { get; set; }
         public GetRNGBetDetailData Data { get; set; }
     }
+
     public class GetRNGBetDetailData
     {
         public long last_version_key { get; set; }
