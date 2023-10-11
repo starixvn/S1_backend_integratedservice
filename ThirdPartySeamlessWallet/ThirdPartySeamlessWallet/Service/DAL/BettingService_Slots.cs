@@ -2014,5 +2014,74 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region PNG
+
+        public async Task<PNGResult> PlaceBetRNG_PNG(TpCustInfo tpCustInfo, BettingDataRNG_PNG bettingData)
+        {
+            await using var conn = _mainDbClient.GetMySqlConnection();
+            await conn.OpenAsync();
+            await using var trans = await conn.BeginTransactionAsync();
+
+            try
+            {
+                var p = new DynamicParameters(bettingData);
+                var result = _mainDbClient.Execute("Service_BettransRng_PNG_Ins", p, conn, trans);
+
+                if (result == 0)
+                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "Reserve fail");
+
+                var bonusId = 0;
+                result = PlaceBetV2(
+                    tpCustInfo: tpCustInfo,
+                    amount: Math.Abs(bettingData.Amount) * -1,
+                    tpId: (int)Tp.PNG,
+                    tpTransId: bettingData.RoundId.ToString(),
+                    gameType: (int)GameType.PNG_RNG,
+                    refId: bettingData.RoundId.ToString(),
+                    betData: null,
+                    tpCategory: TpCategory.Slots,
+                    afterAmount: out var afterAmount,
+                    bonusId: ref bonusId,
+                    conn: conn,
+                    trans: trans);
+
+                if (afterAmount < 0)
+                    throw new PNGException(PNG_StatsuCodeEnum.NotEnoughMoney, "Insufficient Balance");
+
+                if (result < 1)
+                    throw new PNGException(PNG_StatsuCodeEnum.Internal, $"TransactionId:{bettingData.TransactionId} Reserve Fail");
+
+                await trans.CommitAsync();
+
+                return new PNGResult
+                {
+                    ExternalTransactionId = bettingData.TransactionId,
+                    AfterAmount = afterAmount
+                };
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "Duplicate Reserve");
+                }
+                throw;
+            }
+            catch (PNGException ex)
+            {
+                await trans.RollbackAsync();
+                logger.LogError(ex, ex.Message);
+                throw;
+            }
+        }
+
+        public IEnumerable<BettingDataRNG_PNG> GetBettingDataRng_PNG(long roundId)
+        {
+            using var conn = _mainDbClient.GetMySqlConnection();
+            return conn.Query<BettingDataRNG_PNG>("Service_BettransRng_PNG_Get", new { _RoundId = roundId }, commandType: CommandType.StoredProcedure);
+        }
+
+        #endregion
     }
 }

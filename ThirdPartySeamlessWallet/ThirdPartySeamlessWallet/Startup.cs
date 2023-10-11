@@ -103,6 +103,7 @@ namespace ThirdPartySeamlessWallet
             services.AddTransient<IBGBLL, BGBLL>();
             services.AddTransient<ITFGBLL, TFGBLL>();
             services.AddTransient<V8BLL>();
+            services.AddTransient<IPNGBLL, PNGBLL>();
             services.AddSingleton<TpUnSettledBLL>();
             services.AddSingleton<TpBetRecordExtendBLL>();
             services.AddSingleton<TpRequestFailBLL>();
@@ -113,7 +114,7 @@ namespace ThirdPartySeamlessWallet
             services.AddControllers();
 
             services.AddOptionListByDB<SabaSportTypeOption>("Service_SabaSportType_Get");
-            //處理SiteConfig
+            //�B�zSiteConfig
             services.AddOptionListByDB<ServerInfo>("ServerInfoList_Get");
             services.AddOptionListByDB<ConfigObject>("SiteConfig_Get", new { ConfigGroup = "TP" });
             services.AddSiteConfig();

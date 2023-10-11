@@ -89,6 +89,7 @@ namespace ThirdPartySettleWorker.Workers
                             continue;
                         }
 
+                        var settlementType = SetSettlementType((TicketStatus)settleData.TicketStatus);// 判斷 TicketStatus，因為可能重新結算
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,

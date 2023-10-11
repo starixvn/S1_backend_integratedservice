@@ -328,7 +328,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var casino = GetGameCasinoWithCache(tpId);
 
             //Kiss918(21)
-            var check = tpId == 21 ? casino.FirstOrDefault(x => x.AppId == gameId && x.TypeId == 3)
+            //PNG(54)
+            var check = tpId is 21 or 54 ? casino.FirstOrDefault(x => x.AppId == gameId && x.TypeId == 3)
                 : casino.FirstOrDefault(x => x.GameId == gameId && x.TypeId == 3);
             if (check != null)
             {
