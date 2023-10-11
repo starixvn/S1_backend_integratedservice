@@ -78,6 +78,7 @@ builder.Services
     .AddHostedService<SBSWWorker>()
     .AddHostedService<DGWorker>()
     .AddHostedService<AGWorker>();
+    .AddHostedService<N2LiveWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
