@@ -1,7 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.DependencyInjection;
+
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -14,6 +17,12 @@ namespace ThirdParty.SBSW
     public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular, IThirdPartyBetLimitParticular
     {
         private const string ContentType = "application/x-www-form-urlencoded";
+        private readonly Dictionary<int, Dictionary<string, string>> siteConfigDic;
+
+        public TpHelper(IServiceProvider provider)
+        {
+            siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(TpEnum.SBSW.ToString());
+        }
 
         private class Result
         {
@@ -67,7 +76,8 @@ namespace ThirdParty.SBSW
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var config = new SabaConfig(inputs);
+            var siteInputs = siteConfigDic[tpCustInfo.SiteId];
+            var config = new SabaConfig(siteInputs);
             var ApiUrl = $"{config.ApiUrl}/CreateMember";
             var input = new CreateMemberReq
             {
@@ -120,7 +130,8 @@ namespace ThirdParty.SBSW
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var config = new SabaConfig(inputs);
+            var siteInputs = siteConfigDic[tpCustInfo.SiteId];
+            var config = new SabaConfig(siteInputs);
             var platform = (int)appType;
             if (inputs.TryGetValue("device", out var device) && device.Equals("wap", StringComparison.OrdinalIgnoreCase))
             {
@@ -153,15 +164,19 @@ namespace ThirdParty.SBSW
 
         public ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string ApiUrl = new SabaConfig(inputs).ApiUrl;
-            Req input = new Req();
-            input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
-            input.vendor_member_id = tpCustInfo.TpUserName;
+            var siteInputs = siteConfigDic[tpCustInfo.SiteId];
+            var config = new SabaConfig(siteInputs);
+
+            var input = new Req
+            {
+                vendor_id = config.VendorId,
+                vendor_member_id = tpCustInfo.TpUserName
+            };
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(input)).ToDictionary(kp => kp.Key, kp => kp.Value);
             string postdata = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}";
 
-            ApiUrl = $"{ApiUrl}/KickUser";
+            var ApiUrl = $"{config.ApiUrl}/KickUser";
             var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded");
 
             ApiResult apiResult = new ApiResult();
@@ -199,8 +214,9 @@ namespace ThirdParty.SBSW
 
         public ApiResult SetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, string betSetting)
         {
-            var config = new SabaConfig(inputs);
-            var apiUrl = config.ApiUrl;
+            var siteInputs = siteConfigDic[tpCustInfo.SiteId];
+            var config = new SabaConfig(siteInputs);
+
             var req = new SetMemberBetSettingReq
             {
                 vendor_id = config.VendorId,
@@ -211,7 +227,7 @@ namespace ThirdParty.SBSW
             var props = t.GetProperties();
             var postData = $"{string.Join("&", props.Select(kp => $"{kp.Name}={kp.GetValue(req)}"))}";
 
-            apiUrl = $"{apiUrl}/SetMemberBetSetting";
+            var apiUrl = $"{config.ApiUrl}/SetMemberBetSetting";
             var result = HttpPost(apiUrl, postData, "application/x-www-form-urlencoded");
 
             var oApiResult = new ApiResult();

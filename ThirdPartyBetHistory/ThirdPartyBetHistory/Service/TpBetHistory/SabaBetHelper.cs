@@ -31,10 +31,10 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 try
                 {
                     var api = _kenoGameTypeList.Contains(ticket.GameType) ? "GetKenoDetailByTransID" : "GetBetDetailByTransID";
-                    var url = $"{SBSWConfig.ApiUrl}/{api}";
+                    var url = $"{SabaConfig.ApiUrl}/{api}";
                     var parameters = new Dictionary<string, string>
                     {
-                        { "vendor_id", SBSWConfig.VendorId },
+                        { "vendor_id", SabaConfig.VendorId },
                         { "trans_id", ticket.TransId}
                     };
 
@@ -130,7 +130,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
         {
             var parameters = new Dictionary<string, string>
             {
-                { "vendor_id", SBSWConfig.VendorId },
+                { "vendor_id", SabaConfig.VendorId },
                 { "version_key", siteTicketKey.ToString()}
             };
 
@@ -146,7 +146,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 
         private async Task<long> GetTpBetRecordDetailToAdd(Dictionary<string, string> parameters)
         {
-            var getBetDetailUrl = $"{SBSWConfig.ApiUrl}/GetBetDetail";
+            var getBetDetailUrl = $"{SabaConfig.ApiUrl}/GetBetDetail";
             var p = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
 
             var result = await HttpPostAsync(getBetDetailUrl, p, "application/x-www-form-urlencoded");
@@ -224,7 +224,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
 
         private async Task<long> GetRNGBetDetailToAdd(Dictionary<string, string> parameters)
         {
-            var getBetDetailUrl = $"{SBSWConfig.ApiUrl}/GetRNGBetDetail";
+            var getBetDetailUrl = $"{SabaConfig.ApiUrl}/GetRNGBetDetail";
             var p = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
 
             var result = await HttpPostAsync(getBetDetailUrl, p, "application/x-www-form-urlencoded");
