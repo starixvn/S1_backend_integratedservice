@@ -120,10 +120,6 @@ public class N2LiveWorker : BackgroundService, ISettleWorker
                 }
                 catch (Exception ex)
                 {
-                    Task.Run(() =>
-                    {
-                        _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, isSuccess: false);
-                    });
                     isError = true;
                     _logger.LogError(ex, $"N2LiveDoSettleLiveCasinoWork:{ex.Message}" , logName);
 
