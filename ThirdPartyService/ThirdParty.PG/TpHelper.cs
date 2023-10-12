@@ -1,8 +1,7 @@
 ﻿using System.Text;
 using System.Web;
-
+using HtmlAgilityPack;
 using Newtonsoft.Json;
-
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -37,15 +36,19 @@ namespace ThirdParty.PG
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            ApiResult oApiResult = new ApiResult();
-            oApiResult.ErrorCode = ErrorCode.Success;
+            var oApiResult = new ApiResult
+            {
+                ErrorCode = ErrorCode.Success
+            };
             return oApiResult;
         }
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
-            oApiResult.ErrorCode = ErrorCode.Fail;
+            var oApiResult = new ApiResult<UserBalance>
+            {
+                ErrorCode = ErrorCode.Fail
+            };
             return oApiResult;
         }
 
@@ -56,25 +59,65 @@ namespace ThirdParty.PG
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception("GameUrl");
-            string GameUrlV2 = inputs.ContainsKey("GameUrlV2") && !string.IsNullOrEmpty(inputs["GameUrlV2"]) ? inputs["GameUrlV2"] : throw new Exception("GameUrlV2");
-            //China & Thailand use GameUrl, other use GameUrlV2
-            string LoginUrl = tpCustInfo.TpCurrencyId == "THB" || tpCustInfo.TpCurrencyId == "CNY" ? GameUrl: GameUrlV2;
-            string operator_token = inputs.ContainsKey("operator_token") && !string.IsNullOrEmpty(inputs["operator_token"]) ? inputs["operator_token"] : throw new Exception("operator_token");
-            string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "";
-            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
-
-            ApiResult oApiResult = new ApiResult();
-
-            string bet_type = "1";
+            var apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
+            var operatorToken = inputs.ContainsKey("operator_token") && !string.IsNullOrEmpty(inputs["operator_token"]) ? inputs["operator_token"] : throw new Exception("operator_token");
+            var gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
+            var clientIp = inputs["ClientIP"];
+            var traceId = Guid.NewGuid();
+            var betType = "1";
+            var uri = "external-game-launcher/api/v1/GetLaunchURLHTML";
+            
             var key = ApplyToken(tpCustInfo);
-            inputs.TryGetValue("Token", out string token);
-            var sessionKeyArr = new string[] { key, token };
-            byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
-            string sessionKey = Convert.ToBase64String(bytes);
+            inputs.TryGetValue("Token", out var token);
+            var sessionKeyArr = new[] { key, token };
+            var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
+            var sessionKey = Convert.ToBase64String(bytes);
+            
+            var extraArgs = new
+            {
+                btt = betType,
+                ops = HttpUtility.UrlEncode(sessionKey),
+                l = TpLangId
+            };
+            var dicExtraArgs = FromJson<Dictionary<string, string>>(ToJson(extraArgs));
+            var sParamExtraArgs = string.Join("&", dicExtraArgs.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            
+            var getLaunchUrl = new
+            {
+                operator_token = operatorToken,
+                path = HttpUtility.UrlEncode($"/{gameId}/index.html"),
+                extra_args = HttpUtility.UrlEncode(sParamExtraArgs),
+                url_type = "game-entry",
+                client_ip = clientIp
+            };
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(getLaunchUrl));
+            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-            oApiResult.ErrorCode = ErrorCode.Success;
-            oApiResult.Message = string.Format(LoginUrl, gameId, TpLangId, bet_type, HttpUtility.UrlEncode(operator_token), HttpUtility.UrlEncode(sessionKey), HttpUtility.UrlEncode(lobbyUrl));
+            var result = HttpPost(
+                $"{apiUrl}/{uri}?trace_id={traceId}",
+                sParam,
+                "application/x-www-form-urlencoded"
+            );
+            
+            var oApiResult = new ApiResult();
+            
+            var doc = new HtmlDocument();
+            doc.LoadHtml(result);
+            var metaTag = doc.DocumentNode.SelectSingleNode("//meta[@http-equiv='refresh']");
+            if (metaTag != null)
+            {
+                var contentAttribute = metaTag.GetAttributeValue("content", "");
+                var urlStartIndex = contentAttribute.IndexOf("URL=") + 4;
+                var url = contentAttribute.Substring(urlStartIndex);
+                
+                oApiResult.ErrorCode = ErrorCode.Success;
+                oApiResult.Message = url;
+            }
+            else
+            {
+                oApiResult.ErrorCode = ErrorCode.Fail;
+            }
+            
             return oApiResult;
         }
 
@@ -89,7 +132,7 @@ namespace ThirdParty.PG
             string BetDetailUrl = inputs.ContainsKey("BetDetailUrl") && !string.IsNullOrEmpty(inputs["BetDetailUrl"]) ? inputs["BetDetailUrl"] : throw new Exception("BetDetailUrl");
             string operator_token = inputs.ContainsKey("operator_token") && !string.IsNullOrEmpty(inputs["operator_token"]) ? inputs["operator_token"] : throw new Exception("operator_token");
             string secret_key = inputs.ContainsKey("secret_key") && !string.IsNullOrEmpty(inputs["secret_key"]) ? inputs["secret_key"] : throw new Exception("secret_key");
-            string Uri = $"/Login/v1/LoginProxy";
+            string Uri = $"external/Login/v1/LoginProxy";
 
             var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_PG_Detail_Get", new { getBetDetail.TransId }, DataBase.Report);
 
@@ -111,7 +154,7 @@ namespace ThirdParty.PG
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             var result = HttpPost(
-                $"{ApiUrl}{Uri}?trace_id={TraceId}",
+                $"{ApiUrl}/{Uri}?trace_id={TraceId}",
                 sParam,
                 "application/x-www-form-urlencoded"
             );
