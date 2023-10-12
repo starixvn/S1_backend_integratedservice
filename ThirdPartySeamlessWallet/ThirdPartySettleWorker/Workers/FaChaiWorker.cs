@@ -1,10 +1,5 @@
 ﻿using Newtonsoft.Json;
 using Serilog.Context;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -101,7 +96,7 @@ namespace ThirdPartySettleWorker.Workers
                             TransId = tpUnsettle.TransId,
                             GameType = GameType.FaChai_RNG,
                             TpUserName = betData.MemberAccount,
-                            SettledTime = betData.Ts/1000,
+                            SettledTime = wagerData.SettleTime,
                             TransTime = betData.Ts/1000,
                             SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, betData.GameID.ToString()),
                             TicketStatus = betData.NetWin > 0 ? TicketStatus.Win : betData.NetWin == 0 ? TicketStatus.Draw : TicketStatus.Lost,
@@ -138,7 +133,7 @@ namespace ThirdPartySettleWorker.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(3);
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(1);
                 if (forContinue)
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(5);

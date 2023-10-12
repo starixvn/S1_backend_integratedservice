@@ -1,5 +1,4 @@
-﻿using Org.BouncyCastle.Asn1.Cms;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Text.Json.Serialization;
 
 namespace ThirdPartySeamlessWallet.Service.Model
@@ -93,6 +92,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int jpmode { get; set; }
         public DateTime bdate { get; set; }
         public bool isBuyFeature { get; set; }
+        public long SettleTime { get; set; }
     }
     public enum FCErrorMessage
     {

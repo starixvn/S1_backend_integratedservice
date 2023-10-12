@@ -9,7 +9,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
     public class FaChaiBLL : IFaChaiBLL
     {
         private readonly MySqlClient _mainDbClient;
-        private readonly MySqlClient _wagerDbClient;
         private readonly PartitionService _partitionService;
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
@@ -19,7 +18,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public FaChaiBLL(IServiceProvider provider)
         {
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
-            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
             _partitionService = provider.GetRequiredService<PartitionService>();
             _bettingService = provider.GetRequiredService<BettingService>();
             _settledService = provider.GetRequiredService<SettledService>();
@@ -77,9 +75,31 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
+            bool getBonus = false;
             if (tempResult > 0 && bettingData.Win > 0)
             {
-                tempResult = _settledService.PayoutV2(
+                if(bonusId > 0)
+                {
+                    getBonus = true;
+                    tempResult = _settledService.PayoutWithBonusId(
+                                tpCustInfo,
+                                bettingData.Win,
+                                (int)Tp.FaChai,
+                                bettingData.RecordID,
+                                (int)GameType.FaChai_RNG,
+                                TpCategory.Slots,
+                                bettingData.RecordID,
+                                TransType.Payout,
+                                out afterAmount,
+                                "Payout",
+                                bonusId,
+                                conn,
+                                trans
+                            );
+                }
+                else
+                {
+                    tempResult = _settledService.PayoutV2(
                         tpCustInfo,
                         bettingData.Win,
                         (int)Tp.FaChai,
@@ -94,6 +114,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         out bonusId,
                         conn,
                         trans);
+                }
+                
             }
 
             if (tempResult > 0)
@@ -101,13 +123,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 _ = _tpUnsettleService.InsertTpUnsettle(Tp.FaChai, GameType.FaChai_RNG, bettingData.RecordID, trans);
                 _mainDbClient.CommitAndDisposeConnection(conn, trans);
 
+                if (getBonus)
+                {
+                    //call Service_TpSlotsBonus_Get to set flag
+                    _settledService.GetTpBonus((int)Tp.FaChai, bettingData.RecordID, (int)GameType.FaChai_RNG, TpCategory.Slots, out int custId, out bonusId);
+                }
+
                 if (afterAmount > 0 && tpCurrency.ExchangeRate > 0)
                 {
                     afterAmount /= tpCurrency.ExchangeRate;
                 }
                 else if (afterAmount == 0)
                 {
-                    afterAmount = _tpCustInfoBLL.GetBalance((int)Tp.Skywind, bettingData.MemberAccount, (int)GameType.FaChai_RNG).Balance;
+                    afterAmount = _tpCustInfoBLL.GetBalance((int)Tp.FaChai, bettingData.MemberAccount, (int)GameType.FaChai_RNG).Balance;
                 }
             }
             else

@@ -8,11 +8,9 @@ namespace ThirdPartyWager.Service.DAL
     public class WagerFaChaiService
     {
         private readonly MySqlClient _wagerDbClient;
-        private readonly MySqlClient _mainDbClient;
         public WagerFaChaiService(IServiceProvider provider)
         {
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
-            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
         public Task<int> InsertWager(Record data)
         {
