@@ -1,12 +1,6 @@
-﻿using Google.Protobuf.WellKnownTypes;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using Org.BouncyCastle.Asn1.Cms;
-using System;
-using System.Text;
 using ThirdPartySeamlessWallet.Service.BLL;
-using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -18,12 +12,10 @@ namespace ThirdPartySeamlessWallet.Controllers
     public class FaChaiController : ControllerBase
     {
         private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly IFaChaiBLL _faChaiBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly IFaChaiBLL _faChakiBLL;
-        private readonly Tp thisTp;
-        private readonly ILogger<FaChaiController> logger;
-        private readonly IHostEnvironment environment;
-        private readonly Dictionary<int, Dictionary<string, string>> siteConfigDic;
+        private readonly Tools _tools;
+        private readonly List<Dictionary<string, string>> _configList;
 
         public Tp ThirdParty { get; set; }
         public int gameType { get; set; }
@@ -34,12 +26,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             ThirdParty = Tp.FaChai;
             gameType = (int)GameType.FaChai_RNG;
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _faChaiBLL = provider.GetRequiredService<IFaChaiBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _faChakiBLL = provider.GetRequiredService<IFaChaiBLL>();
-            logger = provider.GetRequiredService<ILogger<FaChaiController>>();
-            thisTp = Tp.FaChai;
-            environment = provider.GetRequiredService<IHostEnvironment>();
-            siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>((ThirdParty).ToString());
+            _tools = provider.GetRequiredService<Tools>();
+            _configList = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>((ThirdParty).ToString()).Select(x => x.Value).ToList();
         }
         #endregion
 
@@ -74,15 +64,14 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpPost]
         public FCResponse GetBalance([FromForm] FCRequest req)
         {
-            var configList = siteConfigDic.Select(x => x.Value).ToList();
-            var siteConfig = configList.Find(x => x["AgentCode"] == req.AgentCode);
-            var para = AesDecrypt(req.Params, siteConfig["Key"]);
+            var siteConfig = _configList.Find(x => x["AgentCode"] == req.AgentCode);
+            var para = _tools.AesDecrypt(req.Params, siteConfig["Key"]);
 
             if(para == null)
             {
                 return new FCResponse()
                 {
-                    Result = 604
+                    Result = (int)FCErrorMessage.Verification_failed
                 };
             }
             var getBalanceReq = JsonConvert.DeserializeObject<GetBalanceData>(para);
@@ -90,7 +79,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             return new FCResponse()
             {
-                Result = 0,
+                Result = (int)FCErrorMessage.Success,
                 MainPoints = decimal.ToSingle(tpCustBalance.Balance),
             };
         }
@@ -100,9 +89,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         public FCResponse Bet([FromForm] FCRequest req)
         {
-            var configList = siteConfigDic.Select(x => x.Value).ToList();
-            var siteConfig = configList.Find(x => x["AgentCode"] == req.AgentCode);
-            var para = AesDecrypt(req.Params, siteConfig["Key"]);
+            var siteConfig = _configList.Find(x => x["AgentCode"] == req.AgentCode);
+            var para = _tools.AesDecrypt(req.Params, siteConfig["Key"]);
 
             if (para == null)
             {
@@ -113,6 +101,23 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             var bettingData = JsonConvert.DeserializeObject<BettingDataRNG_FaChai>(para);
+
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.FaChai, bettingData.MemberAccount);
+
+            if (tpCheck == null)
+            {
+                return new FCResponse()
+                {
+                    Result = (int)FCErrorMessage.Account_does_not_exist
+                };
+            }
+            else if (tpCheck.Locked)
+            {
+                return new FCResponse()
+                {
+                    Result = (int)FCErrorMessage.Account_locked
+                };
+            }
 
             var tpCustBalance = _tpCustInfoBLL.GetBalance((int)Tp.FaChai, bettingData.MemberAccount, gameType);
 
@@ -126,13 +131,13 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.FaChai, bettingData.MemberAccount);
 
-            var result = _faChakiBLL.Bet(tpCustInfo, bettingData, out decimal afterAmount);
+            var result = _faChaiBLL.Bet(tpCustInfo, bettingData, out decimal afterAmount);
 
             if (result.Result == (int)FCErrorMessage.Success)
             {
                 return new FCResponse()
                 {
-                    Result = 0,
+                    Result = (int)FCErrorMessage.Success,
                     MainPoints = decimal.ToSingle(afterAmount)
                 };
             }
@@ -144,9 +149,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpPost]
         public FCResponse Cancel([FromForm] FCRequest req)
         {
-            var configList = siteConfigDic.Select(x => x.Value).ToList();
-            var siteConfig = configList.Find(x => x["AgentCode"] == req.AgentCode);
-            var para = AesDecrypt(req.Params, siteConfig["Key"]);
+            var siteConfig = _configList.Find(x => x["AgentCode"] == req.AgentCode);
+            var para = _tools.AesDecrypt(req.Params, siteConfig["Key"]);
 
             if (para == null)
             {
@@ -168,25 +172,25 @@ namespace ThirdPartySeamlessWallet.Controllers
                 };
             }
 
-            var result = _faChakiBLL.Cancel(tpCustInfo, cancelData);
+            var result = _faChaiBLL.Cancel(tpCustInfo, cancelData);
 
             return result;
         }
-        public static string AesDecrypt(string str, string key)
-        {
-            if (string.IsNullOrEmpty(str)) return null;
-            Byte[] toEncryptArray = Convert.FromBase64String(str);
-            System.Security.Cryptography.RijndaelManaged rm = new
-            System.Security.Cryptography.RijndaelManaged
-            {
-                Key = Encoding.UTF8.GetBytes(key),
-                Mode = System.Security.Cryptography.CipherMode.ECB,
-                Padding = System.Security.Cryptography.PaddingMode.PKCS7
-            };
-            System.Security.Cryptography.ICryptoTransform cTransform = rm.CreateDecryptor();
-            Byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
-            return Encoding.UTF8.GetString(resultArray);
-        }
+        //public static string AesDecrypt(string str, string key)
+        //{
+        //    if (string.IsNullOrEmpty(str)) return null;
+        //    Byte[] toEncryptArray = Convert.FromBase64String(str);
+        //    System.Security.Cryptography.RijndaelManaged rm = new
+        //    System.Security.Cryptography.RijndaelManaged
+        //    {
+        //        Key = Encoding.UTF8.GetBytes(key),
+        //        Mode = System.Security.Cryptography.CipherMode.ECB,
+        //        Padding = System.Security.Cryptography.PaddingMode.PKCS7
+        //    };
+        //    System.Security.Cryptography.ICryptoTransform cTransform = rm.CreateDecryptor();
+        //    Byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+        //    return Encoding.UTF8.GetString(resultArray);
+        //}
 
     }
 }
