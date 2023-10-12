@@ -2912,6 +2912,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _wagerDbClient.Execute("Service_TpWagerLC_N2Live_Settle_Set", commandType: CommandType.StoredProcedure, new { TransId = TransId });
         }
 
+        public int SetSettleFlag_BettransSmartLC_N2Live(string TransId, int SettleFlag)
+        {
+            return _wagerDbClient.Execute("Service_SmartBettransLC_N2Live_Settle_Set", commandType: CommandType.StoredProcedure, new { TransId = TransId,SettleFlag = SettleFlag});
+        }
+
         public int SetSettleFlag_TpSmartWagerLC_N2Live(string TransId)
         {
             return _wagerDbClient.Execute("Service_TpSmartWagerLC_N2Live_Settle_Set", commandType: CommandType.StoredProcedure, new { TransId = TransId });
