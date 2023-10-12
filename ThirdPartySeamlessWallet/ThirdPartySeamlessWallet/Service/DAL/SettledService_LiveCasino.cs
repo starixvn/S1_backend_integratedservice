@@ -367,7 +367,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
                 p.Add("CanPayout", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-                result = _mainDbClient.Execute("Service_BettransLC_AGV2_Payout_Ins", p, conn, trans);
+                result = _mainDbClient.Execute("Service_BettransLC_AGV2_Payout_Ins_V2", p, conn, trans);
 
                 if (p.Get<int>("CanPayout") == 1)
                 {
@@ -1686,7 +1686,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                result = _mainDbClient.Execute("Service_BettransLC_EBet_Payout_Ins", p, conn, trans);
+                result = _mainDbClient.Execute("Service_BettransLC_EBet_Payout_Ins_V2", p, conn, trans);
 
                 if (result > 0)
                 {
@@ -2091,7 +2091,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             return _mainDbClient.Query<SettleData>("Service_BettransLC_EBet_Unsettle_Get_V4", commandType: CommandType.StoredProcedure);
         }
-
+        
+        public SettleData GetUnsettledListLC_EBet_ByTrans(string transId)
+        {
+            return _mainDbClient.QueryFirst<SettleData>("Service_BettransLC_EBet_Unsettle_ByTrans_Get", parameters: new { _TransId = transId });
+        }
+        
         public int SetSettleFlag_EBet(string TransId)
         {
             return _mainDbClient.Execute("Service_BettransLC_EBet_Settle_Set", commandType: CommandType.StoredProcedure, new { TransId = TransId, SettleFlag = 1 });

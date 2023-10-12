@@ -6482,5 +6482,146 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+
+        #region PNG
+
+        public async Task<PNGResult> CancelBetRNG_PNG(TpCustInfo tpCustInfo, BettingDataRNG_PNG bettingData)
+        {
+            decimal afterAmount = 0;
+            await using var conn = _mainDbClient.GetMySqlConnection();
+            await conn.OpenAsync();
+            await using var trans = await conn.BeginTransactionAsync();
+
+            try
+            {
+                // update
+                var result = _mainDbClient.Execute("Service_BettransRng_PNG_CancelBet_Set", new { _TransactionId = bettingData.TransactionId }, conn, trans);
+                if (result > 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        bettingData.Amount,
+                        (int)Tp.PNG,
+                        bettingData.RoundId.ToString(),
+                        (int)GameType.PNG_RNG,
+                        TpCategory.Slots,
+                        bettingData.RoundId.ToString(),
+                        TransType.Refunds,
+                        null,
+                        out afterAmount,
+                        "Cancel",
+                        out var bonusId,
+                        conn,
+                        trans);
+
+                    if (result < 1)
+                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "CancelReserve Set Balance Fail");
+                }
+                else
+                {
+                    // Insert
+                    var p = new DynamicParameters(bettingData);
+                    result = _mainDbClient.Execute("Service_BettransRng_PNG_Ins", p, conn, trans);
+
+                    if (result < 1)
+                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "CancelReserve Insert Fail");
+                }
+
+                await trans.CommitAsync();
+                return new PNGResult
+                {
+                    ExternalTransactionId = bettingData.TransactionId,
+                    AfterAmount = afterAmount //沒有退款的話 afterAmount 會是 0，有需要可以在外層判斷 = 0 重取餘額一次
+                };
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    throw new PNGException(PNG_StatsuCodeEnum.Ok, "Duplicate CancelReserve");
+                }
+                throw;
+            }
+            catch (Exception ex)
+            {
+                await trans.RollbackAsync();
+                logger.LogError(ex, ex.Message);
+                throw new PNGException(PNG_StatsuCodeEnum.Internal, ex.Message);
+            }
+        }
+
+        public async Task<PNGResult> PayoutRNG_PNG(TpCustInfo tpCustInfo, BettingDataRNG_PNG bettingData, TransType transType)
+        {
+            var afterAmount = 0m;
+            long endRoundId = 0;
+            await using var conn = _mainDbClient.GetMySqlConnection();
+            await conn.OpenAsync();
+            await using var trans = await conn.BeginTransactionAsync();
+
+            try
+            {
+                var p = new DynamicParameters(bettingData);
+                var result = bettingData.RoundId != endRoundId
+                    ? _mainDbClient.Execute("Service_BettransRng_PNG_Ins", p, conn, trans) // 正常投注、取消、派彩
+                    : _mainDbClient.Execute("Service_BettransRng_PNG_END_Ins", p, conn, trans); // EndRound 紀錄
+
+                if (result == 0)
+                    throw new PNGException(PNG_StatsuCodeEnum.Internal, "Release Fail");
+
+                if (bettingData.Amount > 0 && bettingData.RoundId != endRoundId)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        bettingData.Amount,
+                        (int)Tp.PNG,
+                        bettingData.RoundId.ToString(),
+                        (int)GameType.PNG_RNG,
+                        TpCategory.Slots,
+                        bettingData.RoundId.ToString(),
+                        transType,
+                        null,
+                        out afterAmount,
+                        "Payout",
+                        out var bonusId,
+                        conn,
+                        trans);
+
+                    if (result < 1)
+                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "Release Set Balance Fail");
+                }
+
+                if (bettingData.RoundId != endRoundId) //非endRound 才塞 TpUnsettle
+                {
+                    result = _tpUnsettleService.InsertTpUnsettle(Tp.PNG, GameType.PNG_RNG, bettingData.RoundId.ToString(), trans);
+
+                    if (result < 1)
+                        throw new PNGException(PNG_StatsuCodeEnum.Internal, "PNG TpUnsettle Fail");
+                }
+
+                await trans.CommitAsync();
+
+                return new PNGResult
+                {
+                    ExternalTransactionId = bettingData.TransactionId,
+                    AfterAmount = afterAmount
+                };
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    throw new PNGException(PNG_StatsuCodeEnum.Ok, $"TransactionId:{bettingData.TransactionId},RoundId:{bettingData.RoundId} Duplicate Release");
+                }
+                throw;
+            }
+            catch (PNGException ex)
+            {
+                logger.LogError(ex, ex.Message);
+                await trans.RollbackAsync();
+                throw new PNGException(PNG_StatsuCodeEnum.Internal, ex.Message);
+            }
+        }
+
+        #endregion
     }
 }

@@ -133,6 +133,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         IM_ESports = 102,
         IM_Sports = 103,
         SPRIBE_RNG = 104,
+        PNG_RNG = 105,
     }
     public enum Tp
     {
@@ -187,7 +188,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         Nextspin = 50,
         PlayTech = 51,
         IM = 52,
-        SPRIBE = 53
+        SPRIBE = 53,
+        PNG = 54,
     }
     public enum TransferType : int
     {

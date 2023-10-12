@@ -339,12 +339,12 @@ namespace ThirdPartySettleWorker.Workers
             var wagerStake = wager.StakeAmount * tpCurrency.ExchangeRate;
             var wagerWinLostAmount = (isRefund ? wager.BetTradeBuybackAmount - wager.StakeAmount : wager.WinLoss)
                                           * tpCurrency.ExchangeRate;
-            
+
             //var fWagerWinLostAmount = Math.Round((decimal)wagerWinLostAmount);
-            
+
             var fWagerStake = Math.Truncate(wagerStake * 10) / 10;
             betTrans.Stake = Math.Truncate(betTrans.Stake * 10) / 10;
-            
+
             var isSame = fWagerStake == betTrans.Stake
                          && Math.Abs(wagerWinLostAmount - betTrans.WinLostAmount) < Convert.ToDecimal(2);
 
