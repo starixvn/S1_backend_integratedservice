@@ -57,23 +57,22 @@ namespace ThirdParty.SG
             ApiResult oApiResult = new ApiResult();
             string mobile = (appType == AppType.Mobile) ? "true" : "false";
 
+            if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
+            {
+                oApiResult.ErrorCode = ErrorCode.Success;
+                oApiResult.Message = $"{FunGameUrl}?language={TpLangId}&game={gameId}&menumode=off&mobile={mobile}";
+                return oApiResult;
+            }
+
             var key = ApplyToken(tpCustInfo);
             inputs.TryGetValue("Token", out string token);
             var sessionKeyArr = new string[] { key, token };
             byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
             string sessionKey = Convert.ToBase64String(bytes);
 
-            string queryString = $"acctId={tpCustInfo.TpUserName}&language={TpLangId}&token={HttpUtility.UrlEncode(sessionKey)}&game={gameId}&menumode=off&mobile={mobile}";
-
-            if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
-            {
-                oApiResult.ErrorCode = ErrorCode.Success;
-                oApiResult.Message = $"{FunGameUrl}?{queryString}&fun=true";
-                return oApiResult;
-            }
 
             oApiResult.ErrorCode = ErrorCode.Success;
-            oApiResult.Message = $"{GameUrl}?{queryString}";
+            oApiResult.Message = $"{GameUrl}?acctId={tpCustInfo.TpUserName}&language={TpLangId}&token={HttpUtility.UrlEncode(sessionKey)}&game={gameId}&menumode=off&mobile={mobile}";
 
             return oApiResult;
         }
