@@ -28,7 +28,6 @@ public class N2LiveWorker : BackgroundService, ISettleWorker
         _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         _tpName = Enum.GetName(typeof(Tp), Tp);
         LogContext.PushProperty("TP", _tpName);
-
     }
     
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -55,25 +54,19 @@ public class N2LiveWorker : BackgroundService, ISettleWorker
             {
                 throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
             }
-
+            
             forContinue = tpUnsettleList.Count() == 200;
+            //過濾是否為Smart
+            tpUnsettleList = tpUnsettleList.Where(x => x.TransId.Length > 10).ToList();
             foreach (var tpUnsettle in tpUnsettleList)
             {
                 try
                 {
-                    var getUnsettledData = new List<SettleData>();
-                    var getWagerData = new List<SettleData_N2Live>();
                     var TransId = tpUnsettle.TransId;
-                    var checkTransId = CheckTransId(TransId);
-                    
-                    var unsettledSPName = checkTransId ? "Service_BettransLC_N2Live_Unsettle_Get_V2" : "Service_TpSmartWagerLC_N2Live_Unsettle_Get_V2";
-                    var wagerSPName = checkTransId ? "Service_TpWagerLC_N2Live_Get_V2" : "Service_TpSmartWagerLC_N2Live_Unsettle_Get_V2";
-                    
-                    getUnsettledData = GetN2LiveData<SettleData>(unsettledSPName, new {TransId = tpUnsettle.TransId}, DataBase.Main).ToList();
-                    getWagerData = GetN2LiveData<SettleData_N2Live>(wagerSPName, new {TransId = tpUnsettle.TransId}, DataBase.Wager).ToList();
-                    
-                    var unsettledData = getUnsettledData.FirstOrDefault();
-                    var wagerData = getWagerData.FirstOrDefault();
+                    var unsettledData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>("Service_BettransLC_N2Live_Unsettle_Get_V2",
+                        new { tpUnsettle.TransId }, DataBase.Main).FirstOrDefault();
+                    var wagerData = _tpUnSettledBLL.GetTpUnsettleData<SettleData_N2Live>("Service_TpWagerLC_N2Live_Get_V2",
+                        new { tpUnsettle.TransId }, DataBase.Main).FirstOrDefault();
                     
                     var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(tpId, wagerData.Account);
                     var tpCurrency = _thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
@@ -105,25 +98,14 @@ public class N2LiveWorker : BackgroundService, ISettleWorker
 
                     Task.Run(() =>
                     {
-                        if (checkTransId)
-                        {
-                            _settledBLL.SetSettleFlag_TpWagerLC_N2Live(TransId);
-                            _settledBLL.SetSettleFlag_BettransLC_N2Live(TransId, 1);
-                        }
-                        else
-                        {
-                            _settledBLL.SetSettleFlag_TpSmartWagerLC_N2Live(TransId);
-                        }
+                        _settledBLL.SetSettleFlag_TpWagerLC_N2Live(TransId);
+                        _settledBLL.SetSettleFlag_BettransLC_N2Live(TransId, 1);
                         _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, true);
                     });
 
                 }
                 catch (Exception ex)
                 {
-                    Task.Run(() =>
-                    {
-                        _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, isSuccess: false);
-                    });
                     isError = true;
                     _logger.LogError(ex, $"N2LiveDoSettleLiveCasinoWork:{ex.Message}" , logName);
 

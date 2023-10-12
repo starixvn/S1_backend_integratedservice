@@ -84,7 +84,8 @@ builder.Services
     .AddHostedService<EBetWorker>()
     .AddHostedService<WMWorker>()
     .AddHostedService<N2LiveWorker>()
-    .AddHostedService<PNGWorker>();
+    .AddHostedService<PNGWorker>()
+    .AddHostedService<N2LiveSmartWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
