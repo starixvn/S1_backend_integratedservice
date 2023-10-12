@@ -65,7 +65,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         public FCResponse GetBalance([FromForm] FCRequest req)
         {
             var siteConfig = _configList.Find(x => x["AgentCode"] == req.AgentCode);
-            var para = _tools.AesDecrypt(req.Params, siteConfig["Key"]);
+            var para = _tools.AesDecrypt(req.Params, siteConfig["Key"], false);
 
             if(para == null)
             {
@@ -90,7 +90,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         public FCResponse Bet([FromForm] FCRequest req)
         {
             var siteConfig = _configList.Find(x => x["AgentCode"] == req.AgentCode);
-            var para = _tools.AesDecrypt(req.Params, siteConfig["Key"]);
+            var para = _tools.AesDecrypt(req.Params, siteConfig["Key"], false);
 
             if (para == null)
             {
@@ -150,7 +150,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         public FCResponse Cancel([FromForm] FCRequest req)
         {
             var siteConfig = _configList.Find(x => x["AgentCode"] == req.AgentCode);
-            var para = _tools.AesDecrypt(req.Params, siteConfig["Key"]);
+            var para = _tools.AesDecrypt(req.Params, siteConfig["Key"], false);
 
             if (para == null)
             {
@@ -176,21 +176,5 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             return result;
         }
-        //public static string AesDecrypt(string str, string key)
-        //{
-        //    if (string.IsNullOrEmpty(str)) return null;
-        //    Byte[] toEncryptArray = Convert.FromBase64String(str);
-        //    System.Security.Cryptography.RijndaelManaged rm = new
-        //    System.Security.Cryptography.RijndaelManaged
-        //    {
-        //        Key = Encoding.UTF8.GetBytes(key),
-        //        Mode = System.Security.Cryptography.CipherMode.ECB,
-        //        Padding = System.Security.Cryptography.PaddingMode.PKCS7
-        //    };
-        //    System.Security.Cryptography.ICryptoTransform cTransform = rm.CreateDecryptor();
-        //    Byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
-        //    return Encoding.UTF8.GetString(resultArray);
-        //}
-
     }
 }
