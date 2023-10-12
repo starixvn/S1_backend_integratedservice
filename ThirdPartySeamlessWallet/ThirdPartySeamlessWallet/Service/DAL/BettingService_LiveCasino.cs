@@ -876,7 +876,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 var category = TpCategory.LiveCasino;
                 var gameType = (int)GameType.EVO_LiveCasino;
-                result = _mainDbClient.Execute("Service_BettransLC_EVO_Ins", p, conn, trans);
+                result = _mainDbClient.Execute("Service_BettransLC_EVO_Ins_V2", p, conn, trans);
 
                 if (result > 0 && bettingData_EVO.transaction.amount != 0)
                 {
