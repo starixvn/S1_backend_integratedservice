@@ -66,7 +66,7 @@ public class N2LiveWorker : BackgroundService, ISettleWorker
                     var unsettledData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>("Service_BettransLC_N2Live_Unsettle_Get_V2",
                         new { tpUnsettle.TransId }, DataBase.Main).FirstOrDefault();
                     var wagerData = _tpUnSettledBLL.GetTpUnsettleData<SettleData_N2Live>("Service_TpWagerLC_N2Live_Get_V2",
-                        new { tpUnsettle.TransId }, DataBase.Main).FirstOrDefault();
+                        new { tpUnsettle.TransId }, DataBase.Wager).FirstOrDefault();
                     
                     var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(tpId, wagerData.Account);
                     var tpCurrency = _thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
@@ -132,18 +132,4 @@ public class N2LiveWorker : BackgroundService, ISettleWorker
             _timerLC?.Change(dueTimeSpan, TimeSpan.Zero);
         }
     }
-
-    #region private
-
-    private bool CheckTransId(string transId)
-    {
-        return transId.Length > 10;
-    }
-    
-    private IEnumerable<T> GetN2LiveData<T>(string serviceName, object parameters, DataBase database)
-    {
-        return _tpUnSettledBLL.GetTpUnsettleData<T>(serviceName, parameters, database);
-    }
-
-    #endregion
 }
