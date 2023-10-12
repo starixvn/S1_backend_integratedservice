@@ -1,8 +1,9 @@
 using Serilog;
 using Serilog.Exceptions;
-using ThirdPartyBetHistory.Service.Worker;
+
 using ThirdPartyBetHistory;
 using ThirdPartyBetHistory.Extensions;
+using ThirdPartyBetHistory.Service.Worker;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,8 +28,7 @@ builder.Services
     .AddHostedService<WorkerService>()
     .AddHostedService<BonusWorker>()
     .AddHostedService<SabaByTransIdUnSettleWorkerService>()
-    //.AddHostedService<SabaByTransIdSettleWorkerService>()
-    .AddHostedService<RngService>();
+    .AddHostedService<RngWorkerService>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);

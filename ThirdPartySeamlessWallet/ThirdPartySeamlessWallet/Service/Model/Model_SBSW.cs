@@ -46,23 +46,11 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         AdjustBalance,
     }
 
-    public class Config
+    public class SabaConfig
     {
         public string ApiUrl { get; set; }
         public string VendorId { get; set; }
-
-        public Config(Dictionary<string, string> inputs, string merchant)
-        {
-            try
-            {
-                ApiUrl = inputs.GetValue($"ApiUrl_{merchant}");
-                VendorId = inputs.GetValue($"VendorId_{merchant}");
-            }
-            catch (Exception ex)
-            {
-                throw new SBSWException(ReturnCode.OperatorNotFound, ex.Message);
-            }
-        }
+        public string OperatorId { get; set; }
     }
 
     public class ReturnObj
