@@ -116,7 +116,25 @@ namespace ThirdPartyService.Service.BLL
 
                 TpCustInfo freeCustInfo = new TpCustInfo();
                 freeCustInfo.SiteId = tpInfo.SiteId;
-                apiResult = tpHelper.Login(freeCustInfo, (AppType)tpInfo.AppType, tpLangId, inputs);
+                if (tpInfo.TpId == 10) //SG FunGame need tpcustinfo auth
+                {
+                    var getTpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
+                    if (getTpCustInfoResult.ErrorCode == ErrorCode.Success)
+                    {
+                        apiResult = tpHelper.Login(getTpCustInfoResult.Data, (AppType)tpInfo.AppType, tpLangId, inputs);
+                    }
+                    else
+                    {
+                        apiResult.ErrorCode = getTpCustInfoResult.ErrorCode;
+                        apiResult.Message = getTpCustInfoResult.Message;
+                        apiResult.RawErrorCode = getTpCustInfoResult.RawErrorCode; /*3RD Error Code*/
+                        apiResult.RawMessage = getTpCustInfoResult.RawMessage; /*3RD Error Message*/
+                    }
+                }
+                else
+                {
+                    apiResult = tpHelper.Login(freeCustInfo, (AppType)tpInfo.AppType, tpLangId, inputs);
+                }
                 return apiResult;
             }
 
