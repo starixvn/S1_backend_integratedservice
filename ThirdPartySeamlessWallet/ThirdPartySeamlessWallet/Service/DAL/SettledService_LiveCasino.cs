@@ -2536,15 +2536,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        //看要不要改成放到Redis 這樣就不用跑DB拿
-                        var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp.N2Live, GameType.N2Live_LiveCasino);
-                        if (tpUnsettleList.All(x => x.TransId == TransId))
+                        var insertTpResults = _tpUnsettleService.InsertTpUnsettle(Tp.N2Live, GameType.N2Live_LiveCasino, TransId, trans);
+                        if (insertTpResults <= 0)
                         {
-                            var insertTpResults = _tpUnsettleService.InsertTpUnsettle(Tp.N2Live, GameType.N2Live_LiveCasino, TransId, trans);
-                            if (insertTpResults <= 0)
-                            {
-                                result = 0;
-                            }
+                            result = 0;
                         }
                         _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     }
@@ -2687,15 +2682,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        //看要不要改成放到Redis 這樣就不用跑DB拿
-                        var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp.N2Live, GameType.N2Live_LiveCasino);
-                        if (tpUnsettleList.All(x => x.TransId != smartPayoutDataLC_N2Live.request.schemeid))
-                        {
-                            var insertTpResults = _tpUnsettleService.InsertTpUnsettle(Tp.N2Live, GameType.N2Live_LiveCasino, smartPayoutDataLC_N2Live.request.schemeid, trans);
-                            if (insertTpResults <= 0)
-                            {
-                                result = 0;
-                            }
+                        var insertTpResults = _tpUnsettleService.InsertTpUnsettle(Tp.N2Live, GameType.N2Live_LiveCasino, smartPayoutDataLC_N2Live.request.schemeid, trans);
+                        if (insertTpResults <= 0) 
+                        { 
+                            result = 0;
                         }
                         _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     }
