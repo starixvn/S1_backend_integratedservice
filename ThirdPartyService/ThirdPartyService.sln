@@ -109,7 +109,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.Nextspin", "Thir
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.PlayTech", "ThirdParty.PlayTech\ThirdParty.PlayTech.csproj", "{71B82547-C834-4382-A609-BE6EE2194D4A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.END", "ThirdParty.END\ThirdParty.END.csproj", "{7443C12B-E45F-4B9D-9A4A-5BFD3341EE79}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.ES", "ThirdParty.ES\ThirdParty.ES.csproj", "{7443C12B-E45F-4B9D-9A4A-5BFD3341EE79}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.IM", "ThirdParty.IM\ThirdParty.IM.csproj", "{F571D3D8-B6AA-40A1-8CDF-6C27E5F83162}"
 EndProject
