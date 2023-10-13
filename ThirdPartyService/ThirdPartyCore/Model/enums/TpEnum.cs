@@ -43,6 +43,7 @@
         SBSW = 41,
         SimplePlay = 44,
         Nextspin = 50,
+        PNG = 54,
         FaChai = 55
     }
 

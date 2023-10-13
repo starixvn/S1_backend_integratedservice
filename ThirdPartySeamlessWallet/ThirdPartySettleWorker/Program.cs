@@ -79,6 +79,7 @@ builder.Services
     .AddHostedService<DGWorker>()
     .AddHostedService<AGWorker>()
     .AddHostedService<EBetWorker>()
+    .AddHostedService<PNGWorker>()
     .AddHostedService<FaChaiWorker>();
 
 var app = builder.Build();

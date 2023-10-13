@@ -24,5 +24,15 @@
             }
             return string.Empty;
         }
+
+        /// <summary>
+        /// 將 Dictionary 轉為 QueryString
+        /// </summary>
+        /// <param name="dict"></param>
+        /// <returns></returns>
+        public static string ToQueryString(this Dictionary<string, string> dict)
+        {
+            return string.Join("&", dict.Select(p => $"{p.Key}={p.Value}"));
+        }
     }
 }
