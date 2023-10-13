@@ -55,12 +55,12 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task<WagerV8Model> GetBetListByTimeV2(dynamic setting, long startUnix, long endUnix)
+        public async Task<WagerV8Model> GetBetListByTimeV2(dynamic setting, long startUnix, long endUnix, string tpCurrencyId)
         {
             var wagerUrl = setting["WagerUrl_SW"];
-            var deskey = setting["Deskey_SW"];
-            var md5key = setting["Md5key_SW"];
-            var agent = setting["Agent_SW"];
+            var deskey = setting[$"Deskey_{tpCurrencyId}"];
+            var md5key = setting[$"Md5key_{tpCurrencyId}"];
+            var agent = setting[$"Agent_{tpCurrencyId}"];
 
             var current = new DateTimeOffset(DateTime.UtcNow);
             var timestamp = current.ToUnixTimeMilliseconds();

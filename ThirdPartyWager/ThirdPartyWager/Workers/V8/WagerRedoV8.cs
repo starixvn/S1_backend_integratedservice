@@ -8,18 +8,20 @@ namespace ThirdPartyWager.Workers
     {
         private readonly ILogger<WagerRedoV8> _logger;
         private readonly WagerV8BLL _wagerV8BLL;
+        private readonly CommonBLL _commonBLL;
         private Timer timer;
         private readonly int tpType = (int)WagerTimerType.RedoWager;
         private readonly int timeRange = 60; //in minutes
         private readonly int quickTime = 75; // in seconds
         private readonly int runTime = 1; // in hours
         private readonly string _tpName = Tp.V8.ToString();
-
+        private readonly int tpId = (int)Tp.V8;
 
         public WagerRedoV8(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<WagerRedoV8>>();
             _wagerV8BLL = provider.GetRequiredService<WagerV8BLL>();
+            _commonBLL = provider.GetRequiredService<CommonBLL>();
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -31,10 +33,16 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
+            var isFast = false;
             var quick = false;
             try
             {
-                quick = await _wagerV8BLL.ExecWagerRedoWorker(tpType, timeRange);
+                var TpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
+                foreach (var item in TpCurrencyList)
+                {
+                    quick = await _wagerV8BLL.ExecWagerRedoWorker(tpType, timeRange, item.TpCurrencyId);
+                    if (!isFast && quick) isFast = true;
+                }
             }
             catch (Exception ex)
             {

@@ -241,9 +241,9 @@ namespace ThirdParty.V8
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             string ApiUrl = inputs.ContainsKey("ApiUrl_SW") && !string.IsNullOrEmpty(inputs["ApiUrl_SW"]) ? inputs["ApiUrl_SW"] : throw new Exception("ApiUrl_SW");
-            string Agent = inputs.ContainsKey("Agent_SW") && !string.IsNullOrEmpty(inputs["Agent_SW"]) ? inputs["Agent_SW"] : throw new Exception("Agent_SW");
-            string Deskey = inputs.ContainsKey("Deskey_SW") && !string.IsNullOrEmpty(inputs["Deskey_SW"]) ? inputs["Deskey_SW"] : throw new Exception("Deskey_SW");
-            string Md5key = inputs.ContainsKey("Md5key_SW") && !string.IsNullOrEmpty(inputs["Md5key_SW"]) ? inputs["Md5key_SW"] : throw new Exception("Md5key_SW");
+            string Agent = inputs.ContainsKey($"Agent_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"Agent_{tpCustInfo.TpCurrencyId}"]) ? inputs[$"Agent_{tpCustInfo.TpCurrencyId}"] : throw new Exception();
+            string Deskey = inputs.ContainsKey($"Deskey_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"Deskey_{tpCustInfo.TpCurrencyId}"]) ? inputs[$"Deskey_{tpCustInfo.TpCurrencyId}"] : throw new Exception();
+            string Md5key = inputs.ContainsKey($"Md5key_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"Md5key_{tpCustInfo.TpCurrencyId}"]) ? inputs[$"Md5key_{tpCustInfo.TpCurrencyId}"] : throw new Exception();
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
 
             var current = new DateTimeOffset(DateTime.UtcNow);

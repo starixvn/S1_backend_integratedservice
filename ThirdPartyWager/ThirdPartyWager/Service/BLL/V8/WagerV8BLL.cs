@@ -27,7 +27,7 @@ namespace ThirdPartyWager.Service.BLL
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         }
 
-        public async Task<bool> ExecWagerWorker(int type, int timeRange)
+        public async Task<bool> ExecWagerWorker(int type, int timeRange, string tpCurrencyId)
         {
             var wokerTime = GetWorkerTime(type, -180);
             var quick = CheckQuick(wokerTime, 5);
@@ -37,7 +37,7 @@ namespace ThirdPartyWager.Service.BLL
             if (time.endUnix < cvTime)
             {
 
-                var result = await GetWagersAsync(time);
+                var result = await GetWagersAsync(time, tpCurrencyId);
                 if (result)
                 {
                     _thirdPartyBLL.SetThirdPartyTimer(_tpId, type, time.endUnix);
@@ -47,7 +47,7 @@ namespace ThirdPartyWager.Service.BLL
             return quick;
         }
 
-        public async Task<bool> ExecWagerRedoWorker(int type, int timeRange)
+        public async Task<bool> ExecWagerRedoWorker(int type, int timeRange, string tpCurrencyId)
         {
             var wokerTime = GetWorkerTime(type, 1);
             var quick = CheckQuick(wokerTime, 120);
@@ -56,7 +56,7 @@ namespace ThirdPartyWager.Service.BLL
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
             {
-                var result = await GetWagersAsync(time, true);
+                var result = await GetWagersAsync(time, tpCurrencyId, true);
                 if (result)
                 {
                     _thirdPartyBLL.SetThirdPartyTimer(_tpId, type, time.endUnix);
@@ -66,7 +66,7 @@ namespace ThirdPartyWager.Service.BLL
             return quick;
         }
 
-        public async Task<bool> GetWagersAsync(TimeCast wagerTime, bool compare = false)
+        public async Task<bool> GetWagersAsync(TimeCast wagerTime, string tpCurrencyId, bool compare = false)
         {
             var msg = "FATAL_ERROR";
             var workerName = compare ? "GetRedoWagersAsync" : "GetWagersAsync";
@@ -76,7 +76,7 @@ namespace ThirdPartyWager.Service.BLL
                 var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
 
                 // get wager
-                var dataWager = await _apiV8BLL.GetBetListByTimeV2(setting, wagerTime.startUnix, wagerTime.endUnix);
+                var dataWager = await _apiV8BLL.GetBetListByTimeV2(setting, wagerTime.startUnix, wagerTime.endUnix, tpCurrencyId);
 
                 // error condition
                 var errorCode = dataWager.d.code;
@@ -85,27 +85,27 @@ namespace ThirdPartyWager.Service.BLL
                 if (errorCode != 0 && errorCode != 16)
                 {
                     msg = "THIRD_PARTY_ERROR";
-                    _logger.LogError($"{workerName} {msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                    _logger.LogError($"{workerName} {msg} {tpCurrencyId}\r\n{JsonConvert.SerializeObject(dataWager)}");
                     return false;
                 }
 
                 if (errorCode == 16 || (errorCode == 0 && dataWager.d.count == 0))
                 {
                     msg = "NO_DATA";
-                    _logger.LogInformation($"{workerName} {msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                    _logger.LogInformation($"{workerName} {msg} {tpCurrencyId}\r\n{JsonConvert.SerializeObject(dataWager)}");
                     return true;
                 }
 
-                if (compare)
-                {
-                    bool check = CompareSummary(wagerTime, dataWager);
-                    if (check)
-                    {
-                        msg = "MATCH";
-                        _logger.LogInformation($"{workerName} {msg}");
-                        return true;
-                    }
-                }
+                //if (compare)
+                //{
+                //    bool check = CompareSummary(wagerTime, dataWager);
+                //    if (check)
+                //    {
+                //        msg = "MATCH";
+                //        _logger.LogInformation($"{workerName} {msg} {tpCurrencyId}");
+                //        return true;
+                //    }
+                //}
 
                 var field = new List<string>();
                 for (var i = 0; i < dataWager.d.count; i++)
