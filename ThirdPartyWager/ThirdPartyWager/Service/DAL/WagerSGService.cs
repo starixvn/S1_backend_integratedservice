@@ -1,26 +1,30 @@
-﻿using ThirdPartyWager.Service.Library;
+﻿using Dapper;
+using Microsoft.Extensions.Configuration;
+using MySql.Data.MySqlClient;
+using System.Data;
 using ThirdPartyWager.Service.Model;
-using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.DAL
 {
     public class WagerSGService
     {
-        private readonly MySqlClient _wagerDbClient;
+        private readonly IConfiguration configuration;
 
-        public WagerSGService(IServiceProvider provider)
+        public WagerSGService(IConfiguration configuration)
         {
-            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
+            this.configuration = configuration;
         }
 
         public int InsertWager(BetSG bet)
         {
-            return _wagerDbClient.Execute("Service_TpWagerSG_Ins", bet);
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Execute("Service_TpWagerSG_Ins", bet, commandType: CommandType.StoredProcedure);
         }
 
         public int InsertWagerRng(BetSG bet)
         {
-            return _wagerDbClient.Execute("Service_TpWagerRng_SG_Ins", bet);
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Execute("Service_TpWagerRng_SG_Ins", bet, commandType: CommandType.StoredProcedure);
         }
     }
 }

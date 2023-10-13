@@ -1,26 +1,30 @@
-﻿using ThirdPartyWager.Service.Library;
+﻿using Dapper;
+using Microsoft.Extensions.Configuration;
+using MySql.Data.MySqlClient;
+using System.Data;
 using ThirdPartyWager.Service.Model;
-using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.DAL
 {
     public class WagerCFService
     {
-        private readonly MySqlClient _wagerDbClient;
-        
-        public WagerCFService(IServiceProvider provider)
+        private readonly IConfiguration configuration;
+
+        public WagerCFService(IConfiguration configuration)
         {
-            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
+            this.configuration = configuration;
         }
 
         public int InsertWager(BetCF bet)
         {
-            return _wagerDbClient.Execute("Service_TpWagerCF_Ins", bet);
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.Execute("Service_TpWagerCF_Ins", bet, commandType: CommandType.StoredProcedure);
         }
 
         public WagerCFModel GetWagerTotal(long beginTime, long endTime)
         {
-            return _wagerDbClient.QueryFirst<WagerCFModel>("Service_TpWagerCFTotal_Get", new { BeginTime = beginTime, EndTime = endTime });
+            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
+            return conn.QueryFirstOrDefault<WagerCFModel>("Service_TpWagerCFTotal_Get", new { BeginTime = beginTime, EndTime = endTime }, commandType: CommandType.StoredProcedure);
         }
     }
 }
