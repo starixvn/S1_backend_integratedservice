@@ -8,8 +8,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public string Token { get; set; }
         public string TpUserName { get; set; }
-        public string CustId { get; set; }
-        public string GameId { get; set; }
     }
     
     public class Response_Pegasus<T>

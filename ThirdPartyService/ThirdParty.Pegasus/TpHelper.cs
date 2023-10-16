@@ -38,7 +38,7 @@ namespace ThirdParty.Pegasus
             var config = new PegasusConfig(siteInputs, tpCustInfo.TpCurrencyId);
 
             var token = ApplyToken(tpCustInfo);
-            var sessionKeyArr = new[] { token, tpCustInfo.CustId.ToString(), tpCustInfo.TpUserName, gameCode };
+            var sessionKeyArr = new[] { token, tpCustInfo.TpUserName};
             var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
             var sessionKey = Convert.ToBase64String(bytes);
 
@@ -60,7 +60,7 @@ namespace ThirdParty.Pegasus
             var parameters = string.Join("&", dicRequest.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             var gameUrl = config.ApiUrl + "/game/launch-link";
-            var json = HttpGet(gameUrl, parameters, ContentType);
+            var json = HttpGet(gameUrl, parameters);
             var result = FromJson<PegasusGameLaunchResult>(json);
 
             if (result.code != 0)
