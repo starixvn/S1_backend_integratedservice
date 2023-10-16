@@ -11,10 +11,12 @@ namespace ThirdPartyBetHistory.Service.BLL
         {
             _settledService = provider.GetRequiredService<SettledService>();
         }
+
         public IEnumerable<BonusFulfill> GetBonusFulfill()
         {
             return _settledService.GetBonusFulfill();
         }
+
         public bool BonusSettle(BonusFulfill bonusFulfill)
         {
             return _settledService.BonusSettle(bonusFulfill);

@@ -1,9 +1,9 @@
-﻿using Dapper;
-using MySql.Data.MySqlClient;
+﻿using System.Data;
+
+using Dapper;
 
 using Newtonsoft.Json;
 
-using System.Data;
 using ThirdPartyBetHistory.Service.Library;
 using ThirdPartyBetHistory.Service.Model;
 using ThirdPartyBetHistory.Service.Model.enums;
@@ -21,25 +21,17 @@ namespace ThirdPartyBetHistory.Service.DAL
             _logger = provider.GetRequiredService<ILogger<SettledService>>();
         }
 
-        /// <summary>
-        /// 找到用戶還在Running的CustBonus
-        /// </summary>
-        public IEnumerable<CustBonus> GetCustBonusList(int CustId)
-        {
-            return _mainDbClient.Query<CustBonus>("Service_Bonus_Get_V2", parameters: new { CustId });
-        }
-
         public IEnumerable<BonusFulfill> GetBonusFulfill()
         {
             return _mainDbClient.Query<BonusFulfill>("Service_BonusFulfill_Get");
         }
-        
+
         public bool BonusSettle(BonusFulfill bonusFulfill)
         {
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
-            
+
             var p = new DynamicParameters(bonusFulfill);
             p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("TpId", dbType: DbType.Int32, direction: ParameterDirection.Output);
@@ -48,7 +40,7 @@ namespace ThirdPartyBetHistory.Service.DAL
             {
                 var bonus = p.Get<decimal>("Bonus");
                 var tpId = p.Get<int>("TpId");
-                
+
                 if (bonus > 0 && tpId == (int)Tp.SBSW)
                 {
                     var input = new
@@ -67,8 +59,8 @@ namespace ThirdPartyBetHistory.Service.DAL
                     parameters.Add("AllowNegative", allowNegative, dbType: DbType.Decimal, direction: ParameterDirection.Input);
                     parameters.Add("AfterAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
 
-                    result = _mainDbClient.Execute("Service_SeamlessWallet_Set_V2", parameters, trans);   
-                    _logger.LogInformation($"SBSW Bonus Bonus Fulfill Transfer to Cash:{JsonConvert.SerializeObject(input)} | result:{result} | bonus:{bonus}");                    
+                    result = _mainDbClient.Execute("Service_SeamlessWallet_Set_V2", parameters, trans);
+                    _logger.LogInformation($"SBSW Bonus Bonus Fulfill Transfer to Cash:{JsonConvert.SerializeObject(input)} | result:{result} | bonus:{bonus}");
                 }
 
                 if (result >= 0)
