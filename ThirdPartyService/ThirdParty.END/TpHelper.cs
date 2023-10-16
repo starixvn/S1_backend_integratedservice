@@ -10,7 +10,7 @@ using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
-namespace ThirdParty.ES
+namespace ThirdParty.END
 {
     public class TpHelper : ThirdPartyHelperBase
     {
