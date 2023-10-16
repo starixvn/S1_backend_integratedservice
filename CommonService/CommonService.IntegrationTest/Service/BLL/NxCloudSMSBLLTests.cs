@@ -1,25 +1,21 @@
-﻿using NUnit.Framework;
-using CommonService.Service.BLL;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using CommonService.Extensions;
 using CommonService.IntegrationTest.Models;
 using CommonService.IntegrationTest.Stubs;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
-using CommonService.Extensions;
-using NSubstitute;
+using CommonService.Service.DAL;
 using CommonService.Service.Library;
-using Microsoft.Extensions.Logging;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-using CommonService.Service.DAL;
+
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+using NSubstitute;
+
+using NUnit.Framework;
 
 namespace CommonService.Service.BLL.Tests
 {
@@ -54,7 +50,7 @@ namespace CommonService.Service.BLL.Tests
             services.AddTransient(p => Substitute.For<ILogger<MySqlClient>>());
             services.AddTransient(p => Substitute.For<ILogger<HttpHelper>>());
             services.AddTransient(p => Substitute.For<ILogger<OTPSMSService>>());
-            
+
 
 
             var startup = new StubStartUp(_configuration);
@@ -65,21 +61,25 @@ namespace CommonService.Service.BLL.Tests
             _nxCloudSMSBLL = provider.GetRequiredService<NxCloudSMSBLL>();
         }
 
-        [TestCase("+886912345678", ExpectedResult = ErrorCode.Success)] //使用要測試的號碼
+        [TestCase("+86", "15880083230", ExpectedResult = ErrorCode.Success)]
         [Ignore("需要測試時在註解")]
-        public async Task<ErrorCode> SendOTPSMSAsyncTest(string PhoneNo)
+        public async Task<ErrorCode> SendOTPSMSAsyncTest(string areaCode, string PhoneNo)
         {
-            var custInfoProfile = new CustInfoProfile
+            var otp = new OTPRequestObject
             {
-                CurrencyId = 2,
-                UserName = "Test",
-                SiteName = "Nova88",
-                UserLang ="en",
-                AreaCode = "886"
+                CustInfoProfile = new CustInfoProfile
+                {
+                    CustId = 250713,
+                    CurrencyId = 2,
+                    UserName = "Test",
+                    SiteName = "Nova88",
+                    UserLang = "en",
+                    AreaCode = areaCode,
+                    PhoneNo = PhoneNo,
+                },
+                OTPNum = "test123"
             };
-            var custId = 250713;
-            var userLang = "en";
-            var actual = await _nxCloudSMSBLL.SendOTPSMSAsync(PhoneNo, "test", custInfoProfile, userLang, custId);
+            var actual = await _nxCloudSMSBLL.SendOTP(otp);
             return actual.ErrorCode;
         }
     }

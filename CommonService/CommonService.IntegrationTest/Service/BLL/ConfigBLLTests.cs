@@ -1,17 +1,21 @@
-﻿using NUnit.Framework;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
-using CommonService.Extensions;
+﻿using CommonService.Extensions;
 using CommonService.IntegrationTest.Models;
 using CommonService.IntegrationTest.Stubs;
-using NSubstitute;
-using CommonService.Service.Model;
 using CommonService.Service.Library;
+using CommonService.Service.Model;
+
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
+using NSubstitute;
+
+using NUnit.Framework;
 
 namespace CommonService.Service.BLL.Tests
 {
@@ -116,7 +120,7 @@ namespace CommonService.Service.BLL.Tests
             var actual = _configBLL.GetConfigValuesBySiteName<SendGridConfig>("SendGrid");
             return actual[siteName].mailFrom.email;
         }
-        
+
         [TestCase(1, ExpectedResult = "https://www.nova88.net/Home/ResetPassword")]
         [TestCase(2, ExpectedResult = "https://www.goal123.com/Home/ResetPassword")]
         [TestCase(3, ExpectedResult = "https://www.bwing.com/Home/ResetPassword")]
@@ -143,7 +147,7 @@ namespace CommonService.Service.BLL.Tests
             var actual = _configBLL.GetConfigValuesBySiteName<FPSServicesConfig>("FPS");
             return actual[siteName].Subscriber;
         }
-        
+
         [TestCase(1, ExpectedResult = "N88")]
         [TestCase(2, ExpectedResult = "N8G")]
         [TestCase(3, ExpectedResult = "N8B")]
@@ -171,7 +175,7 @@ namespace CommonService.Service.BLL.Tests
             var actual = _configBLL.GetConfigValuesBySiteName<LiveStreamingConfig>("LiveStreaming");
             return actual[siteName].Apiuser;
         }
-        
+
         [TestCase(1, ExpectedResult = "nvc")]
         [TestCase(2, ExpectedResult = "nvcg")]
         [TestCase(3, ExpectedResult = "nvcb")]
@@ -199,13 +203,13 @@ namespace CommonService.Service.BLL.Tests
             var actual = _configBLL.GetConfigValuesBySiteName<IovationServicesConfig>("Iovation");
             return actual[siteName].SubscriberID;
         }
-        
+
         [TestCase(1, ExpectedResult = "1054302")]
         [TestCase(2, ExpectedResult = "1054302")]
         [TestCase(3, ExpectedResult = "1054302")]
         [TestCase(5, ExpectedResult = "1054302")]
         [TestCase(6, ExpectedResult = "1054302")]
-        public string  Iovation_GetConfigValuesBySiteIdTest(int siteId)
+        public string Iovation_GetConfigValuesBySiteIdTest(int siteId)
         {
             var actual = _configBLL.GetConfigValuesBySiteId<IovationServicesConfig>("Iovation");
             return actual[siteId].SubscriberID;
@@ -228,19 +232,19 @@ namespace CommonService.Service.BLL.Tests
             //return actual[siteName].AccessKey;
             return "";
         }
-        
+
         [TestCase(1, ExpectedResult = "")]
         [TestCase(2, ExpectedResult = "")]
         [TestCase(3, ExpectedResult = "")]
         [TestCase(5, ExpectedResult = "")]
         [TestCase(6, ExpectedResult = "")]
-        public string  AWS_GetConfigValuesBySiteIdTest(int siteId)
+        public string AWS_GetConfigValuesBySiteIdTest(int siteId)
         {
             var actual = _configBLL.GetConfigValuesBySiteId<AWSKeyConfig>("AWSKey");
             //return actual[siteId].SecretKey;
             return "";
         }
-        
+
 
         #endregion
 
@@ -258,7 +262,7 @@ namespace CommonService.Service.BLL.Tests
             var actual = _configBLL.GetConfigValuesBySiteName<TelegramConfig>("Telegram");
             return actual[siteName].TelegramCommon.Url;
         }
-        
+
         [TestCase(1, ExpectedResult = -594288926)]
         [TestCase(2, ExpectedResult = -594288926)]
         [TestCase(3, ExpectedResult = -594288926)]
@@ -269,7 +273,7 @@ namespace CommonService.Service.BLL.Tests
             var actual = _configBLL.GetConfigValuesBySiteId<TelegramConfig>("Telegram");
             return actual[siteId].TelegramNotification.FirstOrDefault().ChatId;
         }
-        
+
 
         #endregion
 
@@ -287,7 +291,7 @@ namespace CommonService.Service.BLL.Tests
             var actual = _configBLL.GetConfigValuesBySiteName<LetsTalkConfig>("LetsTalk");
             return actual[siteName].LetsTalkCommon.SignInURL;
         }
-        
+
         [TestCase(1, ExpectedResult = 100044)]
         [TestCase(2, ExpectedResult = 100044)]
         [TestCase(3, ExpectedResult = 100044)]
@@ -302,7 +306,7 @@ namespace CommonService.Service.BLL.Tests
         #endregion
 
         #region SMSSupport
-        
+
         [TestCase("Nova88", ExpectedResult = "NxCloud")]
         [TestCase("NOVA88", ExpectedResult = "NxCloud")]
         [TestCase("nova88", ExpectedResult = "NxCloud")]
@@ -315,7 +319,7 @@ namespace CommonService.Service.BLL.Tests
             var actual = _configBLL.GetConfigValuesBySiteName<SMSSupportConfig>("SMSSupport");
             return actual[siteName].SMSSupport["Default"];
         }
-        
+
         [TestCase(1, ExpectedResult = "NxCloud")]
         [TestCase(2, ExpectedResult = "NxCloud")]
         [TestCase(3, ExpectedResult = "NxCloud")]
@@ -326,7 +330,7 @@ namespace CommonService.Service.BLL.Tests
             var actual = _configBLL.GetConfigValuesBySiteId<SMSSupportConfig>("SMSSupport");
             return actual[siteId].SMSSupport["Default"];
         }
-        
+
 
         #endregion
     }

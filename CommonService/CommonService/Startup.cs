@@ -8,14 +8,12 @@ using Elastic.Apm.AspNetCore;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.SqlClient;
 
-using PaymentService.Service.Library;
-
 namespace CommonService
 {
     public class Startup
     {
         public IConfiguration Configuration { get; }
-        
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -32,7 +30,6 @@ namespace CommonService
 
             services.AddSingleton<HttpHelper>();
             services.AddSingleton<AWSSNSHelper>();
-            services.AddSingleton<Log2File>();
 
             services.AddSingleton<CustInfoService>();
             services.AddSingleton<AuthService>();
@@ -44,8 +41,7 @@ namespace CommonService
             services.AddSingleton<SendGridBLL>();
             services.AddSingleton<RestPasswordBLL>();
             services.AddSingleton<IovationBLL>();
-            services.AddSingleton<OTPSMSBLL>();
-            services.AddSingleton<NxCloudSMSBLL>();
+
             services.AddSingleton<SelLangBLL>();
             services.AddSingleton<FPSBLL>();
             services.AddSingleton<LiveStreamingBLL>();
@@ -54,11 +50,23 @@ namespace CommonService
             services.AddSingleton<ConfigService>();
             services.AddControllers();
 
-            //處理SiteConfig
+            //OTP與SMS
+            services.AddSingleton<OTPSMSBLL>();
+            services.AddSingleton<NxCloudSMSBLL>();
+            services.AddSingleton<SkyLineBLL>();
+            services.AddSingleton<YCBLL>();
+            services.AddSingleton<AWSBLL>();
+
             services.AddOptionListByDB<ServerInfo>("ServerInfoList_Get");
+            //處理SiteConfig
             services.AddOptionListByDB<Config>("SiteConfig_Get", new { ConfigGroup = "CommonService" });
             services.AddSiteConfig();
             services.AddSingleton<ConfigBLL>();
+
+            // 處理SiteLanguage
+            services.AddOptionListByDB<SiteLanguageObject>("SiteLanguage_Get", new { LanguageGroup = "CommonService" });
+            services.AddSiteLanguage();
+            services.AddSingleton<SiteLanguageBLL>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

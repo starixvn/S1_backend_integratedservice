@@ -1,4 +1,5 @@
 ﻿using CommonService.Service.DAL;
+
 using Newtonsoft.Json;
 
 namespace CommonService.Service.BLL
