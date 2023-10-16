@@ -55,7 +55,6 @@ public class WagerBGBLL
         {
             // get tp info for api
             var setting = _thirdPartyBLL.GetThirdPartyBySite(_tpId, siteId);
-            _logger.LogInformation($"setting={JsonConvert.SerializeObject(setting)}");
             if (!_commonBGBLL.GetSnAndSecretKey(setting, tpCurrencyId,
                 out string sn, out string secretKey, out string secretCode, out string agentLoginId, out string message))
             {

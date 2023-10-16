@@ -52,6 +52,8 @@ public class WagerBG : BackgroundService
                 var currencyList = JsonSerializer.Deserialize<IEnumerable<int>>(serverList.First(x => x.SiteId == siteInfo.SiteId).CurrencyList);
                 foreach (var item in TpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
                 {
+
+                    _logger.LogInformation($"BG ExecWagerWorker.");
                     quick = await _wagerBGBLL.ExecWagerWorker(siteInfo.SiteId, item.TpCurrencyId, tpType, timeRange, needQuickTime);
                     if (!isFast && quick) isFast = true;
                 }
