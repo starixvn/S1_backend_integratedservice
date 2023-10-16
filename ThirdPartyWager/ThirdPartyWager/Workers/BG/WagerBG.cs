@@ -45,7 +45,6 @@ public class WagerBG : BackgroundService
             isFast = false;
             var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
             var serverList = _commonBLL.GetSiteList();
-            _logger.LogInformation($"serverList={JsonSerializer.Serialize(serverList)}");
             var TpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
             var quick = false;
             foreach (var siteInfo in siteList)
