@@ -100,7 +100,7 @@ namespace ThirdPartySettleWorker.Workers
                                 TpId = thisTp,
                                 Stake = settleTrans.BetAmount,
                                 ValidBet = settleTrans.ValidAmount,
-                                WinlostAmount = settleTrans.PayoutAmount,
+                                WinlostAmount = tpWagerData.WinLossAmount,
                                 TransId = settleTrans.TransactionNo,
                                 GameType = gameType,
                                 TpUserName = settleTrans.PlayerUniqueID,
