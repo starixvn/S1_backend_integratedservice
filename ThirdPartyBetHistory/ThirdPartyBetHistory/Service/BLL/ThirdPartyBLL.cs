@@ -1,5 +1,4 @@
-﻿using MySql.Data.MySqlClient;
-using ThirdPartyBetHistory.Service.DAL;
+﻿using ThirdPartyBetHistory.Service.DAL;
 using ThirdPartyBetHistory.Service.Model;
 using ThirdPartyBetHistory.Service.Model.enums;
 
@@ -8,23 +7,17 @@ namespace ThirdPartyBetHistory.Service.BLL
     public class ThirdPartyBLL
     {
         private readonly ThirdPartyService _thirdPartyService;
+        private readonly IEnumerable<ConfigObject> _configs;
+
         public ThirdPartyBLL(IServiceProvider provider)
         {
             _thirdPartyService = provider.GetRequiredService<ThirdPartyService>();
+            _configs = provider.GetRequiredService<IEnumerable<ConfigObject>>();
         }
-        public IEnumerable<ThirdPartyModel> GetTpList()
-        {
-            var tpList = _thirdPartyService.GetTpList().ToList();
-            var siteTpList = _thirdPartyService.GetSiteTpList();
-            if (siteTpList != null)
-            {
-                foreach (var siteTp in siteTpList)
-                {
-                    tpList.Add(siteTp);
-                }
-            }
 
-            return tpList;
+        public IEnumerable<ConfigObject> GetTpConfigList(string tpName)
+        {
+            return _configs.Where(i => i.SiteId != 0 && i.ConfigKey == tpName);
         }
 
         public long GetSiteTicketKey(WorkerType workerType, IThirdPartyBetHelper betHelper)
@@ -34,7 +27,7 @@ namespace ThirdPartyBetHistory.Service.BLL
 
         public int SetSiteTicketKey(WorkerType workerType, IThirdPartyBetHelper betHelper, long ticketKey)
         {
-            return _thirdPartyService.SetSiteTicketKey((int)betHelper.SiteId, (int)betHelper.Tp, workerType, ticketKey);
+            return _thirdPartyService.SetSiteTicketKey(betHelper.SiteId, (int)betHelper.Tp, workerType, ticketKey);
         }
 
         public int AddTpBetRecordDetail(TpBetRecordDetail detail, DateTime? partitionTime = null)

@@ -1,7 +1,9 @@
 ﻿using CommonService.Service.BLL;
 using CommonService.Service.Library;
 using CommonService.Service.Model;
+
 using Microsoft.AspNetCore.Mvc;
+
 using Newtonsoft.Json;
 
 namespace CommonService.Controllers
@@ -37,7 +39,7 @@ namespace CommonService.Controllers
                 var notificationGroup = _telegramConfig.Values.FirstOrDefault()
                     ?.TelegramNotification
                     .FirstOrDefault(n => n.GroupName == req.GroupName) ?? throw new Exception("GroupName");
-                
+
                 var url = $"{_telegramConfig.Values.FirstOrDefault()?.TelegramCommon.Url}/bot{notificationGroup.Token}/sendMessage";
 
                 var param = new
@@ -64,7 +66,7 @@ namespace CommonService.Controllers
                 var notificationGroup = _telegramConfig.Values.FirstOrDefault()
                     ?.TelegramNotification
                     .FirstOrDefault(n => n.GroupName == req.GroupName) ?? throw new Exception("GroupName");
-                
+
                 var url = $"{_telegramConfig.Values.FirstOrDefault()?.TelegramCommon.Url}/bot{notificationGroup.Token}/getUpdates";
 
                 return await HttpPostAsync(url, "");

@@ -14,7 +14,7 @@ namespace ThirdPartyBetHistory.Service.Worker
             this.environment = environment;
             this.logger = logger;
         }
-        
+
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);

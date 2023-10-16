@@ -1,6 +1,7 @@
 ﻿using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
+
 using Newtonsoft.Json;
 
 namespace CommonService.Service.DAL
@@ -8,12 +9,12 @@ namespace CommonService.Service.DAL
     public class IovationService
     {
         private readonly MySqlClient _logbClient;
-      
+
         public IovationService(IServiceProvider provider)
         {
             _logbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Log);
         }
-        
+
         public int IovationResultIns(IovationResult iovationResult)
         {
             var deviceId = iovationResult?.details?.device?.alias;

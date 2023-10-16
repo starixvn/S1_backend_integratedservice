@@ -1,8 +1,11 @@
 ﻿using System.Net;
+
 using CommonService.Service.BLL;
 using CommonService.Service.Library;
 using CommonService.Service.Model;
+
 using Microsoft.AspNetCore.Mvc;
+
 using Newtonsoft.Json;
 
 namespace CommonService.Controllers
@@ -60,7 +63,7 @@ namespace CommonService.Controllers
                 var notificationGroup =
                     _letsTalkConfig.Values.FirstOrDefault()?.LetsTalkNotification
                         .FirstOrDefault(n => n.GroupName == req.GroupName) ?? throw new Exception("GroupName");
-                
+
                 var token = await GetLetsTalkToken(req.GroupName);
                 if (string.IsNullOrEmpty(token))
                 {
