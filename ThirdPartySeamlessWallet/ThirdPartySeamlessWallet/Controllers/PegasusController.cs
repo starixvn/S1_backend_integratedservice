@@ -297,9 +297,7 @@ public class PegasusController : ControllerBase
         return new PegasusTokenInfo
         {
             Token = sessionKeyArr[0],
-            CustId = sessionKeyArr[1],
-            TpUserName = sessionKeyArr[2],
-            GameId = sessionKeyArr[3]
+            TpUserName = sessionKeyArr[1]
         };
     }
 
