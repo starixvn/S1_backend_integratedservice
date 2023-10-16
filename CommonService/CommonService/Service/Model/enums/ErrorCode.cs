@@ -1,13 +1,6 @@
 ﻿namespace CommonService.Service.Model.enums
 {
-    public enum DataBase
-    {
-        Main, //ConnectionString
-        Report,//ConnectionStringReport
-        Wager,//ConnectionStringWager
-        Log,//ConnectionStringLog
-    }
-    
+
     public enum ErrorCode
     {
         Success = 0,
@@ -43,6 +36,7 @@
         #region SMS  (5xxxx)
         Verified = 5001,
         PhoneError = 5002,
+        SMSProviderFail = 5003,
         //Not_allowed_country = 5001,
         //Not_allowed_currency = 5002,
         #endregion
@@ -59,35 +53,6 @@
         SystemError = 9000,
         #endregion
         UM = 10
-    }
-
-    public enum OtpType
-    {
-        SMS,
-        Email
-    }
-
-    public enum TemplateType
-    {
-        ResetPassword,
-        VerificationMail,
-        WelcomeMail
-    }
-
-    public enum OTPProvider
-    {
-        SkyLine,
-        NxCloud,
-        YC,
-        AWS
-    }
-
-    public enum OTPStatus
-    {
-        SendToProvider = 1,     //呼叫第三方API成功
-        SendToCustomer = 2,     //第三方發送至客戶成功
-        CustomerVerified = 3,   //客戶完成驗證
-        Fail = 4,
     }
 
 }
