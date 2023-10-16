@@ -35,12 +35,13 @@ namespace ThirdParty.IM
         {
             var env = provider.GetRequiredService<IWebHostEnvironment>();
             var configuration = provider.GetRequiredService<IConfiguration>();
-            if (env.EnvironmentName == "Development")
-            {
-                var proxyHost = configuration.GetValue<string>("configProxyHost");
-                var proxyPort = configuration.GetValue<int>("configProxyPort");
-                _proxy = new WebProxy(proxyHost, proxyPort);
-            }
+            //For Leobet prod:因為Leobet prod IP在新加坡，故做調整為所有環境都IM都走proxy
+            //if (env.EnvironmentName == "Development")
+            //{
+            var proxyHost = configuration.GetValue<string>("configProxyHost");
+            var proxyPort = configuration.GetValue<int>("configProxyPort");
+            _proxy = new WebProxy(proxyHost, proxyPort);
+            //}
         }
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
