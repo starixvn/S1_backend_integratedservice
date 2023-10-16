@@ -305,7 +305,7 @@ namespace ThirdParty.NineW
 
         private string GetKey(string user, string currency, NineWConfig config)
         {
-            var apiUrl = $"{config.OldApiUrl}/player/{config.WebSite}/getKey";
+            var apiUrl = $"{config.ApiUrl}/{config.WebSite}/getKey";
             var sParam = $"&cert={config.Cert}&userId={user}&userName={user}&agent={config.Agent}&currency={currency}";
             var json = HttpPost(apiUrl, sParam, ContentType);
             var result = FromJson<NineWResult>(json);
