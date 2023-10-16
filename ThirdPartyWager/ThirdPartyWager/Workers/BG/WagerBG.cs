@@ -51,7 +51,7 @@ public class WagerBG : BackgroundService
             _logger.LogInformation($"siteList={JsonSerializer.Serialize(siteList)}");
             foreach (var siteInfo in siteList)
             {
-                var siteServerInfo = serverList.First(x => x.SiteId == siteInfo.SiteId);
+                var siteServerInfo = serverList.FirstOrDefault(x => x.SiteId == siteInfo.SiteId);
                 _logger.LogInformation($"siteServerInfo={JsonSerializer.Serialize(siteServerInfo)}");
                 if (siteServerInfo is not null)
                 {
