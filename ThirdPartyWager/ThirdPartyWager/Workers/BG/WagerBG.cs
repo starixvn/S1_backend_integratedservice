@@ -1,4 +1,5 @@
-﻿using Serilog.Context;
+﻿using Microsoft.Extensions.Logging;
+using Serilog.Context;
 using System.Text.Json;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
@@ -47,9 +48,11 @@ public class WagerBG : BackgroundService
             var serverList = _commonBLL.GetSiteList();
             var TpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
             var quick = false;
+            _logger.LogInformation($"siteList={JsonSerializer.Serialize(siteList)}");
             foreach (var siteInfo in siteList)
             {
                 var siteServerInfo = serverList.First(x => x.SiteId == siteInfo.SiteId);
+                _logger.LogInformation($"siteServerInfo={JsonSerializer.Serialize(siteServerInfo)}");
                 if (siteServerInfo is not null)
                 {
                     var currencyList = JsonSerializer.Deserialize<IEnumerable<int>>(siteServerInfo.CurrencyList);
