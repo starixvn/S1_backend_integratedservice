@@ -1,6 +1,8 @@
-﻿using Newtonsoft.Json;
-using System.Web;
+﻿using System.Web;
 using System.Xml;
+
+using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;

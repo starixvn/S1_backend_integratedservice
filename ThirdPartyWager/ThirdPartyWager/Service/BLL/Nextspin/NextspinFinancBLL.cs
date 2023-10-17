@@ -1,7 +1,7 @@
-﻿using ThirdPartyWager.Service.Library;
-using ThirdPartyWager.Service.Model.enums;
+﻿using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
-using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {

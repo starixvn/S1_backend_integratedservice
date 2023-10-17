@@ -12,7 +12,7 @@ namespace CommonService.Service.BLL
 {
     public class IovationBLL
     {
-        private readonly Dictionary<string, IovationServicesConfig> _iovationServicesConfig;
+        private readonly IovationServicesConfig _iovationServicesConfig;
         private readonly IovationService iovationService;
         private readonly HttpHelper httpHelper;
 
@@ -21,7 +21,7 @@ namespace CommonService.Service.BLL
             httpHelper = provider.GetRequiredService<HttpHelper>();
             iovationService = provider.GetRequiredService<IovationService>();
             var configBLL = provider.GetRequiredService<ConfigBLL>();
-            _iovationServicesConfig = configBLL.GetConfigValuesBySiteName<IovationServicesConfig>("Iovation");
+            _iovationServicesConfig = configBLL.GetConfigValue<IovationServicesConfig>("Iovation");
         }
 
         public async Task<ApiResult<IovationCheckResult>> IovationChecksAsync(IovationChecksRequest iovationChecksRequest)
@@ -37,9 +37,7 @@ namespace CommonService.Service.BLL
                 { "type",iovationChecksRequest.type}
             };
 
-            //Iovation沒有分組別，故直接使用第一筆資料。
-            var iovationData = _iovationServicesConfig.FirstOrDefault();
-            var Authtoken = $"{iovationData.Value.SubscriberID}/{iovationData.Value.SubscriberAccount}:{iovationData.Value.Password}";
+            var Authtoken = $"{_iovationServicesConfig.SubscriberID}/{_iovationServicesConfig.SubscriberAccount}:{_iovationServicesConfig.Password}";
             var bytes = Encoding.GetEncoding("utf-8").GetBytes(Authtoken);
             //編成 Base64 字串
             var Base64Authtoken = Convert.ToBase64String(bytes);
@@ -50,7 +48,7 @@ namespace CommonService.Service.BLL
             };
 
             var parameters = JsonConvert.SerializeObject(sendIovationChecks);
-            using var result = await httpHelper.HttpPost1Async(iovationData.Value.ResourceURL, Authorization, parameters, "application/json");
+            using var result = await httpHelper.HttpPost1Async(_iovationServicesConfig.ResourceURL, Authorization, parameters, "application/json");
             var resultResp = JsonConvert.DeserializeObject<IovationResult>(await result.Content.ReadAsStringAsync());
             var resultIns = iovationService.IovationResultIns(resultResp);
 

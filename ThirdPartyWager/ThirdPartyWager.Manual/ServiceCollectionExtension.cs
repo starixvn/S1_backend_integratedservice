@@ -1,7 +1,9 @@
 ﻿using System.Net;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
@@ -15,7 +17,7 @@ namespace ThirdPartyWager.Manual
         {
             var provider = services.BuildServiceProvider();
             var logger = provider.GetRequiredService<ILogger<MySqlClient>>();
-            
+
             return services
                 .AddSingleton(param => new MySqlClient(config.GetConnectionString($"ConnectionString"), logger)
                 {
@@ -92,7 +94,7 @@ namespace ThirdPartyWager.Manual
             // Iconic
             services.AddSingleton<WagerIconicBLL>();
             services.AddSingleton<ApiIconicBLL>();
-            
+
             services.AddSingleton<WagerIconic>();
             return services;
         }

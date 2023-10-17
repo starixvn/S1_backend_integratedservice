@@ -11,7 +11,7 @@ namespace CommonService.Service.BLL
     public class YCBLL
     {
         private readonly HttpHelper _httpHelper;
-        private readonly Dictionary<string, YcSmsServiceTypeConfig> _config;
+        private readonly Dictionary<int, YcSmsServiceTypeConfig> _config;
         private readonly ILogger<YCBLL> _logger;
         private readonly SiteLanguageBLL _siteLanguageBLL;
         private readonly OTPSMSBLL _oTPSMSBLL;
@@ -20,7 +20,7 @@ namespace CommonService.Service.BLL
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _logger = provider.GetRequiredService<ILogger<YCBLL>>();
-            _config = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<YcSmsServiceTypeConfig>("YcSMS");
+            _config = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<YcSmsServiceTypeConfig>("YcSMS");
             _siteLanguageBLL = provider.GetRequiredService<SiteLanguageBLL>();
             _oTPSMSBLL = provider.GetRequiredService<OTPSMSBLL>();
         }
@@ -36,7 +36,7 @@ namespace CommonService.Service.BLL
         private async Task<ApiResult> SendToYC(string phone, string otpNum, CustInfoProfile custInfo, int custId, string userLang)
         {
             var apiResult = new ApiResult();
-            var config = _config[custInfo.SiteName].OTP;
+            var config = _config[custInfo.SiteId].OTP;
             var siteName = custInfo.SiteName;
             var postData = new Dictionary<string, string>
             {

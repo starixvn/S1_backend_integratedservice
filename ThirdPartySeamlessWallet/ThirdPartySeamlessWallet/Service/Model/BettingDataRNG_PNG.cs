@@ -1,7 +1,4 @@
-﻿using K4os.Hash.xxHash;
-using Microsoft.AspNetCore.Http;
-using System.ComponentModel;
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {

@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 
