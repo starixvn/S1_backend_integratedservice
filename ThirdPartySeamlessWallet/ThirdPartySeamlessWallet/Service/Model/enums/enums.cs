@@ -134,6 +134,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         IM_Sports = 103,
         SPRIBE_RNG = 104,
         PNG_RNG = 105,
+        FaChai_RNG = 106
     }
     public enum Tp
     {
@@ -190,6 +191,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         IM = 52,
         SPRIBE = 53,
         PNG = 54,
+        FaChai = 55
     }
     public enum TransferType : int
     {
