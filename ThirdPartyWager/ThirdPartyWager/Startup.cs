@@ -52,25 +52,6 @@ namespace ThirdPartyWager
             services.AddSingleton<ConfigService>();
             services.AddSingleton<FincanceService>();
 
-            services.AddSingleton<WagerFaChaiService>();
-            services.AddSingleton<WagerPegasusService>();
-
-            //FaChai
-            services.AddSingleton<ApiFaChaiBLL>();
-            services.AddSingleton<WagerFaChaiBLL>();
-            services.AddSingleton<FinanceFaChaiBLL>();
-
-            //Pegasus
-            services.AddSingleton<ApiPegasusBLL>();
-            services.AddSingleton<WagerPegasusBLL>();
-            services.AddSingleton<FinancePegasusBLL>();
-
-            services.AddHostedService<WagerFaChai>();
-            services.AddHostedService<WagerRedoFaChai>();
-            services.AddHostedService<WagerPegasus>();
-            services.AddHostedService<FinancePegasus>();
-            services.AddHostedService<FinanceFaChai>();
-
             services.AddOptionListByDB<ServerInfo>("Admin_ServerInfoList_Get");
             services.AddOptionListByDB<dynamic>("Service_TpWagerTimer_Get", new { TpId = 1, Type = 1 }, DataBase.Wager);
             services.AddOptionListByDB<dynamic>("Tp_Get", new { TpId = 1 }, DataBase.Main);
