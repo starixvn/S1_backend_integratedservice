@@ -1174,6 +1174,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetUnsettledListLC_EBet();
         }
 
+        public SettleData GetUnsettledListLC_EBet_ByTrans(string transId)
+        {
+            return settledService.GetUnsettledListLC_EBet_ByTrans(transId);
+        }
+        
         public int SetSettleFlag_EBet(string TransId)
         {
             return settledService.SetSettleFlag_EBet(TransId);
@@ -1508,9 +1513,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public IEnumerable<SettleData_WM> GetUnsettledList_WM()
+        public SettleData_WM GetUnsettled_WM(string transId)
         {
-            return settledService.GetUnsettledList_WM();
+            return settledService.GetUnsettled_WM(transId);
         }
 
         public SettleData GetSettle_TpWagerWM(string TransId)

@@ -1,8 +1,9 @@
 ﻿using System.Net;
+
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-using Microsoft.Extensions.Options;
+
 using Newtonsoft.Json;
 
 namespace CommonService.Service.BLL
@@ -11,14 +12,14 @@ namespace CommonService.Service.BLL
     {
         private readonly Dictionary<string, LiveStreamingConfig> _liveStreamingConfig;
         private readonly HttpHelper httpHelper;
-        
+
         public LiveStreamingBLL(IServiceProvider provider)
         {
             httpHelper = provider.GetRequiredService<HttpHelper>();
             var configBLL = provider.GetRequiredService<ConfigBLL>();
             _liveStreamingConfig = configBLL.GetConfigValuesBySiteName<LiveStreamingConfig>("LiveStreaming");
         }
-        
+
         public async Task<ApiResult> GetLiveStreamingLink(LiveStreamingLinkReq liveStreamingLinkReq)
         {
             var apiResult = new ApiResult();

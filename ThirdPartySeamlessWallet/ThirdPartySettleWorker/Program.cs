@@ -75,8 +75,14 @@ builder.Services
     .AddHostedService<ENDWorker>()
     .AddHostedService<IMWorker>()
     .AddHostedService<SPRIBEWorker>()
+    .AddHostedService<SBSWWorker>()
+    .AddHostedService<DGWorker>()
+    .AddHostedService<AGWorker>()
+    .AddHostedService<EBetWorker>()
+    .AddHostedService<PNGWorker>()
+    .AddHostedService<SexyWorker>()
     .AddHostedService<PegasusWorker>()
-    .AddHostedService<SBSWWorker>();
+    .AddHostedService<WMWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);

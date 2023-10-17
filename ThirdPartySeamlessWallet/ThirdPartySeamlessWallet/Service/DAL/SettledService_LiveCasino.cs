@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 
 using Dapper;
 
@@ -236,7 +236,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        _mainDbClient.Execute("Service_BettransLC_DGV2_Set", new { TransId = bettingDataLC_DG.TransId, SettleFlag = 2 }, conn, trans);
+                        //_mainDbClient.Execute("Service_BettransLC_DGV2_Set", new { TransId = bettingDataLC_DG.TransId, SettleFlag = 2 }, conn, trans);
+                        var insertTpResults = _tpUnsettleService.InsertTpUnsettle(Tp.DG, GameType.DG_LiveCasino, bettingDataLC_DG.TransId, trans);
+                        if (insertTpResults <= 0)
+                        {
+                            result = 0;
+                        }
                         _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     }
                     else
@@ -362,7 +367,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("WinLostAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
                 p.Add("CanPayout", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-                result = _mainDbClient.Execute("Service_BettransLC_AGV2_Payout_Ins", p, conn, trans);
+                result = _mainDbClient.Execute("Service_BettransLC_AGV2_Payout_Ins_V2", p, conn, trans);
 
                 if (p.Get<int>("CanPayout") == 1)
                 {
@@ -1262,6 +1267,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (result > 0)
                         {
+                            var insertTpResults = _tpUnsettleService.InsertTpUnsettle(Tp.Sexy, GameType.Sexy_LiveCasino, txn.platformTxId, trans);
+                            if (insertTpResults <= 0)
+                            {
+                                result = 0;
+                            }
                             _mainDbClient.CommitAndDisposeConnection(conn, trans);
                         }
                         else
@@ -1681,7 +1691,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                result = _mainDbClient.Execute("Service_BettransLC_EBet_Payout_Ins", p, conn, trans);
+                result = _mainDbClient.Execute("Service_BettransLC_EBet_Payout_Ins_V2", p, conn, trans);
 
                 if (result > 0)
                 {
@@ -2086,7 +2096,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             return _mainDbClient.Query<SettleData>("Service_BettransLC_EBet_Unsettle_Get_V4", commandType: CommandType.StoredProcedure);
         }
-
+        
+        public SettleData GetUnsettledListLC_EBet_ByTrans(string transId)
+        {
+            return _mainDbClient.QueryFirst<SettleData>("Service_BettransLC_EBet_Unsettle_ByTrans_Get", parameters: new { _TransId = transId });
+        }
+        
         public int SetSettleFlag_EBet(string TransId)
         {
             return _mainDbClient.Execute("Service_BettransLC_EBet_Settle_Set", commandType: CommandType.StoredProcedure, new { TransId = TransId, SettleFlag = 1 });
@@ -2160,6 +2175,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
+                        var insertTpResults = _tpUnsettleService.InsertTpUnsettle(Tp.WM, GameType.WM_LiveCasino, mixUniqueId, trans);
+                        if (insertTpResults <= 0) 
+                        { 
+                            result = 0;
+                        }
                         _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     }
                     else
@@ -2368,9 +2388,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public IEnumerable<SettleData_WM> GetUnsettledList_WM()
+        public SettleData_WM GetUnsettled_WM(string TransId)
         {
-            return _mainDbClient.Query<SettleData_WM>("Service_BettransLC_WM_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
+            return _mainDbClient.QueryFirst<SettleData_WM>("Service_BettransLC_WM_Unsettle_Get_V3", new { TransId = TransId });
         }
 
         public SettleData GetSettle_TpWagerWM(string TransId)

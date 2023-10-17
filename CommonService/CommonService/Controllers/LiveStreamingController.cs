@@ -1,6 +1,7 @@
 ﻿using CommonService.Service.BLL;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
+
 using Microsoft.AspNetCore.Mvc;
 
 namespace CommonService.Controllers
@@ -15,7 +16,7 @@ namespace CommonService.Controllers
             this.liveStreamingBLL = liveStreamingBLL;
         }
         [HttpPost]
-        public async Task<ApiResult> GetLiveStreamingLinkAsync(LiveStreamingLinkReq liveStreamingLinkReq )
+        public async Task<ApiResult> GetLiveStreamingLinkAsync(LiveStreamingLinkReq liveStreamingLinkReq)
         {
             var apiResult = new ApiResult();
 

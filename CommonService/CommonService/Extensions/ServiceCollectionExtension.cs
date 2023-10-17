@@ -55,8 +55,28 @@ public static class ServiceCollectionExtension
         {
             //設定SiteConfig
             var siteConfig = siteConfigGroup.FirstOrDefault(i => i.Key == serverInfo.SiteId) ?? siteConfigGroup.First(i => i.Key == 0);
-            var config = siteConfig.ToDictionary(i => i.ConfigKey, i => i.ConfigValue);         
+            var config = siteConfig.ToDictionary(i => i.ConfigKey, i => i.ConfigValue);
             services.AddSingleton(new SiteConfig(serverInfo, config));
+        }
+
+        return services;
+    }
+
+    public static IServiceCollection AddSiteLanguage(this IServiceCollection services)
+    {
+        var provider = services.BuildServiceProvider();
+        // 準備ServerInfo
+        var serverInfoList = new List<ServerInfo>() { new ServerInfo() { SiteId = 0, SiteName = "default" } };
+        serverInfoList.AddRange(provider.GetRequiredService<IEnumerable<ServerInfo>>());
+
+        // 準備SiteLanguage
+        var siteLanguageGroup = provider.GetRequiredService<IEnumerable<SiteLanguageObject>>().GroupBy(i => i.SiteId);
+
+        foreach (var serverInfo in serverInfoList)
+        {
+            //設定SiteLanguage
+            var siteLanguages = siteLanguageGroup.FirstOrDefault(i => i.Key == serverInfo.SiteId) ?? siteLanguageGroup.First(i => i.Key == 0);
+            services.AddSingleton(new SiteLanguage(serverInfo, siteLanguages.ToList()));
         }
 
         return services;

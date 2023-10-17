@@ -1,25 +1,21 @@
-﻿using NUnit.Framework;
-using CommonService.Service.BLL;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using CommonService.Extensions;
 using CommonService.IntegrationTest.Models;
 using CommonService.IntegrationTest.Stubs;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Configuration;
-using CommonService.Extensions;
-using NSubstitute;
+using CommonService.Service.DAL;
 using CommonService.Service.Library;
-using Microsoft.Extensions.Logging;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-using CommonService.Service.DAL;
+
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+using NSubstitute;
+
+using NUnit.Framework;
 
 namespace CommonService.Service.BLL.Tests
 {
@@ -27,7 +23,7 @@ namespace CommonService.Service.BLL.Tests
     public class SkyLineSMSTests
     {
         private IConfiguration _configuration;
-        private readonly OTPSMSBLL _otpSMSBLL;
+        private readonly SkyLineBLL _skyLineBLL;
 
         public SkyLineSMSTests()
         {
@@ -59,27 +55,30 @@ namespace CommonService.Service.BLL.Tests
             startup.ConfigureServices(services);
             var provider = services.BuildServiceProvider();
 
-            _otpSMSBLL = provider.GetRequiredService<OTPSMSBLL>();
+            _skyLineBLL = provider.GetRequiredService<SkyLineBLL>();
         }
-        
-        [TestCase("+886912345678", ExpectedResult = ErrorCode.Success)]
-        [Ignore("要測試再註解掉，")]
-        public async Task<ErrorCode> SendSkyLineOTPSMSAsyncTest(string PhoneNo)
-        {
-            var custInfoProfile = new CustInfoProfile
-            {
-                CurrencyId = 2,
-                UserName = "Test",
-                SiteName = "Nova88",
-                UserLang ="en",
-                AreaCode = "886"
-            };
-            var custId = 250713;
-            var userLang = "en";
 
-            var actual = await _otpSMSBLL.SendSkyLineOTPSMSAsync(PhoneNo,custInfoProfile, custId , userLang);
+        [TestCase("+86", "15880083230", ExpectedResult = ErrorCode.Success)]
+        [Ignore("要測試再註解掉，")]
+        public async Task<ErrorCode> SkyLineSendOTPTest(string areaCode, string PhoneNo)
+        {
+            var otp = new OTPRequestObject
+            {
+                CustInfoProfile = new CustInfoProfile
+                {
+                    CustId = 250713,
+                    CurrencyId = 2,
+                    UserName = "Test",
+                    SiteName = "Nova88",
+                    UserLang = "en",
+                    AreaCode = areaCode,
+                    PhoneNo = PhoneNo,
+                },
+                OTPNum = "test123"
+            };
+            var actual = await _skyLineBLL.SendOTP(otp);
             return actual.ErrorCode;
         }
-    }                                                                                                                                                                               
+    }
 }
 

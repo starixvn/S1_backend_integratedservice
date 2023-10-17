@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -285,11 +284,11 @@ namespace ThirdParty.V8
                 {
                     var uri = new Uri(json.d.url);
                     var forward = json.d.url;
-                    string pLang = HttpUtility.ParseQueryString(uri.Query).Get("lang");
-                    if (pLang != TpLangId)
-                    {
-                        forward = forward.Replace($"lang={pLang}", $"lang={TpLangId}");
-                    }
+                    //string pLang = HttpUtility.ParseQueryString(uri.Query).Get("lang");
+                    //if (pLang != TpLangId)
+                    //{
+                    //    forward = forward.Replace($"lang={pLang}", $"lang={TpLangId}");
+                    //}
 
                     oApiResult.ErrorCode = ErrorCode.Success;
                     oApiResult.Message = forward;
