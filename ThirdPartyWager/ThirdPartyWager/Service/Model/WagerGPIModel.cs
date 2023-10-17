@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.Model

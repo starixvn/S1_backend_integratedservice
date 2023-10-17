@@ -17,7 +17,7 @@
             ErrorMessage = statusCode.ToString();
         }
 
-        public PNGException(PNG_StatsuCodeEnum statusCode,string errorMessage)
+        public PNGException(PNG_StatsuCodeEnum statusCode, string errorMessage)
         {
             StatsuCode = statusCode;
             ErrorMessage = errorMessage;

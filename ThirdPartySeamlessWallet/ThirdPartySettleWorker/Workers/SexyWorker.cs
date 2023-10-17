@@ -1,7 +1,9 @@
 ﻿using Serilog.Context;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -67,7 +69,7 @@ namespace ThirdPartySettleWorker.Workers
                         var stake = settleData.Stake;
                         var validBet = settleData.ValidBet;
                         var winLostAmount = settleData.WinLostAmount;
-                        
+
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = tpId,
@@ -83,7 +85,7 @@ namespace ThirdPartySettleWorker.Workers
                             TicketStatus = (TicketStatus)settleData.TicketStatus,
                             GameID = settleData.GameId
                         };
-                        
+
                         _ = _settledBLL.Settled(tpCustInfo, betRecordInfo, category);
 
                         Task.Run(() =>
@@ -100,7 +102,7 @@ namespace ThirdPartySettleWorker.Workers
                             _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, isSuccess: false);
                         });
                         isError = true;
-                        _logger.LogError(ex, $"SexyDoSettleLiveCasinoWork:{ex.Message}" , logName);
+                        _logger.LogError(ex, $"SexyDoSettleLiveCasinoWork:{ex.Message}", logName);
                     }
                 }
 
