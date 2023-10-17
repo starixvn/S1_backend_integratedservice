@@ -1,5 +1,7 @@
 ﻿using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
+
 using static ThirdPartyWager.Extensions.MethodExtension;
 
 namespace ThirdPartyWager.Workers

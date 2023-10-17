@@ -12,7 +12,7 @@ namespace CommonService.Service.BLL
     public class NxCloudSMSBLL
     {
         private readonly HttpHelper _httpHelper;
-        private readonly Dictionary<string, NxcloudSMSServiceTypeConfig> _config;
+        private readonly Dictionary<int, NxcloudSMSServiceTypeConfig> _config;
         private readonly SelLangBLL _selLangBLL;
         private readonly ILogger<OTPSMSService> _logger;
         private readonly SiteLanguageBLL _siteLanguageBLL;
@@ -23,7 +23,7 @@ namespace CommonService.Service.BLL
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _selLangBLL = provider.GetRequiredService<SelLangBLL>();
             _logger = provider.GetRequiredService<ILogger<OTPSMSService>>();
-            _config = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<NxcloudSMSServiceTypeConfig>("NxCloud");
+            _config = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<NxcloudSMSServiceTypeConfig>("NxCloud");
             _siteLanguageBLL = provider.GetRequiredService<SiteLanguageBLL>();
             _oTPSMSBLL = provider.GetRequiredService<OTPSMSBLL>();
         }
@@ -60,7 +60,7 @@ namespace CommonService.Service.BLL
         private async Task<ApiResult> SendToNxCloud(string PhoneNo, string OTPNum, CustInfoProfile custInfo, string userLang, int custId)
         {
             var apiResult = new ApiResult();
-            var Config = _config[custInfo.SiteName].OTP;
+            var Config = _config[custInfo.SiteId].OTP;
             var smsMessage = MakeSMSContext(custInfo, OTPNum, PhoneNo);
             var oTPLog = new OTPLog
             {

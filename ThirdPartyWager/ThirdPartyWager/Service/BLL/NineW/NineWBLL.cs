@@ -2,8 +2,8 @@
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
-using ThirdPartyWager.Service.Model.NineW;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.NineW;
 
 namespace ThirdPartyWager.Service.BLL
 {

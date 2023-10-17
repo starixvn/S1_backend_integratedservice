@@ -1,6 +1,7 @@
-﻿using ThirdPartyWager.Service.Model;
-using System.Text.Json;
+﻿using System.Text.Json;
+
 using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.DAL

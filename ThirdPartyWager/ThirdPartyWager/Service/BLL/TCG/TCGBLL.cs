@@ -1,13 +1,17 @@
-﻿using Dapper;
-using Newtonsoft.Json;
-using Serilog.Context;
+﻿using System.Collections.Concurrent;
 using System.Net;
-using System.Text;
 using System.Security.Cryptography;
+using System.Text;
+
+using Dapper;
+
+using Newtonsoft.Json;
+
+using Serilog.Context;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
-using System.Collections.Concurrent;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -30,7 +34,7 @@ namespace ThirdPartyWager.Service.BLL
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
 
             //用 SiteId = 0 取回預設Config
-            _setting = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(0, _tp.ToString());
+            _setting = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(_tp.ToString());
 
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();

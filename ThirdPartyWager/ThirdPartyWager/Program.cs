@@ -1,5 +1,6 @@
 using Serilog;
 using Serilog.Exceptions;
+
 using ThirdPartyWager;
 using ThirdPartyWager.Extensions;
 

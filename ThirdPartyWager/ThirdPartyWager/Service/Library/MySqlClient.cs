@@ -1,8 +1,12 @@
 ﻿using System.Data;
 using System.Diagnostics;
+
 using Dapper;
+
 using MySql.Data.MySqlClient;
+
 using Serilog.Context;
+
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.Library
@@ -58,7 +62,7 @@ namespace ThirdPartyWager.Service.Library
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                var command = new CommandDefinition(name, parameters, 
+                var command = new CommandDefinition(name, parameters,
                     commandType: CommandType.StoredProcedure,
                     flags: CommandFlags.NoCache);
                 result = connection.QueryFirstOrDefault<T>(command);
@@ -75,7 +79,7 @@ namespace ThirdPartyWager.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
-        
+
         public IEnumerable<T> Query<T>(string name)
         {
             IEnumerable<T> result;
@@ -108,7 +112,7 @@ namespace ThirdPartyWager.Service.Library
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                var command = new CommandDefinition(name,parameters,
+                var command = new CommandDefinition(name, parameters,
                     commandType: CommandType.StoredProcedure,
                     flags: CommandFlags.NoCache);
                 result = connection.Query<T>(command);
@@ -133,7 +137,7 @@ namespace ThirdPartyWager.Service.Library
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                var command = new CommandDefinition(name,parameters,
+                var command = new CommandDefinition(name, parameters,
                     commandType: CommandType.StoredProcedure,
                     flags: CommandFlags.NoCache);
                 var multiple = connection.QueryMultiple(command);
@@ -151,7 +155,7 @@ namespace ThirdPartyWager.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
-        
+
         public async Task<IEnumerable<T>> QueryAsync<T>(string name, object parameters)
         {
             IEnumerable<T> result;
@@ -197,7 +201,7 @@ namespace ThirdPartyWager.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
-        
+
         #endregion
 
         #region Execute
@@ -266,7 +270,7 @@ namespace ThirdPartyWager.Service.Library
             _logger.LogDebug(command);
             return result;
         }
-        
+
         public int Execute(string name, IDbTransaction transaction, object parameters = null)
         {
             var sw = Stopwatch.StartNew();
@@ -309,6 +313,6 @@ namespace ThirdPartyWager.Service.Library
         }
 
         #endregion
-        
-      }
+
+    }
 }
