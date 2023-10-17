@@ -1,4 +1,5 @@
 ﻿using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -51,7 +52,7 @@ namespace ThirdPartyWager.Workers
                         nextTimeSpan = TimeSpan.FromMinutes(1);
                     }
                 }
-              
+
             }
             catch (Exception ex)
             {

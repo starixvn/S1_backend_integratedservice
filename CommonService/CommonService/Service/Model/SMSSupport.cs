@@ -2,5 +2,5 @@
 
 public class SMSSupportConfig
 {
-    public Dictionary<string,string> SMSSupport { get; set; }
+    public Dictionary<string, string> SMSSupport { get; set; }
 }

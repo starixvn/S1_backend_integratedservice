@@ -1,5 +1,7 @@
-﻿using Serilog.Context;
-using System.Text.Json;
+﻿using System.Text.Json;
+
+using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -49,11 +51,15 @@ public class WagerBG : BackgroundService
             var quick = false;
             foreach (var siteInfo in siteList)
             {
-                var currencyList = JsonSerializer.Deserialize<IEnumerable<int>>(serverList.First(x => x.SiteId == siteInfo.SiteId).CurrencyList);
-                foreach (var item in TpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
+                var siteServerInfo = serverList.FirstOrDefault(x => x.SiteId == siteInfo.SiteId);
+                if (siteServerInfo is not null)
                 {
-                    quick = await _wagerBGBLL.ExecWagerWorker(siteInfo.SiteId, item.TpCurrencyId, tpType, timeRange, needQuickTime);
-                    if (!isFast && quick) isFast = true;
+                    var currencyList = JsonSerializer.Deserialize<IEnumerable<int>>(siteServerInfo.CurrencyList);
+                    foreach (var item in TpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
+                    {
+                        quick = await _wagerBGBLL.ExecWagerWorker(siteInfo.SiteId, item.TpCurrencyId, tpType, timeRange, needQuickTime);
+                        if (!isFast && quick) isFast = true;
+                    }
                 }
             }
         }

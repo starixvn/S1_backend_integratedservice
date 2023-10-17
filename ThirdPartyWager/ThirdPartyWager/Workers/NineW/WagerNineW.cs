@@ -1,8 +1,9 @@
 ﻿using Serilog.Context;
+
+using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
-using ThirdPartyWager.Extensions;
 
 namespace ThirdPartyWager.Workers
 {

@@ -1,5 +1,7 @@
-﻿using Dapper;
-using System.Text.Json;
+﻿using System.Text.Json;
+
+using Dapper;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;

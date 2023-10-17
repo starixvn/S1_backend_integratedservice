@@ -1,7 +1,8 @@
 ﻿using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -34,7 +35,7 @@ namespace ThirdPartyWager.Service.BLL
             // 結帳時間
             var wokerTime = GetWorkerTime(type, currency, deduct, -5);
             bool quick = CheckQuick(wokerTime, excess);
-            
+
             // 依結帳時間取得前一天撈取時間範圍 (Ex. wokerTime = 2022-02-19 06:00:00，撈取時間範圍為 2022-02-18 00:00:00 ~ 2022-02-18 23:59:59)
             TimeCast time = _dateTimeHelper.GetTimeByDay(timeRange, 0, timeFormat, wokerTime.AddDays(-1));
 

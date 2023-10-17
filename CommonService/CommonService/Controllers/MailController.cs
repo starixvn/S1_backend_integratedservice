@@ -1,6 +1,7 @@
 ﻿using CommonService.Service.BLL;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
+
 using Microsoft.AspNetCore.Mvc;
 
 namespace CommonService.Controllers
@@ -66,7 +67,7 @@ namespace CommonService.Controllers
             }
             return apiResult;
         }
-        
+
         [HttpPost]
         public async Task<ApiResult<SendOTPEmailResult>> OTPEmail(OTPEmailReq req)
         {

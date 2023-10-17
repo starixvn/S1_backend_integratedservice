@@ -1,4 +1,5 @@
 ﻿using Serilog.Context;
+
 using ThirdPartyBetHistory.Service.Model.enums;
 
 namespace ThirdPartyBetHistory.Service.Worker
@@ -7,7 +8,7 @@ namespace ThirdPartyBetHistory.Service.Worker
     {
         private readonly ILogger<SabaByTransIdUnSettleWorkerService> _logger;
         private readonly IEnumerable<IThirdPartyBetHelper> _sabaSiteList;
-        private readonly Dictionary<SiteId, Timer> _timerWorkerList;
+        private readonly Dictionary<int, Timer> _timerWorkerList;
         private readonly WorkerType workerType = WorkerType.ByTransIdUnSettleWager;
         private const int SubtractDays = -14;// 檢查幾天前的資料
         private readonly IEnumerable<SettlementType> _settlementTypeList = new List<SettlementType> //檢查類型
@@ -19,7 +20,7 @@ namespace ThirdPartyBetHistory.Service.Worker
         {
             _logger = provider.GetRequiredService<ILogger<SabaByTransIdUnSettleWorkerService>>();
             _sabaSiteList = provider.GetServices<IThirdPartyBetHelper>();
-            _timerWorkerList = new Dictionary<SiteId, Timer>();
+            _timerWorkerList = new Dictionary<int, Timer>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -43,17 +44,17 @@ namespace ThirdPartyBetHistory.Service.Worker
         {
             var tpBetHelp = (IThirdPartyBetHelper)state;
             LogContext.PushProperty("RequestId", Guid.NewGuid());
-            LogContext.PushProperty("TpName", tpBetHelp.thirdPartyModel.TpName);
+            LogContext.PushProperty("TpName", tpBetHelp.TpName);
             LogContext.PushProperty("WorkerType", workerType);
             LogContext.PushProperty("SiteId", tpBetHelp.SiteId);
 
-            var taskProperty = $"{tpBetHelp.thirdPartyModel.TpName}:{workerType} | SiteId:{tpBetHelp.SiteId} |";
+            var taskProperty = $"{tpBetHelp.TpName}:{workerType} | SiteId:{tpBetHelp.SiteId} |";
             try
             {
                 var startTime = DateTime.UtcNow.Date.AddDays(SubtractDays);
                 var endTime = DateTime.UtcNow.AddHours(-1);
                 _logger.LogInformation($"{taskProperty} : {startTime:yyyy-MM-dd HH:mm} ~ {endTime:yyyy-MM-dd HH:mm}");
-                tpBetHelp.UpdateBetRecordByTransId(workerType, startTime, endTime, _settlementTypeList);                         
+                tpBetHelp.UpdateBetRecordByTransId(workerType, startTime, endTime, _settlementTypeList);
             }
             catch (Exception ex)
             {

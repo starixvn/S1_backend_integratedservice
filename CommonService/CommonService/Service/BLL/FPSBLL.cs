@@ -1,27 +1,27 @@
 ﻿using System.Net;
+
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-using Microsoft.Extensions.Options;
 
 namespace CommonService.Service.BLL
 {
     public class FPSBLL
     {
-        private readonly Dictionary<string, FPSServicesConfig> _fpsServicesConfig;
+        private readonly Dictionary<int, FPSServicesConfig> _fpsServicesConfig;
         private readonly HttpHelper httpHelper;
 
         public FPSBLL(IServiceProvider provider)
         {
             httpHelper = provider.GetRequiredService<HttpHelper>();
             var configBLL = provider.GetRequiredService<ConfigBLL>();
-            _fpsServicesConfig = configBLL.GetConfigValuesBySiteName<FPSServicesConfig>("FPS");
+            _fpsServicesConfig = configBLL.GetConfigValuesBySiteId<FPSServicesConfig>("FPS");
         }
-        
+
         public async Task<ApiResult> FPSChecksAsync(CustInfoProfile custInfo, FPSChecksRequest fpsChecksRequest)
         {
             var apiResult = new ApiResult();
-            var config = _fpsServicesConfig[custInfo.SiteName];
+            var config = _fpsServicesConfig[custInfo.SiteId];
             var url = config.ResourceURL;
 
             var sendIovationChecks = new Dictionary<string, string>

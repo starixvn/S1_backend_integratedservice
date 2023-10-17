@@ -19,26 +19,23 @@ namespace CommonService.Service.BLL
             _siteIdConfigs = siteConfigs.ToDictionary(i => i.SiteId, i => i);
         }
 
-        public string GetConfigValue(string siteName, string configKey)
+        public TItem GetConfigValue<TItem>(string configKey, int siteId = 0)
         {
-            var defaultValue = _defaultSiteConfig.GetValueOrDefault(configKey, string.Empty);
-            if (_siteNameConfigs.TryGetValue(siteName, out var siteConfig))
+            var defaultItem = _defaultSiteConfig.TryGetValue(configKey, out var json)
+                ? JsonConvert.DeserializeObject<TItem>(json) : default;
+
+            if (siteId == 0)
             {
-                return siteConfig.Config.TryGetValue(configKey, out var configValue) ? configValue : defaultValue;
+                return defaultItem;
             }
 
-            return defaultValue;
-        }
-
-        public string GetConfigValue(int siteId, string configKey)
-        {
-            var defaultValue = _defaultSiteConfig.GetValueOrDefault(configKey, string.Empty);
             if (_siteIdConfigs.TryGetValue(siteId, out var siteConfig))
             {
-                return siteConfig.Config.TryGetValue(configKey, out var configValue) ? configValue : defaultValue;
+                return siteConfig.Config.TryGetValue(configKey, out var configValue)
+                    ? JsonConvert.DeserializeObject<TItem>(configValue) : defaultItem;
             }
 
-            return defaultValue;
+            return defaultItem;
         }
 
         public Dictionary<int, TItem> GetConfigValuesBySiteId<TItem>(string configKey)

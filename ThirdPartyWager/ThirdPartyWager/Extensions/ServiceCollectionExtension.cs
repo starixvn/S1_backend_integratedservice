@@ -66,5 +66,23 @@ namespace ThirdPartyWager.Extensions
 
             return services;
         }
+
+        public static IServiceCollection AddTpList(this IServiceCollection services)
+        {
+            var provider = services.BuildServiceProvider();
+            var tpHelper = provider.GetRequiredService<ThirdPartyHelper>();
+            var tpFuncDictionary = new TpExtension().TpFuncDictionary;
+
+            foreach (var tpFunc in tpFuncDictionary)
+            {
+                var thirdPartyModel = tpHelper.GetThirdPartySetting((int)tpFunc.Key);
+                if (thirdPartyModel.Status == 1)
+                {
+                    tpFunc.Value.Invoke(services);
+                }
+            }
+
+            return services;
+        }
     }
 }

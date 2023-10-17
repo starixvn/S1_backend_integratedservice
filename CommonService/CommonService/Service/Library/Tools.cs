@@ -18,6 +18,7 @@ namespace CommonService.Service.Library
                 return md5;
             }
         }
+
         public string GetRandomNumString(int length)
         {
             // var str = "0123456789abcdefghijklmnopqrstuvwxyz";//ABCDEFGHIJKLMNOPQRSTUVWXYZ

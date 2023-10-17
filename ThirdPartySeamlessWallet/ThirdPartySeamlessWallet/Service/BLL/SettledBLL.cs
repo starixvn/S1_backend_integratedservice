@@ -1178,7 +1178,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.GetUnsettledListLC_EBet_ByTrans(transId);
         }
-        
+
         public int SetSettleFlag_EBet(string TransId)
         {
             return settledService.SetSettleFlag_EBet(TransId);
@@ -1513,9 +1513,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public IEnumerable<SettleData_WM> GetUnsettledList_WM()
+        public SettleData_WM GetUnsettled_WM(string transId)
         {
-            return settledService.GetUnsettledList_WM();
+            return settledService.GetUnsettled_WM(transId);
         }
 
         public SettleData GetSettle_TpWagerWM(string TransId)
@@ -2033,6 +2033,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetUnsettledList_EVO();
         }
 
+        public SettleData GetUnsettled_EVO(string transId)
+        {
+            return settledService.GetUnsettled_EVO(transId);
+        }
+        
         public int SetSettleFlag_EVO(string TransId)
         {
             return settledService.SetSettleFlag_EVO(TransId);
@@ -2053,6 +2058,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetUnsettledRewardList_EVO();
         }
 
+        public SettledReward_EVO GetUnsettledReward_EVO(string transId)
+        {
+            return settledService.GetUnsettledReward_EVO(transId);
+        }
+        
         public int SetRewardSettleFlag_EVO(int sq)
         {
             return settledService.SetRewardSettleFlag_EVO(sq);

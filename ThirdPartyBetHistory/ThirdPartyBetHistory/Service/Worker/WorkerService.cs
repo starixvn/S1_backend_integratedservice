@@ -1,4 +1,5 @@
 ﻿using Serilog.Context;
+
 using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.Model.enums;
 
@@ -9,7 +10,7 @@ namespace ThirdPartyBetHistory.Service.Worker
         private readonly ILogger<WorkerService> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly IEnumerable<IThirdPartyBetHelper> _sabaSiteList;
-        private readonly Dictionary<SiteId, Timer> timerWorkerList;
+        private readonly Dictionary<int, Timer> timerWorkerList;
         private readonly WorkerType workerType = WorkerType.MainWager;
 
         public WorkerService(IServiceProvider provider)
@@ -17,7 +18,7 @@ namespace ThirdPartyBetHistory.Service.Worker
             _logger = provider.GetRequiredService<ILogger<WorkerService>>();
             _sabaSiteList = provider.GetServices<IThirdPartyBetHelper>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            timerWorkerList = new Dictionary<SiteId, Timer>();
+            timerWorkerList = new Dictionary<int, Timer>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -43,15 +44,15 @@ namespace ThirdPartyBetHistory.Service.Worker
         {
             var tpBetHelp = (IThirdPartyBetHelper)state;
             LogContext.PushProperty("RequestId", Guid.NewGuid());
-            LogContext.PushProperty("TpName", tpBetHelp.thirdPartyModel.TpName);
+            LogContext.PushProperty("TpName", tpBetHelp.TpName);
             LogContext.PushProperty("WorkerType", workerType);
             LogContext.PushProperty("SiteId", tpBetHelp.SiteId);
 
             var lastTicketKey = _thirdPartyBLL.GetSiteTicketKey(workerType, tpBetHelp);
-            var taskProperty = $"{tpBetHelp.thirdPartyModel.TpName}:{workerType} | SiteId:{tpBetHelp.SiteId} | siteTicketKey:{lastTicketKey}";
+            var taskProperty = $"{tpBetHelp.TpName}:{workerType} | SiteId:{tpBetHelp.SiteId} | siteTicketKey:{lastTicketKey}";
             try
             {
-                var nextTicketKey = tpBetHelp.AddTpBetRecordDetail(workerType,lastTicketKey).Result;
+                var nextTicketKey = tpBetHelp.AddTpBetRecordDetail(workerType, lastTicketKey).Result;
                 _thirdPartyBLL.SetSiteTicketKey(workerType, tpBetHelp, nextTicketKey);
                 _logger.LogInformation($"Success: {taskProperty} at: {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm.ss.fff}");
 

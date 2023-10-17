@@ -414,4 +414,14 @@ namespace ThirdPartySeamlessWallet.Service.Model
     }
 
     #endregion
+
+    #region Settle
+
+    public class SettleData_Sexy : SettleData
+    {
+        public new string TransId { get; set; }
+        public new string GameId { get; set; }
+    }
+
+    #endregion
 }

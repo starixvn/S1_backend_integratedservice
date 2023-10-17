@@ -1,39 +1,43 @@
 ﻿using System.Net;
+
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-using Microsoft.Extensions.Options;
+
 using Newtonsoft.Json;
+
 using static CommonService.Service.Model.SendGridResetPassword;
 
 namespace CommonService.Service.BLL
 {
     public class RestPasswordBLL
     {
-        private readonly Dictionary<string, SendGridConfig> _sendGridConfig;
+        private readonly Dictionary<int, SendGridConfig> _sendGridConfig;
         private readonly HttpHelper httpHelper;
         private readonly AuthBLL authBLL;
-        
+
         public RestPasswordBLL(IServiceProvider provider)
         {
             httpHelper = provider.GetRequiredService<HttpHelper>();
             authBLL = provider.GetRequiredService<AuthBLL>();
             var configBLL = provider.GetRequiredService<ConfigBLL>();
-            _sendGridConfig = configBLL.GetConfigValuesBySiteName<SendGridConfig>("SendGrid");
+            _sendGridConfig = configBLL.GetConfigValuesBySiteId<SendGridConfig>("SendGrid");
         }
-        
+
         public async Task<ApiResult> SendMailAsync(CustInfoProfile custInfo, string resetPasswordUrl)
         {
             var apiResult = new ApiResult();
 
-            if (!_sendGridConfig.ContainsKey(custInfo.SiteName))
+            if (!_sendGridConfig.TryGetValue(custInfo.SiteId, out var config))
             {
-                apiResult.ErrorCode = ErrorCode.Fail;
+                return new ApiResult
+                {
+                    ErrorCode = ErrorCode.Fail
+                };
             }
 
-            var config = _sendGridConfig[custInfo.SiteName];
-
-            var headerParams = new Dictionary<string, string> {
+            var headerParams = new Dictionary<string, string>
+            {
                 { "Authorization", $"Bearer {config.ApiKey}"}
             };
 

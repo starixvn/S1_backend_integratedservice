@@ -1267,6 +1267,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (result > 0)
                         {
+                            var insertTpResults = _tpUnsettleService.InsertTpUnsettle(Tp.Sexy, GameType.Sexy_LiveCasino, txn.platformTxId, trans);
+                            if (insertTpResults <= 0)
+                            {
+                                result = 0;
+                            }
                             _mainDbClient.CommitAndDisposeConnection(conn, trans);
                         }
                         else
@@ -2091,12 +2096,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             return _mainDbClient.Query<SettleData>("Service_BettransLC_EBet_Unsettle_Get_V4", commandType: CommandType.StoredProcedure);
         }
-        
+
         public SettleData GetUnsettledListLC_EBet_ByTrans(string transId)
         {
             return _mainDbClient.QueryFirst<SettleData>("Service_BettransLC_EBet_Unsettle_ByTrans_Get", parameters: new { _TransId = transId });
         }
-        
+
         public int SetSettleFlag_EBet(string TransId)
         {
             return _mainDbClient.Execute("Service_BettransLC_EBet_Settle_Set", commandType: CommandType.StoredProcedure, new { TransId = TransId, SettleFlag = 1 });
@@ -2170,6 +2175,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
+                        
                         _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     }
                     else
@@ -2378,9 +2384,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public IEnumerable<SettleData_WM> GetUnsettledList_WM()
+        public SettleData_WM GetUnsettled_WM(string TransId)
         {
-            return _mainDbClient.Query<SettleData_WM>("Service_BettransLC_WM_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
+            return _mainDbClient.QueryFirst<SettleData_WM>("Service_BettransLC_WM_Unsettle_Get_V3", new { TransId = TransId });
         }
 
         public SettleData GetSettle_TpWagerWM(string TransId)
@@ -3272,7 +3278,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     SettleFlag = (int)SettleFlag.EndGame
                 });
 
-                result = _mainDbClient.Execute("Service_BettransLC_EVO_Ins", p, conn, trans);
+                result = _mainDbClient.Execute("Service_BettransLC_EVO_Ins_V2", p, conn, trans);
 
                 if (result > 0)
                 {
@@ -3387,6 +3393,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.Query<SettleData>("Service_BettransLC_EVO_Unsettle_Get");
         }
 
+        public SettleData GetUnsettled_EVO(string transId)
+        {
+            return _mainDbClient.QueryFirst<SettleData>("Service_BettransLC_EVO_Unsettle_ByTrans_Get", parameters: new DynamicParameters(new { _TransId = transId }));
+        }
+        
         public int SetSettleFlag_EVO(string TransId)
         {
             return _mainDbClient.Execute("Service_BettransLC_EVO_Settle_Set", parameters: new DynamicParameters(new { TransId = TransId }));
@@ -3397,6 +3408,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.Query<SettledReward_EVO>("Service_Reward_EVO_Unsettle_Get");
         }
 
+        public SettledReward_EVO GetUnsettledReward_EVO(string transId)
+        {
+            return _mainDbClient.QueryFirst<SettledReward_EVO>("Service_Reward_EVO_Unsettle_ByTrans_Get",parameters: new DynamicParameters(new { _TransId = transId }));
+        }
+        
         public int SetRewardSettleFlag_EVO(int sq)
         {
             return _mainDbClient.Execute("Service_Reward_EVO_Settle_Set", parameters: new DynamicParameters(new { _SQ = sq }));

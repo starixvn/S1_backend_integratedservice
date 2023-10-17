@@ -160,7 +160,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        private int PayoutWithBonusId(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, TpCategory tpCategory, string refId, TransType transType, out decimal afterAmount, string memoHead, int bonusId, MySqlConnection conn, MySqlTransaction trans, AllowNegative allowNegative = AllowNegative.NotAllow)
+        public int PayoutWithBonusId(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, TpCategory tpCategory, string refId, TransType transType, out decimal afterAmount, string memoHead, int bonusId, MySqlConnection conn, MySqlTransaction trans, AllowNegative allowNegative = AllowNegative.NotAllow)
         {
             afterAmount = 0;
             int result = 0;
@@ -209,7 +209,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        private int GetTpBonus(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId, GetTpSeamlessBonusType getTpSeamlessBonusType = GetTpSeamlessBonusType.ByGameTypeAndTransId)
+        public int GetTpBonus(int tpId, string tpTransId, int gameType, TpCategory tpCategory, out int CustId, out int BonusId, GetTpSeamlessBonusType getTpSeamlessBonusType = GetTpSeamlessBonusType.ByGameTypeAndTransId)
         {
             return GetTpSeamlessBonus(tpId, tpTransId, gameType, out CustId, out BonusId, getTpSeamlessBonusType);
         }
