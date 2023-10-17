@@ -20,9 +20,27 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             _environment = provider.GetRequiredService<IWebHostEnvironment>();
         }
 
+        public string GetConfigValue(string configKey, int siteId = 0)
+        {
+            var defaultResult = _defaultSiteConfig.TryGetValue(configKey, out var result) ? result : string.Empty;
+
+            if (siteId == 0)
+            {
+                return defaultResult;
+            }
+
+            if (_siteIdConfigs.TryGetValue(siteId, out var siteConfig))
+            {
+                return siteConfig.Config.TryGetValue(configKey, out var configValue) ? configValue : defaultResult;
+            }
+
+            return defaultResult;
+        }
+
         public TItem GetConfigValueByEnvironment<TItem>(string configKey, int siteId = 0)
         {
-            return GetConfigValue<TItem>($"{configKey}.{_environment.EnvironmentName}.json", siteId);
+            var json = GetConfigValue($"{configKey}.{_environment.EnvironmentName}.json", siteId);
+            return JsonConvert.DeserializeObject<TItem>(json);
         }
 
         public TItem GetConfigValue<TItem>(string configKey, int siteId = 0)
@@ -56,6 +74,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     ? JsonConvert.DeserializeObject<TItem>(configValue) : defaultItem;
                 result.Add(siteConfig.Key, data);
             }
+
             return result;
         }
     }
