@@ -26,11 +26,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
-        private readonly TpUnsettleService _tpUnsettleService;
         private readonly ILogger<SBSWBLL> _logger;
-        private readonly ThirdPartySetting _thirdPartySetting;
         private readonly Dictionary<SBSWTransType, Func<SBSWTransType, string, string, Task<ReturnObj>>> _requestHandler;
         private readonly Dictionary<int, SabaSportTypeOption> _sportTypeConfig;
+        private readonly Dictionary<string, SabaConfig> _siteSabaConfigs;
 
 
         public Tp ThirdParty { get; set; }
@@ -44,9 +43,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _bettingService = provider.GetRequiredService<BettingService>();
             _settledService = provider.GetRequiredService<SettledService>();
-            _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
-            _thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)ThirdParty);
             _requestHandler = new Dictionary<SBSWTransType, Func<SBSWTransType, string, string, Task<ReturnObj>>>()
             {
                 { SBSWTransType.GetBalance, GetBalance},
@@ -70,6 +67,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _logger = provider.GetRequiredService<ILogger<SBSWBLL>>();
             _sportTypeConfig = provider.GetRequiredService<IEnumerable<SabaSportTypeOption>>()
                 .ToDictionary(item => item.SportType, item => item);
+
+            _siteSabaConfigs = provider.GetRequiredService<ConfigBLL>()
+                .GetConfigValuesBySiteId<SabaConfig>(ThirdParty.ToString())
+                .Where(item => item.Key != 0)
+                .ToDictionary(item => item.Value.OperatorId, item => item.Value);
         }
 
         public async Task<ReturnObj> SeamlessWallet(string merchant, SBSWTransType transType, string bodyText)
@@ -795,8 +797,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         private void CheckKey(string merchant, string key)
         {
-            var config = new Config(_thirdPartySetting.TpSetting, merchant);
-            if (config.VendorId != key)
+            if (!_siteSabaConfigs.TryGetValue(merchant,out var sabaConfig))
+            {
+                throw new SBSWException(ReturnCode.OperatorNotFound, $"Invalid merchant | merchant is:{merchant}");
+            }
+
+            if (sabaConfig.VendorId != key)
             {
                 throw new SBSWException(ReturnCode.InvalidVendorId, $"Invalid key | key is:{key}");
             }

@@ -15,20 +15,20 @@ namespace CommonService.Service.BLL
 
         public OTPEmailBLL(SendGridBLL sendGridBll, OTPSMSService otpService, Tools tools, CustInfoService custInfoService, AuthBLL authBll)
         {
-            
+
             _sendGridBll = sendGridBll;
             _otpService = otpService;
             _tools = tools;
             _custInfoService = custInfoService;
             _authBLL = authBll;
         }
-        
+
         public async Task<ApiResult<SendOTPEmailResult>> SendOtpEmailAsync(int custId, string url)
         {
             var apiResult = new ApiResult<SendOTPEmailResult>();
             var custInfo = _custInfoService.GetCustInfoProfile(custId);
             if (custInfo != null && !string.IsNullOrEmpty(custInfo.Email))
-            { 
+            {
                 var otpResult = _otpService.GetOTPVerifyinfo(custId, (int)OtpType.Email);
                 if (otpResult.Status != 1)
                 {
@@ -36,9 +36,9 @@ namespace CommonService.Service.BLL
                     var code = _tools.GetRandomNumString(6);
                     var key = _authBLL.ApplyToken(custInfo);
                     var verificationUrl = $"{url}?key={key}&emailcode={code}";
-                    
-                    var sendMailResult = await _sendGridBll.SendMailAsync(custInfo, new {verifyemailurl=verificationUrl}, TemplateType.VerificationMail);
-                    
+
+                    var sendMailResult = await _sendGridBll.SendMailAsync(custInfo, new { verifyemailurl = verificationUrl }, TemplateType.VerificationMail);
+
                     if (sendMailResult.ErrorCode == ErrorCode.Success)
                     {
                         var insertOtpResult = _otpService.OTPVerifyinfoIns(custId, code, (int)OtpType.Email);
@@ -76,10 +76,10 @@ namespace CommonService.Service.BLL
 
         public ApiResult VerifyOtp(int custId, string inputOtp)
         {
-            var result = _otpService.VerifyOTP(new VerifyOTPReq {CustId = custId, InputOTP = inputOtp}, (int)OtpType.Email);
+            var result = _otpService.VerifyOTP(new VerifyOTPReq { CustId = custId, InputOTP = inputOtp }, (int)OtpType.Email);
             var apiResult = new ApiResult
             {
-                ErrorCode = (ErrorCode) (result)
+                ErrorCode = (ErrorCode)(result)
             };
             return apiResult;
         }

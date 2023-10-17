@@ -1,7 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.DependencyInjection;
+
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -14,6 +17,12 @@ namespace ThirdParty.SBSW
     public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular, IThirdPartyBetLimitParticular
     {
         private const string ContentType = "application/x-www-form-urlencoded";
+        private readonly Dictionary<int, SabaConfig> siteSabaConfigs;
+
+        public TpHelper(IServiceProvider provider)
+        {
+            siteSabaConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SabaConfig>(TpEnum.SBSW.ToString());
+        }
 
         private class Result
         {
@@ -67,7 +76,7 @@ namespace ThirdParty.SBSW
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var config = new SabaConfig(inputs);
+            var config = siteSabaConfigs[tpCustInfo.SiteId];
             var ApiUrl = $"{config.ApiUrl}/CreateMember";
             var input = new CreateMemberReq
             {
@@ -120,7 +129,7 @@ namespace ThirdParty.SBSW
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var config = new SabaConfig(inputs);
+            var config = siteSabaConfigs[tpCustInfo.SiteId];
             var platform = (int)appType;
             if (inputs.TryGetValue("device", out var device) && device.Equals("wap", StringComparison.OrdinalIgnoreCase))
             {
@@ -152,16 +161,18 @@ namespace ThirdParty.SBSW
         }
 
         public ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {
-            string ApiUrl = new SabaConfig(inputs).ApiUrl;
-            Req input = new Req();
-            input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
-            input.vendor_member_id = tpCustInfo.TpUserName;
+        {   
+            var config = siteSabaConfigs[tpCustInfo.SiteId];
+            var input = new Req
+            {
+                vendor_id = config.VendorId,
+                vendor_member_id = tpCustInfo.TpUserName
+            };
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(input)).ToDictionary(kp => kp.Key, kp => kp.Value);
             string postdata = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}";
 
-            ApiUrl = $"{ApiUrl}/KickUser";
+            var ApiUrl = $"{config.ApiUrl}/KickUser";
             var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded");
 
             ApiResult apiResult = new ApiResult();
@@ -199,8 +210,7 @@ namespace ThirdParty.SBSW
 
         public ApiResult SetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, string betSetting)
         {
-            var config = new SabaConfig(inputs);
-            var apiUrl = config.ApiUrl;
+            var config = siteSabaConfigs[tpCustInfo.SiteId];
             var req = new SetMemberBetSettingReq
             {
                 vendor_id = config.VendorId,
@@ -211,7 +221,7 @@ namespace ThirdParty.SBSW
             var props = t.GetProperties();
             var postData = $"{string.Join("&", props.Select(kp => $"{kp.Name}={kp.GetValue(req)}"))}";
 
-            apiUrl = $"{apiUrl}/SetMemberBetSetting";
+            var apiUrl = $"{config.ApiUrl}/SetMemberBetSetting";
             var result = HttpPost(apiUrl, postData, "application/x-www-form-urlencoded");
 
             var oApiResult = new ApiResult();
@@ -252,13 +262,6 @@ namespace ThirdParty.SBSW
             public string ApiUrl { get; set; }
             public string VendorId { get; set; }
             public string OperatorId { get; set; }
-
-            public SabaConfig(Dictionary<string, string> inputs)
-            {
-                ApiUrl = inputs.GetValue("ApiUrl");
-                VendorId = inputs.GetValue("VendorId");
-                OperatorId = inputs.GetValue("OperatorId");
-            }
         }
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
