@@ -55,6 +55,8 @@
         IM = 52,
         SPRIBE = 53,
         PNG = 54,
+        FaChai = 55,
+        Pegasus = 56,
     }
 
 }

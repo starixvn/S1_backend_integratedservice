@@ -92,6 +92,8 @@
         IM_Sports = 103,
         SPRIBE_RNG = 104,
         PNG_RNG = 105,
+        FaChai_RNG = 106,
+        Pegasus_RNG = 107,
     }
 
 }
