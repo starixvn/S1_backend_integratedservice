@@ -1,6 +1,8 @@
-﻿using Newtonsoft.Json;
-using System.Text;
+﻿using System.Text;
 using System.Xml;
+
+using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -34,7 +36,7 @@ namespace ThirdPartyWager.Service.BLL
             // encrype param
             var q = _common.encrypt(parameter, encrypKey);
             var s = _common.ToMD5($"{parameter}{md5Key}{time}{secretKey}");
-            var param = $"q={System.Web.HttpUtility.UrlEncode(q)}&s={ System.Web.HttpUtility.UrlEncode(s)}";
+            var param = $"q={System.Web.HttpUtility.UrlEncode(q)}&s={System.Web.HttpUtility.UrlEncode(s)}";
 
             // log
             _logger.LogInformation(parameter);
@@ -56,7 +58,7 @@ namespace ThirdPartyWager.Service.BLL
             // encrype param
             var q = _common.encrypt(parameter, encrypKey);
             var s = _common.ToMD5($"{parameter}{md5Key}{time}{secretKey}");
-            var param = $"q={System.Web.HttpUtility.UrlEncode(q)}&s={ System.Web.HttpUtility.UrlEncode(s)}";
+            var param = $"q={System.Web.HttpUtility.UrlEncode(q)}&s={System.Web.HttpUtility.UrlEncode(s)}";
 
             // log
             _logger.LogInformation(parameter);

@@ -1,9 +1,12 @@
 ﻿using System.Text.Json;
 using System.Web;
+
 using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+
 using static ThirdPartyWager.Extensions.MethodExtension;
 
 namespace ThirdPartyWager.Workers

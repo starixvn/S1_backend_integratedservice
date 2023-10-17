@@ -797,7 +797,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         private void CheckKey(string merchant, string key)
         {
-            if (!_siteSabaConfigs.TryGetValue(merchant,out var sabaConfig))
+            if (!_siteSabaConfigs.TryGetValue(merchant, out var sabaConfig))
             {
                 throw new SBSWException(ReturnCode.OperatorNotFound, $"Invalid merchant | merchant is:{merchant}");
             }

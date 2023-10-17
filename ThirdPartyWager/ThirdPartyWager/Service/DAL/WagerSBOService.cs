@@ -1,5 +1,7 @@
 ﻿using Dapper;
+
 using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
