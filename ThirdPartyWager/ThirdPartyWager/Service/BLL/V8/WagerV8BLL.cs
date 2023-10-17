@@ -14,6 +14,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly WagerV8Service _wagerV8Service;
         private readonly ILogger<WagerV8BLL> _logger;
         private readonly DateTimeHelper _dateTimeHelper;
+        private readonly V8Config _config;
 
         private readonly int _tpId = (int)Tp.V8;
         private readonly int _timeZone = 0;
@@ -26,6 +27,7 @@ namespace ThirdPartyWager.Service.BLL
             _wagerV8Service = provider.GetRequiredService<WagerV8Service>();
             _logger = provider.GetRequiredService<ILogger<WagerV8BLL>>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _config = provider.GetRequiredService<ConfigBLL>().GetConfigValue<V8Config>(Tp.V8.ToString());
         }
 
         public async Task<bool> ExecWagerWorker(int type, int timeRange, string tpCurrencyId)
@@ -73,11 +75,9 @@ namespace ThirdPartyWager.Service.BLL
             var workerName = compare ? "GetRedoWagersAsync" : "GetWagersAsync";
             try
             {
-                // get api info
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
 
                 // get wager
-                var dataWager = await _apiV8BLL.GetBetListByTimeV2(setting, wagerTime.startUnix, wagerTime.endUnix, tpCurrencyId);
+                var dataWager = await _apiV8BLL.GetBetListByTimeV2(_config, wagerTime.startUnix, wagerTime.endUnix, tpCurrencyId);
 
                 // error condition
                 var errorCode = dataWager.d.code;
@@ -97,16 +97,16 @@ namespace ThirdPartyWager.Service.BLL
                     return true;
                 }
 
-                //if (compare)
-                //{
-                //    bool check = CompareSummary(wagerTime, dataWager);
-                //    if (check)
-                //    {
-                //        msg = "MATCH";
-                //        _logger.LogInformation($"{workerName} {msg} {tpCurrencyId}");
-                //        return true;
-                //    }
-                //}
+                if (compare)
+                {
+                    bool check = CompareSummary(wagerTime, dataWager, tpCurrencyId);
+                    if (check)
+                    {
+                        msg = "MATCH";
+                        _logger.LogInformation($"{workerName} {msg} {tpCurrencyId}");
+                        return true;
+                    }
+                }
 
                 var field = new List<string>();
                 for (var i = 0; i < dataWager.d.count; i++)
@@ -166,10 +166,10 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        private bool CompareSummary(TimeCast wagerTime, WagerV8Model betDetail)
+        private bool CompareSummary(TimeCast wagerTime, WagerV8Model betDetail, string tpCurrencyId)
         {
             // table summary
-            var getWagerCount = _wagerV8Service.GetWagerTotal(wagerTime.startUnix, wagerTime.endUnix);
+            var getWagerCount = _wagerV8Service.GetWagerTotalV2(wagerTime.startUnix, wagerTime.endUnix, tpCurrencyId);
             var wagerCnt = getWagerCount.wagerCount;
 
             // api summary
