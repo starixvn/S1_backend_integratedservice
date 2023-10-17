@@ -2175,11 +2175,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        var insertTpResults = _tpUnsettleService.InsertTpUnsettle(Tp.WM, GameType.WM_LiveCasino, mixUniqueId, trans);
-                        if (insertTpResults <= 0)
-                        {
-                            result = 0;
-                        }
+                        
                         _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     }
                     else
