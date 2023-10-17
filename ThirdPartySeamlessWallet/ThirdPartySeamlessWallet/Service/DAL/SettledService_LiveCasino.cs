@@ -1267,6 +1267,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (result > 0)
                         {
+                            var insertTpResults = _tpUnsettleService.InsertTpUnsettle(Tp.Sexy, GameType.Sexy_LiveCasino, txn.platformTxId, trans);
+                            if (insertTpResults <= 0)
+                            {
+                                result = 0;
+                            }
                             _mainDbClient.CommitAndDisposeConnection(conn, trans);
                         }
                         else
@@ -2170,6 +2175,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
+                        var insertTpResults = _tpUnsettleService.InsertTpUnsettle(Tp.WM, GameType.WM_LiveCasino, mixUniqueId, trans);
+                        if (insertTpResults <= 0) 
+                        { 
+                            result = 0;
+                        }
                         _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     }
                     else
@@ -2378,9 +2388,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public IEnumerable<SettleData_WM> GetUnsettledList_WM()
+        public SettleData_WM GetUnsettled_WM(string TransId)
         {
-            return _mainDbClient.Query<SettleData_WM>("Service_BettransLC_WM_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
+            return _mainDbClient.QueryFirst<SettleData_WM>("Service_BettransLC_WM_Unsettle_Get_V3", new { TransId = TransId });
         }
 
         public SettleData GetSettle_TpWagerWM(string TransId)
