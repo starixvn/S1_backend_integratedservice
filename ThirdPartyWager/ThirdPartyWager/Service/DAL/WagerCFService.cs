@@ -7,7 +7,7 @@ namespace ThirdPartyWager.Service.DAL
     public class WagerCFService
     {
         private readonly MySqlClient _wagerDbClient;
-        
+
         public WagerCFService(IServiceProvider provider)
         {
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);

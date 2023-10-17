@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Manual
@@ -9,13 +10,13 @@ namespace ThirdPartyWager.Manual
     {
         private static readonly string RootPath = Directory.GetCurrentDirectory();
         private static string _env;
-        internal static async  Task Main(string[] args)
+        internal static async Task Main(string[] args)
         {
             _env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
             Console.WriteLine($"Environment:{_env}");
             var host = CreateHostBuilder(args)
                 .Build();
-            
+
             Console.Write("Please input TpId:");
             var input = Console.ReadLine();
             var tpId = int.Parse(input);
@@ -50,5 +51,5 @@ namespace ThirdPartyWager.Manual
                 .AddYamlFile($"appsettings.{_env}.json", false, true)
                 .AddEnvironmentVariables();
     };
-    
+
 }

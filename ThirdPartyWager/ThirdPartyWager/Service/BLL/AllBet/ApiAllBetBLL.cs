@@ -1,12 +1,14 @@
-﻿using Newtonsoft.Json;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Net;
+using System.Net.Http.Headers;
+using System.Security.Cryptography;
 using System.Text;
+
+using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
-using System.Security.Cryptography;
-using System.Net.Http.Headers;
 
 namespace ThirdPartyWager.Service.BLL
 {

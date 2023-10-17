@@ -1178,7 +1178,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.GetUnsettledListLC_EBet_ByTrans(transId);
         }
-        
+
         public int SetSettleFlag_EBet(string TransId)
         {
             return settledService.SetSettleFlag_EBet(TransId);

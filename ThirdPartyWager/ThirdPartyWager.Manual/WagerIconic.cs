@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
-using ThirdPartyWager.Extensions;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;

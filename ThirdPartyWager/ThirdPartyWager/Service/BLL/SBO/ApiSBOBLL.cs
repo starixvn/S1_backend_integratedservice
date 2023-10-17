@@ -1,9 +1,12 @@
-﻿using static System.Net.Mime.MediaTypeNames;
-using System.Text;
+﻿using System.Text;
+
 using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ThirdPartyWager.Service.BLL
 {

@@ -16,14 +16,14 @@ namespace CommonService.Controllers
     {
         private readonly HttpHelper _httpHelper;
         private readonly ILogger<LetsTalkController> _logger;
-        private readonly Dictionary<string, LetsTalkConfig> _letsTalkConfig;
+        private readonly LetsTalkConfig _letsTalkConfig;
 
         public LetsTalkController(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _logger = provider.GetService<ILogger<LetsTalkController>>();
             var configBLL = provider.GetRequiredService<ConfigBLL>();
-            _letsTalkConfig = configBLL.GetConfigValuesBySiteName<LetsTalkConfig>("LetsTalk");
+            _letsTalkConfig = configBLL.GetConfigValue<LetsTalkConfig>("LetsTalk");
         }
 
         public class LetsTalkMsgParam
@@ -59,9 +59,8 @@ namespace CommonService.Controllers
         {
             try
             {
-                var url = _letsTalkConfig.Values.FirstOrDefault()?.LetsTalkCommon.SignInURL;
-                var notificationGroup =
-                    _letsTalkConfig.Values.FirstOrDefault()?.LetsTalkNotification
+                var url = _letsTalkConfig.LetsTalkCommon.SignInURL;
+                var notificationGroup = _letsTalkConfig.LetsTalkNotification
                         .FirstOrDefault(n => n.GroupName == req.GroupName) ?? throw new Exception("GroupName");
 
                 var token = await GetLetsTalkToken(req.GroupName);
@@ -92,9 +91,8 @@ namespace CommonService.Controllers
         {
             try
             {
-                var url = _letsTalkConfig.Values.FirstOrDefault()?.LetsTalkCommon.SignInURL;
-                var notificationGroup =
-                    _letsTalkConfig.Values.FirstOrDefault()?.LetsTalkNotification
+                var url = _letsTalkConfig.LetsTalkCommon.SignInURL;
+                var notificationGroup = _letsTalkConfig.LetsTalkNotification
                         .FirstOrDefault(n => n.GroupName == groupName) ?? throw new Exception("GroupName");
 
                 var data = new Dictionary<string, string>

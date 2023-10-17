@@ -1,5 +1,5 @@
-﻿using System.Xml.Serialization;
-using System.Xml;
+﻿using System.Xml;
+using System.Xml.Serialization;
 
 namespace ThirdPartySeamlessWallet.Extensions
 {

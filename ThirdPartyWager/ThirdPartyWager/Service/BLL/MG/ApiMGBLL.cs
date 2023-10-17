@@ -1,9 +1,11 @@
-﻿using Newtonsoft.Json;
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Headers;
+using System.Text;
+
+using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
-using System.Text;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
