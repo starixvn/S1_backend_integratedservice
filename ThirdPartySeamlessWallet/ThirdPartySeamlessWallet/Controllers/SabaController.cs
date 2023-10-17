@@ -25,8 +25,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         public SabaController(IServiceProvider provider)
         {
-            var configuration = provider.GetRequiredService<IConfiguration>();
-            _sabaSecretKey = configuration.GetValue<string>("SabaSecretKey");
+            _sabaSecretKey = provider.GetRequiredService<ConfigBLL>().GetConfigValue<string>("SabaSecretKey");
             _logger = provider.GetRequiredService<ILogger<SabaController>>();
             _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
             _sabaBLL = new SabaBLL(provider);

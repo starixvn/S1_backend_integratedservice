@@ -8,6 +8,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
     {
         private readonly Dictionary<string, string> _defaultSiteConfig;
         private readonly Dictionary<int, SiteConfig> _siteIdConfigs;
+        private readonly IWebHostEnvironment _environment;
 
         public ConfigBLL(IServiceProvider provider)
         {
@@ -16,8 +17,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             //TPSW不排除0，第三方送過來無法辨識site的時候，需要從site=0拿config            
             _siteIdConfigs = siteConfigList.ToDictionary(i => i.SiteId, i => i);
+            _environment = provider.GetRequiredService<IWebHostEnvironment>();
         }
 
+        public TItem GetConfigValueByEnvironment<TItem>(string configKey, int siteId = 0)
+        {
+            return GetConfigValue<TItem>($"{configKey}.{_environment.EnvironmentName}.json", siteId);
+        }
 
         public TItem GetConfigValue<TItem>(string configKey, int siteId = 0)
         {
