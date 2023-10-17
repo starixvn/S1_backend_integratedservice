@@ -112,31 +112,31 @@ public class ApiIMBLL
         var handler = new HttpClientHandler();
         string proxyHost;
         int proxyPort;
+        //For Leobet prod:因為Leobet prod IP在新加坡，故做調整為所有環境都IM都走proxy
+        //if (_env.EnvironmentName == "Development")
+        //{
+        handler.UseProxy = true;
+        proxyHost = _configuration.GetValue<string>("configProxyHost");
+        proxyPort = _configuration.GetValue<int>("configProxyPort");
+        handler.Proxy = new WebProxy(proxyHost, proxyPort);
 
-        if (_env.EnvironmentName == "Development")
-        {
-            handler.UseProxy = true;
-            proxyHost = _configuration.GetValue<string>("configProxyHost");
-            proxyPort = _configuration.GetValue<int>("configProxyPort");
-            handler.Proxy = new WebProxy(proxyHost, proxyPort);
-
-            _logger.LogInformation($"use proxy, host:{proxyHost}, port:{proxyPort}");
-
-            return handler;
-        }
-
-        proxyHost = _configuration.GetValue<string>("ProxyHost");
-        proxyPort = _configuration.GetValue<int>("ProxyPort");
-
-        if (!string.IsNullOrEmpty(proxyHost))
-        {
-            handler.UseProxy = true;
-            handler.Proxy = new WebProxy(proxyHost, proxyPort);
-
-            _logger.LogInformation($"use proxy, host:{proxyHost}, port:{proxyPort}");
-        }
+        _logger.LogInformation($"use proxy, host:{proxyHost}, port:{proxyPort}");
 
         return handler;
+        //}
+
+        //proxyHost = _configuration.GetValue<string>("ProxyHost");
+        //proxyPort = _configuration.GetValue<int>("ProxyPort");
+
+        //if (!string.IsNullOrEmpty(proxyHost))
+        //{
+        //    handler.UseProxy = true;
+        //    handler.Proxy = new WebProxy(proxyHost, proxyPort);
+
+        //    _logger.LogInformation($"use proxy, host:{proxyHost}, port:{proxyPort}");
+        //}
+
+        //return handler;
     }
 
     #endregion
