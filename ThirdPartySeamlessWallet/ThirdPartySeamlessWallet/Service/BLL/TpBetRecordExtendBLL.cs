@@ -68,22 +68,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         betRecordInfo.TicketKey,
                     });
                     parameters.AddDynamicParams(result.Data);
-
-                    //減少全站維護時間，由程式判斷日期決定走哪支SP
-                    var newDate = new DateTime(2023, 3, 9);
-                    var spName = "Service_TpBetRecordExtend_Ins";
-                    var partitionDate = betRecordInfo.SettledTime == 0 ?
-                        DateTime.UtcNow.Date : DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).Date;
-                    if (partitionDate >= DateTime.UtcNow.AddDays(2))
-                    {
-                        partitionDate = DateTime.UtcNow.Date;
-                    }
-                    if (partitionDate.Date >= newDate)
-                    {
-                        spName = "Service_TpBetRecordExtend_Ins_V2";
-                    }
-
-                    _mainDbClient.Execute(spName, parameters: parameters);
+                    _mainDbClient.Execute("Service_TpBetRecordExtend_Ins_V2", parameters: parameters);
                 }
             }
             catch (AggregateException ex)
