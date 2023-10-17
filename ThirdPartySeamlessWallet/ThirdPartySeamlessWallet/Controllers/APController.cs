@@ -1243,8 +1243,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var error = false;
                 if (getReq.WinResults.Any() && getReq.WinResults.Count() > 0)
                 {
+                    var placebetAmount = bettrans.Where(x => x.TicketType == (int)BettransType.Bet).Sum(x => x.Amount);
                     foreach (var winItem in getReq.WinResults)
                     {
+                        //AP Mini cardracing win 偶爾會有匯率問題，多檢查下注金額是否一致。
+                        if (placebetAmount != winItem.BuyAmount)
+                        {
+                            log2File.Error($"PayoutBet={winItem.BuyAmount} amount not equal PlaceBet={placebetAmount}.", logName);
+                            return errResponse;
+                        }
                         var singleBettrans = new PayoutData_AdvantPlayMini();
                         var singleWinResults = new List<WinResults_AdvantPlayMini>
                         {
