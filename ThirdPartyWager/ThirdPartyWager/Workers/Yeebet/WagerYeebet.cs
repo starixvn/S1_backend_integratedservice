@@ -1,5 +1,7 @@
-﻿using Serilog.Context;
-using System.Text.Json;
+﻿using System.Text.Json;
+
+using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 

@@ -1,4 +1,5 @@
 ﻿using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -38,7 +39,7 @@ namespace ThirdPartyWager.Workers
                 // get setting
                 var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
                 var currencyList = _commonBLL.GetTpCurrencyList(tpId);
-                
+
                 // call jwt
                 foreach (var curr in currencyList)
                 {

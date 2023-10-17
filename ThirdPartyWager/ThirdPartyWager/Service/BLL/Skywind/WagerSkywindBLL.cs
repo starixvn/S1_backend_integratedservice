@@ -1,5 +1,7 @@
 ﻿using System.Text.RegularExpressions;
+
 using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
