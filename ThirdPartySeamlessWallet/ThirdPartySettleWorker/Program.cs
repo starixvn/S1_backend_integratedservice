@@ -80,7 +80,9 @@ builder.Services
     .AddHostedService<EBetWorker>()
     .AddHostedService<PNGWorker>()
     .AddHostedService<SexyWorker>()
-    .AddHostedService<WMWorker>();
+    .AddHostedService<WMWorker>()
+    .AddHostedService<FaChaiWorker>()
+    .AddHostedService<EVOWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
