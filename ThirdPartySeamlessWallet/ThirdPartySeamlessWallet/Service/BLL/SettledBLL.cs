@@ -2034,6 +2034,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetUnsettledList_EVO();
         }
 
+        public SettleData GetUnsettled_EVO(string transId)
+        {
+            return settledService.GetUnsettled_EVO(transId);
+        }
+        
         public int SetSettleFlag_EVO(string TransId)
         {
             return settledService.SetSettleFlag_EVO(TransId);
@@ -2054,6 +2059,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetUnsettledRewardList_EVO();
         }
 
+        public SettledReward_EVO GetUnsettledReward_EVO(string transId)
+        {
+            return settledService.GetUnsettledReward_EVO(transId);
+        }
+        
         public int SetRewardSettleFlag_EVO(int sq)
         {
             return settledService.SetRewardSettleFlag_EVO(sq);
