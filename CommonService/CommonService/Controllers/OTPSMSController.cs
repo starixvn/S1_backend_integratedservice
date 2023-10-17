@@ -13,7 +13,7 @@ namespace CommonService.Controllers
     {
         private readonly ILogger<OTPSMSController> _logger;
         private readonly CustInfoBLL _custInfoBLL;
-        private readonly Dictionary<string, SMSSupportConfig> _supportOTPConfig;
+        private readonly Dictionary<int, SMSSupportConfig> _supportOTPConfig;
         private readonly OTPSMSBLL _oTPSMSBLL;
         private readonly Tools _tools;
 
@@ -24,7 +24,7 @@ namespace CommonService.Controllers
         {
             _logger = provider.GetRequiredService<ILogger<OTPSMSController>>();
             _custInfoBLL = provider.GetRequiredService<CustInfoBLL>();
-            _supportOTPConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<SMSSupportConfig>("SMSSupport");
+            _supportOTPConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SMSSupportConfig>("SMSSupport");
             _oTPSMSBLL = provider.GetRequiredService<OTPSMSBLL>();
             _tools = provider.GetRequiredService<Tools>();
 
@@ -183,9 +183,16 @@ namespace CommonService.Controllers
 
         private OTPProvider GetSupportOTP(CustInfoProfile custInfo)
         {
-            var sMSSupport = _supportOTPConfig[custInfo.SiteName].SMSSupport;
-            var otpProvider = sMSSupport.TryGetValue(custInfo.AreaCode, out var areaSupportOTP) ? areaSupportOTP : sMSSupport["Default"];
-            return Enum.TryParse(otpProvider, out OTPProvider oTPProvider) ? oTPProvider : OTPProvider.NxCloud;
+            try
+            {
+                var sMSSupport = _supportOTPConfig[custInfo.SiteId].SMSSupport;
+                var otpProvider = sMSSupport.TryGetValue(custInfo.AreaCode, out var areaSupportOTP) ? areaSupportOTP : sMSSupport["Default"];
+                return Enum.TryParse(otpProvider, out OTPProvider oTPProvider) ? oTPProvider : OTPProvider.NxCloud;
+            }
+            catch
+            {
+                return OTPProvider.NxCloud;
+            }
         }
     }
 }

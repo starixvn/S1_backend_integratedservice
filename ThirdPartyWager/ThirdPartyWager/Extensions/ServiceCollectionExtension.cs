@@ -1,9 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq.Expressions;
-
-using Microsoft.Extensions.DependencyInjection.Extensions;
-
-using ThirdPartyWager.Service.DAL;
+﻿using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -77,14 +72,14 @@ namespace ThirdPartyWager.Extensions
             var provider = services.BuildServiceProvider();
             var tpHelper = provider.GetRequiredService<ThirdPartyHelper>();
             var tpFuncDictionary = new TpExtension().TpFuncDictionary;
-           
-            foreach (var tpFunc in tpFuncDictionary) 
+
+            foreach (var tpFunc in tpFuncDictionary)
             {
-                var thirdPartyModel = tpHelper.GetThirdPartySetting((int)tpFunc.Key);               
+                var thirdPartyModel = tpHelper.GetThirdPartySetting((int)tpFunc.Key);
                 if (thirdPartyModel.Status == 1)
                 {
                     tpFunc.Value.Invoke(services);
-                }            
+                }
             }
 
             return services;

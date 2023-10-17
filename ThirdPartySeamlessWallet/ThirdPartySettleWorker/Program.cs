@@ -81,6 +81,8 @@ builder.Services
     .AddHostedService<EBetWorker>()
     .AddHostedService<PNGWorker>()
     .AddHostedService<SexyWorker>()
+    .AddHostedService<WMWorker>()
+    .AddHostedService<EVOWorker>()
     .AddHostedService<FaChaiWorker>();
 
 var app = builder.Build();

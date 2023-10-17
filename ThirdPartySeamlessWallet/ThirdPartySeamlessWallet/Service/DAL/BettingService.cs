@@ -21,6 +21,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly MySqlClient _mainDbClient;
         private readonly MySqlClient _reportDbClient;
         private readonly PartitionService _partitionService;
+        private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly TpUnsettleService _tpUnsettleService;
         private readonly ThirdPartyBLL _thirdPartyBLL;
 
@@ -33,6 +34,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             _partitionService = provider.GetRequiredService<PartitionService>();
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
         }
 
         public int AddTpBonus(int tpId, string transId, int gameType, int custId, string userName, int currencyId, int siteId, decimal stake, int bonusId, TpCategory tpCategory, MySqlConnection conn, MySqlTransaction trans)

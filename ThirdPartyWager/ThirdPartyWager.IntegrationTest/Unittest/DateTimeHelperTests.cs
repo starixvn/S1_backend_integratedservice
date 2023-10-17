@@ -1,5 +1,5 @@
-﻿using System;
-using NUnit.Framework;
+﻿using NUnit.Framework;
+
 using ThirdPartyWager.Service.Library;
 
 namespace ThirdPartyWager.IntegrationTest.Unittest
@@ -19,7 +19,7 @@ namespace ThirdPartyWager.IntegrationTest.Unittest
 
             var startTime = "2023-06-09T09:50:00";
             var endTime = "2023-06-09T10:05:00";
-            
+
             Assert.AreEqual(startTime, actual.startTime);
             Assert.AreEqual(endTime, actual.endTime);
         }

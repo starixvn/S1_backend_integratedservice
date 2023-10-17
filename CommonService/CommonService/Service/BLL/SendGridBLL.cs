@@ -10,14 +10,14 @@ namespace CommonService.Service.BLL
 {
     public class SendGridBLL
     {
-        private readonly Dictionary<string, SendGridConfig> _sendGridConfig;
+        private readonly Dictionary<int, SendGridConfig> _sendGridConfig;
         private readonly HttpHelper _httpHelper;
 
         public SendGridBLL(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             var configBLL = provider.GetRequiredService<ConfigBLL>();
-            _sendGridConfig = configBLL.GetConfigValuesBySiteName<SendGridConfig>("SendGrid");
+            _sendGridConfig = configBLL.GetConfigValuesBySiteId<SendGridConfig>("SendGrid");
         }
 
         public class Result
@@ -36,14 +36,16 @@ namespace CommonService.Service.BLL
         {
             var apiResult = new ApiResult();
 
-            if (!_sendGridConfig.ContainsKey(custInfo.SiteName))
+            if (!_sendGridConfig.TryGetValue(custInfo.SiteId, out var config))
             {
-                apiResult.ErrorCode = ErrorCode.Fail;
+                return new ApiResult
+                {
+                    ErrorCode = ErrorCode.Fail
+                };
             }
 
-            var config = _sendGridConfig[custInfo.SiteName];
-
-            var headerParams = new Dictionary<string, string> {
+            var headerParams = new Dictionary<string, string>
+            {
                 { "Authorization", $"Bearer {config.ApiKey}"}
             };
 

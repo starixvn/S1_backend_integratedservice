@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -33,7 +34,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             ThirdParty = Tp.PNG;
             GameType = GameType.PNG_RNG;
-            defaultConfig = _configBll.GetConfigValue<Dictionary<string, string>>(0, ThirdParty.ToString());
+            defaultConfig = _configBll.GetConfigValue<Dictionary<string, string>>(ThirdParty.ToString());
         }
 
         public PNG_AuthenticateResponse Authenticate(PNG_AuthenticateRequest authenticateRequest)
@@ -219,7 +220,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return new PNG_ReleaseResponse(checkResult.response.StatusCode, checkResult.response.StatusMessage);
 
                 // check BetTrans
-                 var betTransData = _bettingService.GetBettingDataRng_PNG(releaseRequest.RoundId);
+                var betTransData = _bettingService.GetBettingDataRng_PNG(releaseRequest.RoundId);
 
                 // check ticketType
                 var pngTicketType = releaseRequest.RoundId == 0
