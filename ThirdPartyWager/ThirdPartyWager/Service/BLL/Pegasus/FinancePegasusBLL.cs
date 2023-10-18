@@ -19,7 +19,7 @@ namespace ThirdPartyWager.Service.BLL
             _commonBll = provider.GetRequiredService<CommonBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _apiPegasusBll = provider.GetRequiredService<ApiPegasusBLL>();
-            _setting = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(0, Tp.Pegasus.ToString());
+            _setting = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(Tp.Pegasus.ToString());
             PegasusConfig(_setting);
         }
         

@@ -21,7 +21,7 @@ namespace ThirdPartyWager.Service.BLL
             _wagerPegasusService = provider.GetRequiredService<WagerPegasusService>();
             _logger = provider.GetRequiredService<ILogger<WagerPegasusBLL>>();
             _commonBll = provider.GetRequiredService<CommonBLL>();
-            _setting = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(0, Tp.Pegasus.ToString());
+            _setting = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(Tp.Pegasus.ToString());
             PegasusConfig(_setting);
         }
         
