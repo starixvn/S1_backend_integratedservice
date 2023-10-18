@@ -10,8 +10,6 @@ using Microsoft.Extensions.Logging;
 
 using Newtonsoft.Json;
 
-using Serilog.Context;
-
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
@@ -281,18 +279,7 @@ namespace ThirdPartyCore
 
         protected string HttpPostWithX509(string url, Dictionary<string, string> parameters, string contentType, Dictionary<string, string> headers = null, X509Certificate2 certificate = null)
         {
-            //LogContext.PushProperty("url", url);
-            //LogContext.PushProperty("contentType", contentType);
-            //logger.LogInformation($"headers: {JsonConvert.SerializeObject(headers)} " +
-            //    $"| parameters: {JsonConvert.SerializeObject(parameters)}" +
-            //    $"| certificate: {certificate.SubjectName} ");
-
             using var handler = new HttpClientHandler();
-            //if (!string.IsNullOrEmpty(proxyHost))
-            //{
-            //    handler.UseProxy = true;
-            //    handler.Proxy = new WebProxy(proxyHost, proxyPort);
-            //}
             if (certificate != null)
             {
                 handler.ClientCertificates.Add(certificate);
