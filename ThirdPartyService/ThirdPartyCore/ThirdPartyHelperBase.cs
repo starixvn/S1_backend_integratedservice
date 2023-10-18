@@ -10,8 +10,6 @@ using Microsoft.Extensions.Logging;
 
 using Newtonsoft.Json;
 
-using Serilog.Context;
-
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
@@ -21,41 +19,6 @@ using ThirdPartyCore.Model.TpMerchantBalance.Response;
 namespace ThirdPartyCore
 {
     public delegate void InsertLogEventHandler(string url, string input, string output);
-    public interface IThirdPartyHelper
-    {
-        ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-        ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs);
-        ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-        ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID);
-        ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID);
-        TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-        event InsertLogEventHandler InsertLog;
-        bool isHeathly { set; get; }
-    }
-
-    public interface IThirdPartyParticular
-    {
-        ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-        //ApiResult<TransferResult> BonusTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal bonus, string transID, string thirdPartyTransID);
-    }
-
-    public interface IThirdPartyGetBalanceParticular
-    {
-        /// <summary>
-        /// 取得指定第三方多筆客戶餘額
-        /// </summary>
-        /// <param name="inputs">第三方相關參數</param>
-        /// <param name="tpUserNameString">第三方使用者名稱參數清單</param>
-        /// <param name="tpCurrencyId">第三方幣別</param>
-        /// <returns></returns>
-        ApiResult<List<ReceiveTpUserBalanceModel>> GetBalance(Dictionary<string, string> inputs, string tpUserNameString, string tpCurrencyId);
-    }
-
-    public interface IThirdPartyBetLimitParticular
-    {
-        ApiResult SetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, string betSetting);
-    }
-
     public abstract class ThirdPartyHelperBase : IThirdPartyHelper, IThirdPartyTpBetRecordDetail, IThirdPartyTpGetMerchantBalance
     {
         public static string proxyHost;
@@ -76,11 +39,7 @@ namespace ThirdPartyCore
 
         public static IBetLimitProvider BetLimitProvider { set; get; }
 
-        public static string CommonServiceHost { get; set; }
-
-        public static string LetsTalkGroupName { get; set; }
-
-        public static string SeamlessUrl { get; set; }
+        public static string SeamlessServiceHost { get; set; }
 
         public static string EnvironmentName { set; get; }
 
@@ -106,8 +65,6 @@ namespace ThirdPartyCore
                 return _isHeathly;
             }
         }
-
-        public bool isUnderMaintenance { set; get; }
 
         public DateTime CheckTime { set; get; }
 
@@ -318,68 +275,7 @@ namespace ThirdPartyCore
                 InsertLog?.Invoke(url, parametersLog, e.Message);
                 return e.Message;
             }
-        }
-
-        protected string HttpPostWithX509(string url, Dictionary<string, string> parameters, string contentType, Dictionary<string, string> headers = null, X509Certificate2 certificate = null)
-        {
-            LogContext.PushProperty("url", url);
-            LogContext.PushProperty("contentType", contentType);
-            logger.LogInformation($"headers: {JsonConvert.SerializeObject(headers)} " +
-                $"| parameters: {JsonConvert.SerializeObject(parameters)}" +
-                $"| certificate: {certificate.SubjectName} ");
-
-            using var handler = new HttpClientHandler();
-            //if (!string.IsNullOrEmpty(proxyHost))
-            //{
-            //    handler.UseProxy = true;
-            //    handler.Proxy = new WebProxy(proxyHost, proxyPort);
-            //}
-            if (certificate != null)
-            {
-                handler.ClientCertificates.Add(certificate);
-            }
-
-            //ignore Certificate
-            handler.ServerCertificateCustomValidationCallback = delegate { return true; };
-
-            using var client = new HttpClient(handler);
-            try
-            {
-                if (headers != null)
-                {
-                    foreach (var item in headers)
-                    {
-                        client.DefaultRequestHeaders.Add(item.Key, item.Value ?? string.Empty);
-                    }
-                }
-                var formData = new FormUrlEncodedContent(parameters);
-                var response = client.PostAsync(url, formData).Result;
-                var sb = response.Content.ReadAsStringAsync().Result;
-                logger.LogInformation($"response: {sb}");
-                return sb;
-            }
-            catch (AggregateException ae)
-            {
-                foreach (var ex in ae.InnerExceptions)
-                {
-                    logger.LogError(ex, ex.Message);
-                }
-                return ae.Message;
-            }
-            catch (HttpRequestException ex)
-            {
-                if (ex.InnerException != null)
-                {
-                    logger.LogError(ex, ex.InnerException.Message);
-                }
-                return ex.Message;
-            }
-            catch (Exception e)
-            {
-                logger.LogError(e, e.Message);
-                return e.Message;
-            }
-        }
+        }        
 
         protected string HttpGet(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
         {
@@ -780,17 +676,5 @@ namespace ThirdPartyCore
         /// 回傳後台BetList所需要的注單明細
         /// </summary>
         public abstract TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-    }
-
-    public interface IThirdPartyTpBetRecordDetail
-    {
-        BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-
-        TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-    }
-
-    public interface IThirdPartyTpGetMerchantBalance
-    {
-        ApiResult<MerchantBalanceResponse> GetMerchantBalance(TpMerchantInfo tpMerchantInfo, Dictionary<string, string> inputs);
     }
 }

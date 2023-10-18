@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
@@ -30,16 +31,12 @@ namespace ThirdParty.IM
         private const string ContentType = "application/json";
         private readonly WebProxy? _proxy;
 
-
         public TpHelper(IServiceProvider provider)
         {
-            var env = provider.GetRequiredService<IWebHostEnvironment>();
-            var configuration = provider.GetRequiredService<IConfiguration>();
-            if (env.EnvironmentName == "Development")
+            var tokyoProxyConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ProxyConfig>("TokyoProxy");
+            if (tokyoProxyConfig != null)
             {
-                var proxyHost = configuration.GetValue<string>("configProxyHost");
-                var proxyPort = configuration.GetValue<int>("configProxyPort");
-                _proxy = new WebProxy(proxyHost, proxyPort);
+                _proxy = new WebProxy(tokyoProxyConfig.ProxyHost, tokyoProxyConfig.ProxyPort);
             }
         }
 

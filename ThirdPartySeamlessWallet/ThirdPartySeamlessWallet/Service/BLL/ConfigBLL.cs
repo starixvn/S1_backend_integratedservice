@@ -40,7 +40,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public TItem GetConfigValueByEnvironment<TItem>(string configKey, int siteId = 0)
         {
             var json = GetConfigValue($"{configKey}.{_environment.EnvironmentName}.json", siteId);
-            return JsonConvert.DeserializeObject<TItem>(json);
+            return !string.IsNullOrEmpty(json) ? JsonConvert.DeserializeObject<TItem>(json) : default;
         }
 
         public TItem GetConfigValue<TItem>(string configKey, int siteId = 0)
