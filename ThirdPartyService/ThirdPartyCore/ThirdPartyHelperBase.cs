@@ -602,47 +602,6 @@ namespace ThirdPartyCore
             return Convert.ToBase64String(resultArray, 0, resultArray.Length);
         }
 
-        public string AesDecrypt(string str, string key, bool isDecodeUrl = true)
-        {
-            if (string.IsNullOrEmpty(str)) return null;
-            if (isDecodeUrl)
-                str = System.Web.HttpUtility.UrlDecode(str);
-
-            byte[] toEncryptArray = Convert.FromBase64String(str);
-
-            RijndaelManaged rm = new RijndaelManaged
-            {
-                Key = Encoding.UTF8.GetBytes(key),
-                Mode = CipherMode.ECB,
-                Padding = PaddingMode.PKCS7
-            };
-
-            ICryptoTransform cTransform = rm.CreateDecryptor();
-            byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
-
-            return Encoding.UTF8.GetString(resultArray);
-        }
-
-        public string AesDecryptV2(string str, string secretKey)
-        {
-            byte[] toEncryptArray = Convert.FromBase64String(str);
-            byte[] keyBytes = new byte[16];
-            byte[] secretKeyBytes = Encoding.UTF8.GetBytes(secretKey);
-            Array.Copy(secretKeyBytes, keyBytes, Math.Min(keyBytes.Length, secretKeyBytes.Length));
-            using RijndaelManaged rm = new RijndaelManaged
-            {
-                Mode = CipherMode.CBC,
-                Padding = PaddingMode.PKCS7,
-                KeySize = 128,
-                BlockSize = 128,
-                Key = keyBytes,
-                IV = keyBytes
-            };
-
-            byte[] resultArray = rm.CreateDecryptor().TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
-            return Encoding.UTF8.GetString(resultArray);
-        }
-
         public string SHA1(string dataToSign)
         {
             SHA1 sha1 = new SHA1CryptoServiceProvider();//建立一個SHA1
@@ -663,18 +622,6 @@ namespace ThirdPartyCore
             return Convert.ToBase64String(sign);
         }
 
-        public void Info(string InfoContent, string PrefixName)
-        {
-            var LogFolder = $"{Directory.GetCurrentDirectory()}\\Logs";
-
-            var filePath = $@"{LogFolder}\{PrefixName}_Info_{DateTime.Now.ToString("yyyyMMdd")}.log";
-            Task.Run(() =>
-            {
-                Directory.CreateDirectory(LogFolder);
-                using StreamWriter writer = new StreamWriter(filePath, append: true);
-                writer.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}\r\n  {InfoContent}");
-            });
-        }
         public string ApplyToken<T>(T t)
         {
             if (AuthProvider != null)
