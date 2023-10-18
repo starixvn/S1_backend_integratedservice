@@ -225,16 +225,16 @@ namespace ThirdPartyCore.Model.enums
         Bonus = 4
     }
 
+    public enum RecentlyViewedTypeEnum
+    {
+        LobbyName = 1, // saba sport
+        GameName = 2, // Fishing War
+    }
+
     public enum CustomerMemberTypeEnum
     {
         Normal = 1,
         Affiliate = 2,  //後續整合代理系統會使用
         LiveStreaming = 3
-    }
-
-    public enum RecentlyViewedTypeEnum
-    {
-        LobbyName = 1, // saba sport
-        GameName = 2, // Fishing War
     }
 }

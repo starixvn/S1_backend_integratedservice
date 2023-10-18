@@ -67,7 +67,6 @@ builder.Services
     .AddHostedService<BTIWorker>()
     .AddHostedService<NineWWorker>()
     .AddHostedService<One789Worker>()
-    .AddHostedService<GPIWorker>()
     .AddHostedService<YeebetWorker>()
     .AddHostedService<BGWorker>()
     .AddHostedService<TFGWorker>()
@@ -76,13 +75,17 @@ builder.Services
     .AddHostedService<IMWorker>()
     .AddHostedService<SPRIBEWorker>()
     .AddHostedService<SBSWWorker>()
+    .AddHostedService<PNGWorker>()
     .AddHostedService<DGWorker>()
+    .AddHostedService<FaChaiWorker>()
+    .AddHostedService<PegasusWorker>()
+    .AddHostedService<SexyWorker>()
     .AddHostedService<AGWorker>()
     .AddHostedService<EBetWorker>()
-    .AddHostedService<PNGWorker>()
-    .AddHostedService<SexyWorker>()
     .AddHostedService<WMWorker>()
-    .AddHostedService<FaChaiWorker>()
+    .AddHostedService<N2LiveWorker>()
+    .AddHostedService<PNGWorker>()
+    .AddHostedService<N2LiveSmartWorker>()
     .AddHostedService<EVOWorker>();
 
 var app = builder.Build();

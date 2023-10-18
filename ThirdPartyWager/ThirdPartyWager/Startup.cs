@@ -67,7 +67,6 @@ namespace ThirdPartyWager
             services.AddSingleton<ThirdPartyBLL>();
             services.AddSingleton<CommonBLL>();
 
-
             #region SabaOdds
 
             // DAL
@@ -109,6 +108,8 @@ namespace ThirdPartyWager
             services.AddHostedService<TpRefundWorker>();
 
             #endregion
+                        // health check use
+            services.AddControllers();
 
             services.AddTpList();
         }
@@ -119,6 +120,17 @@ namespace ThirdPartyWager
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            app.UseRouting();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapGet("/health", async context =>
+                {
+                    await context.Response.WriteAsync($"{env.EnvironmentName}-{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}");
+                });
+
+                endpoints.MapControllers();
+            });
         }
     }
 }
