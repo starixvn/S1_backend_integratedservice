@@ -21,41 +21,6 @@ using ThirdPartyCore.Model.TpMerchantBalance.Response;
 namespace ThirdPartyCore
 {
     public delegate void InsertLogEventHandler(string url, string input, string output);
-    public interface IThirdPartyHelper
-    {
-        ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-        ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs);
-        ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-        ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID);
-        ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID);
-        TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-        event InsertLogEventHandler InsertLog;
-        bool isHeathly { set; get; }
-    }
-
-    public interface IThirdPartyParticular
-    {
-        ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-        //ApiResult<TransferResult> BonusTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal bonus, string transID, string thirdPartyTransID);
-    }
-
-    public interface IThirdPartyGetBalanceParticular
-    {
-        /// <summary>
-        /// 取得指定第三方多筆客戶餘額
-        /// </summary>
-        /// <param name="inputs">第三方相關參數</param>
-        /// <param name="tpUserNameString">第三方使用者名稱參數清單</param>
-        /// <param name="tpCurrencyId">第三方幣別</param>
-        /// <returns></returns>
-        ApiResult<List<ReceiveTpUserBalanceModel>> GetBalance(Dictionary<string, string> inputs, string tpUserNameString, string tpCurrencyId);
-    }
-
-    public interface IThirdPartyBetLimitParticular
-    {
-        ApiResult SetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, string betSetting);
-    }
-
     public abstract class ThirdPartyHelperBase : IThirdPartyHelper, IThirdPartyTpBetRecordDetail, IThirdPartyTpGetMerchantBalance
     {
         public static string proxyHost;
@@ -76,11 +41,7 @@ namespace ThirdPartyCore
 
         public static IBetLimitProvider BetLimitProvider { set; get; }
 
-        public static string CommonServiceHost { get; set; }
-
-        public static string LetsTalkGroupName { get; set; }
-
-        public static string SeamlessUrl { get; set; }
+        public static string SeamlessServiceHost { get; set; }
 
         public static string EnvironmentName { set; get; }
 
@@ -106,8 +67,6 @@ namespace ThirdPartyCore
                 return _isHeathly;
             }
         }
-
-        public bool isUnderMaintenance { set; get; }
 
         public DateTime CheckTime { set; get; }
 
@@ -643,47 +602,6 @@ namespace ThirdPartyCore
             return Convert.ToBase64String(resultArray, 0, resultArray.Length);
         }
 
-        public string AesDecrypt(string str, string key, bool isDecodeUrl = true)
-        {
-            if (string.IsNullOrEmpty(str)) return null;
-            if (isDecodeUrl)
-                str = System.Web.HttpUtility.UrlDecode(str);
-
-            byte[] toEncryptArray = Convert.FromBase64String(str);
-
-            RijndaelManaged rm = new RijndaelManaged
-            {
-                Key = Encoding.UTF8.GetBytes(key),
-                Mode = CipherMode.ECB,
-                Padding = PaddingMode.PKCS7
-            };
-
-            ICryptoTransform cTransform = rm.CreateDecryptor();
-            byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
-
-            return Encoding.UTF8.GetString(resultArray);
-        }
-
-        public string AesDecryptV2(string str, string secretKey)
-        {
-            byte[] toEncryptArray = Convert.FromBase64String(str);
-            byte[] keyBytes = new byte[16];
-            byte[] secretKeyBytes = Encoding.UTF8.GetBytes(secretKey);
-            Array.Copy(secretKeyBytes, keyBytes, Math.Min(keyBytes.Length, secretKeyBytes.Length));
-            using RijndaelManaged rm = new RijndaelManaged
-            {
-                Mode = CipherMode.CBC,
-                Padding = PaddingMode.PKCS7,
-                KeySize = 128,
-                BlockSize = 128,
-                Key = keyBytes,
-                IV = keyBytes
-            };
-
-            byte[] resultArray = rm.CreateDecryptor().TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
-            return Encoding.UTF8.GetString(resultArray);
-        }
-
         public string SHA1(string dataToSign)
         {
             SHA1 sha1 = new SHA1CryptoServiceProvider();//建立一個SHA1
@@ -704,18 +622,6 @@ namespace ThirdPartyCore
             return Convert.ToBase64String(sign);
         }
 
-        public void Info(string InfoContent, string PrefixName)
-        {
-            var LogFolder = $"{Directory.GetCurrentDirectory()}\\Logs";
-
-            var filePath = $@"{LogFolder}\{PrefixName}_Info_{DateTime.Now.ToString("yyyyMMdd")}.log";
-            Task.Run(() =>
-            {
-                Directory.CreateDirectory(LogFolder);
-                using StreamWriter writer = new StreamWriter(filePath, append: true);
-                writer.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}\r\n  {InfoContent}");
-            });
-        }
         public string ApplyToken<T>(T t)
         {
             if (AuthProvider != null)
@@ -780,17 +686,5 @@ namespace ThirdPartyCore
         /// 回傳後台BetList所需要的注單明細
         /// </summary>
         public abstract TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-    }
-
-    public interface IThirdPartyTpBetRecordDetail
-    {
-        BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-
-        TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-    }
-
-    public interface IThirdPartyTpGetMerchantBalance
-    {
-        ApiResult<MerchantBalanceResponse> GetMerchantBalance(TpMerchantInfo tpMerchantInfo, Dictionary<string, string> inputs);
     }
 }

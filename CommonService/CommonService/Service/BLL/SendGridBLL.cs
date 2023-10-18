@@ -16,8 +16,7 @@ namespace CommonService.Service.BLL
         public SendGridBLL(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
-            var configBLL = provider.GetRequiredService<ConfigBLL>();
-            _sendGridConfig = configBLL.GetConfigValuesBySiteId<SendGridConfig>("SendGrid");
+            _sendGridConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SendGridConfig>("SendGrid");
         }
 
         public class Result

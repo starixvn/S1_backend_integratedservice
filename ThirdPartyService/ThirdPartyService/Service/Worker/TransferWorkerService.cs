@@ -11,29 +11,29 @@ using ThirdPartyService.Service.DAL;
 
 namespace ThirdPartyService.Service.Worker
 {
-    public class WorkerService : BackgroundService
+    public class TransferWorkerService : BackgroundService
     {
-        private Timer _timer;
+        private Timer _transferTimer;
         private Timer _bonusTimer;
         private Timer _remainingBonusTimer;
-        private readonly ILogger<WorkerService> _logger;
+        private readonly ILogger<TransferWorkerService> _logger;
         private readonly TpTransferInfo _tpTransferInfo;
         private readonly ThirdPartyBLL _thirdPartyBll;
         private readonly Random _random;
 
-        public WorkerService(ILogger<WorkerService> logger, TpTransferInfo tpTransferInfo, ThirdPartyBLL thirdPartyBll)
+        public TransferWorkerService(IServiceProvider provider)
         {
-            _logger = logger;
-            _tpTransferInfo = tpTransferInfo;
-            _thirdPartyBll = thirdPartyBll;
+            _logger = provider.GetRequiredService<ILogger<TransferWorkerService>>();
+            _tpTransferInfo = provider.GetRequiredService<TpTransferInfo>();
+            _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
             _random = new Random();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
-            _bonusTimer = new Timer(DoTaskForBonusTransfer, null, TimeSpan.Zero, TimeSpan.Zero);
-            _remainingBonusTimer = new Timer(DoTaskRemainingBonusAmountTransfer, null, TimeSpan.Zero, TimeSpan.Zero);
+            _transferTimer = new Timer(TpTransferCheck, null, TimeSpan.Zero, TimeSpan.Zero);
+            _bonusTimer = new Timer(BonusTransfer, null, TimeSpan.Zero, TimeSpan.Zero);
+            _remainingBonusTimer = new Timer(RemainingBonusAmountTransfer, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -41,7 +41,7 @@ namespace ThirdPartyService.Service.Worker
         /// TpTransfer check worker
         /// </summary>
         /// <param name="state"></param>
-        private void DoTask(object state)
+        private void TpTransferCheck(object state)
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             try
@@ -71,7 +71,7 @@ namespace ThirdPartyService.Service.Worker
             finally
             {
                 var dueTimeSpan = TimeSpan.FromMinutes(2);
-                _timer.Change(dueTimeSpan, TimeSpan.Zero);
+                _transferTimer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 
@@ -79,7 +79,7 @@ namespace ThirdPartyService.Service.Worker
         /// pending bonus transfer check worker
         /// </summary>
         /// <param name="state"></param>
-        private void DoTaskForBonusTransfer(object state)
+        private void BonusTransfer(object state)
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             try
@@ -125,7 +125,7 @@ namespace ThirdPartyService.Service.Worker
         /// Lose out , Remaining bonus transfer worker
         /// </summary>
         /// <param name="state"></param>
-        private void DoTaskRemainingBonusAmountTransfer(object state)
+        private void RemainingBonusAmountTransfer(object state)
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             try

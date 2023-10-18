@@ -5,7 +5,6 @@ using Newtonsoft.Json.Linq;
 
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
-using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
@@ -161,7 +160,7 @@ namespace ThirdParty.SBSW
         }
 
         public ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {   
+        {
             var config = siteSabaConfigs[tpCustInfo.SiteId];
             var input = new Req
             {
