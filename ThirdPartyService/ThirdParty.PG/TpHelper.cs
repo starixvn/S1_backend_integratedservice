@@ -1,7 +1,10 @@
 ﻿using System.Text;
 using System.Web;
+
 using HtmlAgilityPack;
+
 using Newtonsoft.Json;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -66,13 +69,13 @@ namespace ThirdParty.PG
             var traceId = Guid.NewGuid();
             var betType = "1";
             var uri = "external-game-launcher/api/v1/GetLaunchURLHTML";
-            
+
             var key = ApplyToken(tpCustInfo);
             inputs.TryGetValue("Token", out var token);
             var sessionKeyArr = new[] { key, token };
             var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
             var sessionKey = Convert.ToBase64String(bytes);
-            
+
             var extraArgs = new
             {
                 btt = betType,
@@ -81,7 +84,7 @@ namespace ThirdParty.PG
             };
             var dicExtraArgs = FromJson<Dictionary<string, string>>(ToJson(extraArgs));
             var sParamExtraArgs = string.Join("&", dicExtraArgs.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-            
+
             var getLaunchUrl = new
             {
                 operator_token = operatorToken,
@@ -98,9 +101,9 @@ namespace ThirdParty.PG
                 sParam,
                 "application/x-www-form-urlencoded"
             );
-            
+
             var oApiResult = new ApiResult();
-            
+
             var doc = new HtmlDocument();
             doc.LoadHtml(result);
             var metaTag = doc.DocumentNode.SelectSingleNode("//meta[@http-equiv='refresh']");
@@ -109,7 +112,7 @@ namespace ThirdParty.PG
                 var contentAttribute = metaTag.GetAttributeValue("content", "");
                 var urlStartIndex = contentAttribute.IndexOf("URL=") + 4;
                 var url = contentAttribute.Substring(urlStartIndex);
-                
+
                 oApiResult.ErrorCode = ErrorCode.Success;
                 oApiResult.Message = url;
             }
@@ -117,7 +120,7 @@ namespace ThirdParty.PG
             {
                 oApiResult.ErrorCode = ErrorCode.Fail;
             }
-            
+
             return oApiResult;
         }
 

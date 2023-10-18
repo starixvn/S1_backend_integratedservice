@@ -7,7 +7,6 @@ using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
-using ThirdPartyService.Service.Model;
 
 namespace ThirdPartyService
 {
@@ -62,7 +61,7 @@ namespace ThirdPartyService
             services.AddOptionListByDB<GameCasinoOption>("Member_GameCasinoList_Get_V2");
             services.AddOptionListByDB<TpListOption>("Common_TpList_Get");
             services.AddOptionListByDB<CurrencyOption>("Common_Currency_Get");
-            
+
             //處理SiteConfig
             services.AddOptionListByDB<ServerInfoObject>("ServerInfoList_Get");
             services.AddOptionListByDB<ConfigObject>("SiteConfig_Get", new { ConfigGroup = "TP" });

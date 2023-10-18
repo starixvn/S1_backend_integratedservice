@@ -23,8 +23,6 @@ using ThirdPartyService.Extensions;
 using ThirdPartyService.IntegrationTest.Models;
 
 using ThirdPartyService.IntegrationTest.Stubs;
-
-using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
 
@@ -40,7 +38,7 @@ namespace ThirdParty.TCG.Tests
         private IConfiguration _configuration;
         private IServiceProvider _provider;
 
-  
+
         public TCGTpHelperTests()
         {
             var services = new ServiceCollection();

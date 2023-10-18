@@ -6,17 +6,17 @@ namespace CommonService.Service.BLL
 {
     public class OTPSMSBLL
     {
-        private readonly OTPSMSService _sOtpSmsService;
+        private readonly OTPSMSService _otpSmsService;
 
         public OTPSMSBLL(IServiceProvider provider)
         {
-            _sOtpSmsService = provider.GetRequiredService<OTPSMSService>();
+            _otpSmsService = provider.GetRequiredService<OTPSMSService>();
         }
 
         public ApiResult<SendOTPSMSResult> GetOTPVerifyInfo(int custId)
         {
             var apiResult = new ApiResult<SendOTPSMSResult>();
-            var result = _sOtpSmsService.GetOTPVerifyinfo(custId);
+            var result = _otpSmsService.GetOTPVerifyinfo(custId);
             apiResult.ErrorCode = (ErrorCode)(result.Status == 1 ? 0 : 1000);
             apiResult.Data = result;
 
@@ -32,7 +32,7 @@ namespace CommonService.Service.BLL
         public ApiResult<SendOTPSMSResult> OTPVerifyinfoInsAsync(int custId, string sOTPNum)
         {
             var apiResult = new ApiResult<SendOTPSMSResult>();
-            var result = _sOtpSmsService.OTPVerifyinfoIns(custId, sOTPNum);
+            var result = _otpSmsService.OTPVerifyinfoIns(custId, sOTPNum);
             apiResult.ErrorCode = (ErrorCode)result.Status;
             apiResult.Data = result;
 
@@ -42,14 +42,14 @@ namespace CommonService.Service.BLL
         public ApiResult VerifyOPT(VerifyOTPReq verifyOtpReq)
         {
             var apiResult = new ApiResult();
-            var result = _sOtpSmsService.VerifyOTP(verifyOtpReq);
+            var result = _otpSmsService.VerifyOTP(verifyOtpReq);
             apiResult.ErrorCode = (ErrorCode)result;
             return apiResult;
         }
 
         public int InsertOTPLog(OTPLog oTPLog)
         {
-            return _sOtpSmsService.InsertOTPLog(oTPLog);
+            return _otpSmsService.InsertOTPLog(oTPLog);
         }
     }
 }

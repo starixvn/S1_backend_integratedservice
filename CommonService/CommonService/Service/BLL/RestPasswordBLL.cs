@@ -13,15 +13,14 @@ namespace CommonService.Service.BLL
     public class RestPasswordBLL
     {
         private readonly Dictionary<int, SendGridConfig> _sendGridConfig;
-        private readonly HttpHelper httpHelper;
-        private readonly AuthBLL authBLL;
+        private readonly HttpHelper _httpHelper;
+        private readonly AuthBLL _authBLL;
 
         public RestPasswordBLL(IServiceProvider provider)
         {
-            httpHelper = provider.GetRequiredService<HttpHelper>();
-            authBLL = provider.GetRequiredService<AuthBLL>();
-            var configBLL = provider.GetRequiredService<ConfigBLL>();
-            _sendGridConfig = configBLL.GetConfigValuesBySiteId<SendGridConfig>("SendGrid");
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _authBLL = provider.GetRequiredService<AuthBLL>();
+            _sendGridConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SendGridConfig>("SendGrid");
         }
 
         public async Task<ApiResult> SendMailAsync(CustInfoProfile custInfo, string resetPasswordUrl)
@@ -62,7 +61,7 @@ namespace CommonService.Service.BLL
                 name = custInfo.UserName
             };
             resetPasswordPersonalization.to.Add(to);
-            var key = authBLL.ApplyToken(custInfo);
+            var key = _authBLL.ApplyToken(custInfo);
             var dynamicTemplateData = new DynamicTemplateData();
             resetPasswordUrl ??= config.ResetPasswordUrl;
             dynamicTemplateData.resetpwdurl = $"{resetPasswordUrl}?key={key}";
@@ -72,7 +71,7 @@ namespace CommonService.Service.BLL
                 lang = custInfo.UserLang;
             sendGridResetPasswordBody.template_id = config.ResetPasswordTemplate[lang];
 
-            using var result = await httpHelper.HttpPost1Async(url, headerParams, JsonConvert.SerializeObject(sendGridResetPasswordBody), "application/json");
+            using var result = await _httpHelper.HttpPost1Async(url, headerParams, JsonConvert.SerializeObject(sendGridResetPasswordBody), "application/json");
             if (result.StatusCode == HttpStatusCode.Accepted)
             {
                 apiResult.ErrorCode = 0;
