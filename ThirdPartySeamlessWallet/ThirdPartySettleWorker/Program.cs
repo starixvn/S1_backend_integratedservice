@@ -83,7 +83,9 @@ builder.Services
     .AddHostedService<SexyWorker>()
     .AddHostedService<WMWorker>()
     .AddHostedService<FaChaiWorker>()
-    .AddHostedService<EVOWorker>();
+    .AddHostedService<EVOWorker>()
+    .AddHostedService<N2LiveWorker>()
+    .AddHostedService<N2LiveSmartWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);

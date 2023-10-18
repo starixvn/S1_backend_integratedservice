@@ -3,6 +3,7 @@
 using Newtonsoft.Json;
 
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
@@ -11,6 +12,7 @@ using ThirdPartyCore.Model.TpMerchantBalance.Response;
 
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
+using ThirdPartyService.Service.Model;
 
 namespace ThirdPartyService.Controllers
 {
@@ -30,13 +32,11 @@ namespace ThirdPartyService.Controllers
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _logger = provider.GetRequiredService<ILogger<APIController>>();
 
-            var configuration = provider.GetRequiredService<IConfiguration>();
             ThirdPartyHelperBase.EnvironmentName = _env.EnvironmentName;
             ThirdPartyHelperBase.IsDevelopment = _env.IsDevelopment();
             ThirdPartyHelperBase.ContentRootPath = _env.ContentRootPath;
-            ThirdPartyHelperBase.CommonServiceHost = configuration.GetValue<string>("AiLabServiceHost:CommonServiceHost");
-            ThirdPartyHelperBase.LetsTalkGroupName = configuration.GetValue<string>("LetsTalkConfig:LetsTalkGroupName");
-            ThirdPartyHelperBase.SeamlessUrl = configuration.GetValue<string>("AiLabServiceHost:SeamlessUrl");
+            ThirdPartyHelperBase.SeamlessServiceHost = provider.GetRequiredService<ConfigBLL>()
+                .GetConfigValueByEnvironment<ServiceHostConfig>("ServiceHost").SeamlessService;
             ThirdPartyHelperBase.logger = provider.GetRequiredService<ILogger<IThirdPartyHelper>>();
         }
 

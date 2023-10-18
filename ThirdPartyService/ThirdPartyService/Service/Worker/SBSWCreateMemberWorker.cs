@@ -12,34 +12,21 @@ namespace ThirdPartyService.Service.Worker
 {
     public class SBSWCreateMemberWorker : BackgroundService
     {
-        #region Fields
-
         private readonly IHostEnvironment _environment;
-        private readonly ILogger<GetBalanceWorker> _logger;
+        private readonly ILogger<SBSWCreateMemberWorker> _logger;
         private readonly TpCustInfoBLL _tpCustInfoBll;
         private readonly ThirdPartyBLL _thirdPartyBll;
         private readonly int _tpId = (int)TpEnum.SBSW;
-
         private Timer _timer;
-        private List<int> _failCustIdList = new List<int>();
+        private List<int> _failCustIdList = new();
 
-        #endregion
-
-        #region Constructors
-
-        public SBSWCreateMemberWorker(IHostEnvironment environment,
-            ILogger<GetBalanceWorker> logger,
-            TpCustInfoBLL tpCustInfoBll,
-            ThirdPartyBLL thirdPartyBll)
+        public SBSWCreateMemberWorker(IServiceProvider provider)
         {
-            _environment = environment;
-            _logger = logger;
-
-            _tpCustInfoBll = tpCustInfoBll;
-            _thirdPartyBll = thirdPartyBll;
+            _environment = provider.GetRequiredService<IHostEnvironment>();
+            _logger = provider.GetRequiredService<ILogger<SBSWCreateMemberWorker>>();
+            _tpCustInfoBll = provider.GetRequiredService<TpCustInfoBLL>();
+            _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
         }
-
-        #endregion
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
