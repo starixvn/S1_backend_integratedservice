@@ -12,9 +12,9 @@ namespace CommonService.Service.BLL
         {
             return GetResourceValue(key, "CommonService_lan", langId);
         }
+
         private string GetResourceValue(string key, string categoryId, string langId)
         {
-            //
             var labelString = string.Empty;
             var sKey = $"{Assembly.GetExecutingAssembly().GetName().Name}.App_GlobalResources.{categoryId}_{langId}";
             if (!rm.ContainsKey(sKey))
@@ -26,7 +26,7 @@ namespace CommonService.Service.BLL
             {
                 labelString = rm[sKey].GetString(key);
             }
-            catch (MissingManifestResourceException mme)
+            catch (MissingManifestResourceException)
             {
 
             }

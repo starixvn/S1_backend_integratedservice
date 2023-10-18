@@ -13,15 +13,14 @@ namespace CommonService.Service.BLL
     public class IovationBLL
     {
         private readonly IovationServicesConfig _iovationServicesConfig;
-        private readonly IovationService iovationService;
-        private readonly HttpHelper httpHelper;
+        private readonly IovationService _iovationService;
+        private readonly HttpHelper _httpHelper;
 
         public IovationBLL(IServiceProvider provider)
         {
-            httpHelper = provider.GetRequiredService<HttpHelper>();
-            iovationService = provider.GetRequiredService<IovationService>();
-            var configBLL = provider.GetRequiredService<ConfigBLL>();
-            _iovationServicesConfig = configBLL.GetConfigValue<IovationServicesConfig>("Iovation");
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _iovationService = provider.GetRequiredService<IovationService>();
+            _iovationServicesConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<IovationServicesConfig>("Iovation");
         }
 
         public async Task<ApiResult<IovationCheckResult>> IovationChecksAsync(IovationChecksRequest iovationChecksRequest)
@@ -48,9 +47,9 @@ namespace CommonService.Service.BLL
             };
 
             var parameters = JsonConvert.SerializeObject(sendIovationChecks);
-            using var result = await httpHelper.HttpPost1Async(_iovationServicesConfig.ResourceURL, Authorization, parameters, "application/json");
+            using var result = await _httpHelper.HttpPost1Async(_iovationServicesConfig.ResourceURL, Authorization, parameters, "application/json");
             var resultResp = JsonConvert.DeserializeObject<IovationResult>(await result.Content.ReadAsStringAsync());
-            var resultIns = iovationService.IovationResultIns(resultResp);
+            var resultIns = _iovationService.IovationResultIns(resultResp);
 
             if (result.StatusCode == HttpStatusCode.OK && resultIns > 0)
             {
