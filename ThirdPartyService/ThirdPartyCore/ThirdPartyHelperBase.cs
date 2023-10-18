@@ -10,6 +10,8 @@ using Microsoft.Extensions.Logging;
 
 using Newtonsoft.Json;
 
+using Serilog.Context;
+
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
@@ -273,6 +275,67 @@ namespace ThirdPartyCore
             {
                 logger.LogError(e, e.Message);
                 InsertLog?.Invoke(url, parametersLog, e.Message);
+                return e.Message;
+            }
+        }
+
+        protected string HttpPostWithX509(string url, Dictionary<string, string> parameters, string contentType, Dictionary<string, string> headers = null, X509Certificate2 certificate = null)
+        {
+            LogContext.PushProperty("url", url);
+            LogContext.PushProperty("contentType", contentType);
+            logger.LogInformation($"headers: {JsonConvert.SerializeObject(headers)} " +
+                $"| parameters: {JsonConvert.SerializeObject(parameters)}" +
+                $"| certificate: {certificate.SubjectName} ");
+
+            using var handler = new HttpClientHandler();
+            //if (!string.IsNullOrEmpty(proxyHost))
+            //{
+            //    handler.UseProxy = true;
+            //    handler.Proxy = new WebProxy(proxyHost, proxyPort);
+            //}
+            if (certificate != null)
+            {
+                handler.ClientCertificates.Add(certificate);
+            }
+
+            //ignore Certificate
+            handler.ServerCertificateCustomValidationCallback = delegate { return true; };
+
+            using var client = new HttpClient(handler);
+            try
+            {
+                if (headers != null)
+                {
+                    foreach (var item in headers)
+                    {
+                        client.DefaultRequestHeaders.Add(item.Key, item.Value ?? string.Empty);
+                    }
+                }
+                var formData = new FormUrlEncodedContent(parameters);
+                var response = client.PostAsync(url, formData).Result;
+                var sb = response.Content.ReadAsStringAsync().Result;
+                logger.LogInformation($"response: {sb}");
+                return sb;
+            }
+            catch (AggregateException ae)
+            {
+                foreach (var ex in ae.InnerExceptions)
+                {
+                    logger.LogError(ex, ex.Message);
+                }
+                return ae.Message;
+            }
+            catch (HttpRequestException ex)
+            {
+                if (ex.InnerException != null)
+                {
+                    logger.LogError(ex, ex.InnerException.Message);
+                }
+                return ex.Message;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, e.Message);
                 return e.Message;
             }
         }
@@ -573,7 +636,7 @@ namespace ThirdPartyCore
                 KeySize = 128,
                 BlockSize = 128,
                 Key = keyBytes,
-                IV = keyBytes
+                IV = keyBytesf
             };
 
             byte[] resultArray = rm.CreateDecryptor().TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
