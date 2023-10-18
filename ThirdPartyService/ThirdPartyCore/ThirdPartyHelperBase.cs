@@ -636,7 +636,7 @@ namespace ThirdPartyCore
                 KeySize = 128,
                 BlockSize = 128,
                 Key = keyBytes,
-                IV = keyBytesf
+                IV = keyBytes
             };
 
             byte[] resultArray = rm.CreateDecryptor().TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
