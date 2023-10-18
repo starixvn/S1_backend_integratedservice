@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
+
 using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;

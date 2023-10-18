@@ -56,6 +56,7 @@
         PlayTech = 51,
         IM = 52,
         SPRIBE = 53,
+        FaChai = 55,
         Pegasus = 56
     }
 
@@ -96,7 +97,8 @@
         TFG_Esports = 97,
         Nextspin_RNG = 99,
         IM_ESports = 102,
-        IM_Sports = 103
+        IM_Sports = 103,
+        FaChai_RNG = 106
     }
 
     public enum SettlementType

@@ -44,6 +44,7 @@
         SimplePlay = 44,
         Nextspin = 50,
         PNG = 54,
+        FaChai = 55,
         Pegasus = 56
     }
 
@@ -131,5 +132,6 @@
         IM_ESports = 102,
         IM_Sports = 103,
         SPRIBE_RNG = 104,
+        FaChai_RNG = 106
     }
 }

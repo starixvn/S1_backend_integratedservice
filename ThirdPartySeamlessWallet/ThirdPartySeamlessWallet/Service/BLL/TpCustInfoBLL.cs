@@ -143,5 +143,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 return tpCountryCode;
             }
         }
+
+        public int UpdateOnline(int custId, bool isOnline, string token, string ip)
+        {
+            return tpCustInfoService.UpdateOnline(custId, isOnline, token, ip);
+        }
     }
 }

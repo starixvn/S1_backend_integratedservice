@@ -54,6 +54,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.PlayTech, AddPlayTech},
                 { Tp.IM, AddIM},
                 { Tp.SPRIBE, AddSPRIBE},
+                { Tp.FaChai, AddFaChai},
                 { Tp.Pegasus, AddPegasus}
             };
         }
@@ -602,6 +603,21 @@ namespace ThirdPartyWager.Extensions
 
             return services;
         }
+
+        private IServiceCollection AddFaChai(IServiceCollection services)
+        {
+            services.AddSingleton<WagerFaChaiService>();
+
+            services.AddSingleton<ApiFaChaiBLL>();
+            services.AddSingleton<FinanceFaChaiBLL>();
+            services.AddSingleton<WagerFaChaiBLL>();
+
+            services.AddHostedService<WagerFaChai>();
+            services.AddHostedService<WagerRedoFaChai>();
+            services.AddHostedService<FinanceFaChai>();
+
+            return services;
+        }
         
         private IServiceCollection AddPegasus(IServiceCollection services)
         {
@@ -613,6 +629,8 @@ namespace ThirdPartyWager.Extensions
 
             services.AddHostedService<WagerPegasus>();
             services.AddHostedService<FinancePegasus>();
+
+
             return services;
         }
     }

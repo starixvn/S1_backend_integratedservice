@@ -81,8 +81,10 @@ builder.Services
     .AddHostedService<EBetWorker>()
     .AddHostedService<PNGWorker>()
     .AddHostedService<SexyWorker>()
-    .AddHostedService<PegasusWorker>()
-    .AddHostedService<WMWorker>();
+    .AddHostedService<WMWorker>()
+    .AddHostedService<FaChaiWorker>()
+    .AddHostedService<EVOWorker>()
+    .AddHostedService<PegasusWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);

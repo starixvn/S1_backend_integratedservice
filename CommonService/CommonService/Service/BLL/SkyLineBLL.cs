@@ -12,7 +12,7 @@ namespace CommonService.Service.BLL
     public class SkyLineBLL
     {
         private readonly HttpHelper _httpHelper;
-        private readonly Dictionary<string, SkyLineSMSServiceTypeConfig> _config;
+        private readonly Dictionary<int, SkyLineSMSServiceTypeConfig> _config;
         private readonly Tools _tools;
         private readonly SelLangBLL _selLangBll;
         private readonly ILogger<OTPSMSService> _logger;
@@ -25,7 +25,7 @@ namespace CommonService.Service.BLL
             _tools = provider.GetRequiredService<Tools>();
             _selLangBll = provider.GetRequiredService<SelLangBLL>();
             _logger = provider.GetRequiredService<ILogger<OTPSMSService>>();
-            _config = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<SkyLineSMSServiceTypeConfig>("SkyLineSMS");
+            _config = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SkyLineSMSServiceTypeConfig>("SkyLineSMS");
             _siteLanguageBLL = provider.GetRequiredService<SiteLanguageBLL>();
             _oTPSMSBLL = provider.GetRequiredService<OTPSMSBLL>();
         }
@@ -34,7 +34,7 @@ namespace CommonService.Service.BLL
         {
             var apiResult = new ApiResult();
             var dateTime = new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyyMMddHHmmss");
-            var Config = _config[custInfo.SiteName].SMS;
+            var Config = _config[custInfo.SiteId].SMS;
             var sign = MakeSignString(Config.Account, Config.Password, dateTime);
             var url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
 
@@ -116,7 +116,7 @@ namespace CommonService.Service.BLL
             var apiResult = new ApiResult();
             var areaCode = custInfo.AreaCode;
             var dateTime = new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyyMMddHHmmss");
-            var Config = _config[custInfo.SiteName].OTP;
+            var Config = _config[custInfo.SiteId].OTP;
             var sign = MakeSignString(Config.Account, Config.Password, dateTime);
             var url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
 

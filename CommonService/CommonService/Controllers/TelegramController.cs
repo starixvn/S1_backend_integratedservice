@@ -14,13 +14,13 @@ namespace CommonService.Controllers
     {
         private readonly HttpHelper _httpHelper;
         private readonly ILogger<TelegramController> _logger;
-        private readonly Dictionary<string, TelegramConfig> _telegramConfig;
+        private readonly TelegramConfig _telegramConfig;
 
         public TelegramController(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             var configBLL = provider.GetRequiredService<ConfigBLL>();
-            _telegramConfig = configBLL.GetConfigValuesBySiteName<TelegramConfig>("Telegram");
+            _telegramConfig = configBLL.GetConfigValue<TelegramConfig>("Telegram");
             _logger = provider.GetService<ILogger<TelegramController>>();
         }
 
@@ -36,11 +36,10 @@ namespace CommonService.Controllers
             try
             {
 
-                var notificationGroup = _telegramConfig.Values.FirstOrDefault()
-                    ?.TelegramNotification
+                var notificationGroup = _telegramConfig.TelegramNotification
                     .FirstOrDefault(n => n.GroupName == req.GroupName) ?? throw new Exception("GroupName");
 
-                var url = $"{_telegramConfig.Values.FirstOrDefault()?.TelegramCommon.Url}/bot{notificationGroup.Token}/sendMessage";
+                var url = $"{_telegramConfig.TelegramCommon.Url}/bot{notificationGroup.Token}/sendMessage";
 
                 var param = new
                 {
@@ -63,11 +62,10 @@ namespace CommonService.Controllers
         {
             try
             {
-                var notificationGroup = _telegramConfig.Values.FirstOrDefault()
-                    ?.TelegramNotification
+                var notificationGroup = _telegramConfig.TelegramNotification
                     .FirstOrDefault(n => n.GroupName == req.GroupName) ?? throw new Exception("GroupName");
 
-                var url = $"{_telegramConfig.Values.FirstOrDefault()?.TelegramCommon.Url}/bot{notificationGroup.Token}/getUpdates";
+                var url = $"{_telegramConfig.TelegramCommon.Url}/bot{notificationGroup.Token}/getUpdates";
 
                 return await HttpPostAsync(url, "");
             }
