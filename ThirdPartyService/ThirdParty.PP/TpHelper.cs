@@ -1,5 +1,7 @@
 ﻿using System.Text.RegularExpressions;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Newtonsoft.Json;
 
 using ThirdPartyCore;
@@ -13,7 +15,7 @@ namespace ThirdParty.PP
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        
+
 
         public class UserReq
         {
@@ -66,7 +68,7 @@ namespace ThirdParty.PP
 
             //"userId":"421", "currency":"USD", "cash": 99999.99, "bonus": 99.99, "error":0, "description":"Success"
         }
-        
+
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
         private readonly Dictionary<int, string> _siteSuffixList;
 

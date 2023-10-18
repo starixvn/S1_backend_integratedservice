@@ -3,7 +3,6 @@ using ThirdPartyCore.Model.enums;
 
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
-using ThirdPartyService.Service.Model;
 
 namespace ThirdPartyService.Extensions
 {

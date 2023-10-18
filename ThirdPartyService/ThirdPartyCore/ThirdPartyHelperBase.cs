@@ -275,7 +275,7 @@ namespace ThirdPartyCore
                 InsertLog?.Invoke(url, parametersLog, e.Message);
                 return e.Message;
             }
-        }        
+        }
 
         protected string HttpGet(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
         {
