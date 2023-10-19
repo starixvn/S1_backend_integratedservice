@@ -190,6 +190,11 @@ namespace ThirdPartySettleWorker.Workers
                         try
                         {
                             var rewardData = _settledBll.GetUnsettledReward_EVO(unsettled.TransId);
+                            if (rewardData == null)
+                            {
+                                continue;
+                            }
+                            
                             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache(rewardData.TpId, rewardData.userId);
                           
                             var betRecordInfo = new BetRecordInfo
