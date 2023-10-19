@@ -8,6 +8,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
     {
         private readonly Dictionary<string, string> _defaultSiteConfig;
         private readonly Dictionary<int, SiteConfig> _siteIdConfigs;
+        private readonly IWebHostEnvironment _environment;
 
         public ConfigBLL(IServiceProvider provider)
         {
@@ -16,8 +17,31 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             //TPSW不排除0，第三方送過來無法辨識site的時候，需要從site=0拿config            
             _siteIdConfigs = siteConfigList.ToDictionary(i => i.SiteId, i => i);
+            _environment = provider.GetRequiredService<IWebHostEnvironment>();
         }
 
+        public string GetConfigValue(string configKey, int siteId = 0)
+        {
+            var defaultResult = _defaultSiteConfig.TryGetValue(configKey, out var result) ? result : string.Empty;
+
+            if (siteId == 0)
+            {
+                return defaultResult;
+            }
+
+            if (_siteIdConfigs.TryGetValue(siteId, out var siteConfig))
+            {
+                return siteConfig.Config.TryGetValue(configKey, out var configValue) ? configValue : defaultResult;
+            }
+
+            return defaultResult;
+        }
+
+        public TItem GetConfigValueByEnvironment<TItem>(string configKey, int siteId = 0)
+        {
+            var json = GetConfigValue($"{configKey}.{_environment.EnvironmentName}.json", siteId);
+            return !string.IsNullOrEmpty(json) ? JsonConvert.DeserializeObject<TItem>(json) : default;
+        }
 
         public TItem GetConfigValue<TItem>(string configKey, int siteId = 0)
         {
@@ -50,6 +74,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     ? JsonConvert.DeserializeObject<TItem>(configValue) : defaultItem;
                 result.Add(siteConfig.Key, data);
             }
+
             return result;
         }
     }

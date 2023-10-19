@@ -361,7 +361,7 @@ namespace ThirdParty.AG
 
             var parameters = JsonConvert.SerializeObject(postData);
             var result = HttpPost(
-                $"{SeamlessUrl}/AG/getBalance",
+                $"{SeamlessServiceHost}AG/getBalance",
                 parameters,
                 "application/json"
             );

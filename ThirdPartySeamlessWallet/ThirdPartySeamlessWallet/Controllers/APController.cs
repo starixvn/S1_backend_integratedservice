@@ -1081,12 +1081,20 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var getReq = JsonConvert.DeserializeObject<PayoutData_AdvantPlayMini>(Decrypt);
 
                 var betting = bettingBLL.GetAdvantPlayMiniBet(getReq.TransId, getReq.SettlementTime, "crash", out _);
-                if (betting == null || !betting.Any(x => x.TicketType == (int)BettransType.Bet))
+                var betTrans = betting.Where(x => x.TicketType == (int)BettransType.Bet);
+                if (!betTrans.Any())
                 {
                     log2File.Error($"PlaceBet data not found", logName);
                     return errResponse;
                 }
-
+                
+                if (betTrans.Sum(x => x.Amount) != getReq.StakeAmount)
+                {
+                    errResponse.errorMessage = "Wrong stake amount";
+                    log2File.Error($"Wrong stake amount , StakeAmount:{getReq.StakeAmount}", logName);
+                    return errResponse;
+                }
+                
                 //var split = splitTransactionReferenceId(getReq.TransactionReferenceId);
                 getReq.GameId = betting.First().GameId;
                 getReq.MiniGameCode = betting.First().MiniGameCode;
@@ -1235,8 +1243,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var error = false;
                 if (getReq.WinResults.Any() && getReq.WinResults.Count() > 0)
                 {
+                    var placebetAmount = bettrans.Where(x => x.TicketType == (int)BettransType.Bet).Sum(x => x.Amount);
                     foreach (var winItem in getReq.WinResults)
                     {
+                        //AP Mini cardracing win 偶爾會有匯率問題，多檢查下注金額是否一致。
+                        if (placebetAmount != winItem.BuyAmount)
+                        {
+                            log2File.Error($"PayoutBet={winItem.BuyAmount} amount not equal PlaceBet={placebetAmount}.", logName);
+                            return errResponse;
+                        }
                         var singleBettrans = new PayoutData_AdvantPlayMini();
                         var singleWinResults = new List<WinResults_AdvantPlayMini>
                         {

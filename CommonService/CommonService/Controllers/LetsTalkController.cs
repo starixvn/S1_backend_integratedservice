@@ -22,8 +22,7 @@ namespace CommonService.Controllers
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _logger = provider.GetService<ILogger<LetsTalkController>>();
-            var configBLL = provider.GetRequiredService<ConfigBLL>();
-            _letsTalkConfig = configBLL.GetConfigValue<LetsTalkConfig>("LetsTalk");
+            _letsTalkConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<LetsTalkConfig>("LetsTalk");
         }
 
         public class LetsTalkMsgParam

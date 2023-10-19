@@ -9,13 +9,12 @@ namespace CommonService.Service.BLL
     public class FPSBLL
     {
         private readonly Dictionary<int, FPSServicesConfig> _fpsServicesConfig;
-        private readonly HttpHelper httpHelper;
+        private readonly HttpHelper _httpHelper;
 
         public FPSBLL(IServiceProvider provider)
         {
-            httpHelper = provider.GetRequiredService<HttpHelper>();
-            var configBLL = provider.GetRequiredService<ConfigBLL>();
-            _fpsServicesConfig = configBLL.GetConfigValuesBySiteId<FPSServicesConfig>("FPS");
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _fpsServicesConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<FPSServicesConfig>("FPS");
         }
 
         public async Task<ApiResult> FPSChecksAsync(CustInfoProfile custInfo, FPSChecksRequest fpsChecksRequest)
@@ -42,7 +41,7 @@ namespace CommonService.Service.BLL
 
             };
 
-            using var result = await httpHelper.HttpFromPostAsync(url, null, sendIovationChecks, "application/x-www-form-urlencoded");
+            using var result = await _httpHelper.HttpFromPostAsync(url, null, sendIovationChecks, "application/x-www-form-urlencoded");
             //var resultResp = JsonConvert.DeserializeObject<FPSResult>(result.Content.ReadAsStringAsync().Result);
 
             if (result.StatusCode == HttpStatusCode.OK)

@@ -19,8 +19,7 @@ namespace CommonService.Controllers
         public TelegramController(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
-            var configBLL = provider.GetRequiredService<ConfigBLL>();
-            _telegramConfig = configBLL.GetConfigValue<TelegramConfig>("Telegram");
+            _telegramConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<TelegramConfig>("Telegram");
             _logger = provider.GetService<ILogger<TelegramController>>();
         }
 

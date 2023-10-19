@@ -13,14 +13,13 @@ namespace CommonService.Service.BLL
         private readonly Tools _tools;
         private readonly AuthBLL _authBLL;
 
-        public OTPEmailBLL(SendGridBLL sendGridBll, OTPSMSService otpService, Tools tools, CustInfoService custInfoService, AuthBLL authBll)
+        public OTPEmailBLL(IServiceProvider provider)
         {
-
-            _sendGridBll = sendGridBll;
-            _otpService = otpService;
-            _tools = tools;
-            _custInfoService = custInfoService;
-            _authBLL = authBll;
+            _sendGridBll = provider.GetRequiredService<SendGridBLL>();
+            _otpService = provider.GetRequiredService<OTPSMSService>();
+            _tools = provider.GetRequiredService<Tools>();
+            _custInfoService = provider.GetRequiredService<CustInfoService>();
+            _authBLL = provider.GetRequiredService<AuthBLL>();
         }
 
         public async Task<ApiResult<SendOTPEmailResult>> SendOtpEmailAsync(int custId, string url)

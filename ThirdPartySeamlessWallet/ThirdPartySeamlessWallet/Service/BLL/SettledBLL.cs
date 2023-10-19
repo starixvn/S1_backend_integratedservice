@@ -1769,6 +1769,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlag_TpWagerLC_N2Live(TransId);
         }
 
+        public int SetSettleFlag_BettransSmartLC_N2Live(string TransId, int SettleFlag)
+        {
+            return settledService.SetSettleFlag_BettransSmartLC_N2Live(TransId,SettleFlag);
+        }
+
         public int SetSettleFlag_TpSmartWagerLC_N2Live(string TransId)
         {
             return settledService.SetSettleFlag_TpSmartWagerLC_N2Live(TransId);

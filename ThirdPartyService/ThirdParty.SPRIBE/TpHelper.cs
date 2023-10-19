@@ -1,10 +1,9 @@
 ﻿using System.Net;
 
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
@@ -54,15 +53,11 @@ namespace ThirdParty.SPRIBE
 
         public TpHelper(IServiceProvider provider)
         {
-            var env = provider.GetRequiredService<IWebHostEnvironment>();
-            var configuration = provider.GetRequiredService<IConfiguration>();
-            //For Leobet prod:因為Leobet prod IP在新加坡，故做調整為所有環境都IM都走proxy
-            //if (env.EnvironmentName == "Development")
-            //{
-            var proxyHost = configuration.GetValue<string>("configProxyHost");
-            var proxyPort = configuration.GetValue<int>("configProxyPort");
-            _proxy = new WebProxy(proxyHost, proxyPort);
-            //}
+            var tokyoProxyConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ProxyConfig>("TokyoProxy");
+            if (tokyoProxyConfig != null)
+            {
+                _proxy = new WebProxy(tokyoProxyConfig.ProxyHost, tokyoProxyConfig.ProxyPort);
+            }
         }
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)

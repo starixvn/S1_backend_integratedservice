@@ -10,22 +10,24 @@ namespace CommonService.Controllers
     [ApiController]
     public class FPSController : ControllerBase
     {
-        private readonly CustInfoBLL custInfoBLL;
-        private readonly FPSBLL fpsBLL;
-        public FPSController(FPSBLL fpsBLL, CustInfoBLL custInfoBLL)
+        private readonly CustInfoBLL _custInfoBLL;
+        private readonly FPSBLL _fpsBLL;
+
+        public FPSController(IServiceProvider provider)
         {
-            this.fpsBLL = fpsBLL;
-            this.custInfoBLL = custInfoBLL;
+            _fpsBLL = provider.GetRequiredService<FPSBLL>();
+            _custInfoBLL = provider.GetRequiredService<CustInfoBLL>();
         }
+
         [HttpPost]
         public async Task<ApiResult> FPSChecksAsync(FPSChecksRequest fpsChecksRequest)
         {
             var apiResult = new ApiResult();
-            var custInfo = custInfoBLL.GetCustInfoProfile(fpsChecksRequest.account);
+            var custInfo = _custInfoBLL.GetCustInfoProfile(fpsChecksRequest.account);
 
             if (custInfo != null && !string.IsNullOrEmpty(custInfo.TpUserName))
             {
-                var resultResp = await fpsBLL.FPSChecksAsync(custInfo, fpsChecksRequest);
+                var resultResp = await _fpsBLL.FPSChecksAsync(custInfo, fpsChecksRequest);
                 apiResult.ErrorCode = resultResp.ErrorCode;
                 apiResult.Message = resultResp.Message;
             }

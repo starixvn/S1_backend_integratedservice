@@ -11,13 +11,12 @@ namespace CommonService.Service.BLL
     public class LiveStreamingBLL
     {
         private readonly Dictionary<string, LiveStreamingConfig> _liveStreamingConfig;
-        private readonly HttpHelper httpHelper;
+        private readonly HttpHelper _httpHelper;
 
         public LiveStreamingBLL(IServiceProvider provider)
         {
-            httpHelper = provider.GetRequiredService<HttpHelper>();
-            var configBLL = provider.GetRequiredService<ConfigBLL>();
-            _liveStreamingConfig = configBLL.GetConfigValuesBySiteName<LiveStreamingConfig>("LiveStreaming");
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _liveStreamingConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<LiveStreamingConfig>("LiveStreaming");
         }
 
         public async Task<ApiResult> GetLiveStreamingLink(LiveStreamingLinkReq liveStreamingLinkReq)
@@ -36,7 +35,7 @@ namespace CommonService.Service.BLL
 
             };
 
-            using var result = await httpHelper.HttpGetAsync(url, null, liveStreaming, null);
+            using var result = await _httpHelper.HttpGetAsync(url, null, liveStreaming, null);
             var resultResp = JsonConvert.DeserializeObject<LiveStreamingLinkResult>(result.Content.ReadAsStringAsync().Result); ;
 
             if (result.StatusCode == HttpStatusCode.OK && resultResp.Status == "OK")
