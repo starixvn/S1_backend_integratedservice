@@ -76,7 +76,7 @@ namespace ThirdPartyWager.Extensions
             foreach (var tpFunc in tpFuncDictionary)
             {
                 var thirdPartyModel = tpHelper.GetThirdPartySetting((int)tpFunc.Key);
-                if (thirdPartyModel.Status == 1)
+                if (thirdPartyModel != null && thirdPartyModel.Status == 1)
                 {
                     tpFunc.Value.Invoke(services);
                 }
