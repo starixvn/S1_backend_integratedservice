@@ -237,4 +237,11 @@ namespace ThirdPartyCore.Model.enums
         Affiliate = 2,  //後續整合代理系統會使用
         LiveStreaming = 3
     }
+
+	public enum LoginGameTypeEnum
+    {
+        // from memberSite action
+        EntPage = 1, 
+        GotoGame = 2
+    }
 }
