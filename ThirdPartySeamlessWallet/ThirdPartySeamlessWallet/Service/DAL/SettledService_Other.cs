@@ -1111,7 +1111,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (result > 0 && data.amount != 0)
                 {
                     // 先取回下注的ref_no
-                    var bet_ref_no = _mainDbClient.QueryFirst<string>("Service_BettransLottery_TCG_ReferenceNo_Get", new { TpUserName = data.username, data.order_no });
+                    var bet_ref_no = _mainDbClient.QueryFirst<string>("Service_BettransLottery_TCG_ReferenceNo_Get", new { TpUserName = data.username, OrderNum = data.order_no });
                     result = PayoutV2(
                         tpCustInfo: tpCustInfo,
                         amount: data.amount,
@@ -1191,7 +1191,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (result > 0 && data.amount != 0)
                 {
                     // 先取回下注的ref_no
-                    var bet_ref_no = _mainDbClient.QueryFirst<string>("Service_BettransLottery_TCG_ReferenceNo_Get", new { TpUserName = data.username, data.order_no });
+                    var bet_ref_no = _mainDbClient.QueryFirst<string>("Service_BettransLottery_TCG_ReferenceNo_Get", new { TpUserName = data.username, OrderNum = data.order_no });
                     result = PayoutV2(
                         tpCustInfo: tpCustInfo,
                         amount: data.amount,
