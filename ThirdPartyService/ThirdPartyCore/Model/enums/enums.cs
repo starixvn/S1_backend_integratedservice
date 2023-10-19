@@ -237,4 +237,11 @@ namespace ThirdPartyCore.Model.enums
         LobbyName = 1, // saba sport
         GameName = 2, // Fishing War
     }
+    
+    public enum LoginGameTypeEnum
+    {
+        // from memberSite action
+        EntPage = 1, 
+        GotoGame = 2
+    }
 }
