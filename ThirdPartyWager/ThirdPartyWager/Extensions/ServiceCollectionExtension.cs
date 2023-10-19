@@ -1,7 +1,9 @@
-﻿using ThirdPartyWager.Service.DAL;
+﻿using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Workers;
 
 namespace ThirdPartyWager.Extensions
 {
@@ -76,12 +78,43 @@ namespace ThirdPartyWager.Extensions
             foreach (var tpFunc in tpFuncDictionary)
             {
                 var thirdPartyModel = tpHelper.GetThirdPartySetting((int)tpFunc.Key);
-                if (thirdPartyModel.Status == 1)
+                if (thirdPartyModel != null && thirdPartyModel.Status == 1)
                 {
                     tpFunc.Value.Invoke(services);
                 }
             }
 
+            return services;
+        }
+
+        public static IServiceCollection AddSabaOdds(this IServiceCollection services)
+        {
+            services.AddSingleton<SabaOddsService>();
+            services.AddSingleton<SabaOddsBLL>();
+            services.AddHostedService<SabaOdds>();
+            return services;
+        }
+
+        public static IServiceCollection AddLiveStreaming(this IServiceCollection services)
+        {
+            services.AddSingleton<LiveStreamingService>();
+            services.AddSingleton<LiveStreamingBLL>();
+            services.AddHostedService<LiveStreaming>();
+            return services;
+        }
+
+        public static IServiceCollection AddLatestHighlightVideo(this IServiceCollection services)
+        {
+            services.AddSingleton<LatestHighlightVideoService>();
+            services.AddSingleton<LatestHighlightVideoBLL>();
+            services.AddHostedService<LatestHighlightVideo>();
+            return services;
+        }
+
+        public static IServiceCollection AddTpRefundWorker(this IServiceCollection services)
+        {
+            services.AddSingleton<TpRefundBLL>();
+            services.AddHostedService<TpRefundWorker>();
             return services;
         }
     }

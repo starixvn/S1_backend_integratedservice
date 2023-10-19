@@ -16,6 +16,7 @@ public class ApiIMBLL
     private readonly Log2File _log2File;
     private readonly IWebHostEnvironment _env;
     private readonly IConfiguration _configuration;
+    private readonly ProxyConfig? _tokyoProxy;
     public ApiIMBLL(IServiceProvider provider)
     {
         _httpHelper = provider.GetRequiredService<HttpHelper>();
@@ -23,6 +24,7 @@ public class ApiIMBLL
         _log2File = provider.GetRequiredService<Log2File>();
         _env = provider.GetRequiredService<IWebHostEnvironment>();
         _configuration = provider.GetRequiredService<IConfiguration>();
+        _tokyoProxy = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ProxyConfig>("TokyoProxy");
     }
 
     public async Task<IMWagerModel<T>> GetBetListByTime<T>(GetBetListByTimeParam param, Tp tp)
@@ -115,11 +117,11 @@ public class ApiIMBLL
         string proxyHost;
         int proxyPort;
 
-        if (_env.EnvironmentName == "Development")
+        if (_tokyoProxy != null)
         {
             handler.UseProxy = true;
-            proxyHost = _configuration.GetValue<string>("configProxyHost");
-            proxyPort = _configuration.GetValue<int>("configProxyPort");
+            proxyHost = _tokyoProxy.ProxyHost;
+            proxyPort = _tokyoProxy.ProxyPort;
             handler.Proxy = new WebProxy(proxyHost, proxyPort);
 
             _logger.LogInformation($"use proxy, host:{proxyHost}, port:{proxyPort}");
