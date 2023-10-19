@@ -6,7 +6,6 @@ using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
-using ThirdPartyWager.Workers;
 
 namespace ThirdPartyWager
 {
@@ -57,7 +56,7 @@ namespace ThirdPartyWager
             // 先連線DB減少Worker連線錯誤
             services.AddOptionListByDB<dynamic>("Service_TpWagerTimer_Get", new { TpId = 1, Type = 1 }, DataBase.Wager);
             services.AddOptionListByDB<dynamic>("Tp_Get", new { TpId = 1 }, DataBase.Main);
-           
+
             services.AddOptionListByDB<CurrencyOption>("Common_Currency_Get");
 
             //處理SiteConfig
