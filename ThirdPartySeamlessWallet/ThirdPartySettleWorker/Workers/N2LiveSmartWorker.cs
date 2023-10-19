@@ -112,7 +112,7 @@ public class N2LiveSmartWorker : BackgroundService, ISettleWorker
                 catch (Exception ex)
                 {
                     isError = true;
-                    _logger.LogError(ex, $"N2LiveSmartDoSettleLiveCasinoWork:{ex.Message}" , logName);
+                    _logger.LogError(ex, $"{logName}:{ex.Message}");
                 }
             }
         }

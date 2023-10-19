@@ -123,7 +123,7 @@ namespace ThirdPartySettleWorker.Workers
                     catch (Exception ex1)
                     {
                         isError = true;
-                        _logger.LogError(ex1, $"exMessage:{ex1.Message}", logName);
+                        _logger.LogError(ex1, $"{logName}:{ex1.Message}", );
                     }
 
                 }
