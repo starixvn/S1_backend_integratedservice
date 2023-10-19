@@ -27,7 +27,7 @@ namespace ThirdPartyWager.Service.BLL
             _log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<ApiAllBetBLL>>();
             _configuration = provider.GetRequiredService<IConfiguration>();
-            _seamlessUrl = _configuration.GetValue<string>("TpSWserviceUrl");
+            _seamlessUrl = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ServiceHostConfig>("ServiceHost").SeamlessService;
         }
 
         public WagerAllBetModel<BetAllBet> GetBetListByTime(IReadOnlyDictionary<string, string> setting, string agent, string startDateTime, string endDateTime, int pageNum)
@@ -165,7 +165,7 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {
-                var url = $"{_seamlessUrl}/Allbet/transfer";
+                var url = $"{_seamlessUrl}Allbet/transfer";
 
                 var rewardAllBetRequest = new RewardAllBetRequest()
                 {
