@@ -39,6 +39,7 @@ namespace ThirdPartyWager
             {
                 services.AddHttpClient();
             }
+
             /*Library*/
             services.AddSingleton<HttpHelper>();
             services.AddSingleton<Common>();
@@ -53,64 +54,26 @@ namespace ThirdPartyWager
             services.AddSingleton<ConfigService>();
             services.AddSingleton<FincanceService>();
 
-            services.AddOptionListByDB<ServerInfo>("Admin_ServerInfoList_Get");
+            // 先連線DB減少Worker連線錯誤
             services.AddOptionListByDB<dynamic>("Service_TpWagerTimer_Get", new { TpId = 1, Type = 1 }, DataBase.Wager);
             services.AddOptionListByDB<dynamic>("Tp_Get", new { TpId = 1 }, DataBase.Main);
+           
             services.AddOptionListByDB<CurrencyOption>("Common_Currency_Get");
 
             //處理SiteConfig
+            services.AddOptionListByDB<ServerInfo>("ServerInfoList_Get");
             services.AddOptionListByDB<ConfigObject>("SiteConfig_Get", new { ConfigGroup = "TP" });
             services.AddSiteConfig();
             services.AddSingleton<ConfigBLL>();
 
-            /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
             services.AddSingleton<CommonBLL>();
 
-
-            #region SabaOdds
-
-            // DAL
-            services.AddSingleton<SabaOddsService>();
-            // BLL
-            services.AddSingleton<SabaOddsBLL>();
-
-            services.AddHostedService<SabaOdds>();
-
-            #endregion
-
-            #region LiveStreaming
-
-            // DAL
-            services.AddSingleton<LiveStreamingService>();
-            // BLL
-            services.AddSingleton<LiveStreamingBLL>();
-
-            services.AddHostedService<LiveStreaming>();
-
-            #endregion
-
-            #region LatestHighlightVideo
-
-            // DAL
-            services.AddSingleton<LatestHighlightVideoService>();
-            // BLL
-            services.AddSingleton<LatestHighlightVideoBLL>();
-
-            services.AddHostedService<LatestHighlightVideo>();
-
-            #endregion
-
-            #region TpRefundWorker
-
-            //BLL
-            services.AddSingleton<TpRefundBLL>();
-
-            services.AddHostedService<TpRefundWorker>();
-
-            #endregion
-
             services.AddTpList();
+            services.AddSabaOdds();
+            services.AddLiveStreaming();
+            services.AddLatestHighlightVideo();
+            services.AddTpRefundWorker();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
