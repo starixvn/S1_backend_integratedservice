@@ -98,7 +98,7 @@ namespace ThirdPartySettleWorker.Workers
                             if (dDiffStake > 0.5m)
                             {
                                 LogContext.PushProperty("TP", Tp.EVO);
-                                _logger.LogError($"amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettledData)}", logName);
+                                _logger.LogWarning($"{logName}:amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettledData)}");
                                 continue;
                             }
 
@@ -142,7 +142,7 @@ namespace ThirdPartySettleWorker.Workers
                             _tpUnSettledBll.SetTpUnsettle(Tp, gameType, unsettled.TransId, isSuccess: false);
                         });
                         isError = true;
-                        _logger.LogError($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                        _logger.LogError(ex1, $"{logName}:{JsonConvert.SerializeObject(unsettled)}");
                     }
                 }
             }
@@ -154,7 +154,7 @@ namespace ThirdPartySettleWorker.Workers
             {
                 LogContext.PushProperty("TP", _tpName);
                 isError = true;
-                _logger.LogError(ex.ToString(), logName);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
             }
             finally
             {
@@ -190,6 +190,11 @@ namespace ThirdPartySettleWorker.Workers
                         try
                         {
                             var rewardData = _settledBll.GetUnsettledReward_EVO(unsettled.TransId);
+                            if (rewardData == null)
+                            {
+                                continue;
+                            }
+                            
                             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache(rewardData.TpId, rewardData.userId);
                           
                             var betRecordInfo = new BetRecordInfo
@@ -226,7 +231,7 @@ namespace ThirdPartySettleWorker.Workers
                                 _tpUnSettledBll.SetTpUnsettle(tp, gameType, unsettled.TransId, isSuccess: false);
                             });
                             isError = true;
-                            _logger.LogError($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                            _logger.LogError(ex1, $"{logName}:{JsonConvert.SerializeObject(unsettled)}");
                         }
                     }
                     
@@ -245,7 +250,7 @@ namespace ThirdPartySettleWorker.Workers
             {
                 LogContext.PushProperty("TP", _tpName);
                 isError = true;
-                _logger.LogError(ex.ToString(), logName);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
             }
             finally
             {

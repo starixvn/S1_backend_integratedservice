@@ -83,7 +83,7 @@ namespace ThirdPartySettleWorker.Workers
 
                         if (!IsBettransSameAsTpWager(settleData, tpWagerData, tpCurrency))
                         {
-                            _logger.LogError($"transId: {transId} is not equal " +
+                            _logger.LogWarning($"transId: {transId} is not equal " +
                                              $"settle: {JsonConvert.SerializeObject(settleData)} " +
                                              $"wager: {JsonConvert.SerializeObject(tpWagerData)}");
                             continue;
