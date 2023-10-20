@@ -100,7 +100,7 @@ namespace ThirdPartySettleWorker.Workers
                         catch (Exception ex1)
                         {
                             LogContext.PushProperty("TP", tpName);
-                            _logger.LogError($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                            _logger.LogError(ex1, $"{logName}:{JsonConvert.SerializeObject(unsettled)}");
                             isError = true;
                         }
                     }
@@ -113,7 +113,7 @@ namespace ThirdPartySettleWorker.Workers
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", tpName);
-                _logger.LogError(ex.ToString(), logName);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
                 isError = true;
             }
             finally

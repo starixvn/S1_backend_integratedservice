@@ -94,7 +94,7 @@ namespace ThirdPartySettleWorker.Workers
                         if (!bettrans.Any())
                         {
                             LogContext.PushProperty("TP", _tpName);
-                            _logger.LogError($"bettrans not found ({gametype})\r\n{JsonConvert.SerializeObject(unsettled)}", logName);
+                            _logger.LogInformation($"{logName}:bettrans not found ({gametype})\r\n{JsonConvert.SerializeObject(unsettled)}");
                             continue;
                         }
 
@@ -102,7 +102,7 @@ namespace ThirdPartySettleWorker.Workers
                         if (wager == null)
                         {
                             LogContext.PushProperty("TP", _tpName);
-                            _logger.LogError($"wager not found ({gametype})\r\n{JsonConvert.SerializeObject(unsettled)}", logName);
+                            _logger.LogWarning($"{logName}:wager not found ({gametype})\r\n{JsonConvert.SerializeObject(unsettled)}");
                             continue;
                         }
 
@@ -121,7 +121,7 @@ namespace ThirdPartySettleWorker.Workers
                         if (!CheckAmount(bettrans, wager))
                         {
                             LogContext.PushProperty("TP", _tpName);
-                            _logger.LogError($"amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}", logName);
+                            _logger.LogWarning($"{logName}:amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}");
                             continue;
                         }
 
@@ -177,7 +177,7 @@ namespace ThirdPartySettleWorker.Workers
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", _tpName);
-                _logger.LogError(ex.ToString(), logName);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
                 isError = true;
             }
             finally

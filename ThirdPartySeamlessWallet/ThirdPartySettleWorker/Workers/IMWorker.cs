@@ -114,7 +114,7 @@ namespace ThirdPartySettleWorker.Workers
                             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
                             if (tpCurrency == null)
                             {
-                                _logger.LogError($"{logName} {lastBetTransData.PlayerId} TpCurrency not found.");
+                                _logger.LogWarning($"{logName} {lastBetTransData.PlayerId} TpCurrency not found.");
                                 continue;
                             }
 
@@ -136,7 +136,7 @@ namespace ThirdPartySettleWorker.Workers
                                 };
                                 if (!IsBetTransSameAsTpWager(settleAmountDataIm, tpWagerData, tpCurrency, isRefund))
                                 {
-                                    _logger.LogError($"transId: {transId} is not equal " +
+                                    _logger.LogWarning($"transId: {transId} is not equal " +
                                                      $"settle: {JsonConvert.SerializeObject(settleAmountDataIm)} " +
                                                      $"wager: {JsonConvert.SerializeObject(tpWagerData)}");
                                     continue;
@@ -163,7 +163,7 @@ namespace ThirdPartySettleWorker.Workers
                             _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, unsettled.TransId, isSuccess: false);
                         });
                         isError = true;
-                        _logger.LogError($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                        _logger.LogError(ex1,$"{logName}:{JsonConvert.SerializeObject(unsettled)}");
                     }
                 }
             }
@@ -174,7 +174,7 @@ namespace ThirdPartySettleWorker.Workers
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", _tpName);
-                _logger.LogError(ex.ToString(), logName);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
                 isError = true;
             }
             finally
@@ -244,7 +244,7 @@ namespace ThirdPartySettleWorker.Workers
                             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
                             if (tpCurrency == null)
                             {
-                                _logger.LogError($"{logName} {lastBetTransData.PlayerId} TpCurrency not found.");
+                                _logger.LogWarning($"{logName} {lastBetTransData.PlayerId} TpCurrency not found.");
                                 continue;
                             }
 
@@ -266,7 +266,7 @@ namespace ThirdPartySettleWorker.Workers
                                 };
                                 if (!IsBetTransSameAsTpWager(settleAmountDataIm, tpWagerData, tpCurrency, isRefund))
                                 {
-                                    _logger.LogError($"transId: {transId} is not equal " +
+                                    _logger.LogWarning($"transId: {transId} is not equal " +
                                                      $"settle: {JsonConvert.SerializeObject(settleAmountDataIm)} " +
                                                      $"wager: {JsonConvert.SerializeObject(tpWagerData)}");
                                     continue;
@@ -294,7 +294,7 @@ namespace ThirdPartySettleWorker.Workers
                             _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, unsettled.TransId, isSuccess: false);
                         });
                         isError = true;
-                        _logger.LogError($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                        _logger.LogError(ex1, $"{logName}:{JsonConvert.SerializeObject(unsettled)}");
                     }
                 }
             }
@@ -305,7 +305,7 @@ namespace ThirdPartySettleWorker.Workers
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", _tpName);
-                _logger.LogError(ex.ToString(), logName);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
                 isError = true;
             }
             finally
@@ -350,7 +350,7 @@ namespace ThirdPartySettleWorker.Workers
 
             if (!isSame)
             {
-                _logger.LogError(
+                _logger.LogWarning(
                     $"wagerStake={fWagerStake}, betTrans.Stake={betTrans.Stake}, wagerWinLostAmount={wagerWinLostAmount}, betTrans.WinLostAmount={betTrans.WinLostAmount}");
             }
 
