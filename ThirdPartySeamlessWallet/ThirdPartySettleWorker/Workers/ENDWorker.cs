@@ -81,7 +81,7 @@ namespace ThirdPartySettleWorker.Workers
                         if (!bettrans.Any())
                         {
                             LogContext.PushProperty("TP", _tpName);
-                            _logger.LogError($"bettrans not found ({gametype})\r\n{JsonConvert.SerializeObject(unsettled)}\r\n", logName);
+                            _logger.LogWarning($"{logName}:bettrans not found ({gametype})\r\n{JsonConvert.SerializeObject(unsettled)}");
                             continue;
                         }
 

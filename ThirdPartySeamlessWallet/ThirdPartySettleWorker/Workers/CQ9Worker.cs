@@ -92,7 +92,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             LogContext.PushProperty("TP", tpName);
                             isError = true;
-                            _logger.LogError($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleCQ9");
+                            _logger.LogError(ex1,$"SettleCQ9:{JsonConvert.SerializeObject(unsettled)}");
                         }
                     }
                 }
@@ -100,7 +100,7 @@ namespace ThirdPartySettleWorker.Workers
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", tpName);
-                _logger.LogError(ex.ToString(), "SettleCQ9");
+                _logger.LogError(ex, $"SettleCQ9:{ex.Message}");
                 isError = true;
             }
             finally
@@ -166,7 +166,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             LogContext.PushProperty("TP", tpName);
                             isError = true;
-                            _logger.LogError($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName, ex1);
+                            _logger.LogError(ex1, $"{logName}:{JsonConvert.SerializeObject(unsettled)}");
                         }
                     }
                 }
@@ -174,7 +174,7 @@ namespace ThirdPartySettleWorker.Workers
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", tpName);
-                _logger.LogError(ex.ToString(), logName, ex);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
                 isError = true;
             }
             finally

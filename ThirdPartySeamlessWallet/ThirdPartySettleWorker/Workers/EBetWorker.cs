@@ -109,7 +109,7 @@ namespace ThirdPartySettleWorker.Workers
                             {
                                 LogContext.PushProperty("TP", _tpName);
                                 isError = true;
-                                _logger.LogError($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleEBet");
+                                _logger.LogError(ex1,$"{logName}:{JsonConvert.SerializeObject(unsettled)}");
                             }
                         }
                     }

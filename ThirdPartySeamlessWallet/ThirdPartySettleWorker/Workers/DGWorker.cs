@@ -106,7 +106,7 @@ namespace ThirdPartySettleWorker.Workers
                             var winLossAmountComparison = DG_WinLossAmountComparison(wager.WinLostAmount, settleData);
                             if (!winLossAmountComparison.Comparison)
                             {
-                                _logger.LogWarning($"DG WinLossAmount Comparison Incompatible TransId : {betRecordInfo.TransId} - WagerWinLossAmount {wager.WinLostAmount:F2}, betTrans : {winLossAmountComparison.WinLossAmount}", logName);
+                                _logger.LogWarning($"{logName}:DG WinLossAmount Comparison Incompatible TransId : {betRecordInfo.TransId} - WagerWinLossAmount {wager.WinLostAmount:F2}, betTrans : {winLossAmountComparison.WinLossAmount}");
                                 continue;
                             }
 

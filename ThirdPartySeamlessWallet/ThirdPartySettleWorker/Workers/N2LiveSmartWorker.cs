@@ -118,7 +118,7 @@ public class N2LiveSmartWorker : BackgroundService, ISettleWorker
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex.ToString(), logName);
+            _logger.LogError(ex, $"{logName}:{ex.Message}");
             isError = true;
         }
         finally

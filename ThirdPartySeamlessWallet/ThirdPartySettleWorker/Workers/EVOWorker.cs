@@ -98,7 +98,7 @@ namespace ThirdPartySettleWorker.Workers
                             if (dDiffStake > 0.5m)
                             {
                                 LogContext.PushProperty("TP", Tp.EVO);
-                                _logger.LogError($"amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettledData)}", logName);
+                                _logger.LogWarning($"{logName}:amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettledData)}");
                                 continue;
                             }
 
@@ -154,7 +154,7 @@ namespace ThirdPartySettleWorker.Workers
             {
                 LogContext.PushProperty("TP", _tpName);
                 isError = true;
-                _logger.LogError(ex.ToString(), logName);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
             }
             finally
             {
@@ -250,7 +250,7 @@ namespace ThirdPartySettleWorker.Workers
             {
                 LogContext.PushProperty("TP", _tpName);
                 isError = true;
-                _logger.LogError(ex.ToString(), logName);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
             }
             finally
             {
