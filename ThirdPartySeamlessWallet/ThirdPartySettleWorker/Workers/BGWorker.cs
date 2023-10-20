@@ -85,20 +85,20 @@ internal class BGWorker : BackgroundService, ISettleWorker
                     var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
                     if (tpCustInfo == null)
                     {
-                        _logger.LogError($"{logName} {settleData.Account} TpCustInfo not found.");
+                        _logger.LogWarning($"{logName} {settleData.Account} TpCustInfo not found.");
                         continue;
                     }
 
                     var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
                     if (tpCurrency == null)
                     {
-                        _logger.LogError($"{logName} {settleData.Account} TpCurrency not found.");
+                        _logger.LogWarning($"{logName} {settleData.Account} TpCurrency not found.");
                         continue;
                     }
 
                     if (!IsBettransSameAsTpWager(settleData, tpWagerData, tpCurrency))
                     {
-                        _logger.LogError($"transId: {tpUnsettle.TransId} is not equal " +
+                        _logger.LogWarning($"transId: {tpUnsettle.TransId} is not equal " +
                         $"settle: {JsonConvert.SerializeObject(settleData)} " +
                         $"wager: {JsonConvert.SerializeObject(tpWagerData)}");
                         continue;
