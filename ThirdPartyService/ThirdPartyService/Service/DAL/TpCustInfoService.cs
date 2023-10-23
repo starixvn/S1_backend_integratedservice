@@ -96,7 +96,6 @@ namespace ThirdPartyService.Service.DAL
 
             return apiResult;
         }
-
         public ApiResult<TpCustInfo> CreateMember(int custId, int tpId, bool isNeedSendRequest)
         {
             var customer = _mainDbClient.QueryFirst<Customer>("Customer_Get", new { CustId = custId });
@@ -159,6 +158,7 @@ namespace ThirdPartyService.Service.DAL
                 {
                     // allow test custid
                     var _testCustId = new List<long> { };
+
                     if (_testCustId.Contains(custId))
                     {
                         return false;

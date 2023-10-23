@@ -94,14 +94,14 @@ namespace ThirdPartySettleWorker.Workers
                         if (!bettrans.Any())
                         {
                             LogContext.PushProperty("TP", _tpName);
-                            _logger.LogError($"bettrans not found ({gametype})\r\n{JsonConvert.SerializeObject(unsettled)}\r\n", logName);
+                            _logger.LogWarning($"{logName}:bettrans not found ({gametype})\r\n{JsonConvert.SerializeObject(unsettled)}");
                             continue;
                         }
                         var wager = _tpUnSettledBLL.GetTpUnsettleData<SettleData_PlayTech>(wagerGet, new { TransId = TransId }, DataBase.Wager).FirstOrDefault();
                         if (wager == null)
                         {
                             LogContext.PushProperty("TP", _tpName);
-                            _logger.LogError($"wager not found ({gametype})\r\n{JsonConvert.SerializeObject(unsettled)}\r\n", logName);
+                            _logger.LogWarning($"{logName}:wager not found ({gametype})\r\n{JsonConvert.SerializeObject(unsettled)}");
                             continue;
                         }
                         var tpUserName = bettrans.FirstOrDefault().Account;
@@ -121,7 +121,7 @@ namespace ThirdPartySettleWorker.Workers
                         if (wager.Stake != bettrans.Sum(x => x.Stake) || wager.WinLostAmount != bettrans.Sum(x => x.WinLostAmount))
                         {
                             LogContext.PushProperty("TP", _tpName);
-                            _logger.LogError($"amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}\r\n", logName);
+                            _logger.LogWarning($"{logName}:amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}");
                             continue;
                         }
 

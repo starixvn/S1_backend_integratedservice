@@ -1,6 +1,7 @@
-﻿using Newtonsoft.Json;
-
+﻿using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -11,6 +12,12 @@ namespace ThirdParty.V8
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly V8Config _config;
+        public TpHelper(IServiceProvider provider)
+        {
+            _config = provider.GetRequiredService<ConfigBLL>().GetConfigValue<V8Config>((TpEnum.V8).ToString());
+        }
+
         Dictionary<int, string> ErrorMassage = new Dictionary<int, string>()
         {   {1,"TOKEN 丢失"},
             {2,"渠道不存在"},
@@ -87,7 +94,18 @@ namespace ThirdParty.V8
             public string extraParam { get; set; }
             public string lang { get; set; }
         }
-
+        public class CurrencyData
+        {
+            public string Deskey { get; set; }
+            public string Agent { get; set; }
+            public string Md5key { get; set; }
+        }
+        public class V8Config
+        {
+            public string WagerUrl { get; set; }
+            public string ApiUrl { get; set; }
+            public Dictionary<string, CurrencyData> CurrencyData { get; set; }
+        }
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -241,10 +259,10 @@ namespace ThirdParty.V8
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl_SW") && !string.IsNullOrEmpty(inputs["ApiUrl_SW"]) ? inputs["ApiUrl_SW"] : throw new Exception("ApiUrl_SW");
-            string Agent = inputs.ContainsKey("Agent_SW") && !string.IsNullOrEmpty(inputs["Agent_SW"]) ? inputs["Agent_SW"] : throw new Exception("Agent_SW");
-            string Deskey = inputs.ContainsKey("Deskey_SW") && !string.IsNullOrEmpty(inputs["Deskey_SW"]) ? inputs["Deskey_SW"] : throw new Exception("Deskey_SW");
-            string Md5key = inputs.ContainsKey("Md5key_SW") && !string.IsNullOrEmpty(inputs["Md5key_SW"]) ? inputs["Md5key_SW"] : throw new Exception("Md5key_SW");
+            string ApiUrl = _config.ApiUrl;
+            string Agent = _config.CurrencyData[tpCustInfo.TpCurrencyId].Agent;
+            string Deskey = _config.CurrencyData[tpCustInfo.TpCurrencyId].Deskey;
+            string Md5key = _config.CurrencyData[tpCustInfo.TpCurrencyId].Md5key;
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
 
             var current = new DateTimeOffset(DateTime.UtcNow);

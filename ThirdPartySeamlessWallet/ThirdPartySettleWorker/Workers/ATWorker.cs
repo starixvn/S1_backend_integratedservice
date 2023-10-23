@@ -89,7 +89,7 @@ namespace ThirdPartySettleWorker.Workers
                                     _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, TransId, isSuccess: true);
                                 });
                                 LogContext.PushProperty("TP", tpName);
-                                _logger.LogError($"wager cancel no bettrans data\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}\r\n", logName);
+                                _logger.LogWarning($"{logName}:wager cancel no bettrans data\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}");
                                 continue;
                             }
 
@@ -105,7 +105,7 @@ namespace ThirdPartySettleWorker.Workers
                             if (wager.Stake != bettrans.Stake || wager.WinLostAmount != bettrans.WinLostAmount)
                             {
                                 LogContext.PushProperty("TP", tpName);
-                                _logger.LogError($"amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}\r\n", logName);
+                                _logger.LogWarning($"{logName}:amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}");
                                 continue;
                             }
 
@@ -145,7 +145,7 @@ namespace ThirdPartySettleWorker.Workers
                                 _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, unsettled.TransId, isSuccess: false);
                             });
                             isError = true;
-                            _logger.LogError($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                            _logger.LogError(ex1, $"{logName}:{JsonConvert.SerializeObject(unsettled)}");
                         }
                     }
                 }
@@ -157,7 +157,7 @@ namespace ThirdPartySettleWorker.Workers
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", tpName);
-                _logger.LogError(ex.ToString(), logName);
+                _logger.LogError(ex,$"{logName}:{ex.Message}");
                 isError = true;
             }
             finally
@@ -243,7 +243,7 @@ namespace ThirdPartySettleWorker.Workers
                                 _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, unsettled.TransId, isSuccess: false);
                             });
                             isError = true;
-                            _logger.LogError($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                            _logger.LogError(ex1, $"{logName}:{JsonConvert.SerializeObject(unsettled)}");
                         }
                     }
                 }
@@ -255,7 +255,7 @@ namespace ThirdPartySettleWorker.Workers
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", tpName);
-                _logger.LogError(ex.ToString(), logName);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
                 isError = true;
             }
             finally
