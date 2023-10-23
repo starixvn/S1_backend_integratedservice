@@ -174,7 +174,7 @@ namespace ThirdPartySettleWorker.Workers
                             {
                                 _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nStep5");
                                 LogContext.PushProperty("TP", _tpName);
-                                _logger.LogError($"TransId:{tpUnsettle.TransId}\r\nbetData=\r\n{JsonConvert.SerializeObject(betData)}\r\nwagerData=\r\n{JsonConvert.SerializeObject(wagerData)}");
+                                _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nbetData=\r\n{JsonConvert.SerializeObject(betData)}\r\nwagerData=\r\n{JsonConvert.SerializeObject(wagerData)}");
                                 Task.Run(() =>
                                 {
                                     _tpUnSettledBLL.SetTpUnsettle(Tp, tpUnsettle.GameType, tpUnsettle.TransId, false);
@@ -239,7 +239,7 @@ namespace ThirdPartySettleWorker.Workers
                             _tpUnSettledBLL.SetTpUnsettle(Tp, tpUnsettle.GameType, tpUnsettle.TransId, isSuccess: false);
                         });
                         LogContext.PushProperty("TP", _tpName);
-                        _logger.LogError(ex, $"SBSW Settle exceptionMessage. {ex.Message} || TransId : {tpUnsettle.TransId} || exception:{JsonConvert.SerializeObject(ex)}  ");
+                        _logger.LogError(ex, $"SBSW Settle: {ex.Message} || TransId : {tpUnsettle.TransId}");
                     }
                 }
             }
@@ -262,25 +262,7 @@ namespace ThirdPartySettleWorker.Workers
 
                 timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
-        }
-
-        private GameType GetBetDetailGameType(int? sport_type)
-        {
-            if (sport_type == null)
-            {
-                return GameType.SBSW_Sports;
-            }
-
-            return sport_type switch
-            {
-                165 => GameType.SBSW_CardClub,
-                171 => GameType.SBSW_Vgaming,
-                202 => GameType.SBSW_Keno,
-                220 => GameType.SBSW_Lottery,
-                222 => GameType.SBSW_TableGame,
-                _ => GameType.SBSW_Sports,
-            };
-        }
+        }        
         public enum BetType
         {
             [Description("串关(其他)")] Parlay = 29,
@@ -472,7 +454,6 @@ namespace ThirdPartySettleWorker.Workers
                 betRecordInfo.TicketStatus = TicketStatus.Refund;
             }
         }
-
         private bool isCancelStatus(ISabaBet betDetial)
         {
             return betDetial.ticket_status.Equals("reject", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("refund", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("void", StringComparison.OrdinalIgnoreCase);

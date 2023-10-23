@@ -81,7 +81,7 @@ namespace ThirdPartySettleWorker.Workers
                         }
                         if (!IsBettransSameAsTpWager(unsettleData, tpWagerData, tpCurrency))
                         {
-                            _logger.LogError($"transId: {tpUnsettle.TransId} is not equal " +
+                            _logger.LogWarning($"transId: {tpUnsettle.TransId} is not equal " +
                                              $"settle: {JsonConvert.SerializeObject(unsettleData)} " +
                                              $"wager: {JsonConvert.SerializeObject(tpWagerData)}");
                             continue;

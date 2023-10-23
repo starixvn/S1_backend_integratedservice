@@ -102,7 +102,7 @@ namespace ThirdPartySettleWorker.Workers
                             _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, isSuccess: false);
                         });
                         isError = true;
-                        _logger.LogError(ex, $"SexyDoSettleLiveCasinoWork:{ex.Message}", logName);
+                        _logger.LogError(ex, $"{logName}:{ex.Message}");
                     }
                 }
 
