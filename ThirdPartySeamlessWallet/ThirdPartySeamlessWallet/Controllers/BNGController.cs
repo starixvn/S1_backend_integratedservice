@@ -40,7 +40,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         #endregion
 
 
-        [HttpPost]
+        //[HttpGet]
         public BNGResponse POST(BNGRequest req)
         {
             var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(req.token)));
