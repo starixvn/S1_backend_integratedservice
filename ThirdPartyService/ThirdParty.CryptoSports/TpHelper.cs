@@ -1,4 +1,7 @@
-﻿using ThirdPartyCore;
+﻿using Microsoft.Extensions.DependencyInjection;
+
+using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -8,6 +11,12 @@ namespace ThirdParty.CryptoSports
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly Dictionary<int, TpSiteConfig> tpSiteSabaConfigs;
+        public TpHelper(IServiceProvider provider)
+        {
+            tpSiteSabaConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<TpSiteConfig>(TpEnum.CryptoSports.ToString());
+        }
+
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -36,7 +45,7 @@ namespace ThirdParty.CryptoSports
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var gameUrl = inputs.GetValue("GameUrl");
+            var gameUrl = tpSiteSabaConfigs[tpCustInfo.SiteId].GameUrl;
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Success,
