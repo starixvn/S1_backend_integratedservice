@@ -11,10 +11,11 @@ namespace ThirdParty.CryptoSports
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly Dictionary<int, TpSiteConfig> tpSiteSabaConfigs;
+        private readonly Dictionary<int, TpSiteConfig> tpSiteConfigs;
+
         public TpHelper(IServiceProvider provider)
         {
-            tpSiteSabaConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<TpSiteConfig>(TpEnum.CryptoSports.ToString());
+            tpSiteConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<TpSiteConfig>(TpEnum.CryptoSports.ToString());
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -45,7 +46,7 @@ namespace ThirdParty.CryptoSports
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var gameUrl = tpSiteSabaConfigs[tpCustInfo.SiteId].GameUrl;
+            var gameUrl = tpSiteConfigs[tpCustInfo.SiteId].GameUrl;
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Success,
