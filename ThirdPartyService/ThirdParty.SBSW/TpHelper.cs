@@ -256,9 +256,8 @@ namespace ThirdParty.SBSW
             return result;
         }
 
-        public class SabaConfig
+        public class SabaConfig : TpSiteConfig
         {
-            public string ApiUrl { get; set; }
             public string VendorId { get; set; }
             public string OperatorId { get; set; }
         }
