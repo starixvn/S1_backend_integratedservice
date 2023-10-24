@@ -26,10 +26,10 @@ namespace ThirdPartySeamlessWallet.Service.Workers
         {
             try
             {
-                foreach (var bonus in walletService.GetBonusFulfill())
-                {
-                    walletService.BonusSettle(bonus);
-                }
+                // foreach (var bonus in walletService.GetBonusFulfill())
+                // {
+                //     walletService.BonusSettle(bonus);
+                // }
             }
             catch (Exception ex)
             {

@@ -24,10 +24,10 @@ namespace ThirdPartyBetHistory.Service.Worker
         {
             try
             {
-                foreach (var bonus in settledBLL.GetBonusFulfill())
-                {
-                    settledBLL.BonusSettle(bonus);
-                }
+                // foreach (var bonus in settledBLL.GetBonusFulfill())
+                // {
+                //     settledBLL.BonusSettle(bonus);
+                // }
             }
             catch (Exception ex)
             {
