@@ -40,7 +40,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         #endregion
 
 
-        //[HttpGet]
+        [HttpPost]
         public BNGResponse POST(BNGRequest req)
         {
             var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(req.token)));
@@ -48,28 +48,30 @@ namespace ThirdPartySeamlessWallet.Controllers
             string authToken = sessionKeyArr[0];
             string sessionToken = sessionKeyArr[1];
             string tpUserName = sessionKeyArr[2];
-            if (!_authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
-                return new BNGResponse()
-                {
-                    uid = req.uid,
-                    error = new error()
-                    {
-                        code = ErrorCode.INVALID_TOKEN.ToString()
-                    }
-                };
-            var tpCheck = _thirdPartyBLL.ThirdPartyCheck((int)ThirdParty, tpUserName);
-            if (tpCheck == null || tpCheck.Token != sessionToken)
-                return new BNGResponse()
-                {
-                    uid = req.uid,
-                    error = new error()
-                    {
-                        code = ErrorCode.INVALID_TOKEN.ToString()
-                    }
-                };
-
+            
             if (req.name == ActionName.login.ToString())
             {
+                if (!_authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
+                    return new BNGResponse()
+                    {
+                        uid = req.uid,
+                        error = new error()
+                        {
+                            code = ErrorCode.INVALID_TOKEN.ToString()
+                        }
+                    };
+
+                var tpCheck = _thirdPartyBLL.ThirdPartyCheck((int)ThirdParty, tpUserName);
+                if (tpCheck == null || tpCheck.Token != sessionToken)
+                    return new BNGResponse()
+                    {
+                        uid = req.uid,
+                        error = new error()
+                        {
+                            code = ErrorCode.INVALID_TOKEN.ToString()
+                        }
+                    };
+
                 var tpCustBalance = _tpCustInfoBLL.GetBalance((int)Tp.FaChai, tpUserName, gameType);
                 return new BNGResponse()
                 {

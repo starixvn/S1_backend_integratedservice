@@ -1,4 +1,6 @@
-﻿namespace ThirdPartySeamlessWallet.Service.Model
+﻿using System.Text.Json.Serialization;
+
+namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class BettingDataRNG_BNG
     {
@@ -22,7 +24,11 @@
     public class balance
     {
         public string value { get; set; }
-        public int version { get; set; }
+        public long version { get; set; }
+    }
+    public class error
+    {
+        public string code { get; set; }
     }
     public class BNGRequest
     {
@@ -41,16 +47,48 @@
     public class args
     {
         public string platform { get; set; }
+        public string bet { get; set; }
+        public string win { get; set; }
+        public bool round_started { get; set; }
+        public bool round_finished { get; set; }
+        public long round_id { get; set; }
+        public bonus bonus { get; set; }
+        public player player { get; set; }
+        public string tag { get; set; }
     }
-    public class error
+    public class bonus
     {
-        public string code { get; set; }
+        public string campaign { get; set; }
+        public string source { get; set; }
+        public int bonus_id { get; set; }
+        public string ext_bonus_id { get; set; }
+        public string bonus_type { get; set; }
+        [JsonPropertyName("event")]
+        public string Event { get; set; }
+        public string start_date { get; set; }
+        public string end_date { get; set; }
+        public string total_bet { get; set; }
+        public string total_win { get; set; }
+        public string played_bet { get; set; }
+        public string played_win { get; set; }
+        public string status { get; set; }
+    }
+
+    public class BettransRng_BNG
+    {
+        public long SQ { get; set; }
     }
     public enum ErrorCode
     {
         INVALID_TOKEN,
         EXPIRED_TOKEN,
-        GAME_NOT_ALLOWED
+        GAME_NOT_ALLOWED,
+        TIME_EXCEED,
+        LOSS_EXCEED,
+        BET_EXCEED,
+        FUNDS_EXCEED,
+        OTHER_EXCEED,
+        SESSION_CLOSED
     }
     public enum ActionName
     {
