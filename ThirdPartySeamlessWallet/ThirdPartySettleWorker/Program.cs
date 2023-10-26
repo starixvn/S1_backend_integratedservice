@@ -85,7 +85,8 @@ builder.Services
     .AddHostedService<FaChaiWorker>()
     .AddHostedService<EVOWorker>()
     .AddHostedService<N2LiveWorker>()
-    .AddHostedService<N2LiveSmartWorker>();
+    .AddHostedService<N2LiveSmartWorker>()
+    .AddHostedService<PegasusWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);

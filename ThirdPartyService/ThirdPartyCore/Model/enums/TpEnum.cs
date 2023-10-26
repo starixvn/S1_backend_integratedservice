@@ -46,7 +46,8 @@
         CryptoSports = 45,
         Nextspin = 50,
         PNG = 54,
-        FaChai = 55
+        FaChai = 55,
+        Pegasus = 56
     }
 
     public enum TpGameType
