@@ -39,5 +39,15 @@ namespace ThirdPartyBetHistory.Service.BLL
         {
             return _thirdPartyService.GetTpCustInfoWithCache(tpId, tpUserName);
         }
+
+        public IEnumerable<VgamingUnSettle> GetVgamingUnSettleTicket(int SiteId, long TicketKey, int LimitCount = 1000)
+        {
+            return _thirdPartyService.GetVgamingUnSettleTicket(SiteId, TicketKey, LimitCount);
+        }
+
+        public long GetVgamingTicketKey(int SiteId, long TicketKey)
+        {
+            return _thirdPartyService.GetVgamingTicketKey(SiteId, TicketKey);
+        }
     }
 }
