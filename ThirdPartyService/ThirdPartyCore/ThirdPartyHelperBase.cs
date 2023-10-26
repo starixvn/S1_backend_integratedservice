@@ -325,22 +325,32 @@ namespace ThirdPartyCore
                         }
                     }
                 }
+
+                string result;
                 
                 var response = client.SendAsync(httpRequestMessage).Result;
-                var raw = response.Content.ReadAsByteArrayAsync().Result;
-                    
-                using var output = new MemoryStream();
-                using (var input = new MemoryStream(raw))
-                using (var gzip = new GZipStream(input, CompressionMode.Decompress))
+                
+                if (response.Content.Headers.ContentEncoding.Contains("gzip"))
                 {
-                    gzip.CopyToAsync(output);
+                    var raw = response.Content.ReadAsByteArrayAsync().Result;
+                    
+                    using var output = new MemoryStream();
+                    using (var input = new MemoryStream(raw))
+                    using (var gzip = new GZipStream(input, CompressionMode.Decompress))
+                    {
+                        gzip.CopyToAsync(output);
+                    }
+                    
+                    output.Seek(0, SeekOrigin.Begin);
+                    result = new StreamReader(output).ReadToEnd();
                 }
-                    
-                output.Seek(0, SeekOrigin.Begin);
-                var decompressed = new StreamReader(output).ReadToEnd();
-                    
-                InsertLog?.Invoke(url, parametersLog, decompressed);
-                return decompressed;
+                else
+                {
+                    result = response.Content.ReadAsStringAsync().Result;
+                }
+                
+                InsertLog?.Invoke(url, parametersLog, result);
+                return result;
             }
             catch (Exception e)
             {
