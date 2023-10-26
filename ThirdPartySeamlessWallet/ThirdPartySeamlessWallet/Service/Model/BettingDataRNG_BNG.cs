@@ -74,9 +74,43 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string status { get; set; }
     }
 
+
     public class BettransRng_BNG
     {
-        public long SQ { get; set; }
+        public string uid { get; set; }
+        public string token { get; set; }
+        public string session { get; set; }
+        public string game_id { get; set; }
+        public string game_name { get; set; }
+        public string provider_id { get; set; }
+        public string provider_name { get; set; }
+        public string c_at { get; set; }
+        public string sent_at { get; set; }
+        public string platform { get; set; }
+        public decimal bet { get; set; }
+        public decimal win { get; set; }
+        public bool round_started { get; set; }
+        public bool round_finished { get; set; }
+        public long round_id { get; set; }
+        public string id { get; set; }
+        public string brand { get; set; }
+        public string currency { get; set; }
+        public string mode { get; set; }
+        public bool is_test { get; set; }
+        public string campaign { get; set; }
+        public string source { get; set; }
+        public int bonus_id { get; set; }
+        public string ext_bonus_id { get; set; }
+        public string bonus_type { get; set; }
+        public string Event { get; set; }
+        public string start_date { get; set; }
+        public string end_date { get; set; }
+        public decimal total_bet { get; set; }
+        public decimal total_win { get; set; }
+        public decimal played_bet { get; set; }
+        public decimal played_win { get; set; }
+        public string status { get; set; }
+        public string tag { get; set; }
     }
     public enum ErrorCode
     {
@@ -97,4 +131,15 @@ namespace ThirdPartySeamlessWallet.Service.Model
         rollback,
         getbalance
     }
+
+    public enum TransactionStatus
+    {
+        Success = 0,
+        Fail = 1
+    }
+    //public class Result
+    //{
+    //    public ResultCode Code { get; set; }
+    //    public string Message { get; set; }
+    //}
 }

@@ -11,6 +11,7 @@ using System.Text;
 using System.Web;
 using ThirdPartySeamlessWallet.Service.Model.SBSW;
 using System.Drawing.Drawing2D;
+using Pipelines.Sockets.Unofficial.Buffers;
 
 namespace ThirdPartySeamlessWallet.Controllers
 {
@@ -21,6 +22,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly AuthBLL _authBLL;
+        private readonly IBNGBLL _bNGBLL;
         private readonly Tools _tools;
         private readonly Dictionary<string, string> _defaultConfig;
         public Tp ThirdParty { get; set; }
@@ -41,7 +43,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
 
         [HttpPost]
-        public BNGResponse POST(BNGRequest req)
+        public IActionResult POST(BNGRequest req)
         {
             var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(req.token)));
             var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
@@ -52,28 +54,28 @@ namespace ThirdPartySeamlessWallet.Controllers
             if (req.name == ActionName.login.ToString())
             {
                 if (!_authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
-                    return new BNGResponse()
+                    return Ok(new BNGResponse()
                     {
                         uid = req.uid,
                         error = new error()
                         {
                             code = ErrorCode.INVALID_TOKEN.ToString()
                         }
-                    };
+                    });
 
                 var tpCheck = _thirdPartyBLL.ThirdPartyCheck((int)ThirdParty, tpUserName);
                 if (tpCheck == null || tpCheck.Token != sessionToken)
-                    return new BNGResponse()
+                    return Ok(new BNGResponse()
                     {
                         uid = req.uid,
                         error = new error()
                         {
                             code = ErrorCode.INVALID_TOKEN.ToString()
                         }
-                    };
+                    });
 
                 var tpCustBalance = _tpCustInfoBLL.GetBalance((int)Tp.FaChai, tpUserName, gameType);
-                return new BNGResponse()
+                return Ok(new BNGResponse()
                 {
                     uid = req.uid,
                     player = new player()
@@ -88,10 +90,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         value = tpCustBalance.Balance.ToString()
                     }
-                };
+                });
             }
 
-            return new BNGResponse();
+            if (req.name == ActionName.login.ToString())
+            {
+
+            }
         }
     }
 }
