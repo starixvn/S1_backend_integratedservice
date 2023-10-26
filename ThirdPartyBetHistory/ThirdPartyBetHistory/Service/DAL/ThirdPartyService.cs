@@ -85,5 +85,22 @@ namespace ThirdPartyBetHistory.Service.DAL
             props.Add("PartitionTime", partitionTime);
             return _mainDbClient.Execute("Service_TpBetRecordDetail_Ins_V3", props);
         }
+
+        public IEnumerable<VgamingUnSettle> GetVgamingUnSettleTicket(int SiteId, long TicketKey, int LimitCount)
+        {
+            return _reportDbClient.Query<VgamingUnSettle>("Service_SBSW_Vgaming_Unsettle_Get",
+                new
+                {
+                    SiteId,
+                    TicketKey,
+                    LimitCount,
+                }, 120);
+        }
+
+        public long GetVgamingTicketKey(int SiteId, long TicketKey)
+        {
+            var parameters = new { SiteId, TicketKey};
+            return _reportDbClient.QueryFirst<long>("Service_SBSW_Vgaming_TicketKey_Get", parameters);
+        }
     }
 }

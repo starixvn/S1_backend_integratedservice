@@ -11,5 +11,6 @@ namespace ThirdPartyBetHistory.Service
         SabaConfig SabaConfig { set; get; }
         Task UpdateBetRecordByTransId(WorkerType workerType, DateTime startTime, DateTime endTime, IEnumerable<SettlementType> settlementTypeList);             
         Task<long> AddTpBetRecordDetail(WorkerType workerType, long siteTicketKey);
+        Task ResubmitProcess(VgamingUnSettle unSettle);
     }
 }
