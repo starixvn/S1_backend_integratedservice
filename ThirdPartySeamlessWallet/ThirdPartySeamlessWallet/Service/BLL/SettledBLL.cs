@@ -2476,7 +2476,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         #endregion
 
         #region SBSW
-        public IEnumerable<SBSWUnsettle> GetSBSWUnsettleList(int LimitCount = 200)
+        public IEnumerable<SBSWUnsettle> GetSBSWUnsettleList(int LimitCount = 1000)
         {
             return settledService.GetSBSWUnsettleList(LimitCount);
         }
