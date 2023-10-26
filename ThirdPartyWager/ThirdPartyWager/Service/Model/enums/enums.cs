@@ -56,7 +56,8 @@
         PlayTech = 51,
         IM = 52,
         SPRIBE = 53,
-        FaChai = 55
+        FaChai = 55,
+        Pegasus = 56
     }
 
     public enum GameType
