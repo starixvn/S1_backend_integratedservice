@@ -65,7 +65,7 @@ namespace ThirdPartyBetHistory.Service.Worker
                 }
 
                 _thirdPartyBLL.SetSiteTicketKey(workerType, tpBetHelp, ticketKey);
-
+                _logger.LogInformation($"Success: {taskProperty} at: {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm.ss.fff}");
             }
             catch (Exception ex)
             {
