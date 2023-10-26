@@ -58,7 +58,7 @@ namespace ThirdPartySettleWorker.Workers
             var thisTp = (int)Tp;
             var gameType = (GameType)state;
             var category = TpCategory.Slots;
-            var betTransGet = "Service_BettransRng_Pegesus_Settle_Get";
+            var betTransGet = "Service_BettransRng_Pegasus_Settle_Get";
             var tpWagerGet = "Service_TpWagerRng_Pegasus_Unsettle_Get";
             var tpWagerSet = "Service_TpWagerRng_Pegasus_Settle_Set";
             var logName = "PegasusDoSettleRngWork";
