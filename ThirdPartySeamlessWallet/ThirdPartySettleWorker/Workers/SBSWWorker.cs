@@ -64,7 +64,7 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
                 }
-                forContinue = tpUnsettleList.Count() == 200;
+                forContinue = tpUnsettleList.Count() == 1000;
 
                 foreach (var tpUnsettle in tpUnsettleList.OrderBy(x => x.TransId))
                 {
