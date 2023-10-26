@@ -80,6 +80,7 @@ namespace ThirdParty.DG
         private decimal dWinLimit = 0m;
         private const string DefaultLimitGroup = "A";
 
+        #region Request
         public class Member
         {
             public string username { get; set; }
@@ -107,7 +108,9 @@ namespace ThirdParty.DG
             public string currencyName { get; set; }
             public decimal winLimit { get; set; }
         }
+        #endregion
 
+        #region Response
         private class SignupResult : CommReq
         {
             public int codeId { get; set; }
@@ -120,7 +123,7 @@ namespace ThirdParty.DG
             public string domains { get; set; }
             public string[] list { get; set; }
         }
-
+        #endregion
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -336,14 +339,7 @@ namespace ThirdParty.DG
                     return dg.LimitGroup;
             }
 
-            if (!IsDevelopment && custId == 477682)
-            {
-                /* 
-                 GOAL123_477682 VND2 member can change bet limit to 80 - 40,000
-                */
-                return "F";
-            }
-            else if (limitGroupNoMapping.ContainsKey(tpCurrencyId))
+            if (limitGroupNoMapping.ContainsKey(tpCurrencyId))
             {
                 return limitGroupNoMapping[tpCurrencyId];
             }
