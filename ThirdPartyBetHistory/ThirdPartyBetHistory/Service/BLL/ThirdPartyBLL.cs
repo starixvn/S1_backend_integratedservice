@@ -20,11 +20,17 @@ namespace ThirdPartyBetHistory.Service.BLL
             return _configs.Where(i => i.SiteId != 0 && i.ConfigKey == tpName);
         }
 
+        /// <summary>
+        /// 分SiteId與WorkerType取回TicketKey
+        /// </summary>
         public long GetSiteTicketKey(WorkerType workerType, IThirdPartyBetHelper betHelper)
         {
             return _thirdPartyService.GetSiteTicketKey(betHelper.SiteId, (int)betHelper.Tp, workerType);
         }
 
+        /// <summary>
+        /// 分SiteId與WorkerType更新TicketKey
+        /// </summary>
         public int SetSiteTicketKey(WorkerType workerType, IThirdPartyBetHelper betHelper, long ticketKey)
         {
             return _thirdPartyService.SetSiteTicketKey(betHelper.SiteId, (int)betHelper.Tp, workerType, ticketKey);
@@ -40,14 +46,38 @@ namespace ThirdPartyBetHistory.Service.BLL
             return _thirdPartyService.GetTpCustInfoWithCache(tpId, tpUserName);
         }
 
-        public IEnumerable<VgamingUnSettle> GetVgamingUnSettleTicket(int SiteId, long TicketKey, int LimitCount = 1000)
+        /// <summary>
+        /// 取得SBSW Vgaming五分鐘沒收到派彩的下注清單
+        /// </summary>
+        public IEnumerable<VgamingUnSettle> GetVgamingUnSettleTicket(long TicketKey, int LimitCount = 1000)
         {
-            return _thirdPartyService.GetVgamingUnSettleTicket(SiteId, TicketKey, LimitCount);
+            return _thirdPartyService.GetVgamingUnSettleTicket(TicketKey, LimitCount);
         }
 
-        public long GetVgamingTicketKey(int SiteId, long TicketKey)
+        /// <summary>
+        /// 取得Vgaming下一次要檢查的TicketKey
+        /// </summary>
+        /// <param name="TicketKey"></param>
+        /// <returns></returns>
+        public long GetVgamingTicketKey(long TicketKey)
         {
-            return _thirdPartyService.GetVgamingTicketKey(SiteId, TicketKey);
+            return _thirdPartyService.GetVgamingTicketKey(TicketKey);
+        }
+
+        /// <summary>
+        /// 不分SiteId，用WorkerType取回TicketKey
+        /// </summary>
+        public long GetAllSiteTicketKey(WorkerType workerType, int tpId)
+        {
+            return _thirdPartyService.GetSiteTicketKey(0, tpId, workerType);
+        }
+
+        /// <summary>
+        /// 不分SiteId，用WorkerType更新TicketKey
+        /// </summary>
+        public int SetAllSiteTicketKey(WorkerType workerType, int tpId, long ticketKey)
+        {
+            return _thirdPartyService.SetSiteTicketKey(0, tpId, workerType, ticketKey);
         }
     }
 }
