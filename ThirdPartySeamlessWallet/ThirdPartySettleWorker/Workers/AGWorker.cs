@@ -150,7 +150,7 @@ namespace ThirdPartySettleWorker.Workers
                             _tpUnSettledBll.SetTpUnsettle(Tp, gameType, unsettled.TransId, isSuccess: false);
                         });
                         isError = true;
-                        _logger.LogError($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                        _logger.LogError(ex1,$"{logName}:{JsonConvert.SerializeObject(unsettled)}");
                     }
                 }
             }
@@ -162,7 +162,7 @@ namespace ThirdPartySettleWorker.Workers
             {
                 LogContext.PushProperty("TP", _tpName);
                 isError = true;
-                _logger.LogError(ex.ToString(), logName);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
             }
             finally
             {

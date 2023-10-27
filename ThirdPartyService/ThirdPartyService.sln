@@ -120,6 +120,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.PNG", "ThirdPart
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.FaChai", "ThirdParty.FaChai\ThirdParty.FaChai.csproj", "{96D145FD-2915-4420-9255-F6FEF7CAAD79}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.Pegasus", "ThirdParty.Pegasus\ThirdParty.Pegasus.csproj", "{E54E96DB-ED9C-4868-BF85-04FBF14E4EE3}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.BNG", "ThirdParty.BNG\ThirdParty.BNG.csproj", "{5B4D3CFC-A36C-4D52-9E62-6084F9E6A72E}"
 EndProject
 Global
@@ -348,6 +350,10 @@ Global
 		{96D145FD-2915-4420-9255-F6FEF7CAAD79}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{96D145FD-2915-4420-9255-F6FEF7CAAD79}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{96D145FD-2915-4420-9255-F6FEF7CAAD79}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E54E96DB-ED9C-4868-BF85-04FBF14E4EE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E54E96DB-ED9C-4868-BF85-04FBF14E4EE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E54E96DB-ED9C-4868-BF85-04FBF14E4EE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E54E96DB-ED9C-4868-BF85-04FBF14E4EE3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5B4D3CFC-A36C-4D52-9E62-6084F9E6A72E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5B4D3CFC-A36C-4D52-9E62-6084F9E6A72E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5B4D3CFC-A36C-4D52-9E62-6084F9E6A72E}.Release|Any CPU.ActiveCfg = Release|Any CPU

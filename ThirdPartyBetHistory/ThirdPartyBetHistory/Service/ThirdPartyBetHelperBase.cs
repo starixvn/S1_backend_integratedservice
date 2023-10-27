@@ -69,5 +69,7 @@ namespace ThirdPartyBetHistory.Service
         }
 
         public abstract Task<long> AddTpBetRecordDetail(WorkerType workerType, long siteTicketKey);
+
+        public abstract Task ResubmitProcess(VgamingUnSettle unSettle);
     }
 }

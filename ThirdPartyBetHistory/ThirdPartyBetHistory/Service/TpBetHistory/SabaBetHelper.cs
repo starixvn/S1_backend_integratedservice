@@ -144,6 +144,25 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             }
         }
 
+        public override async Task ResubmitProcess(VgamingUnSettle unSettle)
+        {
+            var parameters = new Dictionary<string, string>
+            {
+                { "vendor_id", SabaConfig.VendorId },
+                { "refId", unSettle.TransId},
+                { "userId", unSettle.TpUserName}
+            };
+
+            var p = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
+            var result = await HttpPostAsync($"{SabaConfig.ApiUrl}/ResubmitProcess", p, "application/x-www-form-urlencoded");
+            var response = FromJson<SabaResponse>(result);
+
+            if (response.error_code != 0)
+            {
+                _logger.LogError($"ResubmitProcess:{response.message}");
+            }
+        }
+
         private async Task<long> GetTpBetRecordDetailToAdd(Dictionary<string, string> parameters)
         {
             var getBetDetailUrl = $"{SabaConfig.ApiUrl}/GetBetDetail";

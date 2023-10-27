@@ -256,9 +256,8 @@ namespace ThirdParty.SBSW
             return result;
         }
 
-        public class SabaConfig
+        public class SabaConfig : TpSiteConfig
         {
-            public string ApiUrl { get; set; }
             public string VendorId { get; set; }
             public string OperatorId { get; set; }
         }
@@ -396,13 +395,14 @@ namespace ThirdParty.SBSW
             {
                 int.TryParse(betDetail.odds_type, out int odds_type);
                 decimal.TryParse(betDetail.odds, out decimal odds);
+
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
-                    GameID = betDetail.sport_type.ToString(),
+                    GameID = GetGameID(tpGameType, betDetail.sport_type),
                     Game = betDetail.sportname?.FirstOrDefault(i => i.lang == "en")?.name ?? string.Empty,
-                    RefNo = betDetail.parlay_ref_no.ToString(),
+                    RefNo = betDetail.parlay_ref_no ?? string.Empty,
                     Title = betDetail.leaguename?.FirstOrDefault(i => i.lang == "en")?.name ?? string.Empty,
-                    MatchID = betDetail.match_id.ToString(),
+                    MatchID = betDetail.match_id ?? string.Empty,
                     BetType = betDetail.bettypename?.FirstOrDefault(i => i.lang == "en")?.name ?? string.Empty,
                     BetChoice = betDetail.bet_team ?? string.Empty,
                     Result = betDetail.ticket_status,
@@ -513,6 +513,11 @@ namespace ThirdParty.SBSW
                 5 => OddsTypeEnum.AmericanOdds,
                 _ => OddsTypeEnum.None,
             };
+        }
+
+        private string GetGameID(TpGameTypeOption tpGameType, string sportType)
+        {
+            return tpGameType.Type == (int)TpGameType.SBSW_Vgaming ? "171" : sportType;
         }
     }
 }
