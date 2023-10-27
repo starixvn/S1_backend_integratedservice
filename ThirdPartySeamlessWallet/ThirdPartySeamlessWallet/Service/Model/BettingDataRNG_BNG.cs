@@ -13,6 +13,11 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string tag { get; set; }
         public error error { get; set; }
     }
+    public class BNGTransactionResponse
+    {
+        public string uid { get; set; }
+        public balance balance { get; set; }
+    }
     public class player
     {
         public string id { get; set; }

@@ -175,10 +175,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 _mainDbClient.RollbackAndDisposeConnection(conn, trans);
 
-                //return new FCResponse()
-                //{
-                //    Result = (int)FCErrorMessage.Write_transaction_order_is_failed
-                //};
                 return (int)TransactionStatus.Fail;
             }
 

@@ -88,15 +88,36 @@ namespace ThirdPartySeamlessWallet.Controllers
                     },
                     balance = new balance()
                     {
-                        value = tpCustBalance.Balance.ToString()
+                        value = tpCustBalance.Balance.ToString(),
+                        version = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
                     }
                 });
             }
 
-            if (req.name == ActionName.login.ToString())
+            if (req.name == ActionName.transaction.ToString())
             {
+                var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.FaChai, tpUserName);
+                var result = _bNGBLL.Transaction(tpCustInfo, req, out decimal afterAmount);
 
+                if (result == (int)TransactionStatus.Success)
+                {
+                    return Ok(new BNGTransactionResponse()
+                    {
+                        uid = req.uid,
+                        balance = new balance()
+                        {
+                            value = afterAmount.ToString(),
+                            version = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                        }
+                    });
+                }
+                else
+                {
+                    return StatusCode(500, "Internal Server Error. Something went Wrong!");
+                }
             }
+
+            return Ok();
         }
     }
 }
