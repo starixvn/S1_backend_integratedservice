@@ -12,6 +12,7 @@ namespace ThirdPartyWager.Workers
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly WagerN2LiveBLL _wagerN2LiveBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly Dictionary<int, Dictionary<string, string>> _siteConfigDic;
         private Timer timer;
         private readonly int intervalMins = 2;
         private readonly int iRangMins = 20;
@@ -28,6 +29,7 @@ namespace ThirdPartyWager.Workers
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _wagerN2LiveBLL = provider.GetRequiredService<WagerN2LiveBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(Tp.N2Live.ToString());
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -46,7 +48,7 @@ namespace ThirdPartyWager.Workers
                 var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
                 foreach (var siteData in siteList)
                 {
-                    var setting = _thirdPartyBLL.GetThirdPartyBySite(tpId, siteData.SiteId);
+                    var setting = _siteConfigDic[siteData.SiteId];
                     var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, tpType, siteData.SiteId);
                     DateTime timerTime;
                     int last;
