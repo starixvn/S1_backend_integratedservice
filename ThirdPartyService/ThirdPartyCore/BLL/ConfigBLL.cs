@@ -55,12 +55,6 @@ namespace ThirdPartyCore.BLL
             return defaultResult;
         }
         
-        public TItem GetConfigValue<TItem>(string configKey, int siteId = 0)
-        {
-            var json = GetConfigValue(configKey, siteId);
-            return !string.IsNullOrEmpty(json) ? JsonConvert.DeserializeObject<TItem>(json) : default;
-        }
-
         public TItem GetConfigValueByEnvironment<TItem>(string configKey, int siteId = 0)
         {
             var json = GetConfigValue($"{configKey}.{_environment.EnvironmentName}.json", siteId);
