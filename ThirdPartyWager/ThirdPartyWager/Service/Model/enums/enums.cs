@@ -98,7 +98,8 @@
         Nextspin_RNG = 99,
         IM_ESports = 102,
         IM_Sports = 103,
-        FaChai_RNG = 106
+        FaChai_RNG = 106,
+        SG_Table = 109
     }
 
     public enum SettlementType

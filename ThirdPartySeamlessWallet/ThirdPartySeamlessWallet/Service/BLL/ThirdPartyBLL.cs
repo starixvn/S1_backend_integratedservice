@@ -139,7 +139,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
         public GameType GetGameType_SG(string gameId)
         {
-            GameType gameType = GameType.SG_RNG;
+            var gameType = GameType.SG_RNG;
 
             if (gameId.StartsWith("F-", StringComparison.OrdinalIgnoreCase))
             {
