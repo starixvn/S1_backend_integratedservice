@@ -94,8 +94,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                 });
             }
-
-            if (req.name == ActionName.transaction.ToString())
+            else if (req.name == ActionName.transaction.ToString())
             {
                 var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.FaChai, tpUserName);
                 var result = _bNGBLL.Transaction(tpCustInfo, req, out decimal afterAmount);
@@ -117,8 +116,42 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return StatusCode(500, "Internal Server Error. Something went Wrong!");
                 }
             }
+            else if (req.name == ActionName.rollback.ToString())
+            {
+                var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.FaChai, tpUserName);
+                var result = _bNGBLL.Rollback(tpCustInfo, req, out decimal afterAmount);
 
-            return Ok();
+                if (result == (int)TransactionStatus.Success)
+                {
+                    return Ok(new BNGTransactionResponse()
+                    {
+                        uid = req.uid,
+                        balance = new balance()
+                        {
+                            value = afterAmount.ToString(),
+                            version = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                        }
+                    });
+                }
+                else
+                {
+                    return StatusCode(500, "Internal Server Error. Something went Wrong!");
+                }
+            }
+            else
+            {
+                var tpCustBalance = _tpCustInfoBLL.GetBalance((int)Tp.FaChai, tpUserName, gameType);
+
+                return Ok(new BNGTransactionResponse()
+                {
+                    uid = req.uid,
+                    balance = new balance()
+                    {
+                        value = tpCustBalance.Balance.ToString(),
+                        version = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                    }
+                });
+            }
         }
     }
 }

@@ -4,6 +4,7 @@ using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySeamlessWallet.Service.Model.SBSW;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
@@ -144,7 +145,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (tempResult > 0)
             {
-                _ = _tpUnsettleService.InsertTpUnsettle(Tp.BNG, GameType.BNG_RNG, bettingData.round_id.ToString(), trans);
+                if (reqData.args.round_finished)
+                {
+                    _ = _tpUnsettleService.InsertTpUnsettle(Tp.BNG, GameType.BNG_RNG, bettingData.round_id.ToString(), trans);
+                }
+
                 _mainDbClient.CommitAndDisposeConnection(conn, trans);
 
                 if (getBonus)
@@ -152,6 +157,74 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     //call Service_TpSlotsBonus_Get to set flag
                     _settledService.GetTpBonus((int)Tp.BNG, bettingData.round_id.ToString(), (int)GameType.BNG_RNG, TpCategory.Slots, out int custId, out bonusId);
                 }
+
+                if (afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+                {
+                    afterAmount /= tpCurrency.ExchangeRate;
+                }
+                else if (afterAmount == 0)
+                {
+                    afterAmount = _tpCustInfoBLL.GetBalance((int)Tp.BNG, tpCustInfo.TpUserName, (int)GameType.BNG_RNG).Balance;
+                }
+            }
+            else
+            {
+                _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+
+                return (int)TransactionStatus.Fail;
+            }
+
+            return (int)TransactionStatus.Success;
+        }
+
+        public int Rollback(TpCustInfo tpCustInfo, BNGRequest reqData, out decimal afterAmount)
+        {
+            var tempResult = 0;
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            var trans = conn.BeginTransaction();
+
+            int bonusId = 0;
+            afterAmount = 0;
+
+            var partitionTime = DateTimeOffset.Parse(reqData.c_at).DateTime;
+
+            var check = _partitionService.Query<BettransRng_BNG>(partitionTime, "Service_BettransRng_BNG_CheckByRoundId", new { reqData.args.round_id });
+
+            if (!check.Any())
+            {
+                return (int)TransactionStatus.Success;
+            }
+
+            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp.BNG, tpCustInfo.CurrencyId);
+
+            decimal bet = 0;
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bet = Convert.ToDecimal(reqData.args.bet) * tpCurrency.ExchangeRate;
+            }
+
+            tempResult = _settledService.PayoutV2(
+                        tpCustInfo,
+                        Math.Abs(bet),
+                        (int)Tp.BNG,
+                        reqData.args.round_id.ToString(),
+                        (int)GameType.BNG_RNG,
+                        TpCategory.Slots,
+                        reqData.args.round_id.ToString(),
+                        TransType.Refunds,
+                        null,
+                        out afterAmount,
+                        "Refund",
+                        out bonusId,
+                        conn,
+                        trans
+                    );
+
+            if (tempResult > 0)
+            {
+                _mainDbClient.CommitAndDisposeConnection(conn, trans);
 
                 if (afterAmount > 0 && tpCurrency.ExchangeRate > 0)
                 {
