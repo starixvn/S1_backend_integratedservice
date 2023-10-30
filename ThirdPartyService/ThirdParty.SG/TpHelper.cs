@@ -87,12 +87,27 @@ namespace ThirdParty.SG
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var spName = getBetDetail.TpGameTypeOption.Type == 15 ? "Service_TpWagerRng_SG_Detail_Get" : "Service_TpWagerSG_Detail_Get";
+            var spName = getBetDetail.TpGameTypeOption.Type is (int)TpGameType.SG_RNG or (int) TpGameType.SG_Table ?
+                "Service_TpWagerRng_SG_Detail_Get" : "Service_TpWagerSG_Detail_Get";
             var wagerDetail = TpBetRecordProvider.DbQueryFirst(spName, new { getBetDetail.TransId }, DataBase.Wager);
             var detail = ToJson(wagerDetail);
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
                 TpCategory.Casino => new CasinoDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                    RefTransId = wagerDetail.GetValueOrDefault("ticketId")?.ToString(),
+                    TpUserName = wagerDetail.GetValueOrDefault("acctId")?.ToString(),
+                    UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("ticketTime", DateTime.MinValue),
+                    UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("ticketTime", DateTime.MinValue),
+                    Stake = (decimal)wagerDetail.GetValueOrDefault("betAmount") * tpCurrency.ExchangeRate,
+                    WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("winLoss") * tpCurrency.ExchangeRate,
+                    GameCode = wagerDetail.GetValueOrDefault("gameCode")?.ToString(),
+                    GameName = GetGameName(wagerDetail.GetValueOrDefault("gameCode")?.ToString()),
+                },
+                TpCategory.P2P => new CasinoDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
                     Detail = detail,
