@@ -1,12 +1,14 @@
-﻿using Serilog.Context;
+﻿using Newtonsoft.Json;
+
+using Serilog.Context;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
-using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
-using Newtonsoft.Json;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace ThirdPartySettleWorker.Workers;
 
@@ -83,20 +85,20 @@ internal class BGWorker : BackgroundService, ISettleWorker
                     var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
                     if (tpCustInfo == null)
                     {
-                        _logger.LogError($"{logName} {settleData.Account} TpCustInfo not found.");
+                        _logger.LogWarning($"{logName} {settleData.Account} TpCustInfo not found.");
                         continue;
                     }
 
                     var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
                     if (tpCurrency == null)
                     {
-                        _logger.LogError($"{logName} {settleData.Account} TpCurrency not found.");
+                        _logger.LogWarning($"{logName} {settleData.Account} TpCurrency not found.");
                         continue;
                     }
 
                     if (!IsBettransSameAsTpWager(settleData, tpWagerData, tpCurrency))
                     {
-                        _logger.LogError($"transId: {tpUnsettle.TransId} is not equal " +
+                        _logger.LogWarning($"transId: {tpUnsettle.TransId} is not equal " +
                         $"settle: {JsonConvert.SerializeObject(settleData)} " +
                         $"wager: {JsonConvert.SerializeObject(tpWagerData)}");
                         continue;

@@ -16,7 +16,7 @@
         public Dictionary<string, string> transactionInsight { get; set; }
         public string type { get; set; }
     }
-    
+
     public class IovationDetails
     {
         public Device device { get; set; }

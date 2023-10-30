@@ -1,5 +1,7 @@
-﻿using Newtonsoft.Json;
-using System.Text;
+﻿using System.Text;
+
+using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -28,7 +30,7 @@ namespace ThirdPartyWager.Service.BLL
             var channelId = setting[$"ChannelId_{currency}"];
             var privateKey = setting[$"PrivateKey_{currency}"];
             var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
-            
+
             // param
             var url = $"{apiUrl}/api/userbetsummary";
             var param = new

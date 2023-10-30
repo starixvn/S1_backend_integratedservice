@@ -1,11 +1,8 @@
-using System;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+﻿using Elastic.Apm.NetCoreAll;
+
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Model;
+
 using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
@@ -64,6 +61,12 @@ namespace ThirdPartyService
             services.AddOptionListByDB<GameCasinoOption>("Member_GameCasinoList_Get_V2");
             services.AddOptionListByDB<TpListOption>("Common_TpList_Get");
             services.AddOptionListByDB<CurrencyOption>("Common_Currency_Get");
+
+            //處理SiteConfig
+            services.AddOptionListByDB<ServerInfoObject>("ServerInfoList_Get");
+            services.AddOptionListByDB<ConfigObject>("SiteConfig_Get", new { ConfigGroup = "TP" });
+            services.AddSiteConfig();
+            services.AddSingleton<ConfigBLL>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -75,7 +78,10 @@ namespace ThirdPartyService
             }
 
             //app.UseHttpsRedirection();
-
+            if (!env.IsEnvironment("Local"))
+            {
+                app.UseAllElasticApm(Configuration);
+            }
             app.UseRouting();
             app.UseRequestLogMiddleware();
             app.UseResponseLogMiddleware();

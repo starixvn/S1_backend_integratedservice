@@ -1,21 +1,21 @@
-﻿using Newtonsoft.Json;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Net;
+using System.Net.Http.Headers;
+using System.Security.Cryptography;
 using System.Text;
+
+using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
-using System.Security.Cryptography;
-using System.Net.Http.Headers;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class ApiAllBetBLL
     {
         private readonly string _seamlessUrl;
-        private readonly byte[] NULL_IV = Convert.FromBase64String("AAAAAAAAAAA=");
         private readonly HttpHelper _httpHelper;
-        private readonly Common _common;
         private readonly Log2File _log2File;
         private readonly ILogger<ApiAllBetBLL> _logger;
         private readonly string _tpName = Tp.Allbet.ToString();
@@ -24,14 +24,13 @@ namespace ThirdPartyWager.Service.BLL
         public ApiAllBetBLL(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
-            _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<ApiAllBetBLL>>();
             _configuration = provider.GetRequiredService<IConfiguration>();
-            _seamlessUrl = _configuration.GetValue<string>("TpSWserviceUrl");
+            _seamlessUrl = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ServiceHostConfig>("ServiceHost").SeamlessService;
         }
 
-        public async Task<WagerAllBetModel<BetAllBet>> GetBetListByTime(IReadOnlyDictionary<string, string> setting, string agent, string startDateTime, string endDateTime, int pageNum)
+        public WagerAllBetModel<BetAllBet> GetBetListByTime(IReadOnlyDictionary<string, string> setting, string agent, string startDateTime, string endDateTime, int pageNum)
         {
             // param
             var apiUrl = setting["ApiUrl"];
@@ -58,7 +57,7 @@ namespace ThirdPartyWager.Service.BLL
             return JsonConvert.DeserializeObject<WagerAllBetModel<BetAllBet>>(r);
         }
 
-        public async Task<SettleCheckAllBetModel> GetBetByBetNum(IReadOnlyDictionary<string, string> setting, string betNum)
+        public SettleCheckAllBetModel GetBetByBetNum(IReadOnlyDictionary<string, string> setting, string betNum)
         {
             // param
             var apiUrl = setting["ApiUrl"];
@@ -81,7 +80,7 @@ namespace ThirdPartyWager.Service.BLL
             return JsonConvert.DeserializeObject<SettleCheckAllBetModel>(r);
         }
 
-        public async Task<WagerAllBetModel<BetAllBet>> GetModifiedBetListByTime(IReadOnlyDictionary<string, string> setting, string agent, string startDateTime, string endDateTime)
+        public WagerAllBetModel<BetAllBet> GetModifiedBetListByTime(IReadOnlyDictionary<string, string> setting, string agent, string startDateTime, string endDateTime)
         {
             // param
             var apiUrl = setting["ApiUrl"];
@@ -107,7 +106,7 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task<WagerAllBetModel<RewardAllBet>> GetRewardByTime(IReadOnlyDictionary<string, string> setting, string agent, string startDateTime, string endDateTime, int pageNum)
+        public WagerAllBetModel<RewardAllBet> GetRewardByTime(IReadOnlyDictionary<string, string> setting, string agent, string startDateTime, string endDateTime, int pageNum)
         {
             var apiUrl = setting["ApiUrl"];
             var path = "PagingQueryEventRecords";
@@ -136,7 +135,7 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        public async Task<CurrencyStats_AllBet> GetBetSummaryByTime(IReadOnlyDictionary<string, string> setting, string agent, string startTime)
+        public CurrencyStats_AllBet GetBetSummaryByTime(IReadOnlyDictionary<string, string> setting, string agent, string startTime)
         {
             // param
             var apiUrl = setting["ApiUrl"];
@@ -162,12 +161,11 @@ namespace ThirdPartyWager.Service.BLL
             return JsonConvert.DeserializeObject<CurrencyStats_AllBet>(r);
         }
 
-
         public async Task<string> CallEventSettleApi(RewardAllBet reward)
         {
             try
             {
-                var url = $"{_seamlessUrl}/Allbet/transfer";
+                var url = $"{_seamlessUrl}Allbet/transfer";
 
                 var rewardAllBetRequest = new RewardAllBetRequest()
                 {
@@ -178,7 +176,7 @@ namespace ThirdPartyWager.Service.BLL
                     isRetry = true,
                     currency = reward.currency,
                     details = new List<RewardAllBet>() { reward },
-                };            
+                };
                 var param = JsonConvert.SerializeObject(rewardAllBetRequest);
 
                 var request = new HttpRequestMessage(HttpMethod.Post, url)

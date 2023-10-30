@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -27,7 +28,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public TpCustBalance GetBalanceByHalfSecCache(int tpId, string tpUserName, int gameType = 0)
         {
             var tpCustBalance = _redisHelper.TryGetOrCreate(
-                $"TpCustBalance:{tpId}:{tpUserName}", 
+                $"TpCustBalance:{tpId}:{tpUserName}",
                 TimeSpan.FromSeconds(0.5),
                 () => GetBalance(tpId, tpUserName, gameType));
             return tpCustBalance;
@@ -39,17 +40,22 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var tpCustInfo = GetTpCustInfoWithCache(tpId, tpUserName);
             var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
             var balance = walletService.GetBalance(tpCustInfo.CustId);
-            var bonusCategoryId = thirdPartyBLL.GetBonusCategoryId(gameType);
+            var bonusCategory = thirdPartyBLL.GetBonusCategory(gameType);
 
             // 1.先找到用戶還在Running的CustBonusList
-            // 2.再找出符合條件的找到用戶還在Running的CustBonus加到Balance，PromoCategoryId = 0 為不分類皆可使用
+            // 2.再找出符合條件的找到用戶還在Running的CustBonus加到Balance
+            // 符合條件:
+            //  1.CustBonus.PromoCategoryId = TpGameType.PromoCategoryId
+            //  2.CustBonus.PromoCategoryId = 0 (不分類皆可使用，但不包含捕魚類遊戲)
             var custBonus = walletService.GetCustBonusList(tpCustInfo.CustId)
-                .FirstOrDefault(i => (int)i.PromoCategoryId == bonusCategoryId || i.PromoCategoryId == PromotionCategory.ALL);
+                .FirstOrDefault(i => (int)i.PromoCategoryId == bonusCategory?.Id ||
+                (i.PromoCategoryId == PromotionCategory.ALL && bonusCategory != null && bonusCategory.CategoryId != (int)TpCategory.Fish));
+
             if (custBonus != null)
             {
                 balance += custBonus.Bonus;
-            }            
-                      
+            }
+
             tpCustBalance.Balance = balance / tpCurrency.ExchangeRate;
             tpCustBalance.Balance = tools.Floor(tpCustBalance.Balance, 4);
             tpCustBalance.ExchangeRate = tpCurrency.ExchangeRate;
@@ -60,7 +66,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public TpCustInfo GetTpCustInfoWithCache(int tpId, string tpUserName)
         {
             var tpCustInfo = _redisHelper.TryGetOrCreate(
-                $"TpCustInfo:{tpId}:{tpUserName}", 
+                $"TpCustInfo:{tpId}:{tpUserName}",
                 TimeSpan.FromMinutes(1),
                () => GetTpCustInfo(tpId, tpUserName));
             return tpCustInfo;
@@ -77,13 +83,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public TpCustInfo GetTpCustInfo(int tpId, string tpUserName)
         {
-            var tpCustInfo = tpCustInfoService.GetTpCustInfo(tpId, tpUserName, null);
+            var tpCustInfo = tpCustInfoService.GetTpCustInfoByTpUserName(tpId, tpUserName);
             return tpCustInfo;
         }
 
         public TpCustInfo GetTpCustInfoByTpCustId(int tpId, string tpCustId)
         {
-            var tpCustInfo = tpCustInfoService.GetTpCustInfo(tpId, null, tpCustId);
+            var tpCustInfo = tpCustInfoService.GetTpCustInfoByTpCustId(tpId, tpCustId);
             return tpCustInfo;
         }
 
@@ -136,6 +142,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 tpCountryCodeCache.TryAdd(key, tpCountryCode);
                 return tpCountryCode;
             }
+        }
+
+        public int UpdateOnline(int custId, bool isOnline, string token, string ip)
+        {
+            return tpCustInfoService.UpdateOnline(custId, isOnline, token, ip);
         }
     }
 }

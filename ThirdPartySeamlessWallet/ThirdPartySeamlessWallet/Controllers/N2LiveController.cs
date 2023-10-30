@@ -1,15 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
+﻿using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+
+using Microsoft.AspNetCore.Mvc;
+
+using Newtonsoft.Json;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -443,40 +439,30 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         #endregion
 
-        private readonly AuthBLL authBLL;
-        private readonly ILogger<N2LiveController> logger;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly TpCustInfoBLL tpCustInfoBLL;
-        private readonly BettingBLL bettingBLL;
-        private readonly SettledBLL settledBLL;
-        private readonly Log2File log2File;
-        private readonly Tp thisTp;
+        private readonly ILogger<N2LiveController> _logger;
+        private readonly AuthBLL _authBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly BettingBLL _bettingBLL;
+        private readonly SettledBLL _settledBLL;
+        private readonly Log2File _log2File;
+        private readonly Tp _thisTp;
         private readonly string _tpName;
-        private readonly IHostEnvironment environment;
-        private readonly int gameType = 0;
+        private readonly IHostEnvironment _environment;
+        private readonly int _gameType = 0;
 
-        public N2LiveController(
-            AuthBLL authBLL,
-            ILogger<N2LiveController> logger,
-            ThirdPartyBLL thirdPartyBLL,
-            TpCustInfoBLL tpCustInfoBLL,
-            BettingBLL bettingBLL,
-            SettledBLL settledBLL,
-            Log2File log2File,
-            IHostEnvironment environment
-        )
+        public N2LiveController(IServiceProvider provider)
         {
-            this.authBLL = authBLL;
-            this.logger = logger;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.tpCustInfoBLL = tpCustInfoBLL;
-            this.bettingBLL = bettingBLL;
-            this.settledBLL = settledBLL;
-            this.log2File = log2File;
-            thisTp = Tp.N2Live;
-            _tpName = Enum.GetName(typeof(Tp), thisTp);
-            this.environment = environment;
-            gameType = (int)GameType.N2Live_LiveCasino;
+            _log2File = provider.GetRequiredService<Log2File>();
+            _environment = provider.GetRequiredService<IHostEnvironment>();
+            _authBLL = provider.GetRequiredService<AuthBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _bettingBLL = provider.GetRequiredService<BettingBLL>();
+            _settledBLL = provider.GetRequiredService<SettledBLL>();
+            _thisTp = Tp.N2Live;
+            _tpName = Enum.GetName(typeof(Tp), _thisTp);
+            _gameType = (int)GameType.N2Live_LiveCasino;
         }
 
         [Route("[controller]")]
@@ -485,7 +471,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Produces("application/xml")]
         public async Task<dynamic> SeamlessWalletAsync()
         {
-            string logName = $"{thisTp}";
+            string logName = $"{_thisTp}";
 
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
@@ -498,7 +484,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             commResp.exception.id = "";
             commResp.exception.desc = "ERROR_SYSTEM_EXCEPTION";
 
-            var xml = toXml(typeof(ErrorResponse), commResp);
+            var xml = N2LiveController.ToXml(typeof(ErrorResponse), commResp);
 
             try
             {
@@ -515,7 +501,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 string json = JsonConvert.SerializeXmlNode(xmlDoc.DocumentElement.FirstChild, Newtonsoft.Json.Formatting.Indented, false);
 
-                log2File.Info(Content, logName);
+                _log2File.Info(Content, logName);
 
                 var commReq = JsonConvert.DeserializeObject<CommRequest>(json);
                 string action = commReq.request.action;
@@ -532,47 +518,47 @@ namespace ThirdPartySeamlessWallet.Controllers
                     // slogin for n2 test account but need use tpservice create account first and add test hierarchy cust id
                     var getLoginManualReq = JsonConvert.DeserializeObject<LoginManualRequest>(json);
 
-                    string getTpCurrencyId = getTestHierarchy(getLoginManualReq.request.userid, "0", getLoginManualReq.request.password);
+                    string getTpCurrencyId = GetTestHierarchy(getLoginManualReq.request.userid, "0", getLoginManualReq.request.password);
 
                     if (getTpCurrencyId != "1111")
                     {
                         commResp.status = "105";
                         commResp.exception.desc = "ERROR_INVALID_AUTHENTICATION";
-                        xml = toXml(typeof(ErrorResponse), commResp);
-                        log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                        xml = N2LiveController.ToXml(typeof(ErrorResponse), commResp);
+                        _log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                         return xml;
                     }
 
 
-                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getLoginManualReq.request.userid);
+                    var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, getLoginManualReq.request.userid);
                     if (tpCheck == null)
                     {
                         string token = null;
                         string clientIp = "";
-                        var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)thisTp, getLoginManualReq.request.userid);
-                        tpCustInfoBLL.AddLoginRecord(tpCustInfo.CustId, tpCustInfo.SiteId, clientIp, out token);
-                        tpCustInfoBLL.AddUserLoginLog(tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, clientIp, $"Web - {_tpName}", $"Web - {_tpName}");
-                        tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, getLoginManualReq.request.userid);
+                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfo((int)_thisTp, getLoginManualReq.request.userid);
+                        _tpCustInfoBLL.AddLoginRecord(tpCustInfo.CustId, tpCustInfo.SiteId, clientIp, out token);
+                        _tpCustInfoBLL.AddUserLoginLog(tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, clientIp, $"Web - {_tpName}", $"Web - {_tpName}");
+                        tpCheck = _thirdPartyBLL.ThirdPartyCheck((int)_thisTp, getLoginManualReq.request.userid);
                     }
                     if (tpCheck == null || tpCheck.Locked)
                     {
                         commResp.status = "105";
                         commResp.exception.desc = "ERROR_INVALID_AUTHENTICATION";
-                        xml = toXml(typeof(ErrorResponse), commResp);
-                        log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                        xml = N2LiveController.ToXml(typeof(ErrorResponse), commResp);
+                        _log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                         return xml;
                     }
 
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getLoginManualReq.request.userid, gameType);
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getLoginManualReq.request.userid, _gameType);
                     if (tpCustBalance != null)
                     {
-                        var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, getLoginManualReq.request.userid);
-                        var key = authBLL.ApplyToken(tpCustInfo);
+                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, getLoginManualReq.request.userid);
+                        var key = _authBLL.ApplyToken(tpCustInfo);
                         var sessionKeyArr = new string[] { key, tpCheck.Token, tpCustInfo.SiteId.ToString(), tpCustBalance.TpCurrencyId };
                         byte[] bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(sessionKeyArr));
                         string sessionKey = Convert.ToBase64String(bytes);
 
-                        var thirdPartySetting = thirdPartyBLL.GetThirdPartyBySite((int)thisTp, tpCustInfo.SiteId);
+                        var thirdPartySetting = _thirdPartyBLL.GetThirdPartyBySite((int)_thisTp, tpCustInfo.SiteId);
 
                         LoginResponse getApiResp = new LoginResponse();
                         getApiResp.status = "0";
@@ -589,25 +575,25 @@ namespace ThirdPartySeamlessWallet.Controllers
                         getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting["MerchantPassCode"];
                         getApiResp.result.sessiontoken = sessionKey;
 
-                        xml = toXml(typeof(LoginResponse), getApiResp);
-                        log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                        xml = N2LiveController.ToXml(typeof(LoginResponse), getApiResp);
+                        _log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                         return xml;
                     }
 
-                    xml = toXml(typeof(ErrorResponse), commResp);
-                    log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                    xml = N2LiveController.ToXml(typeof(ErrorResponse), commResp);
+                    _log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                     return xml;
                 }
                 else
                 {
-                    var tokenInfo = getTokenInfo(commReq.request.sessiontoken);
-                    var thirdPartySetting = thirdPartyBLL.GetThirdPartyBySite((int)thisTp, Convert.ToInt32(tokenInfo.siteId));
+                    var tokenInfo = GetTokenInfo(commReq.request.sessiontoken);
+                    var thirdPartySetting = _thirdPartyBLL.GetThirdPartyBySite((int)_thisTp, Convert.ToInt32(tokenInfo.siteId));
 
                     if (string.Equals(action, "swebsinglelogin", StringComparison.OrdinalIgnoreCase))
                     {
                         var getLoginReq = JsonConvert.DeserializeObject<LoginRequest>(json);
 
-                        var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getLoginReq.request.userid);
+                        var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, getLoginReq.request.userid);
                         if (tpCheck == null || tpCheck.Locked)
                         {
                             error = true;
@@ -623,7 +609,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                         if (error == false)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getLoginReq.request.userid, gameType);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getLoginReq.request.userid, _gameType);
                             if (tpCustBalance != null)
                             {
                                 LoginResponse getApiResp = new LoginResponse();
@@ -635,28 +621,28 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 getApiResp.result.userid = getLoginReq.request.userid;
                                 getApiResp.result.username = getLoginReq.request.userid;
                                 getApiResp.result.acode = "";
-                                getApiResp.result.currencyid = getTestHierarchy(getLoginReq.request.userid, tpCustBalance.TpCurrencyId);
+                                getApiResp.result.currencyid = GetTestHierarchy(getLoginReq.request.userid, tpCustBalance.TpCurrencyId);
                                 getApiResp.result.balance = tpCustBalance.Balance;
                                 getApiResp.result.vendorid = thirdPartySetting.TpSetting["VendorId"];
                                 getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting["MerchantPassCode"];
                                 getApiResp.result.sessiontoken = getLoginReq.request.sessiontoken;
                                 getApiResp.result.clientip = tpCheck.IP;
 
-                                xml = toXml(typeof(LoginResponse), getApiResp);
-                                log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                                xml = N2LiveController.ToXml(typeof(LoginResponse), getApiResp);
+                                _log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                                 return xml;
                             }
                         }
 
-                        xml = toXml(typeof(ErrorResponse), commResp);
-                        log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                        xml = N2LiveController.ToXml(typeof(ErrorResponse), commResp);
+                        _log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                         return xml;
                     }
                     else if (string.Equals(action, "sgetbalance", StringComparison.OrdinalIgnoreCase))
                     {
                         var getBalanceReq = JsonConvert.DeserializeObject<BalanceRequest>(json);
 
-                        var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getBalanceReq.request.userid);
+                        var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, getBalanceReq.request.userid);
                         if (tpCheck == null || tpCheck.Locked)
                         {
                             error = true;
@@ -673,7 +659,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                         if (error == false)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBalanceReq.request.userid, gameType);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getBalanceReq.request.userid, _gameType);
                             if (tpCustBalance != null)
                             {
                                 BalanceResponse getApiResp = new BalanceResponse();
@@ -685,26 +671,26 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 getApiResp.result.id = id;
                                 getApiResp.result.userid = getBalanceReq.request.userid;
                                 getApiResp.result.balance = tpCustBalance.Balance;
-                                getApiResp.result.currencyid = getTestHierarchy(getBalanceReq.request.userid, tpCustBalance.TpCurrencyId);
+                                getApiResp.result.currencyid = GetTestHierarchy(getBalanceReq.request.userid, tpCustBalance.TpCurrencyId);
                                 getApiResp.result.vendorid = thirdPartySetting.TpSetting["VendorId"];
                                 getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting["MerchantPassCode"];
-                                getApiResp.result.timestamp = getCurrentGameTime();
+                                getApiResp.result.timestamp = GetCurrentGameTime();
 
-                                xml = toXml(typeof(BalanceResponse), getApiResp);
-                                log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                                xml = N2LiveController.ToXml(typeof(BalanceResponse), getApiResp);
+                                _log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                                 return xml;
                             }
                         }
 
-                        xml = toXml(typeof(ErrorResponse), commResp);
-                        log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                        xml = N2LiveController.ToXml(typeof(ErrorResponse), commResp);
+                        _log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                         return xml;
                     }
                     else if (string.Equals(action, "splacetrade", StringComparison.OrdinalIgnoreCase))
                     {
                         var getBetReq = JsonConvert.DeserializeObject<BettingDataLC_N2Live>(json);
 
-                        var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getBetReq.request.userid);
+                        var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, getBetReq.request.userid);
                         if (tpCheck == null || tpCheck.Locked)
                         {
                             error = true;
@@ -722,7 +708,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         {
                             try
                             {
-                                var result = bettingBLL.PlaceBetLC_N2Live(getBetReq, out decimal tpAffterAmount);
+                                var result = _bettingBLL.PlaceBetLC_N2Live(getBetReq, out decimal tpAffterAmount);
                                 if (result > 0)
                                 {
                                     BetResponse getApiResp = new BetResponse();
@@ -732,15 +718,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                                     getApiResp.result.action = action;
                                     getApiResp.result.id = id;
                                     getApiResp.result.userid = getBetReq.request.userid;
-                                    getApiResp.result.currencyid = getTestHierarchy(getBetReq.request.userid, tokenInfo.tpCurrency);
+                                    getApiResp.result.currencyid = GetTestHierarchy(getBetReq.request.userid, tokenInfo.tpCurrency);
                                     getApiResp.result.balance = tpAffterAmount;
                                     getApiResp.result.tradeid = getBetReq.request.tradeid;
                                     getApiResp.result.vendorid = thirdPartySetting.TpSetting["VendorId"];
                                     getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting["MerchantPassCode"];
-                                    getApiResp.result.timestamp = getCurrentGameTime();
+                                    getApiResp.result.timestamp = GetCurrentGameTime();
 
-                                    xml = toXml(typeof(BetResponse), getApiResp);
-                                    log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                                    xml = N2LiveController.ToXml(typeof(BetResponse), getApiResp);
+                                    _log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                                     return xml;
                                 }
                                 else if (result == -1)
@@ -756,13 +742,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                             }
                             catch (Exception ex)
                             {
-                                log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
+                                _log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
                                 return xml;
                             }
                         }
 
-                        xml = toXml(typeof(ErrorResponse), commResp);
-                        log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                        xml = N2LiveController.ToXml(typeof(ErrorResponse), commResp);
+                        _log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                         return xml;
                     }
                     else if (string.Equals(action, "spushtrade", StringComparison.OrdinalIgnoreCase))
@@ -770,11 +756,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                         var getCancelBetReq = JsonConvert.DeserializeObject<CancelBetDataLC_N2Live>(json);
                         try
                         {
-                            var result = settledBLL.CancelBetLC_N2Live(getCancelBetReq, out decimal tpAffterAmount);
+                            var result = _settledBLL.CancelBetLC_N2Live(getCancelBetReq, out decimal tpAffterAmount);
                             if (result > 0 || result == -2)
                             {
                                 // your side should response success to the push trade since the trade placement is failed
-                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getCancelBetReq.request.userid, gameType);
+                                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getCancelBetReq.request.userid, _gameType);
                                 BetResponse getApiResp = new BetResponse();
                                 getApiResp.status = "0";
                                 getApiResp.n2xsd = "urn:n2ns";
@@ -782,15 +768,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 getApiResp.result.action = action;
                                 getApiResp.result.id = id;
                                 getApiResp.result.userid = getCancelBetReq.request.userid;
-                                getApiResp.result.currencyid = getTestHierarchy(getCancelBetReq.request.userid, tokenInfo.tpCurrency);
+                                getApiResp.result.currencyid = GetTestHierarchy(getCancelBetReq.request.userid, tokenInfo.tpCurrency);
                                 getApiResp.result.balance = tpCustBalance.Balance;
                                 getApiResp.result.tradeid = getCancelBetReq.request.tradeid;
                                 getApiResp.result.vendorid = thirdPartySetting.TpSetting["VendorId"];
                                 getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting["MerchantPassCode"];
-                                getApiResp.result.timestamp = getCurrentGameTime();
+                                getApiResp.result.timestamp = GetCurrentGameTime();
 
-                                xml = toXml(typeof(BetResponse), getApiResp);
-                                log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                                xml = N2LiveController.ToXml(typeof(BetResponse), getApiResp);
+                                _log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                                 return xml;
                             }
                             else if (result == -1)
@@ -801,12 +787,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         catch (Exception ex)
                         {
-                            log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
+                            _log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
                             return xml;
                         }
 
-                        xml = toXml(typeof(ErrorResponse), commResp);
-                        log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                        xml = N2LiveController.ToXml(typeof(ErrorResponse), commResp);
+                        _log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                         return xml;
                     }
                     else if (string.Equals(action, "straderesult", StringComparison.OrdinalIgnoreCase))
@@ -815,10 +801,10 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                         try
                         {
-                            var result = settledBLL.PayoutLC_N2Live(getPayoutReq, out decimal tpAffterAmount);
+                            var result = _settledBLL.PayoutLC_N2Live(getPayoutReq, out decimal tpAffterAmount);
                             if (result > 0)
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getPayoutReq.request.userid, gameType);
+                                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getPayoutReq.request.userid, _gameType);
                                 BetResponse getApiResp = new BetResponse();
                                 getApiResp.status = "0";
                                 getApiResp.n2xsd = "urn:n2ns";
@@ -826,15 +812,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 getApiResp.result.action = action;
                                 getApiResp.result.id = id;
                                 getApiResp.result.userid = getPayoutReq.request.userid;
-                                getApiResp.result.currencyid = getTestHierarchy(getPayoutReq.request.userid, tokenInfo.tpCurrency);
+                                getApiResp.result.currencyid = GetTestHierarchy(getPayoutReq.request.userid, tokenInfo.tpCurrency);
                                 getApiResp.result.balance = tpCustBalance.Balance;
                                 getApiResp.result.tradeid = getPayoutReq.request.tradeid;
                                 getApiResp.result.vendorid = thirdPartySetting.TpSetting["VendorId"];
                                 getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting["MerchantPassCode"];
-                                getApiResp.result.timestamp = getCurrentGameTime();
+                                getApiResp.result.timestamp = GetCurrentGameTime();
 
-                                xml = toXml(typeof(BetResponse), getApiResp);
-                                log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                                xml = N2LiveController.ToXml(typeof(BetResponse), getApiResp);
+                                _log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                                 return xml;
                             }
                             else if (result == -1)
@@ -845,19 +831,19 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         catch (Exception ex)
                         {
-                            log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
+                            _log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
                             return xml;
                         }
 
-                        xml = toXml(typeof(ErrorResponse), commResp);
-                        log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                        xml = N2LiveController.ToXml(typeof(ErrorResponse), commResp);
+                        _log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                         return xml;
                     }
                     else if (string.Equals(action, "ssmartbetcreate", StringComparison.OrdinalIgnoreCase))
                     {
                         var getSmartBetReq = JsonConvert.DeserializeObject<SmartBettingDataLC_N2Live>(json);
 
-                        var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getSmartBetReq.request.userid);
+                        var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, getSmartBetReq.request.userid);
                         if (tpCheck == null || tpCheck.Locked)
                         {
                             error = true;
@@ -875,7 +861,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         {
                             try
                             {
-                                var result = bettingBLL.SmartPlaceBetLC_N2Live(getSmartBetReq, out decimal tpAffterAmount);
+                                var result = _bettingBLL.SmartPlaceBetLC_N2Live(getSmartBetReq, out decimal tpAffterAmount);
                                 if (result > 0)
                                 {
                                     SmartBetResponse getApiResp = new SmartBetResponse();
@@ -885,15 +871,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                                     getApiResp.result.action = action;
                                     getApiResp.result.id = id;
                                     getApiResp.result.userid = getSmartBetReq.request.userid;
-                                    getApiResp.result.currencyid = getTestHierarchy(getSmartBetReq.request.userid, tokenInfo.tpCurrency);
+                                    getApiResp.result.currencyid = GetTestHierarchy(getSmartBetReq.request.userid, tokenInfo.tpCurrency);
                                     getApiResp.result.balance = tpAffterAmount;
                                     getApiResp.result.schemeid = getSmartBetReq.request.schemeid;
                                     getApiResp.result.vendorid = thirdPartySetting.TpSetting["VendorId"];
                                     getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting["MerchantPassCode"];
-                                    getApiResp.result.timestamp = getCurrentGameTime();
+                                    getApiResp.result.timestamp = GetCurrentGameTime();
 
-                                    xml = toXml(typeof(SmartBetResponse), getApiResp);
-                                    log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                                    xml = N2LiveController.ToXml(typeof(SmartBetResponse), getApiResp);
+                                    _log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                                     return xml;
                                 }
                                 else if (result == -1)
@@ -909,12 +895,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                             }
                             catch (Exception ex)
                             {
-                                log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
+                                _log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
                                 return xml;
                             }
                         }
-                        xml = toXml(typeof(ErrorResponse), commResp);
-                        log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                        xml = N2LiveController.ToXml(typeof(ErrorResponse), commResp);
+                        _log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                         return xml;
                     }
                     else if (string.Equals(action, "spushsmartbet", StringComparison.OrdinalIgnoreCase))
@@ -922,11 +908,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                         var getSmartCancelBetReq = JsonConvert.DeserializeObject<SmartCancelBetDataLC_N2Live>(json);
                         try
                         {
-                            var result = settledBLL.SmartCancelBetLC_N2Live(getSmartCancelBetReq, out decimal tpAffterAmount);
+                            var result = _settledBLL.SmartCancelBetLC_N2Live(getSmartCancelBetReq, out decimal tpAffterAmount);
                             if (result > 0 || result == -2)
                             {
                                 // your side should response success to the push trade since the trade placement is failed
-                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getSmartCancelBetReq.request.userid, gameType);
+                                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getSmartCancelBetReq.request.userid, _gameType);
                                 SmartBetResponse getApiResp = new SmartBetResponse();
                                 getApiResp.status = "0";
                                 getApiResp.n2xsd = "urn:n2ns";
@@ -934,15 +920,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 getApiResp.result.action = action;
                                 getApiResp.result.id = id;
                                 getApiResp.result.userid = getSmartCancelBetReq.request.userid;
-                                getApiResp.result.currencyid = getTestHierarchy(getSmartCancelBetReq.request.userid, tokenInfo.tpCurrency);
+                                getApiResp.result.currencyid = GetTestHierarchy(getSmartCancelBetReq.request.userid, tokenInfo.tpCurrency);
                                 getApiResp.result.balance = tpCustBalance.Balance;
                                 getApiResp.result.schemeid = getSmartCancelBetReq.request.schemeid;
                                 getApiResp.result.vendorid = thirdPartySetting.TpSetting["VendorId"];
                                 getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting["MerchantPassCode"];
-                                getApiResp.result.timestamp = getCurrentGameTime();
+                                getApiResp.result.timestamp = GetCurrentGameTime();
 
-                                xml = toXml(typeof(SmartBetResponse), getApiResp);
-                                log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                                xml = N2LiveController.ToXml(typeof(SmartBetResponse), getApiResp);
+                                _log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                                 return xml;
                             }
                             else if (result == -1)
@@ -953,12 +939,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         catch (Exception ex)
                         {
-                            log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
+                            _log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
                             return xml;
                         }
 
-                        xml = toXml(typeof(ErrorResponse), commResp);
-                        log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                        xml = N2LiveController.ToXml(typeof(ErrorResponse), commResp);
+                        _log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                         return xml;
                     }
                     else if (string.Equals(action, "ssmartbetclose", StringComparison.OrdinalIgnoreCase))
@@ -967,10 +953,10 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                         try
                         {
-                            var result = settledBLL.SmartPayoutLC_N2Live(getSmartPayoutReq, out decimal tpAffterAmount);
+                            var result = _settledBLL.SmartPayoutLC_N2Live(getSmartPayoutReq, out decimal tpAffterAmount);
                             if (result > 0)
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getSmartPayoutReq.request.userid, gameType);
+                                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getSmartPayoutReq.request.userid, _gameType);
                                 SmartBetResponse getApiResp = new SmartBetResponse();
                                 getApiResp.status = "0";
                                 getApiResp.n2xsd = "urn:n2ns";
@@ -978,15 +964,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 getApiResp.result.action = action;
                                 getApiResp.result.id = id;
                                 getApiResp.result.userid = getSmartPayoutReq.request.userid;
-                                getApiResp.result.currencyid = getTestHierarchy(getSmartPayoutReq.request.userid, tokenInfo.tpCurrency);
+                                getApiResp.result.currencyid = GetTestHierarchy(getSmartPayoutReq.request.userid, tokenInfo.tpCurrency);
                                 getApiResp.result.balance = tpCustBalance.Balance;
                                 getApiResp.result.schemeid = getSmartPayoutReq.request.schemeid;
                                 getApiResp.result.vendorid = thirdPartySetting.TpSetting["VendorId"];
                                 getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting["MerchantPassCode"];
-                                getApiResp.result.timestamp = getCurrentGameTime();
+                                getApiResp.result.timestamp = GetCurrentGameTime();
 
-                                xml = toXml(typeof(SmartBetResponse), getApiResp);
-                                log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                                xml = N2LiveController.ToXml(typeof(SmartBetResponse), getApiResp);
+                                _log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                                 return xml;
                             }
                             else if (result == -1)
@@ -997,12 +983,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         catch (Exception ex)
                         {
-                            log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
+                            _log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
                             return xml;
                         }
 
-                        xml = toXml(typeof(ErrorResponse), commResp);
-                        log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                        xml = N2LiveController.ToXml(typeof(ErrorResponse), commResp);
+                        _log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                         return xml;
                     }
                     else if (string.Equals(action, "screditbonus", StringComparison.OrdinalIgnoreCase))
@@ -1011,7 +997,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                         try
                         {
-                            var result = settledBLL.BonusLC_N2Live(getBonusReq, out decimal tpAffterAmount);
+                            var result = _settledBLL.BonusLC_N2Live(getBonusReq, out decimal tpAffterAmount);
                             if (result > 0)
                             {
                                 BonusResponse getApiResp = new BonusResponse();
@@ -1021,15 +1007,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 getApiResp.result.action = action;
                                 getApiResp.result.id = id;
                                 getApiResp.result.userid = getBonusReq.request.userid;
-                                getApiResp.result.currencyid = getTestHierarchy(getBonusReq.request.userid, tokenInfo.tpCurrency);
+                                getApiResp.result.currencyid = GetTestHierarchy(getBonusReq.request.userid, tokenInfo.tpCurrency);
                                 getApiResp.result.balance = tpAffterAmount;
                                 getApiResp.result.bonusid = getBonusReq.request.bonusid;
                                 getApiResp.result.vendorid = thirdPartySetting.TpSetting["VendorId"];
                                 getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting["MerchantPassCode"];
-                                getApiResp.result.timestamp = getCurrentGameTime();
+                                getApiResp.result.timestamp = GetCurrentGameTime();
 
-                                xml = toXml(typeof(BonusResponse), getApiResp);
-                                log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                                xml = N2LiveController.ToXml(typeof(BonusResponse), getApiResp);
+                                _log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                                 return xml;
                             }
                             else if (result == -1)
@@ -1040,12 +1026,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         catch (Exception ex)
                         {
-                            log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
+                            _log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
                             return xml;
                         }
 
-                        xml = toXml(typeof(ErrorResponse), commResp);
-                        log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                        xml = N2LiveController.ToXml(typeof(ErrorResponse), commResp);
+                        _log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                         return xml;
                     }
                     else if (string.Equals(action, "seventtransaction", StringComparison.OrdinalIgnoreCase))
@@ -1054,7 +1040,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                         try
                         {
-                            var result = settledBLL.EventLC_N2Live(getEventReq, out decimal tpAffterAmount);
+                            var result = _settledBLL.EventLC_N2Live(getEventReq, out decimal tpAffterAmount);
                             if (result > 0)
                             {
                                 EventResponse getApiResp = new EventResponse();
@@ -1064,15 +1050,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 getApiResp.result.action = action;
                                 getApiResp.result.id = id;
                                 getApiResp.result.userid = getEventReq.request.userid;
-                                getApiResp.result.currencyid = getTestHierarchy(getEventReq.request.userid, tokenInfo.tpCurrency);
+                                getApiResp.result.currencyid = GetTestHierarchy(getEventReq.request.userid, tokenInfo.tpCurrency);
                                 getApiResp.result.balance = tpAffterAmount;
                                 getApiResp.result.eventtrxid = getEventReq.request.eventtrxid;
                                 getApiResp.result.vendorid = thirdPartySetting.TpSetting["VendorId"];
                                 getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting["MerchantPassCode"];
-                                getApiResp.result.timestamp = getCurrentGameTime();
+                                getApiResp.result.timestamp = GetCurrentGameTime();
 
-                                xml = toXml(typeof(EventResponse), getApiResp);
-                                log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                                xml = N2LiveController.ToXml(typeof(EventResponse), getApiResp);
+                                _log2File.Info($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                                 return xml;
                             }
                             else if (result == -1)
@@ -1088,31 +1074,31 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         catch (Exception ex)
                         {
-                            log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
+                            _log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
                             return xml;
                         }
 
-                        xml = toXml(typeof(ErrorResponse), commResp);
-                        log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                        xml = N2LiveController.ToXml(typeof(ErrorResponse), commResp);
+                        _log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                         return xml;
                     }
                 }
-                log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
+                _log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}", logName);
                 return xml;
             }
             catch (Exception ex)
             {
-                log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
+                _log2File.Error($"Request:\r\n{Content}\r\nResponse:\r\n{xml.OuterXml}\r\nException:\r\n{ex}", logName, ex);
                 return xml;
             }
         }
 
-        private string getCurrentGameTime()
+        private static string GetCurrentGameTime()
         {
             return DateTime.UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss.fff");
         }
 
-        private TokenInfo getTokenInfo(string token)
+        private static TokenInfo GetTokenInfo(string token)
         {
             string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(token));
             var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
@@ -1125,33 +1111,31 @@ namespace ThirdPartySeamlessWallet.Controllers
             };
         }
 
-        private dynamic toXml(dynamic type, object response)
+        private static dynamic ToXml(dynamic type, object response)
         {
             var xml = "";
-            XmlSerializerNamespaces ns = new XmlSerializerNamespaces();
+            XmlSerializerNamespaces ns = new();
             ns.Add("", "");
 
-            XmlSerializer serilizer = new XmlSerializer(type);
+            XmlSerializer serilizer = new(type);
             using (var sww = new StringWriter())
             {
-                using (XmlWriter writer = XmlWriter.Create(sww))
-                {
-                    serilizer.Serialize(writer, response, ns);
-                    xml = sww.ToString();
-                }
+                using XmlWriter writer = XmlWriter.Create(sww);
+                serilizer.Serialize(writer, response, ns);
+                xml = sww.ToString();
             }
 
             var xml2 = xml.Replace("n2root", "n2xsd:n2root");
-            XmlDocument doc = new XmlDocument();
+            XmlDocument doc = new();
             doc.LoadXml(xml2);
 
             return doc;
         }
 
-        private string getTestHierarchy(string account, string tpCurrencyId, string password = null)
+        private string GetTestHierarchy(string account, string tpCurrencyId, string password = null)
         {
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, account);
-            List<long> testHierarchyCustId = environment.IsDevelopment() ? new List<long> { 1288,1481 } : new List<long> { 90, 31909, 240129, 236358, 2071, 2072 };
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, account);
+            List<long> testHierarchyCustId = _environment.IsDevelopment() ? new List<long> { 1288, 1481 } : new List<long> { 90, 31909, 240129, 236358, 2071, 2072 };
             bool isTestHierarchy = testHierarchyCustId.Contains(tpCustInfo.CustId);
             if (isTestHierarchy)
             {

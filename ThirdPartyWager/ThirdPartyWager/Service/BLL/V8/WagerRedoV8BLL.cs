@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 
@@ -62,6 +63,7 @@ namespace ThirdPartyWager.Service.BLL
                 var field = new List<string>();
                 for (var i = 0; i < dataWager.d.count; i++)
                 {
+                    var chairId = (dataWager.d.list.ChairID[i] == null) ? 0 : dataWager.d.list.ChairID[i];
                     var keyValuePairs = new Dictionary<string, dynamic>
                     {
                         { "GameID", dataWager.d.list.GameID[i] },
@@ -69,7 +71,7 @@ namespace ThirdPartyWager.Service.BLL
                         { "ServerID", dataWager.d.list.ServerID[i] },
                         { "KindID", dataWager.d.list.KindID[i] },
                         { "TableID", dataWager.d.list.TableID[i] },
-                        { "ChairID", dataWager.d.list.ChairID[i] },
+                        { "ChairID", chairId },
                         { "UserCount", dataWager.d.list.UserCount[i] },
                         { "CellScore", dataWager.d.list.CellScore[i] },
                         { "AllBet", dataWager.d.list.AllBet[i] },

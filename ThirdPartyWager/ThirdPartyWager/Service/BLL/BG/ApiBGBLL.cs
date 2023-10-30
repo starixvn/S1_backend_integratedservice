@@ -1,9 +1,11 @@
-﻿using Newtonsoft.Json;
+﻿using System.Security.Cryptography;
 using System.Text;
+
+using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
-using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model;
-using System.Security.Cryptography;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL;
 
@@ -50,7 +52,7 @@ public class ApiBGBLL
         return result;
     }
 
-    public async Task<WagerBG_ApiResponseModel<object>> OrderSum(string apiUrl, 
+    public async Task<WagerBG_ApiResponseModel<object>> OrderSum(string apiUrl,
         string sn, string secrectKey, string agentLoginId, string startTime, string endTime)
     {
         // param

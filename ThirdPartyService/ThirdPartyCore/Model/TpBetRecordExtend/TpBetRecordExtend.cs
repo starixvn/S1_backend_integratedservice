@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using ThirdPartyCore.Model.enums;
+﻿using ThirdPartyCore.Model.enums;
 
 namespace ThirdPartyCore.Model.TpBetRecordExtend
 {
@@ -15,8 +12,8 @@ namespace ThirdPartyCore.Model.TpBetRecordExtend
         {
             TpId = betRecordInfo.TpId;
             TransId = betRecordInfo.TransId;
-            GameType = betRecordInfo.GameType;     
-            
+            GameType = betRecordInfo.GameType;
+
             ProviderID = tpGameType.TpId.ToString();
             Provider = tpGameType.TpName;
             Product = tpGameType.TypeName;
@@ -122,13 +119,13 @@ namespace ThirdPartyCore.Model.TpBetRecordExtend
         /// <summary>
         /// 下注裝置
         /// </summary>
-        public string Platform 
-        { 
+        public string Platform
+        {
             get
             {
                 return DeviceType.ToString();
             }
-        } 
+        }
 
         /// <summary>
         /// 下注裝置

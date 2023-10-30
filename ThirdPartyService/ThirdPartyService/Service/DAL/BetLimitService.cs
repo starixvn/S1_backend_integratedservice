@@ -1,7 +1,9 @@
 ﻿using Dapper;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+
 using ThirdPartyService.Service.Library;
 
 namespace ThirdPartyService.Service.DAL

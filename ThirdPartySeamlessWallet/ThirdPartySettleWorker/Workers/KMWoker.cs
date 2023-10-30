@@ -1,17 +1,11 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+
 using Serilog.Context;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -106,7 +100,7 @@ namespace ThirdPartySettleWorker.Workers
                         catch (Exception ex1)
                         {
                             LogContext.PushProperty("TP", tpName);
-                            _logger.LogError($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                            _logger.LogError(ex1, $"{logName}:{JsonConvert.SerializeObject(unsettled)}");
                             isError = true;
                         }
                     }
@@ -119,7 +113,7 @@ namespace ThirdPartySettleWorker.Workers
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", tpName);
-                _logger.LogError(ex.ToString(), logName);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
                 isError = true;
             }
             finally

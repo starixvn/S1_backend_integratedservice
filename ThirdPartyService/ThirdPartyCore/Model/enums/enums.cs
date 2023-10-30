@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Text;
+﻿using System.ComponentModel;
 
 namespace ThirdPartyCore.Model.enums
 {
@@ -167,13 +164,6 @@ namespace ThirdPartyCore.Model.enums
         Month
     }
 
-    public enum SiteId
-    {
-        Nova88 = 1,
-        Goal123 = 2,
-        Bwing = 3
-    }
-
     public enum DeviceType
     {
         None,
@@ -246,5 +236,12 @@ namespace ThirdPartyCore.Model.enums
     {
         LobbyName = 1, // saba sport
         GameName = 2, // Fishing War
+    }
+    
+    public enum LoginGameTypeEnum
+    {
+        // from memberSite action
+        EntPage = 1, 
+        GotoGame = 2
     }
 }

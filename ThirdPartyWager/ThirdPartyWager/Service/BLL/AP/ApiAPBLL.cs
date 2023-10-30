@@ -1,7 +1,9 @@
-﻿using Newtonsoft.Json;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using System.Web;
+
+using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -15,7 +17,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Log2File _log2File;
         private readonly ILogger<ApiAPBLL> _logger;
         private readonly string _tpName = Tp.AP.ToString();
-        private readonly int _timeZone = 0;
 
         public ApiAPBLL(IServiceProvider provider)
         {

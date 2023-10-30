@@ -6,7 +6,6 @@ namespace ThirdPartyWager.Service.DAL
 {
     public class LatestHighlightVideoService
     {
-       
         private readonly MySqlClient _mainDbClient;
         private readonly MySqlClient _reportDbClient;
 

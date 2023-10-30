@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -8,7 +9,6 @@ namespace ThirdPartyWager.Service.BLL
     public class FinanceSimplePlayBLL : ITpReportBLL
     {
         private readonly ILogger<FinanceSimplePlayBLL> _logger;
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly CommonBLL _commonBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = 0;
@@ -17,7 +17,6 @@ namespace ThirdPartyWager.Service.BLL
         public FinanceSimplePlayBLL(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceSimplePlayBLL>>();
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         }

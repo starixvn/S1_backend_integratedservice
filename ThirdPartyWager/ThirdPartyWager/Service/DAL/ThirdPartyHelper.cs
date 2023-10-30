@@ -6,7 +6,6 @@ namespace ThirdPartyWager.Service.DAL
 {
     public class ThirdPartyHelper
     {
-
         private readonly MySqlClient _mainDbClient;
         private readonly MySqlClient _reportDbClient;
         private readonly MySqlClient _wagerDbClient;
@@ -64,7 +63,7 @@ namespace ThirdPartyWager.Service.DAL
         }
 
         public int SetThirdPartyTimerByGameType(int tpId, int type, long start, int gameType)
-        { 
+        {
             return _wagerDbClient.Execute("Service_TpWagerTimerReference_GameType_Set", new { TpId = tpId, Type = type, StartUnix = start, GameType = gameType });
         }
 
@@ -77,5 +76,11 @@ namespace ThirdPartyWager.Service.DAL
         {
             return _reportDbClient.Query<TpGameCasino>("Service_GameCasino_Get_V2", new { TpId = tpId });
         }
+
+        public IEnumerable<TpListModel> GetTpListByTpId(int tpId)
+        {
+            return _reportDbClient.Query<TpListModel>("Service_TpList_ByTpId_Get", new { _TpId = tpId });
+        }
+
     }
 }

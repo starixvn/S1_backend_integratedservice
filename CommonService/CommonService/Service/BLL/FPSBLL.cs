@@ -1,25 +1,26 @@
 ﻿using System.Net;
+
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-using Microsoft.Extensions.Options;
 
 namespace CommonService.Service.BLL
 {
     public class FPSBLL
     {
-        private readonly IOptions<Dictionary<string, FPSServicesConfig>> fpsServicesConfig;
-        private readonly HttpHelper httpHelper;
+        private readonly Dictionary<int, FPSServicesConfig> _fpsServicesConfig;
+        private readonly HttpHelper _httpHelper;
 
-        public FPSBLL(IOptions<Dictionary<string, FPSServicesConfig>> fpsServicesConfig, HttpHelper httpHelper)
+        public FPSBLL(IServiceProvider provider)
         {
-            this.fpsServicesConfig = fpsServicesConfig;
-            this.httpHelper = httpHelper;
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _fpsServicesConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<FPSServicesConfig>("FPS");
         }
+
         public async Task<ApiResult> FPSChecksAsync(CustInfoProfile custInfo, FPSChecksRequest fpsChecksRequest)
         {
             var apiResult = new ApiResult();
-            var config = fpsServicesConfig.Value[custInfo.SiteName];
+            var config = _fpsServicesConfig[custInfo.SiteId];
             var url = config.ResourceURL;
 
             var sendIovationChecks = new Dictionary<string, string>
@@ -40,7 +41,7 @@ namespace CommonService.Service.BLL
 
             };
 
-            using var result = await httpHelper.HttpFromPostAsync(url, null, sendIovationChecks, "application/x-www-form-urlencoded");
+            using var result = await _httpHelper.HttpFromPostAsync(url, null, sendIovationChecks, "application/x-www-form-urlencoded");
             //var resultResp = JsonConvert.DeserializeObject<FPSResult>(result.Content.ReadAsStringAsync().Result);
 
             if (result.StatusCode == HttpStatusCode.OK)

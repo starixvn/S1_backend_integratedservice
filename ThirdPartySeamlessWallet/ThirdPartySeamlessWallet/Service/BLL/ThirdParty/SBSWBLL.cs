@@ -1,8 +1,13 @@
-﻿using Dapper;
+﻿using System.Data;
+
+using Dapper;
+
 using MySql.Data.MySqlClient;
+
 using Newtonsoft.Json;
+
 using Serilog.Context;
-using System.Data;
+
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -22,9 +27,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
         private readonly ILogger<SBSWBLL> _logger;
-        private readonly ThirdPartySetting _thirdPartySetting;
         private readonly Dictionary<SBSWTransType, Func<SBSWTransType, string, string, Task<ReturnObj>>> _requestHandler;
         private readonly Dictionary<int, SabaSportTypeOption> _sportTypeConfig;
+        private readonly Dictionary<string, SabaConfig> _siteSabaConfigs;
 
 
         public Tp ThirdParty { get; set; }
@@ -39,7 +44,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _bettingService = provider.GetRequiredService<BettingService>();
             _settledService = provider.GetRequiredService<SettledService>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
-            _thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)ThirdParty);
             _requestHandler = new Dictionary<SBSWTransType, Func<SBSWTransType, string, string, Task<ReturnObj>>>()
             {
                 { SBSWTransType.GetBalance, GetBalance},
@@ -63,6 +67,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _logger = provider.GetRequiredService<ILogger<SBSWBLL>>();
             _sportTypeConfig = provider.GetRequiredService<IEnumerable<SabaSportTypeOption>>()
                 .ToDictionary(item => item.SportType, item => item);
+
+            _siteSabaConfigs = provider.GetRequiredService<ConfigBLL>()
+                .GetConfigValuesBySiteId<SabaConfig>(ThirdParty.ToString())
+                .Where(item => item.Key != 0)
+                .ToDictionary(item => item.Value.OperatorId, item => item.Value);
         }
 
         public async Task<ReturnObj> SeamlessWallet(string merchant, SBSWTransType transType, string bodyText)
@@ -70,7 +79,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             try
             {
                 LogContext.PushProperty("Merchant", merchant);
-                LogContext.PushProperty("Action", transType.ToString());                
+                LogContext.PushProperty("Action", transType.ToString());
                 _logger.LogInformation(bodyText);
 
                 return await _requestHandler[transType].Invoke(transType, merchant, bodyText);
@@ -120,6 +129,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var request = JsonConvert.DeserializeObject<BaseReq<PlaceBetParlay>>(bodyText);
             CheckKey(merchant, request.key);
+            CheckBalance(request.message.userId, request.message.txns.Sum(x => x.debitAmount));
             var resultList = new List<ExecuteResult>();
             foreach (var ticket in request.message.txns)
             {
@@ -146,7 +156,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var request = JsonConvert.DeserializeObject<BaseReq<PlaceBet3rd>>(bodyText);
             CheckKey(merchant, request.key);
-
+            CheckBalance(request.message.userId, request.message.ticketList.Sum(x => x.debitAmount));
             var resultList = new List<ExecuteResult>();
             foreach (var ticket in request.message.ticketList)
             {
@@ -174,6 +184,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var request = JsonConvert.DeserializeObject<BaseReq<PlaceBetEnt>>(bodyText);
             CheckKey(merchant, request.key);
+            CheckBalance(request.message.userId, request.message.debitAmount);
             var resultList = new List<ExecuteResult>();
             foreach (var ticket in request.message.ticketList)
             {
@@ -221,7 +232,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Service_Bettrans_SBSW_Bet", trans, p);
                 if (result.SPResult == -4)
                 {
-                    throw new SBSWException(ReturnCode.TransactionDuplicated,$"refId: {bet.refId} Duplicated.");
+                    throw new SBSWException(ReturnCode.TransactionDuplicated, $"refId: {bet.refId} Duplicated.");
                 }
 
                 if (result.licenseeTxId < 1)
@@ -242,8 +253,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     out var afterAmount,
                     ref bonusId,
                     conn,
-                    trans,
-                    SeamlessBonusType.TpId);
+                    trans);
 
                 if (result.SetBalanceResult < 1 || afterAmount < 0)
                 {
@@ -344,8 +354,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                                 out int bonusId,
                                 conn,
                                 trans,
-                                AllowNegative.NotAllow,
-                                SeamlessBonusType.TpId);
+                                AllowNegative.NotAllow);
 
                     if (result.SetBalanceResult < 1)
                     {
@@ -374,7 +383,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var resultList = new List<ExecuteResult>();
             foreach (var txn in request.message.txns)
             {
-                resultList.Add(await ExecuteCancelBet(request.message, txn));
+                resultList.Add(await ExecuteCancelBet(request.message, txn, false));
             }
             var error = resultList.FirstOrDefault(result => result.ReturnCode != ReturnCode.Success);
             if (error != null)
@@ -409,11 +418,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     winlostDate = request.message.winLostDate,
                     creditAmount = request.message.creditAmount,
                     debitAmount = request.message.debitAmount,
-                });
+                }, true);
             return new ReturnObj(result);
         }
 
-        private async Task<ExecuteResult> ExecuteCancelBet(ConfirmBet confirmBet, ConfirmDetail detail)
+        private async Task<ExecuteResult> ExecuteCancelBet(ConfirmBet confirmBet, ConfirmDetail detail, bool hasTxId)
         {
             try
             {
@@ -425,7 +434,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 await using var conn = _mainDbClient.GetMySqlConnection();
                 await conn.OpenAsync();
                 await using var trans = await conn.BeginTransactionAsync();
-                var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>("Service_Bettrans_SBSW_CancelBet", trans, new
+                var result = await _mainDbClient.QueryFirstAsync<ExecuteResult>(hasTxId ? "Service_Bettrans_SBSW_CancelBetEnt" : "Service_Bettrans_SBSW_CancelBet", trans, hasTxId ? new
+                {
+                    confirmBet.action,
+                    confirmBet.operationId,
+                    confirmBet.userId,
+                    confirmBet.updateTime,
+                    detail.refId,
+                    detail.creditAmount,
+                    detail.debitAmount,
+                    detail.txId,
+                    TicketType = (int)SBSWTransType.CancelBet,
+                } : new
                 {
                     confirmBet.action,
                     confirmBet.operationId,
@@ -436,7 +456,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     detail.debitAmount,
                     TicketType = (int)SBSWTransType.CancelBet,
                 });
-                if (result.SPResult == -1 || result.SPResult == -2) //查無交易與完成Cancel都視為成功
+                if (result.SPResult == -1) //查無此交易
+                {
+                    throw new SBSWException(ReturnCode.TransactionNotFound);
+                }
+
+                if (result.SPResult == -2) //已完成Cancel視為成功
                 {
                     throw new SBSWException(ReturnCode.Success);
                 }
@@ -463,8 +488,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             out int bonusId,
                             conn,
                             trans,
-                            AllowNegative.NotAllow,
-                            SeamlessBonusType.TpId);
+                            AllowNegative.NotAllow);
 
                 if (result.SetBalanceResult < 1)
                 {
@@ -567,6 +591,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 if (amount != 0)
                 {
                     var (gameType, tpCategory) = GetGameType(result.SportType);
+
                     var memoHead = transType switch
                     {
                         SBSWTransType.Settle => "Payout",
@@ -589,15 +614,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                                 out int bonusId,
                                 conn,
                                 trans,
-                                AllowNegative.Allow,
-                                SeamlessBonusType.TpId);
+                                AllowNegative.Allow);
 
                     if (result.SetBalanceResult < 1)
                     {
                         return new ExecuteResult(ReturnCode.InvalidAmount);
                     }
                 }
-                
+
                 await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 return result;
             }
@@ -638,14 +662,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (betList.Any(i => i.TicketType == (int)SBSWTransType.CancelBet))
             {
                 ticketStatus = "refund";
-            }           
+            }
             if (settleList.Any())
             {
                 ticketStatus = settleList.MaxBy(i => i.SQ).status;
             }
-          
+
             var actualStake = betList.Sum(i => i.actualAmount);
-            var winlostAmount = ticketStatus == "running" ? 0 
+            var winlostAmount = ticketStatus == "running" ? 0
                 : settleList.Sum(i => i.creditAmount) - settleList.Sum(i => i.debitAmount) - actualStake;
 
             //將平台匯率轉回第三方匯率
@@ -715,8 +739,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             out int bonusId,
                             conn,
                             trans,
-                            AllowNegative.Allow,
-                            SeamlessBonusType.TpId);
+                            AllowNegative.Allow);
 
                 if (result.SetBalanceResult < 1)
                 {
@@ -774,10 +797,23 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         private void CheckKey(string merchant, string key)
         {
-            var config = new Config(_thirdPartySetting.TpSetting, merchant);
-            if (config.VendorId != key)
+            if (!_siteSabaConfigs.TryGetValue(merchant, out var sabaConfig))
+            {
+                throw new SBSWException(ReturnCode.OperatorNotFound, $"Invalid merchant | merchant is:{merchant}");
+            }
+
+            if (sabaConfig.VendorId != key)
             {
                 throw new SBSWException(ReturnCode.InvalidVendorId, $"Invalid key | key is:{key}");
+            }
+        }
+
+        private void CheckBalance(string tpUserName, decimal totalBetAmount)
+        {
+            var balance = GetTpCustBalance(tpUserName);
+            if (balance.Balance < totalBetAmount)
+            {
+                throw new SBSWException(ReturnCode.InsufficientBalance, $"CheckBalance | Insufficient. Balance={balance.Balance}. totalBetAmount={totalBetAmount}.");
             }
         }
 

@@ -1,10 +1,13 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
+
 using Newtonsoft.Json;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 using ThirdPartyCore.Model.TpMerchantBalance.Response;
+
 using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
@@ -113,6 +116,7 @@ namespace ThirdPartyService.Service.BLL
 
                 TpCustInfo freeCustInfo = new TpCustInfo();
                 freeCustInfo.SiteId = tpInfo.SiteId;
+                freeCustInfo.CustId = tpInfo.CustId;
                 apiResult = tpHelper.Login(freeCustInfo, (AppType)tpInfo.AppType, tpLangId, inputs);
                 return apiResult;
             }
@@ -790,7 +794,7 @@ namespace ThirdPartyService.Service.BLL
 
             tpTransferInfo.SetAdjustWalletLog(transferResult, transId);
             if (transferResult.ErrorCode == ErrorCode.Success
-                && adminTpTransfer.Category == 9 && adminTpTransfer.DepositId > 0) // Category 9: Deposit
+                && adminTpTransfer.IsDepositId && adminTpTransfer.DepositId > 0) // IsDepositId = true
             {
                 var adjustAmount = adminTpTransfer.Amount * (adminTpTransfer.direction == Direction.ToTp ? 1 : -1);
                 var reslutCode = tpTransferInfo.SetAdjustmentActualDeposit(transId, adminTpTransfer.DepositId, adjustAmount);
@@ -1195,6 +1199,11 @@ namespace ThirdPartyService.Service.BLL
             return _TpList.TryGetValue(tpId, out var result) ? result.TpName : string.Empty;
         }
 
+        public ApiResult<TpCustInfo> CreateMember(int custId, int tpId, bool isNeedSendRequest)
+        {
+            return tpCustInfoService.CreateMember(custId, tpId, isNeedSendRequest);
+        }
+
         #region Private Methods
 
         /// <summary>
@@ -1495,12 +1504,12 @@ namespace ThirdPartyService.Service.BLL
                     var gameId = tpInfo.inputs.ContainsKey("gameId") ? tpInfo.inputs["gameId"] : "0";
                     gameId = (gameId == "undefined" || gameId == "null") ? "" : gameId;
                     var betType = tpInfo.inputs.ContainsKey("bettype") ? tpInfo.inputs["bettype"] : "0";
-                    
+
                     // 顯示遊戲大廳名 (Dream Gaming)
                     var type = (int)RecentlyViewedTypeEnum.LobbyName;
                     // 類型_TP_TpGameType_CategoryId_GameId_BetType
                     var gameInfo = $"{type}:{tpInfo.TpId}:{tpGameType}:{(int)gameTypeOption.CategoryId}:{gameId}:0";
-                    
+
                     // Slot 顯示遊戲名稱
                     if (gameTypeOption.CategoryId == TpCategory.Casino)
                     {
@@ -1510,8 +1519,8 @@ namespace ThirdPartyService.Service.BLL
                             type = (int)RecentlyViewedTypeEnum.GameName;
                             gameInfo = $"{type}:{tpInfo.TpId}:{tpGameType}:{(int)gameTypeOption.CategoryId}:{gameId}:0";
                         }
-                    } 
-                    else if(tpInfo.TpId == (int)TpEnum.SBSW)
+                    }
+                    else if (tpInfo.TpId == (int)TpEnum.SBSW)
                     {
                         // esport games 多塞bettype判斷
                         type = (int)RecentlyViewedTypeEnum.LobbyName;

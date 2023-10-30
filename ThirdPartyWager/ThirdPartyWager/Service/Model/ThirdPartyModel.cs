@@ -1,4 +1,6 @@
-﻿namespace ThirdPartyWager.Service.Model
+﻿using Newtonsoft.Json;
+
+namespace ThirdPartyWager.Service.Model
 {
     public class ThirdPartyModel
     {
@@ -34,12 +36,32 @@
         public string AgentAccount { get; set; }
 
     }
-    
+
     public class TpGameCasino
     {
         public int TpId { set; get; }
         public int CategoryId { set; get; }
         public int TypeId { set; get; }
         public string GameId { set; get; }
+    }
+
+    public class TpListModel
+    {
+        public int SiteId { set; get; }
+        public int TpId { set; get; }
+        public string TpName { set; get; }
+        public string Setting { set; get; }
+        public int Status { set; get; }
+        public Dictionary<string, string> SettingDic
+        {
+            get
+            {
+                if (Setting != null)
+                {
+                    return JsonConvert.DeserializeObject<Dictionary<string, string>>(Setting);
+                }
+                return default;
+            }
+        }
     }
 }

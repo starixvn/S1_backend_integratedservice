@@ -1,21 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Text.RegularExpressions;
+
+using Microsoft.Extensions.DependencyInjection;
+
+using Newtonsoft.Json;
+
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
-using Newtonsoft.Json;
-using System.Text.RegularExpressions;
 using ThirdPartyCore.Model.TpBetRecordExtend;
-using ThirdPartyCore.Extensions;
 
 namespace ThirdParty.PP
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly Dictionary<int, string> _siteSuffixList = new()
-        { { 1, "nova" }, { 2, "goal123" }, { 3, "bwing" } };
+
 
         public class UserReq
         {
@@ -50,7 +50,6 @@ namespace ThirdParty.PP
             //public string secureLogin { get; set; }  //运营商在 Pragmatic Play 侧的唯一标识符。
         }
 
-
         public class LoginResult
         {
             public int error { get; set; }
@@ -71,9 +70,11 @@ namespace ThirdParty.PP
         }
 
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
+        private readonly Dictionary<int, string> _siteSuffixList;
 
-        public TpHelper()
+        public TpHelper(IServiceProvider provider)
         {
+            _siteSuffixList = provider.GetRequiredService<IEnumerable<ServerInfoObject>>().ToDictionary(k => k.SiteId, v => v.SiteName.ToLower());
             _gameNameList = TpBetRecordProvider.GetGameCasinoList(5).ToDictionary(d => d.GameId, d => d.Name);
         }
 

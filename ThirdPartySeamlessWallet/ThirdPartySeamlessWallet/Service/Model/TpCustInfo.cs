@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-using ThirdPartySeamlessWallet.Service.Model.enums;
+﻿using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -36,6 +31,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal ExchangeRate { get; set; }
         public string TpCurrencyId { get; set; }
         public int MemberType { get; set; }
+        public string GameId { get; set; }
     }
     public class TpCustBalance
     {
@@ -82,10 +78,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class CustBonus
     {
-        public int BonusId { get; set; } 
+        public int BonusId { get; set; }
         public decimal Bonus { get; set; }
         public PromotionCategory PromoCategoryId { get; set; }
         public int GameType { get; set; }
-        public int TpId { get; set; }      
+        public int TpId { get; set; }
     }
 }

@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
-using Microsoft.AspNetCore.Http;
+﻿using System.Web;
+
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -21,18 +15,6 @@ namespace ThirdPartySeamlessWallet.Controllers
     [ApiController]
     public class V8Controller : ControllerBase
     {
-        #region Request
-
-        public class ApiReq
-        {
-            public string agent { get; set; }
-            public long timestamp { get; set; }
-            public string param { get; set; }
-            public string key { get; set; }
-        }
-
-        #endregion
-
         #region Response
 
         public class GetApiResp
@@ -52,76 +34,34 @@ namespace ThirdPartySeamlessWallet.Controllers
             public int code { get; set; }
             public decimal money { get; set; }
         }
+
         #endregion
 
-        private readonly ILogger<V8Controller> logger;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly TpCustInfoBLL tpCustInfoBLL;
-        private readonly BettingBLL bettingBLL;
-        private readonly Log2File log2File;
-        private readonly Tools tools;
-        private readonly Tp thisTp;
-        private readonly IHttpClientFactory clientFactory;
-        private readonly string apiUrl;
+        private readonly ILogger<V8Controller> _logger;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly V8BLL _v8BLL;
+        private readonly Log2File _log2File;
+        private readonly Tools _tools;
+        private readonly Tp _thisTp;
 
-        public V8Controller(
-            ILogger<V8Controller> logger,
-            ThirdPartyBLL thirdPartyBLL,
-            TpCustInfoBLL tpCustInfoBLL,
-            BettingBLL bettingBLL,
-            Log2File log2File,
-            Tools tools,
-            IHttpClientFactory clientFactory,
-            IConfiguration configuration
-        )
+        public V8Controller(IServiceProvider provider)
         {
-            this.logger = logger;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.tpCustInfoBLL = tpCustInfoBLL;
-            this.bettingBLL = bettingBLL;
-            this.log2File = log2File;
-            this.tools = tools;
-            thisTp = Tp.V8;
-            this.clientFactory = clientFactory;
-            apiUrl = configuration.GetValue<string>("TpService");
-        }
-        public class ApiResult<TData>
-        {
-            public ApiResult()
-            {
-                ErrorCode = 9000;
-            }
-            public int ErrorCode { get; set; }
-            public string Message { get; set; }
-            public TData Data { get; set; }
-        }
-        public class TransferResult
-        {
-            public TransferResult()
-            {
-                Status = 2;
-            }
-            public int Status { get; set; }
-            public string ThirdId { get; set; }
-            public decimal Difference { get; set; }
-            public decimal Bonus { get; set; }
-            public decimal Rollover { get; set; }
-            public decimal Turnover { get; set; }
-            public int BonusStatus { get; set; }
+            _logger = provider.GetRequiredService<ILogger<V8Controller>>();
+            _log2File = provider.GetRequiredService<Log2File>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _v8BLL = provider.GetRequiredService<V8BLL>();
+            _tools = provider.GetRequiredService<Tools>();
+            _thisTp = Tp.V8;
         }
 
         [HttpGet]
-        [Route("[controller]/channelHandle")]
-        public async Task<GetApiResp> channelHandleAsync([FromQuery] Dictionary<string, string> getReq)
+        [Route("[controller]/seamlesswallet")]
+        public dynamic SeamlessWalletAsync([FromQuery] ApiReq getReq)
         {
-            string logName = $"{thisTp}";
-            var subName = "";
-            var json = JsonConvert.SerializeObject(getReq);
-            var apiReq = JsonConvert.DeserializeObject<ApiReq>(json);
-
+            string logName = $"{_thisTp}";
             GetApiResp getApiResponse = new GetApiResp
             {
-                s = 101,
+                s = 0,
                 m = "/channelHandle",
                 d = new info
                 {
@@ -130,182 +70,115 @@ namespace ThirdPartySeamlessWallet.Controllers
             };
             try
             {
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                var param = tools.AesDecrypt(HttpUtility.UrlEncode(apiReq.param), thirdPartySetting.TpSetting["Deskey"]);
-                var s = HttpUtility.ParseQueryString(param).Get("s");
-
-                if (s == "11")
+                if (string.IsNullOrEmpty(getReq.agent))
                 {
-                    subName = "notify";
-                    log2File.Info($"{json}\r\n{param}", $"{logName}_{subName}");
-
-                    string account = HttpUtility.ParseQueryString(param).Get("account");
-
-                    if (account.IndexOf("_") > -1)
-                    {
-                        account = account[(account.IndexOf("_") + 1)..];
-                    }
-
-                    var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, account);
-
-                    /*Transfer In*/
-                    var client = clientFactory.CreateClient();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    Dictionary<string, string> input = new Dictionary<string, string>();
-                    input.Add("AllOut", null);
-
-                    var fooJSON = JsonConvert.SerializeObject(new
-                    {
-                        TpId = (int)thisTp,
-                        CustId = tpCustInfo.CustId,
-                        Amount = 1,
-                        direction = 2,
-                        inputs = input
-                    });
-
-                    var fooContent = new StringContent(fooJSON, Encoding.UTF8, "application/json");
-                    var myUrl = $"{apiUrl}Transfer";
-                    HttpResponseMessage response = await client.PostAsync(myUrl, fooContent);
-                    ApiResult<TransferResult> oApiResult = new ApiResult<TransferResult>();
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        string responseBody = await response.Content.ReadAsStringAsync();
-                        oApiResult = JsonConvert.DeserializeObject<ApiResult<TransferResult>>(responseBody);
-                    }
-
-                    if (oApiResult.ErrorCode == 0)
-                    {
-                        getApiResponse.d.code = 0;
-                        log2File.Info($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(oApiResult)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", $"{logName}_{subName}");
-                    }
-                    else
-                    {
-                        log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(oApiResult)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", $"{logName}_{subName}");
-                    }
-
+                    getApiResponse.d.code = (int)ErrorCodeOfV8.Agent;
+                    _log2File.Error($"Agent Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
 
-                log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getApiResponse)}", $"{logName}_{subName}");
-                return getApiResponse;
+                if (string.IsNullOrEmpty(getReq.param))
+                {
+                    getApiResponse.d.code = (int)ErrorCodeOfV8.Decryption;
+                    _log2File.Error($"Decryption Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+
+                var param = DecryptParam(getReq.param);
+
+                if (string.IsNullOrEmpty(param))
+                {
+                    getApiResponse.d.code = (int)ErrorCodeOfV8.Decryption;
+                    _log2File.Error($"Decryption Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+
+                var query = HttpUtility.ParseQueryString(param);
+                var json = JsonConvert.SerializeObject(query.AllKeys.ToDictionary(y => y, y => query[y]));
+                _log2File.Info($"{json}", logName);
+                var req = JsonConvert.DeserializeObject<CommonP>(json);
+                getApiResponse.s = req.s;
+
+                if (!Enum.IsDefined(typeof(SubTypeOfV8), req.s))
+                {
+                    getApiResponse.d.code = (int)ErrorCodeOfV8.Subtype;
+                    _log2File.Error($"Subtype Error {req.s}", logName);
+                    return getApiResponse;
+                }
+
+                var verifyKey = false;
+                if (!string.IsNullOrEmpty(getReq.key))
+                {
+                    verifyKey = CheckKey(getReq.key, getReq.timestamp);
+                }
+                if (!verifyKey)
+                {
+                    getApiResponse.d.code = (int)ErrorCodeOfV8.Md5;
+                    _log2File.Error($"CheckKey Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+
+                switch (req.s)
+                {
+                    case (int)SubTypeOfV8.GetBalance:
+                        return _v8BLL.GetBalance(json);
+                    case (int)SubTypeOfV8.RequestBet:
+                        return _v8BLL.PlaceBet(getReq, json);
+                    case (int)SubTypeOfV8.ReturnBalance:
+                        return _v8BLL.Payout(getReq, json);
+                    case (int)SubTypeOfV8.GetOrderStatus:
+                        return _v8BLL.GetOrderStatus(getReq, json);
+                    case (int)SubTypeOfV8.CancelBet:
+                        return _v8BLL.CancelBet(getReq, json);
+                    default:
+                        break;
+                }
             }
             catch (Exception ex)
             {
-                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex.Message}", logName, ex);
+                _log2File.Error($"{ex.Message}", logName, ex);
             }
+
+            _log2File.Error($"Unknow Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
             return getApiResponse;
         }
 
-        [HttpGet]
-        [Route("[controller]")]
-        public async Task<GetBalanceResp> SeamlessWalletAsync([FromQuery] Dictionary<string, string> getReq)
+        private string DecryptParam(string getReq)
         {
-            string logName = $"{thisTp}";
-            var subName = "";
-            var json = JsonConvert.SerializeObject(getReq);
-            var apiReq = JsonConvert.DeserializeObject<ApiReq>(json);
+            var param = getReq;
 
-            GetBalanceResp getBalanceResponse = new GetBalanceResp();
-            getBalanceResponse.code = 999;
-
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            var param = tools.AesDecrypt(HttpUtility.UrlEncode(apiReq.param), thirdPartySetting.TpSetting["Deskey"]);
-            var s = HttpUtility.ParseQueryString(param).Get("s");
-
-            if (s == "12")
+            try
             {
-                subName = "balance";
-                var account = HttpUtility.ParseQueryString(param).Get("account");
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, account);
-                if (tpCheck == null || tpCheck.Locked)
-                {
-                    getBalanceResponse.code = 4;
-                    log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}", $"{logName}_{subName}");
-                    return getBalanceResponse;
-                }
+                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)_thisTp);
+                var deskey = thirdPartySetting.TpSetting["Deskey_SW"];
 
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, account);
-                if (tpCustBalance != null)
-                {
-                    getBalanceResponse.code = 0;
-                    getBalanceResponse.money = tpCustBalance.Balance;
-                    log2File.Info($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}", $"{logName}_{subName}");
-                }
-                else
-                {
-                    log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}", $"{logName}_{subName}");
-                }
-                return getBalanceResponse;
+                param = _tools.AesDecrypt(HttpUtility.UrlEncode(getReq), deskey);
+
+                _logger.LogInformation(param);
             }
-            else if (s == "13")
+            catch (Exception)
             {
-                subName = "TransferOut";
-                var account = HttpUtility.ParseQueryString(param).Get("account");
-                var money = HttpUtility.ParseQueryString(param).Get("money");
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, account);
-                if (tpCheck == null || tpCheck.Locked)
-                {
-                    getBalanceResponse.code = 4;
-                    log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}", $"{logName}_{subName}");
-                    return getBalanceResponse;
-                }
-
-                try
-                {
-                    var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, account);
-                    /*Transfer Out*/
-
-                    var client = clientFactory.CreateClient();
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    var fooJSON = JsonConvert.SerializeObject(new
-                    {
-                        TpId = (int)thisTp,
-                        CustId = tpCustInfo.CustId,
-                        Amount = Convert.ToDecimal(money),
-                        direction = 1
-                    });
-
-                    var fooContent = new StringContent(fooJSON, Encoding.UTF8, "application/json");
-                    var myUrl = $"{apiUrl}Transfer";
-                    HttpResponseMessage response = await client.PostAsync(myUrl, fooContent);
-                    ApiResult<TransferResult> oApiResult = new ApiResult<TransferResult>();
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        string responseBody = await response.Content.ReadAsStringAsync();
-                        oApiResult = JsonConvert.DeserializeObject<ApiResult<TransferResult>>(responseBody);
-                    }
-
-                    if (oApiResult.ErrorCode == 0)
-                    {
-                        getBalanceResponse.code = 0;
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, account);
-                        getBalanceResponse.money = tpCustBalance.Balance;
-                        log2File.Info($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}\r\n{JsonConvert.SerializeObject(oApiResult)}", $"{logName}_{subName}");
-                    }
-                    else if (oApiResult.Data.Difference != 0)
-                    {
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, account);
-                        getBalanceResponse.code = 1005;
-                        getBalanceResponse.money = tpCustBalance.Balance;
-                        log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}\r\n{JsonConvert.SerializeObject(oApiResult)}", $"{logName}_{subName}");
-                    }
-                    else
-                    {
-                        log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}\r\n{response.ReasonPhrase}", $"{logName}_{subName}");
-                    }
-                    return getBalanceResponse;
-                }
-                catch (Exception ex)
-                {
-                    log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}\r\n{ex.Message}", $"{logName}_{subName}", ex);
-                    return getBalanceResponse;
-                }
+                _logger.LogError($"DecryptParam Error\r\nkey={getReq}");
             }
 
-            log2File.Error($"{json}\r\n{param}\r\n{JsonConvert.SerializeObject(getBalanceResponse)}", $"{logName}_{subName}");
-            return getBalanceResponse;
+            return param;
         }
+
+        private bool CheckKey(string key, long timestamp)
+        {
+            var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)_thisTp);
+            var md5key = thirdPartySetting.TpSetting["Md5key_SW"];
+            var agent = thirdPartySetting.TpSetting["Agent_SW"];
+
+            var encryptKey = _tools.ToMD5($"{agent}{timestamp}{md5key}").ToLower();
+            if (key.ToLower() == encryptKey)
+            {
+                return true;
+            }
+
+            _logger.LogError($"CheckKey Error\r\nkey={key}\r\nencryptKey={encryptKey}");
+            return false;
+        }
+
     }
 }

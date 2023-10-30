@@ -11,7 +11,7 @@
         public long StartUnixTime { get; set; }
         public string Request_id { get; set; }
     }
-    
+
     public class VerifyOTPEmailReq
     {
         public int CustId { get; set; }

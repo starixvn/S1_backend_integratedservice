@@ -15,6 +15,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.0.123" />
+    <PackageReference Include="Elastic.Apm.NetCoreAll" Version="1.22.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.1" />
     <PackageReference Include="MySql.Data" Version="8.0.27" />
@@ -34,10 +35,13 @@
     <ProjectReference Include="..\ThirdParty.CryptoSports\ThirdParty.CryptoSports.csproj" />
     <ProjectReference Include="..\ThirdParty.DG\ThirdParty.DG.csproj" />
     <ProjectReference Include="..\ThirdParty.EBet\ThirdParty.EBet.csproj" />
+    <ProjectReference Include="..\ThirdParty.END\ThirdParty.END.csproj" />
     <ProjectReference Include="..\ThirdParty.EVO\ThirdParty.EVO.csproj" />
+    <ProjectReference Include="..\ThirdParty.FaChai\ThirdParty.FaChai.csproj" />
     <ProjectReference Include="..\ThirdParty.GPI\ThirdParty.GPI.csproj" />
     <ProjectReference Include="..\ThirdParty.HB\ThirdParty.HB.csproj" />
     <ProjectReference Include="..\ThirdParty.Iconic\ThirdParty.Iconic.csproj" />
+    <ProjectReference Include="..\ThirdParty.IM\ThirdParty.IM.csproj" />
     <ProjectReference Include="..\ThirdParty.JILI\ThirdParty.JILI.csproj" />
     <ProjectReference Include="..\ThirdParty.Joker\ThirdParty.Joker.csproj" />
     <ProjectReference Include="..\ThirdParty.Kiss918\ThirdParty.Kiss918.csproj" />
@@ -50,17 +54,19 @@
     <ProjectReference Include="..\ThirdParty.Mega\ThirdParty.Mega.csproj" />
     <ProjectReference Include="..\ThirdParty.MG\ThirdParty.MG.csproj" />
     <ProjectReference Include="..\ThirdParty.OneGaming\ThirdParty.OneGaming.csproj" />
+    <ProjectReference Include="..\ThirdParty.Pegasus\ThirdParty.Pegasus.csproj" />
     <ProjectReference Include="..\ThirdParty.PG\ThirdParty.PG.csproj" />
+    <ProjectReference Include="..\ThirdParty.PlayTech\ThirdParty.PlayTech.csproj" />
+    <ProjectReference Include="..\ThirdParty.PNG\ThirdParty.PNG.csproj" />
     <ProjectReference Include="..\ThirdParty.PP\ThirdParty.PP.csproj" />
-    <ProjectReference Include="..\ThirdParty.PT\ThirdParty.PT.csproj" />
     <ProjectReference Include="..\ThirdParty.RedTiger\ThirdParty.RedTiger.csproj" />
-    <ProjectReference Include="..\ThirdParty.Saba\ThirdParty.Saba.csproj" />
     <ProjectReference Include="..\ThirdParty.SA\ThirdParty.SA.csproj" />
     <ProjectReference Include="..\ThirdParty.SBO\ThirdParty.SBO.csproj" />
     <ProjectReference Include="..\ThirdParty.SBSW\ThirdParty.SBSW.csproj" />
     <ProjectReference Include="..\ThirdParty.Sexy\ThirdParty.Sexy.csproj" />
     <ProjectReference Include="..\ThirdParty.SG\ThirdParty.SG.csproj" />
     <ProjectReference Include="..\ThirdParty.SimplePlay\ThirdParty.SimplePlay.csproj" />
+    <ProjectReference Include="..\ThirdParty.SPRIBE\ThirdParty.SPRIBE.csproj" />
     <ProjectReference Include="..\ThirdParty.TCG\ThirdParty.TCG.csproj" />
     <ProjectReference Include="..\ThirdParty.TF\ThirdParty.TFG.csproj" />
     <ProjectReference Include="..\ThirdParty.V8\ThirdParty.V8.csproj" />
@@ -70,71 +76,6 @@
     <ProjectReference Include="..\ThirdParty.YL\ThirdParty.YL.csproj" />
     <ProjectReference Include="..\ThirdParty.Skywind\ThirdParty.Skywind.csproj" />
     <ProjectReference Include="..\ThiryParty.BG\ThirdParty.BG.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="Storage\PT\CNY.p12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\IDR.p12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\INR.p12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\MYR.p12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\PEM\CNY.key">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\PEM\CNY.pem">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\PEM\IDR.key">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\PEM\IDR.pem">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\PEM\INR.key">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\PEM\INR.pem">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\PEM\MYR.key">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\PEM\MYR.pem">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\PEM\THB.key">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\PEM\THB.pem">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\PEM\USD.key">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\PEM\USD.pem">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\PEM\VND.key">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\PEM\VND.pem">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\THB.p12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\USD.p12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\VND.p12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">

@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 using System.Web;
-using Microsoft.AspNetCore.Http;
+
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -51,7 +47,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.settledBLL = settledBLL;
             this.log2File = log2File;
             this.thisTp = Tp.CQ9;
-            //gameType = (int)GameType.CQ9_RNG;
             tpGameName = "CQ9";
             this.environment = environment;
         }
@@ -327,7 +322,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             // player offline return balance 0 others return cache balance
-            var gameType = thirdPartyBLL.GetGameType((int)thisTp, gamecode);
+            var gameType = string.IsNullOrEmpty(gamecode) ? 0 : thirdPartyBLL.GetGameType((int)thisTp, gamecode);
             var tpCustBalance = (environment.IsDevelopment()) ? tpCustInfoBLL.GetBalance((int)thisTp, account, (int)gameType) : tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, account, (int)gameType);
             getBalanceResp.data = new BalanceData();
             getBalanceResp.status.code = "0";
@@ -1052,7 +1047,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             apiResponse.data = null;
 
             // 當為負值時則反回錯誤編碼1003
-            if (rolloutReq.amount <= 0)
+            if (rolloutReq.amount < 0 || !getRolloutReq.ContainsKey("amount"))
             {
                 apiResponse.status.code = "1003";
                 apiResponse.status.message = "Error : insufficient amount";
@@ -1216,7 +1211,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, takeAllReq.account, (int)gameType);
                 takeAllReq.amount = tpCustBalance.Balance;
-                if (takeAllReq.amount <= 0)
+                if (takeAllReq.amount < 0 || !getTakeAllReq.ContainsKey("amount"))
                 {
                     var record = settledBLL.GetRecordRNG_CQ9(takeAllReq.mtcode);
                     if (record != null && record.Count() > 0)

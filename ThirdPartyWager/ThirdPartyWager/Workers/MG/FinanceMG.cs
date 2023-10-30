@@ -1,7 +1,7 @@
 ﻿using Serilog.Context;
+
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.BLL.MG;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers
@@ -44,7 +44,7 @@ namespace ThirdPartyWager.Workers
                 {
                     date = date.AddDays(-1);
                 }
-                
+
                 var isSuccess = await _mgBll.GetReport(date);
                 if (isSuccess)
                 {

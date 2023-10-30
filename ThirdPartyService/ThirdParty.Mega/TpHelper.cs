@@ -1,8 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
+
+using Newtonsoft.Json;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -372,7 +371,7 @@ namespace ThirdParty.Mega
                 "application/json"
             );
 
-            
+
             apiResult.RawMessage = "No Result";
             apiResult.RawErrorCode = "1";
             apiResult.ErrorCode = ErrorCode.TransferPending;
@@ -555,8 +554,8 @@ namespace ThirdParty.Mega
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
-            { 
-                Title= tpGameType.TypeName,
+            {
+                Title = tpGameType.TypeName,
             };
         }
     }

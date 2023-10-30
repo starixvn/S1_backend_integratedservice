@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace ThirdPartySeamlessWallet.Extensions
+﻿namespace ThirdPartySeamlessWallet.Extensions
 {
     public static class DateTimeExtension
     {
@@ -10,6 +7,9 @@ namespace ThirdPartySeamlessWallet.Extensions
             return partitionTime.ToString("yyyyMM");
         }
 
+        /// <remarks>
+        /// partitionCheckDay 為幾號時觸發往前抓一個月
+        /// </remarks>
         public static IEnumerable<string> GetPartitionRange(this DateTime partitionTime, int partitionCheckDay)
         {
             var result = new List<string>

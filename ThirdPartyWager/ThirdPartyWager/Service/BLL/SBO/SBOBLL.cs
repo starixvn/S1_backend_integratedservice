@@ -1,9 +1,10 @@
 ﻿using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Service.BLL.SBO
+namespace ThirdPartyWager.Service.BLL
 {
     public interface ISBOBLL
     {
@@ -16,25 +17,32 @@ namespace ThirdPartyWager.Service.BLL.SBO
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly IApiSBOBLL _apiSboBll;
         private readonly ILogger<SBOBLL> _logger;
-        private readonly List<int> _siteList = new List<int>() { 2, 3 };
-        public SBOBLL(IWagerSBOService wagerSboService, ThirdPartyBLL thirdPartyBll, IApiSBOBLL apiSboBll, ILogger<SBOBLL> logger)
+        private readonly int _tpId = (int)Tp.SBO;
+
+        public SBOBLL(IServiceProvider provider)
         {
-            _wagerSboService = wagerSboService;
-            _thirdPartyBLL = thirdPartyBll;
-            _apiSboBll = apiSboBll;
-            _logger = logger;
+            _logger = provider.GetRequiredService<ILogger<SBOBLL>>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _wagerSboService = provider.GetRequiredService<IWagerSBOService>();
+            _apiSboBll = provider.GetRequiredService<IApiSBOBLL>();
         }
-        
+
         public async Task<bool> GetWagersAsync(string startTime, string endTime, SBOPortfolio portfolio)
         {
-            foreach (var siteId in _siteList)
+            var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+            foreach (var siteData in siteList)
             {
-                var dictSetting = _thirdPartyBLL.GetThirdPartyBySite((int)Tp.SBO, siteId);
+                if (siteData.SiteId == 1)
+                {
+                    continue;
+                }
+
+                var dictSetting = _thirdPartyBLL.GetThirdPartyBySite((int)Tp.SBO, siteData.SiteId);
                 var sboSetting = GetSboSetting(dictSetting);
                 var sboWagers = await _apiSboBll.GetBetListByModifyDateAsync(startTime, endTime, portfolio, sboSetting);
 
                 if (sboWagers == null) return false;
-                    
+
                 if (sboWagers.error.id != 0)
                 {
                     _logger.LogError($"get betList by modify date failed: {sboWagers.error.msg}");
@@ -57,7 +65,7 @@ namespace ThirdPartyWager.Service.BLL.SBO
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e,$"insert TpWagerSBO failed: {e.Message}");
+                    _logger.LogError(e, $"insert TpWagerSBO failed: {e.Message}");
                     return false;
                 }
             }

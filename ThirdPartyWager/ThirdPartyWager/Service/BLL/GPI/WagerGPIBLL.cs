@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -13,10 +14,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiGPIBLL _apiGPIBLL;
         private readonly CommonBLL _commonBLL;
         private readonly WagerGPIService _wagerGPIService;
-        private readonly TpUnsettleService _tpUnsettleService;
         private readonly ILogger<WagerGPIBLL> _logger;
-        private readonly MySqlClient _wagerDbClient;
-
 
         private readonly int _tpId = (int)Tp.GPI;
         private readonly int _timeZone = 8;
@@ -34,17 +32,15 @@ namespace ThirdPartyWager.Service.BLL
             _apiGPIBLL = provider.GetRequiredService<ApiGPIBLL>();
             _wagerGPIService = provider.GetRequiredService<WagerGPIService>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
-            _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _logger = provider.GetRequiredService<ILogger<WagerGPIBLL>>();
-            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
         }
 
         public async Task<bool> ExecWagerWorker(int type, int gameType, int timeRange)
         {
-            var wokerTime = GetWorkerTime(type, -60, gameType);
-            var quick = CheckQuick(wokerTime, 5);
-            TimeCast time = _dateTimeHelper.GetTimeByMinute(timeRange, _timeZone, _timeFormat, wokerTime);
+            var workerTime = GetWorkerTime(type, -60, gameType);
+            var quick = CheckQuick(workerTime, 5);
+            TimeCast time = _dateTimeHelper.GetTimeByMinute(timeRange, _timeZone, _timeFormat, workerTime);
 
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
@@ -61,9 +57,9 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> ExecWagerRedoWorker(int type, int gameType, int timeRange)
         {
-            var wokerTime = GetWorkerTime(type, 0, gameType);
-            var quick = CheckQuick(wokerTime, 120);
-            var time = _dateTimeHelper.GetTimeByHour(timeRange, _timeZone, _timeFormat, wokerTime, 1);
+            var workerTime = GetWorkerTime(type, 0, gameType);
+            var quick = CheckQuick(workerTime, 120);
+            var time = _dateTimeHelper.GetTimeByHour(timeRange, _timeZone, _timeFormat, workerTime, 1);
 
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)

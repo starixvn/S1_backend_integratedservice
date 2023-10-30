@@ -1,6 +1,9 @@
+using StackExchange.Redis;
+
 using ThirdPartyBetHistory.Extensions;
 using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.DAL;
+using ThirdPartyBetHistory.Service.Library;
 using ThirdPartyBetHistory.Service.Model;
 
 namespace ThirdPartyBetHistory
@@ -16,7 +19,8 @@ namespace ThirdPartyBetHistory
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDatabaseConnection(Configuration);
-            services.AddMemoryCache();
+            services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(Configuration.GetValue<string>("RedisConnection")));
+            services.AddSingleton<ICacheHelper, RedisCacheHelper>();
 
             /*DAL*/
             services.AddSingleton<SettledService>();
@@ -26,13 +30,9 @@ namespace ThirdPartyBetHistory
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
             services.AddSingleton<SettledBLL>();
-            services.AddSingleton<TpBetRecordExtendBLL>();
 
+            services.AddOptionListByDB<ConfigObject>("SiteConfig_Get", new { ConfigGroup = "TP" });
             services.RegisterSabaSiteHelper();
-
-            services.AddOptionListByDB<TpGameTypeOption>("Admin_TpGameType_Get");
-            services.AddOptionListByDB<TpListOption>("Common_TpList_Get");
-            services.AddOptionListByDB<CurrencyOption>("Common_Currency_Get");
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -43,12 +43,11 @@ namespace ThirdPartyBetHistory
             }
 
             app.UseRouting();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapGet("/health", async context =>
                 {
-                    await context.Response.WriteAsync($"{env.EnvironmentName}-{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}");
+                    await context.Response.WriteAsync($"{env.EnvironmentName}-{DateTime.Now:yyyy/MM/dd HH:mm:ss}");
                 });
             });
         }

@@ -1,4 +1,5 @@
 ﻿using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
@@ -9,7 +10,6 @@ namespace ThirdPartyWager.Workers
 {
     public class FinanceOneGaming : BackgroundService
     {
-        private readonly IHostEnvironment _environment;
         private readonly ILogger<FinanceOneGaming> _logger;
         private readonly FinanceOneGamingBLL _financeOneGamingBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
@@ -20,15 +20,12 @@ namespace ThirdPartyWager.Workers
         private readonly int _beyond = 2;
         private Timer timer;
 
-        public FinanceOneGaming(
-            IServiceProvider provider
-        )
+        public FinanceOneGaming(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceOneGaming>>();
             _financeOneGamingBLL = provider.GetRequiredService<FinanceOneGamingBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _fincanceService = provider.GetRequiredService<FincanceService>();
-            _environment = provider.GetRequiredService<IHostEnvironment>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)

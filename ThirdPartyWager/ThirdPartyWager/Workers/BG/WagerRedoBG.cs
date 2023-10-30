@@ -1,5 +1,7 @@
-﻿using Serilog.Context;
-using System.Text.Json;
+﻿using System.Text.Json;
+
+using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -10,6 +12,7 @@ public class WagerRedoBG : BackgroundService
     private readonly ILogger<WagerRedoBG> _logger;
     private readonly WagerBGBLL _wagerBGBLL;
     private readonly CommonBLL _commonBLL;
+    private readonly ThirdPartyBLL _thirdPartyBLL;
 
     private readonly int tpId = (int)Tp.BG;
     private bool isFast = false;
@@ -21,13 +24,12 @@ public class WagerRedoBG : BackgroundService
     private readonly int runTime = 30; // in minutes
     private readonly int needQuickTime = 60; // in minutes
 
-    public WagerRedoBG(ILogger<WagerRedoBG> logger,
-                       WagerBGBLL wagerBGBLL,
-                       CommonBLL commonBll)
+    public WagerRedoBG(IServiceProvider provider)
     {
-        _logger = logger;
-        _wagerBGBLL = wagerBGBLL;
-        _commonBLL = commonBll;
+        _logger = provider.GetRequiredService<ILogger<WagerRedoBG>>();
+        _wagerBGBLL = provider.GetRequiredService<WagerBGBLL>();
+        _commonBLL = provider.GetRequiredService<CommonBLL>();
+        _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -42,12 +44,13 @@ public class WagerRedoBG : BackgroundService
         LogContext.PushProperty("Tp", Tp.BG.ToString());
         try
         {
-            var siteList = _commonBLL.GetSiteList().Where(x => x.SiteId != 4 && x.SiteId != 5);
+            var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+            var serverList = _commonBLL.GetSiteList();
             var TpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
             var quick = false;
             foreach (var siteInfo in siteList)
             {
-                var currencyList = JsonSerializer.Deserialize<IEnumerable<int>>(siteInfo.CurrencyList);
+                var currencyList = JsonSerializer.Deserialize<IEnumerable<int>>(serverList.First(x => x.SiteId == siteInfo.SiteId).CurrencyList);
                 foreach (var item in TpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
                 {
                     quick = await _wagerBGBLL.ExecWagerWorker(siteInfo.SiteId, item.TpCurrencyId, tpType, timeRange, needQuickTime);

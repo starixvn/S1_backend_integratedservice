@@ -7,53 +7,77 @@ namespace ThirdPartyBetHistory.Service.BLL
     public class ThirdPartyBLL
     {
         private readonly ThirdPartyService _thirdPartyService;
+        private readonly IEnumerable<ConfigObject> _configs;
+
         public ThirdPartyBLL(IServiceProvider provider)
         {
             _thirdPartyService = provider.GetRequiredService<ThirdPartyService>();
+            _configs = provider.GetRequiredService<IEnumerable<ConfigObject>>();
         }
-        public IEnumerable<ThirdPartyModel> GetTpList()
+
+        public IEnumerable<ConfigObject> GetTpConfigList(string tpName)
         {
-            var tpList = _thirdPartyService.GetTpList().ToList();
-            var siteTpList = _thirdPartyService.GetSiteTpList();
-            if (siteTpList != null)
-            {
-                foreach (var siteTp in siteTpList)
-                {
-                    tpList.Add(siteTp);
-                }
-            }
-
-            return tpList;
+            return _configs.Where(i => i.SiteId != 0 && i.ConfigKey == tpName);
         }
 
-        public void DoSettleTicket(IEnumerable<SabaSettleData> settleDataList, WorkerType workerType)
-        {
-            _thirdPartyService.DoSettleTicket(settleDataList, workerType);
-        }
-
-        public TpCurrency GetTpCurrency(int tpId, int currencyId)
-        {
-            return _thirdPartyService.GetTpCurrency(tpId, currencyId);
-        }
-
+        /// <summary>
+        /// 分SiteId與WorkerType取回TicketKey
+        /// </summary>
         public long GetSiteTicketKey(WorkerType workerType, IThirdPartyBetHelper betHelper)
         {
             return _thirdPartyService.GetSiteTicketKey(betHelper.SiteId, (int)betHelper.Tp, workerType);
         }
 
+        /// <summary>
+        /// 分SiteId與WorkerType更新TicketKey
+        /// </summary>
         public int SetSiteTicketKey(WorkerType workerType, IThirdPartyBetHelper betHelper, long ticketKey)
         {
-            return _thirdPartyService.SetSiteTicketKey((int)betHelper.SiteId, (int)betHelper.Tp, workerType, ticketKey);
+            return _thirdPartyService.SetSiteTicketKey(betHelper.SiteId, (int)betHelper.Tp, workerType, ticketKey);
         }
 
-        public int AddTpBetRecordDetail(TpBetRecordDetail detail)
+        public int AddTpBetRecordDetail(TpBetRecordDetail detail, DateTime? partitionTime = null)
         {
-            return _thirdPartyService.AddTpBetRecordDetail(detail);
+            return _thirdPartyService.AddTpBetRecordDetail(detail, partitionTime);
         }
 
         public TpCustInfo GetTpCustInfoWithCache(int tpId, string tpUserName)
         {
             return _thirdPartyService.GetTpCustInfoWithCache(tpId, tpUserName);
+        }
+
+        /// <summary>
+        /// 取得SBSW Vgaming五分鐘沒收到派彩的下注清單
+        /// </summary>
+        public IEnumerable<VgamingUnSettle> GetVgamingUnSettleTicket(long TicketKey, int LimitCount = 1000)
+        {
+            return _thirdPartyService.GetVgamingUnSettleTicket(TicketKey, LimitCount);
+        }
+
+        /// <summary>
+        /// 取得Vgaming下一次要檢查的TicketKey
+        /// </summary>
+        /// <param name="TicketKey"></param>
+        /// <returns></returns>
+        public long GetVgamingTicketKey(long TicketKey)
+        {
+            return _thirdPartyService.GetVgamingTicketKey(TicketKey);
+        }
+
+        /// <summary>
+        /// 不分SiteId，用WorkerType取回TicketKey
+        /// </summary>
+        public long GetAllSiteTicketKey(WorkerType workerType, int tpId)
+        {
+            return _thirdPartyService.GetSiteTicketKey(0, tpId, workerType);
+        }
+
+        /// <summary>
+        /// 不分SiteId，用WorkerType更新TicketKey
+        /// </summary>
+        public int SetAllSiteTicketKey(WorkerType workerType, int tpId, long ticketKey)
+        {
+            return _thirdPartyService.SetSiteTicketKey(0, tpId, workerType, ticketKey);
         }
     }
 }

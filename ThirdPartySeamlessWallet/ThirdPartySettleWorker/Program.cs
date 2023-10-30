@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Builder;
+
 using Serilog;
 using Serilog.Exceptions;
+
 using ThirdPartySeamlessWallet;
 using ThirdPartySeamlessWallet.Core.Extensions;
 using ThirdPartySeamlessWallet.Service.Workers;
+
 using ThirdPartySettleWorker.Workers;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -45,7 +48,8 @@ builder.Services
     .AddHostedService<SimplePlayWorker>()
     .AddHostedService<SGWorker>()
     .AddHostedService<AllbetWorker>()
-    .AddHostedService<PTWorker>()
+    //.AddHostedService<PTWorker>()
+    .AddHostedService<PlayTechWorker>()
     .AddHostedService<SBOWorker>()
     .AddHostedService<JILIWorker>()
     //.AddHostedService<ATWorker>()
@@ -63,10 +67,26 @@ builder.Services
     .AddHostedService<BTIWorker>()
     .AddHostedService<NineWWorker>()
     .AddHostedService<One789Worker>()
+    .AddHostedService<GPIWorker>()
     .AddHostedService<YeebetWorker>()
     .AddHostedService<BGWorker>()
     .AddHostedService<TFGWorker>()
-    .AddHostedService<NextspinWorker>();
+    .AddHostedService<NextspinWorker>()
+    .AddHostedService<ENDWorker>()
+    .AddHostedService<IMWorker>()
+    .AddHostedService<SPRIBEWorker>()
+    .AddHostedService<SBSWWorker>()
+    .AddHostedService<DGWorker>()
+    .AddHostedService<AGWorker>()
+    .AddHostedService<EBetWorker>()
+    .AddHostedService<PNGWorker>()
+    .AddHostedService<SexyWorker>()
+    .AddHostedService<WMWorker>()
+    .AddHostedService<FaChaiWorker>()
+    .AddHostedService<EVOWorker>()
+    .AddHostedService<N2LiveWorker>()
+    .AddHostedService<N2LiveSmartWorker>()
+    .AddHostedService<PegasusWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);

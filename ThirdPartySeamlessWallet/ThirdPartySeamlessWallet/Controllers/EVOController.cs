@@ -1,16 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 using System.Web;
+
+using Microsoft.AspNetCore.Mvc;
+
+using Newtonsoft.Json;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -163,7 +157,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/sid")]
-        public async Task<dynamic> sidAsync([FromQuery] Dictionary<string, string> getQuery)
+        public async Task<dynamic> SidAsync([FromQuery] Dictionary<string, string> getQuery)
         {
             string logName = $"{thisTp}_sid";
 
@@ -176,11 +170,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             getApiResponse.status = "UNKNOWN_ERROR";
 
             var authToken = getQuery["authToken"];
-            var check = checkAuthorization(authToken);
+            var check = CheckAuthorization(authToken);
             if (check.status != "OK")
             {
                 getApiResponse.status = check.status;
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
             if (/*string.IsNullOrEmpty(getReq.gameProvider) ||*/ string.IsNullOrEmpty(getReq.userId))
@@ -242,7 +236,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/check")]
-        public async Task<dynamic> checkAsync([FromQuery] Dictionary<string, string> getQuery)
+        public async Task<dynamic> CheckAsync([FromQuery] Dictionary<string, string> getQuery)
         {
             string logName = $"{thisTp}_common_check";
 
@@ -260,7 +254,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getApiResponse;
             }
 
-            var tokenInfo = getTokenInfo(getReq.sid);
+            var tokenInfo = GetTokenInfo(getReq.sid);
             int tpId = tokenInfo.tpId;
             if (tpId == 0)
             {
@@ -278,11 +272,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             logName = $"{(Tp)tpId}_check";
 
             var authToken = getQuery["authToken"];
-            var check = checkAuthorization(authToken);
+            var check = CheckAuthorization(authToken);
             if (check.status != "OK")
             {
                 getApiResponse.status = check.status;
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -315,7 +309,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/balance")]
-        public async Task<dynamic> balanceAsync([FromQuery] Dictionary<string, string> getQuery)
+        public async Task<dynamic> BalanceAsync([FromQuery] Dictionary<string, string> getQuery)
         {
             string logName = $"{thisTp}_common_balance";
 
@@ -333,7 +327,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getApiResponse;
             }
 
-            var tokenInfo = getTokenInfo(getReq.sid);
+            var tokenInfo = GetTokenInfo(getReq.sid);
             int tpId = tokenInfo.tpId;
             int gameType = tokenInfo.gameType;
             if (tpId == 0 || gameType == 0)
@@ -352,11 +346,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             logName = $"{(Tp)tpId}_balance";
 
             var authToken = getQuery["authToken"];
-            var check = checkAuthorization(authToken);
+            var check = CheckAuthorization(authToken);
             if (check.status != "OK")
             {
                 getApiResponse.status = check.status;
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -377,7 +371,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/debit")]
-        public async Task<dynamic> debitAsync([FromQuery] Dictionary<string, string> getQuery)
+        public async Task<dynamic> DebitAsync([FromQuery] Dictionary<string, string> getQuery)
         {
             string logName = $"{thisTp}_common_debit";
 
@@ -396,7 +390,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getApiResponse;
             }
 
-            var tokenInfo = getTokenInfo(getReq.sid);
+            var tokenInfo = GetTokenInfo(getReq.sid);
             int tpId = tokenInfo.tpId;
             int gameType = tokenInfo.gameType;
             if (tpId == 0 || gameType == 0)
@@ -405,7 +399,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
-            if (!verifyGameId(gameType, getReq.game.details.table.id))
+            if (!VerifyGameId(gameType, getReq.game.details.table.id))
             {
                 getApiResponse.status = "INVALID_TOKEN_ID";
                 _log2File.Error($"error gametype\r\n{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
@@ -421,11 +415,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             logName = $"{(Tp)tpId}_debit";
 
             var authToken = getQuery["authToken"];
-            var check = checkAuthorization(authToken);
+            var check = CheckAuthorization(authToken);
             if (check.status != "OK")
             {
                 getApiResponse.status = check.status;
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -465,7 +459,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.balance = tpAffterAmount;
                     getApiResponse.retransmission = false;
                     getApiResponse.uuid = getReq.uuid;
-                    _log2File.Info($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n", logName);
+                    _log2File.Info($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
                 else if (result == -1)
@@ -485,7 +479,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.uuid = getReq.uuid;
                 }
 
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
             catch (Exception ex)
@@ -497,7 +491,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/cancel")]
-        public async Task<dynamic> cancelAsync([FromQuery] Dictionary<string, string> getQuery)
+        public async Task<dynamic> CancelAsync([FromQuery] Dictionary<string, string> getQuery)
         {
             string logName = $"{thisTp}_common_cancel";
 
@@ -516,7 +510,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getApiResponse;
             }
 
-            var tokenInfo = getTokenInfo(getReq.sid);
+            var tokenInfo = GetTokenInfo(getReq.sid);
             int tpId = tokenInfo.tpId;
             int gameType = tokenInfo.gameType;
             if (tpId == 0 || gameType == 0)
@@ -535,11 +529,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             logName = $"{(Tp)tpId}_cancel";
 
             var authToken = getQuery["authToken"];
-            var check = checkAuthorization(authToken);
+            var check = CheckAuthorization(authToken);
             if (check.status != "OK")
             {
                 getApiResponse.status = check.status;
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -565,7 +559,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.balance = tpAffterAmount;
                     getApiResponse.retransmission = false;
                     getApiResponse.uuid = getReq.uuid;
-                    _log2File.Info($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n", logName);
+                    _log2File.Info($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
                 else if (result == -1)
@@ -585,7 +579,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.uuid = getReq.uuid;
                 }
 
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
             catch (Exception ex)
@@ -598,7 +592,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/credit")]
-        public async Task<dynamic> creditAsync([FromQuery] Dictionary<string, string> getQuery)
+        public async Task<dynamic> CreditAsync([FromQuery] Dictionary<string, string> getQuery)
         {
             string logName = $"{thisTp}_common_credit";
 
@@ -617,7 +611,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getApiResponse;
             }
 
-            var tokenInfo = getTokenInfo(getReq.sid);
+            var tokenInfo = GetTokenInfo(getReq.sid);
             int tpId = tokenInfo.tpId;
             int gameType = tokenInfo.gameType;
             if (tpId == 0 || gameType == 0)
@@ -636,11 +630,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             logName = $"{(Tp)tpId}_credit";
 
             var authToken = getQuery["authToken"];
-            var check = checkAuthorization(authToken);
+            var check = CheckAuthorization(authToken);
             if (check.status != "OK")
             {
                 getApiResponse.status = check.status;
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -667,7 +661,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.balance = tpAffterAmount;
                     getApiResponse.retransmission = false;
                     getApiResponse.uuid = getReq.uuid;
-                    _log2File.Info($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n", logName);
+                    _log2File.Info($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                     return getApiResponse;
                 }
                 else if (result == -1)
@@ -687,7 +681,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.uuid = getReq.uuid;
                 }
 
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
             catch (Exception ex)
@@ -700,13 +694,13 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/promo_payout")]
-        public async Task<dynamic> promoPayoutAsync([FromQuery] Dictionary<string, string> getQuery)
+        public async Task<dynamic> PromoPayoutAsync([FromQuery] Dictionary<string, string> getQuery)
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
 
             PromoData_EVO getReq = JsonConvert.DeserializeObject<PromoData_EVO>(Content);
-            BetResp getApiResponse = new BetResp() { status = "UNKNOWN_ERROR" };
+            BetResp getApiResponse = new() { status = "UNKNOWN_ERROR" };
             var authToken = getQuery["authToken"];
 
             if (getReq == null || string.IsNullOrWhiteSpace(authToken))
@@ -730,7 +724,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 };
             }
 
-            var tokenInfo = getTokenInfo(getReq.sid);
+            var tokenInfo = GetTokenInfo(getReq.sid);
             int tpId = tokenInfo.tpId;
             int gameType = tokenInfo.gameType;
             if (tpId == 0 || gameType == 0)
@@ -754,7 +748,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 };
             }
 
-            var check = checkAuthorization(authToken);
+            var check = CheckAuthorization(authToken);
             if (check.status != "OK")
             {
                 getApiResponse.status = check.status;
@@ -824,7 +818,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     };
                 }
 
-                _logger.LogError($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n");
+                _logger.LogError($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}");
                 return getApiResponse;
             }
             catch (Exception ex)
@@ -835,7 +829,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
         }
 
-        private CommonResp checkAuthorization(string authorization)
+        private CommonResp CheckAuthorization(string authorization)
         {
             CommonResp checkResponse = new CommonResp();
 
@@ -856,7 +850,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             return checkResponse;
         }
 
-        private TokenInfo getTokenInfo(string token)
+        private static TokenInfo GetTokenInfo(string token)
         {
             string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(token));
             var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
@@ -870,7 +864,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             };
         }
 
-        private bool verifyGameId(int gameType, string gameId)
+        private bool VerifyGameId(int gameType, string gameId)
         {
             var getGameType = _thirdPartyBLL.GetGameType((int)Tp.EVO, gameId);
             if (gameType == (int)getGameType)

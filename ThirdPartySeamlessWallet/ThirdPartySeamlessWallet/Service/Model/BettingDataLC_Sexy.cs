@@ -1,9 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -416,6 +411,16 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public DateTime txTime { get; set; }
         public string settleType { get; set; }
         public string refPlatformTxId { get; set; }
+    }
+
+    #endregion
+
+    #region Settle
+
+    public class SettleData_Sexy : SettleData
+    {
+        public new string TransId { get; set; }
+        public new string GameId { get; set; }
     }
 
     #endregion

@@ -1,11 +1,6 @@
-﻿using System;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using System.Linq;
-using ThirdPartySeamlessWallet.Service.DAL;
+﻿using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
+using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Extensions
@@ -44,6 +39,27 @@ namespace ThirdPartySeamlessWallet.Extensions
             var configService = provider.GetRequiredService<ConfigService>();
             var option = configService.Query<T>(sql, parameters).FirstOrDefault();
             services.AddSingleton(typeof(T), p => option);
+            return services;
+        }
+
+        public static IServiceCollection AddSiteConfig(this IServiceCollection services)
+        {
+            var provider = services.BuildServiceProvider();
+            // 準備ServerInfo
+            var serverInfoList = new List<ServerInfo>() { new ServerInfo() { SiteId = 0, SiteName = "default" } };
+            serverInfoList.AddRange(provider.GetRequiredService<IEnumerable<ServerInfo>>());
+
+            // 準備Config
+            var siteConfigGroup = provider.GetRequiredService<IEnumerable<ConfigObject>>().GroupBy(i => i.SiteId);
+
+            foreach (var serverInfo in serverInfoList)
+            {
+                //設定SiteConfig
+                var siteConfig = siteConfigGroup.FirstOrDefault(i => i.Key == serverInfo.SiteId) ?? siteConfigGroup.First(i => i.Key == 0);
+                var config = siteConfig.ToDictionary(i => i.ConfigKey, i => i.ConfigValue);
+                services.AddSingleton(new SiteConfig(serverInfo, config));
+            }
+
             return services;
         }
     }

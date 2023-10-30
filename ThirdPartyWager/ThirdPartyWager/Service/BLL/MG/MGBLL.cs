@@ -1,9 +1,10 @@
 ﻿using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Service.BLL.MG
+namespace ThirdPartyWager.Service.BLL
 {
     public class MGBLL : IMGBLL
     {

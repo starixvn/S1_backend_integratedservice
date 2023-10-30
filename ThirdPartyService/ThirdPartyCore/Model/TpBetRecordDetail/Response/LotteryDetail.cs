@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ThirdPartyCore.Model.TpBetRecordDetail.Response
+﻿namespace ThirdPartyCore.Model.TpBetRecordDetail.Response
 {
     public class LotteryDetail : BaseDetail
     {

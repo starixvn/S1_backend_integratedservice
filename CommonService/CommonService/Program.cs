@@ -1,5 +1,8 @@
 using CommonService;
 using CommonService.Extensions;
+
+using Elastic.Apm.SerilogEnricher;
+
 using Serilog;
 using Serilog.Exceptions;
 
@@ -12,6 +15,7 @@ builder.Host.UseSerilog((context, Configuration) =>
 {
     Configuration
         .ReadFrom.Configuration(builder.Configuration)
+        .Enrich.WithElasticApmCorrelationInfo()
         .Enrich.FromLogContext()
         .Filter.ByExcluding(c =>
             c.Properties.Any(p =>

@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
+﻿using System.Web;
 using System.Xml.Serialization;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -398,111 +396,22 @@ namespace ThirdParty.SA
             return deviceName;
         }
 
-        /// <summary>
-        /// 依據幣別取得第三方個幣別提供的 BetLimit RuleID，有需要更新在呼叫Api取就好，dev、prd Local都會通，更改config即可
-        /// </summary>
-        /// <param name="config"></param>
-        private void QueryBetLimit(SaConfig config)
-        {
-            var time = this.Time;
-            var saCurrency = new List<string>()
-            {
-                "MYR", "THB", "IDR",  "VND", "USD", "INR", "BDT"
-            };
-
-            foreach (var currency in saCurrency)
-            {
-                var input = new QueryBetLimitReq()
-                {
-                    Method = "QueryBetLimit",
-                    Key = config.SecretKey,
-                    Time = time,
-                    Currency = currency
-                };
-
-                var queryString = $"method={input.Method}&Key={input.Key}&Time={time}&Currency={input.Currency}";
-                var q = HttpUtility.UrlEncode(DESEncryptSA(queryString, config.EncryptKey));
-                var s = ToMD5(queryString + config.Md5Key + time + config.SecretKey).ToLower();
-                var postData = "q=" + q + "&s=" + s;
-
-                var result = HttpPost(config.ApiUrl, postData, "application/x-www-form-urlencoded");
-
-                QueryBetLimitResult queryBetLimitResult = null;
-                if (IsXML(result))
-                {
-                    queryBetLimitResult = XMLDeserialize<QueryBetLimitResult>(result);
-                }
-
-                var firstRuleId = string.Empty; // 第一段級距
-                var secondRuleId = string.Empty; // 第二段級距
-                var threeRuleId = string.Empty; // 第三段級距
-
-                switch (input.Currency)
-                {
-                    case "MYR":
-                        firstRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 10 && r.Max == 1000).Select(r => r.RuleID).FirstOrDefault();
-                        secondRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 100 && r.Max == 10000).Select(r => r.RuleID).FirstOrDefault();
-                        break;
-                    case "THB":
-                        firstRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 20 && r.Max == 10000).Select(r => r.RuleID).FirstOrDefault();
-                        secondRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 1000 && r.Max == 75000).Select(r => r.RuleID).FirstOrDefault();
-                        break;
-                    case "IDR":
-                        firstRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 10 && r.Max == 1000).Select(r => r.RuleID).FirstOrDefault();
-                        secondRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 100 && r.Max == 10000).Select(r => r.RuleID).FirstOrDefault();
-                        threeRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 300 && r.Max == 30000).Select(r => r.RuleID).FirstOrDefault();
-                        break;
-                    case "VND":
-                        firstRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 20 && r.Max == 10000).Select(r => r.RuleID).FirstOrDefault();
-                        secondRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 300 && r.Max == 30000).Select(r => r.RuleID).FirstOrDefault();
-                        threeRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 1000 && r.Max == 50000).Select(r => r.RuleID).FirstOrDefault();
-                        break;
-                    case "USD":
-                        firstRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 1 && r.Max == 2500).Select(r => r.RuleID).FirstOrDefault();
-                        break;
-                    case "INR":
-                        firstRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 100 && r.Max == 100000).Select(r => r.RuleID).FirstOrDefault();
-                        secondRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 1000 && r.Max == 200000).Select(r => r.RuleID).FirstOrDefault();
-                        break;
-                    case "BDT":
-                        firstRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 100 && r.Max == 10000).Select(r => r.RuleID).FirstOrDefault();
-                        secondRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 300 && r.Max == 30000).Select(r => r.RuleID).FirstOrDefault();
-                        threeRuleId = queryBetLimitResult.BetLimitList.BetLimit.Where(r => r.Min == 1000 && r.Max == 200000).Select(r => r.RuleID).FirstOrDefault();
-                        break;
-                }
-
-                var betLimitInfo = $"{input.Currency}：fristRuleID：{firstRuleId},secondRuleID:{secondRuleId},threeRuleId:{threeRuleId}";
-                // ex：MYR：fristRuleID：17592186044416,secondRuleID:524288,threeRuleId:
-            }
-        }
-
-        /// <summary>
-        /// 用 tpCurrencyId ，找出 db 內有的 BetLimit Key
-        /// </summary>
-        /// <param name="tpCurrencyId"></param>
-        /// <returns></returns>
         private string GetBetLimitQueryString(string tpCurrencyId, Dictionary<string, string> inputs)
         {
-            var dictMapInputKey = new Dictionary<string, List<string>>()
+            //用第三方提供的文件設定好RuleID
+            var dictMapInputKey = new Dictionary<string, string>()
             {
-                {"MYR", new List<string>() { "MYRBetLimit1", "MYRBetLimit2" }},
-                {"THB", new List<string>() { "THBBetLimit1", "THBBetLimit2" }},
-                {"IDR", new List<string>() { "IDRBetLimit1", "IDRBetLimit2","IDRBetLimit3" }},
-                {"VND", new List<string>() { "VNDBetLimit1", "VNDBetLimit2","VNDBetLimit3" }},
-                {"USD", new List<string>() { "USDBetLimit1"}},
-                {"INR", new List<string>() { "INRBetLimit1", "INRBetLimit2" }},
-                {"BDT", new List<string>() { "BDTBetLimit1", "BDTBetLimit2","BDTBetLimit3" }}
+                {"MYR", "10104581000110003,10204581000110003,10304581000110003,10504581000110003,11004581000110003,11504581000110003,11604581000110003,11704581000110003,10104581000210004,10204581000210004,10304581000210004,10504581000210004,11004581000210004,11504581000210004"},
+                {"IDR", "10103601000110003,10203601000110003,10303601000110003,10503601000110003,11003601000110003,11503601000110003,11603601000110003,11703601000110003,10103601000210004,10203601000210004,10303601000210004,10503601000210004,11003601000210004,11503601000210004,11603601000210004,11703601000210004,10103603000230004,10203603000230004,10303603000230004,10503603000230004,11003603000230004,11503603000230004,11603603000230004,11703603000230004"},
+                {"VND", "10107042000110004,10207042000110004,10307042000110004,10507042000110004,11007042000110004,11507042000110004,11607042000110004,11707042000110004,10107043000230004,10207043000230004,10307043000230004,10507043000230004,11007043000230004,11507043000230004,11607043000230004,11707043000230004,10107041000350004,10207041000350004,10307041000350004,10507041000350004,11007041000350004,11507041000350004,11607041000350004,11707041000350004"},
+                {"USD", "10108401000025003,10208401000025003,10308401000025003,10508401000025003,11008401000025003,11508401000025003,11608401000025003,11708401000025003"},
+                {"INR", "10103561000210005,10203561000210005,10303561000210005,10503561000210005,11003561000210005,11503561000210005,11603561000210005,11703561000210005,10103561000320005,10203561000320005,10303561000320005,10503561000320005,11003561000320005,11503561000320005,11603561000320005,11703561000320005"},
+                {"BDT", "10100501000210004,10200501000210004,10300501000210004,10500501000210004,11000501000210004,11500501000210004,11600501000210004,11700501000210004,10100503000230004,10200503000230004,10300503000230004,10500503000230004,11000503000230004,11500503000230004,11600503000230004,11700503000230004,10100501000320005,10200501000320005,10300501000320005,10500501000320005,11000501000320005,11500501000320005,11600501000320005,11700501000320005"}
             };
 
             if (!dictMapInputKey.TryGetValue(tpCurrencyId, out var betLimitKeys)) return string.Empty;
 
-            var queryStringList = new List<string>();
-            foreach (var (value, index) in betLimitKeys.Select((value, index) => (value, index)))
-            {
-                queryStringList.Add($"Set{index + 1}={inputs[value]}");
-            }
-
-            return string.Join("&", queryStringList);
+            return $"ListSet={betLimitKeys}";
         }
 
         /// <summary>
@@ -511,7 +420,8 @@ namespace ThirdParty.SA
         /// <param name="config"></param>
         /// <param name="tpCustInfo"></param>
         /// <param name="inputs"></param>
-        private void SetBetLimit(SaConfig config, TpCustInfo tpCustInfo, Dictionary<string, string> inputs) {
+        private void SetBetLimit(SaConfig config, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
             try
             {
                 var betLimitQueryString = GetBetLimitQueryString(tpCustInfo.TpCurrencyId, inputs);
@@ -520,7 +430,7 @@ namespace ThirdParty.SA
                 var time = this.Time;
                 var input = new SetBetLimitReq()
                 {
-                    Method = "SetBetLimit",
+                    Method = "SetAllBetLimit",
                     Key = config.SecretKey,
                     Time = time,
                     UserName = tpCustInfo.TpUserName,
@@ -528,7 +438,7 @@ namespace ThirdParty.SA
                 };
 
                 var queryString =
-                    $"method={input.Method}&Key={input.Key}&Time={time}&Username={input.UserName}&Currency={input.Currency}&{betLimitQueryString}&Gametype=roulette,sicbo,pokdeng,andarbahar,others";
+                    $"method={input.Method}&Key={input.Key}&Time={time}&Username={input.UserName}&Currency={input.Currency}&{betLimitQueryString}";
                 var q = HttpUtility.UrlEncode(DESEncryptSA(queryString, config.EncryptKey));
                 var s = ToMD5(queryString + config.Md5Key + time + config.SecretKey).ToLower();
                 var postData = "q=" + q + "&s=" + s;

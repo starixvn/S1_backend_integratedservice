@@ -1,5 +1,6 @@
-﻿using ThirdPartyService.Service.Library;
-using ThirdPartyCore.Model.enums;
+﻿using ThirdPartyCore.Model.enums;
+
+using ThirdPartyService.Service.Library;
 
 namespace ThirdPartyService.Service.DAL
 {

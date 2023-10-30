@@ -1,13 +1,11 @@
-﻿using NUnit.Framework;
-using System.Collections.Generic;
-using ThirdPartyCore.Model;
-using FluentAssertions;
-using ThirdPartyCore.Model.enums;
+﻿using FluentAssertions;
+
 using Newtonsoft.Json;
-using System.Web;
-using System.Diagnostics;
-using System;
-using ThirdParty.AP;
+
+using NUnit.Framework;
+
+using ThirdPartyCore.Model;
+using ThirdPartyCore.Model.enums;
 
 namespace ThirdParty.AP.Tests
 {

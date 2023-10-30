@@ -1,7 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
+
+using Newtonsoft.Json;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -58,7 +58,7 @@ namespace ThirdParty.EVO
             string countryCode = !string.IsNullOrEmpty(tpCountryCode.CountryCode) ? tpCountryCode.CountryCode : throw new Exception("CountryCode");
 
             bool mobile = appType != AppType.Desktop;
-            var siteName = ServerInfoProvider.getSiteName(tpCustInfo.SiteId);
+            var siteName = ServerInfoProvider.GetSiteName(tpCustInfo.SiteId);
 
             ApiResult oApiResult = new ApiResult();
 
@@ -154,7 +154,7 @@ namespace ThirdParty.EVO
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerLC_EVO_Detail_Get", new { getBetDetail.TransId },DataBase.Wager);
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerLC_EVO_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
             if (wagerDetail != null)
             {
                 //general data
@@ -234,7 +234,7 @@ namespace ThirdParty.EVO
                         BetType = string.Empty,
                         BetChoice = string.Empty,
                         Result = detail.GetStringValue("result"),
-                        DeviceType = GetDeviceType( detail.GetStringValue("channel")),                
+                        DeviceType = GetDeviceType(detail.GetStringValue("channel")),
                         IP = string.Empty,
                     },
                     _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)

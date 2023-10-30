@@ -1,9 +1,12 @@
 using Newtonsoft.Json;
+
 using Serilog.Context;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -109,7 +112,7 @@ namespace ThirdPartySettleWorker.Workers
                             TicketStatus = winLostAmount > 0 ? TicketStatus.Win : winLostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost,
                             GameID = gameId,
                         };
-                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo,  TpCategory.Slots);
+                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Slots);
 
                         if (result == 1)
                         {
@@ -194,7 +197,7 @@ namespace ThirdPartySettleWorker.Workers
                         if (wager == null)
                         {
                             LogContext.PushProperty("TP", _tpName);
-                            _logger.LogError($"wager not found (cardracing)\r\n{JsonConvert.SerializeObject(unsettled)}\r\n", logName);
+                            _logger.LogWarning($"{logName}:wager not found (cardracing)\r\n{JsonConvert.SerializeObject(unsettled)}");
                             continue;
                         }
 
@@ -216,7 +219,7 @@ namespace ThirdPartySettleWorker.Workers
                         if (wager.Stake != stake || wager.WinLostAmount != winLostAmount)
                         {
                             LogContext.PushProperty("TP", _tpName);
-                            _logger.LogError($"amount not match (cardracing)\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}\r\n", logName);
+                            _logger.LogWarning($"{logName}:amount not match (cardracing)\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}");
                             continue;
                         }
 
@@ -267,7 +270,7 @@ namespace ThirdPartySettleWorker.Workers
                             _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, unsettled.TransId, isSuccess: false);
                         });
                         isError = true;
-                        _logger.LogError($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                        _logger.LogError(ex1, $"{logName}:{JsonConvert.SerializeObject(unsettled)}");
                     }
                 }
             }
@@ -278,7 +281,7 @@ namespace ThirdPartySettleWorker.Workers
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", _tpName);
-                _logger.LogError(ex.ToString(), logName);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
                 isError = true;
             }
             finally
@@ -335,7 +338,7 @@ namespace ThirdPartySettleWorker.Workers
                         if (wager == null)
                         {
                             LogContext.PushProperty("TP", _tpName);
-                            _logger.LogError($"wager not found (crash)\r\n{JsonConvert.SerializeObject(unsettled)}\r\n", logName);
+                            _logger.LogWarning($"{logName}:wager not found (crash)\r\n{JsonConvert.SerializeObject(unsettled)}");
                             continue;
                         }
 
@@ -357,7 +360,7 @@ namespace ThirdPartySettleWorker.Workers
                         if (wager.Stake != stake || wager.WinLostAmount != winLostAmount)
                         {
                             LogContext.PushProperty("TP", _tpName);
-                            _logger.LogError($"amount not match (crash)\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}\r\n", logName);
+                            _logger.LogWarning($"{logName}:amount not match (crash)\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}");
                             continue;
                         }
 
@@ -408,7 +411,7 @@ namespace ThirdPartySettleWorker.Workers
                             _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, unsettled.TransId, isSuccess: false);
                         });
                         isError = true;
-                        _logger.LogError($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                        _logger.LogError(ex1, $"{logName}:{JsonConvert.SerializeObject(unsettled)}");
                     }
                 }
             }
@@ -419,7 +422,7 @@ namespace ThirdPartySettleWorker.Workers
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", _tpName);
-                _logger.LogError(ex.ToString(), logName);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
                 isError = true;
             }
             finally

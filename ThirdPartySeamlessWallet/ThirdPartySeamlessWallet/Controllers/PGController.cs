@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 using System.Web;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -28,20 +21,32 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly SettledBLL settledBLL;
         private readonly IHostEnvironment environment;
         private readonly int gameType = 0;
+        private readonly PGSiteConfig _config;
 
-        public PGController(IHostEnvironment environment, Log2File log2File, ThirdPartyBLL thirdPartyBLL, AuthBLL authBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL)
+        public PGController(IServiceProvider provider)
         {
-            this.log2File = log2File;
+            log2File = provider.GetRequiredService<Log2File>();
+            thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            authBLL = provider.GetRequiredService<AuthBLL>();
+            tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            bettingBLL = provider.GetRequiredService<BettingBLL>();
+            settledBLL = provider.GetRequiredService<SettledBLL>();
+            environment = provider.GetRequiredService<IHostEnvironment>();
             thisTp = Tp.PG;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.authBLL = authBLL;
-            this.tpCustInfoBLL = tpCustInfoBLL;
-            this.bettingBLL = bettingBLL;
-            this.settledBLL = settledBLL;
-            this.environment = environment;
             gameType = (int)GameType.PG_RNG;
+            _config = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<PGSiteConfig>(thisTp.ToString()).FirstOrDefault().Value;
         }
 
+        private class PGSiteConfig : TpSiteConfig
+        {
+            public string GameUrl_CNY { get; set; }
+            public string GameUrl_THB { get; set; }
+            public string secret_key { get; set; }
+            public string BetDetailUrl { get; set; }
+            public string operator_token { get; set; }
+        }
+
+        
         public class Error
         {
             public string code { get; set; }
@@ -93,10 +98,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             };
 
             var verifySessionReq = JsonConvert.DeserializeObject<VerifySessionReq>(JsonConvert.SerializeObject(reqq));
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-
-            string secret_key = thirdPartySetting.TpSetting["secret_key"];
-            string operator_token = thirdPartySetting.TpSetting["operator_token"];
+            
+            var secret_key = _config.secret_key;
+            var operator_token = _config.operator_token;
 
             if (string.IsNullOrEmpty(verifySessionReq.OperatorToken) || string.IsNullOrEmpty(verifySessionReq.SecretKey) || string.IsNullOrEmpty(verifySessionReq.OperatorPlayerSession) || !verifySessionReq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !verifySessionReq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase))
             {
@@ -152,7 +156,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else
                         {
-                            VerifySessionRespData respData = new VerifySessionRespData(); ;
+                            VerifySessionRespData respData = new VerifySessionRespData();
                             resp.data = respData;
 
                             respData.currency = tpCustInfoAuth.TpCurrencyId;
@@ -237,10 +241,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             };
 
             var getBalanceReq = JsonConvert.DeserializeObject<GetBalanceReq>(JsonConvert.SerializeObject(reqq));
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-
-            string secret_key = thirdPartySetting.TpSetting["secret_key"];
-            string operator_token = thirdPartySetting.TpSetting["operator_token"];
+          
+            var secret_key = _config.secret_key;
+            var operator_token = _config.operator_token;
 
             if (!getBalanceReq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !getBalanceReq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase))
             {
@@ -383,11 +386,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             var transferOutReqq = JsonConvert.DeserializeObject<TransferOutReqq>(JsonConvert.SerializeObject(reqq));
 
             //transferOutReqq = JsonConvert.DeserializeObject<TransferOutReqq>(@"{""operator_token"":""5884cec7905af23c1586a6819ae0b1e1"",""secret_key"":""645b1f5db5c7c6e3d0fb087f11f62e50"",""operator_player_session"":""WyJldW9WN1BqNDFVQ2dTaUhnSzVmQWxRIiwiS2VSbDRhbm5qVXl0eTdFSlBZRmZ3Il0%3D"",""game_id"":""1"",""parent_bet_id"":""6669305"",""bet_id"":""6669305"",""player_name"":""DNova88_156"",""currency_code"":""THB"",""transfer_amount"":""30.00"",""wallet_type"":""C"",""bet_type"":""1"",""transaction_id"":""6669305-6669305-201-0"",""updated_time"":""1592192524927"",""is_feature"":""False"",""is_minus_count"":""False"",""is_wager"":""True"",""platform"":""1"",""create_time"":""1592192524927"",""is_parent_zero_stake"":""False"",""jackpot_rtp_contribution_amount"":""0"",""jackpot_win_amount"":""0""}");
-
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-
-            string secret_key = thirdPartySetting.TpSetting["secret_key"];
-            string operator_token = thirdPartySetting.TpSetting["operator_token"];
+            
+            var secret_key = _config.secret_key;
+            var operator_token = _config.operator_token;
 
             if (string.IsNullOrEmpty(transferOutReqq.PlayerName) || !transferOutReqq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !transferOutReqq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase) || transferOutReqq.TransferAmount < 0)
             {
@@ -608,10 +609,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             };
 
             var transferInReqq = JsonConvert.DeserializeObject<TransferInReqq>(JsonConvert.SerializeObject(reqq));
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-
-            string secret_key = thirdPartySetting.TpSetting["secret_key"];
-            string operator_token = thirdPartySetting.TpSetting["operator_token"];
+            
+            var secret_key = _config.secret_key;
+            var operator_token = _config.operator_token;
 
             if (string.IsNullOrEmpty(transferInReqq.PlayerName) || !transferInReqq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !transferInReqq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase) || transferInReqq.TransferAmount < 0)
             {
@@ -730,11 +730,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             };
 
             var transferInOutReqq = JsonConvert.DeserializeObject<TransferInOutReqq>(JsonConvert.SerializeObject(reqq));
-
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-
-            string secret_key = thirdPartySetting.TpSetting["secret_key"];
-            string operator_token = thirdPartySetting.TpSetting["operator_token"];
+            
+            var secret_key = _config.secret_key;
+            var operator_token = _config.operator_token;
 
             if (string.IsNullOrEmpty(transferInOutReqq.PlayerName) || !transferInOutReqq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !transferInOutReqq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase))
             {
@@ -910,10 +908,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             };
 
             var adjustmentReqq = JsonConvert.DeserializeObject<AdjustmentDataRNG_PG>(JsonConvert.SerializeObject(reqq));
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-
-            string secret_key = thirdPartySetting.TpSetting["secret_key"];
-            string operator_token = thirdPartySetting.TpSetting["operator_token"];
+         
+            var secret_key = _config.secret_key;
+            var operator_token = _config.operator_token;
 
             if (string.IsNullOrEmpty(adjustmentReqq.PlayerName) || !adjustmentReqq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !adjustmentReqq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase))
             {

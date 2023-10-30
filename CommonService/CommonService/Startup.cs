@@ -1,16 +1,19 @@
-using CommonService.Extensions;
+﻿using CommonService.Extensions;
 using CommonService.Service.BLL;
 using CommonService.Service.DAL;
 using CommonService.Service.Library;
 using CommonService.Service.Model;
-using PaymentService.Service.Library;
+
+using Elastic.Apm.AspNetCore;
+using Elastic.Apm.DiagnosticSource;
+using Elastic.Apm.SqlClient;
 
 namespace CommonService
 {
     public class Startup
     {
         public IConfiguration Configuration { get; }
-        
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -19,18 +22,7 @@ namespace CommonService
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<Dictionary<string, SendGridConfig>>(Configuration.GetSection("SendGridConfig"));
-            services.Configure<IovationServicesConfig>(Configuration.GetSection("IovationServicesConfig"));
-            services.Configure<Dictionary<string, FPSServicesConfig>>(Configuration.GetSection("FPSServicesConfig"));
-            services.Configure<Dictionary<string, LiveStreamingConfig>>(Configuration.GetSection("LiveStreamingConfig"));
-            services.Configure<Dictionary<string, SkyLineSMSServiceTypeConfig>>(Configuration.GetSection("SkyLineSMSServiceConfig"));
-            services.Configure<Dictionary<string, YcSmsServiceTypeConfig>>(Configuration.GetSection("YcSMSServiceConfig"));
-            services.Configure<Dictionary<string, NxcloudSMSServiceTypeConfig>>(Configuration.GetSection("NxCloudSMSServiceConfig"));
-            services.Configure<AWSKeyConfig>(Configuration.GetSection("ailab-sns"));
-            services.Configure<Dictionary<string, Dictionary<string, string>>>(Configuration.GetSection("SMSSupportConfig"));
-            services.Configure<Dictionary<string, Dictionary<string, string>>>(Configuration.GetSection("Telegram"));
-            services.Configure<Dictionary<string, Dictionary<string, string>>>(Configuration.GetSection("LetsTalk"));
-
+            services.AddLogging();
             services.AddMemoryCache();
             services.AddDatabaseConnection(Configuration);
             HttpHelper.proxyHost = Configuration.GetValue<string>("ProxyHost");
@@ -38,7 +30,6 @@ namespace CommonService
 
             services.AddSingleton<HttpHelper>();
             services.AddSingleton<AWSSNSHelper>();
-            services.AddSingleton<Log2File>();
 
             services.AddSingleton<CustInfoService>();
             services.AddSingleton<AuthService>();
@@ -50,16 +41,32 @@ namespace CommonService
             services.AddSingleton<SendGridBLL>();
             services.AddSingleton<RestPasswordBLL>();
             services.AddSingleton<IovationBLL>();
-            services.AddSingleton<OTPSMSBLL>();
-            services.AddSingleton<NxCloudSMSBLL>();
+
             services.AddSingleton<SelLangBLL>();
             services.AddSingleton<FPSBLL>();
             services.AddSingleton<LiveStreamingBLL>();
             services.AddSingleton<OTPEmailBLL>();
             services.AddSingleton<Tools>();
-
+            services.AddSingleton<ConfigService>();
             services.AddControllers();
 
+            //OTP與SMS
+            services.AddSingleton<OTPSMSBLL>();
+            services.AddSingleton<NxCloudSMSBLL>();
+            services.AddSingleton<SkyLineBLL>();
+            services.AddSingleton<YCBLL>();
+            services.AddSingleton<AWSBLL>();
+
+            services.AddOptionListByDB<ServerInfo>("ServerInfoList_Get");
+            //處理SiteConfig
+            services.AddOptionListByDB<Config>("SiteConfig_Get", new { ConfigGroup = "CommonService" });
+            services.AddSiteConfig();
+            services.AddSingleton<ConfigBLL>();
+
+            // 處理SiteLanguage
+            services.AddOptionListByDB<SiteLanguageObject>("SiteLanguage_Get", new { LanguageGroup = "CommonService" });
+            services.AddSiteLanguage();
+            services.AddSingleton<SiteLanguageBLL>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -69,7 +76,12 @@ namespace CommonService
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            if (!env.IsEnvironment("Local"))
+            {
+                app.UseElasticApm(Configuration,
+                    new HttpDiagnosticsSubscriber(),
+                    new SqlClientDiagnosticSubscriber());
+            }
             app.UseRouting();
 
             app.UseAuthorization();

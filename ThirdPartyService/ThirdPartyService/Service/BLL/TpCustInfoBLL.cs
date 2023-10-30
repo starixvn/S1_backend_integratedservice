@@ -1,6 +1,8 @@
 ﻿using System.Collections.Concurrent;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
+
 using ThirdPartyService.Service.DAL;
 
 namespace ThirdPartyService.Service.BLL
@@ -41,6 +43,11 @@ namespace ThirdPartyService.Service.BLL
                 tpCountryCodeCache.TryAdd(key, tpCountryCode);
                 return tpCountryCode;
             }
+        }
+
+        public IEnumerable<int> GetCustIdWithoutSabaId(int tpId)
+        {
+            return tpCustInfoService.GetCustIdWithoutSabaId(tpId);
         }
     }
 }

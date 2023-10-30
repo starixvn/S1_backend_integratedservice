@@ -1,4 +1,5 @@
 ﻿using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -84,7 +85,7 @@ namespace ThirdPartyWager.Workers
             {
                 if (quick == 1)
                 {
-                    var dueTimeSpan = TimeSpan.FromSeconds(45);
+                    var dueTimeSpan = TimeSpan.FromSeconds(90);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else

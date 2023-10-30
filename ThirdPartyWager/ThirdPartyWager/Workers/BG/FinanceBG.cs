@@ -1,9 +1,10 @@
 ﻿using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
-using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers;
 
@@ -103,7 +104,7 @@ public class FinanceBG : BackgroundService
                 _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, reportTime.endUnix);
 
             var diffDay = (int)(DateTime.Now.Date - reportDate.Date).TotalDays;
-            
+
             if (diffDay >= _beyond)
                 quick = true;
 

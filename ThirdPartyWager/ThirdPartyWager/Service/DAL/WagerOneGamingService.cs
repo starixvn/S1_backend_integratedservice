@@ -16,6 +16,5 @@ namespace ThirdPartyWager.Service.DAL
         {
             return _wagerDbClient.Execute("Service_TpWagerPK_OneGaming_Ins", bet);
         }
-        
     }
 }

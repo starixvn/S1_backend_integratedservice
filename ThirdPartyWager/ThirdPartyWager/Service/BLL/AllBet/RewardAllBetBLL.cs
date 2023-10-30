@@ -1,5 +1,7 @@
 ﻿using Newtonsoft.Json;
+
 using Serilog.Context;
+
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -21,7 +23,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
         private IEnumerable<TpCurrency> _currencyList;
         private readonly IWebHostEnvironment _env;
-
 
         public RewardAllBetBLL(IServiceProvider provider)
         {
@@ -68,8 +69,8 @@ namespace ThirdPartyWager.Service.BLL
                 }
                 foreach (var currency in _currencyList)
                 {
-                    try 
-                    {                
+                    try
+                    {
                         // pagination
                         var pageIndex = 1;
                         var pageRowCnt = 1;
@@ -78,7 +79,7 @@ namespace ThirdPartyWager.Service.BLL
                         while (pageRowCnt >= 1)
                         {
                             // get reward
-                            var rewardData = await _apiAllBetBLL.GetRewardByTime(setting, agent, startTime, endTime, pageIndex);
+                            var rewardData = _apiAllBetBLL.GetRewardByTime(setting, agent, startTime, endTime, pageIndex);
 
                             // error condition
                             if (rewardData == null)

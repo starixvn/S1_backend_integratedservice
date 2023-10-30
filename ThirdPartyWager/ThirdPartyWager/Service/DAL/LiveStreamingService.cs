@@ -14,7 +14,7 @@ namespace ThirdPartyWager.Service.DAL
         }
         public async Task<int> SetLiveStreaming(IEnumerable<LiveStreamingJson> liveStreaming)
         {
-            return await _mySqlClient.ExecuteAsync("Service_LiveStreaming_Set_V2", liveStreaming );
+            return await _mySqlClient.ExecuteAsync("Service_LiveStreaming_Set_V2", liveStreaming);
         }
         public int TruncateLiveStreaming()
         {

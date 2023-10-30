@@ -13,11 +13,11 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Common _common;
         private const int SuccessErrorCode = 0;
 
-        public SabaOddsBLL(IServiceProvider provider, IConfiguration configuration)
+        public SabaOddsBLL(IServiceProvider provider)
         {
             _sabaOddsService = provider.GetRequiredService<SabaOddsService>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
-            _configModel = configuration.GetSection("HotEventOddsConfig").Get<HotEventOddsConfigModel>();
+            _configModel = provider.GetRequiredService<ConfigBLL>().GetConfigValue<HotEventOddsConfigModel>("HotEventOddsConfig");
             _common = provider.GetRequiredService<Common>();
             _logger = provider.GetRequiredService<ILogger<SabaOddsBLL>>();
         }
@@ -31,12 +31,12 @@ namespace ThirdPartyWager.Service.BLL
             try
             {
                 foreach (var group in GetSabaOddsMatchId().GroupBy(i => i.GameId.ToString()))//用GameId分類
-                {         
+                {
                     foreach (var marketType in new List<string>() { "d", "l" })
                     {
                         var apiUrl = $"{_configModel.ApiUrl}/api/GetMarkets";
                         var httpContent = CreateFormData(
-                            marketType, 
+                            marketType,
                             group.Key,
                             string.Join(",", group.Select(i => i.MatchId)));
 

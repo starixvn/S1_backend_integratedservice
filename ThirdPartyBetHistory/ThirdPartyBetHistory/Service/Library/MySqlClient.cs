@@ -1,8 +1,12 @@
 ﻿using System.Data;
 using System.Diagnostics;
+
 using Dapper;
+
 using MySql.Data.MySqlClient;
+
 using Serilog.Context;
+
 using ThirdPartyBetHistory.Service.Model.enums;
 
 namespace ThirdPartyBetHistory.Service.Library
@@ -12,7 +16,7 @@ namespace ThirdPartyBetHistory.Service.Library
         private readonly string _connectionString;
 
         private readonly ILogger<MySqlClient> _logger;
-        
+
         public DataBase DataBase { get; set; }
 
         public MySqlClient(string connectionString, ILogger<MySqlClient> logger, DataBase dataBase)
@@ -21,7 +25,7 @@ namespace ThirdPartyBetHistory.Service.Library
             _logger = logger;
             DataBase = dataBase;
         }
-        
+
         public MySqlConnection GetMySqlConnection()
         {
             return new MySqlConnection(_connectionString);
@@ -59,7 +63,7 @@ namespace ThirdPartyBetHistory.Service.Library
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                var command = new CommandDefinition(name,parameters,
+                var command = new CommandDefinition(name, parameters,
                     commandType: CommandType.StoredProcedure,
                     flags: CommandFlags.NoCache);
                 result = connection.QueryFirstOrDefault<T>(command);
@@ -109,7 +113,7 @@ namespace ThirdPartyBetHistory.Service.Library
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                var command = new CommandDefinition(name,parameters,
+                var command = new CommandDefinition(name, parameters,
                     commandType: CommandType.StoredProcedure,
                     flags: CommandFlags.NoCache,
                     commandTimeout: commandTimeout);
@@ -196,7 +200,7 @@ namespace ThirdPartyBetHistory.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
-        
+
         #endregion
 
         #region Execute
@@ -242,7 +246,7 @@ namespace ThirdPartyBetHistory.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
-        
+
         public int Execute(string name, DynamicParameters parameters, IDbTransaction transaction)
         {
             int result;
@@ -261,7 +265,7 @@ namespace ThirdPartyBetHistory.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
-        
+
         public int Execute(string command)
         {
             var result = 0;
@@ -307,6 +311,6 @@ namespace ThirdPartyBetHistory.Service.Library
         }
 
         #endregion
-        
+
     }
 }

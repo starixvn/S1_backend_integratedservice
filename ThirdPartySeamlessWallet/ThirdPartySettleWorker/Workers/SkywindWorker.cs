@@ -1,17 +1,12 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+﻿using System.Text.RegularExpressions;
+
 using Serilog.Context;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -137,7 +132,7 @@ namespace ThirdPartySettleWorker.Workers
                                     _tpUnSettledBLL.SetSettleFlag("Service_Bettrans_Skywind_Settle_Set", Tp, gametype, $"{tpUnsettle.TransId}-{gameId}", tpUnsettle.TransId, true, DataBase.Wager);
                                 });
                             }
-                        }                      
+                        }
                     }
                     catch (Exception ex1)
                     {

@@ -1,4 +1,5 @@
 ﻿using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -31,14 +32,14 @@ namespace ThirdPartyWager.Workers
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _environment = provider.GetRequiredService<IHostEnvironment>();
         }
-        
+
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
-        private async void DoTask(object state)
+        private void DoTask(object state)
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);

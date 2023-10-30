@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using ThirdPartyCore;
+﻿using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-using System.Linq;
 using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpBetRecordExtend;
-using ThirdPartyCore.Extensions;
 
 namespace ThirdParty.YL
 {
@@ -178,8 +175,8 @@ namespace ThirdParty.YL
         {
             try
             {
-                var apiUrl = inputs.GetValueOrDefault("ApiUrl")??  throw new Exception();
-                var cert = inputs.GetValueOrDefault("cert") ??  throw new Exception();
+                var apiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception();
+                var cert = inputs.GetValueOrDefault("cert") ?? throw new Exception();
 
                 var url = $"{apiUrl}getGameReportByTxId";
                 var sParam = $"cert={cert}&txId={getBetDetail.TransId}";

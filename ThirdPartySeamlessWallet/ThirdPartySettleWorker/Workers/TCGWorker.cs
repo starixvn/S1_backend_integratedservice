@@ -1,8 +1,10 @@
-using Newtonsoft.Json;
 using Serilog.Context;
+
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -21,6 +23,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly ILogger<TCGWorker> _logger;
         private readonly string _tpName;
         private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly MySqlClient _mainDbClient;
 
 
         public TCGWorker(IServiceProvider provider)
@@ -30,6 +33,7 @@ namespace ThirdPartySettleWorker.Workers
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _logger = provider.GetRequiredService<ILogger<TCGWorker>>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _tpName = Enum.GetName(typeof(Tp), Tp);
             LogContext.PushProperty("TP", _tpName);
         }
@@ -83,6 +87,7 @@ namespace ThirdPartySettleWorker.Workers
 
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
+                        var referenceNo = string.Empty;
 
                         if (isClosed)
                         {
@@ -106,6 +111,7 @@ namespace ThirdPartySettleWorker.Workers
                                 _logger.LogWarning($"TCG settle amount check fail || TransId : {transId}  OrderNum: {unsettled.OrderNum}");
                                 continue;
                             }
+                            referenceNo = _mainDbClient.QueryFirst<string>("Service_BettransLottery_TCG_ReferenceNo_Get", new { TpUserName = unsettled.Account, unsettled.OrderNum });
                         }
 
                         if (tpCurrency.ExchangeRate > 0)
@@ -128,6 +134,7 @@ namespace ThirdPartySettleWorker.Workers
                             TransTime = DateTimeOffset.FromUnixTimeSeconds(unsettled.TransTime).AddHours(-8).ToUnixTimeSeconds(),
                             SettlementType = isClosed ? SettlementType.SettledForValid : SettlementType.UnSettled,
                             GameID = unsettled.GameId,
+                            ReferenceNo = referenceNo
                         };
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)

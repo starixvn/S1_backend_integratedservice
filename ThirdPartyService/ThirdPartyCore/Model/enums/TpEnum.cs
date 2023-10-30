@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ThirdPartyCore.Model.enums
+﻿namespace ThirdPartyCore.Model.enums
 {
     /// <summary>
     /// 第三方ID 列舉
@@ -34,6 +30,7 @@ namespace ThirdPartyCore.Model.enums
         V8 = 25,
         PT = 27,
         N2Live = 28,
+        BTI = 29,
         NineW = 31,
         JILI = 32,
         TCG = 33,
@@ -46,7 +43,11 @@ namespace ThirdPartyCore.Model.enums
         HB = 40,
         SBSW = 41,
         SimplePlay = 44,
-        Nextspin = 50
+        CryptoSports = 45,
+        Nextspin = 50,
+        PNG = 54,
+        FaChai = 55,
+        Pegasus = 56
     }
 
     public enum TpGameType
@@ -128,5 +129,11 @@ namespace ThirdPartyCore.Model.enums
         SBSW_Vgaming = 95,
         SBSW_CardClub = 96,
         Nextspin_RNG = 99,
+        PlayTech_RNG = 100,
+        PlayTech_LiveCasino = 101,
+        IM_ESports = 102,
+        IM_Sports = 103,
+        SPRIBE_RNG = 104,
+        FaChai_RNG = 106
     }
 }

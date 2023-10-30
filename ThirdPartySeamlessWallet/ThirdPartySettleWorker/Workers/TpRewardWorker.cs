@@ -3,6 +3,7 @@ using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 
 namespace ThirdPartySettleWorker.Workers
@@ -13,7 +14,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly TpUnRewardBLL _tpUnRewardBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly ILogger<TpRewardWorker> _logger;
-        private readonly Dictionary<GameType, Timer> _timerList = new Dictionary<GameType, Timer>();
+        private readonly Dictionary<GameType, Timer> _timerList = new();
         private readonly IEnumerable<TaskParam> _taskList;
 
         public TpRewardWorker(IServiceProvider provider)
@@ -27,6 +28,7 @@ namespace ThirdPartySettleWorker.Workers
                 new TaskParam { Tp = Tp.AP, GameType = GameType.AP_RNG, TpCategory = TpCategory.Slots, GetSpName = "Service_RewardRNG_AP_Settle_Get", SetSpName = "Service_RewardRNG_AP_Settle_Set" },
                 new TaskParam { Tp = Tp.KM, GameType = GameType.KM_Poker, TpCategory = TpCategory.Games, GetSpName = "Service_RewardPK_KM_Settle_Get", SetSpName = "Service_RewardPK_KM_Settle_Set", CheckBonus = false },
                 new TaskParam { Tp = Tp.SG, GameType = GameType.SG_RNG, TpCategory = TpCategory.Slots, GetSpName = "Service_Reward_SG_Settle_Get", SetSpName = "Service_Reward_SG_Settle_Set", CheckBonus = false },
+                new TaskParam { Tp = Tp.Pegasus, GameType = GameType.Pegasus_RNG, TpCategory = TpCategory.Slots, GetSpName = "Service_Reward_Pegasus_Settle_Get", SetSpName = "Service_Reward_Pegasus_Settle_Set", CheckBonus = false },
             };
         }
 

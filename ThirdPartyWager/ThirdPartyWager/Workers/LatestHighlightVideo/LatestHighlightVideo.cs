@@ -1,10 +1,13 @@
 ﻿using System.Net;
 using System.Text.Json;
 using System.Web;
+
 using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+
 using static ThirdPartyWager.Extensions.MethodExtension;
 
 namespace ThirdPartyWager.Workers
@@ -31,13 +34,19 @@ namespace ThirdPartyWager.Workers
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            // DEV 暫時不使用
+            if (_environment.IsDevelopment())
+            {
+                return Task.CompletedTask;
+            }
 
             _timerLatestHighlightVideo = new Timer(DoLatestHighlightVideoAsync, null, TimeSpan.Zero, TimeSpan.Zero);
-
             return Task.CompletedTask;
         }
         private async void DoLatestHighlightVideoAsync(object state)
         {
+
+
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var isError = false;
@@ -45,7 +54,9 @@ namespace ThirdPartyWager.Workers
             {
                 var url = "https://glombi.accordde.com/video/soccerList.json";
                 var timestamp = DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
-                var SiteId = 1;
+                // get first site to run
+                var serverList = _commonBll.GetSiteList().OrderBy(x => x.SiteId);
+                int SiteId = serverList.First().SiteId;
                 var builder = new UriBuilder(url)
                 {
                     Port = -1
@@ -57,7 +68,7 @@ namespace ThirdPartyWager.Workers
                 var data = new HttpRequestMessage(HttpMethod.Get, newurl);
                 using var client = _httpHelper.GetClientWithHandler(CreateHandler());
                 var result = await client.SendAsync(data);
-                
+
                 if (result.StatusCode == HttpStatusCode.OK)
                 {
                     var siteList = _commonBll.GetSiteList().Where(x => x.SiteId == SiteId);
@@ -106,17 +117,10 @@ namespace ThirdPartyWager.Workers
             finally
             {
                 var dueTimeSpan = TimeSpan.FromMinutes(10);
-                if (_environment.IsDevelopment())
-                {
-                    //dueTimeSpan = TimeSpan.FromMinutes(1);
-                    dueTimeSpan = TimeSpan.FromSeconds(30);
-                }
-
                 if (isError)
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(5);
                 }
-
                 _timerLatestHighlightVideo.Change(dueTimeSpan, TimeSpan.Zero);
             }
 

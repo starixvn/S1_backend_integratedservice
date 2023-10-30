@@ -1,4 +1,5 @@
 ﻿using Dapper;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -8,10 +9,12 @@ namespace ThirdPartyWager.Service.DAL
     public class WagerEVOService
     {
         private readonly MySqlClient _wagerDbClient;
+        private readonly MySqlClient _mainDbClient;
 
         public WagerEVOService(IServiceProvider provider)
         {
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
 
         public Task<int> InsertWager(Wager_EVO bet)
@@ -26,8 +29,17 @@ namespace ThirdPartyWager.Service.DAL
 
         public WagerRoundInfoTotal_EVO GetWagerRoundInfoTotal(long beginTime, long endTime)
         {
-            
             return _wagerDbClient.QueryFirst<WagerRoundInfoTotal_EVO>("Service_TpWagerRoundInfoLC_EVO_Total_Get", new DynamicParameters(new { BeginTime = beginTime, EndTime = endTime }));
+        }
+
+        public Task<IEnumerable<SettleData>> GetUnsettleCheckList()
+        {
+            return _mainDbClient.QueryAsync<SettleData>("Service_BettransLC_EVO_Unsettle_Get", null);
+        }
+
+        public Task<IEnumerable<SettleData>> GetTransIdList(string transId)
+        {
+            return _wagerDbClient.QueryAsync<SettleData>("Service_TpWagerLC_EVO_TransId_Get", new DynamicParameters(new { _TransIds = transId }));
         }
     }
 }

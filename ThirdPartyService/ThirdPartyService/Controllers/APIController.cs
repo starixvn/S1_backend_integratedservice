@@ -1,13 +1,18 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+
 using Newtonsoft.Json;
+
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
-using ThirdPartyCore.Model.TpMerchantBalance.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
+using ThirdPartyCore.Model.TpMerchantBalance.Response;
+
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
+using ThirdPartyService.Service.Model;
 
 namespace ThirdPartyService.Controllers
 {
@@ -21,19 +26,17 @@ namespace ThirdPartyService.Controllers
         private readonly ILogger<APIController> _logger;
 
         public APIController(IServiceProvider provider)
-        {                   
+        {
             _env = provider.GetRequiredService<IHostEnvironment>();
             _tpCustInfoService = provider.GetRequiredService<TpCustInfoService>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _logger = provider.GetRequiredService<ILogger<APIController>>();
 
-            var configuration = provider.GetRequiredService<IConfiguration>();
             ThirdPartyHelperBase.EnvironmentName = _env.EnvironmentName;
             ThirdPartyHelperBase.IsDevelopment = _env.IsDevelopment();
             ThirdPartyHelperBase.ContentRootPath = _env.ContentRootPath;
-            ThirdPartyHelperBase.CommonServiceHost = configuration.GetValue<string>("AiLabServiceHost:CommonServiceHost");
-            ThirdPartyHelperBase.LetsTalkGroupName = configuration.GetValue<string>("LetsTalkConfig:LetsTalkGroupName");
-            ThirdPartyHelperBase.SeamlessUrl = configuration.GetValue<string>("AiLabServiceHost:SeamlessUrl");
+            ThirdPartyHelperBase.SeamlessServiceHost = provider.GetRequiredService<ConfigBLL>()
+                .GetConfigValueByEnvironment<ServiceHostConfig>("ServiceHost").SeamlessService;
             ThirdPartyHelperBase.logger = provider.GetRequiredService<ILogger<IThirdPartyHelper>>();
         }
 
@@ -55,7 +58,7 @@ namespace ThirdPartyService.Controllers
             var apiResult = new ApiResult();
 
             try
-            {            
+            {
                 apiResult = _thirdPartyBLL.GotoGame(tpInfo);
                 _logger.LogInformation(apiResult.Message);
 
@@ -161,7 +164,7 @@ namespace ThirdPartyService.Controllers
 
             return apiResult;
         }
-        
+
         [HttpPost]
         public ActionResult<ApiResult> BonusCancelTransfer(TpBonusCancelTransfer tpBonusCancelTransfer)
         {
@@ -226,7 +229,7 @@ namespace ThirdPartyService.Controllers
 
             return apiResult;
         }
-        
+
         public ActionResult<ApiResult> SetBetLimit(SetBetLimit setBetLimit)
         {
             var apiResult = new ApiResult();
@@ -307,7 +310,7 @@ namespace ThirdPartyService.Controllers
                 };
             }
         }
-        
+
         [HttpPost]
         public ActionResult<ApiResult<TpBetRecordExtend>> GetTpBetRecordExtend([FromBody] GetTpBetRecordExtendRequest request)
         {

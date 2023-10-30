@@ -1,16 +1,14 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Web;
+﻿using System.Web;
+
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
 using ThirdPartyCore;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
-using ThirdPartyCore.Extensions;
 
 namespace ThirdParty.NineW
 {
@@ -307,7 +305,7 @@ namespace ThirdParty.NineW
 
         private string GetKey(string user, string currency, NineWConfig config)
         {
-            var apiUrl = $"{config.OldApiUrl}/player/{config.WebSite}/getKey";
+            var apiUrl = $"{config.ApiUrl}/{config.WebSite}/getKey";
             var sParam = $"&cert={config.Cert}&userId={user}&userName={user}&agent={config.Agent}&currency={currency}";
             var json = HttpPost(apiUrl, sParam, ContentType);
             var result = FromJson<NineWResult>(json);

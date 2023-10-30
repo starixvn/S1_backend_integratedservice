@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
+
 using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -44,6 +46,22 @@ namespace ThirdPartyWager.Service.BLL
                 if (dataTpList != null)
                 {
                     setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(dataTpList.Setting);
+                    cache.Set(key, setting, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
+                }
+            }
+
+            return setting;
+        }
+        public T GetThirdPartyBySite<T>(int tpId, int siteId)
+        {
+            var key = $"Setting_{tpId}_{siteId}";
+            var setting = cache.Get<T>(key);
+            if (setting == null)
+            {
+                var dataTpList = thirdPartyHelper.GetThirdPartyBySite(tpId, siteId);
+                if (dataTpList != null)
+                {
+                    setting = JsonConvert.DeserializeObject<T>(dataTpList.Setting);
                     cache.Set(key, setting, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
                 }
             }
@@ -128,7 +146,7 @@ namespace ThirdPartyWager.Service.BLL
             var tpCustInfo = tpCustInfoService.GetTpCustInfo(tpId, tpUserName);
             return tpCustInfo;
         }
-        
+
         public SettlementType GetGameCasinoSettlementType(int tpId, string gameId)
         {
             var settlementType = SettlementType.SettledForValid;
@@ -152,6 +170,23 @@ namespace ThirdPartyWager.Service.BLL
             }
 
             return tpGameCasino;
+        }
+
+        public IEnumerable<TpListModel> GetTpListByTpId(int tpId)
+        {
+            var key = $"GetTpListByTpId_{tpId}";
+            var setting = cache.Get<IEnumerable<TpListModel>>(key);
+            if (setting == null)
+            {
+                var dataTpList = thirdPartyHelper.GetTpListByTpId(tpId);
+                if (dataTpList != null)
+                {
+                    setting = dataTpList.Where(x => x.Status == 1).ToList();
+                    cache.Set(key, setting, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
+                }
+            }
+
+            return setting;
         }
     }
 }

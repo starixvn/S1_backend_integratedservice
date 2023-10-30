@@ -1,8 +1,9 @@
 ﻿using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 
-namespace ThirdPartyWager.Service.BLL.TFG
+namespace ThirdPartyWager.Service.BLL
 {
     public class WagerTFGBLL
     {

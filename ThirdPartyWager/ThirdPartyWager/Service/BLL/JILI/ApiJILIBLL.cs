@@ -1,8 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿using System.Data;
+
+using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
-using ThirdPartyWager.Service.Model.enums;
-using System.Data;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {

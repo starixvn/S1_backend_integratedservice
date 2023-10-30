@@ -1,16 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 using System.Web;
+
+using Microsoft.AspNetCore.Mvc;
+
+using Newtonsoft.Json;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -111,7 +105,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string merch_pwd { get; set; }
             public string ip { get; set; }
         }
-        public class GetBalanceReq 
+        public class GetBalanceReq
         {
             public string merch_id { get; set; }
             public string merch_pwd { get; set; }
@@ -130,7 +124,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string currency_code { get; set; } = "";
             public string game_code { get; set; } = "";
             public string trx_id { get; set; } = "";
-            public long game_id   { get; set; }
+            public long game_id { get; set; }
             public string event_type { get; set; } = "";
             public int event_id { get; set; }
             public long timestamp { get; set; }
@@ -232,7 +226,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return result;
                 }
                 var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, tpUserName);
-                if(tpCheck == null || tpCheck.Token != sessionToken)
+                if (tpCheck == null || tpCheck.Token != sessionToken)
                     return result;
                 var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Skywind, tpUserName);
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
@@ -243,7 +237,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 result.cust_id = tpUserName;
                 result.country = tpCountryCode.CountryCode;
                 result.currency_code = tpCurrency.TpCurrencyId;
-                if(environment.IsDevelopment() || tpCustInfoAuth.IsTest)
+                if (environment.IsDevelopment() || tpCustInfoAuth.IsTest)
                 {
                     result.test_cust = true;
                 }
@@ -386,7 +380,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     game_type = req.game_type,
                     platform = req.platform,
                     promo_id = req.promo_id,
-                    promo_pid =req.promo_pid,
+                    promo_pid = req.promo_pid,
                     jp_contribution = req.jp_contribution,
                     operation_ts = req.operation_ts,
                     distribution_type = req.distribution_type,

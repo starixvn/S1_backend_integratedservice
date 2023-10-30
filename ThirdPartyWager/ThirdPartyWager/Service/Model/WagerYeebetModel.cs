@@ -20,7 +20,7 @@ public class WagerYeebetModel
 {
     public int id { get; set; }
     public string uid { get; set; } = "";
-    public int userid { get; set; } 
+    public int userid { get; set; }
     public string username { get; set; } = "";
     public int userstatus { get; set; }
     public string currency { get; set; } = "";

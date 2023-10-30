@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -39,7 +40,7 @@ namespace ThirdPartyWager.Service.BLL
                     {
                         continue;
                     }
-                    
+
                     // get wager
                     var dataWager = await _apiWMBLL.GetBetListByTime(setting["ApiUrl"], setting[$"vendorId_{currency.TpCurrencyId}"], setting[$"signature_{currency.TpCurrencyId}"], startTime, endTime, guid);
 

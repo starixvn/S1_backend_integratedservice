@@ -1,5 +1,7 @@
 ﻿using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -9,6 +11,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiAGBLL _apiAGBLL;
         private readonly WagerAGService _wagerAGService;
         private readonly ILogger<WagerAGBLL> _logger;
+        private readonly AGConfig _siteAgConfig;
 
         public WagerAGBLL(IServiceProvider provider)
         {
@@ -16,16 +19,18 @@ namespace ThirdPartyWager.Service.BLL
             _apiAGBLL = provider.GetRequiredService<ApiAGBLL>();
             _wagerAGService = provider.GetRequiredService<WagerAGService>();
             _logger = provider.GetRequiredService<ILogger<WagerAGBLL>>();
+            _siteAgConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AGConfig>(Tp.AG.ToString());
         }
 
-        public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime)
+        public async Task<bool> GetWagersAsync(string startTime, string endTime)
         {
             var msg = "FATAL_ERROR";
             var guid = Guid.NewGuid().ToString();
             try
             {
-                // get api info
-                var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
+                var wagerUrl = _siteAgConfig.WagerUrl;
+                var hashKey = _siteAgConfig.HashKey;
+                var data_cagent = _siteAgConfig.data_cagent;
 
                 // pagination
                 var page = 1;
@@ -33,7 +38,7 @@ namespace ThirdPartyWager.Service.BLL
                 while (page <= totalPage)
                 {
                     // get wager
-                    var dataWager = await _apiAGBLL.GetBetListByTime(setting["WagerUrl"], setting["HashKey"], setting["data_cagent"], startTime, endTime, page, guid);
+                    var dataWager = await _apiAGBLL.GetBetListByTime(wagerUrl, hashKey, data_cagent, startTime, endTime, page, guid);
 
                     // error condition
                     var errorCode = dataWager.result.info;
@@ -80,6 +85,20 @@ namespace ThirdPartyWager.Service.BLL
                 _logger.LogError(ex, $"GetWagersAsync {msg}\r\n{ex.Message}");
                 return false;
             }
+        }
+        
+        private class AGConfig
+        {
+            public string ApiUrl { get; set; }
+            public string GameUrl { get; set; }
+            public string WagerUrl { get; set; }
+            public string DesKey { get; set; }
+            public string Md5Key { get; set; }
+            public string cagent { get; set; }
+            public string HashKey { get; set; }
+            public string CommonUrl { get; set; }
+            public string SessionUrl { get; set; }
+            public string data_cagent { get; set; }
         }
     }
 }

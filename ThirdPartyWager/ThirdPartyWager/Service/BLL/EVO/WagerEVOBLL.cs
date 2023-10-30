@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -68,6 +69,16 @@ namespace ThirdPartyWager.Service.BLL
             }
 
             return quick;
+        }
+
+        public async Task<bool> ExecUnsettleWorker(int type)
+        {
+            var result = await GetUnsettleAsync();
+            if (result)
+            {
+                _thirdPartyBLL.SetThirdPartyTimer(_tpId, type, DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+            }
+            return true;
         }
 
         private async Task<bool> GetWagersAsync(string startTime, string endTime, bool compare = false, decimal wagerTotal = 0, decimal payoutTotal = 0)
@@ -196,6 +207,148 @@ namespace ThirdPartyWager.Service.BLL
             {
                 msg = "FATAL_ERROR";
                 _logger.LogError(ex, $"GetWagersAsync {msg}\r\n{ex.Message}");
+                return false;
+            }
+        }
+
+        private async Task<bool> GetUnsettleAsync()
+        {
+            var msg = "FATAL_ERROR";
+            var before = -30;
+            try
+            {
+                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+                // 取得目前未結算資料
+                var unsettledList = await _wagerEVOService.GetUnsettleCheckList();
+                if (unsettledList == null)
+                {
+                    msg = "NO_DATA";
+                    _logger.LogInformation($"{msg}\r\nunsettledList");
+                    return true;
+                }
+
+                // 超過30分鐘尚未結算的資料
+                var execBefore = DateTimeOffset.UtcNow.AddMinutes(before).ToUnixTimeSeconds();
+                var execUnsettleData = unsettledList.Where(i => i.SettleTime < execBefore).ToList();
+                if (execUnsettleData == null)
+                {
+                    msg = "NO_DATA";
+                    _logger.LogInformation($"{msg}\r\nexecUnsettleData");
+                    return true;
+                }
+
+                // 排除wager已存在的注單不用重新抓取
+                var unsettleOfTransId = execUnsettleData.Select(x => x.TransId).ToList();
+                var wagerData = await _wagerEVOService.GetTransIdList(JsonConvert.SerializeObject(unsettleOfTransId));
+                var reGetTransId = unsettleOfTransId;
+                if (wagerData.Any())
+                {
+                    var wagerOfTransId = wagerData.Select(x => x.TransId).ToList();
+                    reGetTransId = unsettleOfTransId.Except(wagerOfTransId).ToList();
+                }
+
+                // 準備以單號取得注單資料
+                foreach (var unsettled in execUnsettleData)
+                {
+                    if (!reGetTransId.Contains(unsettled.TransId))
+                    {
+                        msg = "DATA_EXIST";
+                        _logger.LogInformation($"{msg}\r\nTransId={unsettled.TransId}");
+                        continue;
+                    }
+                    // TooManyRequests:Please try again after 10 seconds
+                    Thread.Sleep(12000);
+
+                    // get wager
+                    var settleTime = DateTimeOffset.FromUnixTimeSeconds(unsettled.SettleTime).DateTime.ToString(_timeFormat);
+                    var dataWager = await _apiEVOBLL.GetBetListByTransId(setting["ApiUrl"], setting["CasinoKey"], setting["gameHistoryApiToken"], setting["GameProvider"], unsettled.TransId, settleTime);
+
+                    // error condition
+                    var error = dataWager.Select(x => x.error).FirstOrDefault();
+
+                    if (error != null && error != "nodata")
+                    {
+                        msg = "THIRD_PARTY_ERROR";
+                        _logger.LogError($"{msg}\r\nTransId={unsettled.TransId}\r\n{JsonConvert.SerializeObject(dataWager, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })}");
+                        return false;
+                    }
+
+                    if (error == "nodata")
+                    {
+                        msg = "NO_DATA";
+                        _logger.LogInformation($"{msg}\r\nTransId={unsettled.TransId}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                        continue;
+                    }
+
+                    var name = "ROUNDID";
+                    var field = "";
+                    foreach (var round in dataWager)
+                    {
+                        try
+                        {
+                            field = round.id;
+
+                            var roundInfo = new WagerRoundInfo_EVO();
+                            roundInfo.id = round.id;
+                            roundInfo.gameProvider = round.gameProvider;
+                            roundInfo.startedAt = round.startedAt;
+                            roundInfo.settledAt = round.settledAt;
+                            roundInfo.status = round.status;
+                            roundInfo.gameType = round.gameType;
+                            roundInfo.table = JsonConvert.SerializeObject(round.table);
+                            roundInfo.dealer = JsonConvert.SerializeObject(round.dealer);
+                            roundInfo.currency = round.currency;
+                            roundInfo.result = JsonConvert.SerializeObject(round.result);
+                            roundInfo.wager = round.wager;
+                            roundInfo.payout = round.payout;
+                            roundInfo.TableId = round.table["id"];
+
+                            IList<Participant_EVO> participants = JsonConvert.DeserializeObject<IList<Participant_EVO>>(JsonConvert.SerializeObject(round.participants));
+                            foreach (var playerItem in participants)
+                            {
+                                foreach (var betItem in playerItem.bets)
+                                {
+                                    name = "WAGERID";
+                                    field = betItem.transactionId;
+
+                                    var bet = new Wager_EVO();
+                                    bet.RoundId = round.id;
+                                    bet.casinoId = playerItem.casinoId;
+                                    bet.playerId = playerItem.playerId;
+                                    bet.currency = playerItem.currency;
+                                    bet.code = betItem.code;
+                                    bet.stake = betItem.stake;
+                                    bet.payout = betItem.payout;
+                                    bet.placedOn = betItem.placedOn;
+                                    bet.description = betItem.description;
+                                    bet.transactionId = betItem.transactionId;
+                                    bet.playMode = playerItem.playMode;
+                                    bet.channel = playerItem.channel;
+                                    bet.participants = JsonConvert.SerializeObject(playerItem);
+                                    var r = _wagerEVOService.InsertWager(bet);
+                                    _ = r.Result;
+                                }
+                            }
+                            // 寫入wager待seamless settleworker執行結算
+                            var rr = _wagerEVOService.InsertWagerRoundInfo(roundInfo);
+                            _ = rr.Result;
+                        }
+                        catch (Exception ex)
+                        {
+                            msg = $"INSERT_WAGER({name}: {field} )";
+                            _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(round)}\r\n{ex.Message}");
+                            return false;
+                        }
+                    }
+                }
+                msg = "FINISH";
+                _logger.LogInformation($"GetUnsettleAsync {msg}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                msg = "FATAL_ERROR";
+                _logger.LogError(ex, $"GetUnsettleAsync {msg}\r\n{ex.Message}");
                 return false;
             }
         }

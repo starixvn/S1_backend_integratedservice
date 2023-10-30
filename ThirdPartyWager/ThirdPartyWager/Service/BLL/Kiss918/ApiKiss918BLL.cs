@@ -1,5 +1,7 @@
-﻿using Newtonsoft.Json;
-using System.Text;
+﻿using System.Text;
+
+using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 
@@ -119,7 +121,7 @@ namespace ThirdPartyWager.Service.BLL
             if (value.Contains("MOBILE")) return "MOBILE";
             else if (value.Contains("WEB")) return "WEB";
             else if (value.Contains("DOWNLOAD")) return "DOWNLOAD";
-            else  return value;
+            else return value;
         }
 
         protected async Task<string> HttpGet(string url,

@@ -1,7 +1,10 @@
-﻿using Newtonsoft.Json;
-using System.Text;
+﻿using System.Text;
 using System.Web;
+
+using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
@@ -15,16 +18,13 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<ApiOne789BLL> _logger;
         private readonly string _tpName = Tp.One789.ToString();
 
-        public ApiOne789BLL(
-            IServiceProvider provider,
-            IConfiguration configuration
-        )
+        public ApiOne789BLL(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<ApiOne789BLL>>();
-            _seamlessUrl = configuration.GetValue<string>("TpSWserviceUrl");
+            _seamlessUrl = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ServiceHostConfig>("ServiceHost").SeamlessService;
         }
 
         public async Task<dynamic> GetBetListByTime(dynamic setting, string startTime, string endTime, int page, int perPage, int gameType, string guid)
@@ -96,7 +96,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<string> callSeamlessApi(string type, BettransDataOne789 bettransDataOne789)
         {
             // param
-            var url = $"{_seamlessUrl}/One789";
+            var url = $"{_seamlessUrl}One789";
             var uri = "/balance_transactions";
             var tag = true;
             var param = string.Empty;

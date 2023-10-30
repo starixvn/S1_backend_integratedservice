@@ -23,7 +23,7 @@
         public IList<int> ServerID { get; set; }
         public IList<int> KindID { get; set; }
         public IList<long> TableID { get; set; }
-        public IList<int> ChairID { get; set; }
+        public IList<int?> ChairID { get; set; }
         public IList<int> UserCount { get; set; }
         public IList<string> CardValue { get; set; }
         public IList<decimal> CellScore { get; set; }
@@ -34,7 +34,6 @@
         public IList<string> GameEndTime { get; set; }
         public IList<int> ChannelID { get; set; }
         public IList<string> LineCode { get; set; }
-        // public IList<string> CreateTime { get; set; }
     }
 
     public class BetV8
@@ -69,6 +68,8 @@
                 return new DateTimeOffset(GameEndTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
             }
         }
+        public int TpId { get; set; }
+        public int TpGameType { get; set; }
     }
 
     public class WagerV8Total

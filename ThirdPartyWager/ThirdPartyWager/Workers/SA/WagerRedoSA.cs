@@ -1,4 +1,5 @@
 ﻿using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -57,7 +58,7 @@ namespace ThirdPartyWager.Workers
                     timerTime = dataTpTimer.StartTime.AddSeconds(1);
                     last = intervalMins;
                 }
-               
+
                 var time = dateTimeHelper.GetTimeByHour(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
                 var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
                 if (time.endUnix < cvTime)

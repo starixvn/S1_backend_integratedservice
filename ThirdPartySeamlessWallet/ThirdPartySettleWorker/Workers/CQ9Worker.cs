@@ -1,13 +1,16 @@
 ﻿using Newtonsoft.Json;
+
 using Serilog.Context;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Interfaces;
 
 namespace ThirdPartySettleWorker.Workers
 {
-    public class CQ9Worker:BackgroundService, ISettleWorker
+    public class CQ9Worker : BackgroundService, ISettleWorker
     {
         public Tp Tp => Tp.CQ9;
         private Timer _timerSettleCq9Slot;
@@ -16,7 +19,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly SettledBLL _settledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly ILogger<CQ9Worker> _logger;
-        
+
         public CQ9Worker(IServiceProvider provider)
         {
             _settledBLL = provider.GetRequiredService<SettledBLL>();
@@ -89,7 +92,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             LogContext.PushProperty("TP", tpName);
                             isError = true;
-                            _logger.LogError($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", "SettleCQ9");
+                            _logger.LogError(ex1,$"SettleCQ9:{JsonConvert.SerializeObject(unsettled)}");
                         }
                     }
                 }
@@ -97,7 +100,7 @@ namespace ThirdPartySettleWorker.Workers
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", tpName);
-                _logger.LogError(ex.ToString(), "SettleCQ9");
+                _logger.LogError(ex, $"SettleCQ9:{ex.Message}");
                 isError = true;
             }
             finally
@@ -163,7 +166,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             LogContext.PushProperty("TP", tpName);
                             isError = true;
-                            _logger.LogError($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName, ex1);
+                            _logger.LogError(ex1, $"{logName}:{JsonConvert.SerializeObject(unsettled)}");
                         }
                     }
                 }
@@ -171,7 +174,7 @@ namespace ThirdPartySettleWorker.Workers
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", tpName);
-                _logger.LogError(ex.ToString(), logName, ex);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
                 isError = true;
             }
             finally

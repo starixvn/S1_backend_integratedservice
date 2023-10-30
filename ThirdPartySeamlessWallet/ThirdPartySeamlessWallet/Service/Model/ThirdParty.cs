@@ -1,8 +1,6 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -13,7 +11,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string Setting { set; get; }
         public Dictionary<string, string> TpSetting => JsonConvert.DeserializeObject<Dictionary<string, string>>(Setting);
         public int Status { set; get; }
-        public int WalletType { set; get; }
+        public WalletType WalletType { set; get; }
     }
     public class TpCurrency
     {
@@ -22,9 +20,22 @@ namespace ThirdPartySeamlessWallet.Service.Model
     }
     public class BonusCategory
     {
+        /// <summary>
+        /// 遊戲類型: TpGameType.Type
+        /// </summary>
         public int Type { set; get; }
+        /// <summary>
+        /// 遊戲分類: TpGameType.CategoryId
+        /// </summary>
+        public int CategoryId { set; get; }
+        /// <summary>
+        /// Promotion分類: PromotionCategory.Id = TpGameType.PromoCategoryId
+        /// </summary>
         public int Id { set; get; }
         public int TpId { set; get; }
+        /// <summary>
+        /// 錢包類型
+        /// </summary>
         public int WalletType { set; get; }
     }
     public class BonusMinBet

@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -57,13 +58,14 @@ public class FinanceBGBLL : ITpReportBLL
 
     public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
     {
+        var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+        var serverList = _commonBLL.GetSiteList();
         var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
-        var siteList = _commonBLL.GetSiteList().Where(x => x.SiteId != 4 && x.SiteId != 5);
         var reportData = new List<dynamic>();
 
         foreach (var siteInfo in siteList)
         {
-            var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(siteInfo.CurrencyList);
+            var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(serverList.First(x => x.SiteId == siteInfo.SiteId).CurrencyList);
             foreach (var item in tpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
             {
                 var prefixMsg = $"Finance {siteInfo.SiteId}_{item.TpCurrencyId}_";

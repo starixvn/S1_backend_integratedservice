@@ -1,21 +1,22 @@
 ﻿using System.Net;
+
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-using Microsoft.Extensions.Options;
+
 using Newtonsoft.Json;
 
 namespace CommonService.Service.BLL
 {
     public class SendGridBLL
     {
-        private readonly IOptions<Dictionary<string, SendGridConfig>> _sendGridConfig;
+        private readonly Dictionary<int, SendGridConfig> _sendGridConfig;
         private readonly HttpHelper _httpHelper;
 
-        public SendGridBLL(IOptions<Dictionary<string, SendGridConfig>> sendGridConfig, HttpHelper httpHelper)
+        public SendGridBLL(IServiceProvider provider)
         {
-            _sendGridConfig = sendGridConfig;
-            _httpHelper = httpHelper;
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _sendGridConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SendGridConfig>("SendGrid");
         }
 
         public class Result
@@ -34,14 +35,16 @@ namespace CommonService.Service.BLL
         {
             var apiResult = new ApiResult();
 
-            if (!_sendGridConfig.Value.ContainsKey(custInfo.SiteName))
+            if (!_sendGridConfig.TryGetValue(custInfo.SiteId, out var config))
             {
-                apiResult.ErrorCode = ErrorCode.Fail;
+                return new ApiResult
+                {
+                    ErrorCode = ErrorCode.Fail
+                };
             }
 
-            var config = _sendGridConfig.Value[custInfo.SiteName];
-
-            var headerParams = new Dictionary<string, string> {
+            var headerParams = new Dictionary<string, string>
+            {
                 { "Authorization", $"Bearer {config.ApiKey}"}
             };
 
@@ -49,7 +52,7 @@ namespace CommonService.Service.BLL
             var (verify, template) = CreateTemplate(type, config, GetUserLang(custInfo.UserLang));
             var sendGridResetPasswordBody = new SendGridTemplateBody
             {
-                from = new NameEmail {name = config.mailFrom.name, email = config.mailFrom.email},
+                from = new NameEmail { name = config.mailFrom.name, email = config.mailFrom.email },
                 personalizations = new List<TemplatePersonalization>
                 {
                     new TemplatePersonalization
@@ -70,7 +73,7 @@ namespace CommonService.Service.BLL
                 apiResult.Message = template;
                 return apiResult;
             }
-            
+
             using var result = await _httpHelper.HttpPost1Async(apiUrl, headerParams, JsonConvert.SerializeObject(sendGridResetPasswordBody), "application/json");
             if (result.StatusCode == HttpStatusCode.Accepted)
             {

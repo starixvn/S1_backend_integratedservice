@@ -1,26 +1,28 @@
 ﻿using System.Net;
 using System.Text;
+
 using CommonService.Service.DAL;
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-using Microsoft.Extensions.Options;
+
 using Newtonsoft.Json;
 
 namespace CommonService.Service.BLL
 {
     public class IovationBLL
     {
-        private readonly IOptions<IovationServicesConfig> iovationServicesConfig;
-        private readonly IovationService iovationService;
-        private readonly HttpHelper httpHelper;
+        private readonly IovationServicesConfig _iovationServicesConfig;
+        private readonly IovationService _iovationService;
+        private readonly HttpHelper _httpHelper;
 
-        public IovationBLL(IOptions<IovationServicesConfig> iovationServicesConfig, IovationService iovationService, HttpHelper httpHelper)
+        public IovationBLL(IServiceProvider provider)
         {
-            this.iovationServicesConfig = iovationServicesConfig;
-            this.iovationService = iovationService;
-            this.httpHelper = httpHelper;
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _iovationService = provider.GetRequiredService<IovationService>();
+            _iovationServicesConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<IovationServicesConfig>("Iovation");
         }
+
         public async Task<ApiResult<IovationCheckResult>> IovationChecksAsync(IovationChecksRequest iovationChecksRequest)
         {
             var apiResult = new ApiResult<IovationCheckResult>();
@@ -34,7 +36,7 @@ namespace CommonService.Service.BLL
                 { "type",iovationChecksRequest.type}
             };
 
-            var Authtoken = $"{iovationServicesConfig.Value.SubscriberID}/{iovationServicesConfig.Value.SubscriberAccount}:{iovationServicesConfig.Value.Password}";
+            var Authtoken = $"{_iovationServicesConfig.SubscriberID}/{_iovationServicesConfig.SubscriberAccount}:{_iovationServicesConfig.Password}";
             var bytes = Encoding.GetEncoding("utf-8").GetBytes(Authtoken);
             //編成 Base64 字串
             var Base64Authtoken = Convert.ToBase64String(bytes);
@@ -45,9 +47,9 @@ namespace CommonService.Service.BLL
             };
 
             var parameters = JsonConvert.SerializeObject(sendIovationChecks);
-            using var result = await httpHelper.HttpPost1Async(iovationServicesConfig.Value.ResourceURL, Authorization, parameters, "application/json");
+            using var result = await _httpHelper.HttpPost1Async(_iovationServicesConfig.ResourceURL, Authorization, parameters, "application/json");
             var resultResp = JsonConvert.DeserializeObject<IovationResult>(await result.Content.ReadAsStringAsync());
-            var resultIns = iovationService.IovationResultIns(resultResp);
+            var resultIns = _iovationService.IovationResultIns(resultResp);
 
             if (result.StatusCode == HttpStatusCode.OK && resultIns > 0)
             {
@@ -62,7 +64,7 @@ namespace CommonService.Service.BLL
                     Result = resultResp.result,
                     Reason = string.IsNullOrEmpty(resultResp.reason) ? "" : resultResp.reason,
                     DeviceId = string.IsNullOrEmpty(deviceId) ? "" : deviceId,
-                    DeviceType = string.IsNullOrEmpty(deviceType) ? "" : deviceType ,
+                    DeviceType = string.IsNullOrEmpty(deviceType) ? "" : deviceType,
                     Score = score ?? 0
                 };
             }

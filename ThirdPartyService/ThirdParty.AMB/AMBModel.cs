@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace ThirdParty.AMB
+﻿namespace ThirdParty.AMB
 {
     public class CommonResponse
     {
@@ -41,7 +39,7 @@ namespace ThirdParty.AMB
         public string zh { get; set; }
         public string my { get; set; }
     }
-    
+
     public class Data
     {
         public string url { get; set; }

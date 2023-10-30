@@ -1,7 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.DependencyInjection;
+
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
 using ThirdPartyCore;
-using ThirdPartyCore.Extensions;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
@@ -13,6 +16,12 @@ namespace ThirdParty.SBSW
     public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular, IThirdPartyBetLimitParticular
     {
         private const string ContentType = "application/x-www-form-urlencoded";
+        private readonly Dictionary<int, SabaConfig> siteSabaConfigs;
+
+        public TpHelper(IServiceProvider provider)
+        {
+            siteSabaConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SabaConfig>(TpEnum.SBSW.ToString());
+        }
 
         private class Result
         {
@@ -66,7 +75,7 @@ namespace ThirdParty.SBSW
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var config = new SabaConfig(inputs);
+            var config = siteSabaConfigs[tpCustInfo.SiteId];
             var ApiUrl = $"{config.ApiUrl}/CreateMember";
             var input = new CreateMemberReq
             {
@@ -78,7 +87,7 @@ namespace ThirdParty.SBSW
                 mintransfer = 1,
                 currency = tpCustInfo.IsTest ? 20 : Convert.ToInt32(tpCustInfo.TpCurrencyId),
                 oddsType = "1",
-            };   
+            };
             var dicP = FromJson<Dictionary<string, string>>(ToJson(input));
             var postdata = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}"))}";
             var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded");
@@ -119,7 +128,7 @@ namespace ThirdParty.SBSW
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var config = new SabaConfig(inputs);
+            var config = siteSabaConfigs[tpCustInfo.SiteId];
             var platform = (int)appType;
             if (inputs.TryGetValue("device", out var device) && device.Equals("wap", StringComparison.OrdinalIgnoreCase))
             {
@@ -152,15 +161,17 @@ namespace ThirdParty.SBSW
 
         public ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string ApiUrl = new SabaConfig(inputs).ApiUrl;
-            Req input = new Req();
-            input.vendor_id = inputs.ContainsKey("VendorId") && !string.IsNullOrEmpty(inputs["VendorId"]) ? inputs["VendorId"] : throw new Exception();
-            input.vendor_member_id = tpCustInfo.TpUserName;
+            var config = siteSabaConfigs[tpCustInfo.SiteId];
+            var input = new Req
+            {
+                vendor_id = config.VendorId,
+                vendor_member_id = tpCustInfo.TpUserName
+            };
 
             var dicP = FromJson<Dictionary<string, string>>(ToJson(input)).ToDictionary(kp => kp.Key, kp => kp.Value);
             string postdata = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}";
 
-            ApiUrl = $"{ApiUrl}/KickUser";
+            var ApiUrl = $"{config.ApiUrl}/KickUser";
             var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded");
 
             ApiResult apiResult = new ApiResult();
@@ -198,8 +209,7 @@ namespace ThirdParty.SBSW
 
         public ApiResult SetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, string betSetting)
         {
-            var config = new SabaConfig(inputs);
-            var apiUrl = config.ApiUrl;
+            var config = siteSabaConfigs[tpCustInfo.SiteId];
             var req = new SetMemberBetSettingReq
             {
                 vendor_id = config.VendorId,
@@ -210,7 +220,7 @@ namespace ThirdParty.SBSW
             var props = t.GetProperties();
             var postData = $"{string.Join("&", props.Select(kp => $"{kp.Name}={kp.GetValue(req)}"))}";
 
-            apiUrl = $"{apiUrl}/SetMemberBetSetting";
+            var apiUrl = $"{config.ApiUrl}/SetMemberBetSetting";
             var result = HttpPost(apiUrl, postData, "application/x-www-form-urlencoded");
 
             var oApiResult = new ApiResult();
@@ -246,18 +256,10 @@ namespace ThirdParty.SBSW
             return result;
         }
 
-        public class SabaConfig
+        public class SabaConfig : TpSiteConfig
         {
-            public string ApiUrl { get; set; }
             public string VendorId { get; set; }
             public string OperatorId { get; set; }
-
-            public SabaConfig(Dictionary<string, string> inputs)
-            {
-                ApiUrl = inputs.GetValue("ApiUrl");
-                VendorId = inputs.GetValue("VendorId");
-                OperatorId = inputs.GetValue("OperatorId");
-            }
         }
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -372,7 +374,87 @@ namespace ThirdParty.SBSW
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var tpBetRecordDetail = TpBetRecordProvider.GetTpBetRecordDetail(betRecordInfo.TpId, betRecordInfo.GameType, betRecordInfo.TransId, DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime);
+
+            if (tpBetRecordDetail == null)
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+
+            var model = JsonConvert.DeserializeObject<DetailModel>(tpBetRecordDetail.Detail);
+            var betDetail = model?.BetDetails?.First();
+            var betNumberDetail = model?.BetNumberDetails?.First();
+            var betVirtualSportDetail = model?.BetVirtualSportDetails?.First();
+
+            if (betDetail == null && betNumberDetail == null && betVirtualSportDetail == null)
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+
+            if (betDetail != null)
+            {
+                int.TryParse(betDetail.odds_type, out int odds_type);
+                decimal.TryParse(betDetail.odds, out decimal odds);
+
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = GetGameID(tpGameType, betDetail.sport_type),
+                    Game = betDetail.sportname?.FirstOrDefault(i => i.lang == "en")?.name ?? string.Empty,
+                    RefNo = betDetail.parlay_ref_no ?? string.Empty,
+                    Title = betDetail.leaguename?.FirstOrDefault(i => i.lang == "en")?.name ?? string.Empty,
+                    MatchID = betDetail.match_id ?? string.Empty,
+                    BetType = betDetail.bettypename?.FirstOrDefault(i => i.lang == "en")?.name ?? string.Empty,
+                    BetChoice = betDetail.bet_team ?? string.Empty,
+                    Result = betDetail.ticket_status,
+                    DeviceType = GetDeviceType(betDetail.betfrom),
+                    IP = string.Empty,
+                    Odds = odds,
+                    OddsTypeEnum = GetOddsType(odds_type),
+                    Live = betDetail.islive
+                };
+            }
+            else if (betNumberDetail != null)
+            {
+                int.TryParse(betNumberDetail.odds_type, out int odds_type);
+                decimal.TryParse(betNumberDetail.odds, out decimal odds);
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = betNumberDetail.sport_type.ToString(),
+                    Game = tpGameType.TypeName,
+                    RefNo = betNumberDetail.trans_id.ToString(),
+                    Title = tpGameType.TypeName,
+                    MatchID = betNumberDetail.match_id.ToString(),
+                    BetType = betNumberDetail.bet_type.ToString(),
+                    BetChoice = betNumberDetail.bet_team ?? string.Empty,
+                    Result = betNumberDetail.ticket_status,
+                    DeviceType = GetDeviceType(betNumberDetail.betfrom),
+                    IP = string.Empty,
+                    Odds = odds,
+                    OddsTypeEnum = GetOddsType(odds_type),
+                    Live = betNumberDetail.islive
+                };
+            }
+            else
+            {
+                int.TryParse(betVirtualSportDetail.odds_type, out int odds_type);
+                decimal.TryParse(betVirtualSportDetail.odds, out decimal odds);
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                {
+                    GameID = betVirtualSportDetail.sport_type.ToString(),
+                    Game = tpGameType.TypeName,
+                    RefNo = betVirtualSportDetail.parlay_ref_no.ToString(),
+                    Title = tpGameType.TypeName,
+                    MatchID = betVirtualSportDetail.match_id.ToString(),
+                    BetType = betVirtualSportDetail.bet_type.ToString(),
+                    BetChoice = betVirtualSportDetail.bet_team ?? string.Empty,
+                    Result = betVirtualSportDetail.ticket_status,
+                    DeviceType = GetDeviceType(betVirtualSportDetail.betfrom),
+                    IP = string.Empty,
+                    Odds = odds,
+                    OddsTypeEnum = GetOddsType(odds_type),
+                    Live = betVirtualSportDetail.islive
+                };
+            }
         }
 
         private string ChangeTransIdToString(string json)
@@ -393,6 +475,49 @@ namespace ThirdParty.SBSW
                 jObject["BetVirtualSportDetails"][0]["trans_id"] = jObject["BetVirtualSportDetails"][0]["trans_id"].ToString();
             }
             return jObject.ToString();
+        }
+        private DeviceType GetDeviceType(string device)
+        {
+            switch (device)
+            {
+                case "m":
+                case "l":
+                case "c":
+                case "2":
+                case "5":
+                case "%":
+                case "@":
+                case "]":
+                case "7":
+                case "~":
+                    return DeviceType.Mobile;
+                case "1":
+                case "4":
+                case "[":
+                case "9":
+                case ">":
+                    return DeviceType.Desktop;
+                default:
+                    return DeviceType.None;
+            }
+        }
+
+        private OddsTypeEnum GetOddsType(int oddsType)
+        {
+            return oddsType switch
+            {
+                1 => OddsTypeEnum.MalayOdds,
+                2 => OddsTypeEnum.ChinaOdds,
+                3 => OddsTypeEnum.DecimalOdds,
+                4 => OddsTypeEnum.IndoOdds,
+                5 => OddsTypeEnum.AmericanOdds,
+                _ => OddsTypeEnum.None,
+            };
+        }
+
+        private string GetGameID(TpGameTypeOption tpGameType, string sportType)
+        {
+            return tpGameType.Type == (int)TpGameType.SBSW_Vgaming ? "171" : sportType;
         }
     }
 }

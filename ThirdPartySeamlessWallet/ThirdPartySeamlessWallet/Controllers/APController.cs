@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using System.Text;
+﻿using System.Text;
 using System.Web;
+
+using Microsoft.AspNetCore.Mvc;
+
+using Newtonsoft.Json;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -402,7 +405,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     result.ErrorCode = (int)ErrorCode.TokenInvalid;
                     result.ErrorDescription = ErrorCode.TokenInvalid.ToString();
-                    logger.LogError($"{Content}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex.ToString()}");
+                    logger.LogError($"{Content}\r\n{JsonConvert.SerializeObject(result)}\r\n{ex}");
                 }
 
                 var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, TpUserName);
@@ -923,7 +926,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpGet]
         [Route("[controller]/{sitename}/api/v1/{game}/wallet/balance")]
-        public async Task<dynamic> GetBalanceOfMiniAsync(string sitename, string game, string payload, string signature)
+        public dynamic GetBalanceOfMini(string sitename, string game, string payload, string signature)
         {
             string logName = $"{_tpName}_GetBalanceOfMini";
             Response.StatusCode = (int)HttpStatusCode.INVALID_DATA;
@@ -940,7 +943,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return errResponse;
                 }
 
-                var Decrypt = DecrypeRequest(payload, sitename);
+                var Decrypt = DecryptRequest(payload, sitename);
                 log2File.Info($"{Decrypt}", logName);
                 var getReq = JsonConvert.DeserializeObject<GetBalanceMiniReq>(Decrypt);
 
@@ -991,7 +994,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 var getCommReq = JsonConvert.DeserializeObject<CommonMiniReq>(Content);
 
-                var Decrypt = DecrypeRequest(getCommReq.payload, sitename);
+                var Decrypt = DecryptRequest(getCommReq.payload, sitename);
                 log2File.Info($"{Decrypt}", logName);
 
                 var getReq = JsonConvert.DeserializeObject<BettingData_AdvantPlayMini>(Decrypt);
@@ -1073,17 +1076,25 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 var getCommReq = JsonConvert.DeserializeObject<CommonMiniReq>(Content);
 
-                var Decrypt = DecrypeRequest(getCommReq.payload, sitename);
+                var Decrypt = DecryptRequest(getCommReq.payload, sitename);
                 log2File.Info($"{Decrypt}", logName);
                 var getReq = JsonConvert.DeserializeObject<PayoutData_AdvantPlayMini>(Decrypt);
 
                 var betting = bettingBLL.GetAdvantPlayMiniBet(getReq.TransId, getReq.SettlementTime, "crash", out _);
-                if (betting == null || !betting.Any(x => x.TicketType == (int)BettransType.Bet))
+                var betTrans = betting.Where(x => x.TicketType == (int)BettransType.Bet);
+                if (!betTrans.Any())
                 {
                     log2File.Error($"PlaceBet data not found", logName);
                     return errResponse;
                 }
-
+                
+                if (betTrans.Sum(x => x.Amount) != getReq.StakeAmount)
+                {
+                    errResponse.errorMessage = "Wrong stake amount";
+                    log2File.Error($"Wrong stake amount , StakeAmount:{getReq.StakeAmount}", logName);
+                    return errResponse;
+                }
+                
                 //var split = splitTransactionReferenceId(getReq.TransactionReferenceId);
                 getReq.GameId = betting.First().GameId;
                 getReq.MiniGameCode = betting.First().MiniGameCode;
@@ -1142,7 +1153,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 var getCommReq = JsonConvert.DeserializeObject<CommonMiniReq>(Content);
 
-                var Decrypt = DecrypeRequest(getCommReq.payload, sitename);
+                var Decrypt = DecryptRequest(getCommReq.payload, sitename);
                 log2File.Info($"{Decrypt}", logName);
                 var getReq = JsonConvert.DeserializeObject<ResultData_AdvantPlayMini>(Decrypt);
 
@@ -1164,7 +1175,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         continue;
                     }
-                    
+
                     // 待處理
                     var endRoundData = bettransItem.First(c => c.TicketType == (int)BettransType.Bet);
                     getReq.MiniGameCode = endRoundData.MiniGameCode;
@@ -1216,7 +1227,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 var getCommReq = JsonConvert.DeserializeObject<CommonMiniReq>(Content);
 
-                var Decrypt = DecrypeRequest(getCommReq.payload, sitename);
+                var Decrypt = DecryptRequest(getCommReq.payload, sitename);
                 log2File.Info($"{Decrypt}", logName);
                 var getReq = JsonConvert.DeserializeObject<PayoutData_AdvantPlayMini>(Decrypt);
 
@@ -1232,8 +1243,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var error = false;
                 if (getReq.WinResults.Any() && getReq.WinResults.Count() > 0)
                 {
+                    var placebetAmount = bettrans.Where(x => x.TicketType == (int)BettransType.Bet).Sum(x => x.Amount);
                     foreach (var winItem in getReq.WinResults)
                     {
+                        //AP Mini cardracing win 偶爾會有匯率問題，多檢查下注金額是否一致。
+                        if (placebetAmount != winItem.BuyAmount)
+                        {
+                            log2File.Error($"PayoutBet={winItem.BuyAmount} amount not equal PlaceBet={placebetAmount}.", logName);
+                            return errResponse;
+                        }
                         var singleBettrans = new PayoutData_AdvantPlayMini();
                         var singleWinResults = new List<WinResults_AdvantPlayMini>
                         {
@@ -1293,7 +1311,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             lostItem
                         };
                         var getBet = bettrans.FirstOrDefault(i => i.TicketType == 1 && i.TransId == lostItem.TransactionReferenceId);
-                        if(getBet == null)
+                        if (getBet == null)
                         {
                             error = true;
                             log2File.Error($"bettrans no found bet error\r\n{JsonConvert.SerializeObject(lostItem)}", logName);
@@ -1364,7 +1382,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 RefundMiniResp response = new RefundMiniResp();
                 var getCommReq = JsonConvert.DeserializeObject<CommonMiniReq>(Content);
 
-                var Decrypt = DecrypeRequest(getCommReq.payload, sitename);
+                var Decrypt = DecryptRequest(getCommReq.payload, sitename);
                 log2File.Info($"{Decrypt}", logName);
                 var getReq = JsonConvert.DeserializeObject<CancelBetData_AdvantPlayMini>(Decrypt);
 
@@ -1380,7 +1398,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var err = false;
                 foreach (var item in getReq.Data)
                 {
-                    if(bettrans.Any(i => i.TransId == item.TransactionReferenceId && i.TicketType == (int)BettransType.CancelBet))
+                    if (bettrans.Any(i => i.TransId == item.TransactionReferenceId && i.TicketType == (int)BettransType.CancelBet))
                     {
                         continue;
                     }
@@ -1598,35 +1616,22 @@ namespace ThirdPartySeamlessWallet.Controllers
             return _gameOfMiniList.Contains(game, StringComparer.OrdinalIgnoreCase);
         }
 
-        private string DecrypeRequest(string payload, string sitename)
+        private string DecryptRequest(string payload, string siteName)
         {
-            var serverInfo = thirdPartyBLL.GetServerInfoBySiteName(sitename);
-            var siteId = (serverInfo != null) ? serverInfo.SiteId : 1;
+            var serverInfo = thirdPartyBLL.GetServerInfoBySiteName(siteName);
+            if (serverInfo is not { SiteId: > 0 })
+            {
+                throw new Exception("DecrypeRequest SiteName empty");
+            }
+            var siteId = serverInfo.SiteId;
             var thirdPartySetting = thirdPartyBLL.GetThirdPartyBySite((int)thisTp, siteId);
-            string SecretKey = thirdPartySetting.TpSetting["SecretKey_MiniGame"];
-            return tools.AesDecryptV2(payload, SecretKey);
-        }
-
-        private SplitTransactionReferenceId splitTransactionReferenceId(string transactionReferenceId)
-        {
-            var split = transactionReferenceId.Split("_");
-            var p = new SplitTransactionReferenceId();
-            if (split.Count() == 2)
+            if (thirdPartySetting == null || !thirdPartySetting.TpSetting.ContainsKey("SecretKey_MiniGame"))
             {
-                p.GameId = split[0];
-                p.SessionId = split[1];
-                return p;
-
+                throw new Exception("SecretKey_MiniGame NotFound TpSetting");
             }
 
-            if (split.Count() == 3)
-            {
-                p.GameId = split[0];
-                p.SessionId = split[1];
-                p.UserReferenceId = split[2];
-                return p;
-            }
-            throw new Exception("splitTransactionReferenceId failed");
+            var secretKey = thirdPartySetting.TpSetting["SecretKey_MiniGame"];
+            return tools.AesDecryptV2(payload, secretKey);
         }
 
         #endregion

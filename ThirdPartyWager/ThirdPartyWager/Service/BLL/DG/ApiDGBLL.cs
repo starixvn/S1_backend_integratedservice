@@ -1,6 +1,8 @@
-﻿using Newtonsoft.Json;
-using System.Net;
+﻿using System.Net;
 using System.Text;
+
+using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -15,9 +17,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<ApiDGBLL> _logger;
         private readonly string _tpName = Tp.DG.ToString();
 
-        public ApiDGBLL(
-            IServiceProvider provider
-        )
+        public ApiDGBLL(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
@@ -90,7 +90,7 @@ namespace ThirdPartyWager.Service.BLL
             var result = JsonConvert.DeserializeObject<WagerRedoDGModel>(r);
             return result;
         }
-        
+
         private async Task<string> DoHttpClientAsync(string url, object param)
         {
             var json = JsonConvert.SerializeObject(param);
@@ -99,7 +99,7 @@ namespace ThirdPartyWager.Service.BLL
 
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
-            
+
             var response = await _httpHelper.GetClient().SendAsync(request);
             var result = response.Content.ReadAsStringAsync().Result;
 
@@ -108,7 +108,7 @@ namespace ThirdPartyWager.Service.BLL
                 _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
                 _log2File.InsertResponseLog(_tpName, url, json, result);
             }
-            
+
             return (response.StatusCode == HttpStatusCode.ServiceUnavailable) ? "{\"codeId\": 300}" : result;
         }
     }

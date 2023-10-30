@@ -1,13 +1,9 @@
-﻿using Dapper;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿using System.Text;
+
+using Dapper;
+
 using Newtonsoft.Json;
-using System;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
+
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -26,7 +22,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             _logger = provider.GetRequiredService<ILogger<TpBetRecordExtendBLL>>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
-            _apiUrl = $"{provider.GetRequiredService<IConfiguration>().GetValue<string>("TpService")}GetTpBetRecordExtend";
+            var serviceHost = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ServiceHostConfig>("ServiceHost");
+            _apiUrl = $"{serviceHost.TpService}GetTpBetRecordExtend";
         }
 
         public async Task AddTpBetRecordExtend(BetRecordInfo betRecordInfo, TpCustInfo tpCustInfo)
@@ -71,22 +68,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         betRecordInfo.TicketKey,
                     });
                     parameters.AddDynamicParams(result.Data);
-                    
-                    //減少全站維護時間，由程式判斷日期決定走哪支SP
-                    var newDate = new DateTime(2023, 3, 9);
-                    var spName = "Service_TpBetRecordExtend_Ins";
-                    var partitionDate = betRecordInfo.SettledTime == 0 ?
-                        DateTime.UtcNow.Date : DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).Date;
-                    if (partitionDate >= DateTime.UtcNow.AddDays(2))
-                    {
-                        partitionDate = DateTime.UtcNow.Date;
-                    }
-                    if (partitionDate.Date >= newDate)
-                    {
-                        spName = "Service_TpBetRecordExtend_Ins_V2";
-                    }
-
-                    _mainDbClient.Execute(spName, parameters: parameters);
+                    _mainDbClient.Execute("Service_TpBetRecordExtend_Ins_V2", parameters: parameters);
                 }
             }
             catch (AggregateException ex)
@@ -96,11 +78,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 {
                     msg.Append(innerException.Message);
                 }
-                _logger.LogError(ex, $"{msg} || { JsonConvert.SerializeObject(betRecordInfo)}");
+                _logger.LogError(ex, $"{msg} || {JsonConvert.SerializeObject(betRecordInfo)}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"{ex.Message} || { JsonConvert.SerializeObject(betRecordInfo)}");
+                _logger.LogError(ex, $"{ex.Message} || {JsonConvert.SerializeObject(betRecordInfo)}");
             }
         }
     }

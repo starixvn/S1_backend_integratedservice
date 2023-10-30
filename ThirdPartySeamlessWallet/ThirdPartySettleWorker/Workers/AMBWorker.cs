@@ -1,9 +1,12 @@
-using Serilog.Context;
 using Newtonsoft.Json;
+
+using Serilog.Context;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -148,7 +151,7 @@ namespace ThirdPartySettleWorker.Workers
             if (winLostAmount == 0) return TicketStatus.Draw;
 
             if (winLostAmount > 0) return TicketStatus.Win;
-            
+
             return TicketStatus.Lost;
         }
 
@@ -206,7 +209,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             LogContext.PushProperty("TP", tpName);
                             isError = true;
-                            _logger.LogError($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                            _logger.LogError(ex1,$"{logName}:{JsonConvert.SerializeObject(unsettled)}");
                         }
                     }
                 }
@@ -214,7 +217,7 @@ namespace ThirdPartySettleWorker.Workers
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", tpName);
-                _logger.LogError(ex.ToString(), logName);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
                 isError = true;
             }
             finally

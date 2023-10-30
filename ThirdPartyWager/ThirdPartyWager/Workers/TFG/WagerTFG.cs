@@ -1,6 +1,6 @@
 ﻿using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.BLL.TFG;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;

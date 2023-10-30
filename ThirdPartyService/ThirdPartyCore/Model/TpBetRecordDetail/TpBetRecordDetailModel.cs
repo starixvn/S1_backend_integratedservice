@@ -1,8 +1,5 @@
-﻿using System;
-using System.IO;
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using System.Text;
-using Newtonsoft.Json.Linq;
 
 namespace ThirdPartyCore.Model
 {
@@ -16,7 +13,7 @@ namespace ThirdPartyCore.Model
 
         public int CurrencyId { get; set; }
 
-        public string Detail 
+        public string Detail
         {
             get
             {

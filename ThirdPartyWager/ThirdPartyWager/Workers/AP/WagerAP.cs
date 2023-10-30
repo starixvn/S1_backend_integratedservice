@@ -1,4 +1,5 @@
 ﻿using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -8,7 +9,7 @@ namespace ThirdPartyWager.Workers
     {
         private readonly ILogger<WagerAP> _logger;
         private readonly WagerAPBLL _wagerAPBLL;
-        private readonly CommonBLL _commonBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
 
         private Timer timerMini;
         private readonly int tpType = (int)WagerTimerType.Wager;
@@ -16,12 +17,13 @@ namespace ThirdPartyWager.Workers
         private readonly int quickTime = 45; // in seconds
         private readonly int runTime = 90; // in seconds
         private readonly string _tpName = Tp.AP.ToString();
+        private readonly int _tpId = (int)Tp.AP;
 
         public WagerAP(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<WagerAP>>();
             _wagerAPBLL = provider.GetRequiredService<WagerAPBLL>();
-            _commonBLL = provider.GetRequiredService<CommonBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -36,15 +38,9 @@ namespace ThirdPartyWager.Workers
             var quick = false;
             try
             {
-                var siteList = _commonBLL.GetSiteList();
-
+                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
                 foreach (var site in siteList)
                 {
-                    if (site.SiteId == 4)
-                    {
-                        continue;
-                    }
-
                     var siteId = site.SiteId;
                     var res = await _wagerAPBLL.ExecWagerWorker(siteId, tpType, timeRange);
                     if (res == true)

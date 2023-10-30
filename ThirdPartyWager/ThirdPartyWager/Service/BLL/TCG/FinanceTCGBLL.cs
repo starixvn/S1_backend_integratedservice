@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -11,7 +12,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly CommonBLL _commonBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = 0;
-        private readonly IEnumerable<TpCurrency> _tpCurrencyList;
         private readonly int _tpId = (int)Tp.TCG;
 
         public FinanceTCGBLL(IServiceProvider provider)
@@ -19,7 +19,6 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<FinanceTCGBLL>>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
-            _tpCurrencyList = _commonBLL.GetTpCurrencyList(_tpId);
         }
 
         public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)

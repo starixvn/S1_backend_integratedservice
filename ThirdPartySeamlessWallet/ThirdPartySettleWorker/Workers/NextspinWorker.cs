@@ -1,10 +1,12 @@
 using Newtonsoft.Json;
+
 using Serilog.Context;
+
 using ThirdPartySeamlessWallet.Service.BLL;
-using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -70,7 +72,7 @@ namespace ThirdPartySettleWorker.Workers
                     try
                     {
                         var unsettleData = _partitionService.GetUnsettleDataList<SettleDataRNG_Nextspin>("Service_BettransRng_Nextspin_Unsettle_Get", tpUnsettle).FirstOrDefault();
-                        var tpWagerData = _tpUnSettledBLL.GetTpUnsettleData<SettleDataRNG_Nextspin>("Service_TpWagerRng_Nextspin_Unsettle_Get", new { tpUnsettle .TransId }, DataBase.Wager).FirstOrDefault();
+                        var tpWagerData = _tpUnSettledBLL.GetTpUnsettleData<SettleDataRNG_Nextspin>("Service_TpWagerRng_Nextspin_Unsettle_Get", new { tpUnsettle.TransId }, DataBase.Wager).FirstOrDefault();
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettleData.TpUserName);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
                         if (tpCustInfo == null)
@@ -79,7 +81,7 @@ namespace ThirdPartySettleWorker.Workers
                         }
                         if (!IsBettransSameAsTpWager(unsettleData, tpWagerData, tpCurrency))
                         {
-                            _logger.LogError($"transId: {tpUnsettle.TransId} is not equal " +
+                            _logger.LogWarning($"transId: {tpUnsettle.TransId} is not equal " +
                                              $"settle: {JsonConvert.SerializeObject(unsettleData)} " +
                                              $"wager: {JsonConvert.SerializeObject(tpWagerData)}");
                             continue;
@@ -90,7 +92,7 @@ namespace ThirdPartySettleWorker.Workers
                             Stake = unsettleData.Stake,
                             ValidBet = unsettleData.ValidBet,
                             WinlostAmount = unsettleData.WinLostAmount,
-                            TransId = unsettleData.TicketStatus == (int)TicketStatus.Refund ? unsettleData.ReferenceId : tpUnsettle.TransId,
+                            TransId = tpUnsettle.TransId,
                             GameType = gametype,
                             TpUserName = unsettleData.TpUserName,
                             SettledTime = unsettleData.SettledTime,
@@ -159,10 +161,10 @@ namespace ThirdPartySettleWorker.Workers
             return stake == targetStake && winLost == targetWinLost;
         }
 
-        private TicketStatus CalculateTicketStatus(decimal amount) 
+        private TicketStatus CalculateTicketStatus(decimal amount)
         {
             if (amount > 0)
-            return TicketStatus.Win;
+                return TicketStatus.Win;
             else if (amount == 0)
                 return TicketStatus.Draw;
             else

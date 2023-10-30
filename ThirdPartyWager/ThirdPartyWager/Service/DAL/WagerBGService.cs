@@ -1,5 +1,7 @@
-﻿using Dapper;
-using System.Text.Json;
+﻿using System.Text.Json;
+
+using Dapper;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -15,7 +17,7 @@ public class WagerBGService
         _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
     }
 
-    public Task<int> InsertWager(int siteId,string tpCurrencyId, IEnumerable<WagerBGModel> datas)
+    public Task<int> InsertWager(int siteId, string tpCurrencyId, IEnumerable<WagerBGModel> datas)
     {
         return _wagerDbClient.ExecuteAsync("Service_TpWagerLC_BG_Batch_Ins", new { _SiteId = siteId, _TpCurrencyId = tpCurrencyId, _Infos = JsonSerializer.Serialize(datas) });
     }

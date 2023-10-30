@@ -1,5 +1,7 @@
-﻿using Newtonsoft.Json;
-using System.Text;
+﻿using System.Text;
+
+using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -30,6 +32,25 @@ namespace ThirdPartyWager.Service.BLL
             {
                 startDate = startTime,
                 endDate = endTime,
+                gameProvider = gameProvider
+            };
+            var dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(param));
+            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+            // request
+            var r = await DoHttpClientAsync(url, sParam, casinoKey, gameHistoryApiToken);
+            var result = JsonConvert.DeserializeObject<List<WagerEVOModel>>(r);
+            return result;
+        }
+
+        public async Task<List<WagerEVOModel>> GetBetListByTransId(string wagerUrl, string casinoKey, string gameHistoryApiToken, string gameProvider, string TransId, string startTime)
+        {
+            // param
+            var url = $"{wagerUrl}/api/gamehistory/v1/casino/games/stream";
+            var param = new
+            {
+                startDate = startTime,
+                transactionId = TransId,
                 gameProvider = gameProvider
             };
             var dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(param));

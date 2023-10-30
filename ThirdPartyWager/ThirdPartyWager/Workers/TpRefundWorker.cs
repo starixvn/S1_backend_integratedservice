@@ -1,4 +1,5 @@
 ﻿using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -15,9 +16,7 @@ namespace ThirdPartyWager.Workers
         private Timer timer36;
         private Timer timer37;
 
-        public TpRefundWorker(
-            IServiceProvider provider
-        )
+        public TpRefundWorker(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<TpRefundWorker>>();
             _tpRefundBLL = provider.GetRequiredService<TpRefundBLL>();
@@ -32,7 +31,7 @@ namespace ThirdPartyWager.Workers
             return Task.CompletedTask;
         }
 
-        private async void DoTask(object state)
+        private void DoTask(object state)
         {
             var tpName = (GameType)state switch
             {

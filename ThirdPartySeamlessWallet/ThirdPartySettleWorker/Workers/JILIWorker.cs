@@ -1,9 +1,12 @@
 ﻿using Newtonsoft.Json;
+
 using Serilog.Context;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -154,7 +157,7 @@ namespace ThirdPartySettleWorker.Workers
                             _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, unsettled.TransId, isSuccess: false);
                         });
                         isError = true;
-                        _logger.LogError($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                        _logger.LogError(ex1, $"{logName}:{JsonConvert.SerializeObject(unsettled)}");
                     }
                 }
             }
@@ -165,7 +168,7 @@ namespace ThirdPartySettleWorker.Workers
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", _tpName);
-                _logger.LogError(ex.ToString(), logName);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
                 isError = true;
             }
             finally
@@ -258,7 +261,7 @@ namespace ThirdPartySettleWorker.Workers
                             _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, unsettled.TransId, isSuccess: false);
                         });
                         isError = true;
-                        _logger.LogError($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                        _logger.LogError(ex1, $"{logName}:{JsonConvert.SerializeObject(unsettled)}");
                     }
                 }
             }
@@ -269,7 +272,7 @@ namespace ThirdPartySettleWorker.Workers
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", _tpName);
-                _logger.LogError(ex.ToString(), logName);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
                 isError = true;
             }
             finally
@@ -304,7 +307,7 @@ namespace ThirdPartySettleWorker.Workers
                             if (check.Count() == 1 && check.Any(x => x.TicketStatus == (int)TicketStatus.Refund))
                             {
                                 _ = _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, unsettled.TransId, isSuccess: true);
-                                _logger.LogWarning($"cancel {unsettled.TransId} no need to settle.", logName);
+                                _logger.LogWarning($"{logName}:cancel {unsettled.TransId} no need to settle.");
                             }
                         }
                     }
@@ -317,7 +320,7 @@ namespace ThirdPartySettleWorker.Workers
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", _tpName);
-                _logger.LogError(ex.ToString(), logName);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
             }
             finally
             {
@@ -385,7 +388,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             LogContext.PushProperty("TP", tpName);
                             isError = true;
-                            _logger.LogError($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                            _logger.LogError(ex1, $"{logName}:{JsonConvert.SerializeObject(unsettled)}");
                         }
                     }
                 }
@@ -397,7 +400,7 @@ namespace ThirdPartySettleWorker.Workers
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", tpName);
-                _logger.LogError(ex.ToString(), logName);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
                 isError = true;
             }
             finally
@@ -462,7 +465,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             LogContext.PushProperty("TP", tpName);
                             isError = true;
-                            _logger.LogError($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1}", logName);
+                            _logger.LogError(ex1, $"{logName}:{JsonConvert.SerializeObject(unsettled)}");
                         }
                     }
                 }
@@ -474,7 +477,7 @@ namespace ThirdPartySettleWorker.Workers
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", tpName);
-                _logger.LogError(ex.ToString(), logName);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
                 isError = true;
             }
             finally
@@ -540,7 +543,7 @@ namespace ThirdPartySettleWorker.Workers
                             {
                                 LogContext.PushProperty("TP", tpName);
                                 isError = true;
-                                _logger.LogError($"{JsonConvert.SerializeObject(check)}\r\n{ex1}", logName);
+                                _logger.LogError(ex1, $"{logName}:{JsonConvert.SerializeObject(check)}");
                             }
                         }
                     }
@@ -553,7 +556,7 @@ namespace ThirdPartySettleWorker.Workers
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", tpName);
-                _logger.LogError(ex.ToString(), logName);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
                 isError = true;
             }
             finally

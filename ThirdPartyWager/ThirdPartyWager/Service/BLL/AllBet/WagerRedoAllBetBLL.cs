@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -44,16 +45,16 @@ namespace ThirdPartyWager.Service.BLL
                 foreach (var currency in _currencyList)
                 {
                     try
-                    {                 
+                    {
                         // pagination
                         var pageIndex = 1;
                         var pageRowCnt = 1;
-                    
+
                         var agent = setting[$"{currency.TpCurrencyId}Agent"];
                         while (pageRowCnt >= 1)
                         {
                             // bet 
-                            var dataWager = await _apiAllBetBLL.GetBetListByTime(setting, agent, startTime, endTime, pageIndex);
+                            var dataWager = _apiAllBetBLL.GetBetListByTime(setting, agent, startTime, endTime, pageIndex);
                             if (dataWager == null)
                             {
                                 msg = "THIRD_PARTY_ERROR";

@@ -46,6 +46,13 @@ namespace ThirdPartyWager.Service.BLL
                 }
 
                 // get list
+                var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+                // check tp status and only get first site to run
+                if (!siteList.Any(x => x.Status == 1))
+                {
+                    return false;
+                }
+
                 var pendingList = _bll.GetPendingList(gameType);
                 if (pendingList == null)
                 {

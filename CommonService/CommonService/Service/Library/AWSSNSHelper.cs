@@ -1,19 +1,22 @@
 ﻿using Amazon;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
+
+using CommonService.Service.BLL;
 using CommonService.Service.Model;
-using Microsoft.Extensions.Options;
 
 namespace CommonService.Service.Library;
 
 public class AWSSNSHelper
 {
     private readonly IAmazonSimpleNotificationService _client;
+    private readonly AWSKeyConfig _awsKeyConfig;
 
     public AWSSNSHelper(IServiceProvider provider)
     {
         var configuration = provider.GetRequiredService<IConfiguration>();
-        var awsKeyConfig = provider.GetRequiredService<IOptions<AWSKeyConfig>>();
+        var configBLL = provider.GetRequiredService<ConfigBLL>();
+        _awsKeyConfig = configBLL.GetConfigValue<AWSKeyConfig>("AWSKey");
         var proxyHost = configuration.GetValue<string>("ProxyHost");
         var proxyPort = configuration.GetValue<int>("ProxyPort");
 
@@ -28,7 +31,8 @@ public class AWSSNSHelper
             config.ProxyPort = proxyPort;
         }
 
-        _client = new AmazonSimpleNotificationServiceClient(awsKeyConfig.Value.AccessKey, awsKeyConfig.Value.SecretKey, config);
+        //AWSKey也只有一組，直接拿就好
+        _client = new AmazonSimpleNotificationServiceClient(_awsKeyConfig.AccessKey, _awsKeyConfig.SecretKey, config);
         var attributes = new SetSMSAttributesRequest();
         attributes.Attributes.Add("DefaultSMSType", "Transactional");
         _client.SetSMSAttributesAsync(attributes);
@@ -45,7 +49,7 @@ public class AWSSNSHelper
             };
             request.MessageAttributes.Add("AWS.SNS.SMS.SenderID", senderId);
         }
-        
+
         return await _client.PublishAsync(request);
     }
 }
