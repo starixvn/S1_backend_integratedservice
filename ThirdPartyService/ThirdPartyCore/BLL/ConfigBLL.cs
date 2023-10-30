@@ -54,7 +54,7 @@ namespace ThirdPartyCore.BLL
 
             return defaultResult;
         }
-
+        
         public TItem GetConfigValueByEnvironment<TItem>(string configKey, int siteId = 0)
         {
             var json = GetConfigValue($"{configKey}.{_environment.EnvironmentName}.json", siteId);
