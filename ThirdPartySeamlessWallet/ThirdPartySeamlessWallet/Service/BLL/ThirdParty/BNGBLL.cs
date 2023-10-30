@@ -41,15 +41,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var check = _partitionService.Query<BettransRng_BNG>(partitionTime, "Service_BettransRng_BNG_Check", new { reqData.uid, reqData.args.round_id });
             if (check.Any())
             {
-                //return new BNGResponse()
-                //{
-                //    uid = reqData.uid,
-                //    balance = new balance()
-                //    {
-                //        value = _tpCustInfoBLL.GetBalance((int)Tp.FaChai, tpCustInfo.TpUserName, (int)GameType.BNG_RNG).Balance.ToString(),
-                //        version = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-                //    }
-                //};
                 return (int)TransactionStatus.Success;
             }
 
@@ -75,19 +66,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 currency = reqData.args.player.currency,
                 mode = reqData.args.player.mode,
                 is_test = reqData.args.player.is_test,
-                campaign = reqData.args.bonus.campaign,
+                campaign = string.IsNullOrWhiteSpace(reqData.args.bonus.campaign) ? String.Empty : reqData.args.bonus.campaign,
                 source = reqData.args.bonus.source,
                 bonus_id = reqData.args.bonus.bonus_id,
-                ext_bonus_id = reqData.args.bonus.ext_bonus_id,
-                bonus_type = reqData.args.bonus.bonus_type,
+                ext_bonus_id = string.IsNullOrWhiteSpace(reqData.args.bonus.ext_bonus_id) ? String.Empty : reqData.args.bonus.ext_bonus_id,
+                bonus_type = string.IsNullOrWhiteSpace(reqData.args.bonus.bonus_type) ? String.Empty : reqData.args.bonus.bonus_type,
                 Event = reqData.args.bonus.Event,
-                start_date = reqData.args.bonus.start_date,
-                end_date = reqData.args.bonus.end_date,
+                start_date = string.IsNullOrWhiteSpace(reqData.args.bonus.start_date) ? String.Empty : reqData.args.bonus.start_date,
+                end_date = string.IsNullOrWhiteSpace(reqData.args.bonus.end_date) ? String.Empty : reqData.args.bonus.end_date,
                 total_bet = reqData.args.bonus.total_bet != null ? Convert.ToDecimal(reqData.args.bonus.total_bet) : 0,
                 total_win = reqData.args.bonus.total_win != null ? Convert.ToDecimal(reqData.args.bonus.total_win) : 0,
                 played_bet = reqData.args.bonus.played_bet != null ? Convert.ToDecimal(reqData.args.bonus.played_bet) : 0,
                 played_win = reqData.args.bonus.played_win != null ? Convert.ToDecimal(reqData.args.bonus.played_win) : 0,
-                status = reqData.args.bonus.status,
+                status = string.IsNullOrWhiteSpace(reqData.args.bonus.status) ? String.Empty : reqData.args.bonus.status,
                 tag = reqData.args.tag
             };
 
@@ -106,7 +97,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (reqData.args.round_started && bettingData.bet > 0)
             {
-                tempResult = _bettingService.PlaceBetV2(tpCustInfo, Math.Abs(bettingData.bet) * -1, (int)Tp.FaChai, reqData.args.round_id.ToString(), (int)GameType.BNG_RNG, reqData.args.round_id.ToString(), null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+                tempResult = _bettingService.PlaceBetV2(tpCustInfo, Math.Abs(bettingData.bet) * -1, (int)Tp.BNG, reqData.args.round_id.ToString(), (int)GameType.BNG_RNG, reqData.args.round_id.ToString(), null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
             }
 
             bool getBonus = false;

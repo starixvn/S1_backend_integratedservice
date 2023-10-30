@@ -36,6 +36,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _authBLL = provider.GetRequiredService<AuthBLL>();
+            _bNGBLL = provider.GetRequiredService<IBNGBLL>();
             _tools = provider.GetRequiredService<Tools>();
             _defaultConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(ThirdParty.ToString());
         }
