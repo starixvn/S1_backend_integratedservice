@@ -136,6 +136,7 @@
         IM_Sports = 103,
         SPRIBE_RNG = 104,
         FaChai_RNG = 106,
-        BNG_RNG = 108
+        BNG_RNG = 108,
+        SG_Table = 109
     }
 }
