@@ -194,10 +194,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 TicketStatus = bettingDataRNG_SG.TicketStatus
             });
 
-            bool cash = false;
+            var cash = false;
             var category = TpCategory.Slots;
-            if (gameType == (int)GameType.SG_RNG)
+            if (gameType is (int)GameType.SG_RNG or (int)GameType.SG_Table)
             {
+                if (gameType == (int) GameType.SG_Table)
+                {
+                    category = TpCategory.P2P;
+                }
                 result = _mainDbClient.Execute("Service_BettransRng_SGV2_Ins", p, conn, trans);
             }
             else if (gameType == (int)GameType.SG_Fish)
@@ -206,11 +210,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 category = TpCategory.Fish;
                 result = _mainDbClient.Execute("Service_BettransFish_SG_Ins", p, conn, trans);
             }
-            else
-            {
-                category = TpCategory.P2P;
-                result = _mainDbClient.Execute("Service_BettransTable_SG_Ins", p, conn, trans);
-            }
+           
 
             if (result > 0 && bettingDataRNG_SG.amount != 0)
             {

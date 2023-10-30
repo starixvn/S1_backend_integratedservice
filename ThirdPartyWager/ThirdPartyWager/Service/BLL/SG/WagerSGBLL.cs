@@ -72,6 +72,15 @@ namespace ThirdPartyWager.Service.BLL
                             var gameType = GetGameType(bet.gameCode);
                             result = (gameType == GameType.SG_RNG) ? _wagerSGService.InsertWagerRng(bet) : _wagerSGService.InsertWager(bet);
 
+                            result = gameType switch
+                            {
+                                (int) GameType.SG_RNG => _wagerSGService.InsertWagerRng(bet),
+                                (int) GameType.SG_Fish => _wagerSGService.InsertWager(bet),
+                                (int) GameType.SG_Table => "Service_BettransTable_SG_CancelBet_Set",
+                                _ => throw new ArgumentOutOfRangeException(nameof(gameType), gameType, null)
+                            };
+
+                            
                             if (result > 0)
                             {
                                 _tpUnsettleService.InsertTpUnsettle(Tp.SG, gameType, bet.referenceId);
@@ -102,10 +111,14 @@ namespace ThirdPartyWager.Service.BLL
 
         private GameType GetGameType(string gameCode)
         {
-            if (!gameCode.StartsWith("F-", StringComparison.OrdinalIgnoreCase))
+            if (gameCode.StartsWith("F-", StringComparison.OrdinalIgnoreCase))
             {
-                // slot
-                return GameType.SG_RNG;
+                return GameType.SG_Fish;
+            }
+
+            if (gameCode.StartsWith("C-", StringComparison.OrdinalIgnoreCase))
+            {
+                return GameType.SG_Table;
             }
 
             return GameType.SG_Fish;

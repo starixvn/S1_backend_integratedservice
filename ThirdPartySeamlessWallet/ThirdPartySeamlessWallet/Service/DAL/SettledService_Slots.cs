@@ -882,15 +882,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     (int) GameType.SG_Table => TpCategory.P2P,
                     _ => throw new ArgumentOutOfRangeException(nameof(gameType), gameType, null)
                 };
-                
-                var cancelSetSp = gameType switch
+
+                string cancelSetSp;
+                switch (gameType)
                 {
-                    (int) GameType.SG_RNG => "Service_BettransRng_SG_CancelBet_Set",
-                    (int) GameType.SG_Fish => "Service_BettransFish_SG_CancelBet_Set",
-                    (int) GameType.SG_Table => "Service_BettransTable_SG_CancelBet_Set",
-                    _ => throw new ArgumentOutOfRangeException(nameof(gameType), gameType, null)
-                };
-               
+                    case (int) GameType.SG_RNG:
+                    case (int) GameType.SG_Table:
+                        cancelSetSp = "Service_BettransRng_SG_CancelBet_Set";
+                        break;
+                    case (int) GameType.SG_Fish:
+                        cancelSetSp = "Service_BettransFish_SG_CancelBet_Set";
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(gameType), gameType, null);
+                }
+                
                 result = _mainDbClient.Execute(cancelSetSp, trans, p);
 
                 if (result > 0)
@@ -952,13 +958,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     p.Add("out_result", dbType: DbType.Int32, direction: ParameterDirection.Output);
                     
-                    var cancelInsSp = gameType switch
+                    string cancelInsSp;
+                    switch (gameType)
                     {
-                        (int) GameType.SG_RNG => "Service_BettransRng_SG_CancelBet_Ins",
-                        (int) GameType.SG_Fish => "Service_BettransFish_SG_CancelBet_Ins",
-                        (int) GameType.SG_Table => "Service_BettransTable_SG_CancelBet_Ins",
-                        _ => throw new ArgumentOutOfRangeException(nameof(gameType), gameType, null)
-                    };
+                        case (int) GameType.SG_RNG:
+                        case (int) GameType.SG_Table:
+                            cancelInsSp = "Service_BettransRng_SG_CancelBet_Ins";
+                            break;
+                        case (int) GameType.SG_Fish:
+                            cancelInsSp = "Service_BettransFish_SG_CancelBet_Ins";
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(gameType), gameType, null);
+                    }
                     
                     _mainDbClient.Execute(cancelInsSp, trans, p);
                     var refLC = p.Get<int>("out_result");
@@ -1028,7 +1040,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             tpCustInfo.SiteId,
                             tpCustInfo.UserName,
                             bettingDataRNG_SG.amount,
-                            (int)Tp.SG,
+                            (int) Tp.SG,
                             TransType.Prize,
                             $"Prize: {Math.Abs(bettingDataRNG_SG.amount):#,##0.##}",
                             bettingDataRNG_SG.ticketId,
@@ -1040,10 +1052,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        result = _tpUnRewardService.InsertTpUnReward(Tp.SG, GameType.SG_RNG, bettingDataRNG_SG.ticketId, bettingDataRNG_SG.acctId, trans);
+                        result = _tpUnRewardService.InsertTpUnReward(Tp.SG, GameType.SG_RNG, bettingDataRNG_SG.ticketId,
+                            bettingDataRNG_SG.acctId, trans);
                     }
                 }
-                else if (gameType == (int)GameType.SG_RNG)
+                else if (gameType is (int) GameType.SG_RNG or (int) GameType.SG_Table) 
                 {
                     result = _mainDbClient.Execute("Service_BettransRng_SGV2_Ins", trans, p);
                     if (result > 0 && bettingDataRNG_SG.amount > 0)
@@ -1054,30 +1067,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             (int)Tp.SG,
                             bettingDataRNG_SG.referenceId,
                             gameType,
-                            TpCategory.Slots,
-                            bettingDataRNG_SG.transferId,
-                            TransType.Payout,
-                            null,
-                            out afterAmount,
-                            $"{bettingDataRNG_SG.type}",
-                            out bonusId,
-                            conn,
-                            trans
-                        );
-                    }
-                }
-                else if (gameType == (int)GameType.SG_Table)
-                {
-                    result = _mainDbClient.Execute("Service_BettransTable_SG_Ins", trans, p);
-                    if (result > 0 && bettingDataRNG_SG.amount > 0)
-                    {
-                        result = PayoutV2(
-                            tpCustInfo,
-                            bettingDataRNG_SG.amount,
-                            (int)Tp.SG,
-                            bettingDataRNG_SG.referenceId,
-                            gameType,
-                            TpCategory.P2P,
+                            gameType == (int) GameType.SG_RNG ? TpCategory.Slots : TpCategory.P2P,
                             bettingDataRNG_SG.transferId,
                             TransType.Payout,
                             null,
