@@ -145,6 +145,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             {
                 gameType = GameType.SG_Fish;
             }
+            else if (gameId.StartsWith("C-", StringComparison.OrdinalIgnoreCase))
+            {
+                gameType = GameType.SG_Table;
+            }
 
             return gameType;
         }

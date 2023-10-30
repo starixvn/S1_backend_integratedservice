@@ -176,7 +176,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
             bettingDataRNG_SG.amount *= -1;
             bettingDataRNG_SG.TicketStatus = (int)TicketStatus.UnSettled;
-            var p = new DynamicParameters(new { transferId = bettingDataRNG_SG.transferId, acctId = bettingDataRNG_SG.acctId, currency = bettingDataRNG_SG.currency, amount = bettingDataRNG_SG.amount, type = bettingDataRNG_SG.type, channel = bettingDataRNG_SG.channel, playerIp = bettingDataRNG_SG.playerIp, transferTime = new DateTimeOffset(bettingDataRNG_SG.transferTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(), gameCode = bettingDataRNG_SG.gameCode, ticketId = bettingDataRNG_SG.ticketId, referenceId = bettingDataRNG_SG.referenceId, specialGame = JsonConvert.SerializeObject(bettingDataRNG_SG.specialGame), refTicketIds = JsonConvert.SerializeObject(bettingDataRNG_SG.refTicketIds), TicketStatus = bettingDataRNG_SG.TicketStatus });
+            var p = new DynamicParameters(new
+            {
+                transferId = bettingDataRNG_SG.transferId, 
+                acctId = bettingDataRNG_SG.acctId,
+                currency = bettingDataRNG_SG.currency, 
+                amount = bettingDataRNG_SG.amount,
+                type = bettingDataRNG_SG.type, 
+                channel = bettingDataRNG_SG.channel,
+                playerIp = bettingDataRNG_SG.playerIp,
+                transferTime = new DateTimeOffset(bettingDataRNG_SG.transferTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
+                gameCode = bettingDataRNG_SG.gameCode, 
+                ticketId = bettingDataRNG_SG.ticketId,
+                referenceId = bettingDataRNG_SG.referenceId,
+                specialGame = JsonConvert.SerializeObject(bettingDataRNG_SG.specialGame), 
+                refTicketIds = JsonConvert.SerializeObject(bettingDataRNG_SG.refTicketIds), 
+                TicketStatus = bettingDataRNG_SG.TicketStatus
+            });
 
             bool cash = false;
             var category = TpCategory.Slots;
@@ -184,11 +200,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 result = _mainDbClient.Execute("Service_BettransRng_SGV2_Ins", p, conn, trans);
             }
-            else
+            else if (gameType == (int)GameType.SG_Fish)
             {
                 cash = true;
                 category = TpCategory.Fish;
                 result = _mainDbClient.Execute("Service_BettransFish_SG_Ins", p, conn, trans);
+            }
+            else
+            {
+                category = TpCategory.P2P;
+                result = _mainDbClient.Execute("Service_BettransTable_SG_Ins", p, conn, trans);
             }
 
             if (result > 0 && bettingDataRNG_SG.amount != 0)
