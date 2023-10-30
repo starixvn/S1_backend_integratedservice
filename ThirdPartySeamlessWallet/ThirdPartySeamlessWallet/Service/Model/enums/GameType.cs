@@ -94,6 +94,7 @@
         PNG_RNG = 105,
         FaChai_RNG = 106,
         Pegasus_RNG = 107,
+        SG_Table = 109
     }
 
 }
