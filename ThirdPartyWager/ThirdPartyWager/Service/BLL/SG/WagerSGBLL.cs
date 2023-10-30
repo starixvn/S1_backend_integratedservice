@@ -70,16 +70,7 @@ namespace ThirdPartyWager.Service.BLL
                             }
 
                             var gameType = GetGameType(bet.gameCode);
-                            result = (gameType == GameType.SG_RNG) ? _wagerSGService.InsertWagerRng(bet) : _wagerSGService.InsertWager(bet);
-
-                            result = gameType switch
-                            {
-                                (int) GameType.SG_RNG => _wagerSGService.InsertWagerRng(bet),
-                                (int) GameType.SG_Fish => _wagerSGService.InsertWager(bet),
-                                (int) GameType.SG_Table => "Service_BettransTable_SG_CancelBet_Set",
-                                _ => throw new ArgumentOutOfRangeException(nameof(gameType), gameType, null)
-                            };
-
+                            result = gameType is GameType.SG_RNG or GameType.SG_Table ? _wagerSGService.InsertWagerRng(bet) : _wagerSGService.InsertWager(bet);
                             
                             if (result > 0)
                             {
