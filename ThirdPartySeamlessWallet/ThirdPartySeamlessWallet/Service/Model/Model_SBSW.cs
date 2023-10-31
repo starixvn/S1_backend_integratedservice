@@ -234,6 +234,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.SBSW
         public Bet(PlaceBetEnt placeBetEnt, Ticketlist ticket)
         {
             action = placeBetEnt.action;
+            operationId = DateTime.UtcNow.Ticks.ToString();
             userId = placeBetEnt.userId;
             currency = placeBetEnt.currency;
             sportType = placeBetEnt.productId;
