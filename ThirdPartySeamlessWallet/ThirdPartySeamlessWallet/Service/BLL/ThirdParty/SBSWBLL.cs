@@ -269,6 +269,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             catch (MySqlException mySqlEx)
             {
+                if (mySqlEx.Number == 1062)
+                {
+                    return new ExecuteResult(ReturnCode.TransactionDuplicated, $"refId: {detail.refId} Duplicated.");
+                }
                 _logger.LogError(mySqlEx, mySqlEx.Message);
                 return new ExecuteResult(ReturnCode.DatabaseError, mySqlEx.Message);
             }
@@ -406,7 +410,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 confirmBet: new ConfirmBet()
                 {
                     action = request.message.action,
-                    operationId = string.Empty,
+                    operationId = DateTime.UtcNow.Ticks.ToString(),
                     userId = request.message.userId,
                     updateTime = now,
                     transactionTime = now
@@ -760,6 +764,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             catch (MySqlException mySqlEx)
             {
+                if (mySqlEx.Number == 1062)
+                {
+                    return new ReturnObj(ReturnCode.TransactionDuplicated, $"Transaction Duplicated.");
+                }
                 _logger.LogError(mySqlEx, mySqlEx.Message);
                 return new ReturnObj(ReturnCode.DatabaseError, mySqlEx.Message);
             }
