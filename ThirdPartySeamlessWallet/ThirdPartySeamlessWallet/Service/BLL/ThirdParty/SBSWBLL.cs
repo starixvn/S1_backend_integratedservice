@@ -535,7 +535,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 settle: new Settle()
                 {
                     action = request.message.action,
-                    operationId = string.Empty,
+                    operationId = DateTime.UtcNow.Ticks.ToString(),
                 },
                 detail: new SettleDetail()
                 {
@@ -631,6 +631,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             catch (MySqlException mySqlEx)
             {
+                if (mySqlEx.Number == 1062)
+                {
+                    return new ExecuteResult(ReturnCode.TransactionDuplicated, $"refId: {detail.refId} Duplicated.");
+                }
                 _logger.LogError(mySqlEx, mySqlEx.Message);
                 return new ExecuteResult(ReturnCode.DatabaseError, mySqlEx.Message);
             }
