@@ -271,7 +271,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 if (mySqlEx.Number == 1062)
                 {
-                    return new ExecuteResult(ReturnCode.TransactionDuplicated, $"refId: {detail.refId} Duplicated.");
+                    return new ExecuteResult(ReturnCode.TransactionDuplicated, $"refId: {bet.refId} Duplicated.");
                 }
                 _logger.LogError(mySqlEx, mySqlEx.Message);
                 return new ExecuteResult(ReturnCode.DatabaseError, mySqlEx.Message);
