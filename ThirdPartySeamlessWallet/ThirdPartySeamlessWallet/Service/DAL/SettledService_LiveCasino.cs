@@ -3285,7 +3285,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     return -2;
                 }
-                if (!check.Where(x => x.TicketType is (int)BettransType.Payout or (int)BettransType.CancelBet).Any())
+                if (check.Where(x => x.TicketType is (int)BettransType.Payout or (int)BettransType.CancelBet).Any())
                 {
                     // already payout
                     _mainDbClient.CommitAndDisposeConnection(conn, trans);
