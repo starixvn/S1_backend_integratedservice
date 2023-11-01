@@ -88,9 +88,12 @@ namespace ThirdParty.Pegasus
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var settleDetail = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_Pegasus_Settle_Get", new { getBetDetail.TransId }, DataBase.Main);
             var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerRng_Pegasus_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
             var detail = ToJson(wagerDetail);
+
+            var betTime = (DateTime) wagerDetail.GetValueOrDefault("BetTime", DateTime.MinValue);
+            var partitionTime = betTime.ToString("yyyyMM");
+            var settleDetail = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_Pegasus_Settle_Get", new { getBetDetail.TransId , YYYYMM = partitionTime }, DataBase.Main);
             
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
