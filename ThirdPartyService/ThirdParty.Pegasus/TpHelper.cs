@@ -5,6 +5,7 @@ using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.Pegasus
@@ -82,35 +83,38 @@ namespace ThirdParty.Pegasus
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var siteInputs = _siteConfigDic[tpCustInfo.SiteId];
-            var config = new PegasusConfig(siteInputs, tpCustInfo.TpCurrencyId);
-            
-            var request = new
+            var tpCurrency = new TpCurrency()
             {
-                merchantSecretKey = config.SecretKey,
-                merchantID = config.MerchantID,
-                TransactionNo = getBetDetail.TransId,
-                version = "v1"
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-
-            var dicRequest = FromJson<Dictionary<string, string>>(ToJson(request));
-            var parameters = string.Join("&", dicRequest.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-
-            var gameUrl = config.ApiUrl + "/game-records/screenshot-history/link";
-            var json = HttpGet(gameUrl, parameters, ContentType);
-            var result = FromJson<PegasusGameHistoryResult>(json);
+            var settleDetail = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_Pegasus_Settle_Get", new { getBetDetail.TransId }, DataBase.Main);
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerRng_Pegasus_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
+            var detail = ToJson(wagerDetail);
             
-            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            return getBetDetail.TpGameTypeOption.CategoryId switch
             {
-                TransId = getBetDetail.TransId,
-                DetailUrl = result.Data.Url,
-                TpCurrency = new TpCurrency()
+                TpCategory.Casino => new LiveCasinoDetail(getBetDetail.TpGameTypeOption)
                 {
-                    ExchangeRate = tpCustInfo.ExchangeRate,
-                    TpCurrencyId = tpCustInfo.TpCurrencyId,
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                    RefTransId = "",
+                    TpUserName = wagerDetail.GetValueOrDefault("PlayerName")?.ToString(),
+                    UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("BetTime", DateTime.MinValue),
+                    UTCSettledTime = (DateTime)settleDetail.GetValueOrDefault("SettlementTime", DateTime.MinValue),
+                    Stake = (decimal)wagerDetail.GetValueOrDefault("BetAmount") * tpCurrency.ExchangeRate,
+                    WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("WinLossAmount") * tpCurrency.ExchangeRate,
+                    GameCode = wagerDetail.GetValueOrDefault("GameID")?.ToString(),
+                    GameName = GetGameName(wagerDetail.GetValueOrDefault("GameID")?.ToString()) 
                 },
+                _ => new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                }
             };
-            
         }
 
         public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
