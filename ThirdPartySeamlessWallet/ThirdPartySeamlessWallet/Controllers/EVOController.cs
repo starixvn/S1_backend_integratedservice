@@ -881,7 +881,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             if (request == null)
             {
                 _logger.LogError($"CheckRequest Fail: request is null.");
-                status = "INVALID_PARAMETE";
+                status = "INVALID_PARAMETER";
                 return false;
             }
 
@@ -895,49 +895,49 @@ namespace ThirdPartySeamlessWallet.Controllers
             if (string.IsNullOrWhiteSpace(request.userId))
             {
                 _logger.LogError($"CheckRequest Fail: request.userId is Invalid.");
-                status = "INVALID_PARAMETE";
+                status = "INVALID_PARAMETER";
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(request.currency))
             {
                 _logger.LogError($"CheckRequest Fail: request.currency is Invalid.");
-                status = "INVALID_PARAMETE";
+                status = "INVALID_PARAMETER";
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(request.uuid))
             {
                 _logger.LogError($"CheckRequest Fail: request.uuid is Invalid.");
-                status = "INVALID_PARAMETE";
+                status = "INVALID_PARAMETER";
                 return false;
             }
 
             if (request.promoTransaction == null)
             {
                 _logger.LogError($"CheckRequest Fail: request.promoTransaction is Invalid.");
-                status = "INVALID_PARAMETE";
+                status = "INVALID_PARAMETER";
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(request.promoTransaction.id))
             {
                 _logger.LogError($"CheckRequest Fail: request.promoTransaction.id is Invalid.");
-                status = "INVALID_PARAMETE";
+                status = "INVALID_PARAMETER";
                 return false;
             }
 
             if (string.IsNullOrWhiteSpace(request.promoTransaction.type))
             {
                 _logger.LogError($"CheckRequest Fail: request.promoTransaction.type is Invalid.");
-                status = "INVALID_PARAMETE";
+                status = "INVALID_PARAMETER";
                 return false;
             }
 
             if (!promoTransactionTypeList.Contains(request.promoTransaction.type))
             {
                 _logger.LogError($"CheckRequest Fail: request.promoTransaction.type can't found.");
-                status = "INVALID_PARAMETE";
+                status = "INVALID_PARAMETER";
                 return false;
             }
 
