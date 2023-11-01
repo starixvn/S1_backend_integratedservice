@@ -110,6 +110,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         public class AuthResp : CommonResp
         {
+            public string sid { get; set; }
         }
 
         public class SidResp : CommonResp
@@ -217,10 +218,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return getApiResponse;
                 }
 
-                var key = _authBLL.ApplyToken(tpCustInfo);
-                var sessionKeyArr = new string[] { key, tpCheck.Token, tpCustInfo.TpUserName, gameType.ToString(), tpId.ToString() };
-                byte[] bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(sessionKeyArr));
-                string sessionKey = Convert.ToBase64String(bytes);
+                var sessionKey = GenSid(tpId, gameType, tpCheck.Token, tpCustInfo);
 
                 getApiResponse.status = "OK";
                 getApiResponse.sid = sessionKey;
@@ -280,14 +278,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getApiResponse;
             }
 
-            var verify = _authBLL.Authenticate(tokenInfo.shortTimeToken, out TpCustInfoAuth tpCustInfoAuth);
-            if (!verify)
-            {
-                getApiResponse.status = "INVALID_TOKEN_ID";
-                _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                return getApiResponse;
-            }
-
             var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache(tpId, getReq.userId);
             if (tpCheck == null)
             {
@@ -302,6 +292,18 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getApiResponse;
             }
 
+            var verify = _authBLL.Authenticate(tokenInfo.shortTimeToken, out TpCustInfoAuth tpCustInfoAuth);
+            if (!verify)
+            {
+                //getApiResponse.status = "INVALID_TOKEN_ID";
+                //_log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                //return getApiResponse;
+
+                //如果token過期，需要重新發一把新的token給evo
+                var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(tpId, getReq.userId);
+                getApiResponse.sid = GenSid(tpId, tokenInfo.gameType, tpCheck.Token, tpCustInfo);
+            }
+            getApiResponse.sid = getReq.sid;
             getApiResponse.status = "OK";
             _log2File.Info($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
             return getApiResponse;
@@ -944,5 +946,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             return true;
         }
 
+        private string GenSid(int tpId, int gameType, string token, TpCustInfo tpCustInfo)
+        {
+            var key = _authBLL.ApplyToken(tpCustInfo);
+            var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName, gameType.ToString(), tpId.ToString() };
+            byte[] bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(sessionKeyArr));
+            return Convert.ToBase64String(bytes);
+        }
     }
 }
