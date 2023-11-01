@@ -1,4 +1,5 @@
-﻿using ThirdPartyWager.Service.DAL;
+﻿using Newtonsoft.Json;
+using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 
@@ -39,9 +40,11 @@ namespace ThirdPartyWager.Service.BLL
                             marketType,
                             group.Key,
                             string.Join(",", group.Select(i => i.MatchId)));
-
+                        _logger.LogInformation($"SabaOdds Api={apiUrl}\n Content={JsonConvert.SerializeObject(httpContent)}");
                         var response = await _httpHelper.GetClientWithHandler(new HttpClientHandler()).PostAsync(apiUrl, httpContent);
+                        _logger.LogInformation($"SabaOdds Response={JsonConvert.SerializeObject(response)}");
                         var responseResult = await response.Content.ReadAsStringAsync();
+                        _logger.LogInformation($"SabaOdds ResponseResult={JsonConvert.SerializeObject(responseResult)}");
                         var hotEventOddsResponse = _common.FromJson<HotEventOddsResponseModel>(responseResult);
 
                         if (hotEventOddsResponse.ErrorCode != SuccessErrorCode) return true;
