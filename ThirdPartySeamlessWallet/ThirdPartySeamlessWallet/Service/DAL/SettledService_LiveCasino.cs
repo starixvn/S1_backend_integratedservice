@@ -2175,7 +2175,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        
+
                         _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     }
                     else
@@ -2694,8 +2694,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (result > 0)
                     {
                         var insertTpResults = _tpUnsettleService.InsertTpUnsettle(Tp.N2Live, GameType.N2Live_LiveCasino, smartPayoutDataLC_N2Live.request.schemeid, trans);
-                        if (insertTpResults <= 0) 
-                        { 
+                        if (insertTpResults <= 0)
+                        {
                             result = 0;
                         }
                         _mainDbClient.CommitAndDisposeConnection(conn, trans);
@@ -2915,7 +2915,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public int SetSettleFlag_BettransSmartLC_N2Live(string TransId, int SettleFlag)
         {
-            return _wagerDbClient.Execute("Service_SmartBettransLC_N2Live_Settle_Set", commandType: CommandType.StoredProcedure, new { TransId = TransId,SettleFlag = SettleFlag});
+            return _wagerDbClient.Execute("Service_SmartBettransLC_N2Live_Settle_Set", commandType: CommandType.StoredProcedure, new { TransId = TransId, SettleFlag = SettleFlag });
         }
 
         public int SetSettleFlag_TpSmartWagerLC_N2Live(string TransId)
@@ -3183,6 +3183,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             using var trans = conn.BeginTransaction();
 
+            var precheck = _mainDbClient.Query<BettransData_EVO>("Service_BettransLC_EVO_Get", commandType: CommandType.StoredProcedure, new { TransactionRefId = bettingData_EVO.transaction.refId });
+            if (!precheck.Where(x => x.TicketType == (int)BettransType.Bet).Any())
+            {
+                // no bet or cancel data
+                _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                return -2;
+            }
+            if (precheck.Where(x => x.TicketType is (int)BettransType.Payout or (int)BettransType.CancelBet).Any())
+            {
+                // already payout
+                _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                return -1;
+            }
+
             var p = new DynamicParameters(new
             {
                 TransactionId = bettingData_EVO.transaction.id,
@@ -3265,11 +3279,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 var check = _mainDbClient.Query<BettransData_EVO>("Service_BettransLC_EVO_Get", commandType: CommandType.StoredProcedure, new { TransactionRefId = bettingData_EVO.transaction.refId });
-                if (!check.Any())
+                if (!check.Where(x => x.TicketType == (int)BettransType.Bet).Any())
                 {
                     // no bet or cancel data
                     _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     return -2;
+                }
+                if (!check.Where(x => x.TicketType is (int)BettransType.Payout or (int)BettransType.CancelBet).Any())
+                {
+                    // already payout
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    return -1;
                 }
 
                 var p = new DynamicParameters(new
@@ -3412,7 +3432,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             return _mainDbClient.QueryFirst<SettleData>("Service_BettransLC_EVO_Unsettle_ByTrans_Get", parameters: new DynamicParameters(new { _TransId = transId }));
         }
-        
+
         public int SetSettleFlag_EVO(string TransId)
         {
             return _mainDbClient.Execute("Service_BettransLC_EVO_Settle_Set", parameters: new DynamicParameters(new { TransId = TransId }));
@@ -3425,9 +3445,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public SettledReward_EVO GetUnsettledReward_EVO(string transId)
         {
-            return _mainDbClient.QueryFirst<SettledReward_EVO>("Service_Reward_EVO_Unsettle_ByTrans_Get",parameters: new DynamicParameters(new { _TransId = transId }));
+            return _mainDbClient.QueryFirst<SettledReward_EVO>("Service_Reward_EVO_Unsettle_ByTrans_Get", parameters: new DynamicParameters(new { _TransId = transId }));
         }
-        
+
         public int SetRewardSettleFlag_EVO(int sq)
         {
             return _mainDbClient.Execute("Service_Reward_EVO_Settle_Set", parameters: new DynamicParameters(new { _SQ = sq }));
