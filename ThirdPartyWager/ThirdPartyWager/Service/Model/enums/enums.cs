@@ -57,7 +57,8 @@
         IM = 52,
         SPRIBE = 53,
         FaChai = 55,
-        Pegasus = 56
+        Pegasus = 56,
+        BNG = 58
     }
 
     public enum GameType
