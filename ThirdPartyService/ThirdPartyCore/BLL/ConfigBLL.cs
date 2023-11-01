@@ -1,5 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+
+using Newtonsoft.Json;
+
 using ThirdPartyCore.Model;
 
 namespace ThirdPartyCore.BLL
@@ -8,6 +11,7 @@ namespace ThirdPartyCore.BLL
     {
         private readonly Dictionary<string, string> _defaultSiteConfig;
         private readonly Dictionary<int, SiteConfig> _siteIdConfigs;
+        private readonly IWebHostEnvironment _environment;
 
         public ConfigBLL(IServiceProvider provider)
         {
@@ -16,6 +20,7 @@ namespace ThirdPartyCore.BLL
 
             //TpService會知道用戶的SiteId，所以排除0        
             _siteIdConfigs = siteConfigList.Where(i => i.SiteId != 0).ToDictionary(i => i.SiteId, i => i);
+            _environment = provider.GetRequiredService<IWebHostEnvironment>();
         }
 
         public Dictionary<int, TItem> GetConfigValuesBySiteId<TItem>(string configKey)
@@ -32,7 +37,7 @@ namespace ThirdPartyCore.BLL
             }
             return result;
         }
-
+        
         public TItem GetConfigValue<TItem>(string configKey, int siteId = 0)
         {
             var defaultItem = _defaultSiteConfig.TryGetValue(configKey, out var json)
@@ -46,10 +51,33 @@ namespace ThirdPartyCore.BLL
             if (_siteIdConfigs.TryGetValue(siteId, out var siteConfig))
             {
                 return siteConfig.Config.TryGetValue(configKey, out var configValue)
-                   ? JsonConvert.DeserializeObject<TItem>(configValue) : defaultItem;
+                    ? JsonConvert.DeserializeObject<TItem>(configValue) : defaultItem;
             }
 
             return defaultItem;
+        }
+
+        public string GetConfigValue(string configKey, int siteId = 0)
+        {
+            var defaultResult = _defaultSiteConfig.TryGetValue(configKey, out var result) ? result : string.Empty;
+
+            if (siteId == 0)
+            {
+                return defaultResult;
+            }
+
+            if (_siteIdConfigs.TryGetValue(siteId, out var siteConfig))
+            {
+                return siteConfig.Config.TryGetValue(configKey, out var configValue) ? configValue : defaultResult;
+            }
+
+            return defaultResult;
+        }
+        
+        public TItem GetConfigValueByEnvironment<TItem>(string configKey, int siteId = 0)
+        {
+            var json = GetConfigValue($"{configKey}.{_environment.EnvironmentName}.json", siteId);
+            return !string.IsNullOrEmpty(json) ? JsonConvert.DeserializeObject<TItem>(json) : default;
         }
     }
 }

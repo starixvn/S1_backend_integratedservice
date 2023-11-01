@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
@@ -117,7 +119,7 @@ namespace ThirdParty.PNG
             }
 
             var gameId = detail.GetStringValue("GameId");
-            var roundId  = detail.GetStringValue("RoundId");
+            var roundId = detail.GetStringValue("RoundId");
             var channel = detail.GetStringValue("Channel");
 
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)

@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.IO.Compression;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Security;
 using System.Security.Cryptography;
@@ -10,8 +11,6 @@ using Microsoft.Extensions.Logging;
 
 using Newtonsoft.Json;
 
-using Serilog.Context;
-
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
@@ -21,41 +20,6 @@ using ThirdPartyCore.Model.TpMerchantBalance.Response;
 namespace ThirdPartyCore
 {
     public delegate void InsertLogEventHandler(string url, string input, string output);
-    public interface IThirdPartyHelper
-    {
-        ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-        ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs);
-        ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-        ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID);
-        ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID);
-        TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-        event InsertLogEventHandler InsertLog;
-        bool isHeathly { set; get; }
-    }
-
-    public interface IThirdPartyParticular
-    {
-        ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-        //ApiResult<TransferResult> BonusTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal bonus, string transID, string thirdPartyTransID);
-    }
-
-    public interface IThirdPartyGetBalanceParticular
-    {
-        /// <summary>
-        /// 取得指定第三方多筆客戶餘額
-        /// </summary>
-        /// <param name="inputs">第三方相關參數</param>
-        /// <param name="tpUserNameString">第三方使用者名稱參數清單</param>
-        /// <param name="tpCurrencyId">第三方幣別</param>
-        /// <returns></returns>
-        ApiResult<List<ReceiveTpUserBalanceModel>> GetBalance(Dictionary<string, string> inputs, string tpUserNameString, string tpCurrencyId);
-    }
-
-    public interface IThirdPartyBetLimitParticular
-    {
-        ApiResult SetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, string betSetting);
-    }
-
     public abstract class ThirdPartyHelperBase : IThirdPartyHelper, IThirdPartyTpBetRecordDetail, IThirdPartyTpGetMerchantBalance
     {
         public static string proxyHost;
@@ -76,11 +40,7 @@ namespace ThirdPartyCore
 
         public static IBetLimitProvider BetLimitProvider { set; get; }
 
-        public static string CommonServiceHost { get; set; }
-
-        public static string LetsTalkGroupName { get; set; }
-
-        public static string SeamlessUrl { get; set; }
+        public static string SeamlessServiceHost { get; set; }
 
         public static string EnvironmentName { set; get; }
 
@@ -106,8 +66,6 @@ namespace ThirdPartyCore
                 return _isHeathly;
             }
         }
-
-        public bool isUnderMaintenance { set; get; }
 
         public DateTime CheckTime { set; get; }
 
@@ -320,20 +278,92 @@ namespace ThirdPartyCore
             }
         }
 
-        protected string HttpPostWithX509(string url, Dictionary<string, string> parameters, string contentType, Dictionary<string, string> headers = null, X509Certificate2 certificate = null)
+        protected string HttpPostClientWithGzip(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
         {
-            //LogContext.PushProperty("url", url);
-            //LogContext.PushProperty("contentType", contentType);
-            //logger.LogInformation($"headers: {JsonConvert.SerializeObject(headers)} " +
-            //    $"| parameters: {JsonConvert.SerializeObject(parameters)}" +
-            //    $"| certificate: {certificate.SubjectName} ");
+            var parametersLog = parameters;
+            if (headers != null)
+            {
+                parametersLog = $"{parametersLog}, Header={JsonConvert.SerializeObject(headers)}";
+            }
+            InsertLog?.Invoke(url, parametersLog, "1");
+
+            if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
+            {
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+                ServicePointManager.ServerCertificateValidationCallback = CheckValidationResult;
+            }
 
             using var handler = new HttpClientHandler();
-            //if (!string.IsNullOrEmpty(proxyHost))
-            //{
-            //    handler.UseProxy = true;
-            //    handler.Proxy = new WebProxy(proxyHost, proxyPort);
-            //}
+            if (!string.IsNullOrEmpty(proxyHost))
+            {
+                handler.UseProxy = true;
+                handler.Proxy = new WebProxy(proxyHost, proxyPort);
+            }
+            using var client = new HttpClient(handler);
+            try
+            {
+                var httpRequestMessage = new HttpRequestMessage();
+                httpRequestMessage.Content = new StringContent(parameters);
+                httpRequestMessage.Method = HttpMethod.Post;
+                httpRequestMessage.RequestUri = new Uri(url);
+                httpRequestMessage.Content.Headers.ContentType = new MediaTypeWithQualityHeaderValue(contentType);
+                if (headers != null)
+                {
+                    foreach (var (key, value) in headers)
+                    {
+                        if (string.Compare(key, "Accept", StringComparison.OrdinalIgnoreCase) == 0)
+                        {
+                            httpRequestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(value));
+                        }
+                        else if (key.Contains("-"))
+                        {
+                            httpRequestMessage.Content.Headers.TryAddWithoutValidation(key, value);
+                        }
+                        else
+                        {
+                            httpRequestMessage.Headers.TryAddWithoutValidation(key, value);
+                        }
+                    }
+                }
+
+                string result;
+                
+                var response = client.SendAsync(httpRequestMessage).Result;
+                
+                if (response.Content.Headers.ContentEncoding.Contains("gzip"))
+                {
+                    var raw = response.Content.ReadAsByteArrayAsync().Result;
+                    
+                    using var output = new MemoryStream();
+                    using (var input = new MemoryStream(raw))
+                    using (var gzip = new GZipStream(input, CompressionMode.Decompress))
+                    {
+                        gzip.CopyToAsync(output);
+                    }
+                    
+                    output.Seek(0, SeekOrigin.Begin);
+                    result = new StreamReader(output).ReadToEnd();
+                }
+                else
+                {
+                    result = response.Content.ReadAsStringAsync().Result;
+                }
+                
+                InsertLog?.Invoke(url, parametersLog, result);
+                return result;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, e.Message);
+                InsertLog?.Invoke(url, parametersLog, e.Message);
+                return e.Message;
+            }
+        }
+
+        
+        protected string HttpPostWithX509(string url, Dictionary<string, string> parameters, string contentType, Dictionary<string, string> headers = null, X509Certificate2 certificate = null)
+        {
+            using var handler = new HttpClientHandler();
             if (certificate != null)
             {
                 handler.ClientCertificates.Add(certificate);
@@ -643,47 +673,6 @@ namespace ThirdPartyCore
             return Convert.ToBase64String(resultArray, 0, resultArray.Length);
         }
 
-        public string AesDecrypt(string str, string key, bool isDecodeUrl = true)
-        {
-            if (string.IsNullOrEmpty(str)) return null;
-            if (isDecodeUrl)
-                str = System.Web.HttpUtility.UrlDecode(str);
-
-            byte[] toEncryptArray = Convert.FromBase64String(str);
-
-            RijndaelManaged rm = new RijndaelManaged
-            {
-                Key = Encoding.UTF8.GetBytes(key),
-                Mode = CipherMode.ECB,
-                Padding = PaddingMode.PKCS7
-            };
-
-            ICryptoTransform cTransform = rm.CreateDecryptor();
-            byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
-
-            return Encoding.UTF8.GetString(resultArray);
-        }
-
-        public string AesDecryptV2(string str, string secretKey)
-        {
-            byte[] toEncryptArray = Convert.FromBase64String(str);
-            byte[] keyBytes = new byte[16];
-            byte[] secretKeyBytes = Encoding.UTF8.GetBytes(secretKey);
-            Array.Copy(secretKeyBytes, keyBytes, Math.Min(keyBytes.Length, secretKeyBytes.Length));
-            using RijndaelManaged rm = new RijndaelManaged
-            {
-                Mode = CipherMode.CBC,
-                Padding = PaddingMode.PKCS7,
-                KeySize = 128,
-                BlockSize = 128,
-                Key = keyBytes,
-                IV = keyBytes
-            };
-
-            byte[] resultArray = rm.CreateDecryptor().TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
-            return Encoding.UTF8.GetString(resultArray);
-        }
-
         public string SHA1(string dataToSign)
         {
             SHA1 sha1 = new SHA1CryptoServiceProvider();//建立一個SHA1
@@ -704,18 +693,6 @@ namespace ThirdPartyCore
             return Convert.ToBase64String(sign);
         }
 
-        public void Info(string InfoContent, string PrefixName)
-        {
-            var LogFolder = $"{Directory.GetCurrentDirectory()}\\Logs";
-
-            var filePath = $@"{LogFolder}\{PrefixName}_Info_{DateTime.Now.ToString("yyyyMMdd")}.log";
-            Task.Run(() =>
-            {
-                Directory.CreateDirectory(LogFolder);
-                using StreamWriter writer = new StreamWriter(filePath, append: true);
-                writer.WriteLine($"{DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss")}\r\n  {InfoContent}");
-            });
-        }
         public string ApplyToken<T>(T t)
         {
             if (AuthProvider != null)
@@ -780,17 +757,5 @@ namespace ThirdPartyCore
         /// 回傳後台BetList所需要的注單明細
         /// </summary>
         public abstract TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-    }
-
-    public interface IThirdPartyTpBetRecordDetail
-    {
-        BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-
-        TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
-    }
-
-    public interface IThirdPartyTpGetMerchantBalance
-    {
-        ApiResult<MerchantBalanceResponse> GetMerchantBalance(TpMerchantInfo tpMerchantInfo, Dictionary<string, string> inputs);
     }
 }

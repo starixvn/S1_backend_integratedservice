@@ -30,6 +30,7 @@
         V8 = 25,
         PT = 27,
         N2Live = 28,
+        BTI = 29,
         NineW = 31,
         JILI = 32,
         TCG = 33,
@@ -42,9 +43,11 @@
         HB = 40,
         SBSW = 41,
         SimplePlay = 44,
+        CryptoSports = 45,
         Nextspin = 50,
         PNG = 54,
-        FaChai = 55
+        FaChai = 55,
+        Pegasus = 56
     }
 
     public enum TpGameType

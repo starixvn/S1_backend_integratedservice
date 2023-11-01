@@ -10,15 +10,15 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class ApiSWBLL : IApiSWBLL
     {
-        private readonly string _url;
+        private readonly string _seamlessUrl;
         private readonly ILogger<ApiSWBLL> _logger;
         private readonly IConfiguration _configuration;
         private readonly HttpClient _client;
 
-        public ApiSWBLL(IServiceProvider provider, IConfiguration configuration)
+        public ApiSWBLL(IServiceProvider provider)
         {
-            _configuration = configuration;
-            _url = configuration.GetValue<string>("TpSWserviceUrl");
+            _configuration = provider.GetRequiredService<IConfiguration>();
+            _seamlessUrl = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ServiceHostConfig>("ServiceHost").SeamlessService;
             _logger = provider.GetRequiredService<ILogger<ApiSWBLL>>();
             var httpHelper = provider.GetRequiredService<HttpHelper>();
             _client = httpHelper.GetClientWithHandler(CreateHandler());
@@ -31,7 +31,7 @@ namespace ThirdPartyWager.Service.BLL
                 var httpRequest = new HttpRequestMessage
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new Uri($"{_url}/MG/updatebalance"),
+                    RequestUri = new Uri($"{_seamlessUrl}MG/updatebalance"),
                     Headers = {
                         { "X-MGP-REQ-ID", Guid.NewGuid().ToString()},
                         { "X-MGP-REQUEST-TIMEMS", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString()},

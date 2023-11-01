@@ -1,4 +1,5 @@
 ﻿using CommonService.Service.BLL;
+using CommonService.Service.DAL;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
 
@@ -14,16 +15,15 @@ namespace CommonService.Controllers
         private readonly SendGridBLL _sendGridBll;
         private readonly RestPasswordBLL _restPasswordBll;
         private readonly OTPEmailBLL _otpEmailBll;
-        private readonly ILogger<MailController> _logger;
 
-        public MailController(ILogger<MailController> logger, CustInfoBLL custInfoBll, SendGridBLL sendGridBll, RestPasswordBLL restPasswordBll, OTPEmailBLL otpEmailBll)
+        public MailController(IServiceProvider provider)
         {
-            _custInfoBll = custInfoBll;
-            _sendGridBll = sendGridBll;
-            _restPasswordBll = restPasswordBll;
-            _otpEmailBll = otpEmailBll;
-            _logger = logger;
+            _custInfoBll = provider.GetRequiredService<CustInfoBLL>();
+            _sendGridBll = provider.GetRequiredService<SendGridBLL>();
+            _restPasswordBll = provider.GetRequiredService<RestPasswordBLL>();
+            _otpEmailBll = provider.GetRequiredService<OTPEmailBLL>();
         }
+
         public class Req
         {
             public int custId { get; set; }

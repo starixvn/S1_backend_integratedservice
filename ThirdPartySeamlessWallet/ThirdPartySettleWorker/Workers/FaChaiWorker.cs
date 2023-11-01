@@ -79,7 +79,7 @@ namespace ThirdPartySettleWorker.Workers
                         if (betData.Bet != wagerData.bet || betData.NetWin != wagerData.winlose)
                         {
                             LogContext.PushProperty("TP", _tpName);
-                            _logger.LogError($"betData=\r\n{JsonConvert.SerializeObject(betData)}\r\nwagerData=\r\n{JsonConvert.SerializeObject(wagerData)}");
+                            _logger.LogWarning($"betData=\r\n{JsonConvert.SerializeObject(betData)}\r\nwagerData=\r\n{JsonConvert.SerializeObject(wagerData)}");
                             Task.Run(() =>
                             {
                                 _tpUnSettledBLL.SetTpUnsettle(Tp, GameType.FaChai_RNG, tpUnsettle.TransId, false);
