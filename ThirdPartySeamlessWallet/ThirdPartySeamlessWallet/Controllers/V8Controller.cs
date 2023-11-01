@@ -43,6 +43,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Log2File _log2File;
         private readonly Tools _tools;
         private readonly Tp _thisTp;
+        private readonly V8Config _config;
 
         public V8Controller(IServiceProvider provider)
         {
@@ -52,6 +53,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             _v8BLL = provider.GetRequiredService<V8BLL>();
             _tools = provider.GetRequiredService<Tools>();
             _thisTp = Tp.V8;
+            _config = provider.GetRequiredService<ConfigBLL>().GetConfigValue<V8Config>((Tp.V8).ToString());
         }
 
         [HttpGet]
@@ -84,7 +86,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return getApiResponse;
                 }
 
-                var param = DecryptParam(getReq.param);
+                var param = DecryptParam(getReq.param, getReq.agent);
 
                 if (string.IsNullOrEmpty(param))
                 {
@@ -109,7 +111,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var verifyKey = false;
                 if (!string.IsNullOrEmpty(getReq.key))
                 {
-                    verifyKey = CheckKey(getReq.key, getReq.timestamp);
+                    verifyKey = CheckKey(getReq.key, getReq.timestamp, getReq.agent);
                 }
                 if (!verifyKey)
                 {
@@ -143,15 +145,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             return getApiResponse;
         }
 
-        private string DecryptParam(string getReq)
+        private string DecryptParam(string getReq, string agent)
         {
             var param = getReq;
 
             try
             {
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)_thisTp);
-                var deskey = thirdPartySetting.TpSetting["Deskey_SW"];
-
+                var currencyData = _config.CurrencyData.Values.ToList();
+                var deskey = currencyData.Find(x => x.Agent == agent).Deskey;
                 param = _tools.AesDecrypt(HttpUtility.UrlEncode(getReq), deskey);
 
                 _logger.LogInformation(param);
@@ -164,11 +165,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             return param;
         }
 
-        private bool CheckKey(string key, long timestamp)
+        private bool CheckKey(string key, long timestamp, string agent)
         {
-            var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)_thisTp);
-            var md5key = thirdPartySetting.TpSetting["Md5key_SW"];
-            var agent = thirdPartySetting.TpSetting["Agent_SW"];
+            var currencyData = _config.CurrencyData.Values.ToList();
+            var md5key = currencyData.Find(x => x.Agent == agent).Md5key;
 
             var encryptKey = _tools.ToMD5($"{agent}{timestamp}{md5key}").ToLower();
             if (key.ToLower() == encryptKey)
