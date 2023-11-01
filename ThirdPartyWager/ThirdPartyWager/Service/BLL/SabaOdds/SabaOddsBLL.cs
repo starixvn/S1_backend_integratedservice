@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
+using System.Net.Http;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -31,10 +33,14 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {
+                var test = GetSabaOddsMatchId();
+                _logger.LogInformation($"GetSabaOddsMatchId={JsonConvert.SerializeObject(test)}");
                 foreach (var group in GetSabaOddsMatchId().GroupBy(i => i.GameId.ToString()))//用GameId分類
                 {
+                    _logger.LogInformation($"group={JsonConvert.SerializeObject(group)}");
                     foreach (var marketType in new List<string>() { "d", "l" })
                     {
+                        _logger.LogInformation($"marketType={marketType}");
                         var apiUrl = $"{_configModel.ApiUrl}/api/GetMarkets";
                         var httpContent = CreateFormData(
                             marketType,
