@@ -44,6 +44,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _bettingService = provider.GetRequiredService<BettingService>();
             _settledService = provider.GetRequiredService<SettledService>();
+            _walletService = provider.GetRequiredService<WalletService>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _requestHandler = new Dictionary<SBSWTransType, Func<SBSWTransType, string, string, Task<ReturnObj>>>()
             {
