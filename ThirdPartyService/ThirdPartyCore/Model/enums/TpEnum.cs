@@ -22,6 +22,7 @@
         PG = 14,
         Sexy = 15,
         CF = 17,
+        EBet = 18,
         WM = 20,
         Kiss918 = 21,
         Mega = 22,
