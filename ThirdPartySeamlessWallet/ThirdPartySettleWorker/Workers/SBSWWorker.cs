@@ -166,13 +166,14 @@ namespace ThirdPartySettleWorker.Workers
                         // 5.處理沒有收到SettleData的狀況
                         if (!settleData.Any())
                         {
-                            settleFlowLog.AppendLine($"{tpUnsettle.TransId} Settle Data is empty.");
+                            settleFlowLog.AppendLine($"{tpUnsettle.TransId} Settle Data is empty,");
 
                             // 下注單有被Cancel
                             if (betData.Any(x => x.TicketType == (int)SBSWTransType.CancelBet))
                             {
                                 // 走共用流判斷ValidBet、SettlementType、TicketStatus
                                 CalculateAvailableBet(wagerData, betRecordInfo);
+                                settleFlowLog.AppendLine($"{tpUnsettle.TransId} is cancel bet.");
                             }
                             else
                             {
@@ -181,21 +182,29 @@ namespace ThirdPartySettleWorker.Workers
                                 if (isCancelStatus(wagerData))
                                 {
                                     _tpUnSettledBLL.SetTpUnsettle(Tp, tpUnsettle.GameType, tpUnsettle.TransId, true);
-                                    settleFlowLog.AppendLine($"{tpUnsettle.TransId} was rejected");
+                                    settleFlowLog.AppendLine($"{tpUnsettle.TransId} is rejected.");
                                     continue;
                                 }
 
-                                // 拿TpBetRecord判斷，判斷是否有正常完成下注流程
+                                // 拿TpBetRecord判斷，判斷要執行Settle流程，還是等待API收到Settle後才執行
                                 var tpBetRecord = _settledBLL.GetSBSWTpBetRecord((int)Tp.SBSW, tpUnsettle.TransId, (int)tpUnsettle.GameType);
 
-                                // Wager的注單狀態已經更新，但我方API還沒收到做Settle
-                                // 先將此筆留在TpUnsettle，透過Hangfire排程每10分鐘重置結算狀態
-                                // 等下一次重置後，再次判斷API是否有收到Settle                                
+                                // Wager的注單狀態已經更新，但我方API還沒收到做Settle              
                                 if (tpBetRecord != null)
                                 {
+                                    // 先將此筆留在TpUnsettle，透過Hangfire排程每10分鐘重置結算狀態
+                                    // 等下一次重置後，再次判斷API是否有收到Settle     
                                     _tpUnSettledBLL.SetTpUnsettle(Tp, tpUnsettle.GameType, tpUnsettle.TransId, false);
                                     settleFlowLog.AppendLine($"{tpUnsettle.TransId} waiting Settle Data.");
+
                                     continue;
+                                }
+                                else
+                                {
+                                    // Settle還沒收到資料，一樣正常執行Settle流程，因為有以下兩種情境
+                                    // 情境1：體育的注單執行UnSettled流程
+                                    // 情境2：玩家打賞可能會立刻拿到Wager更新，但還沒收到Settle
+                                    settleFlowLog.AppendLine($"{tpUnsettle.TransId} Execute UnSettled or Tip.");
                                 }
                             }
                         }
@@ -204,6 +213,7 @@ namespace ThirdPartySettleWorker.Workers
                         if (betData.Sum(x => x.betAmount) == wagerData.stake || tpUnsettle.GameType == GameType.SBSW_Vgaming)
                         {
                             betRecordInfo.WinlostAmount = wagerData.winlost_amount;
+                            // 走共用流判斷ValidBet、SettlementType、TicketStatus
                             CalculateAvailableBet(wagerData, betRecordInfo);
 
                             if (wagerData.ticket_extra_status.Equals("cashout", StringComparison.OrdinalIgnoreCase))
