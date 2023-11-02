@@ -3,6 +3,7 @@
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -13,6 +14,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiAllBetBLL _apiAllBetBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = 8;
+        private readonly AllBetConfig _siteAllBetConfig;
 
         public FinanceAllBetBLL(IServiceProvider provider)
         {
@@ -20,6 +22,7 @@ namespace ThirdPartyWager.Service.BLL
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _apiAllBetBLL = provider.GetRequiredService<ApiAllBetBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _siteAllBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AllBetConfig>(Tp.Allbet.ToString());
         }
 
         public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
@@ -51,14 +54,15 @@ namespace ThirdPartyWager.Service.BLL
 
         public Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
         {
+            //setting 無用
             var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
             var reportData = new List<dynamic>();
 
             foreach (var item in tpCurrencyList)
             {
                 var currency = item.TpCurrencyId;
-                var agent = setting[$"{currency}Agent"];
-                var getWagerSummary = _apiAllBetBLL.GetBetSummaryByTime(setting, agent, reportTime.startTime);
+                var agent = _siteAllBetConfig.CurrencyAgents.FirstOrDefault(x => x.CurrencyId == currency)?.Agent;
+                var getWagerSummary = _apiAllBetBLL.GetBetSummaryByTime(agent, reportTime.startTime);
                 Thread.Sleep(150000);
 
                 if (getWagerSummary == null)
