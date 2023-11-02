@@ -3,6 +3,7 @@
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -15,6 +16,7 @@ namespace ThirdPartyWager.Service.BLL
         private IEnumerable<TpCurrency> _currencyList;
         private readonly int _tpId = (int)Tp.Allbet;
         private readonly IWebHostEnvironment _env;
+        private readonly AllBetConfig _siteAllBetConfig;
 
         public WagerAllBetBLL(IServiceProvider provider)
         {
@@ -24,15 +26,15 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<WagerAllBetBLL>>();
             _currencyList = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(_tpId);
             _env = provider.GetRequiredService<IWebHostEnvironment>();
+            _siteAllBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AllBetConfig>(Tp.Allbet.ToString());
         }
 
-        public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime)
+        public async Task<bool> GetWagersAsync(string startTime, string endTime)
         {
             var msg = "FATAL_ERROR";
             try
             {
-                // get api info
-                var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
+                
                 if (_env.IsDevelopment())
                 {
                     _currencyList = _currencyList.Take(1);
@@ -46,11 +48,11 @@ namespace ThirdPartyWager.Service.BLL
                         var pageIndex = 1;
                         var pageRowCnt = 1;
 
-                        var agent = setting[$"{currency.TpCurrencyId}Agent"];
+                        var agent = _siteAllBetConfig.CurrencyAgents.FirstOrDefault(x => x.CurrencyId == currency.TpCurrencyId)?.Agent;
                         while (pageRowCnt >= 1)
                         {
                             // bet                     
-                            var dataWager = _apiAllBetBLL.GetBetListByTime(setting, agent, startTime, endTime, pageIndex);
+                            var dataWager = _apiAllBetBLL.GetBetListByTime(agent, startTime, endTime, pageIndex);
                             if (dataWager == null)
                             {
                                 msg = "THIRD_PARTY_ERROR";
@@ -93,7 +95,7 @@ namespace ThirdPartyWager.Service.BLL
 
 
                         // modified bet
-                        var modifyWager = _apiAllBetBLL.GetModifiedBetListByTime(setting, agent, startTime, endTime);
+                        var modifyWager = _apiAllBetBLL.GetModifiedBetListByTime(agent, startTime, endTime);
                         if (modifyWager.resultCode != "OK")
                         {
                             msg = "THIRD_PARTY_ERROR";
@@ -145,16 +147,13 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {
-                // get api info
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
-
                 var checkList = await _wagerAllBetService.GetUnsettleCheckList();
                 var doQuick = checkList.Count() == 200;
                 foreach (var chcek in checkList)
                 {
                     try
                     {
-                        var result = _apiAllBetBLL.GetBetByBetNum(setting, chcek.betNum);
+                        var result = _apiAllBetBLL.GetBetByBetNum(chcek.betNum);
                         if (result.resultCode == "OK")
                         {
                             _wagerAllBetService.InsertWager(result.data);

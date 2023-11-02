@@ -1,11 +1,10 @@
 ﻿using Newtonsoft.Json;
-
 using Serilog.Context;
-
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -23,6 +22,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
         private IEnumerable<TpCurrency> _currencyList;
         private readonly IWebHostEnvironment _env;
+        private readonly AllBetConfig _siteAllBetConfig;
 
         public RewardAllBetBLL(IServiceProvider provider)
         {
@@ -33,6 +33,7 @@ namespace ThirdPartyWager.Service.BLL
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _currencyList = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(_tpId);
             _env = provider.GetRequiredService<IWebHostEnvironment>();
+            _siteAllBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AllBetConfig>(Tp.Allbet.ToString());
         }
 
         public async Task<bool> ExecRewardWorker(int type, int timeRange)
@@ -61,7 +62,6 @@ namespace ThirdPartyWager.Service.BLL
 
             try
             {
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
                 var success = true;
                 if (_env.IsDevelopment())
                 {
@@ -74,12 +74,12 @@ namespace ThirdPartyWager.Service.BLL
                         // pagination
                         var pageIndex = 1;
                         var pageRowCnt = 1;
-                        var agent = setting[$"{currency.TpCurrencyId}Agent"];
+                        var agent = _siteAllBetConfig.CurrencyAgents.FirstOrDefault(x => x.CurrencyId == currency.TpCurrencyId)?.Agent;
 
                         while (pageRowCnt >= 1)
                         {
                             // get reward
-                            var rewardData = _apiAllBetBLL.GetRewardByTime(setting, agent, startTime, endTime, pageIndex);
+                            var rewardData = _apiAllBetBLL.GetRewardByTime(agent, startTime, endTime, pageIndex);
 
                             // error condition
                             if (rewardData == null)

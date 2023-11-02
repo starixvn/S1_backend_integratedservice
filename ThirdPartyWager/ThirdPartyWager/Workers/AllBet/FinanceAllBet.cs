@@ -99,7 +99,7 @@ namespace ThirdPartyWager.Workers
 
                 // report
                 DateTime reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);
-                var reportData = await _financeAllBetBLL.GetReport(_tpId, setting, reportTime);
+                var reportData = await _financeAllBetBLL.GetReport(_tpId, null , reportTime);
                 int result;
                 if (reportData.Count > 0)
                 {
