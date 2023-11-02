@@ -1,9 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
@@ -18,17 +16,17 @@ namespace ThirdPartySeamlessWallet.Controllers
     public class AllbetController : ControllerBase
     {
         private readonly ILogger<AllbetController> _logger;
-        private readonly Tp thisTp;
-        private readonly ThirdPartyBLL thirdPartyBLL;
+        private readonly Tp thisTp; 
         private static IAllbetBll _AllbetBll { get; set; }
+        private readonly AllBetConfig _siteAllBetConfig;
 
 
         public AllbetController(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<AllbetController>>();
             thisTp = Tp.Allbet;
-            thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _AllbetBll = new AllbetBll(provider);
+            _siteAllBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AllBetConfig>(Tp.Allbet.ToString());
         }
 
         [HttpGet]
@@ -44,12 +42,11 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 Request.Headers.TryGetValue("Authorization", out var authorization);
                 Request.Headers.TryGetValue("Date", out var date);
-
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                
                 var signString = $"GET\n\n\n{date}\n/{method}/{username}";
-                var signature = GetSign(signString, thirdPartySetting.TpSetting["PartnerKey"]);
+                var signature = GetSign(signString, _siteAllBetConfig.PartnerKey);
 
-                CheckSign(authorization, thirdPartySetting, signature);
+                CheckSign(authorization, signature);
 
                 return await _AllbetBll.SeamlessWallet(transType, username);
             }
@@ -81,14 +78,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                 Request.Headers.TryGetValue("Content-Type", out var contentType);
                 Request.Headers.TryGetValue("Date", out var date);
                 Request.Headers.TryGetValue("Internal", out var @internal);
-
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+                
                 var signString = $"POST\n{md5}\n{contentType}\n{date}\n/{transType.ToString()}";
-                var signature = GetSign(signString, thirdPartySetting.TpSetting["PartnerKey"]);
+                var signature = GetSign(signString, _siteAllBetConfig.PartnerKey);
 
                 if (@internal.ToString() != "Wager")
                 {
-                    CheckSign(authorization, thirdPartySetting, signature);
+                    CheckSign(authorization,signature);
                 }
 
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
@@ -106,8 +102,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
         }
 
-        private void CheckSign(StringValues authorization, ThirdPartySetting thirdPartySetting,
-            string signature)
+        private void CheckSign(StringValues authorization, string signature)
         {
             var auth = authorization.ToString();
             var operatorId = "";
@@ -116,12 +111,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                 operatorId = auth.Substring(3, auth.IndexOf(":", StringComparison.Ordinal) - 3);
             }
 
-            if (operatorId != thirdPartySetting.TpSetting["OperatorId"])
+            if (operatorId != _siteAllBetConfig.OperatorId)
             {
                 throw new AllbetException(AllbetResultCode.InvalidOperatorId);
             }
 
-            if (authorization != $"AB {thirdPartySetting.TpSetting["OperatorId"]}:{signature}")
+            if (authorization != $"AB {_siteAllBetConfig.OperatorId}:{signature}")
             {
                 throw new AllbetException(AllbetResultCode.InvalidSignature);
             }
@@ -134,5 +129,26 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             return Convert.ToBase64String(hash);
         }
+
+
+        #region Model
+
+        private class AllBetConfig
+        {
+            public string ApiUrl { get; set; }
+            public string Suffix { get; set; }
+            public string AllbetKey { get; set; }
+            public string OperatorId { get; set; }
+            public string PartnerKey { get; set; }
+            public List<CurrencyAgent> CurrencyAgents { get; set; }
+        }
+        
+        public class CurrencyAgent
+        {
+            public string CurrencyId { get; set; }
+            public string Agent { get; set; }
+        }
+
+        #endregion
     }
 }

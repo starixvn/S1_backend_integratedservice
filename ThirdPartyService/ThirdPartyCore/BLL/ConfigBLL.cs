@@ -74,6 +74,25 @@ namespace ThirdPartyCore.BLL
             return defaultResult;
         }
         
+        public TItem GetConfigValue<TItem>(string configKey, int siteId = 0)
+        {
+            var defaultItem = _defaultSiteConfig.TryGetValue(configKey, out var json)
+                ? JsonConvert.DeserializeObject<TItem>(json) : default;
+
+            if (siteId == 0)
+            {
+                return defaultItem;
+            }
+
+            if (_siteIdConfigs.TryGetValue(siteId, out var siteConfig))
+            {
+                return siteConfig.Config.TryGetValue(configKey, out var configValue)
+                    ? JsonConvert.DeserializeObject<TItem>(configValue) : defaultItem;
+            }
+
+            return defaultItem;
+        }
+        
         public TItem GetConfigValueByEnvironment<TItem>(string configKey, int siteId = 0)
         {
             var json = GetConfigValue($"{configKey}.{_environment.EnvironmentName}.json", siteId);
