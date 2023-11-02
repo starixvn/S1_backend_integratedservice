@@ -76,16 +76,21 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     var settleFlowLog = new StringBuilder();
                     settleFlowLog.AppendLine($"TransId: {tpUnsettle.TransId} - Start Settle Flow");
+                    settleFlowLog.AppendLine($"===================================================");
                     try
                     {
                         // 1.取得Wager資料
                         var tpBetRecordDetail = _settledBLL.GetTpBetRecordDetail((int)Tp.SBSW, (int)tpUnsettle.GameType, tpUnsettle.TransId, tpUnsettle.PartitionTime);
                         var wagerData = GetWagerData(tpBetRecordDetail);
-                        settleFlowLog.AppendLine($"1.Get Wager Data: {JsonConvert.SerializeObject(wagerData)}");
+                        settleFlowLog.AppendLine($"1.Get Wager Data:");
+                        settleFlowLog.AppendLine(JsonConvert.SerializeObject(wagerData));
+                        settleFlowLog.AppendLine($"===================================================");
 
                         // 2.取得Settle資料
                         var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleSBSW>("Service_Bettrans_SBSW_Settle_Get", new { txId = tpUnsettle.TransId }, DataBase.Main);
-                        settleFlowLog.AppendLine($"2.Get Settle Data: {JsonConvert.SerializeObject(settleData)}");
+                        settleFlowLog.AppendLine($"2.Get Settle Data:");
+                        settleFlowLog.AppendLine(JsonConvert.SerializeObject(settleData));
+                        settleFlowLog.AppendLine($"===================================================");
 
                         // 3.取得Bet資料
                         var getBettransSp = "Service_Bettrans_SBSW_Bet_Get";
@@ -99,7 +104,9 @@ namespace ThirdPartySettleWorker.Workers
                         }
 
                         var betData = _tpUnSettledBLL.GetTpUnsettleData<BetSBSW>(getBettransSp, parameters, DataBase.Main);
-                        settleFlowLog.AppendLine($"3.Get Bet Data: {JsonConvert.SerializeObject(betData)}");
+                        settleFlowLog.AppendLine($"3.Get Bet Data:");
+                        settleFlowLog.AppendLine(JsonConvert.SerializeObject(betData));
+                        settleFlowLog.AppendLine($"===================================================");
 
                         // 取不到下注資料，直接跳過這筆
                         if (!betData.Any())
@@ -152,18 +159,21 @@ namespace ThirdPartySettleWorker.Workers
                             GameID = sport_type.ToString(),
                             ReferenceNo = betData.FirstOrDefault()?.refId
                         };
-                        settleFlowLog.AppendLine($"4.Set Default BetRecordInfo: {JsonConvert.SerializeObject(betRecordInfo)}");
+                        settleFlowLog.AppendLine($"4.Set Default BetRecordInfo:");
+                        settleFlowLog.AppendLine(JsonConvert.SerializeObject(betRecordInfo));
+                        settleFlowLog.AppendLine($"===================================================");
 
                         // 5.處理沒有收到SettleData的狀況
                         if (!settleData.Any())
                         {
-                            settleFlowLog.AppendLine($"{tpUnsettle.TransId} Settle Data is empty.");
+                            settleFlowLog.AppendLine($"{tpUnsettle.TransId} Settle Data is empty,");
 
                             // 下注單有被Cancel
                             if (betData.Any(x => x.TicketType == (int)SBSWTransType.CancelBet))
                             {
                                 // 走共用流判斷ValidBet、SettlementType、TicketStatus
                                 CalculateAvailableBet(wagerData, betRecordInfo);
+                                settleFlowLog.AppendLine($"{tpUnsettle.TransId} is cancel bet.");
                             }
                             else
                             {
@@ -172,22 +182,29 @@ namespace ThirdPartySettleWorker.Workers
                                 if (isCancelStatus(wagerData))
                                 {
                                     _tpUnSettledBLL.SetTpUnsettle(Tp, tpUnsettle.GameType, tpUnsettle.TransId, true);
-                                    settleFlowLog.AppendLine($"{tpUnsettle.TransId} was rejected");
+                                    settleFlowLog.AppendLine($"{tpUnsettle.TransId} is rejected.");
                                     continue;
                                 }
 
-                                // 拿TpBetRecord判斷，判斷是否有正常完成下注流程
+                                // 拿TpBetRecord判斷，判斷要執行Settle流程，還是等待API收到Settle後才執行
                                 var tpBetRecord = _settledBLL.GetSBSWTpBetRecord((int)Tp.SBSW, tpUnsettle.TransId, (int)tpUnsettle.GameType);
 
-
-                                // Wager的注單狀態已經更新，但我方API還沒收到做Settle
-                                // 先將此筆留在TpUnsettle，透過Hangfire排程每10分鐘重置結算狀態
-                                // 等下一次重置後，再次判斷API是否有收到Settle                                
+                                // Wager的注單狀態已經更新，但我方API還沒收到做Settle              
                                 if (tpBetRecord != null)
                                 {
+                                    // 先將此筆留在TpUnsettle，透過Hangfire排程每10分鐘重置結算狀態
+                                    // 等下一次重置後，再次判斷API是否有收到Settle     
                                     _tpUnSettledBLL.SetTpUnsettle(Tp, tpUnsettle.GameType, tpUnsettle.TransId, false);
                                     settleFlowLog.AppendLine($"{tpUnsettle.TransId} waiting Settle Data.");
+
                                     continue;
+                                }
+                                else
+                                {
+                                    // Settle還沒收到資料，一樣正常執行Settle流程，因為有以下兩種情境
+                                    // 情境1：體育的注單執行UnSettled流程
+                                    // 情境2：玩家打賞可能會立刻拿到Wager更新，但還沒收到Settle
+                                    settleFlowLog.AppendLine($"{tpUnsettle.TransId} Execute UnSettled or Tip.");
                                 }
                             }
                         }
@@ -196,6 +213,7 @@ namespace ThirdPartySettleWorker.Workers
                         if (betData.Sum(x => x.betAmount) == wagerData.stake || tpUnsettle.GameType == GameType.SBSW_Vgaming)
                         {
                             betRecordInfo.WinlostAmount = wagerData.winlost_amount;
+                            // 走共用流判斷ValidBet、SettlementType、TicketStatus
                             CalculateAvailableBet(wagerData, betRecordInfo);
 
                             if (wagerData.ticket_extra_status.Equals("cashout", StringComparison.OrdinalIgnoreCase))
@@ -217,6 +235,9 @@ namespace ThirdPartySettleWorker.Workers
                         }
 
                         settleFlowLog.AppendLine($"5.Ready BetRecordInfo: {JsonConvert.SerializeObject(betRecordInfo)}");
+                        settleFlowLog.AppendLine(JsonConvert.SerializeObject(betRecordInfo));
+                        settleFlowLog.AppendLine($"===================================================");
+
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, (TpCategory)tpCategoryId, GetTpSeamlessBonusType.ByTransId);
                         if (result == 1)
                         {
