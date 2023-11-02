@@ -74,9 +74,11 @@ namespace ThirdPartySettleWorker.Workers
 
                 foreach (var tpUnsettle in tpUnsettleList.OrderBy(x => x.TransId))
                 {
+                    LogContext.PushProperty("TransId", tpUnsettle.TransId);
                     var settleFlowLog = new StringBuilder();
                     settleFlowLog.AppendLine($"TransId: {tpUnsettle.TransId} - Start Settle Flow");
                     settleFlowLog.AppendLine($"===================================================");
+
                     try
                     {
                         // 1.取得Wager資料
@@ -234,6 +236,7 @@ namespace ThirdPartySettleWorker.Workers
                             continue;
                         }
 
+                        settleFlowLog.AppendLine($"===================================================");
                         settleFlowLog.AppendLine($"5.Ready BetRecordInfo: {JsonConvert.SerializeObject(betRecordInfo)}");
                         settleFlowLog.AppendLine(JsonConvert.SerializeObject(betRecordInfo));
                         settleFlowLog.AppendLine($"===================================================");
