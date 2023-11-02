@@ -76,16 +76,21 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     var settleFlowLog = new StringBuilder();
                     settleFlowLog.AppendLine($"TransId: {tpUnsettle.TransId} - Start Settle Flow");
+                    settleFlowLog.AppendLine($"===================================================");
                     try
                     {
                         // 1.取得Wager資料
                         var tpBetRecordDetail = _settledBLL.GetTpBetRecordDetail((int)Tp.SBSW, (int)tpUnsettle.GameType, tpUnsettle.TransId, tpUnsettle.PartitionTime);
                         var wagerData = GetWagerData(tpBetRecordDetail);
-                        settleFlowLog.AppendLine($"1.Get Wager Data: {JsonConvert.SerializeObject(wagerData)}");
+                        settleFlowLog.AppendLine($"1.Get Wager Data:");
+                        settleFlowLog.AppendLine(JsonConvert.SerializeObject(wagerData));
+                        settleFlowLog.AppendLine($"===================================================");
 
                         // 2.取得Settle資料
                         var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleSBSW>("Service_Bettrans_SBSW_Settle_Get", new { txId = tpUnsettle.TransId }, DataBase.Main);
-                        settleFlowLog.AppendLine($"2.Get Settle Data: {JsonConvert.SerializeObject(settleData)}");
+                        settleFlowLog.AppendLine($"2.Get Settle Data:");
+                        settleFlowLog.AppendLine(JsonConvert.SerializeObject(settleData));
+                        settleFlowLog.AppendLine($"===================================================");
 
                         // 3.取得Bet資料
                         var getBettransSp = "Service_Bettrans_SBSW_Bet_Get";
@@ -99,7 +104,9 @@ namespace ThirdPartySettleWorker.Workers
                         }
 
                         var betData = _tpUnSettledBLL.GetTpUnsettleData<BetSBSW>(getBettransSp, parameters, DataBase.Main);
-                        settleFlowLog.AppendLine($"3.Get Bet Data: {JsonConvert.SerializeObject(betData)}");
+                        settleFlowLog.AppendLine($"3.Get Bet Data:");
+                        settleFlowLog.AppendLine(JsonConvert.SerializeObject(betData));
+                        settleFlowLog.AppendLine($"===================================================");
 
                         // 取不到下注資料，直接跳過這筆
                         if (!betData.Any())
@@ -152,7 +159,9 @@ namespace ThirdPartySettleWorker.Workers
                             GameID = sport_type.ToString(),
                             ReferenceNo = betData.FirstOrDefault()?.refId
                         };
-                        settleFlowLog.AppendLine($"4.Set Default BetRecordInfo: {JsonConvert.SerializeObject(betRecordInfo)}");
+                        settleFlowLog.AppendLine($"4.Set Default BetRecordInfo:");
+                        settleFlowLog.AppendLine(JsonConvert.SerializeObject(betRecordInfo));
+                        settleFlowLog.AppendLine($"===================================================");
 
                         // 5.處理沒有收到SettleData的狀況
                         if (!settleData.Any())
@@ -178,7 +187,6 @@ namespace ThirdPartySettleWorker.Workers
 
                                 // 拿TpBetRecord判斷，判斷是否有正常完成下注流程
                                 var tpBetRecord = _settledBLL.GetSBSWTpBetRecord((int)Tp.SBSW, tpUnsettle.TransId, (int)tpUnsettle.GameType);
-
 
                                 // Wager的注單狀態已經更新，但我方API還沒收到做Settle
                                 // 先將此筆留在TpUnsettle，透過Hangfire排程每10分鐘重置結算狀態
@@ -217,6 +225,9 @@ namespace ThirdPartySettleWorker.Workers
                         }
 
                         settleFlowLog.AppendLine($"5.Ready BetRecordInfo: {JsonConvert.SerializeObject(betRecordInfo)}");
+                        settleFlowLog.AppendLine(JsonConvert.SerializeObject(betRecordInfo));
+                        settleFlowLog.AppendLine($"===================================================");
+
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, (TpCategory)tpCategoryId, GetTpSeamlessBonusType.ByTransId);
                         if (result == 1)
                         {
