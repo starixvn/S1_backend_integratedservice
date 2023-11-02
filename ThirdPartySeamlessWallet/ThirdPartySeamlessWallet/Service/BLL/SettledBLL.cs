@@ -2475,14 +2475,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         #endregion
 
         #region SBSW
+
         public IEnumerable<SBSWUnsettle> GetSBSWUnsettleList(int LimitCount = 1000)
         {
             return settledService.GetSBSWUnsettleList(LimitCount);
         }
+
         public BetRecordInfo GetSBSWTpBetRecord(int TpId, string TransId, int GameType)
         {
             return settledService.GetSBSWUnsettleList(TpId, TransId, GameType);
         }
+
         #endregion
 
         #region PlayTech
