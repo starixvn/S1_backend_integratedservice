@@ -33,6 +33,7 @@
         PT = 27,
         N2Live = 28,
         BTI = 29,
+        AMB = 30,
         NineW = 31,
         JILI = 32,
         TCG = 33,
