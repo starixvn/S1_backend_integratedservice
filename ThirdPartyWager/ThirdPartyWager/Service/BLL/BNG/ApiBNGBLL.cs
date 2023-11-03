@@ -20,7 +20,7 @@ namespace ThirdPartyWager.Service.BLL.BNG
             _httpHelper = provider.GetRequiredService<HttpHelper>();
         }
 
-        public async Task<RecordListData> GetRecordListAsync(Dictionary<string, string> setting, string startTime, string endTime)
+        public async Task<TransactionData> GetRecordListAsync(Dictionary<string, string> setting, string startTime, string endTime)
         {
             var url = $"{setting["ApiUrl"]}/{setting["ProjectName"]}/api/v1/transaction/aggregate/";
 
@@ -36,7 +36,7 @@ namespace ThirdPartyWager.Service.BLL.BNG
             var response = await _httpHelper.GetClient().SendAsync(request);
             var r = response.Content.ReadAsStringAsync().Result;
 
-            var result = JsonConvert.DeserializeObject<JwtToken>(r);
+            var result = JsonConvert.DeserializeObject<TransactionData>(r);
             return result;
         }
 

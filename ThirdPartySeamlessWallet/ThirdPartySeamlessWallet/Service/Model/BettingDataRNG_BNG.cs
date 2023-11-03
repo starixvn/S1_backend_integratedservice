@@ -89,8 +89,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string game_name { get; set; }
         public string provider_id { get; set; }
         public string provider_name { get; set; }
-        public string c_at { get; set; }
-        public string sent_at { get; set; }
+        public DateTime c_at { get; set; }
+        public DateTime sent_at { get; set; }
         public string platform { get; set; }
         public decimal bet { get; set; }
         public decimal win { get; set; }

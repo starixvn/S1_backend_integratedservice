@@ -18,20 +18,20 @@ namespace ThirdPartyWager.Service.BLL.BNG
         public async Task GetWagerAsync(Dictionary<string, string> setting, string startTime, string endTime)
         {
             string msg;
-            var recordList = await _apiBNGBLL.GetRecordListAsync(setting, startTime, endTime);
+            var wagerList = await _apiBNGBLL.GetRecordListAsync(setting, startTime, endTime);
 
-            if (recordList.Records != null)
+            if (wagerList.items != null)
             {
-                foreach (var record in recordList.Records)
+                foreach (var item in wagerList.items)
                 {
                     try
                     {
-                        await _wagerBNGService.InsertWager(record);
+                        await _wagerBNGService.InsertWager(item);
                     }
                     catch (Exception ex)
                     {
-                        msg = $"INSERT_WAGER(recordID: {record.recordID} )";
-                        _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(record)}\r\n{ex.Message}");
+                        msg = $"INSERT_WAGER(round_id: {item.round_id}, transaction_id: {item.transaction_id} )";
+                        _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(item)}\r\n{ex.Message}");
                     }
                 }
             }

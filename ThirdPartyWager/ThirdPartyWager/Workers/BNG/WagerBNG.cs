@@ -19,7 +19,7 @@ namespace ThirdPartyWager.Workers.BNG
         private readonly CommonBLL _commonBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly ILogger<WagerBNG> _logger;
-        private readonly int timeZone = -4;
+        private readonly int timeZone = 0;
         private readonly int iRangMins = 15;
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
         public WagerBNG(IServiceProvider provider)

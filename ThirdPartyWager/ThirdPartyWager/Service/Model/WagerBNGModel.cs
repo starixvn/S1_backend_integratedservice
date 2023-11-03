@@ -6,7 +6,7 @@
     public class TransactionData
     {
         public string fetch_state { get; set; }
-        public item items { get; set; }
+        public List<item> items { get; set; }
     }
     public class item
     {
@@ -33,7 +33,7 @@
         public string game_name { get; set; }
         public string status { get; set; }
         public bool manual_confirmed { get; set; }
-        public string c_at { get; set; }
+        public DateTimeOffset c_at { get; set; }
         public int? bonus_id { get; set; } = 0;
         public string campaign { get; set; }
         public string bonus_source { get; set; }
