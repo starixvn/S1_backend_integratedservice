@@ -205,7 +205,7 @@ namespace ThirdPartySettleWorker.Workers
                                 {
                                     // Settle還沒收到資料，一樣正常執行Settle流程，因為有以下兩種情境
                                     // 情境1：體育的注單執行UnSettled流程
-                                    // 情境2：玩家打賞可能會立刻拿到Wager更新，但還沒收到Settle
+                                    // 情境2：主播打賞可能會立刻拿到Wager更新，但還沒收到Settle
                                     settleFlowLog.AppendLine($"{tpUnsettle.TransId} Execute UnSettled or Tip.");
                                 }
                             }
@@ -224,9 +224,16 @@ namespace ThirdPartySettleWorker.Workers
                             }
 
                             // 只有體育類有Rollover
-                            if (betRecordInfo.GameType != GameType.SBSW_Sports && betRecordInfo.SettlementType == SettlementType.SettledForValid)
+                            if ((betRecordInfo.GameType != GameType.SBSW_Sports && betRecordInfo.SettlementType == SettlementType.SettledForValid)
+                                || sport_type == 157)
                             {
                                 betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
+                            }
+
+                            // 主播打賞沒有流水
+                            if (sport_type == 157)
+                            {
+                                betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
                             }
                         }
                         else
