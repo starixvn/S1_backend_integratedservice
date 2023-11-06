@@ -14,30 +14,23 @@ namespace ThirdPartyBetHistory.Service.DAL
 {
     public class ThirdPartyService
     {
-        private readonly IMemoryCache _cache;
         private readonly MySqlClient _mainDbClient;
         private readonly MySqlClient _reportDbClient;
+        private readonly ICacheHelper _redisHelper;
 
-        public ThirdPartyService(IServiceProvider serviceProvider)
+        public ThirdPartyService(IServiceProvider provider)
         {
-            _cache = serviceProvider.GetRequiredService<IMemoryCache>();
-            _mainDbClient = serviceProvider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
-            _reportDbClient = serviceProvider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+            _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
+            _redisHelper = provider.GetRequiredService<ICacheHelper>();
         }
 
         public TpCustInfo GetTpCustInfoWithCache(int tpId, string tpUserName)
         {
-            var key = $"TpCustInfo_{tpId}_{tpUserName}";
-            var tpCustInfo = _cache.Get<TpCustInfo>(key);
-            if (tpCustInfo == null)
-            {
-                tpCustInfo = GetTpCustInfo(tpId, tpUserName);
-                if (tpCustInfo != null)
-                {
-                    _cache.Set(key, tpCustInfo, new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromMinutes(5)));
-                }
-            }
-
+            var tpCustInfo = _redisHelper.TryGetOrCreate(
+                $"TpCustInfo:{tpId}:{tpUserName}",
+                TimeSpan.FromMinutes(1),
+               () => GetTpCustInfo(tpId, tpUserName));
             return tpCustInfo;
         }
 
@@ -86,21 +79,20 @@ namespace ThirdPartyBetHistory.Service.DAL
             return _mainDbClient.Execute("Service_TpBetRecordDetail_Ins_V3", props);
         }
 
-        public IEnumerable<VgamingUnSettle> GetVgamingUnSettleTicket(int SiteId, long TicketKey, int LimitCount)
+        public IEnumerable<VgamingUnSettle> GetVgamingUnSettleTicket(long TicketKey, int LimitCount)
         {
-            return _reportDbClient.Query<VgamingUnSettle>("Service_SBSW_Vgaming_Unsettle_Get",
+            return _reportDbClient.Query<VgamingUnSettle>("Service_SBSW_Vgaming_Unsettle_Get_V2",
                 new
                 {
-                    SiteId,
                     TicketKey,
                     LimitCount,
                 }, 120);
         }
 
-        public long GetVgamingTicketKey(int SiteId, long TicketKey)
+        public long GetVgamingTicketKey(long TicketKey)
         {
-            var parameters = new { SiteId, TicketKey};
-            return _reportDbClient.QueryFirst<long>("Service_SBSW_Vgaming_TicketKey_Get", parameters);
+            var parameters = new { TicketKey };
+            return _reportDbClient.QueryFirst<long>("Service_SBSW_Vgaming_TicketKey_Get_V2", parameters);
         }
     }
 }

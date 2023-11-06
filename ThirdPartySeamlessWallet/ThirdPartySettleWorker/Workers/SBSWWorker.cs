@@ -71,7 +71,9 @@ namespace ThirdPartySettleWorker.Workers
                     try
                     {
                         var betData = new List<BetSBSW>();
+
                         #region 取得wager資料
+
                         var tpBetRecordDetail = _settledBLL.GetTpBetRecordDetail((int)Tp.SBSW, (int)tpUnsettle.GameType, tpUnsettle.TransId, tpUnsettle.PartitionTime);
                         BaseBetDetail wagerData = tpBetRecordDetail.GameType switch
                         {
@@ -83,9 +85,11 @@ namespace ThirdPartySettleWorker.Workers
                         };
 
                         _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nwagerData=\r\n{JsonConvert.SerializeObject(wagerData)}");
+                       
                         #endregion
 
                         #region 取得betData資料
+
                         var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleSBSW>(getSettleSp, new { txId = tpUnsettle.TransId }, DataBase.Main);
 
                         //如果是Vgaming的遊戲,且wager的狀態為Cancel相關,會撈不到settleData,所以改用getBettransSp去取得betData
@@ -100,14 +104,23 @@ namespace ThirdPartySettleWorker.Workers
                         }
 
                         _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nbetData=\r\n{JsonConvert.SerializeObject(betData)}\r\nsettleData=\r\n{JsonConvert.SerializeObject(settleData)}");
+                        
                         //取不到下注資料，直接跳過這筆
                         if (!betData.Any())
+                        {
                             continue;
+                        }
+                        
+
                         #endregion
 
                         int sport_type = betData.FirstOrDefault().sportType;
+                                               
+                        // Vgaming收到的sport_type是空的，手動進行設定
                         if (tpUnsettle.GameType == GameType.SBSW_Vgaming)
+                        {
                             sport_type = 171;
+                        } 
 
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, wagerData.vendor_member_id);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
@@ -117,12 +130,11 @@ namespace ThirdPartySettleWorker.Workers
                             throw new SBSWException(ReturnCode.InvalidParameters, $"GameType:{(int)tpUnsettle.GameType} not supported.");
                         }
 
-                        #region 匯率轉換
+                        // 匯率轉換
                         wagerData.stake *= tpCurrency.ExchangeRate;
                         wagerData.winlost_amount *= tpCurrency.ExchangeRate;
-                        #endregion
 
-                        //未結算預設值
+                        // 未結算預設值
                         var winlostAmount = 0m;
                         var settlementType = SettlementType.UnSettled;
                         var ticketStatus = TicketStatus.UnSettled;
@@ -221,7 +233,7 @@ namespace ThirdPartySettleWorker.Workers
                         }
 
                         _logger.LogWarning($"TransId:{tpUnsettle.TransId}\r\nbetRecordInfo=\r\n{JsonConvert.SerializeObject(betRecordInfo)}");
-
+                        
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, (TpCategory)tpCategoryId, GetTpSeamlessBonusType.ByTransId);
                         if (result == 1)
                         {

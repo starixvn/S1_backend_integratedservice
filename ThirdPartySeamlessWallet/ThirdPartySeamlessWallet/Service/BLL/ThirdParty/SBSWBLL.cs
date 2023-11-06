@@ -26,6 +26,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
+        private readonly WalletService _walletService;
         private readonly ILogger<SBSWBLL> _logger;
         private readonly Dictionary<SBSWTransType, Func<SBSWTransType, string, string, Task<ReturnObj>>> _requestHandler;
         private readonly Dictionary<int, SabaSportTypeOption> _sportTypeConfig;
@@ -43,6 +44,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _bettingService = provider.GetRequiredService<BettingService>();
             _settledService = provider.GetRequiredService<SettledService>();
+            _walletService = provider.GetRequiredService<WalletService>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _requestHandler = new Dictionary<SBSWTransType, Func<SBSWTransType, string, string, Task<ReturnObj>>>()
             {
@@ -241,19 +243,42 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 }
 
                 var bonusId = 0;
-                result.SetBalanceResult = _bettingService.PlaceBetV2(
-                    tpCustInfo,
-                    Math.Abs(bet.debitAmount) * -1,
-                    (int)ThirdParty,
-                    bet.refId,
-                    (int)gameType,
-                    bet.refId,
-                    null,
-                    tpCategory,
-                    out var afterAmount,
-                    ref bonusId,
-                    conn,
-                    trans);
+                var afterAmount = 0m;
+                
+                if (bet.sportType == 157) // 主播打賞
+                {
+                    result.SetBalanceResult = _walletService.SetBalance(
+                           tpCustInfo.CustId,
+                           tpCustInfo.SiteId,
+                           tpCustInfo.UserName,
+                           Math.Abs(bet.debitAmount) * -1,
+                           (int)ThirdParty,
+                           TransType.Tip,
+                           $"Tip: {Math.Abs(bet.debitAmount):#,##0.##}",
+                           bet.refId,
+                           out afterAmount,
+                           conn,
+                           trans,
+                           AllowNegative.NotAllow
+                       );                  
+                }
+                else
+                {
+                    result.SetBalanceResult = _bettingService.PlaceBetV2(
+                        tpCustInfo,
+                        Math.Abs(bet.debitAmount) * -1,
+                        (int)ThirdParty,
+                        bet.refId,
+                        (int)gameType,
+                        bet.refId,
+                        null,
+                        tpCategory,
+                        out afterAmount,
+                        ref bonusId,
+                        conn,
+                        trans);
+                }
+
 
                 if (result.SetBalanceResult < 1 || afterAmount < 0)
                 {
@@ -269,6 +294,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             catch (MySqlException mySqlEx)
             {
+                if (mySqlEx.Number == 1062)
+                {
+                    return new ExecuteResult(ReturnCode.TransactionDuplicated, $"refId: {bet.refId} Duplicated.");
+                }
                 _logger.LogError(mySqlEx, mySqlEx.Message);
                 return new ExecuteResult(ReturnCode.DatabaseError, mySqlEx.Message);
             }
@@ -406,7 +435,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 confirmBet: new ConfirmBet()
                 {
                     action = request.message.action,
-                    operationId = string.Empty,
+                    operationId = DateTime.UtcNow.Ticks.ToString(),
                     userId = request.message.userId,
                     updateTime = now,
                     transactionTime = now
@@ -535,7 +564,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 settle: new Settle()
                 {
                     action = request.message.action,
-                    operationId = string.Empty,
+                    operationId = DateTime.UtcNow.Ticks.ToString(),
                 },
                 detail: new SettleDetail()
                 {
@@ -631,6 +660,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             catch (MySqlException mySqlEx)
             {
+                if (mySqlEx.Number == 1062)
+                {
+                    return new ExecuteResult(ReturnCode.TransactionDuplicated, $"refId: {detail.refId} Duplicated.");
+                }
                 _logger.LogError(mySqlEx, mySqlEx.Message);
                 return new ExecuteResult(ReturnCode.DatabaseError, mySqlEx.Message);
             }
@@ -756,6 +789,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             catch (MySqlException mySqlEx)
             {
+                if (mySqlEx.Number == 1062)
+                {
+                    return new ReturnObj(ReturnCode.TransactionDuplicated, $"Transaction Duplicated.");
+                }
                 _logger.LogError(mySqlEx, mySqlEx.Message);
                 return new ReturnObj(ReturnCode.DatabaseError, mySqlEx.Message);
             }

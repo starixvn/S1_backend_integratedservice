@@ -1,8 +1,9 @@
 ﻿using System.Web;
-
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -13,8 +14,15 @@ namespace ThirdParty.EBet
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly EBetConfig _siteEBetConfig;
+        
+        public TpHelper(IServiceProvider provider)
+        {
+            _siteEBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<EBetConfig>(TpEnum.EBet.ToString());
+        }
+        
         #region Model
-
+        
         public class DetailResult
         {
             public int status { get; set; }
@@ -27,7 +35,22 @@ namespace ThirdParty.EBet
             public string launchUrl { get; set; }
             public string apiVersion { get; set; }
         }
-
+        
+        public class EBetConfig
+        {
+            public string ApiUrl { get; set; }
+            public List<Currency> Currency { get; set; }
+        }
+        
+        public class Currency
+        {
+            public string CurrencyId { get; set; }
+            public string GameUrl { get; set; }
+            public int ChannelId { get; set; }
+            public string PublicKey { get; set; }
+            public string PrivateKey { get; set; }
+        }
+        
         #endregion
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -56,33 +79,27 @@ namespace ThirdParty.EBet
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string domainUrl = string.Empty;
-            string key = string.Empty;
-            string funParam = string.Empty;
-            string mobileParam = string.Empty;
+            var domainUrl = string.Empty;
+            var key = string.Empty;
+            var funParam = string.Empty;
+            var mobileParam = string.Empty;
+            var currency = tpCustInfo.TpCurrencyId;
 
-            var apiUrl = inputs.ContainsKey($"ApiUrl_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrWhiteSpace(inputs[$"ApiUrl_{tpCustInfo.TpCurrencyId}"])
-                       ? inputs[$"ApiUrl_{tpCustInfo.TpCurrencyId}"]
-                       : throw new Exception($"ApiUrl_{tpCustInfo.TpCurrencyId} is empty");
+            var currencyConfig = GetCurrencyConfig(currency);
+            if (currencyConfig == null)
+                throw new Exception($"CurrencyId {currency} is not found");
+            var apiUrl = _siteEBetConfig.ApiUrl;
+            var channelId = currencyConfig.ChannelId.ToString();
+            var privateKey = currencyConfig.PrivateKey;
 
-            var channelId = inputs.ContainsKey($"ChannelId_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrWhiteSpace(inputs[$"ChannelId_{tpCustInfo.TpCurrencyId}"])
-                          ? inputs[$"ChannelId_{tpCustInfo.TpCurrencyId}"]
-                          : throw new Exception($"ChannelId_{tpCustInfo.TpCurrencyId} is empty");
-
-            var privateKey = inputs.ContainsKey($"PrivateKey_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrWhiteSpace(inputs[$"ApiUrl_{tpCustInfo.TpCurrencyId}"])
-                           ? inputs[$"PrivateKey_{tpCustInfo.TpCurrencyId}"]
-                           : throw new Exception($"PrivateKey_{tpCustInfo.TpCurrencyId} is empty");
-
-            domainUrl = GetUrlForLogin(tpCustInfo.TpCurrencyId, apiUrl, channelId, privateKey, out string launchUrl)
+            domainUrl = GetUrlForLogin(tpCustInfo.TpCurrencyId, apiUrl, channelId, privateKey, out var launchUrl)
                       ? launchUrl
                       : string.Empty;
 
             if (string.IsNullOrWhiteSpace(domainUrl))
             {
                 //launchUrl沒有拿到資料，則用db的GameUrl
-                domainUrl = inputs.ContainsKey($"GameUrl_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrWhiteSpace(inputs[$"GameUrl_{tpCustInfo.TpCurrencyId}"])
-                          ? inputs[$"GameUrl_{tpCustInfo.TpCurrencyId}"]
-                          : throw new Exception($"GameUrl_{tpCustInfo.TpCurrencyId} is empty");
+                domainUrl = currencyConfig.GameUrl;
             }
 
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrWhiteSpace(inputs["fun"])
@@ -116,10 +133,13 @@ namespace ThirdParty.EBet
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
+            var currencyConfig = GetCurrencyConfig(tpCustInfo.TpCurrencyId);
+            if (currencyConfig == null)
+                throw new Exception($"CurrencyId {tpCustInfo.TpCurrencyId} is not found");
             var currency = tpCustInfo.TpCurrencyId;
-            var apiUrl = inputs.GetValueOrDefault($"ApiUrl_{currency}") ?? throw new Exception();
-            var channelId = inputs.GetValueOrDefault($"ChannelId_{currency}") ?? throw new Exception();
-            var privateKey = inputs.GetValueOrDefault($"PrivateKey_{currency}") ?? throw new Exception();
+            var apiUrl = _siteEBetConfig.ApiUrl;
+            var channelId = currencyConfig.ChannelId.ToString();
+            var privateKey = currencyConfig.PrivateKey;
             var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransLC_EBet_Detail_Get", new { getBetDetail.TransId }, DataBase.Report);
 
             var roundCode = detail.GetValueOrDefault("roundCode").ToString();
@@ -216,6 +236,11 @@ namespace ThirdParty.EBet
             };
         }
 
+        private Currency GetCurrencyConfig(string currencyId)
+        {
+            return _siteEBetConfig.Currency.FirstOrDefault(x => x.CurrencyId == currencyId);
+        }
+
         #region Login Step
 
         private bool GetUrlForLogin(string currency, string apiUrl, string channelId, string privateKey, out string launchUrl)
@@ -235,7 +260,7 @@ namespace ThirdParty.EBet
                     currency,
                     china
                 };
-
+                
                 var url = $"{apiUrl}/api/launchUrl";
                 var result = HttpPost(url, ToJson(param), "application/json");
 

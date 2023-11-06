@@ -23,6 +23,7 @@
         Sexy = 15,
         CQ9 = 16,
         CF = 17,
+        EBet = 18,
         WM = 20,
         Kiss918 = 21,
         Mega = 22,
