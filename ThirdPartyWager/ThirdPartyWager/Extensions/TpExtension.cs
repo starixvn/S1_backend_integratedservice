@@ -631,6 +631,19 @@ namespace ThirdPartyWager.Extensions
 
             return services;
         }
+
+        private IServiceCollection AddBNG(IServiceCollection services)
+        {
+            services.AddSingleton<WagerBNGService>();
+
+            services.AddSingleton<ApiBNGBLL>();
+            services.AddSingleton<WagerBNGBLL>();
+            
+            services.AddHostedService<WagerBNG>();
+
+
+            return services;
+        }
     }
 
 }
