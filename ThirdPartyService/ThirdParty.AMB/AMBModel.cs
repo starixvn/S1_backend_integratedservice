@@ -50,9 +50,9 @@
         public string PokerAgent { get; set; }
         public string PokerApiUrl { get; set; }
         public string PokerSecretKey { get; set; }
-        public List<SlotCurrencyAgents> SlotCurrencyAgents { get; set; }
+        public List<SlotCurrencyAgent> SlotCurrencyAgent { get; set; }
     }
-    public class SlotCurrencyAgents
+    public class SlotCurrencyAgent
     {
         public string CurrencyId { get; set; }
         public string Agent { get; set; }

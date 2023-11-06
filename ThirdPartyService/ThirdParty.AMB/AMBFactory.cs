@@ -41,9 +41,9 @@ namespace ThirdParty.AMB
             var data = pbkdf2.GetBytes(HASH_SIZE);
             return Convert.ToBase64String(data);
         }
-        protected SlotCurrencyAgents GetSlotCurrencyConfig(string currencyId)
+        protected SlotCurrencyAgent GetSlotCurrencyConfig(string currencyId)
         {
-            return Config.SlotCurrencyAgents.FirstOrDefault(x => x.CurrencyId == currencyId);
+            return Config.SlotCurrencyAgent.FirstOrDefault(x => x.CurrencyId == currencyId);
         }
     }
 }
