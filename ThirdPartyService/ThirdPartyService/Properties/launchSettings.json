@@ -3,9 +3,8 @@
   "profiles": {
     "ThirdPartyService": {
       "commandName": "Project",
+      "commandLineArgs": "Nova", // Nova or Leobet
       "launchBrowser": false,
-      "launchUrl": "api/apiinfo",
-      "applicationUrl": "http://localhost:5000",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Local",
         "ServiceType": "API"
