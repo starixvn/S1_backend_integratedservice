@@ -105,7 +105,7 @@ namespace ThirdParty.AMB.Tests
                 PokerAgent = "nova88thbuataa",
                 PokerApiUrl = "https://api-uat.ambpoker-api.com",
                 PokerSecretKey = "89659806ccc97ecb456e97755cb0c0f4",
-                SlotCurrencyAgents = new List<SlotCurrencyAgents>
+                SlotCurrencyAgent = new List<SlotCurrencyAgent>
                 {
                     new()
                     {
