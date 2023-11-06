@@ -1,8 +1,9 @@
 ﻿using System.Web;
-
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -13,15 +14,16 @@ namespace ThirdParty.CQ9
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly List<long> _testHierarchyCustId;
+        private readonly Dictionary<string, string> _siteConfig;
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
 
-        public TpHelper()
+        public TpHelper(IServiceProvider provider)
         {
-            _testHierarchyCustId = IsDevelopment ? new List<long> { 1481 } : new List<long> { 90, 31909 };
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList(16).ToDictionary(d => d.AppId, d => d.Name);
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(TpEnum.CQ9.ToString());
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.CQ9).ToDictionary(d => d.AppId, d => d.Name);
         }
 
+        #region Request
         public class LoginReq
         {
             public string account { get; set; }
@@ -31,6 +33,9 @@ namespace ThirdParty.CQ9
             public string lang { get; set; }
             public string session { get; set; }
         }
+        #endregion
+
+        #region Response
         public class LoginResult
         {
             public Data data { get; set; }
@@ -48,7 +53,7 @@ namespace ThirdParty.CQ9
             public string datetime { get; set; }
             public string traceCode { get; set; }
         }
-
+        #endregion
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -76,7 +81,9 @@ namespace ThirdParty.CQ9
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
+            var testHierarchyCustId = JsonConvert.DeserializeObject<List<long>>(_siteConfig["TestHierarchyCustId"]);
+
+            string ApiUrl = _siteConfig.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(_siteConfig["ApiUrl"]) ? _siteConfig["ApiUrl"] : throw new Exception("ApiUrl");
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
 
@@ -84,7 +91,7 @@ namespace ThirdParty.CQ9
 
             if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
             {
-                string FunGameUrl = inputs.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(inputs["FunGameUrl"]) ? inputs["FunGameUrl"] : throw new Exception("FunGameUrl");
+                string FunGameUrl = _siteConfig.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(_siteConfig["FunGameUrl"]) ? _siteConfig["FunGameUrl"] : throw new Exception("FunGameUrl");
 
                 if (!char.IsDigit(gameId[0]))
                 {
@@ -96,11 +103,11 @@ namespace ThirdParty.CQ9
             }
 
             var paramToken = $"API_Token_{tpCustInfo.TpCurrencyId}";
-            string API_Token = inputs.ContainsKey($"{paramToken}") && !string.IsNullOrEmpty(inputs[$"{paramToken}"]) ? inputs[$"{paramToken}"] : throw new Exception($"{paramToken}");
+            string API_Token = _siteConfig.ContainsKey($"{paramToken}") && !string.IsNullOrEmpty(_siteConfig[$"{paramToken}"]) ? _siteConfig[$"{paramToken}"] : throw new Exception($"{paramToken}");
 
-            if (_testHierarchyCustId.Contains(tpCustInfo.CustId))
+            if (testHierarchyCustId.Contains(tpCustInfo.CustId))
             {
-                API_Token = inputs.ContainsKey("API_Token_TEST") && !string.IsNullOrEmpty(inputs["API_Token_TEST"]) ? inputs["API_Token_TEST"] : throw new Exception("API_Token_TEST");
+                API_Token = _siteConfig.ContainsKey("API_Token_TEST") && !string.IsNullOrEmpty(_siteConfig["API_Token_TEST"]) ? _siteConfig["API_Token_TEST"] : throw new Exception("API_Token_TEST");
             }
 
             // Header
@@ -161,11 +168,13 @@ namespace ThirdParty.CQ9
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var apiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception();
-            var token = inputs.GetValueOrDefault($"API_Token_{tpCustInfo.TpCurrencyId}") ?? throw new Exception();
-            if (_testHierarchyCustId.Contains(tpCustInfo.CustId))
+            var testHierarchyCustId = JsonConvert.DeserializeObject<List<long>>(_siteConfig["TestHierarchyCustId"]);
+
+            var apiUrl = _siteConfig.GetValueOrDefault("ApiUrl") ?? throw new Exception("ApiUrl");
+            var token = _siteConfig.GetValueOrDefault($"API_Token_{tpCustInfo.TpCurrencyId}") ?? throw new Exception($"API_Token_{tpCustInfo.TpCurrencyId}");
+            if (testHierarchyCustId.Contains(tpCustInfo.CustId))
             {
-                token = inputs.GetValueOrDefault($"API_Token_TEST") ?? throw new Exception();
+                token = _siteConfig.GetValueOrDefault("API_Token_TEST") ?? throw new Exception("API_Token_TEST");
             }
 
             var url = $"{apiUrl}/gameboy/order/detail/v2";

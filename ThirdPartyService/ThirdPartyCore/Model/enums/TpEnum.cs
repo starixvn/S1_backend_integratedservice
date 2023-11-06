@@ -21,6 +21,7 @@
         OneGaming = 13,
         PG = 14,
         Sexy = 15,
+        CQ9 = 16,
         CF = 17,
         WM = 20,
         Kiss918 = 21,
