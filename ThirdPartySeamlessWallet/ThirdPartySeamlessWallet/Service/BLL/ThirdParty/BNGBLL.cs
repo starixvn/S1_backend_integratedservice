@@ -1,10 +1,8 @@
-﻿using System;
-using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
+﻿using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-using ThirdPartySeamlessWallet.Service.Model.SBSW;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
@@ -189,8 +187,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             var partitionTime = DateTimeOffset.Parse(reqData.c_at).DateTime;
 
-            var check = _partitionService.Query<BettransRng_BNG>(partitionTime, "Service_BettransRng_BNG_CheckByRoundId", new { reqData.args.round_id });
-
+            //var check = _partitionService.Query<BettransRng_BNG>(partitionTime, "Service_BettransRng_BNG_CheckByRoundId", new { reqData.args.round_id });
+            var check = _partitionService.Query<BettransRng_BNG>(partitionTime, "Service_BettransRng_BNG_Check", new { uid = reqData.args.transaction_uid, reqData.args.round_id });
             if (!check.Any())
             {
                 return (int)TransactionStatus.Success;

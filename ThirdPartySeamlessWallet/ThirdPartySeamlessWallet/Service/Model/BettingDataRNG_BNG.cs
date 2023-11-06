@@ -60,6 +60,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public bonus bonus { get; set; }
         public player player { get; set; }
         public string tag { get; set; }
+        public string transaction_uid { get; set; }
     }
     public class bonus
     {
