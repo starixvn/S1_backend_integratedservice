@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using ThirdPartyWager.Service.DAL;
 
-namespace ThirdPartyWager.Service.BLL.BNG
+namespace ThirdPartyWager.Service.BLL
 {
     public class WagerBNGBLL
     {

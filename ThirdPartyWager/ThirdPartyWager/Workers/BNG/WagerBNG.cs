@@ -1,12 +1,9 @@
 ﻿using Serilog.Context;
-using System.Threading.Tasks;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.BLL.BNG;
 using ThirdPartyWager.Service.Library;
-using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Workers.BNG
+namespace ThirdPartyWager.Workers
 {
     public class WagerBNG : BackgroundService
     {

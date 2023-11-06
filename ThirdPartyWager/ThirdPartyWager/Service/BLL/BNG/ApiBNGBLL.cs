@@ -1,12 +1,9 @@
-﻿using Google.Protobuf.WellKnownTypes;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System.Text;
-using System.Transactions;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
-using static ThirdPartyWager.Service.BLL.ApiSkywindBLL;
 
-namespace ThirdPartyWager.Service.BLL.BNG
+namespace ThirdPartyWager.Service.BLL
 {
     public class ApiBNGBLL
     {
