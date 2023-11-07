@@ -67,7 +67,7 @@ namespace ThirdParty.Allbet
             var apiUrl = _siteAllBetConfig.ApiUrl;
             var agent = _siteAllBetConfig.CurrencyAgents.FirstOrDefault(x => x.CurrencyId == tpCustInfo.TpCurrencyId).Agent; 
             var path = "CheckOrCreate";
-            tpCustInfo.TpUserName = $"{tpCustInfo.TpUserName}{inputs["Suffix"]}";
+            tpCustInfo.TpUserName = $"{tpCustInfo.TpUserName}{_siteAllBetConfig.Suffix}";
             var parameters = ToJson(new
             {
                 agent,
@@ -119,9 +119,9 @@ namespace ThirdParty.Allbet
             var isFun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) && inputs["fun"] == "1";
             var path = isFun ? "LoginTrial" : "Login";
 
-            if (!tpCustInfo.TpUserName.EndsWith(inputs["Suffix"]))
+            if (!tpCustInfo.TpUserName.EndsWith(_siteAllBetConfig.Suffix))
             {
-                tpCustInfo.TpUserName = $"{tpCustInfo.TpUserName}{inputs["Suffix"]}";
+                tpCustInfo.TpUserName = $"{tpCustInfo.TpUserName}{_siteAllBetConfig.Suffix}";
             }
 
             var parameters = ToJson(new
@@ -251,11 +251,11 @@ namespace ThirdParty.Allbet
             contentType = "application/json";
             var date = DateTime.UtcNow.ToString("dd MMM yyyy HH:mm:ss z", new CultureInfo("en-US"));
             var signString = $"POST\n{md5}\n{contentType}\n{date}\n/{path}";
-            var signature = Sign(signString, inputs["AllbetKey"]);
+            var signature = Sign(signString, _siteAllBetConfig.AllbetKey);
             return new Dictionary<string, string>
             {
                 { "Accept", "application/json" },
-                { "Authorization", $"AB {inputs["OperatorId"]}:{signature}" },
+                { "Authorization", $"AB {_siteAllBetConfig.OperatorId}:{signature}" },
                 { "Content-MD5", md5 },
                 { "Date", date }
             };
