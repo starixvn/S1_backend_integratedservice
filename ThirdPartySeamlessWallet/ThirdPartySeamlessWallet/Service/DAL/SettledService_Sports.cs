@@ -486,13 +486,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             };
         }
 
-        public IEnumerable<SBSWUnsettle> GetSBSWUnsettleList(int LimitCount = 200)
+        public IEnumerable<SBSWUnsettle> GetSBSWUnsettleList(int LimitCount = 1000)
         {
             return _mainDbClient.Query<SBSWUnsettle>("Service_SBSW_TpUnsettle_Get", parameters: new { LimitCount });
         }
+
         public BetRecordInfo GetSBSWUnsettleList(int TpId, string TransId, int GameType)
         {
-            return _mainDbClient.QueryFirst<BetRecordInfo>("Service_TpBetRecord_Get", parameters: new { TpId = TpId, TransId = TransId, GameType = GameType });
+            return _mainDbClient.QueryFirst<BetRecordInfo>("Service_TpBetRecord_Get", parameters: new { TpId, TransId, GameType });
         }
     }
 }

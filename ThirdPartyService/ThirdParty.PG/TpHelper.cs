@@ -131,7 +131,7 @@ namespace ThirdParty.PG
                 var dicP = FromJson<Dictionary<string, string>>(ToJson(getLaunchUrl));
                 var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-                var result = HttpPost(
+                var result = HttpPostClientWithGzip(
                     $"{apiUrl}/{uri}?trace_id={traceId}",
                     sParam,
                     "application/x-www-form-urlencoded"

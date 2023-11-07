@@ -26,7 +26,11 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
             {
                 EnvironmentName = "Local",
             });
-            builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
+
+            var remoteUrls = builder.Configuration.GetSection("ConfigService").Get<string[]>();
+            remoteUrls = builder.Configuration.CheckLocalConfig(builder.Environment, new[] { "Nova" }, remoteUrls);
+            builder.Configuration.AddRemoteJsonConfig(remoteUrls);
+
             var app = builder.Build();
             var configuration = app.Configuration;
 

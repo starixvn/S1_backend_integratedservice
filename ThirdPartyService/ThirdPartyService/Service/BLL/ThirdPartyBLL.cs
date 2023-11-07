@@ -116,6 +116,7 @@ namespace ThirdPartyService.Service.BLL
 
                 TpCustInfo freeCustInfo = new TpCustInfo();
                 freeCustInfo.SiteId = tpInfo.SiteId;
+                freeCustInfo.CustId = tpInfo.CustId;
                 apiResult = tpHelper.Login(freeCustInfo, (AppType)tpInfo.AppType, tpLangId, inputs);
 
                 return apiResult;
@@ -1464,11 +1465,13 @@ namespace ThirdPartyService.Service.BLL
                 if (!int.TryParse(tpInfo.inputs.GetValueOrDefault("tpGameType"), out var tpGameType))
                 {
                     _logger.LogError($"SetRecentlyPlayed tpGameType Error. tpInfo:{JsonConvert.SerializeObject(tpInfo)}");
+                    return;
                 }
 
                 if (!_tpGameTypeConfig.TryGetValue(tpGameType, out var gameTypeOption))
                 {
                     _logger.LogError($"SetRecentlyPlayed _tpGameTypeConfig Error. tpInfo:{JsonConvert.SerializeObject(tpInfo)}");
+                    return;
                 }
 
                 if (gameTypeOption.CategoryId == TpCategory.Casino)
@@ -1493,11 +1496,13 @@ namespace ThirdPartyService.Service.BLL
                 if (!int.TryParse(tpInfo.inputs.GetValueOrDefault("tpGameType"), out var tpGameType))
                 {
                     _logger.LogWarning($"SetRecentlyViewed tpGameType Error. tpInfo:{JsonConvert.SerializeObject(tpInfo)}");
+                    return;
                 }
 
                 if (!_tpGameTypeConfig.TryGetValue(tpGameType, out var gameTypeOption))
                 {
                     _logger.LogWarning($"SetRecentlyViewed _tpGameTypeConfig Error. tpInfo:{JsonConvert.SerializeObject(tpInfo)}");
+                    return;
                 }
                 else
                 {

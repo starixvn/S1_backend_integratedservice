@@ -11,6 +11,10 @@ using ThirdPartySettleWorker.Workers;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var remoteUrls = builder.Configuration.GetSection("ConfigService").Get<string[]>();
+remoteUrls = builder.Configuration.CheckLocalConfig(builder.Environment, args, remoteUrls);
+builder.Configuration.AddRemoteJsonConfig(remoteUrls);
+
 var excludesMessage = builder.Configuration.GetSection("ExcludesMessage").Get<string[]>();
 var excludesApiEndpoints = builder.Configuration.GetSection("ExcludesApiEndpoint").Get<string[]>();
 builder.Host.UseSerilog((context, Configuration) =>
@@ -84,7 +88,8 @@ builder.Services
     .AddHostedService<FaChaiWorker>()
     .AddHostedService<EVOWorker>()
     .AddHostedService<N2LiveWorker>()
-    .AddHostedService<N2LiveSmartWorker>();
+    .AddHostedService<N2LiveSmartWorker>()
+    .AddHostedService<PegasusWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);

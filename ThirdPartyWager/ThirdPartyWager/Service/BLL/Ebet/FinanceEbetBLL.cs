@@ -51,6 +51,7 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
         {
+            //setting無用
             var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
             var reportData = new List<dynamic>();
 
@@ -63,7 +64,7 @@ namespace ThirdPartyWager.Service.BLL
 
                 var currency = item.TpCurrencyId;
 
-                var getWagerSummary = await _apiEbetBLL.GetBetSummaryByTime(setting, currency, reportTime.startTime, reportTime.endTime);
+                var getWagerSummary = await _apiEbetBLL.GetBetSummaryByTime(currency, reportTime.startTime, reportTime.endTime);
                 if (getWagerSummary.status != 200)
                 {
                     var msg = "THIRD_PARTY_ERROR";

@@ -1,6 +1,9 @@
+using StackExchange.Redis;
+
 using ThirdPartyBetHistory.Extensions;
 using ThirdPartyBetHistory.Service.BLL;
 using ThirdPartyBetHistory.Service.DAL;
+using ThirdPartyBetHistory.Service.Library;
 using ThirdPartyBetHistory.Service.Model;
 
 namespace ThirdPartyBetHistory
@@ -16,7 +19,8 @@ namespace ThirdPartyBetHistory
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDatabaseConnection(Configuration);
-            services.AddMemoryCache();
+            services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(Configuration.GetValue<string>("RedisConnection")));
+            services.AddSingleton<ICacheHelper, RedisCacheHelper>();
 
             /*DAL*/
             services.AddSingleton<SettledService>();

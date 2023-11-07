@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.IO.Compression;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Security;
 using System.Security.Cryptography;
@@ -277,6 +278,89 @@ namespace ThirdPartyCore
             }
         }
 
+        protected string HttpPostClientWithGzip(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
+        {
+            var parametersLog = parameters;
+            if (headers != null)
+            {
+                parametersLog = $"{parametersLog}, Header={JsonConvert.SerializeObject(headers)}";
+            }
+            InsertLog?.Invoke(url, parametersLog, "1");
+
+            if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
+            {
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+                ServicePointManager.ServerCertificateValidationCallback = CheckValidationResult;
+            }
+
+            using var handler = new HttpClientHandler();
+            if (!string.IsNullOrEmpty(proxyHost))
+            {
+                handler.UseProxy = true;
+                handler.Proxy = new WebProxy(proxyHost, proxyPort);
+            }
+            using var client = new HttpClient(handler);
+            try
+            {
+                var httpRequestMessage = new HttpRequestMessage();
+                httpRequestMessage.Content = new StringContent(parameters);
+                httpRequestMessage.Method = HttpMethod.Post;
+                httpRequestMessage.RequestUri = new Uri(url);
+                httpRequestMessage.Content.Headers.ContentType = new MediaTypeWithQualityHeaderValue(contentType);
+                if (headers != null)
+                {
+                    foreach (var (key, value) in headers)
+                    {
+                        if (string.Compare(key, "Accept", StringComparison.OrdinalIgnoreCase) == 0)
+                        {
+                            httpRequestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue(value));
+                        }
+                        else if (key.Contains("-"))
+                        {
+                            httpRequestMessage.Content.Headers.TryAddWithoutValidation(key, value);
+                        }
+                        else
+                        {
+                            httpRequestMessage.Headers.TryAddWithoutValidation(key, value);
+                        }
+                    }
+                }
+
+                string result;
+                
+                var response = client.SendAsync(httpRequestMessage).Result;
+                
+                if (response.Content.Headers.ContentEncoding.Contains("gzip"))
+                {
+                    var raw = response.Content.ReadAsByteArrayAsync().Result;
+                    
+                    using var output = new MemoryStream();
+                    using (var input = new MemoryStream(raw))
+                    using (var gzip = new GZipStream(input, CompressionMode.Decompress))
+                    {
+                        gzip.CopyToAsync(output);
+                    }
+                    
+                    output.Seek(0, SeekOrigin.Begin);
+                    result = new StreamReader(output).ReadToEnd();
+                }
+                else
+                {
+                    result = response.Content.ReadAsStringAsync().Result;
+                }
+                
+                InsertLog?.Invoke(url, parametersLog, result);
+                return result;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, e.Message);
+                InsertLog?.Invoke(url, parametersLog, e.Message);
+                return e.Message;
+            }
+        }
+
+        
         protected string HttpPostWithX509(string url, Dictionary<string, string> parameters, string contentType, Dictionary<string, string> headers = null, X509Certificate2 certificate = null)
         {
             using var handler = new HttpClientHandler();

@@ -21,7 +21,9 @@
         OneGaming = 13,
         PG = 14,
         Sexy = 15,
+        CQ9 = 16,
         CF = 17,
+        EBet = 18,
         WM = 20,
         Kiss918 = 21,
         Mega = 22,
@@ -31,6 +33,7 @@
         PT = 27,
         N2Live = 28,
         BTI = 29,
+        AMB = 30,
         NineW = 31,
         JILI = 32,
         TCG = 33,
@@ -46,7 +49,8 @@
         CryptoSports = 45,
         Nextspin = 50,
         PNG = 54,
-        FaChai = 55
+        FaChai = 55,
+        Pegasus = 56
     }
 
     public enum TpGameType

@@ -174,6 +174,10 @@ namespace ThirdPartySettleWorker.Workers
                     }
                 }
             }
+            catch (UnsettleNotFoundException ex)
+            {
+                _logger.LogInformation(ex, ex.Message);
+            }
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", _tpName);
