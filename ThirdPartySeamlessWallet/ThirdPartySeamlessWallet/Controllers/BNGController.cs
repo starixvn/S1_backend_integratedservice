@@ -182,7 +182,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 });
 
             var tpCustBalance = _tpCustInfoBLL.GetBalance((int)Tp.FaChai, tpUserName, gameType);
-            return Ok(new BNGResponse()
+            return Ok(new BNGAuthenticateResponse()
             {
                 uid = req.uid,
                 player = new player()
@@ -191,14 +191,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     brand = tpCustInfoAuth.SiteId.ToString(),
                     currency = tpCustInfoAuth.TpCurrencyId.ToString(),
                     mode = "REAL",
-                    //is_test = tpCustInfoAuth.IsTest,
-                    is_test = true,
+                    is_test = tpCustInfoAuth.IsTest,
                 },
                 balance = new balance()
                 {
                     value = tpCustBalance.Balance.ToString(),
                     version = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-                }
+                },
+                tag = ""
             });
         }
         private IActionResult Transaction(string tpUserName, BNGRequest req)

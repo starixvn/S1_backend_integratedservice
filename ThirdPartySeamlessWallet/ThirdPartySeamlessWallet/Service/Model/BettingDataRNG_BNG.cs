@@ -5,6 +5,14 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class BettingDataRNG_BNG
     {
     }
+
+    public class BNGAuthenticateResponse
+    {
+        public string uid { get; set; }
+        public player player { get; set; }
+        public balance balance { get; set; }
+        public string tag { get; set; }
+    }
     public class BNGResponse
     {
         public string uid { get; set; }
