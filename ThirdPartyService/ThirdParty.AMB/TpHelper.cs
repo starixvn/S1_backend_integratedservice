@@ -173,7 +173,7 @@ namespace ThirdParty.AMB
 
             return tpGameType.CategoryId switch
             {
-                TpCategory.Games => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+                TpCategory.Poker => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
                     GameID = detailList.GetFirstStringValue("gameId"),
                     Game = detailList.GetFirstStringValue("game"),

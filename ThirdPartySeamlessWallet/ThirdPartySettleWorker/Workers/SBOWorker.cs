@@ -95,7 +95,7 @@ namespace ThirdPartySettleWorker.Workers
                             TpId = (int)Tp,
                             Stake = settleData.Stake,
                             ValidBet = settleData.ValidBet,
-                            WinlostAmount = settlementType == SettlementType.UnSettled ? 0 : tpWagerData.WinLostAmount,
+                            WinlostAmount = tpWagerData.WinLostAmount,
                             TransId = settleData.TransId,
                             GameType = gameType,
                             TpUserName = settleData.Account,

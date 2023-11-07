@@ -115,9 +115,6 @@ namespace ThirdPartyWager.Service.BLL
                         _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(group)}\r\n{ex.Message}");
                         return false;
                     }
-
-                    await conn.CloseAsync();
-                    await conn.DisposeAsync();
                 }
 
                 msg = "FINISH";

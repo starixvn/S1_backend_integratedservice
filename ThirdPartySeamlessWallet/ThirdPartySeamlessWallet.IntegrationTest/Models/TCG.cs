@@ -40,7 +40,7 @@
         public string gameGroupName { get; set; } = "";
         public decimal winAmount { get; set; }
         public decimal netPNL { get; set; }
-        public int betStatus { get; set; } = 0;
+        public string betStatus { get; set; } = "";
         public string settlementTime { get; set; } = "";
         public decimal actualBetAmount { get; set; }
         public decimal exceedWinAmount { get; set; }
@@ -84,7 +84,7 @@
         public decimal winAmount { get; set; }
         public decimal planWinAmount { get; set; }
         public decimal rebateAmount { get; set; }
-        public int result { get; set; } = 0;
+        public int result { get; set; }
         public string drawTime { get; set; } = "";
         public decimal exceedWinAmount { get; set; }
         public string winningNumber { get; set; } = "";

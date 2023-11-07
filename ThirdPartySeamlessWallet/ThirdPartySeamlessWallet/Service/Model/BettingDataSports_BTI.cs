@@ -211,4 +211,5 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string BodyData { get; set; }
     }
 
+
 }

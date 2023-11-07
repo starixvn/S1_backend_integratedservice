@@ -122,7 +122,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     return btiResult;
                 }
 
-                btiResult.SPResult = _tpUnsettleService.InsertTpUnsettle(Tp.BTI, GameType.BTI_Sports, request.reserve_id, trans);
                 if (btiResult.SPResult == 1 && btiResult.ReturnAmount <= 0)
                 {
                     await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
