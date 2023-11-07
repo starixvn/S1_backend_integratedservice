@@ -11,7 +11,6 @@ namespace ThirdPartyWager.Service.BLL
     {
         
         private readonly ILogger<FinanceAMBBLL> _logger;
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly CommonBLL _commonBLL;
         private readonly ApiAMBBLL _apiAMBBLL;
         private readonly DateTimeHelper _dateTimeHelper;
@@ -23,7 +22,6 @@ namespace ThirdPartyWager.Service.BLL
         public FinanceAMBBLL(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceAMBBLL>>();
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _apiAMBBLL = provider.GetRequiredService<ApiAMBBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
