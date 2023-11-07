@@ -131,7 +131,7 @@ namespace ThirdParty.KM
             {
                 return inputs[key];
             }
-            throw new Exception();
+            throw new Exception(key);
         }
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
