@@ -67,7 +67,7 @@ namespace ThirdPartyWager.Workers
                     //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
                     //if (time.endUnix < cvTime)
                     //{
-                    var result = await wagerAllBetBLL.GetWagersAsync(tpId, time.startTime, time.endTime);
+                    var result = await wagerAllBetBLL.GetWagersAsync(time.startTime, time.endTime);
                     if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);

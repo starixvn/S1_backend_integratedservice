@@ -84,7 +84,7 @@ namespace ThirdParty.AG
             string oddtype = _oddtype;
 
             string sParams = $"cagent={cagent}/\\\\/loginname={tpCustInfo.TpUserName}/\\\\/method=lg/\\\\/actype={actype}/\\\\/password={tpCustInfo.TpPwd}/\\\\/oddtype={oddtype}/\\\\/cur={tpCustInfo.TpCurrencyId}";
-            string eParams = DESEncrypt(sParams, inputs["Deskey"]);
+            string eParams = DESEncrypt(sParams, _siteAGConfig.DesKey);
             string oMD5 = $"{eParams}{Md5key}";
             string postParams = $"params={eParams}&key={ToMD5(oMD5).ToLower()}";
 
@@ -214,7 +214,7 @@ namespace ThirdParty.AG
             }
 
             // encrypt
-            string eParams = DESEncrypt(sParams, inputs["Deskey"]);
+            string eParams = DESEncrypt(sParams, _siteAGConfig.DesKey);
             string oMD5 = $"{eParams}{Md5key}";
             postParams = $"params={eParams}&key={ToMD5(oMD5).ToLower()}";
 
