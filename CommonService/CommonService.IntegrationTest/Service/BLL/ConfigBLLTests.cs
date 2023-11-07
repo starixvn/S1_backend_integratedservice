@@ -31,7 +31,11 @@ namespace CommonService.Service.BLL.Tests
             {
                 EnvironmentName = "Local",
             });
-            builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
+
+            var remoteUrls = builder.Configuration.GetSection("ConfigService").Get<string[]>();
+            remoteUrls = builder.Configuration.CheckLocalConfig(builder.Environment, new[] { "Nova" }, remoteUrls);
+            builder.Configuration.AddRemoteJsonConfig(remoteUrls);
+
             var app = builder.Build();
             _configuration = app.Configuration;
             services.AddSingleton(_configuration);

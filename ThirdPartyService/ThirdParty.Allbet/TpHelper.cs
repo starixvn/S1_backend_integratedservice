@@ -1,8 +1,9 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
-
+using Microsoft.Extensions.DependencyInjection;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -13,6 +14,14 @@ namespace ThirdParty.Allbet
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly AllBetConfig _siteAllBetConfig;
+        
+        public TpHelper(IServiceProvider provider)
+        {
+            _siteAllBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AllBetConfig>(TpEnum.Allbet.ToString());
+        }
+        
+        #region Model
         private class Result<T>
         {
             public string resultCode { get; set; }
@@ -30,6 +39,24 @@ namespace ThirdParty.Allbet
             public string gameLoginUrl { get; set; }
         }
 
+        public class AllBetConfig
+        {
+            public string ApiUrl { get; set; }
+            public string Suffix { get; set; }
+            public string AllbetKey {  get; set; }
+            public string OperatorId { get; set; }
+            public string PartnerKey { get; set; }
+            public List<CurrencyAgent> CurrencyAgents { get; set; }
+        }
+        
+        public class CurrencyAgent
+        {
+            public string CurrencyId { get; set; }
+            public string Agent { get; set; }
+        }
+        
+        #endregion
+
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -37,9 +64,8 @@ namespace ThirdParty.Allbet
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
-            var agentKey = $"{tpCustInfo.TpCurrencyId}Agent";
-            var agent = inputs.ContainsKey(agentKey) && !string.IsNullOrEmpty(inputs[agentKey]) ? inputs[agentKey] : throw new Exception("Can't get agent.");
+            var apiUrl = _siteAllBetConfig.ApiUrl;
+            var agent = _siteAllBetConfig.CurrencyAgents.FirstOrDefault(x => x.CurrencyId == tpCustInfo.TpCurrencyId).Agent; 
             var path = "CheckOrCreate";
             tpCustInfo.TpUserName = $"{tpCustInfo.TpUserName}{inputs["Suffix"]}";
             var parameters = ToJson(new
@@ -89,7 +115,7 @@ namespace ThirdParty.Allbet
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string tpLangId, Dictionary<string, string> inputs)
         {
-            var apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            var apiUrl = _siteAllBetConfig.ApiUrl;
             var isFun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) && inputs["fun"] == "1";
             var path = isFun ? "LoginTrial" : "Login";
 

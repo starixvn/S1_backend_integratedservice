@@ -410,7 +410,7 @@ namespace ThirdParty.SBSW
                     IP = string.Empty,
                     Odds = odds,
                     OddsTypeEnum = GetOddsType(odds_type),
-                    Live = betDetail.islive
+                    Live = betDetail.islive ?? string.Empty
                 };
             }
             else if (betNumberDetail != null)
@@ -431,7 +431,7 @@ namespace ThirdParty.SBSW
                     IP = string.Empty,
                     Odds = odds,
                     OddsTypeEnum = GetOddsType(odds_type),
-                    Live = betNumberDetail.islive
+                    Live = betNumberDetail.islive ?? string.Empty
                 };
             }
             else
@@ -452,7 +452,7 @@ namespace ThirdParty.SBSW
                     IP = string.Empty,
                     Odds = odds,
                     OddsTypeEnum = GetOddsType(odds_type),
-                    Live = betVirtualSportDetail.islive
+                    Live = betVirtualSportDetail.islive ?? string.Empty
                 };
             }
         }
