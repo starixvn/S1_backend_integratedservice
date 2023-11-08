@@ -111,19 +111,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string currency { get; set; }
         public string mode { get; set; }
         public bool is_test { get; set; }
-        public string campaign { get; set; }
-        public string source { get; set; }
-        public int bonus_id { get; set; }
-        public string ext_bonus_id { get; set; }
-        public string bonus_type { get; set; }
-        public string Event { get; set; }
-        public string start_date { get; set; }
-        public string end_date { get; set; }
-        public decimal total_bet { get; set; }
-        public decimal total_win { get; set; }
-        public decimal played_bet { get; set; }
-        public decimal played_win { get; set; }
-        public string status { get; set; }
+        public string bonus { get; set; }
         public string tag { get; set; }
     }
     public enum ErrorCode
