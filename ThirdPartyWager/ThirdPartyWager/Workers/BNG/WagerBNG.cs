@@ -11,9 +11,7 @@ namespace ThirdPartyWager.Workers
         private readonly string _tpName = Tp.BNG.ToString();
         private Timer _timer;
         private readonly Dictionary<string, string> _setting;
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly WagerBNGBLL _wagerBNGBLL;
-        private readonly CommonBLL _commonBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly ILogger<WagerBNG> _logger;
         private readonly int timeZone = 0;
@@ -22,9 +20,7 @@ namespace ThirdPartyWager.Workers
         public WagerBNG(IServiceProvider provider)
         {
             _setting = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(Tp.BNG.ToString());
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _wagerBNGBLL = provider.GetRequiredService<WagerBNGBLL>();
-            _commonBLL = provider.GetRequiredService<CommonBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _logger = provider.GetRequiredService<ILogger<WagerBNG>>();
         }

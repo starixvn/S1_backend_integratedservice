@@ -7,19 +7,17 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class ApiBNGBLL
     {
-        private readonly ILogger<ApiBNGBLL> _logger;
         private readonly Common _common;
         private readonly HttpHelper _httpHelper;
         public ApiBNGBLL(IServiceProvider provider)
         {
-            _logger = provider.GetRequiredService<ILogger<ApiBNGBLL>>();
             _common = provider.GetRequiredService<Common>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
         }
 
         public async Task<TransactionData> GetRecordListAsync(Dictionary<string, string> setting, string startTime, string endTime)
         {
-            var url = $"{setting["ApiUrl"]}/{setting["ProjectName"]}/api/v1/transaction/aggregate/";
+            var url = $"{setting["ApiUrl"]}/{setting["ProjectName"]}/api/v1/transaction/list/";
 
             var sParam = new
             {

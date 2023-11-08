@@ -18,7 +18,7 @@ namespace ThirdPartyWager.Service.DAL
             var para = new WagerBNGModel()
             {
                 transaction_id = data.transaction_id,
-                original_transaction_id = data.original_transaction_id,
+                original_transaction_id = string.IsNullOrEmpty(data.original_transaction_id) ? string.Empty : data.original_transaction_id,
                 type = data.type,
                 player_id = data.player_id,
                 brand = data.brand,
@@ -41,11 +41,11 @@ namespace ThirdPartyWager.Service.DAL
                 status = data.status,
                 c_at = data.c_at.DateTime,
                 bonus_id = data.bonus_id != null ? data.bonus_id.Value : 0,
-                campaign = data.campaign,
-                bonus_source = data.bonus_source,
-                ext_bonus_id = data.ext_bonus_id,
-                bonus_event = data.bonus_event,
-                bonus_type = data.bonus_type
+                campaign = string.IsNullOrEmpty(data.campaign) ? string.Empty : data.campaign,
+                bonus_source = string.IsNullOrEmpty(data.bonus_source) ? string.Empty : data.bonus_source,
+                ext_bonus_id = string.IsNullOrEmpty(data.ext_bonus_id) ? string.Empty : data.ext_bonus_id,
+                bonus_event = string.IsNullOrEmpty(data.bonus_event) ? string.Empty : data.bonus_event,
+                bonus_type = string.IsNullOrEmpty(data.bonus_type) ? string.Empty : data.bonus_type,
             };
             return _wagerDbClient.ExecuteAsync("Service_TpWager_BNG_Ins", new DynamicParameters(para));
         }
