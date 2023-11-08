@@ -55,7 +55,8 @@ namespace ThirdPartyWager.Extensions
                 { Tp.IM, AddIM},
                 { Tp.SPRIBE, AddSPRIBE},
                 { Tp.FaChai, AddFaChai},
-                { Tp.Pegasus, AddPegasus}
+                { Tp.Pegasus, AddPegasus},
+                { Tp.BNG, AddBNG}
             };
         }
         private IServiceCollection AddSA(IServiceCollection services)
@@ -642,7 +643,7 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<WagerBNGBLL>();
             
             services.AddHostedService<WagerBNG>();
-
+            services.AddHostedService<WagerRedoBNG>();
 
             return services;
         }
