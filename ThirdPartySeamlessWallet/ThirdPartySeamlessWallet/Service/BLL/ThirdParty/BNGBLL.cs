@@ -1,4 +1,5 @@
-﻿using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
+﻿using Newtonsoft.Json;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -54,7 +55,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 provider_name = reqData.provider_name,
                 c_at = DateTimeOffset.Parse(reqData.c_at).DateTime,
                 sent_at = DateTimeOffset.Parse(reqData.sent_at).DateTime,
-                platform = reqData.args.platform,
+                platform = string.IsNullOrEmpty(reqData.args.platform) ? string.Empty : reqData.args.platform,
                 bet = reqData.args.bet != null ? Convert.ToDecimal(reqData.args.bet) : 0,
                 win = reqData.args.win != null ? Convert.ToDecimal(reqData.args.win) : 0,
                 round_started = reqData.args.round_started,
@@ -65,19 +66,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 currency = reqData.args.player.currency,
                 mode = reqData.args.player.mode,
                 is_test = reqData.args.player.is_test,
-                campaign = string.IsNullOrWhiteSpace(reqData.args.bonus.campaign) ? String.Empty : reqData.args.bonus.campaign,
-                source = reqData.args.bonus.source,
-                bonus_id = reqData.args.bonus.bonus_id,
-                ext_bonus_id = string.IsNullOrWhiteSpace(reqData.args.bonus.ext_bonus_id) ? String.Empty : reqData.args.bonus.ext_bonus_id,
-                bonus_type = string.IsNullOrWhiteSpace(reqData.args.bonus.bonus_type) ? String.Empty : reqData.args.bonus.bonus_type,
-                Event = reqData.args.bonus.Event,
-                start_date = string.IsNullOrWhiteSpace(reqData.args.bonus.start_date) ? String.Empty : reqData.args.bonus.start_date,
-                end_date = string.IsNullOrWhiteSpace(reqData.args.bonus.end_date) ? String.Empty : reqData.args.bonus.end_date,
-                total_bet = reqData.args.bonus.total_bet != null ? Convert.ToDecimal(reqData.args.bonus.total_bet) : 0,
-                total_win = reqData.args.bonus.total_win != null ? Convert.ToDecimal(reqData.args.bonus.total_win) : 0,
-                played_bet = reqData.args.bonus.played_bet != null ? Convert.ToDecimal(reqData.args.bonus.played_bet) : 0,
-                played_win = reqData.args.bonus.played_win != null ? Convert.ToDecimal(reqData.args.bonus.played_win) : 0,
-                status = string.IsNullOrWhiteSpace(reqData.args.bonus.status) ? String.Empty : reqData.args.bonus.status,
+                bonus = reqData.args.bonus == null ? null : JsonConvert.SerializeObject(reqData.args.bonus),
                 tag = reqData.args.tag
             };
 
@@ -86,10 +75,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 bettingData.win *= tpCurrency.ExchangeRate;
                 bettingData.bet *= tpCurrency.ExchangeRate;
-                bettingData.total_win *= tpCurrency.ExchangeRate;
-                bettingData.total_bet *= tpCurrency.ExchangeRate;
-                bettingData.played_win *= tpCurrency.ExchangeRate;
-                bettingData.played_bet *= tpCurrency.ExchangeRate;
             }
 
             tempResult = _partitionService.Execute(partitionTime, "Service_BettransRng_BNG_Ins", bettingData, trans);

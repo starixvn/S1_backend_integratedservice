@@ -24,7 +24,10 @@ namespace ThirdParty.BNG
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            return new ApiResult()
+            {
+                ErrorCode = ErrorCode.Success,
+            };
         }
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
