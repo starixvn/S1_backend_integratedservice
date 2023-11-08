@@ -33,7 +33,7 @@ namespace ThirdPartyCore.Model
 
         private readonly Dictionary<string, string> sportTypeDic = new Dictionary<string, string>()
         {
-            {"1","soccer" },
+            {"1","1" },
             {"2","basketball" },
             {"3","football" },
             {"4","icehockey" },
