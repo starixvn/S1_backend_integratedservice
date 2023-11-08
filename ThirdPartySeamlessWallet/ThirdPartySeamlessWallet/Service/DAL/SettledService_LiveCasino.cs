@@ -3184,17 +3184,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
 
             var precheck = _mainDbClient.Query<BettransData_EVO>("Service_BettransLC_EVO_Get", commandType: CommandType.StoredProcedure, new { TransactionRefId = bettingData_EVO.transaction.refId });
-            if (!precheck.Where(x => x.TicketType == (int)BettransType.Bet).Any())
-            {
-                // no bet or cancel data
-                _mainDbClient.CommitAndDisposeConnection(conn, trans);
-                return -2;
-            }
+
             if (precheck.Where(x => x.TicketType is (int)BettransType.Payout or (int)BettransType.CancelBet).Any())
             {
                 // already payout
                 _mainDbClient.CommitAndDisposeConnection(conn, trans);
                 return -1;
+            }
+            if (!precheck.Where(x => x.TicketType == (int)BettransType.Bet).Any())
+            {
+                // no bet or cancel data
+                _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                return -2;
             }
 
             var p = new DynamicParameters(new
@@ -3279,17 +3280,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 var check = _mainDbClient.Query<BettransData_EVO>("Service_BettransLC_EVO_Get", commandType: CommandType.StoredProcedure, new { TransactionRefId = bettingData_EVO.transaction.refId });
-                if (!check.Where(x => x.TicketType == (int)BettransType.Bet).Any())
-                {
-                    // no bet or cancel data
-                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
-                    return -2;
-                }
                 if (check.Where(x => x.TicketType is (int)BettransType.Payout or (int)BettransType.CancelBet).Any())
                 {
                     // already payout
                     _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     return -1;
+                }
+                if (!check.Where(x => x.TicketType == (int)BettransType.Bet).Any())
+                {
+                    // no bet or cancel data
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    return -2;
                 }
 
                 var p = new DynamicParameters(new
