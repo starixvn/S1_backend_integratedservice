@@ -90,7 +90,8 @@ builder.Services
     .AddHostedService<EVOWorker>()
     .AddHostedService<N2LiveWorker>()
     .AddHostedService<N2LiveSmartWorker>()
-    .AddHostedService<PegasusWorker>();
+    .AddHostedService<PegasusWorker>()
+    .AddHostedService<BNGWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
