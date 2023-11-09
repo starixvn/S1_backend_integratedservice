@@ -26,12 +26,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
+        private readonly AMBConfig _siteAMBConfig;
 
         public string[] HasEndroundTableGameId { get; set; }
 
         #endregion
 
-        #region Constructors
+        #region Constructorspublic 
 
         public AMBBLL(IServiceProvider provider)
         {
@@ -47,8 +48,28 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _settledService = provider.GetRequiredService<SettledService>();
 
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+            _siteAMBConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AMBConfig>(ThirdParty.ToString());
         }
 
+        #endregion
+        
+        #region Model
+        
+        public class AMBConfig
+        {
+            public string PokerAgent { get; set; }
+            public string PokerApiUrl { get; set; }
+            public string PokerSecretKey { get; set; }
+            public List<SlotCurrencyAgent> SlotCurrencyAgent { get; set; }
+        }
+        public class SlotCurrencyAgent
+        {
+            public string CurrencyId { get; set; }
+            public string Agent { get; set; }
+            public string SlotApiUrl { get; set; }
+            public string SecretKey { get; set; }
+        }
+        
         #endregion
 
         #region Methods
@@ -1527,16 +1548,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             try
             {
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)ThirdParty);
-
-                if (thirdPartySetting == null)
-                {
-                    _logger.LogError("CheckAgentId Fail: tpinfo not found.");
-                    return false;
-                }
-
-                var slotAgent = thirdPartySetting.TpSetting[$"SlotAgent{currencyId}"];
-
+                var slotAgent = _siteAMBConfig.SlotCurrencyAgent.FirstOrDefault(x => x.CurrencyId == currencyId)?.Agent;
+                
                 if (string.IsNullOrWhiteSpace(slotAgent))
                 {
                     _logger.LogError("CheckAgentId Fail: tpinfo.agent is null.");
