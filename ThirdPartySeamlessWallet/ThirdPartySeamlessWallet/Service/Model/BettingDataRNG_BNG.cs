@@ -15,9 +15,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public decimal bet { get; set; }
         public decimal win { get; set; }
-        public DateTime c_at { get; set; }
+        public long c_at { get; set; }
         public string brand { get; set; }
         public bool round_finished { get; set; }
+        public string game_id { get; set; }
     }
 
     public class BNGAuthenticateResponse

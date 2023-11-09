@@ -1,15 +1,9 @@
 ﻿using Newtonsoft.Json;
 using Serilog.Context;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-using ThirdPartySeamlessWallet.Service.Model.SBSW;
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -72,7 +66,8 @@ namespace ThirdPartySettleWorker.Workers
                         if (wagerData == null && wagerData.Exists(x => x.round_finished))
                             continue;
 
-                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, betData.FirstOrDefault().id);
+                        var tpUserName = betData.FirstOrDefault().id;
+                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
 
                         var wagerDataBet = wagerData.Sum(x => x.bet);
@@ -94,6 +89,32 @@ namespace ThirdPartySettleWorker.Workers
                                 _tpUnSettledBLL.SetTpUnsettle(Tp, GameType.BNG_RNG, tpUnsettle.TransId, false);
                             });
                             continue;
+                        }
+
+                        var winlostAmount = wagerDataWin - wagerDataBet;
+
+                        var betRecordInfo = new BetRecordInfo
+                        {
+                            TpId = (int)Tp,
+                            Stake = wagerDataBet,
+                            ValidBet = wagerDataBet,
+                            WinlostAmount = winlostAmount,
+                            TransId = tpUnsettle.TransId,
+                            GameType = GameType.BNG_RNG,
+                            TpUserName = tpUserName,
+                            SettledTime = wagerData.Max(x => x.c_at),
+                            TransTime = wagerData.Min(x => x.c_at),
+                            SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, wagerData.FirstOrDefault().game_id),
+                            TicketStatus = winlostAmount > 0 ? TicketStatus.Win : winlostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost,
+                        };
+
+                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Slots);
+                        if (result == 1)
+                        {
+                            Task.Run(() =>
+                            {
+                                _tpUnSettledBLL.SetTpUnsettle(Tp, GameType.BNG_RNG, tpUnsettle.TransId, true);
+                            });
                         }
                     }
                     catch (Exception ex)
