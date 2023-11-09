@@ -32,7 +32,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         #endregion
 
-        #region Constructorspublic 
+        #region Constructors
 
         public AMBBLL(IServiceProvider provider)
         {
