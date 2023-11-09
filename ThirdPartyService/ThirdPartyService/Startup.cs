@@ -1,5 +1,6 @@
 ﻿using Elastic.Apm.NetCoreAll;
-
+using Microsoft.AspNetCore.DataProtection.Repositories;
+using MongoDB.Driver;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Model;
 
@@ -24,6 +25,7 @@ namespace ThirdPartyService
         {
             services.AddMemoryCache();
             services.AddDatabaseConnection(Configuration);
+            services.AddSingleton<IMongoClient>(sp => new MongoClient("mongodb://admin:admin@localhost:27017"));
 
             /*Library*/
             services.AddSingleton<Tools>();
@@ -44,6 +46,7 @@ namespace ThirdPartyService
             services.AddSingleton<TpBetRecordService>();
             services.AddSingleton<ConfigService>();
             services.AddSingleton<BetLimitService>();
+            services.AddSingleton<ITpAuthTokenService, TpAuthTokenService>();
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
