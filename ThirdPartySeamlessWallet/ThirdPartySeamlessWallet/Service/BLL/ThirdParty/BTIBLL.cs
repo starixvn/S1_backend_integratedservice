@@ -399,6 +399,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return TpCurrencyId switch
             {
                 "VND" => "VN",
+                "INR" => "IN",
                 _ => throw new RestrictedCustomerException($"CurrencyId:{TpCurrencyId} not supported.")
             };
 
