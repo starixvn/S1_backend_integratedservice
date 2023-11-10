@@ -3,6 +3,7 @@
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -14,6 +15,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiAGBLL _apiAGBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = -4;
+        private readonly AGConfig _siteAgConfig;
 
         public FinanceAGBLL(IServiceProvider provider)
         {
@@ -22,6 +24,7 @@ namespace ThirdPartyWager.Service.BLL
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _apiAGBLL = provider.GetRequiredService<ApiAGBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _siteAgConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AGConfig>(Tp.AG.ToString());
         }
 
         public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
@@ -59,7 +62,7 @@ namespace ThirdPartyWager.Service.BLL
             var guid = Guid.NewGuid().ToString();
             var reportData = new List<dynamic>();
 
-            var getWagerSummary = await _apiAGBLL.GetBetSummaryByTime(setting["WagerUrl"], setting["HashKey"], setting["data_cagent"], reportTime.startTime, reportTime.endTime, guid);
+            var getWagerSummary = await _apiAGBLL.GetBetSummaryByTime(_siteAgConfig.WagerUrl, _siteAgConfig.HashKey, _siteAgConfig.data_cagent, reportTime.startTime, reportTime.endTime, guid);
 
             // error condition
             var arrSummary = getWagerSummary.result;

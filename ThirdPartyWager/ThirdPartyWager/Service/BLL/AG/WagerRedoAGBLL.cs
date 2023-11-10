@@ -2,6 +2,7 @@
 
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -138,20 +139,6 @@ namespace ThirdPartyWager.Service.BLL
                 _logger.LogError(ex, $"RedoWagersAsync {msg}\r\n{ex.Message}");
                 return false;
             }
-        }
-        
-        public class AGConfig
-        {
-            public string ApiUrl { get; set; }
-            public string GameUrl { get; set; }
-            public string WagerUrl { get; set; }
-            public string DesKey { get; set; }
-            public string Md5Key { get; set; }
-            public string cagent { get; set; }
-            public string HashKey { get; set; }
-            public string CommonUrl { get; set; }
-            public string SessionUrl { get; set; }
-            public string data_cagent { get; set; }
         }
     }
 }
