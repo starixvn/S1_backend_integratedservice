@@ -1139,6 +1139,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 try
                 {
+                    // 如果最後是Void狀態，表示該局已判定無效，不會再變動狀態，也不等於cancel
                     var p = new DynamicParameters(new
                     {
                         platformTxId = item.platformTxId,
@@ -1147,7 +1148,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         voidType = item.voidType,
                         TicketType = (int)BettransType.CancelBet,
                         TicketStatus = (int)TicketStatus.Refund,
-                        SettleFlag = (int)SettleFlag.EndGame
+                        SettleFlag = (int)SettleFlag.Settled
                     });
 
                     result = _mainDbClient.Execute("Service_BettransLC_AWC_Sexy_VoidBet_Set", p, conn, trans);
