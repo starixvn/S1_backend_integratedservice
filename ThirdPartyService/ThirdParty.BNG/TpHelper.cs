@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using System.Text;
 using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordExtend;
@@ -37,7 +39,20 @@ namespace ThirdParty.BNG
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var tpCurrency = new TpCurrency()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+            var wagerDetailList = TpBetRecordProvider.DbQuery("Service_TpWager_BNG_Get",
+                new { round_id = getBetDetail.TransId }, DataBase.Wager);
+            var detail = ToJson(wagerDetailList);
+            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                Detail = detail,
+                TpCurrency = tpCurrency,
+            };
         }
 
         public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -47,7 +62,25 @@ namespace ThirdParty.BNG
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var detail = TpBetRecordProvider.DbQuery("Service_TpWager_BNG_Get", new { round_id = betRecordInfo.TransId }, DataBase.Wager);
+            if (detail.Any())
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = detail.FirstOrDefault().GetStringValue("game_id"),
+                Game = tpGameType.TypeName,
+                RefNo = string.Empty,
+                Title = tpGameType.TypeName,
+                MatchID = betRecordInfo.TransId,
+                BetType = string.Empty,
+                BetChoice = string.Empty,
+                Result = string.Empty,
+                DeviceType = DeviceType.None,
+                IP = string.Empty,
+            };
         }
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
