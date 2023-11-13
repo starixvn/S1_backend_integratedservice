@@ -394,15 +394,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return sb.ToString();
         }
 
-        private string GetCountryCode(string TpCurrencyId)
+        private string GetCountryCode(string tpCurrencyId)
         {
-            return TpCurrencyId switch
+            var tpCountryCode = tpCustInfoBLL.GetTpCurrencyCodeByCurrencyId((int)ThirdParty, tpCurrencyId);
+            if (tpCountryCode == null)
             {
-                "VND" => "VN",
-                "INR" => "IN",
-                _ => throw new RestrictedCustomerException($"CurrencyId:{TpCurrencyId} not supported.")
-            };
-
+                throw new RestrictedCustomerException($"CurrencyId:{tpCurrencyId} not supported.");
+            }
+            return tpCountryCode.CountryCode;
         }
 
     }
