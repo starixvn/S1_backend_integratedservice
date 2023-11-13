@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json;
-
+using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -31,6 +31,11 @@ namespace ThirdPartyWager.Service.DAL
                     _Infos = JsonConvert.SerializeObject(input.Infos),
                     _PartitionTime = input.PartitionTime
                 });
+        }
+
+        public IEnumerable<TpUnsettle> GetTpUnsettleList(Tp tp, GameType gameType, int LimitCount)
+        {
+            return _mainDbClient.Query<TpUnsettle>("Service_TpUnsettle_Get", parameters: new { TpId = (int)tp, GameType = (int)gameType, LimitCount });
         }
     }
 }
