@@ -1,4 +1,5 @@
-﻿using ThirdPartyWager.Service.Library;
+﻿using Newtonsoft.Json;
+using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -18,12 +19,38 @@ namespace ThirdPartyWager.Service.BLL
 
         public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
         {
-            throw new NotImplementedException();
+            var dailyData = new List<FincanceDailySummary>();
+            if (!reportData.Any())
+            {
+                return dailyData;
+            }
+            var getReportData = JsonConvert.DeserializeObject<List<FincanceDailySummary>>(JsonConvert.SerializeObject(reportData));
+
+            foreach (var item in getReportData)
+            {
+                dailyData.Add(new FincanceDailySummary()
+                {
+                    SummaryType = SummaryType.TpBetRecord,
+                    SummaryDate = reportDate,
+                    TpId = tpId,
+                    CurrencyId = item.CurrencyId,
+                    Stake = item.Stake,
+                    ValidBet = item.ValidBet,
+                    Payout = item.Payout,
+                    WinlostAmount = item.WinlostAmount,
+                    ProgressiveBet = item.ProgressiveBet,
+                    ProgressiveWin = item.ProgressiveWin
+                });
+            }
+            return dailyData;
         }
 
-        public Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
+        public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
         {
-            throw new NotImplementedException();
+            var reportData = new List<dynamic>();
+            var result = await _commonBLL.GetWagerSummary("Finance_TpWager_BNG_Summary_Get", reportTime.startUnix, reportTime.endUnix);
+            reportData.AddRange(result);
+            return reportData;
         }
 
         public TimeCast GetReportTime(DateTime startTime, int day)

@@ -1,6 +1,5 @@
 ﻿using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.BLL.BNG;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -69,6 +68,9 @@ namespace ThirdPartyWager.Workers
             var quick = false;
             try
             {
+                // get setting
+                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+
                 // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
 
@@ -77,11 +79,44 @@ namespace ThirdPartyWager.Workers
                 {
                     TpId = _tpId,
                     Type = _tpType,
-                    StartTime = (dataTpTimer == null) ? DateTime.Now.AddDays(-2) : dataTpTimer.StartTime.AddSeconds(1),
+                    StartTime = (dataTpTimer == null) ? DateTime.Now.AddDays(-5) : dataTpTimer.StartTime.AddSeconds(1),
                 };
 
                 // get time 
                 var day = 0;
+                var reportTime = _financeBNGBLL.GetReportTime(execTime.StartTime, day);
+
+                // report
+                var reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);
+                var reportData = await _financeBNGBLL.GetReport(_tpId, setting, reportTime);
+                int result;
+                if (reportData.Count > 0)
+                {
+                    // process
+                    var dailyData = _financeBNGBLL.DealReport(_tpId, reportDate, reportData);
+
+                    // write
+                    result = _financeService.SetFinanceTpDailySummary(dailyData);
+                }
+                else
+                {
+                    result = 1;
+                }
+
+                // update timer
+                if (result > 0)
+                {
+                    _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, reportTime.endUnix);
+                }
+
+                var diffDay = (int)(DateTime.Now.Date - reportDate.Date).TotalDays;
+                if (diffDay > _beyond)
+                {
+                    quick = true;
+                }
+
+                _logger.LogInformation($"{_tpName} Get {reportDate:yyyy-MM-dd} report");
+                return quick;
             }
             catch (Exception ex)
             {

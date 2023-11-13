@@ -641,9 +641,11 @@ namespace ThirdPartyWager.Extensions
 
             services.AddSingleton<ApiBNGBLL>();
             services.AddSingleton<WagerBNGBLL>();
-            
+            services.AddSingleton<FinanceBNGBLL>();
+
             services.AddHostedService<WagerBNG>();
             services.AddHostedService<WagerRedoBNG>();
+            services.AddHostedService<FinanceBNG>();
 
             return services;
         }
