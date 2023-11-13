@@ -3192,12 +3192,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 _mainDbClient.CommitAndDisposeConnection(conn, trans);
                 return -1;
             }
-            if (!precheck.Where(x => x.TicketType == (int)BettransType.Bet).Any())
-            {
-                // no bet or cancel data
-                _mainDbClient.CommitAndDisposeConnection(conn, trans);
-                return -2;
-            }
 
             var p = new DynamicParameters(new
             {
@@ -3257,8 +3251,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var check = _mainDbClient.Query<BettransData_EVO>("Service_BettransLC_EVO_Get", commandType: CommandType.StoredProcedure, new { TransactionRefId = bettingData_EVO.transaction.refId });
                 if (!check.Any())
                 {
-                    // no bet data
-                    return -2;
+                    var cancelInsert = _mainDbClient.Execute("Service_BettransLC_EVO_Ins_V2", p, conn, trans);
+                    if (cancelInsert > 0)
+                    {
+                        // insert cancel record
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                        return -2;
+                    }
                 }
                 var subChk = check.Where(x => x.TicketType == 2);
                 if (subChk.Any())
