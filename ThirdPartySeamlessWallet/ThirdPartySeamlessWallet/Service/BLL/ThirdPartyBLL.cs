@@ -263,6 +263,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.RedTiger_RNG;
                         return gameType;
                     }
+                    var nlc = GetGameCasinoWithCache((int)Tp.NLC);
+                    var chkNLC = nlc.FirstOrDefault(x => x.GameId == gameId);
+                    if (chkNLC != null && chkNLC.GameId == gameId)
+                    {
+                        gameType = GameType.NLC_RNG;
+                        return gameType;
+                    }
                     break;
                 case (int)Tp.Skywind:
                     gameType = GameType.Skywind_RNG;

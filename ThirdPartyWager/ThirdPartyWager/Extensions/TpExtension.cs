@@ -55,7 +55,8 @@ namespace ThirdPartyWager.Extensions
                 { Tp.IM, AddIM},
                 { Tp.SPRIBE, AddSPRIBE},
                 { Tp.FaChai, AddFaChai},
-                { Tp.Pegasus, AddPegasus}
+                { Tp.Pegasus, AddPegasus},
+                { Tp.NLC, AddNLC}
             };
         }
         private IServiceCollection AddSA(IServiceCollection services)
@@ -630,6 +631,22 @@ namespace ThirdPartyWager.Extensions
             services.AddHostedService<WagerPegasus>();
             services.AddHostedService<FinancePegasus>();
 
+
+            return services;
+        }
+
+        private IServiceCollection AddNLC(IServiceCollection services)
+        {
+            services.AddSingleton<WagerNLCService>();
+
+            services.AddSingleton<WagerNLCBLL>();
+            services.AddSingleton<ApiNLCBLL>();
+            services.AddSingleton<FinanceNLCBLL>();
+
+            services.AddHostedService<WagerNLC>();
+            services.AddHostedService<WagerRedoNLC>();
+            services.AddHostedService<WagerUnsettleNLC>();
+            services.AddHostedService<FinanceNLC>();
 
             return services;
         }

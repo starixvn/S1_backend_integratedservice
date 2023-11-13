@@ -1067,6 +1067,101 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #endregion
 
+        #region NLC
+
+        public int PlaceBetRNG_NLC(TpCustInfo tpCustInfo, BettingData_EVO bettingData_EVO, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            afterAmount = 0;
+            var result = 0;
+
+            var tpId = Tp.NLC;
+            var tpGameType = GameType.NLC_RNG;
+            var tpCategory = TpCategory.Slots;
+            var InsSpName = "Service_BettransRng_NLC_Ins";
+            var GetSpName = "Service_BettransRng_NLC_Get";
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                var partitionTime = DateTime.UtcNow;
+                var check = _partitionService.Query<BettransData_EVO>(partitionTime, GetSpName, new { TransactionRefId = bettingData_EVO.transaction.refId });
+                if (check.Where(x => x.TicketType == (int)BettransType.CancelBet && x.TransactionId == bettingData_EVO.transaction.id).Any())
+                {
+                    // cancelled
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    return -2;
+                }
+
+                bettingData_EVO.transaction.amount *= -1;
+                var p = new DynamicParameters(new
+                {
+                    TransactionId = bettingData_EVO.transaction.id,
+                    TransactionRefId = bettingData_EVO.transaction.refId,
+                    userId = bettingData_EVO.userId,
+                    uuid = bettingData_EVO.uuid,
+                    currency = bettingData_EVO.currency,
+                    amount = bettingData_EVO.transaction.amount,
+                    transaction = JsonConvert.SerializeObject(bettingData_EVO.transaction),
+                    game = JsonConvert.SerializeObject(bettingData_EVO.game),
+                    GameId = bettingData_EVO.game.id,
+                    GameType = bettingData_EVO.game.type,
+                    GameDetailsId = bettingData_EVO.game.details.table.id,
+                    SiteId = tpCustInfo.SiteId,
+                    CustId = tpCustInfo.CustId,
+                    CurrencyId = tpCustInfo.CurrencyId,
+                    TicketType = (int)BettransType.Bet,
+                    TicketStatus = (int)TicketStatus.UnSettled,
+                    SettleFlag = (int)SettleFlag.Running
+                });
+
+
+                result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
+                if (result > 0 && bettingData_EVO.transaction.amount != 0)
+                {
+                    result = PlaceBetV2(
+                        tpCustInfo,
+                        bettingData_EVO.transaction.amount,
+                        (int)tpId,
+                        bettingData_EVO.transaction.refId,
+                        (int)tpGameType,
+                        bettingData_EVO.transaction.id,
+                        null,
+                        tpCategory,
+                        out afterAmount,
+                        ref bonusId,
+                        conn,
+                        trans
+                    );
+                }
+
+                if (result > 0)
+                {
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+                throw;
+            }
+
+            return result;
+        }
+
+        #endregion
+
         #region AP
         public int PlaceBet_AP(TpCustInfo tpCustInfo, BettingDataRNG_AP bettingDataRNG_AP, out decimal afterAmount, out long sq)
         {
