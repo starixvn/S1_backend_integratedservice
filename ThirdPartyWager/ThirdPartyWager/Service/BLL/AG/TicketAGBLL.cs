@@ -4,6 +4,8 @@ using Serilog.Context;
 
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -13,6 +15,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiAGBLL _apiAGBLL;
         private readonly WagerAGService _wagerAGService;
         private readonly ILogger<TicketAGBLL> _logger;
+        private readonly AGConfig _siteAgConfig;
 
         public TicketAGBLL(IServiceProvider provider)
         {
@@ -20,6 +23,7 @@ namespace ThirdPartyWager.Service.BLL
             _apiAGBLL = provider.GetRequiredService<ApiAGBLL>();
             _wagerAGService = provider.GetRequiredService<WagerAGService>();
             _logger = provider.GetRequiredService<ILogger<TicketAGBLL>>();
+            _siteAgConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AGConfig>(Tp.AG.ToString());
         }
 
         // TpRefundWorker
@@ -36,7 +40,7 @@ namespace ThirdPartyWager.Service.BLL
             var msg = "";
             var task = true;
 
-            var data = await _apiAGBLL.CheckTicketStatus(setting["CommonUrl"], pending.transactionID);
+            var data = await _apiAGBLL.CheckTicketStatus(_siteAgConfig.CommonUrl, pending.transactionID);
 
             if (data == null)
             {
