@@ -1,0 +1,309 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
+using ThirdPartyCore;
+using ThirdPartyCore.BLL;
+using ThirdPartyCore.Extensions;
+using ThirdPartyCore.Model;
+using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordExtend;
+
+namespace ThirdParty.HL
+{
+    public class TpHelper : ThirdPartyHelperBase
+    {
+        private readonly HLConfig _siteHLConfig;
+        
+        public TpHelper(IServiceProvider provider)
+        {
+            _siteHLConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<HLConfig>(TpEnum.HaoLong.ToString());
+        }
+        
+        public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var oApiResult = new ApiResult();
+            var createMemberReq = new CreateMemberReq
+            {
+                ApiUser = _siteHLConfig.ApiUser,
+                ApiPass = _siteHLConfig.ApiPass,
+                AgentUser = _siteHLConfig.AgentUser,
+                AgentPass = _siteHLConfig.AgentPass,
+                PlayerID = tpCustInfo.TpUserName,
+                PlayerPass = tpCustInfo.TpPwd,
+                PlayerName = tpCustInfo.TpUserName
+            };
+
+            var postData = $"apiUser={createMemberReq.ApiUser}&apiPass={createMemberReq.ApiPass}&" +
+                              $"user={createMemberReq.AgentUser}&pass={createMemberReq.AgentPass}&" +
+                              $"loginID={createMemberReq.PlayerID}&loginPass={createMemberReq.PlayerPass}&fullName={createMemberReq.PlayerName}";
+            
+            var result = HttpPost($"{_siteHLConfig.ApiUrl}createPlayer.aspx?",postData ,"application/x-www-form-urlencoded");
+            if (IsXML(result))
+            {
+                HLResponse hlResponse;
+                try
+                {
+                    hlResponse = XMLDeserialize<HLResponse>(result);
+                }
+                catch (Exception)
+                {
+                    hlResponse = XMLDeserialize<HLResponse>(result);
+                }
+
+                if (hlResponse.ErrorCode is 0 or 4)
+                {
+                    oApiResult.ErrorCode = ErrorCode.Success;
+                }
+                else
+                {
+                    oApiResult.RawMessage = hlResponse.Desc.ToString();
+                    oApiResult.RawErrorCode = hlResponse.ErrorCode.ToString();
+                    oApiResult.ErrorCode = ErrorCode.Fail;
+                }
+            }
+            else
+            {
+                oApiResult.ErrorCode = ErrorCode.Fail;
+            }
+
+            return oApiResult;
+        }
+
+        public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
+        {
+            var oApiResult = new ApiResult();
+            var getLoginInformationReq = new GetLoginInformationReq
+            {
+                ApiUser = _siteHLConfig.ApiUser,
+                ApiPass = _siteHLConfig.ApiPass,
+                PlayerID = tpCustInfo.TpUserName,
+                PlayerPass = tpCustInfo.TpPwd
+            };
+            
+            //這邊的User&Pass非BO的User和Pass，而是玩家的User和Pass
+            var postData = $"apiUser={getLoginInformationReq.ApiUser}&apiPass={getLoginInformationReq.ApiPass}&" +
+                           $"user={getLoginInformationReq.PlayerID}&pass={getLoginInformationReq.PlayerPass}";
+            
+            var result = HttpPost($"{_siteHLConfig.ApiUrl}betLogin.aspx?",postData ,"application/x-www-form-urlencoded");
+            if (IsXML(result))
+            {
+                BetLoginResponse betLoginResponse;
+                try
+                {
+                    betLoginResponse = XMLDeserialize<BetLoginResponse>(result);
+                }
+                catch (Exception)
+                {
+                    betLoginResponse = XMLDeserialize<BetLoginResponse>(result);
+                }
+
+                if (betLoginResponse.ErrorCode == 0)
+                {
+                    var loginReq = new LoginReq
+                    {
+                        PlayerID = tpCustInfo.TpUserName,
+                        SessionID = betLoginResponse.SessionID,
+                        TokenCode = betLoginResponse.TokenCode
+                    };
+                    
+                    postData = $"user={loginReq.PlayerID}&sessionID={loginReq.SessionID}&tokenCode={loginReq.TokenCode}";
+                    
+                    oApiResult.Message = appType == AppType.Desktop
+                        ? $"{_siteHLConfig.ApiUrl}bet.aspx?{postData}"
+                        : $"{_siteHLConfig.MobileGameUrl}wap/main.aspx?{postData}";
+                    oApiResult.ErrorCode = ErrorCode.Success;
+                }
+            }
+            else
+            {
+                oApiResult.ErrorCode = ErrorCode.Fail;
+            }
+            
+            return oApiResult;
+        }
+
+        public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var oApiResult = new ApiResult<UserBalance>();
+            var getProfileReq = new GetProfileReq
+            {
+                ApiUser = _siteHLConfig.ApiUser,
+                ApiPass = _siteHLConfig.ApiPass,
+                AgentUser = _siteHLConfig.AgentUser,
+                AgentPass = _siteHLConfig.AgentPass,
+                PlayerID = tpCustInfo.TpUserName
+            };
+            
+            var postData = $"apiUser={getProfileReq.ApiUser}&apiPass={getProfileReq.ApiPass}&" +
+                           $"user={getProfileReq.AgentUser}&pass={getProfileReq.AgentPass}&" +
+                           $"loginID={getProfileReq.PlayerID}";
+            
+            var result = HttpPost($"{_siteHLConfig.ApiUrl}getProfile.aspx?",postData ,"application/x-www-form-urlencoded");
+            if (IsXML(result))
+            {
+                GetProfileResponse betLoginResponse;
+                try
+                {
+                    betLoginResponse = XMLDeserialize<GetProfileResponse>(result);
+                }
+                catch (Exception)
+                {
+                    betLoginResponse = XMLDeserialize<GetProfileResponse>(result);
+                }
+
+                if (betLoginResponse.ErrorCode == 0)
+                {
+                    oApiResult.Data = new UserBalance
+                    {
+                        balance = betLoginResponse.Balance,
+                        outstanding = betLoginResponse.Outstanding
+                    };
+                    oApiResult.ErrorCode = ErrorCode.Success;
+                }
+            }
+            else
+            {
+                oApiResult.ErrorCode = ErrorCode.Fail;
+            }
+            
+            return oApiResult;
+        }
+
+        public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID,
+            string ThirdPartyTransID)
+        {
+            //TODO 第三方沒有轉帳單號 這個在看看怎麼處理 ThirdID
+            var apiUrl = _siteHLConfig.ApiUrl;
+            var postData = $"apiUser={_siteHLConfig.ApiUser}&apiPass={_siteHLConfig.ApiPass}&" +
+                                $"user={_siteHLConfig.AgentUser}&pass={_siteHLConfig.AgentPass}&" +
+                                $"loginID={tpCustInfo.UserName}&amount={Amount}";
+            apiUrl = direction switch
+            {
+                Direction.ToTp => apiUrl + "deposit.aspx?",
+                Direction.ToMain => apiUrl + "withdraw.aspx?",
+                _ => apiUrl
+            };
+            var result = HttpPost(apiUrl,postData ,"application/x-www-form-urlencoded");
+
+            if (IsXML(result))
+            {
+                GetProfileResponse profileResponse;
+                try
+                {
+                    profileResponse = XMLDeserialize<GetProfileResponse>(result);
+                }
+                catch (Exception)
+                {
+                    profileResponse = XMLDeserialize<GetProfileResponse>(result);
+                }
+
+                if (profileResponse.ErrorCode != 0)
+                {
+                    return new ApiResult<TransferResult>()
+                    {
+                        ErrorCode = ErrorCode.TransferPending,
+                        RawErrorCode = profileResponse.ErrorCode.ToString(),
+                        RawMessage = profileResponse.Desc.ToString(),
+                        Data = new TransferResult()
+                        {
+                            Status = TransferStatus.Pending,
+                        }
+                    };
+                }
+            }
+            return new ApiResult<TransferResult>()
+            {
+                ErrorCode = ErrorCode.Success,
+                Data = new TransferResult()
+                {
+                    Status = TransferStatus.Success
+                }
+            };
+        }
+
+        public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID,
+            string ThirdPartyTransID)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            //最多抓兩天 多一秒都不行
+            var timeStart = getBetDetail.SettledTime.Date;
+            var timeEnd = timeStart.AddDays(2).AddSeconds(-1).ToString("yyyy-MM-dd HH:mm:ss"); 
+            
+            var postData = $"apiUser={_siteHLConfig.ApiUser}&apiPass={_siteHLConfig.ApiPass}&" +
+                           $"user={_siteHLConfig.AgentUser}&pass={_siteHLConfig.AgentPass}&" +
+                           $"loginID={tpCustInfo.TpUserName}&dateFrom={timeStart}&dateTo={timeEnd}";
+            
+            var result = HttpPost($"{_siteHLConfig.ApiUrl}betlistPage.aspx?",postData ,"application/x-www-form-urlencoded");
+            if (IsXML(result))
+            {
+                GetBetListResponse getBetListResponse;
+                try
+                {
+                    getBetListResponse = XMLDeserialize<GetBetListResponse>(result);
+                }
+                catch (Exception)
+                {
+                    getBetListResponse = XMLDeserialize<GetBetListResponse>(result);
+                }
+
+                if (getBetListResponse.ErrorCode != 0)
+                {
+                   var betDetail = getBetListResponse.BetDataList.FirstOrDefault(x => x.BetID == getBetDetail.TransId);
+                   return new BaseDetail(getBetDetail.TpGameTypeOption)
+                   {
+                       TransId = getBetDetail.TransId,
+                       Detail = JsonConvert.SerializeObject(betDetail),
+                       TpCurrency = new TpCurrency()
+                       {
+                           ExchangeRate = tpCustInfo.ExchangeRate,
+                           TpCurrencyId = tpCustInfo.TpCurrencyId
+                       }
+                   };
+                }
+            }
+            
+            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                TpCurrency = new TpCurrency()
+                {
+                    ExchangeRate = tpCustInfo.ExchangeRate,
+                    TpCurrencyId = tpCustInfo.TpCurrencyId,
+                }
+            };
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo,
+            Dictionary<string, string> inputs)
+        {
+
+            var spName = "Service_TpWager_HL_Detail_Get";
+            var db = DataBase.Wager;
+            var detailList = TpBetRecordProvider.DbQuery(spName, new{betRecordInfo.TransId}, db);
+            
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = detailList.GetFirstStringValue("betID"),
+                Game = string.Empty,
+                RefNo = string.Empty,
+                Title = tpGameType.TypeName,
+                BetType = detailList.GetFirstStringValue("drawType"),
+                BetChoice = detailList.GetFirstStringValue("betNumber"),
+                Result = string.Empty,
+                DeviceType = DeviceType.None,
+                IP = string.Empty,
+            };
+        }
+    }
+}
