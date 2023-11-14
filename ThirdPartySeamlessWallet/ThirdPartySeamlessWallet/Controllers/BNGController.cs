@@ -114,7 +114,19 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else
             {
-                return StatusCode(500, "Internal Server Error. Something went Wrong!");
+                return Ok(new BNGTransactionErrorResponse()
+                {
+                    uid = req.uid,
+                    balance = new balance()
+                    {
+                        value = afterAmount.ToString(),
+                        version = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                    },
+                    error = new error()
+                    {
+                        code = "OTHER_EXCEED"
+                    }
+                });
             }
         }
         private IActionResult Rollback(string tpUserName, BNGRequest req)
@@ -136,7 +148,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else
             {
-                return StatusCode(500, "Internal Server Error. Something went Wrong!");
+                return StatusCode(503, "Internal Server Error. Something went Wrong!");
             }
         }
         private IActionResult GetBalance(string tpUserName, BNGRequest req)
