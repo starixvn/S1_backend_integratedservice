@@ -85,42 +85,5 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             return _mainDbClient.Query<CustBonus>("Service_Bonus_Get_V2", parameters: new { CustId });
         }
-
-        public IEnumerable<BonusFulfill> GetBonusFulfill()
-        {
-            return _mainDbClient.Query<BonusFulfill>("Service_BonusFulfillSeamless_Get", commandType: CommandType.StoredProcedure);
-        }
-
-        public int BonusSettle(BonusFulfill bonusFulfill)
-        {
-            using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
-            using var trans = conn.BeginTransaction();
-
-            var p = new DynamicParameters(bonusFulfill);
-            p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-
-            var result = _mainDbClient.Execute("Service_BonusSettle_Set_V2", p, conn, trans);
-
-            if (result > 0)
-            {
-                var bonus = p.Get<decimal>("Bonus");
-                if (bonus > 0)
-                {
-                    result = SetBalance(bonusFulfill.CustId, bonusFulfill.SiteId, bonusFulfill.UserName, bonus, 0, TransType.Prize, $"Bonus Transfer to Cash: {Math.Abs(bonus):#,##0.##}", bonusFulfill.BonusId.ToString(), out _, conn, trans);
-                }
-
-                if (result > 0)
-                {
-                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
-                }
-                else
-                {
-                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
-                }
-            }
-
-            return result;
-        }
     }
 }

@@ -30,7 +30,6 @@ var startup = new Startup(builder.Configuration);
 startup.ConfigureServices(builder.Services);
 
 builder.Services
-    //.AddHostedService<BonusWorker>()
     .AddHostedService<SettleWorker>()
     .AddHostedService<TpReRequestWorker>()
     .AddHostedService<TpRewardWorker>()
