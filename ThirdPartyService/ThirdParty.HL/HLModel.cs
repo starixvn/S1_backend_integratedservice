@@ -1,10 +1,13 @@
-﻿using System.Xml.Serialization;
+﻿using System;
+using System.Collections.Generic;
+using System.Xml.Serialization;
 
 namespace ThirdParty.HL
 { 
     public class HLConfig
     {
         public string ApiUrl { get; set; }
+        public string MobileGameUrl { get; set; }
         public string ApiUser { get; set; }
         public string ApiPass { get; set; }
         public string AgentUser { get; set; }
@@ -40,7 +43,7 @@ namespace ThirdParty.HL
         public Decimal WithdrawAmount { get; set; }
     }
 
-    public class CheckTransferReq : HLReqBase
+    public class GetProfileReq : HLReqBase
     {
         public string PlayerID { get; set; }
     }
@@ -57,8 +60,6 @@ namespace ThirdParty.HL
         public string SessionID { get; set; }
         public string TokenCode { get; set; }
     }
-    
-    
         
     #endregion
     
@@ -72,18 +73,44 @@ namespace ThirdParty.HL
         public int ErrorCode { get; set; } 
 
         [XmlElement(ElementName="desc")] 
-        public object Desc { get; set; } 
+        public object Desc { get; set; }
     }
-
-    public class BetLoginResponse : HLResponse
+    
+    [XmlRoot(ElementName="response")]
+    public class BetLoginResponse
     {
+        
+        [XmlElement(ElementName="errorCode")] 
+        public int ErrorCode { get; set; } 
+        [XmlElement(ElementName="desc")] 
+        public object Desc { get; set; }
         [XmlElement(ElementName="sessionID")] 
         public string SessionID { get; set; } 
-
         [XmlElement(ElementName="tokenCode")] 
         public string TokenCode { get; set; } 
     }
     
+    [XmlRoot(ElementName="response")]
+    public class GetProfileResponse 
+    { 
+
+        [XmlElement(ElementName="errorCode")] 
+        public int ErrorCode { get; set; } 
+        [XmlElement(ElementName="desc")] 
+        public object Desc { get; set; }
+        [XmlElement(ElementName="loginID")] 
+        public string LoginID { get; set; } 
+        [XmlElement(ElementName="fullName")] 
+        public string FullName { get; set; } 
+        [XmlElement(ElementName="status")] 
+        public string Status { get; set; } 
+        [XmlElement(ElementName="balance")] 
+        public decimal Balance { get; set; } 
+        [XmlElement(ElementName="outstanding")] 
+        public decimal Outstanding { get; set; } 
+        [XmlElement(ElementName="currency")] 
+        public string Currency { get; set; } 
+    }
     
     
     #endregion
@@ -91,7 +118,7 @@ namespace ThirdParty.HL
     #region GetBetList
     
     [XmlRoot(ElementName="response")]
-    public class Response : HLResponse
+    public class GetBetListResponse : HLResponse
     {
         [XmlElement(ElementName="betData")]
         public List<BetData> BetDataList { get; set; }
@@ -100,7 +127,7 @@ namespace ThirdParty.HL
     public class BetData
     {
         [XmlElement(ElementName="betID")]
-        public long BetID { get; set; }
+        public string BetID { get; set; }
 
         [XmlElement(ElementName="dateTime")]
         public DateTime DateTime { get; set; }

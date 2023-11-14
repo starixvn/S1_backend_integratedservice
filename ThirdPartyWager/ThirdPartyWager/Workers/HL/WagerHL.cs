@@ -13,13 +13,14 @@ namespace ThirdPartyWager.Workers.HL
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private Timer timer;
-        private readonly int intervalMins = 3;
-        private readonly int iRangMins = 20;
-        private readonly int tpId = (int)Tp.HL;
-        private readonly string _tpName = Tp.HL.ToString();
+        private readonly int intervalMins = 30;
+        private readonly int iRangMins = 61;
+        private readonly int tpId = (int)Tp.HaoLong;
+        private readonly string _tpName = Tp.HaoLong.ToString();
         private readonly int tpType = (int)WagerTimerType.Wager;
         private int quick = 0;
         private readonly int timeZone = 8;
+        private readonly IHostEnvironment _environment;
 
         public WagerHL(IServiceProvider provider)
         {
@@ -27,6 +28,7 @@ namespace ThirdPartyWager.Workers.HL
             _wageHLBLL = provider.GetRequiredService<WagerHLBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _environment = provider.GetRequiredService<IHostEnvironment>();
         }
         
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -53,12 +55,12 @@ namespace ThirdPartyWager.Workers.HL
                 else
                 {
                     timerTime = dataTpTimer.StartTime;
-                    last = iRangMins - 1;
+                    last = iRangMins;
                 }
                 
                 if (timerTime < DateTime.Now)
                 {
-                    var time = _dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
+                    var time = _dateTimeHelper.GetTimeByDay(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
                     //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
                     //if (time.endUnix < cvTime)
                     //{
@@ -83,7 +85,7 @@ namespace ThirdPartyWager.Workers.HL
                 else
                 {
                     var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                    timer.Change(dueTimeSpan, TimeSpan.Zero);
+                    timer.Change(dueTimeSpan, TimeSpan.FromHours(1));
                 }
 
             }

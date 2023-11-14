@@ -58,7 +58,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.SPRIBE, AddSPRIBE},
                 { Tp.FaChai, AddFaChai},
                 { Tp.Pegasus, AddPegasus},
-                { Tp.HL, AddHaoLung}
+                { Tp.HaoLong, AddHaoLung}
             };
         }
         private IServiceCollection AddSA(IServiceCollection services)
@@ -646,7 +646,8 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<WagerHLBLL>();
 
             services.AddHostedService<WagerHL>();
-            services.AddHostedService<FinanceHL>();
+            //TODO 先測WagerHL
+            //services.AddHostedService<FinanceHL>();
 
             return services;
         }
