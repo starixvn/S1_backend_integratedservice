@@ -252,7 +252,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     {
                         { "error_code", "0" },
                         { "error_message", btiResult.SPResult == 0 ?
-                        $"reserve_id:{request.reserve_id} is cancel done." : $"reserve_id:{request.reserve_id} was not found." },
+                        $"reserve_id:{request.reserve_id} is cancel/commit done." : $"reserve_id:{request.reserve_id} was not found." },
                         { "balance", btiResult.SPResult == 0 ? btiResult.AfterAmount.ToString() : "0" },
                     });
                 }
@@ -286,12 +286,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 var btiResult = await settledService.CommitReserve_BTIAsync(tpCustInfo, request);
                 btiResult.AfterAmount = tpCustInfoBLL.GetBalance((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
-                if (btiResult.SPResult < 0)
+                if (btiResult.SPResult < 1)
                 {
                     return ReturnBTI(new Dictionary<string, string>
                     {
                         { "error_code", "0" },
-                        { "error_message", $"reserve_id:{request.reserve_id} was not found." },
+                        { "error_message", btiResult.SPResult == 0 ?
+                        $"reserve_id:{request.reserve_id} is cancel/commit done." : $"reserve_id:{request.reserve_id} was not found." },
                         { "balance", btiResult.AfterAmount.ToString() },
                         { "trx_id", $"{DateTime.UtcNow.ToFileTimeUtc()}"},
                     });
