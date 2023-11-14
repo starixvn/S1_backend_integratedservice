@@ -1,11 +1,8 @@
 ﻿using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-
 using Microsoft.AspNetCore.Mvc;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -439,7 +436,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         #endregion
 
-        private readonly ILogger<N2LiveController> _logger;
         private readonly AuthBLL _authBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
@@ -450,6 +446,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly string _tpName;
         private readonly IHostEnvironment _environment;
         private readonly int _gameType = 0;
+        private readonly Dictionary<int, Dictionary<string, string>> _siteConfigDic;
 
         public N2LiveController(IServiceProvider provider)
         {
@@ -463,6 +460,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             _thisTp = Tp.N2Live;
             _tpName = Enum.GetName(typeof(Tp), _thisTp);
             _gameType = (int)GameType.N2Live_LiveCasino;
+            // 各Site設定
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(_thisTp.ToString());
         }
 
         [Route("[controller]")]
@@ -558,7 +557,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         byte[] bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(sessionKeyArr));
                         string sessionKey = Convert.ToBase64String(bytes);
 
-                        var thirdPartySetting = _thirdPartyBLL.GetThirdPartyBySite((int)_thisTp, tpCustInfo.SiteId);
+                        var thirdPartySetting = _siteConfigDic[tpCustInfo.SiteId];
 
                         LoginResponse getApiResp = new LoginResponse();
                         getApiResp.status = "0";
@@ -571,8 +570,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                         getApiResp.result.acode = "";
                         getApiResp.result.currencyid = getTpCurrencyId;
                         getApiResp.result.balance = tpCustBalance.Balance;
-                        getApiResp.result.vendorid = thirdPartySetting.TpSetting["VendorId"];
-                        getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting["MerchantPassCode"];
+                        getApiResp.result.vendorid = thirdPartySetting["VendorId"];
+                        getApiResp.result.merchantpasscode = thirdPartySetting["MerchantPassCode"];
                         getApiResp.result.sessiontoken = sessionKey;
 
                         xml = N2LiveController.ToXml(typeof(LoginResponse), getApiResp);
@@ -587,7 +586,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else
                 {
                     var tokenInfo = GetTokenInfo(commReq.request.sessiontoken);
-                    var thirdPartySetting = _thirdPartyBLL.GetThirdPartyBySite((int)_thisTp, Convert.ToInt32(tokenInfo.siteId));
+                    var thirdPartySetting = _siteConfigDic[Convert.ToInt32(tokenInfo.siteId)];
 
                     if (string.Equals(action, "swebsinglelogin", StringComparison.OrdinalIgnoreCase))
                     {
@@ -623,8 +622,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 getApiResp.result.acode = "";
                                 getApiResp.result.currencyid = GetTestHierarchy(getLoginReq.request.userid, tpCustBalance.TpCurrencyId);
                                 getApiResp.result.balance = tpCustBalance.Balance;
-                                getApiResp.result.vendorid = thirdPartySetting.TpSetting["VendorId"];
-                                getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting["MerchantPassCode"];
+                                getApiResp.result.vendorid = thirdPartySetting["VendorId"];
+                                getApiResp.result.merchantpasscode = thirdPartySetting["MerchantPassCode"];
                                 getApiResp.result.sessiontoken = getLoginReq.request.sessiontoken;
                                 getApiResp.result.clientip = tpCheck.IP;
 
@@ -672,8 +671,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 getApiResp.result.userid = getBalanceReq.request.userid;
                                 getApiResp.result.balance = tpCustBalance.Balance;
                                 getApiResp.result.currencyid = GetTestHierarchy(getBalanceReq.request.userid, tpCustBalance.TpCurrencyId);
-                                getApiResp.result.vendorid = thirdPartySetting.TpSetting["VendorId"];
-                                getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting["MerchantPassCode"];
+                                getApiResp.result.vendorid = thirdPartySetting["VendorId"];
+                                getApiResp.result.merchantpasscode = thirdPartySetting["MerchantPassCode"];
                                 getApiResp.result.timestamp = GetCurrentGameTime();
 
                                 xml = N2LiveController.ToXml(typeof(BalanceResponse), getApiResp);
@@ -721,8 +720,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                                     getApiResp.result.currencyid = GetTestHierarchy(getBetReq.request.userid, tokenInfo.tpCurrency);
                                     getApiResp.result.balance = tpAffterAmount;
                                     getApiResp.result.tradeid = getBetReq.request.tradeid;
-                                    getApiResp.result.vendorid = thirdPartySetting.TpSetting["VendorId"];
-                                    getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting["MerchantPassCode"];
+                                    getApiResp.result.vendorid = thirdPartySetting["VendorId"];
+                                    getApiResp.result.merchantpasscode = thirdPartySetting["MerchantPassCode"];
                                     getApiResp.result.timestamp = GetCurrentGameTime();
 
                                     xml = N2LiveController.ToXml(typeof(BetResponse), getApiResp);
@@ -771,8 +770,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 getApiResp.result.currencyid = GetTestHierarchy(getCancelBetReq.request.userid, tokenInfo.tpCurrency);
                                 getApiResp.result.balance = tpCustBalance.Balance;
                                 getApiResp.result.tradeid = getCancelBetReq.request.tradeid;
-                                getApiResp.result.vendorid = thirdPartySetting.TpSetting["VendorId"];
-                                getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting["MerchantPassCode"];
+                                getApiResp.result.vendorid = thirdPartySetting["VendorId"];
+                                getApiResp.result.merchantpasscode = thirdPartySetting["MerchantPassCode"];
                                 getApiResp.result.timestamp = GetCurrentGameTime();
 
                                 xml = N2LiveController.ToXml(typeof(BetResponse), getApiResp);
@@ -815,8 +814,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 getApiResp.result.currencyid = GetTestHierarchy(getPayoutReq.request.userid, tokenInfo.tpCurrency);
                                 getApiResp.result.balance = tpCustBalance.Balance;
                                 getApiResp.result.tradeid = getPayoutReq.request.tradeid;
-                                getApiResp.result.vendorid = thirdPartySetting.TpSetting["VendorId"];
-                                getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting["MerchantPassCode"];
+                                getApiResp.result.vendorid = thirdPartySetting["VendorId"];
+                                getApiResp.result.merchantpasscode = thirdPartySetting["MerchantPassCode"];
                                 getApiResp.result.timestamp = GetCurrentGameTime();
 
                                 xml = N2LiveController.ToXml(typeof(BetResponse), getApiResp);
@@ -874,8 +873,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                                     getApiResp.result.currencyid = GetTestHierarchy(getSmartBetReq.request.userid, tokenInfo.tpCurrency);
                                     getApiResp.result.balance = tpAffterAmount;
                                     getApiResp.result.schemeid = getSmartBetReq.request.schemeid;
-                                    getApiResp.result.vendorid = thirdPartySetting.TpSetting["VendorId"];
-                                    getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting["MerchantPassCode"];
+                                    getApiResp.result.vendorid = thirdPartySetting["VendorId"];
+                                    getApiResp.result.merchantpasscode = thirdPartySetting["MerchantPassCode"];
                                     getApiResp.result.timestamp = GetCurrentGameTime();
 
                                     xml = N2LiveController.ToXml(typeof(SmartBetResponse), getApiResp);
@@ -923,8 +922,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 getApiResp.result.currencyid = GetTestHierarchy(getSmartCancelBetReq.request.userid, tokenInfo.tpCurrency);
                                 getApiResp.result.balance = tpCustBalance.Balance;
                                 getApiResp.result.schemeid = getSmartCancelBetReq.request.schemeid;
-                                getApiResp.result.vendorid = thirdPartySetting.TpSetting["VendorId"];
-                                getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting["MerchantPassCode"];
+                                getApiResp.result.vendorid = thirdPartySetting["VendorId"];
+                                getApiResp.result.merchantpasscode = thirdPartySetting["MerchantPassCode"];
                                 getApiResp.result.timestamp = GetCurrentGameTime();
 
                                 xml = N2LiveController.ToXml(typeof(SmartBetResponse), getApiResp);
@@ -967,8 +966,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 getApiResp.result.currencyid = GetTestHierarchy(getSmartPayoutReq.request.userid, tokenInfo.tpCurrency);
                                 getApiResp.result.balance = tpCustBalance.Balance;
                                 getApiResp.result.schemeid = getSmartPayoutReq.request.schemeid;
-                                getApiResp.result.vendorid = thirdPartySetting.TpSetting["VendorId"];
-                                getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting["MerchantPassCode"];
+                                getApiResp.result.vendorid = thirdPartySetting["VendorId"];
+                                getApiResp.result.merchantpasscode = thirdPartySetting["MerchantPassCode"];
                                 getApiResp.result.timestamp = GetCurrentGameTime();
 
                                 xml = N2LiveController.ToXml(typeof(SmartBetResponse), getApiResp);
@@ -1010,8 +1009,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 getApiResp.result.currencyid = GetTestHierarchy(getBonusReq.request.userid, tokenInfo.tpCurrency);
                                 getApiResp.result.balance = tpAffterAmount;
                                 getApiResp.result.bonusid = getBonusReq.request.bonusid;
-                                getApiResp.result.vendorid = thirdPartySetting.TpSetting["VendorId"];
-                                getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting["MerchantPassCode"];
+                                getApiResp.result.vendorid = thirdPartySetting["VendorId"];
+                                getApiResp.result.merchantpasscode = thirdPartySetting["MerchantPassCode"];
                                 getApiResp.result.timestamp = GetCurrentGameTime();
 
                                 xml = N2LiveController.ToXml(typeof(BonusResponse), getApiResp);
@@ -1053,8 +1052,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 getApiResp.result.currencyid = GetTestHierarchy(getEventReq.request.userid, tokenInfo.tpCurrency);
                                 getApiResp.result.balance = tpAffterAmount;
                                 getApiResp.result.eventtrxid = getEventReq.request.eventtrxid;
-                                getApiResp.result.vendorid = thirdPartySetting.TpSetting["VendorId"];
-                                getApiResp.result.merchantpasscode = thirdPartySetting.TpSetting["MerchantPassCode"];
+                                getApiResp.result.vendorid = thirdPartySetting["VendorId"];
+                                getApiResp.result.merchantpasscode = thirdPartySetting["MerchantPassCode"];
                                 getApiResp.result.timestamp = GetCurrentGameTime();
 
                                 xml = N2LiveController.ToXml(typeof(EventResponse), getApiResp);
@@ -1135,7 +1134,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         private string GetTestHierarchy(string account, string tpCurrencyId, string password = null)
         {
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, account);
-            List<long> testHierarchyCustId = _environment.IsDevelopment() ? new List<long> { 1288, 1481 } : new List<long> { 90, 31909, 240129, 236358, 2071, 2072 };
+            var siteConfig = _siteConfigDic[tpCustInfo.SiteId];
+           
+            var testHierarchyCustId = JsonConvert.DeserializeObject<List<long>>(siteConfig["TestHierarchyCustId"]);
             bool isTestHierarchy = testHierarchyCustId.Contains(tpCustInfo.CustId);
             if (isTestHierarchy)
             {

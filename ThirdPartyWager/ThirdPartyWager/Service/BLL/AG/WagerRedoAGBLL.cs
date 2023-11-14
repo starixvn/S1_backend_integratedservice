@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
 
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -10,6 +12,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiAGBLL _apiAGBLL;
         private readonly WagerAGService _wagerAGService;
         private readonly ILogger<WagerAGBLL> _logger;
+        private readonly AGConfig _siteAGConfigs;
 
         public WagerRedoAGBLL(IServiceProvider provider)
         {
@@ -17,23 +20,25 @@ namespace ThirdPartyWager.Service.BLL
             _apiAGBLL = provider.GetRequiredService<ApiAGBLL>();
             _wagerAGService = provider.GetRequiredService<WagerAGService>();
             _logger = provider.GetRequiredService<ILogger<WagerAGBLL>>();
+            _siteAGConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AGConfig>(Tp.AG.ToString());
         }
 
-        public async Task<bool> RedoWagersAsync(int tpId, string startTime, string endTime, long startUnix, long endUnix)
+        public async Task<bool> RedoWagersAsync(string startTime, string endTime, long startUnix, long endUnix)
         {
             var msg = "FATAL_ERROR";
             var guid = Guid.NewGuid().ToString();
 
             try
             {
-                // get api info
-                var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
+                var wagerUrl = _siteAGConfigs.WagerUrl;
+                var hashKey = _siteAGConfigs.HashKey;
+                var data_cagent = _siteAGConfigs.data_cagent;
 
                 // count interval wagers
                 var getWagerCount = _wagerAGService.GetWagerTotal(startUnix, endUnix);
                 var wagerCount = getWagerCount.wagerCount;
 
-                var getWagerSummary = await _apiAGBLL.GetBetSummaryByTime(setting["WagerUrl"], setting["HashKey"], setting["data_cagent"], startTime, endTime, guid);
+                var getWagerSummary = await _apiAGBLL.GetBetSummaryByTime(wagerUrl, hashKey, data_cagent, startTime, endTime, guid);
                 var arrSummary = getWagerSummary.result;
 
                 // error condition
@@ -83,7 +88,7 @@ namespace ThirdPartyWager.Service.BLL
                     fn = ed.ToString("yyyy-MM-dd HH:mm:ss");
                     while (page <= totalPage)
                     {
-                        var dataWager = await _apiAGBLL.GetBetListByTime(setting["WagerUrl"], setting["HashKey"], setting["data_cagent"], bg, fn, page, guid);
+                        var dataWager = await _apiAGBLL.GetBetListByTime(wagerUrl, hashKey, data_cagent, bg, fn, page, guid);
                         var arrWager = dataWager.result;
 
                         // error condition

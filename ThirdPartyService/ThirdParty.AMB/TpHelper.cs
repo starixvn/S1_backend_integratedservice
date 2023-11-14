@@ -1,4 +1,6 @@
-﻿using ThirdPartyCore;
+﻿using Microsoft.Extensions.DependencyInjection;
+using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -10,6 +12,13 @@ namespace ThirdParty.AMB
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly AMBConfig _siteAMBConfig;
+        
+        public TpHelper(IServiceProvider provider)
+        {
+            _siteAMBConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AMBConfig>(TpEnum.AMB.ToString());
+        }
+        
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -18,43 +27,28 @@ namespace ThirdParty.AMB
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var oApiResult = new ApiResult();
-            var ok = false;
             if (tpCustInfo.TpCurrencyId == "THB")
             {
-                if (inputs.ContainsKey("ApiUrl") && inputs.ContainsKey("Agent") && inputs.ContainsKey("SecretKey"))
+                var gameTypes = new[] { TpGameType.AMB_Poker, TpGameType.AMB_RNG };
+                foreach (var gameType in gameTypes)
                 {
-                    var ambPoker = AMBFactory.Create(TpGameType.AMB_Poker, inputs, tpCustInfo.TpCurrencyId);
-                    var pokerResult = ambPoker.CreateMember(tpCustInfo.TpUserName, HttpPost);
-                    if (pokerResult.status.code != 0 && pokerResult.status.code != 902)
+                    var result = AMB_CreateMember(gameType, _siteAMBConfig, tpCustInfo.TpCurrencyId, tpCustInfo.TpUserName);
+                    if (result.ErrorCode != ErrorCode.Success)
                     {
-                        oApiResult.ErrorCode = ErrorCode.Fail;
-                        oApiResult.RawMessage = pokerResult.status.message;
-                        oApiResult.RawErrorCode = pokerResult.status.code.ToString();
-                        return oApiResult;
+                        return result;
                     }
-                    ok = true;
                 }
             }
-
-            if (inputs.ContainsKey($"SlotApiUrl{tpCustInfo.TpCurrencyId}") &&
-                inputs.ContainsKey($"SlotAgent{tpCustInfo.TpCurrencyId}") &&
-                inputs.ContainsKey($"SlotSecretKey{tpCustInfo.TpCurrencyId}"))
+            else
             {
-                var ambSlot = AMBFactory.Create(TpGameType.AMB_RNG, inputs, tpCustInfo.TpCurrencyId);
-                var slotResult = ambSlot.CreateMember(tpCustInfo.TpUserName, HttpPost);
-                if (slotResult.status.code != 0 && slotResult.status.code != 902)
+                var result = AMB_CreateMember(TpGameType.AMB_RNG, _siteAMBConfig, tpCustInfo.TpCurrencyId, tpCustInfo.TpUserName);
+                if (result.ErrorCode != ErrorCode.Success)
                 {
-                    oApiResult.ErrorCode = ErrorCode.Fail;
-                    oApiResult.RawMessage = slotResult.status.message;
-                    oApiResult.RawErrorCode = slotResult.status.code.ToString();
-                    return oApiResult;
+                    return result;
                 }
-                ok = true;
             }
 
-            if (ok)
-                oApiResult.ErrorCode = ErrorCode.Success;
-
+            oApiResult.ErrorCode = ErrorCode.Success;
             return oApiResult;
         }
 
@@ -78,7 +72,7 @@ namespace ThirdParty.AMB
             var isFun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) && inputs["fun"] == "1";
             var enumGameType = (TpGameType)int.Parse(tpGameType);
             var tpCurrency = GetCurrency(tpCustInfo);
-            var amb = AMBFactory.Create(enumGameType, inputs, tpCurrency);
+            var amb = AMBFactory.Create(enumGameType, _siteAMBConfig, tpCurrency);
             var result = amb.LaunchGame(tpCustInfo.TpUserName, gameId, homeUrl, isFun, HttpPost);
 
             var oApiResult = new ApiResult();
@@ -124,7 +118,7 @@ namespace ThirdParty.AMB
                     throw new ArgumentOutOfRangeException(nameof(tpGameType), tpGameType, null);
             }
 
-            var amb = AMBFactory.Create(tpGameType, inputs, tpCustInfo.TpCurrencyId);
+            var amb = AMBFactory.Create(tpGameType, _siteAMBConfig, tpCustInfo.TpCurrencyId);
             var gameReport = amb.GetRoundResult(tpCustInfo.TpUserName, roundId, gameId, HttpPost);
             if (gameReport.status.code != 0)
             {
@@ -226,6 +220,24 @@ namespace ThirdParty.AMB
             if (tpCustInfo != null && !string.IsNullOrEmpty(tpCustInfo.TpCurrencyId))
                 return tpCustInfo.TpCurrencyId;
             return "THB";
+        }
+        
+        private ApiResult AMB_CreateMember(TpGameType gameType, AMBConfig inputs , string tpCurrencyId, string tpUserName)
+        {
+            var game = AMBFactory.Create(gameType, inputs, tpCurrencyId);
+            var gameResult = game.CreateMember(tpUserName, HttpPost);
+
+            if (gameResult.status.code != 0 && gameResult.status.code != 902)
+            {
+                return new ApiResult
+                {
+                    ErrorCode = ErrorCode.Fail,
+                    RawMessage = gameResult.status.message,
+                    RawErrorCode = gameResult.status.code.ToString()
+                };
+            }
+            
+            return new ApiResult{ErrorCode = ErrorCode.Success}; // 表示成功
         }
     }
 }

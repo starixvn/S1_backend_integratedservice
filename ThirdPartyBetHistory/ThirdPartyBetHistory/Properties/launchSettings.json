@@ -2,6 +2,7 @@
   "profiles": {
     "ThirdPartyBetHistory": {
       "commandName": "Project",
+      "commandLineArgs": "Nova", // Nova or Leobet
       "launchBrowser": false,
       "applicationUrl": "http://localhost:59168",
       "environmentVariables": {

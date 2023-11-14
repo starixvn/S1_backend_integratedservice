@@ -3,13 +3,14 @@
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class FinanceAMBBLL : ITpReportBLL
     {
+        
         private readonly ILogger<FinanceAMBBLL> _logger;
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly CommonBLL _commonBLL;
         private readonly ApiAMBBLL _apiAMBBLL;
         private readonly DateTimeHelper _dateTimeHelper;
@@ -21,7 +22,6 @@ namespace ThirdPartyWager.Service.BLL
         public FinanceAMBBLL(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceAMBBLL>>();
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _apiAMBBLL = provider.GetRequiredService<ApiAMBBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
@@ -82,7 +82,7 @@ namespace ThirdPartyWager.Service.BLL
                         continue;
                     }
 
-                    CurrencyStats_AMB getWagerSummary = await _apiAMBBLL.GetBetSummaryByTime(setting, currency, gameType, reportTime.startTime, reportTime.endTime);
+                    CurrencyStats_AMB getWagerSummary = await _apiAMBBLL.GetBetSummaryByTime(currency, gameType, reportTime.startTime, reportTime.endTime);
                     if (getWagerSummary.status.code != 0)
                     {
                         var msg = "THIRD_PARTY_ERROR";

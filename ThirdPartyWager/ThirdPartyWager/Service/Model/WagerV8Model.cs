@@ -76,4 +76,20 @@
     {
         public int wagerCount { get; set; }
     }
+    //public class V8Config
+    //{
+    //    public string WagerUrl { get; set; }
+    //}
+    public class CurrencyData
+    {
+        public string Deskey { get; set; }
+        public string Agent { get; set; }
+        public string Md5key { get; set; }
+    }
+    public class V8Config
+    {
+        public string WagerUrl { get; set; }
+        public string ApiUrl { get; set; }
+        public Dictionary<string, CurrencyData> CurrencyData { get; set; }
+    }
 }

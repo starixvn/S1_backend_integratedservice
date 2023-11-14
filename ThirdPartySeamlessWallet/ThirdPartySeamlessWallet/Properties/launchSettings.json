@@ -1,28 +1,13 @@
 ﻿{
-    "iisSettings": {
-        "windowsAuthentication": false,
-        "anonymousAuthentication": true,
-        "iisExpress": {
-            "applicationUrl": "http://localhost:59259",
-            "sslPort": 0
-        }
-    },
-    "profiles": {
-        "IIS Express": {
-            "commandName": "IISExpress",
-            "launchBrowser": false,
-            "applicationUrl": "http://localhost:59259",
-            "environmentVariables": {
-                "ASPNETCORE_ENVIRONMENT": "Local"
-            }
-        },
-        "ThirdPartySeamlessWallet": {
-            "commandName": "Project",
-            "launchBrowser": false,
-            "applicationUrl": "http://localhost:59259",
-            "environmentVariables": {
-                "ASPNETCORE_ENVIRONMENT": "Local"
-            }
-        }
+  "profiles": {
+    "ThirdPartySeamlessWallet": {
+      "commandName": "Project",
+      "commandLineArgs": "Nova", // Nova or Leobet
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:59259",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Local"
+      }
     }
+  }
 }
