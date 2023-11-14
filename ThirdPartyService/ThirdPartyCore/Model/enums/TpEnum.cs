@@ -51,7 +51,8 @@
         PNG = 54,
         FaChai = 55,
         Pegasus = 56,
-        BNG = 57
+        BNG = 57,
+        HaoLong = 58
     }
 
     public enum TpGameType
@@ -140,6 +141,7 @@
         SPRIBE_RNG = 104,
         FaChai_RNG = 106,
         BNG_RNG = 108,
-        SG_Table = 109
+        SG_Table = 109,
+        HaoLong_Lottery = 110
     }
 }

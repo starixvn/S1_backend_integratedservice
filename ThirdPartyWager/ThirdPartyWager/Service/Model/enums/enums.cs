@@ -58,9 +58,9 @@
         SPRIBE = 53,
         FaChai = 55,
         Pegasus = 56,
-        BNG = 57
+        BNG = 57,
+        HaoLong = 58
     }
-
     public enum GameType
     {
         Allbet_LiveCasino = 6,
@@ -100,9 +100,9 @@
         IM_ESports = 102,
         IM_Sports = 103,
         FaChai_RNG = 106,
-        SG_Table = 109
+        SG_Table = 109,
+        HaoLong_Lottery = 110
     }
-
     public enum SettlementType
     {
         UnSettled = 0,
