@@ -130,4 +130,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public TicketStatus TicketStatus { get; set; }
         public BettransType TicketType { get; set; }
     }
+
+    public class SettleData_NLC : SettleData
+    {
+        public string status { get; set; }
+    }
 }
