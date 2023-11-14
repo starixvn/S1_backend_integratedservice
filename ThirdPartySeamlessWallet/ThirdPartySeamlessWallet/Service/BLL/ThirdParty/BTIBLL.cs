@@ -248,11 +248,23 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 if (btiResult.SPResult < 1)
                 {
                     btiResult.AfterAmount = tpCustInfoBLL.GetBalance((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
+                    var errorMessage = string.Empty;
+                    switch (btiResult.SPResult)
+                    {
+                        case -1:
+                            errorMessage = $"reserve_id:{request.reserve_id} is cancel/commit done.";
+                            break;
+                        case -2:
+                            errorMessage = $"reserve_id:{request.reserve_id} is debit done.";
+                            break;
+                        default:
+                            errorMessage = $"reserve_id:{request.reserve_id} was not found.";
+                            break;
+                    }
                     return ReturnBTI(new Dictionary<string, string>
                     {
                         { "error_code", "0" },
-                        { "error_message", btiResult.SPResult == 0 ?
-                        $"reserve_id:{request.reserve_id} is cancel/commit done." : $"reserve_id:{request.reserve_id} was not found." },
+                        { "error_message", errorMessage },
                         { "balance", btiResult.SPResult == 0 ? btiResult.AfterAmount.ToString() : "0" },
                     });
                 }
