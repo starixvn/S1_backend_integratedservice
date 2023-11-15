@@ -41,6 +41,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string uid { get; set; }
         public balance balance { get; set; }
     }
+    public class BNGTransactionErrorResponse : BNGTransactionResponse
+    {
+        public error error { get; set; }
+    }
     public class player
     {
         public string id { get; set; }
