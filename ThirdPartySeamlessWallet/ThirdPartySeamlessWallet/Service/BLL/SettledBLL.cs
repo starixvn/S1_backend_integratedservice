@@ -11,22 +11,22 @@ namespace ThirdPartySeamlessWallet.Service.BLL
     public partial class SettledBLL
     {
         private readonly SettledService settledService;
-        private readonly MySqlClient _mainDbClient;
         private readonly TpCustInfoBLL tpCustInfoBLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
 
-        public SettledBLL(SettledService settledService, TpCustInfoBLL tpCustInfoBLL, ThirdPartyBLL thirdPartyBLL)
+        public SettledBLL(IServiceProvider provider)
         {
-            this.settledService = settledService;
-            this.tpCustInfoBLL = tpCustInfoBLL;
-            this.thirdPartyBLL = thirdPartyBLL;
+            settledService = provider.GetRequiredService<SettledService>();
+            tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
 
         public int Settled(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo, TpCategory tpCategory, GetTpSeamlessBonusType getTpSeamlessBonusType = GetTpSeamlessBonusType.ByGameTypeAndTransId)
         {
-            var result = settledService.Settle(tpCustInfo, betRecordInfo, tpCategory, getTpSeamlessBonusType);
+            var result = settledService.Settle(tpCustInfo, betRecordInfo, getTpSeamlessBonusType);
             return result;
         }
+
         public int Settled(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo, PromotionCategory promotionCategory)
         {
             var promoCategoryId = (int)promotionCategory;
