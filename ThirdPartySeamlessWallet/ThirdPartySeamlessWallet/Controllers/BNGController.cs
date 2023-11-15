@@ -17,8 +17,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly AuthBLL _authBLL;
         private readonly IBNGBLL _bNGBLL;
-        //private readonly Tools _tools;
-        //private readonly Dictionary<string, string> _defaultConfig;
         public Tp ThirdParty { get; set; }
         public int gameType { get; set; }
 
@@ -31,8 +29,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _authBLL = provider.GetRequiredService<AuthBLL>();
             _bNGBLL = provider.GetRequiredService<IBNGBLL>();
-            //_tools = provider.GetRequiredService<Tools>();
-            //_defaultConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(ThirdParty.ToString());
         }
         #endregion
 
@@ -53,108 +49,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 "rollback" => Rollback(tpUserName, req),
                 _ => GetBalance(tpUserName, req)
             };
-
-            //if (req.name == ActionName.login.ToString())
-            //{
-            //    if (!_authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
-            //        return Ok(new BNGResponse()
-            //        {
-            //            uid = req.uid,
-            //            error = new error()
-            //            {
-            //                code = ErrorCode.INVALID_TOKEN.ToString()
-            //            }
-            //        });
-
-            //    var tpCheck = _thirdPartyBLL.ThirdPartyCheck((int)ThirdParty, tpUserName);
-            //    if (tpCheck == null || tpCheck.Token != sessionToken)
-            //        return Ok(new BNGResponse()
-            //        {
-            //            uid = req.uid,
-            //            error = new error()
-            //            {
-            //                code = ErrorCode.INVALID_TOKEN.ToString()
-            //            }
-            //        });
-
-            //    var tpCustBalance = _tpCustInfoBLL.GetBalance((int)Tp.FaChai, tpUserName, gameType);
-            //    return Ok(new BNGResponse()
-            //    {
-            //        uid = req.uid,
-            //        player = new player()
-            //        {
-            //            id = tpUserName,
-            //            brand = tpCustInfoAuth.SiteId.ToString(),
-            //            currency = tpCustInfoAuth.TpCurrencyId.ToString(),
-            //            mode = "REAL",
-            //            //is_test = tpCustInfoAuth.IsTest,
-            //            is_test = true,
-            //        },
-            //        balance = new balance()
-            //        {
-            //            value = tpCustBalance.Balance.ToString(),
-            //            version = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-            //        }
-            //    });
-            //}
-            //else if (req.name == ActionName.transaction.ToString())
-            //{
-            //    var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.FaChai, tpUserName);
-            //    var result = _bNGBLL.Transaction(tpCustInfo, req, out decimal afterAmount);
-
-            //    if (result == (int)TransactionStatus.Success)
-            //    {
-            //        return Ok(new BNGTransactionResponse()
-            //        {
-            //            uid = req.uid,
-            //            balance = new balance()
-            //            {
-            //                value = afterAmount.ToString(),
-            //                version = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-            //            }
-            //        });
-            //    }
-            //    else
-            //    {
-            //        return StatusCode(500, "Internal Server Error. Something went Wrong!");
-            //    }
-            //}
-            //else if (req.name == ActionName.rollback.ToString())
-            //{
-            //    var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.FaChai, tpUserName);
-            //    var result = _bNGBLL.Rollback(tpCustInfo, req, out decimal afterAmount);
-
-            //    if (result == (int)TransactionStatus.Success)
-            //    {
-            //        return Ok(new BNGTransactionResponse()
-            //        {
-            //            uid = req.uid,
-            //            balance = new balance()
-            //            {
-            //                value = afterAmount.ToString(),
-            //                version = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-            //            }
-            //        });
-            //    }
-            //    else
-            //    {
-            //        return StatusCode(500, "Internal Server Error. Something went Wrong!");
-            //    }
-            //}
-            //else
-            //{
-            //    var tpCustBalance = _tpCustInfoBLL.GetBalance((int)Tp.FaChai, tpUserName, gameType);
-
-            //    return Ok(new BNGTransactionResponse()
-            //    {
-            //        uid = req.uid,
-            //        balance = new balance()
-            //        {
-            //            value = tpCustBalance.Balance.ToString(),
-            //            version = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-            //        }
-            //    });
-            //}
         }
 
         #region private methord
@@ -181,7 +75,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                 });
 
-            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)Tp.FaChai, tpUserName, gameType);
+            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)Tp.BNG, tpUserName, gameType);
+
             return Ok(new BNGAuthenticateResponse()
             {
                 uid = req.uid,
@@ -220,7 +115,19 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else
             {
-                return StatusCode(500, "Internal Server Error. Something went Wrong!");
+                return Ok(new BNGTransactionErrorResponse()
+                {
+                    uid = req.uid,
+                    balance = new balance()
+                    {
+                        value = afterAmount.ToString(),
+                        version = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                    },
+                    error = new error()
+                    {
+                        code = "OTHER_EXCEED"
+                    }
+                });
             }
         }
         private IActionResult Rollback(string tpUserName, BNGRequest req)
@@ -242,7 +149,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else
             {
-                return StatusCode(500, "Internal Server Error. Something went Wrong!");
+                return StatusCode(503, "Internal Server Error. Something went Wrong!");
             }
         }
         private IActionResult GetBalance(string tpUserName, BNGRequest req)
