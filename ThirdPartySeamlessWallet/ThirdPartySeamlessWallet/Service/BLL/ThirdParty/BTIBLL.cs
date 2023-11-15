@@ -371,17 +371,37 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.cust_id);
             request.amount *= tpCurrency.ExchangeRate;
 
-            var btiResult = await settledService.Credit_BTIAsync(tpCustInfo, new BTICreditRequest(request));
+            var creditRequest = new BTICreditRequest(request);
+            var btiResult = await settledService.Credit_BTIAsync(tpCustInfo, creditRequest);
 
-            if (btiResult.SPResult == 0)
+            if (btiResult.SPResult < 1)
             {
                 btiResult.AfterAmount = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
+                var errorMessage = string.Empty;
+                switch (btiResult.SPResult)
+                {
+                    case 0:
+                        errorMessage = $"reserve_id:{creditRequest.reserve_id} is reverse/cancel done.";
+                        break;
+                    case -2:
+                        errorMessage = $"reserve_id:{creditRequest.reserve_id} is credit done.";
+                        break;
+                    case -3:
+                        errorMessage = $"reserve_id:{creditRequest.reserve_id} is not exist PurchaseBetID:{creditRequest.PurchaseID}.";
+                        break;
+                    case -4:
+                        errorMessage = $"reserve_id:{creditRequest.reserve_id} PurchaseBetID not same with PurchaseID:{creditRequest.PurchaseID}.";
+                        break;
+                    default: //-1
+                        errorMessage = $"reserve_id:{creditRequest.reserve_id} was not found.";
+                        break;
+                }
                 return ReturnBTI(new Dictionary<string, string>
                 {
                     { "error_code", "0" },
-                    { "error_message", "OK" },
-                    { "balance", btiResult.AfterAmount.ToString() },
+                    { "error_message", errorMessage },
                     { "trx_id", btiResult.Trx_id.ToString()},
+                    { "balance", btiResult.AfterAmount.ToString() }
                 });
             }
 
@@ -390,8 +410,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 { "error_code", "0" },
                 { "error_message", "OK" },
-                { "balance", btiResult.AfterAmount.ToString() },
                 { "trx_id", btiResult.Trx_id.ToString()},
+                { "balance", btiResult.AfterAmount.ToString() }
             });
         }
 
