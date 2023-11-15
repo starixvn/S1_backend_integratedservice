@@ -95,7 +95,8 @@
         FaChai_RNG = 106,
         Pegasus_RNG = 107,
         BNG_RNG = 108,
-        SG_Table = 109
+        SG_Table = 109,
+        HaoLong_Lottery = 110,
     }
 
 }

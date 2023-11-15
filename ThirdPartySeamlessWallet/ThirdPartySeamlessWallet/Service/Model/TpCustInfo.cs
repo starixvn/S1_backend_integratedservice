@@ -48,13 +48,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string Token { get; set; }
         public bool Locked => CustStatus != 1 || TpStatus != 1 || TpCustStatus != 1;
     }
-    public class BonusFulfill
-    {
-        public int BonusId { get; set; }
-        public int CustId { get; set; }
-        public int SiteId { get; set; }
-        public string UserName { get; set; }
-    }
+    
     public class Customer
     {
         public int CustId { get; set; }
