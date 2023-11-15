@@ -75,7 +75,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                 });
 
-            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)Tp.FaChai, tpUserName, gameType);
+            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)Tp.BNG, tpUserName, gameType);
+
             return Ok(new BNGAuthenticateResponse()
             {
                 uid = req.uid,
