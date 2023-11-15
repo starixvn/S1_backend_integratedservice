@@ -111,6 +111,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 else
                 {
                     await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
+                    btiResult.SPResult = (int)btiResult.Trx_id;
                 }
 
                 return btiResult;
