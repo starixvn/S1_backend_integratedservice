@@ -59,7 +59,8 @@ namespace ThirdPartyWager.Extensions
                 { Tp.FaChai, AddFaChai},
                 { Tp.Pegasus, AddPegasus},
                 { Tp.BNG, AddBNG},
-                { Tp.HaoLong, AddHaoLung}
+                { Tp.HaoLong, AddHaoLung},
+                { Tp.NLC, AddNLC}
             };
         }
         private IServiceCollection AddSA(IServiceCollection services)
@@ -607,7 +608,7 @@ namespace ThirdPartyWager.Extensions
 
             return services;
         }
-        
+
         private IServiceCollection AddPegasus(IServiceCollection services)
         {
             services.AddSingleton<WagerPegasusService>();
@@ -662,6 +663,22 @@ namespace ThirdPartyWager.Extensions
             services.AddHostedService<WagerHL>();
             //TODO 先測WagerHL
             //services.AddHostedService<FinanceHL>();
+
+            return services;
+        }
+
+        private IServiceCollection AddNLC(IServiceCollection services)
+        {
+            services.AddSingleton<WagerNLCService>();
+
+            services.AddSingleton<WagerNLCBLL>();
+            services.AddSingleton<ApiNLCBLL>();
+            services.AddSingleton<FinanceNLCBLL>();
+
+            services.AddHostedService<WagerNLC>();
+            services.AddHostedService<WagerRedoNLC>();
+            services.AddHostedService<WagerUnsettleNLC>();
+            services.AddHostedService<FinanceNLC>();
 
             return services;
         }

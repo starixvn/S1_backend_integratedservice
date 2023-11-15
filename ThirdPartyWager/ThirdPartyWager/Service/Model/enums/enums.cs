@@ -59,7 +59,8 @@
         FaChai = 55,
         Pegasus = 56,
         BNG = 57,
-        HaoLong = 58
+        HaoLong = 58,
+        NLC = 59,
     }
     public enum GameType
     {
@@ -101,7 +102,8 @@
         IM_Sports = 103,
         FaChai_RNG = 106,
         SG_Table = 109,
-        HaoLong_Lottery = 110
+        HaoLong_Lottery = 110,
+        NLC_RNG = 111,
     }
     public enum SettlementType
     {
