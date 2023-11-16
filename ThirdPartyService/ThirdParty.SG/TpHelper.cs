@@ -116,7 +116,7 @@ namespace ThirdParty.SG
                     TpUserName = wagerDetail.GetValueOrDefault("acctId")?.ToString(),
                     UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("ticketTime", DateTime.MinValue),
                     UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("ticketTime", DateTime.MinValue),
-                    Stake = (decimal)wagerDetail.GetValueOrDefault("betAmount") * tpCurrency.ExchangeRate,
+                    Stake = (decimal)wagerDetail.GetValueOrDefault("winLoss") * tpCurrency.ExchangeRate,
                     WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("winLoss") * tpCurrency.ExchangeRate,
                     GameCode = wagerDetail.GetValueOrDefault("gameCode")?.ToString(),
                     GameName = GetGameName(wagerDetail.GetValueOrDefault("gameCode")?.ToString()),

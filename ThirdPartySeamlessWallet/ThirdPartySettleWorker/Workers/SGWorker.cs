@@ -205,8 +205,8 @@ namespace ThirdPartySettleWorker.Workers
 
                         if (SettleAmountCheck(unsettled, wager))
                         {
-                            var stake = unsettled.Stake;
                             // can't get the actually bet amount , so use winLoseAmount
+                            var stake = unsettled.WinLostAmount;
                             var validBet = unsettled.WinLostAmount;
                             var winLostAmount = unsettled.WinLostAmount;
 
