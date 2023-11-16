@@ -104,7 +104,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> DebitReserve([FromQuery] string cust_id, [FromQuery] string reserve_id, [FromQuery] decimal amount, [FromQuery] string req_id)
+        public async Task<IActionResult> DebitReserve([FromQuery] string cust_id, [FromQuery] string reserve_id, [FromQuery] decimal amount, [FromQuery] string req_id, [FromQuery] string purchase_id)
         {
             try
             {
@@ -116,6 +116,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     reserve_id = reserve_id,
                     amount = amount,
                     req_id = req_id,
+                    purchase_id = purchase_id,
                     requestBody = await requestBody.ReadToEndAsync()
                 }));
             }
@@ -199,7 +200,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> DebitCustomer([FromQuery] string cust_id, [FromQuery] string req_id, [FromQuery] decimal amount)
+        public async Task<IActionResult> DebitCustomer([FromQuery] string cust_id, [FromQuery] string req_id, [FromQuery] decimal amount, [FromQuery] string purchase_id)
         {
             try
             {
@@ -210,6 +211,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     cust_id = cust_id,
                     amount = amount * -1,
                     req_id = req_id,
+                    purchase_id = purchase_id,
                     requestBody = await requestBody.ReadToEndAsync()
                 }));
             }
@@ -226,7 +228,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreditCustomer([FromQuery] string cust_id, [FromQuery] string req_id, [FromQuery] decimal amount)
+        public async Task<IActionResult> CreditCustomer([FromQuery] string cust_id, [FromQuery] string req_id, [FromQuery] decimal amount, [FromQuery] string purchase_id)
         {
             try
             {
@@ -237,6 +239,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     cust_id = cust_id,
                     amount = amount,
                     req_id = req_id,
+                    purchase_id = purchase_id,
                     requestBody = await requestBody.ReadToEndAsync()
                 }));
             }
