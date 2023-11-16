@@ -78,6 +78,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         { "error_code", "-10" },
                         { "error_message", $"Wrong Request." },
+                        { "trx_id", $"{DateTime.UtcNow.ToFileTimeUtc()}"},
+                        { "balance", "0" }
                     });
                 }
 
@@ -95,6 +97,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     { "error_code", "-1" },
                     { "error_message", ex.Message },
+                    { "trx_id", $"{DateTime.UtcNow.ToFileTimeUtc()}"},
+                    { "balance", "0" }
                 });
             }
         }
@@ -120,8 +124,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                 LogExceptionError(GetCurrentMethod(), ex);
                 return ReturnBTI(new Dictionary<string, string>
                 {
-                    { "error_code", "-1" },
+                    { "error_code", "0" }, //MUST ALWAYS SET error_code=0
                     { "error_message", ex.Message },
+                    { "trx_id", $"{DateTime.UtcNow.ToFileTimeUtc()}"},
+                    { "balance", "0" }
                 });
             }
         }
@@ -135,8 +141,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     return ReturnBTI(new Dictionary<string, string>
                     {
-                        { "error_code", "-10" },
+                        { "error_code", "0" }, //MUST ALWAYS SET error_code=0
                         { "error_message", $"Wrong Request." },
+                        { "balance", "0" }
                     });
                 }
 
@@ -151,8 +158,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 LogExceptionError(GetCurrentMethod(), ex);
                 return ReturnBTI(new Dictionary<string, string>
                 {
-                    { "error_code", "-1" },
+                    { "error_code", "0" }, //MUST ALWAYS SET error_code=0
                     { "error_message", ex.Message },
+                    { "balance", "0" }
                 });
             }
         }
@@ -166,8 +174,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     return ReturnBTI(new Dictionary<string, string>
                     {
-                        { "error_code", "-10" },
+                        { "error_code", "0" }, //MUST ALWAYS SET error_code=0
                         { "error_message", $"Wrong Request." },
+                        { "balance", "0" }
                     });
                 }
 
@@ -182,8 +191,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 LogExceptionError(GetCurrentMethod(), ex);
                 return ReturnBTI(new Dictionary<string, string>
                 {
-                    { "error_code", "-1" },
+                    { "error_code", "0" }, //MUST ALWAYS SET error_code=0
                     { "error_message", ex.Message },
+                    { "balance", "0" }
                 });
             }
         }
@@ -207,8 +217,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 return ReturnBTI(new Dictionary<string, string>
                 {
-                    { "error_code", "-1" },
+                    { "error_code", "0" }, //MUST ALWAYS SET error_code=0
                     { "error_message", ex.Message },
+                    { "trx_id", $"{DateTime.UtcNow.ToFileTimeUtc()}"},
+                    { "balance", "0" }
                 });
             }
         }
@@ -232,8 +244,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 return ReturnBTI(new Dictionary<string, string>
                 {
-                    { "error_code", "-1" },
+                    { "error_code", "0" }, //MUST ALWAYS SET error_code=0
                     { "error_message", ex.Message },
+                    { "trx_id", $"{DateTime.UtcNow.ToFileTimeUtc()}"},
+                    { "balance", "0" }
                 });
             }
         }
