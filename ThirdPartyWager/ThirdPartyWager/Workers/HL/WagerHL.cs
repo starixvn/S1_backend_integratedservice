@@ -9,7 +9,7 @@ namespace ThirdPartyWager.Workers.HL
     public class WagerHL : BackgroundService
     {
         private readonly ILogger<WagerAllBet> _logger;
-        private readonly WagerHLBLL _wageHLBLL;
+        private readonly WagerHLBLL _wagerHLBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private Timer timer;
@@ -25,7 +25,7 @@ namespace ThirdPartyWager.Workers.HL
         public WagerHL(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<WagerAllBet>>();
-            _wageHLBLL = provider.GetRequiredService<WagerHLBLL>();
+            _wagerHLBLL = provider.GetRequiredService<WagerHLBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _environment = provider.GetRequiredService<IHostEnvironment>();
@@ -41,33 +41,34 @@ namespace ThirdPartyWager.Workers.HL
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
+
+            if (CheckHaoLongBusyTime())
+            {
+                _logger.LogInformation($"TP - HaoLong Busy Time");
+                return;
+            }
+            
             try
             {
+                var nowTime = DateTime.Now;
                 quick = 0;
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(tpId, tpType);
-                DateTime timerTime;
-                int last;
-                if (dataTpTimer == null)
-                {
-                    last = iRangMins - 1;
-                    timerTime = DateTime.Now.AddMinutes(-1 * last);
-                }
-                else
-                {
-                    timerTime = dataTpTimer.StartTime;
-                    last = iRangMins;
-                }
                 
-                if (timerTime < DateTime.Now)
+                var timerTime = dataTpTimer?.StartTime ?? nowTime.AddMinutes(-(iRangMins - 1));
+                var last = (dataTpTimer == null) ? iRangMins - 1 : iRangMins;
+                
+                if (timerTime < nowTime)
                 {
                     var time = _dateTimeHelper.GetTimeByDay(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
-                    //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
-                    //if (time.endUnix < cvTime)
-                    //{
-                    var result = await _wageHLBLL.GetWagersAsync(time.startTime, time.endTime);
+                    var result = await _wagerHLBLL.GetWagersAsync(time.startTime, time.endTime);
                     if (result)
                     {
                         _thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
+                    }
+                    
+                    if(timerTime.Day < nowTime.Day)
+                    {
+                        _ = await _wagerHLBLL.SetSettledWager(time.startTime, time.endTime);
                     }
                 }
             }
@@ -89,6 +90,14 @@ namespace ThirdPartyWager.Workers.HL
                 }
 
             }
+        }
+
+        private bool CheckHaoLongBusyTime()
+        {
+            var utcNow = DateTime.UtcNow;
+            var gmtPlus8 = TimeZoneInfo.FindSystemTimeZoneById("Singapore Standard Time");
+            var timeInGmtPlus8 = TimeZoneInfo.ConvertTimeFromUtc(utcNow, gmtPlus8);
+            return timeInGmtPlus8.TimeOfDay >= new TimeSpan(15, 0, 0) && timeInGmtPlus8.TimeOfDay <= new TimeSpan(20, 0, 0);
         }
     }
 }
