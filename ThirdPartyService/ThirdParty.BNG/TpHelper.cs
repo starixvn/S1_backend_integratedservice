@@ -7,6 +7,7 @@ using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.BNG
@@ -44,14 +45,21 @@ namespace ThirdParty.BNG
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var wagerDetailList = TpBetRecordProvider.DbQuery("Service_TpWager_BNG_Get",
+            var wagerDetailList = TpBetRecordProvider.DbQuery("Service_BettransRng_BNG_Detail_Get",
                 new { round_id = getBetDetail.TransId }, DataBase.Wager);
             var detail = ToJson(wagerDetailList);
-            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            return new CasinoDetail(getBetDetail.TpGameTypeOption)
             {
                 TransId = getBetDetail.TransId,
                 Detail = detail,
                 TpCurrency = tpCurrency,
+                TpUserName = wagerDetailList.FirstOrDefault()?.GetValueOrDefault("player_id")?.ToString(),
+                UTCBetTime = wagerDetailList.Min(i => (DateTime)i.GetValueOrDefault("c_at", DateTime.MinValue)),
+                UTCSettledTime = wagerDetailList.Max(i => (DateTime)i.GetValueOrDefault("c_at", DateTime.MinValue)),
+                Stake = wagerDetailList.Sum(i => Math.Abs((decimal)i.GetValueOrDefault("bet"))) * tpCurrency.ExchangeRate,
+                WinlostAmount = (wagerDetailList.Sum(i => Math.Abs((decimal)i.GetValueOrDefault("win"))) * tpCurrency.ExchangeRate) - (wagerDetailList.Sum(i => Math.Abs((decimal)i.GetValueOrDefault("bet"))) * tpCurrency.ExchangeRate),
+                GameCode = wagerDetailList.FirstOrDefault()?.GetValueOrDefault("game_id")?.ToString(),
+                GameName = wagerDetailList.FirstOrDefault()?.GetValueOrDefault("game_name")?.ToString(),
             };
         }
 
