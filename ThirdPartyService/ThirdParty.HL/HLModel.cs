@@ -105,9 +105,9 @@ namespace ThirdParty.HL
         [XmlElement(ElementName="status")] 
         public string Status { get; set; } 
         [XmlElement(ElementName="balance")] 
-        public decimal Balance { get; set; } 
+        public string Balance { get; set; } 
         [XmlElement(ElementName="outstanding")] 
-        public decimal Outstanding { get; set; } 
+        public string Outstanding { get; set; } 
         [XmlElement(ElementName="currency")] 
         public string Currency { get; set; } 
     }

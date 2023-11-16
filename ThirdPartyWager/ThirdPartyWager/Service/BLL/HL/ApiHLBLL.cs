@@ -27,13 +27,39 @@ public class ApiHLBLL
         _siteHLConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<HLConfig>(Tp.HaoLong.ToString());
     }
 
-    public async Task<HLResponse> GetBetListByTime(string startTime, string endTime, string guid, int page)
+    public async Task<HLResponse> GetBetListByTime(string startTime, string endTime, string guid, int page = 0)
     {
         var param = $"apiUser={_siteHLConfig.ApiUser}&apiPass={_siteHLConfig.ApiPass}&" +
                     $"user={_siteHLConfig.AgentUser}&pass={_siteHLConfig.AgentPass}&" +
-                    $"dateFrom={startTime}&dateTo={endTime}&page={page}";
+                    $"dateFrom={startTime}&dateTo={endTime}";
+                    //保留$"&page={page}";
 
         var r = await DoHttpClientAsync($"{_siteHLConfig.ApiUrl}betlistPage.aspx?", param, "betData");
+        var result = JsonConvert.DeserializeObject<HLResponse>(r);
+        
+        return result;
+    }
+
+    public async Task<HLDrawResultResponse> GetDrawResult(DateTime drawTime)
+    {
+        var param = $"apiUser={_siteHLConfig.ApiUser}&apiPass={_siteHLConfig.ApiPass}&" +
+                    $"user={_siteHLConfig.AgentUser}&pass={_siteHLConfig.AgentPass}&" +
+                    $"drawDate={drawTime.Date:yyyy-MM-dd}";
+                    //$"drawDate={time}";
+        
+        var r = await DoHttpClientAsync($"{_siteHLConfig.ApiUrl}result.aspx?", param, "drawResult");
+        var result = JsonConvert.DeserializeObject<HLDrawResultResponse>(r);
+
+        return result;
+    }
+
+    public async Task<HLResponse> GetWinningNumberByPlayer(string tpAccountName,DateTime drawTime)
+    {
+        var param = $"apiUser={_siteHLConfig.ApiUser}&apiPass={_siteHLConfig.ApiPass}&" +
+                    $"user={_siteHLConfig.AgentUser}&pass={_siteHLConfig.AgentPass}&loginID={tpAccountName}&" +
+                    $"dateFrom={drawTime.Date:yyyy-MM-dd}&dateTo={drawTime.Date:yyyy-MM-dd}";
+        
+        var r = await DoHttpClientAsync($"{_siteHLConfig.ApiUrl}winNumber.aspx?", param, "betData");
         var result = JsonConvert.DeserializeObject<HLResponse>(r);
         
         return result;

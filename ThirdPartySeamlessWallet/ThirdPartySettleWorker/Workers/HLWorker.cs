@@ -114,10 +114,6 @@ namespace ThirdPartySettleWorker.Workers
                     }
                     catch (Exception ex1)
                     {
-                        Task.Run(() =>
-                        {
-                            _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, transId, false);
-                        });
                         _logger.LogError(ex1, $"{logName} exMessage:{ex1.Message} || TransId : {transId}");
                     }
                 }

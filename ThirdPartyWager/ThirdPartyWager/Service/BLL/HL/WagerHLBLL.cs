@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model.TpSiteConfig;
 
@@ -27,10 +28,12 @@ namespace ThirdPartyWager.Service.BLL.HL
             var guid = Guid.NewGuid().ToString();
             try
             {
-                var page = 1;
+                //先保留page
+                //var page = 1;
 
-                var result = _apiHLBLL.GetBetListByTime(startTime,endTime,guid,page);
-                var dataWager = result.Result.hl_Response;
+                var result = await _apiHLBLL.GetBetListByTime(startTime,endTime,guid);
+                var getHLWager = _wagerHLService.GetHLBetUnSettledList();
+                var dataWager = result.hl_Response;
 
                 if (dataWager.ErrorCode != 0 && dataWager.ErrorCode != 998)
                 {
@@ -54,16 +57,19 @@ namespace ThirdPartyWager.Service.BLL.HL
                     return true;
                 }
                 
-                foreach (var betData in dataWager.BetData)
+                foreach (var wagerData in dataWager.WagerData)
                 {
                     try
                     {
-                        _ = _wagerHLService.InsertHLWager(betData);
+                        if (getHLWager != null && !getHLWager.Any(x => x.betID == wagerData.BetID))
+                        {
+                            _ =  _wagerHLService.InsertHLWager(wagerData);
+                        }
                     }
                     catch (Exception ex)
                     {
-                        msg = $"INSERT_WAGER(WAGERID: {betData.BetID} )";
-                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(betData)}\r\n{ex.Message}");
+                        msg = $"INSERT_WAGER(WAGERID: {wagerData.BetID} )";
+                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(wagerData)}\r\n{ex.Message}");
                         return false;
                     }
                 }
@@ -78,6 +84,85 @@ namespace ThirdPartyWager.Service.BLL.HL
                 _logger.LogError(ex, $"GetWagersAsync {msg}\r\n{ex.Message}");
                 return false;
             }
+        }
+
+
+        public async Task<bool> SetSettledWager(string startTime, string endTime)
+        {
+            var msg = "FATAL_ERROR";
+            var guid = Guid.NewGuid().ToString();
+            try
+            {
+                var nowDate = DateTime.Now;
+                _logger.LogInformation($"HaoLong Job Time : {nowDate}");
+                var getDrawResult = await _apiHLBLL.GetDrawResult(nowDate);
+                var getHLUnSettledWager = _wagerHLService.GetHLBetUnSettledList();
+
+                var uniqueDraw = getDrawResult.hl_Response.DrawResult.Distinct().ToList();
+                
+                var matchedTransWager = uniqueDraw
+                    .Join(getHLUnSettledWager,
+                        extracted => new { extracted.drawType, extracted.drawDate },
+                        hlBet => new { hlBet.drawType, hlBet.drawDate },
+                        (extracted, hlBet) => hlBet)
+                    .ToList();
+                
+                
+                if (matchedTransWager.Any())
+                {
+                    try 
+                    {
+                        var tasks = matchedTransWager.Select(async item =>
+                        {
+                            var result = await _apiHLBLL.GetWinningNumberByPlayer(item.loginID, nowDate);
+
+                            HLWagerData insert;
+                            if (result.hl_Response.ErrorCode == 0 && result.hl_Response.WagerData != null)
+                            {
+                                var settledWager = result.hl_Response.WagerData.FirstOrDefault(x => x.BetID == item.betID);
+                                insert = CreateHLWagerData(settledWager.BetID, settledWager.StrikePosition, settledWager.SettleAmount);
+                            }
+                            else
+                            {
+                                insert = CreateHLWagerData(item.betID, "NA", "0");
+                            }
+
+                            var insertResult = await _wagerHLService.UpdateHLWager(insert);
+                            if (!insertResult)
+                            {
+                                msg = $"UPDATE_WAGER(WAGERID: {insert.BetID} )";
+                                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(insert)}");
+                            }
+                        });
+
+                        await Task.WhenAll(tasks);
+
+                    }
+                    catch (Exception ex)
+                    {
+                        msg = $"INSERT_WAGER(WAGERID: {matchedTransWager.Count()} )";
+                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(matchedTransWager)}\r\n{ex.Message}");
+                        return false;
+                    }
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                msg = "FATAL_ERROR";
+                _logger.LogError(ex, $"SetSettledWager {msg}\r\n{ex.Message}");
+                return false;
+            }
+        }
+        
+        private HLWagerData CreateHLWagerData(string betId, string strikePosition, string settleAmount)
+        {
+            return new HLWagerData()
+            {
+                BetID = betId,
+                StrikePosition = strikePosition,
+                SettleAmount = settleAmount
+            };
         }
     }
 }

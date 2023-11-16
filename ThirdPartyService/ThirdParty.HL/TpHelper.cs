@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
@@ -155,10 +156,13 @@ namespace ThirdParty.HL
 
                 if (betLoginResponse.ErrorCode == 0)
                 {
+                    var parseBalance = Convert.ToDecimal(betLoginResponse.Balance);
+                    var parseOutstanding = Convert.ToDecimal(betLoginResponse.Outstanding);
+                    
                     oApiResult.Data = new UserBalance
                     {
-                        balance = betLoginResponse.Balance,
-                        outstanding = betLoginResponse.Outstanding
+                        balance = parseBalance,
+                        outstanding = parseOutstanding 
                     };
                     oApiResult.ErrorCode = ErrorCode.Success;
                 }
@@ -178,7 +182,7 @@ namespace ThirdParty.HL
             var apiUrl = _siteHLConfig.ApiUrl;
             var postData = $"apiUser={_siteHLConfig.ApiUser}&apiPass={_siteHLConfig.ApiPass}&" +
                                 $"user={_siteHLConfig.AgentUser}&pass={_siteHLConfig.AgentPass}&" +
-                                $"loginID={tpCustInfo.UserName}&amount={Amount}";
+                                $"loginID={tpCustInfo.TpUserName}&amount={Amount}";
             apiUrl = direction switch
             {
                 Direction.ToTp => apiUrl + "deposit.aspx?",
@@ -189,14 +193,14 @@ namespace ThirdParty.HL
 
             if (IsXML(result))
             {
-                GetProfileResponse profileResponse;
+                HLResponse profileResponse;
                 try
                 {
-                    profileResponse = XMLDeserialize<GetProfileResponse>(result);
+                    profileResponse = XMLDeserialize<HLResponse>(result);
                 }
                 catch (Exception)
                 {
-                    profileResponse = XMLDeserialize<GetProfileResponse>(result);
+                    profileResponse = XMLDeserialize<HLResponse>(result);
                 }
 
                 if (profileResponse.ErrorCode != 0)
@@ -231,7 +235,9 @@ namespace ThirdParty.HL
 
         public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            TransIdModel transIdModel = new TransIdModel();
+            transIdModel.Implemented = true;
+            return transIdModel;
         }
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)

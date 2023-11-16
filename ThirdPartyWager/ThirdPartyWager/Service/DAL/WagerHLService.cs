@@ -17,30 +17,32 @@ namespace ThirdPartyWager.Service.DAL
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
 
-        public bool InsertHLWager(HLBetData bet)
+        public bool InsertHLWager(HLWagerData wager)
         {
             var p = new DynamicParameters();
-            p.Add("betID", bet.BetID);
-            p.Add("dateTime", bet.DateTime);
-            p.Add("drawType", bet.DrawType);
-            p.Add("drawDate", bet.DrawDate);
-            p.Add("betNumber", bet.BetNumber);
-            p.Add("betPosition", bet.BetPosition);
-            p.Add("bet", bet.BetAmount);
+            p.Add("betID", wager.BetID);
+            p.Add("loginID", wager.UserName);
+            p.Add("dateTime", wager.DateTime);
+            p.Add("drawType", wager.DrawType);
+            p.Add("drawDate", wager.DrawDate);
+            p.Add("betNumber", wager.BetNumber);
+            p.Add("betPosition", wager.BetPosition);
+            p.Add("bet", wager.BetAmount);
             return _wagerDbClient.Execute("Service_TpWagerHL_Ins", p);
         }
 
-        public bool UpdateHLWager(HLBetData bet)
+        public async Task<bool> UpdateHLWager(HLWagerData wager)
         {
             var p = new DynamicParameters();
-            p.Add("betID", bet.BetID);
-            p.Add("dateTime", bet.DateTime);
-            p.Add("drawType", bet.DrawType);
-            p.Add("drawDate", bet.DrawDate);
-            p.Add("betNumber", bet.BetNumber);
-            p.Add("betPosition", bet.BetPosition);
-            p.Add("bet", bet.BetAmount);
-            return _wagerDbClient.Execute("Service_TpWagerHL_Set", p);
+            p.Add("betID", wager.BetID);
+            p.Add("strikePosition", wager.StrikePosition);
+            p.Add("strike", decimal.Parse(wager.SettleAmount));
+            return _wagerDbClient.Execute("Service_TpWager_HL_Set", p);
+        }
+        
+        public IEnumerable<HLBetTrans> GetHLBetUnSettledList()
+        {
+            return _wagerDbClient.Query<HLBetTrans>("Service_TpWager_HL_UnSettle_Get");
         }
     }
 }
