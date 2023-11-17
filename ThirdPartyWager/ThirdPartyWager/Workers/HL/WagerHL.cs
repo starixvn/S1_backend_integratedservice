@@ -13,8 +13,8 @@ namespace ThirdPartyWager.Workers.HL
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private Timer timer;
-        private readonly int intervalMins = 30;
-        private readonly int iRangMins = 61;
+        private readonly int intervalMins = 5;
+        private readonly int iRangMins = 15;
         private readonly int tpId = (int)Tp.HaoLong;
         private readonly string _tpName = Tp.HaoLong.ToString();
         private readonly int tpType = (int)WagerTimerType.Wager;
@@ -80,13 +80,13 @@ namespace ThirdPartyWager.Workers.HL
             {
                 if (quick == 1)
                 {
-                    var dueTimeSpan = TimeSpan.FromSeconds(30);
+                    var dueTimeSpan = TimeSpan.FromMinutes(1);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
                     var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                    timer.Change(dueTimeSpan, TimeSpan.FromHours(1));
+                    timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
 
             }
@@ -97,7 +97,7 @@ namespace ThirdPartyWager.Workers.HL
             var utcNow = DateTime.UtcNow;
             var gmtPlus8 = TimeZoneInfo.FindSystemTimeZoneById("Singapore Standard Time");
             var timeInGmtPlus8 = TimeZoneInfo.ConvertTimeFromUtc(utcNow, gmtPlus8);
-            return timeInGmtPlus8.TimeOfDay >= new TimeSpan(15, 0, 0) && timeInGmtPlus8.TimeOfDay <= new TimeSpan(20, 0, 0);
+            return timeInGmtPlus8.TimeOfDay >= new TimeSpan(14, 57, 0) && timeInGmtPlus8.TimeOfDay <= new TimeSpan(20, 3, 0);
         }
     }
 }

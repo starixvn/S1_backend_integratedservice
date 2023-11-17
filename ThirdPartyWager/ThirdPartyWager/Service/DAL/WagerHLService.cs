@@ -28,7 +28,7 @@ namespace ThirdPartyWager.Service.DAL
             p.Add("betNumber", wager.BetNumber);
             p.Add("betPosition", wager.BetPosition);
             p.Add("bet", wager.BetAmount);
-            return _wagerDbClient.Execute("Service_TpWagerHL_Ins", p);
+            return _wagerDbClient.Execute("Service_TpWager_HL_Ins", p);
         }
 
         public async Task<bool> UpdateHLWager(HLWagerData wager)
@@ -37,6 +37,7 @@ namespace ThirdPartyWager.Service.DAL
             p.Add("betID", wager.BetID);
             p.Add("strikePosition", wager.StrikePosition);
             p.Add("strike", decimal.Parse(wager.SettleAmount));
+            p.Add("SettleFlag", wager.SettleFlag);
             return _wagerDbClient.Execute("Service_TpWager_HL_Set", p);
         }
         
