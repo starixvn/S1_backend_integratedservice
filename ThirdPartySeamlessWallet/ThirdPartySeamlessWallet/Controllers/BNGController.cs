@@ -137,12 +137,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else
             {
+                var tpCustBalance = _tpCustInfoBLL.GetBalance((int)Tp.BNG, tpUserName, gameType);
+
                 return Ok(new BNGTransactionErrorResponse()
                 {
                     uid = req.uid,
                     balance = new balance()
                     {
-                        value = afterAmount.ToString(),
+                        value = tpCustBalance.Balance.ToString(),
                         version = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
                     },
                     error = new error()
