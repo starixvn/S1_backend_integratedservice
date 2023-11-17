@@ -97,6 +97,7 @@
         BNG_RNG = 108,
         SG_Table = 109,
         HaoLong_Lottery = 110,
+        NLC_RNG = 111,
     }
 
 }
