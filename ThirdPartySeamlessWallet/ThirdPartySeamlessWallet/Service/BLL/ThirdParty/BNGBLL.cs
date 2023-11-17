@@ -80,7 +80,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             tempResult = _partitionService.Execute(partitionTime, "Service_BettransRng_BNG_Ins", bettingData, trans);
 
-            if (reqData.args.round_started && bettingData.bet > 0)
+            if (bettingData.bet > 0)
             {
                 tempResult = _bettingService.PlaceBetV2(tpCustInfo, Math.Abs(bettingData.bet) * -1, (int)Tp.BNG, reqData.args.round_id.ToString(), (int)GameType.BNG_RNG, reqData.args.round_id.ToString(), null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
             }
