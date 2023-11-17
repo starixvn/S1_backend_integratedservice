@@ -91,7 +91,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             //    balance = new balance()
             //    {
             //        value = tpCustBalance.Balance.ToString(),
-            //        version = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+            //        version = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
             //    },
             //    tag = ""
             //});
@@ -113,7 +113,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 balance = new balance()
                 {
                     value = tpCustBalance.Balance.ToString(),
-                    version = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                    version = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
                 },
                 tag = ""
             });
@@ -131,7 +131,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     balance = new balance()
                     {
                         value = afterAmount.ToString(),
-                        version = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                        version = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
                     }
                 });
             }
@@ -143,7 +143,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     balance = new balance()
                     {
                         value = afterAmount.ToString(),
-                        version = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                        version = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
                     },
                     error = new error()
                     {
@@ -165,7 +165,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     balance = new balance()
                     {
                         value = afterAmount.ToString(),
-                        version = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                        version = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
                     }
                 });
             }
@@ -184,7 +184,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 balance = new balance()
                 {
                     value = tpCustBalance.Balance.ToString(),
-                    version = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                    version = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
                 }
             });
         }
