@@ -54,15 +54,15 @@ namespace ThirdPartySeamlessWallet.Controllers
         #region private methord
         private IActionResult Authenticate(string authToken, string sessionToken, string tpUserName, BNGRequest req)
         {
-            if (!_authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
-                return Ok(new BNGResponse()
-                {
-                    uid = req.uid,
-                    error = new error()
-                    {
-                        code = ErrorCode.INVALID_TOKEN.ToString()
-                    }
-                });
+            //if (!_authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
+            //    return Ok(new BNGResponse()
+            //    {
+            //        uid = req.uid,
+            //        error = new error()
+            //        {
+            //            code = ErrorCode.INVALID_TOKEN.ToString()
+            //        }
+            //    });
 
             var tpCheck = _thirdPartyBLL.ThirdPartyCheck((int)ThirdParty, tpUserName);
             if (tpCheck == null || tpCheck.Token != sessionToken)
@@ -77,16 +77,38 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             var tpCustBalance = _tpCustInfoBLL.GetBalance((int)Tp.BNG, tpUserName, gameType);
 
+            //return Ok(new BNGAuthenticateResponse()
+            //{
+            //    uid = req.uid,
+            //    player = new player()
+            //    {
+            //        id = tpUserName,
+            //        brand = tpCustInfoAuth.SiteId.ToString(),
+            //        currency = tpCustInfoAuth.TpCurrencyId.ToString(),
+            //        mode = "REAL",
+            //        is_test = tpCustInfoAuth.IsTest,
+            //    },
+            //    balance = new balance()
+            //    {
+            //        value = tpCustBalance.Balance.ToString(),
+            //        version = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+            //    },
+            //    tag = ""
+            //});
+
+            //測試用先寫死某些資料，上正式前要移除
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.BNG, tpUserName);
+
             return Ok(new BNGAuthenticateResponse()
             {
                 uid = req.uid,
                 player = new player()
                 {
                     id = tpUserName,
-                    brand = tpCustInfoAuth.SiteId.ToString(),
-                    currency = tpCustInfoAuth.TpCurrencyId.ToString(),
+                    brand = tpCustInfo.SiteId.ToString(),
+                    currency = tpCustBalance.TpCurrencyId.ToString(),
                     mode = "REAL",
-                    is_test = tpCustInfoAuth.IsTest,
+                    is_test = false,
                 },
                 balance = new balance()
                 {
