@@ -60,7 +60,7 @@ namespace ThirdPartySettleWorker.Workers
             var logName = $"Settle_HaoLong";
             var getSP = $"Service_TpWager_HL_Settle_Get";
             var setSP = $"Service_TpWager_HL_Settle_Set";
-            var dueTimeSpan = TimeSpan.FromSeconds(30);
+            var dueTimeSpan = TimeSpan.FromMinutes(15);
             
             try
             {
@@ -73,7 +73,7 @@ namespace ThirdPartySettleWorker.Workers
                 //forContinue
                 if (tpUnsettleList.Count() == 200)
                 {
-                    dueTimeSpan = TimeSpan.FromSeconds(1);
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
                 }
 
                 foreach (var transId in tpUnsettleList.Select(tpUnsettle => tpUnsettle.TransId))
@@ -94,6 +94,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             TpId = (int)Tp,
                             Stake = unsettled.Stake,
+                            TpUserName = unsettled.Account,
                             ValidBet = unsettled.ValidBet,
                             WinlostAmount = unsettled.WinLostAmount,
                             TransId = unsettled.TransId,

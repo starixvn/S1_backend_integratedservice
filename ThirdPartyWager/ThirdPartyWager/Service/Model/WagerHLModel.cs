@@ -43,7 +43,7 @@ namespace ThirdPartyWager.Service.Model
         public decimal BetAmount { get; set; }
         [JsonProperty("strike")]
         public string SettleAmount { get; set; }
-        
+        public int SettleFlag { get; set; }
     }
     
     #region WagerSettledData

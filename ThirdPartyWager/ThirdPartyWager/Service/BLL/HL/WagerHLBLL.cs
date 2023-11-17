@@ -32,7 +32,6 @@ namespace ThirdPartyWager.Service.BLL.HL
                 //var page = 1;
 
                 var result = await _apiHLBLL.GetBetListByTime(startTime,endTime,guid);
-                var getHLWager = _wagerHLService.GetHLBetUnSettledList();
                 var dataWager = result.hl_Response;
 
                 if (dataWager.ErrorCode != 0 && dataWager.ErrorCode != 998)
@@ -42,7 +41,7 @@ namespace ThirdPartyWager.Service.BLL.HL
                     return false;
                 }
                 
-                if (dataWager.ErrorCode == 0 && dataWager.Desc == "Data not Found")
+                if (dataWager.ErrorCode == 3 && dataWager.Desc == "Data NOT Found")
                 {
                     msg = "NO_DATA";
                     _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
@@ -53,15 +52,17 @@ namespace ThirdPartyWager.Service.BLL.HL
                 if (dataWager.ErrorCode == 998)
                 {
                     msg = "Busy Time";
-                    _logger.LogInformation($"GetWagersAsync {msg}\r\n{startTime} ~ {endTime}");
+                    _logger.LogInformation($"HaoLong GetWagersAsync {msg}\r\n{startTime} ~ {endTime}");
                     return true;
                 }
+                
+                var getHLWager = _wagerHLService.GetHLBetUnSettledList();
                 
                 foreach (var wagerData in dataWager.WagerData)
                 {
                     try
                     {
-                        if (getHLWager != null && !getHLWager.Any(x => x.betID == wagerData.BetID))
+                        if (IsValidWager(getHLWager, wagerData))
                         {
                             _ =  _wagerHLService.InsertHLWager(wagerData);
                         }
@@ -161,8 +162,14 @@ namespace ThirdPartyWager.Service.BLL.HL
             {
                 BetID = betId,
                 StrikePosition = strikePosition,
-                SettleAmount = settleAmount
+                SettleAmount = settleAmount,
+                SettleFlag = 2
             };
+        }
+        
+        private bool IsValidWager(IEnumerable<HLBetTrans> getHLWager, HLWagerData wagerData)
+        {
+            return getHLWager.Any(x => x.betID != wagerData.BetID);
         }
     }
 }

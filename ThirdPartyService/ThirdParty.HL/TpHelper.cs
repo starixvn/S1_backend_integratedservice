@@ -244,11 +244,11 @@ namespace ThirdParty.HL
         {
             //最多抓兩天 多一秒都不行
             var timeStart = getBetDetail.SettledTime.Date;
-            var timeEnd = timeStart.AddDays(2).AddSeconds(-1).ToString("yyyy-MM-dd HH:mm:ss"); 
+            var timeEnd = timeStart.AddDays(2).AddSeconds(-1).ToString("yyyy-MM-dd"); 
             
             var postData = $"apiUser={_siteHLConfig.ApiUser}&apiPass={_siteHLConfig.ApiPass}&" +
                            $"user={_siteHLConfig.AgentUser}&pass={_siteHLConfig.AgentPass}&" +
-                           $"loginID={tpCustInfo.TpUserName}&dateFrom={timeStart}&dateTo={timeEnd}";
+                           $"loginID={tpCustInfo.TpUserName}&dateFrom={timeStart:yyyy-MM-dd}&dateTo={timeEnd}";
             
             var result = HttpPost($"{_siteHLConfig.ApiUrl}betlistPage.aspx?",postData ,"application/x-www-form-urlencoded");
             if (IsXML(result))
@@ -263,7 +263,7 @@ namespace ThirdParty.HL
                     getBetListResponse = XMLDeserialize<GetBetListResponse>(result);
                 }
 
-                if (getBetListResponse.ErrorCode != 0)
+                if (getBetListResponse.ErrorCode == 0)
                 {
                    var betDetail = getBetListResponse.BetDataList.FirstOrDefault(x => x.BetID == getBetDetail.TransId);
                    return new BaseDetail(getBetDetail.TpGameTypeOption)
@@ -277,11 +277,23 @@ namespace ThirdParty.HL
                        }
                    };
                 }
+                
+                return new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = JsonConvert.SerializeObject(getBetListResponse),
+                    TpCurrency = new TpCurrency()
+                    {
+                        ExchangeRate = tpCustInfo.ExchangeRate,
+                        TpCurrencyId = tpCustInfo.TpCurrencyId
+                    }
+                };
             }
             
             return new BaseDetail(getBetDetail.TpGameTypeOption)
             {
                 TransId = getBetDetail.TransId,
+                Detail = string.Empty,
                 TpCurrency = new TpCurrency()
                 {
                     ExchangeRate = tpCustInfo.ExchangeRate,
