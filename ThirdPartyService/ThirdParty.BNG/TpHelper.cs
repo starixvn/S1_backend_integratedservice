@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using System;
 using System.Text;
 using System.Web;
 using ThirdPartyCore;
@@ -14,12 +15,18 @@ namespace ThirdParty.BNG
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly Dictionary<int, Dictionary<string, string>> siteConfigDic;
+        private readonly BNGConfig _siteBNGConfig;
 
         public TpHelper(IServiceProvider provider)
         {
-            siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>((TpEnum.BNG).ToString());
+            _siteBNGConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<BNGConfig>(TpEnum.BNG.ToString());
         }
+        public class BNGConfig : TpSiteConfig
+        {
+            public string ProjectName { get; set; }
+            public string ApiToken { get; set; }
+        }
+
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -35,7 +42,9 @@ namespace ThirdParty.BNG
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
+            oApiResult.ErrorCode = ErrorCode.Fail;
+            return oApiResult;
         }
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -79,7 +88,7 @@ namespace ThirdParty.BNG
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
                 GameID = detail.FirstOrDefault().GetStringValue("game_id"),
-                Game = tpGameType.TypeName,
+                Game = detail.FirstOrDefault().GetStringValue("game_name"),
                 RefNo = string.Empty,
                 Title = tpGameType.TypeName,
                 MatchID = betRecordInfo.TransId,
@@ -95,11 +104,12 @@ namespace ThirdParty.BNG
         {
             ApiResult oApiResult = new ApiResult();
 
-            var siteInputs = siteConfigDic[tpCustInfo.SiteId];
-            string apiUrl = siteInputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(siteInputs["ApiUrl"]) ? siteInputs["ApiUrl"] : throw new Exception();
-            string projectName = siteInputs.ContainsKey("ProjectName") && !string.IsNullOrEmpty(siteInputs["ProjectName"]) ? siteInputs["ProjectName"] : throw new Exception();
-            string apiToken = siteInputs.ContainsKey("ApiToken") && !string.IsNullOrEmpty(siteInputs["ApiToken"]) ? siteInputs["ApiToken"] : throw new Exception();
+            string apiUrl = _siteBNGConfig.ApiUrl;
+            string projectName = _siteBNGConfig.ProjectName;
+            string apiToken = _siteBNGConfig.ApiToken;
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception();
+            string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
+            bool FunPlay = fun == "1" ? true : false;
 
             #region token
             var key = ApplyToken(tpCustInfo);
@@ -111,7 +121,13 @@ namespace ThirdParty.BNG
 
             var ts = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
             var platform = appType == AppType.Desktop ? "desktop" : "mobile";
-            var url = $"{apiUrl}{projectName}/game.html?token={sessionKey}&game={gameId}&ts={ts}&platform={platform}";
+
+            var url = $"{apiUrl}{projectName}/game.html?token={sessionKey}&game={gameId}&ts={ts}&platform={platform}&lang={TpLangId}";
+
+            if (FunPlay)
+            {
+                url = $"{apiUrl}{projectName}/game.html?token={sessionKey}&game={gameId}&ts={ts}&platform={platform}&lang={TpLangId}&wl=demo";
+            }
 
             oApiResult.ErrorCode = ErrorCode.Success;
             oApiResult.Message = url;
