@@ -38,12 +38,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             var partitionTime = DateTimeOffset.Parse(reqData.c_at).DateTime;
 
-            var check = _partitionService.Query<BettransRng_BNG>(partitionTime, "Service_BettransRng_BNG_Check", new { reqData.uid, reqData.args.round_id });
+            var check = _partitionService.Query<BettransRng_BNG>(partitionTime, "Service_BettransRng_BNG_Check", new { reqData.uid});
             if (check.Any())
             {
                 afterAmount = _tpCustInfoBLL.GetBalance((int)Tp.BNG, tpCustInfo.TpUserName, (int)GameType.BNG_RNG).Balance;
                 return (int)TransactionStatus.Success;
             }
+            var ticketType = reqData.args.win != null ? (int)BettransType.Payout : (int)BettransType.Bet;
 
             var bettingData = new BettransRng_BNG()
             {
@@ -68,7 +69,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 mode = reqData.args.player.mode,
                 is_test = reqData.args.player.is_test,
                 bonus = reqData.args.bonus == null ? null : JsonConvert.SerializeObject(reqData.args.bonus),
-                tag = reqData.args.tag
+                tag = reqData.args.tag,
+                TicketType = ticketType
             };
 
             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp.BNG, tpCustInfo.CurrencyId);
@@ -173,9 +175,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             var partitionTime = DateTimeOffset.Parse(reqData.c_at).DateTime;
 
-            //var check = _partitionService.Query<BettransRng_BNG>(partitionTime, "Service_BettransRng_BNG_CheckByRoundId", new { reqData.args.round_id });
-            var check = _partitionService.Query<BettransRng_BNG>(partitionTime, "Service_BettransRng_BNG_Check", new { uid = reqData.args.transaction_uid, reqData.args.round_id });
-            if (!check.Any())
+            var check = _partitionService.Query<BettransRng_BNG>(partitionTime, "Service_BettransRng_BNG_Check", new { uid = reqData.args.transaction_uid });
+            if (!check.Any() || check.FirstOrDefault().TicketType == (int)BettransType.CancelBet)
             {
                 return (int)TransactionStatus.Success;
             }
@@ -205,6 +206,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         conn,
                         trans
                     );
+
+            if(tempResult > 0)
+            {
+                tempResult = _partitionService.Execute(partitionTime, "Service_BettransRng_BNG_Set", new { uid = reqData.args.transaction_uid, TicketType = (int)BettransType.CancelBet }, trans);
+            }
 
             if (tempResult > 0)
             {

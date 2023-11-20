@@ -132,6 +132,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public bool is_test { get; set; }
         public string bonus { get; set; }
         public string tag { get; set; }
+        public int TicketType { get; set; }
     }
     public enum ErrorCode
     {
