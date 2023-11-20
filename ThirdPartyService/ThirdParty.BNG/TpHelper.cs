@@ -80,7 +80,7 @@ namespace ThirdParty.BNG
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var detail = TpBetRecordProvider.DbQuery("Service_TpWager_BNG_Get", new { round_id = betRecordInfo.TransId }, DataBase.Wager);
-            if (detail.Any())
+            if (!detail.Any())
             {
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
             }
