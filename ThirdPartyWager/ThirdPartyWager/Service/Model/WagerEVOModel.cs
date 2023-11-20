@@ -119,4 +119,15 @@
         public double payout { get; set; }
         public string gameSubType { get; set; }
     }
+
+    public class NLCConfig
+    {
+        public string EcId { get; set; }
+        public string ApiUrl { get; set; }
+        public string Ua2Token { get; set; }
+        public string AuthToken { get; set; }
+        public string CasinoKey { get; set; }
+        public string GameProvider { get; set; }
+        public string GameHistoryApiToken { get; set; }
+    }
 }

@@ -135,4 +135,14 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public string status { get; set; }
     }
+
+    public class NLCConfig : TpSiteConfig
+    {
+        public string EcId { get; set; }
+        public string Ua2Token { get; set; }
+        public string AuthToken { get; set; }
+        public string CasinoKey { get; set; }
+        public string GameProvider { get; set; }
+        public string GameHistoryApiToken { get; set; }
+    }
 }

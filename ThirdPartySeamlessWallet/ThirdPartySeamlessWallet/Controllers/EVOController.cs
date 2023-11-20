@@ -29,7 +29,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Tp thisTp;
         private readonly string _tpName;
         public string[] promoTransactionTypeList { get; set; }
-        private readonly Dictionary<string, string> _siteConfigOfNLC;
+        private readonly NLCConfig _siteConfigOfNLC;
 
         #endregion
 
@@ -53,7 +53,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 "RewardGamePlayableSpent", "RewardGameWinCapReached", "RewardGameMinBetLimitReached",
                 "FromGame", "RtrMonetaryReward" };
             // 取共用，設定依機器分為(nova、aiking)
-            _siteConfigOfNLC = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(Tp.NLC.ToString());
+            _siteConfigOfNLC = provider.GetRequiredService<ConfigBLL>().GetConfigValue<NLCConfig>(Tp.NLC.ToString());
         }
 
         #endregion
@@ -863,7 +863,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             string authToken;
             if (tpId == (int)Tp.NLC)
             {
-                authToken = _siteConfigOfNLC["AuthToken"];
+                authToken = _siteConfigOfNLC.AuthToken;
             }
             else
             {

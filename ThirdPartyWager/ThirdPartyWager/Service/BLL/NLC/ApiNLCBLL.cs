@@ -11,7 +11,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly HttpHelper _httpHelper;
         private readonly Common _common;
         private readonly Log2File _log2File;
-        private readonly ILogger<ApiNLCBLL> _logger;
         private readonly string _tpName = Tp.NLC.ToString();
 
         public ApiNLCBLL(IServiceProvider provider)
@@ -19,15 +18,14 @@ namespace ThirdPartyWager.Service.BLL
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
-            _logger = provider.GetRequiredService<ILogger<ApiNLCBLL>>();
         }
 
-        public async Task<List<WagerEVOModel>> GetBetListByTime(dynamic setting, string startTime, string endTime)
+        public async Task<List<WagerEVOModel>> GetBetListByTime(NLCConfig setting, string startTime, string endTime)
         {
-            var wagerUrl = setting["ApiUrl"];
-            var casinoKey = setting["CasinoKey"];
-            var gameHistoryApiToken = setting["gameHistoryApiToken"];
-            var gameProvider = setting["GameProvider"];
+            var wagerUrl = setting.ApiUrl;
+            var casinoKey = setting.CasinoKey;
+            var gameHistoryApiToken = setting.GameHistoryApiToken;
+            var gameProvider = setting.GameProvider;
 
             // param
             var url = $"{wagerUrl}/api/gamehistory/v1/casino/games/stream";
@@ -46,12 +44,12 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task<List<WagerEVOModel>> GetBetListByTransId(dynamic setting, string TransId, string startTime)
+        public async Task<List<WagerEVOModel>> GetBetListByTransId(NLCConfig setting, string TransId, string startTime)
         {
-            var wagerUrl = setting["ApiUrl"];
-            var casinoKey = setting["CasinoKey"];
-            var gameHistoryApiToken = setting["gameHistoryApiToken"];
-            var gameProvider = setting["GameProvider"];
+            var wagerUrl = setting.ApiUrl;
+            var casinoKey = setting.CasinoKey;
+            var gameHistoryApiToken = setting.GameHistoryApiToken;
+            var gameProvider = setting.GameProvider;
 
             // param
             var url = $"{wagerUrl}/api/gamehistory/v1/casino/games/stream";

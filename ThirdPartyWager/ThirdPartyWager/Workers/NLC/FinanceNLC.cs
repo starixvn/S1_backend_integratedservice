@@ -13,7 +13,7 @@ namespace ThirdPartyWager.Workers
         private readonly FinanceNLCBLL _financeNLCBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly FincanceService _fincanceService;
-        private readonly Dictionary<string, string> _siteConfig;
+        private readonly NLCConfig _siteConfig;
         private readonly int _tpId = (int)Tp.NLC;
         private readonly string _tpName = Tp.NLC.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
@@ -26,7 +26,7 @@ namespace ThirdPartyWager.Workers
             _financeNLCBLL = provider.GetRequiredService<FinanceNLCBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _fincanceService = provider.GetRequiredService<FincanceService>();
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(Tp.NLC.ToString());
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<NLCConfig>(Tp.NLC.ToString());
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
