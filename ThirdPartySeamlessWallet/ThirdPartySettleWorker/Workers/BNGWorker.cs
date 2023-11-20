@@ -63,7 +63,7 @@ namespace ThirdPartySettleWorker.Workers
                         var betData = _partitionService.GetUnsettleDataList<BettingDataRNG_BNG>(getBettransSp, tpUnsettle).ToList();
                         var wagerData = _tpUnSettledBLL.GetTpUnsettleData<BNGWager>(getWagerSp, new { round_id = long.Parse(tpUnsettle.TransId) }, DataBase.Wager).ToList();
 
-                        if (wagerData == null && wagerData.Exists(x => x.round_finished))
+                        if (wagerData == null || !wagerData.Exists(x => x.round_finished))
                             continue;
 
                         var tpUserName = betData.FirstOrDefault().id;

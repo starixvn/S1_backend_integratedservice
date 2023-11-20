@@ -8,7 +8,7 @@ namespace ThirdPartyWager.Workers
 {
     public class FinanceBNG : BackgroundService
     {
-        private readonly ILogger<FinanceFaChai> _logger;
+        private readonly ILogger<FinanceBNG> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly FinanceBNGBLL _financeBNGBLL;
         private readonly FincanceService _financeService;
@@ -20,7 +20,7 @@ namespace ThirdPartyWager.Workers
 
         public FinanceBNG(IServiceProvider provider)
         {
-            _logger = provider.GetRequiredService<ILogger<FinanceFaChai>>();
+            _logger = provider.GetRequiredService<ILogger<FinanceBNG>>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _financeBNGBLL = provider.GetRequiredService<FinanceBNGBLL>();
             _financeService = provider.GetRequiredService<FincanceService>();
@@ -68,9 +68,6 @@ namespace ThirdPartyWager.Workers
             var quick = false;
             try
             {
-                // get setting
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
-
                 // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
 
@@ -88,7 +85,7 @@ namespace ThirdPartyWager.Workers
 
                 // report
                 var reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);
-                var reportData = await _financeBNGBLL.GetReport(_tpId, setting, reportTime);
+                var reportData = await _financeBNGBLL.GetReport(_tpId, null, reportTime);
                 int result;
                 if (reportData.Count > 0)
                 {

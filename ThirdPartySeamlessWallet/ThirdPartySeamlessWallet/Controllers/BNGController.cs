@@ -137,7 +137,25 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else
             {
+                if (req.args.bet != null)
+                {
+                    return StatusCode(503, "Internal Server Error. Something went Wrong!");
+                }
+
+                var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp.BNG, tpCustInfo.CurrencyId);
+                var bet = Convert.ToDecimal(req.args.bet);
+                var errorCode = "OTHER_EXCEED";
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    bet *= tpCurrency.ExchangeRate;
+                }
+
                 var tpCustBalance = _tpCustInfoBLL.GetBalance((int)Tp.BNG, tpUserName, gameType);
+
+                if (bet > tpCustBalance.Balance)
+                {
+                    errorCode = "FUNDS_EXCEED";
+                }
 
                 return Ok(new BNGTransactionErrorResponse()
                 {
@@ -149,7 +167,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     },
                     error = new error()
                     {
-                        code = "OTHER_EXCEED"
+                        code = errorCode
                     }
                 });
             }
