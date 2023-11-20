@@ -13,7 +13,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly WagerNLCService _wagerNLCService;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly DateTimeHelper _dateTimeHelper;
-        private readonly Dictionary<string, string> _siteConfig;
+        private readonly NLCConfig _siteConfig;
         private readonly ILogger<WagerNLCBLL> _logger;
 
         private readonly int _tpId = (int)Tp.NLC;
@@ -29,7 +29,7 @@ namespace ThirdPartyWager.Service.BLL
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
             _logger = provider.GetRequiredService<ILogger<WagerNLCBLL>>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(Tp.NLC.ToString());
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<NLCConfig>(Tp.NLC.ToString());
         }
 
         public async Task<bool> ExecWagerWorker(int type, int timeRange)

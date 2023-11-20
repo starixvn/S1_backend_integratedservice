@@ -13,13 +13,13 @@ namespace ThirdParty.NLC
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly Dictionary<string, string> _siteConfig;
+        private readonly NLCConfig _siteConfig;
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
 
         public TpHelper(IServiceProvider provider)
         {
             _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.NLC).ToDictionary(d => d.AppId, d => d.Name);
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(TpEnum.NLC.ToString());
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<NLCConfig>(TpEnum.NLC.ToString());
         }
 
         public class LoginResponse
@@ -77,7 +77,7 @@ namespace ThirdParty.NLC
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var config = new NLCConfig(_siteConfig);
+            var config = _siteConfig;
             string ApiUrl = config.ApiUrl;
             string GameHistoryApiToken = config.GameHistoryApiToken;
             string CasinoKey = config.CasinoKey;
@@ -202,7 +202,7 @@ namespace ThirdParty.NLC
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var config = new NLCConfig(_siteConfig);
+            var config = _siteConfig;
             string ApiUrl = config.ApiUrl;
             string Ua2Token = config.Ua2Token;
             string CasinoKey = config.CasinoKey;
