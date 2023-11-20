@@ -493,7 +493,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         TicketStatus = TicketStatus.Refund
                     };
 
-                    result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
+                    result = SettleTicket(tpCustInfo, betRecordInfo, conn, trans);
 
                     if (result > 0)
                     {
@@ -748,7 +748,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         BonusId = bonusId
                     };
 
-                    result = SettleTicket(tpCustInfo, betRecordInfo, 0, out _, conn, trans, false/*Don't need Payout*/);
+                    result = SettleTicket(tpCustInfo, betRecordInfo, conn, trans);
 
                     if (result > 0)
                     {
@@ -3749,8 +3749,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var check = _mainDbClient.Query<BettransData_EVO>("Service_BettransRng_Netent_Get", commandType: CommandType.StoredProcedure, new { TransactionRefId = bettingData_EVO.transaction.refId });
                 if (!check.Any())
                 {
-                    // no bet data
-                    return -2;
+                    var cancelInsert = _mainDbClient.Execute("Service_BettransRng_Netent_Ins", p, conn, trans);
+                    if (cancelInsert > 0)
+                    {
+                        // insert cancel record
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                        return -2;
+                    }
                 }
                 var subChk = check.Where(x => x.TicketType == 2);
                 if (subChk.Any())
@@ -3993,8 +3998,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var check = _mainDbClient.Query<BettransData_EVO>("Service_BettransRng_RedTiger_Get", commandType: CommandType.StoredProcedure, new { TransactionRefId = bettingData_EVO.transaction.refId });
                 if (!check.Any())
                 {
-                    // no bet data
-                    return -2;
+                    var cancelInsert = _mainDbClient.Execute("Service_BettransRng_RedTiger_Ins", p, conn, trans);
+                    if (cancelInsert > 0)
+                    {
+                        // insert cancel record
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                        return -2;
+                    }
                 }
                 var subChk = check.Where(x => x.TicketType == 2);
                 if (subChk.Any())

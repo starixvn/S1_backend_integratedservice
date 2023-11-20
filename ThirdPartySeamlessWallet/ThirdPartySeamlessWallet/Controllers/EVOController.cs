@@ -480,6 +480,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.retransmission = false;
                     getApiResponse.uuid = getReq.uuid;
                 }
+                else if (result == -2)
+                {
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(tpId, getReq.userId, gameType);
+                    getApiResponse.status = "FINAL_ERROR_ACTION_FAILED";
+                    getApiResponse.balance = tpCustBalance.Balance;
+                    getApiResponse.retransmission = false;
+                    getApiResponse.uuid = getReq.uuid;
+                }
+
 
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;

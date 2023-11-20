@@ -895,6 +895,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             var result = 0;
 
+            var check = _mainDbClient.Query<BettransData_EVO>("Service_BettransRng_Netent_Get", commandType: CommandType.StoredProcedure, new { TransactionRefId = bettingData_EVO.transaction.refId });
+            if (check.Where(x => x.TicketType == (int)BettransType.CancelBet && x.TransactionId == bettingData_EVO.transaction.id).Any())
+            {
+                // cancelled
+                _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                return -2;
+            }
+
             bettingData_EVO.transaction.amount *= -1;
             var p = new DynamicParameters(new
             {
@@ -978,6 +986,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             conn.Open();
             using var trans = conn.BeginTransaction();
             var result = 0;
+
+            var check = _mainDbClient.Query<BettransData_EVO>("Service_BettransRng_RedTiger_Get", commandType: CommandType.StoredProcedure, new { TransactionRefId = bettingData_EVO.transaction.refId });
+            if (check.Where(x => x.TicketType == (int)BettransType.CancelBet && x.TransactionId == bettingData_EVO.transaction.id).Any())
+            {
+                // cancelled
+                _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                return -2;
+            }
 
             bettingData_EVO.transaction.amount *= -1;
             var p = new DynamicParameters(new
