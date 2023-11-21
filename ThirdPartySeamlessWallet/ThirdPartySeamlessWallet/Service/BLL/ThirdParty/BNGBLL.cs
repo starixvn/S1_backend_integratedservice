@@ -223,7 +223,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 tempResult = _settledService.PayoutV2(
                         tpCustInfo,
-                        Math.Abs(bettingData.win),
+                        Math.Abs(bettingData.bet),
                         (int)Tp.BNG,
                         reqData.args.round_id.ToString(),
                         (int)GameType.BNG_RNG,
