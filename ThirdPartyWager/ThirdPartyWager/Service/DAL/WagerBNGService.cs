@@ -47,6 +47,13 @@ namespace ThirdPartyWager.Service.DAL
                 bonus_event = string.IsNullOrEmpty(data.bonus_event) ? string.Empty : data.bonus_event,
                 bonus_type = string.IsNullOrEmpty(data.bonus_type) ? string.Empty : data.bonus_type,
             };
+
+            //如果有ROLLBACK的交易，把bet改為負的方便對帳
+            if (para.type == "ROLLBACK")
+            {
+                para.bet *= -1;
+            }
+
             return _wagerDbClient.ExecuteAsync("Service_TpWager_BNG_Ins", new DynamicParameters(para));
         }
     }
