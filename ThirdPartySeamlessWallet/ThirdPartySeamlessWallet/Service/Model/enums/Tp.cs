@@ -59,6 +59,7 @@
         Pegasus = 56,
         BNG = 57,
         NLC = 59,
+        Amigo = 60,
     }
 
 }

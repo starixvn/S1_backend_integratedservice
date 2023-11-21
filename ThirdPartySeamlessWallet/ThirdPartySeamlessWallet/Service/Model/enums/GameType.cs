@@ -96,6 +96,7 @@
         Pegasus_RNG = 107,
         BNG_RNG = 108,
         NLC_RNG = 111,
+        Amigo_RNG = 112,
     }
 
 }
