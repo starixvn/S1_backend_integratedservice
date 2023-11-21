@@ -39,5 +39,10 @@ namespace ThirdPartyService.Service.DAL
             var permissionData = p.Get<string>("PermissionData");
             return permissionData;
         }
+
+        public int UpdateTpToken(string token, string tpToken)
+        {
+            return _mainDbClient.Execute("Common_AuthToken_TpToken_Set", new { Token = token, TpToken = tpToken });
+        }
     }
 }

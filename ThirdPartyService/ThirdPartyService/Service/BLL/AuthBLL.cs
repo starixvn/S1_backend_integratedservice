@@ -20,5 +20,9 @@ namespace ThirdPartyService.Service.BLL
         {
             return authService.Authenticate(Key);
         }
+        public bool UpdateTpToken(string Token, string TpToken)
+        {
+            return authService.UpdateTpToken(Token, TpToken) > 0;
+        }
     }
 }
