@@ -877,20 +877,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 var category = gameType switch
                 {
-                    (int) GameType.SG_RNG => TpCategory.Slots,
-                    (int) GameType.SG_Fish => TpCategory.Fish,
-                    (int) GameType.SG_Table => TpCategory.P2P,
+                    (int)GameType.SG_RNG => TpCategory.Slots,
+                    (int)GameType.SG_Fish => TpCategory.Fish,
+                    (int)GameType.SG_Table => TpCategory.P2P,
                     _ => throw new ArgumentOutOfRangeException(nameof(gameType), gameType, null)
                 };
 
                 string cancelSetSp;
                 switch (gameType)
                 {
-                    case (int) GameType.SG_RNG:
-                    case (int) GameType.SG_Table:
+                    case (int)GameType.SG_RNG:
+                    case (int)GameType.SG_Table:
                         cancelSetSp = "Service_BettransRng_SG_CancelBet_Set";
                         break;
-                    case (int) GameType.SG_Fish:
+                    case (int)GameType.SG_Fish:
                         cancelSetSp = "Service_BettransFish_SG_CancelBet_Set";
                         break;
                     default:
@@ -961,11 +961,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     string cancelInsSp;
                     switch (gameType)
                     {
-                        case (int) GameType.SG_RNG:
-                        case (int) GameType.SG_Table:
+                        case (int)GameType.SG_RNG:
+                        case (int)GameType.SG_Table:
                             cancelInsSp = "Service_BettransRng_SG_CancelBet_Ins";
                             break;
-                        case (int) GameType.SG_Fish:
+                        case (int)GameType.SG_Fish:
                             cancelInsSp = "Service_BettransFish_SG_CancelBet_Ins";
                             break;
                         default:
@@ -1040,7 +1040,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             tpCustInfo.SiteId,
                             tpCustInfo.UserName,
                             bettingDataRNG_SG.amount,
-                            (int) Tp.SG,
+                            (int)Tp.SG,
                             TransType.Prize,
                             $"Prize: {Math.Abs(bettingDataRNG_SG.amount):#,##0.##}",
                             bettingDataRNG_SG.ticketId,
@@ -1056,7 +1056,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             bettingDataRNG_SG.acctId, trans);
                     }
                 }
-                else if (gameType is (int) GameType.SG_RNG or (int) GameType.SG_Table) 
+                else if (gameType is (int)GameType.SG_RNG or (int)GameType.SG_Table)
                 {
                     result = _mainDbClient.Execute("Service_BettransRng_SGV2_Ins", trans, p);
                     if (result > 0 && bettingDataRNG_SG.amount > 0)
@@ -1067,7 +1067,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             (int)Tp.SG,
                             bettingDataRNG_SG.referenceId,
                             gameType,
-                            gameType == (int) GameType.SG_RNG ? TpCategory.Slots : TpCategory.P2P,
+                            gameType == (int)GameType.SG_RNG ? TpCategory.Slots : TpCategory.P2P,
                             bettingDataRNG_SG.transferId,
                             TransType.Payout,
                             null,
@@ -6949,6 +6949,188 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 await trans.RollbackAsync();
                 throw new PNGException(PNG_StatsuCodeEnum.Internal, ex.Message);
             }
+        }
+
+        #endregion
+
+        #region Amigo
+
+        public int CancelBetRNG_Amigo(TpCustInfo tpCustInfo, BettingData_Amigo bettingData_Amigo)
+        {
+            int bonusId = 0;
+            int result = 0;
+
+            var tpId = Tp.Amigo;
+            var tpGameType = GameType.Amigo_RNG;
+            var tpCategory = TpCategory.Slots;
+            var SetSpName = "Service_BettransRng_Amigo_CancelBet_Set";
+            var InsSpName = "Service_BettransRng_Amigo_Ins";
+            var GetSpName = "Service_BettransRng_Amigo_Get";
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingData_Amigo.timestamp).DateTime;
+
+                var p = new DynamicParameters(bettingData_Amigo);
+                p.Add("TicketStatus", (int)TicketStatus.Refund);
+                p.Add("SettleFlag", (int)SettleFlag.Settled);
+                p.Add("jackpotId", 0);
+
+                result = _partitionService.Execute(partitionTime, SetSpName, p, trans);
+                if (result > 0)
+                {
+                    if (bettingData_Amigo.amount != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            Math.Abs(bettingData_Amigo.amount),
+                            (int)tpId,
+                            bettingData_Amigo.roundId.ToString(),
+                            (int)tpGameType,
+                            tpCategory,
+                            bettingData_Amigo.roundId.ToString(),
+                            TransType.Refunds,
+                            null,
+                            out _,
+                            "CancelBet",
+                            out bonusId,
+                            conn,
+                            trans
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                        return result;
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                        return result;
+                    }
+                }
+                else
+                {
+                    var check = _partitionService.Query<BettingData_Amigo>(partitionTime, GetSpName, new { roundId = bettingData_Amigo.roundId });
+                    if (!check.Any() || !check.Any(x => x.reference == bettingData_Amigo.reference && x.TicketType == (int)BettransType.CancelBet))
+                    {
+                        var cancelInsert = _partitionService.Execute(partitionTime, InsSpName, p, trans);
+                        if (cancelInsert > 0)
+                        {
+                            // insert cancel record
+                            _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                            return 1;
+                        }
+                    }
+
+                    var subChk = check.Where(x => x.TicketType == 2);
+                    if (subChk.Any())
+                    {
+                        // had cancel
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                        return -1;
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                result = 0;
+                logger.LogError(mySqlEx.Message);
+                _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+                throw;
+            }
+
+            _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+            return result;
+        }
+
+        public int PayoutRNG_Amigo(TpCustInfo tpCustInfo, PayoutData_Amigo payoutData_Amigo, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            var tpId = Tp.Amigo;
+            var tpGameType = GameType.Amigo_RNG;
+            var tpCategory = TpCategory.Slots;
+            var InsSpName = "Service_BettransRng_Amigo_Ins";
+            var GetSpName = "Service_BettransRng_Amigo_Get";
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            int result;
+            try
+            {
+                var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(payoutData_Amigo.timestamp).DateTime;
+                var p = new DynamicParameters(payoutData_Amigo);
+                p.Add("SettleFlag", (int)SettleFlag.EndGame);
+                p.Add("TicketStatus", (int)TicketStatus.UnSettled);
+
+                var check = _partitionService.Query<BettingData_Amigo>(partitionTime, GetSpName, new { roundId = payoutData_Amigo.roundId });
+                if (!check.Any())
+                {
+                    // no bet or cancel data
+                    return -2;
+                }
+
+                result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
+                if (result > 0)
+                {
+                    int bonusId = 0;
+
+                    if (payoutData_Amigo.amount != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            Math.Abs(payoutData_Amigo.amount),
+                            (int)tpId,
+                            payoutData_Amigo.roundId.ToString(),
+                            (int)tpGameType,
+                            tpCategory,
+                            payoutData_Amigo.roundId.ToString(),
+                            TransType.Payout,
+                            null,
+                            out afterAmount,
+                            "Payout",
+                            out bonusId,
+                            conn,
+                            trans
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        result = _tpUnsettleService.InsertTpUnsettle(tpId, tpGameType, payoutData_Amigo.roundId.ToString(), trans, partitionTime);
+                    }
+
+                    if (result > 0)
+                    {
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+                throw;
+            }
+
+            return result;
         }
 
         #endregion

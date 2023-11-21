@@ -60,6 +60,7 @@
         BNG = 57,
         HaoLong = 58,
         NLC = 59,
+        Amigo = 60,
     }
 
 }
