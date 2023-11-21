@@ -175,8 +175,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             var partitionTime = DateTimeOffset.Parse(reqData.c_at).DateTime;
 
-            var check = _partitionService.Query<BettransRng_BNG>(partitionTime, "Service_BettransRng_BNG_Check", new { uid = reqData.args.transaction_uid });
-            if (check.Any())
+            var betCheck = _partitionService.Query<BettransRng_BNG>(partitionTime, "Service_BettransRng_BNG_Check", new { uid = reqData.args.transaction_uid });
+
+            //檢查是否有這筆注單
+            if (!betCheck.Any())
+            {
+                afterAmount = _tpCustInfoBLL.GetBalance((int)Tp.BNG, tpCustInfo.TpUserName, (int)GameType.BNG_RNG).Balance;
+                return (int)TransactionStatus.Success;
+            }
+
+            var rollBackCheck = _partitionService.Query<BettransRng_BNG>(partitionTime, "Service_BettransRng_BNG_Check", new { uid = reqData.uid });
+
+            //檢查這個交易是否處理過
+            if (rollBackCheck.Any())
             {
                 afterAmount = _tpCustInfoBLL.GetBalance((int)Tp.BNG, tpCustInfo.TpUserName, (int)GameType.BNG_RNG).Balance;
                 return (int)TransactionStatus.Success;
