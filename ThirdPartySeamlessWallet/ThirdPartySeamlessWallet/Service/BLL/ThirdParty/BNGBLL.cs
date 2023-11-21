@@ -176,23 +176,54 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var partitionTime = DateTimeOffset.Parse(reqData.c_at).DateTime;
 
             var check = _partitionService.Query<BettransRng_BNG>(partitionTime, "Service_BettransRng_BNG_Check", new { uid = reqData.args.transaction_uid });
-            if (!check.Any() || check.FirstOrDefault().TicketType == (int)BettransType.CancelBet)
+            if (!check.Any())
             {
+                afterAmount = _tpCustInfoBLL.GetBalance((int)Tp.BNG, tpCustInfo.TpUserName, (int)GameType.BNG_RNG).Balance;
                 return (int)TransactionStatus.Success;
             }
 
             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp.BNG, tpCustInfo.CurrencyId);
 
-            decimal bet = 0;
+            var bettingData = new BettransRng_BNG()
+            {
+                uid = reqData.uid,
+                token = reqData.token,
+                session = reqData.session,
+                game_id = reqData.game_id,
+                game_name = reqData.game_name,
+                provider_id = reqData.provider_id,
+                provider_name = reqData.provider_name,
+                c_at = DateTimeOffset.Parse(reqData.c_at).DateTime,
+                sent_at = DateTimeOffset.Parse(reqData.sent_at).DateTime,
+                platform = string.IsNullOrEmpty(reqData.args.platform) ? string.Empty : reqData.args.platform,
+                bet = (reqData.args.bet != null ? Convert.ToDecimal(reqData.args.bet) : 0) * -1,
+                win = reqData.args.win != null ? Convert.ToDecimal(reqData.args.win) : 0,
+                round_started = reqData.args.round_started,
+                round_finished = reqData.args.round_finished,
+                round_id = reqData.args.round_id,
+                id = reqData.args.player.id,
+                brand = reqData.args.player.brand,
+                currency = reqData.args.player.currency,
+                mode = reqData.args.player.mode,
+                is_test = reqData.args.player.is_test,
+                bonus = reqData.args.bonus == null ? null : JsonConvert.SerializeObject(reqData.args.bonus),
+                tag = reqData.args.tag,
+                TicketType = (int)BettransType.CancelBet
+            };
 
             if (tpCurrency.ExchangeRate > 0)
             {
-                bet = Convert.ToDecimal(reqData.args.bet) * tpCurrency.ExchangeRate;
+                bettingData.win *= tpCurrency.ExchangeRate;
+                bettingData.bet *= tpCurrency.ExchangeRate;
             }
 
-            tempResult = _settledService.PayoutV2(
+            tempResult = _partitionService.Execute(partitionTime, "Service_BettransRng_BNG_Ins", bettingData, trans);
+
+            if (tempResult > 0)
+            {
+                tempResult = _settledService.PayoutV2(
                         tpCustInfo,
-                        Math.Abs(bet),
+                        Math.Abs(bettingData.win),
                         (int)Tp.BNG,
                         reqData.args.round_id.ToString(),
                         (int)GameType.BNG_RNG,
@@ -206,12 +237,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         conn,
                         trans
                     );
-
-            if(tempResult > 0)
-            {
-                tempResult = _partitionService.Execute(partitionTime, "Service_BettransRng_BNG_Set", new { uid = reqData.args.transaction_uid, TicketType = (int)BettransType.CancelBet }, trans);
             }
-
+            
             if (tempResult > 0)
             {
                 _mainDbClient.CommitAndDisposeConnection(conn, trans);
