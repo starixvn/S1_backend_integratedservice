@@ -16,15 +16,25 @@ namespace ThirdParty.HL
     public class TpHelper : ThirdPartyHelperBase
     {
         private readonly HLConfig _siteHLConfig;
+        private readonly SiteLanguageBLL _siteLanguageBLL;
         
         public TpHelper(IServiceProvider provider)
         {
+            _siteLanguageBLL = provider.GetRequiredService<SiteLanguageBLL>();
             _siteHLConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<HLConfig>(TpEnum.HaoLong.ToString());
         }
         
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var oApiResult = new ApiResult();
+            if (CheckHaoLongBusyTime(1))
+            {
+                oApiResult.ErrorCode = ErrorCode.ServerIsBusy;
+                oApiResult.Message = _siteLanguageBLL.GetLanguageValue(tpCustInfo.SiteId,"HaoLongCreateMemberBusyTime",tpCustInfo.IsoCode);
+                return oApiResult;
+            }
+            
+            
             var createMemberReq = new CreateMemberReq
             {
                 ApiUser = _siteHLConfig.ApiUser,
@@ -75,6 +85,13 @@ namespace ThirdParty.HL
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             var oApiResult = new ApiResult();
+            // if (CheckHaoLongBusyTime(3))
+            // {
+            //     oApiResult.ErrorCode = ErrorCode.ServerIsBusy;
+            //     oApiResult.Message = _siteLanguageBLL.GetLanguageValue(tpCustInfo.SiteId,"HaoLongCreateMemberBusyTime",TpLangId);
+            //     return oApiResult;
+            // }
+            
             var getLoginInformationReq = new GetLoginInformationReq
             {
                 ApiUser = _siteHLConfig.ApiUser,
@@ -178,6 +195,14 @@ namespace ThirdParty.HL
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID,
             string ThirdPartyTransID)
         {
+            var oApiResult = new ApiResult<TransferResult>();
+            if (CheckHaoLongBusyTime(2))
+            {
+                oApiResult.ErrorCode = ErrorCode.ServerIsBusy;
+                oApiResult.Message = "";
+                return oApiResult;
+            }
+            
             //TODO 第三方沒有轉帳單號 這個在看看怎麼處理 ThirdID
             var apiUrl = _siteHLConfig.ApiUrl;
             var postData = $"apiUser={_siteHLConfig.ApiUser}&apiPass={_siteHLConfig.ApiPass}&" +
@@ -242,6 +267,20 @@ namespace ThirdParty.HL
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
+            // if (CheckHaoLongBusyTime(2))
+            // {
+            //     return new BaseDetail(getBetDetail.TpGameTypeOption)
+            //     {
+            //         TransId = getBetDetail.TransId,
+            //         Detail = "Busy Time",
+            //         TpCurrency = new TpCurrency()
+            //         {
+            //             ExchangeRate = tpCustInfo.ExchangeRate,
+            //             TpCurrencyId = tpCustInfo.TpCurrencyId,
+            //         }
+            //     };
+            // }
+            
             //最多抓兩天 多一秒都不行
             var timeStart = getBetDetail.SettledTime.Date;
             var timeEnd = timeStart.AddDays(2).AddSeconds(-1).ToString("yyyy-MM-dd"); 
@@ -321,6 +360,37 @@ namespace ThirdParty.HL
                 Result = string.Empty,
                 DeviceType = DeviceType.None,
                 IP = string.Empty,
+            };
+        }
+        
+        private bool CheckHaoLongBusyTime(int timeType)
+        {
+            //1:創建帳號或拉細單
+            //2:轉帳行為
+            
+            var utcNow = DateTime.UtcNow;
+            var gmtPlus8 = TimeZoneInfo.FindSystemTimeZoneById("Singapore Standard Time");
+            var timeInGmtPlus8 = TimeZoneInfo.ConvertTimeFromUtc(utcNow, gmtPlus8);
+            return timeType switch
+            {
+                1 => timeInGmtPlus8.TimeOfDay >= new TimeSpan(14, 55, 0) &&
+                       timeInGmtPlus8.TimeOfDay <= new TimeSpan(20, 5, 0),
+                2 => timeInGmtPlus8.TimeOfDay >= new TimeSpan(18, 55, 0) &&
+                       timeInGmtPlus8.TimeOfDay <= new TimeSpan(20, 20, 0),
+                3 =>  timeInGmtPlus8.TimeOfDay >= new TimeSpan(00, 00, 0) &&
+                      timeInGmtPlus8.TimeOfDay <= new TimeSpan(23, 59, 59),
+                _ => false
+            };
+        }
+
+        private string ConvertCurrencyToLang(string currencyId)
+        {
+            return currencyId switch
+            {
+                "RMB" => "cs",
+                "CNY" => "cs",
+                "MYR" => "my",
+                _ => "en"
             };
         }
     }

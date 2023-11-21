@@ -99,7 +99,9 @@
         IM_ESports = 102,
         IM_Sports = 103,
         FaChai_RNG = 106,
-        HaoLong_Lottery = 110
+        SG_Table = 109,
+        HaoLong_4D = 110,
+        NLC_RNG = 111,
     }
     public enum SettlementType
     {

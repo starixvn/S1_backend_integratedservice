@@ -30,7 +30,8 @@ namespace ThirdPartyWager.Service.BLL.HL
             {
                 //先保留page
                 //var page = 1;
-
+                
+                
                 var result = await _apiHLBLL.GetBetListByTime(startTime,endTime,guid);
                 var dataWager = result.hl_Response;
 
@@ -47,14 +48,6 @@ namespace ThirdPartyWager.Service.BLL.HL
                     _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                     return true;
                 }
-
-                //繁忙時間 就直接回傳了
-                if (dataWager.ErrorCode == 998)
-                {
-                    msg = "Busy Time";
-                    _logger.LogInformation($"HaoLong GetWagersAsync {msg}\r\n{startTime} ~ {endTime}");
-                    return true;
-                }
                 
                 var getHLWager = _wagerHLService.GetHLBetUnSettledList();
                 
@@ -62,7 +55,7 @@ namespace ThirdPartyWager.Service.BLL.HL
                 {
                     try
                     {
-                        if (IsValidWager(getHLWager, wagerData))
+                        if (!IsValidWager(getHLWager, wagerData))
                         {
                             _ =  _wagerHLService.InsertHLWager(wagerData);
                         }
@@ -169,7 +162,7 @@ namespace ThirdPartyWager.Service.BLL.HL
         
         private bool IsValidWager(IEnumerable<HLBetTrans> getHLWager, HLWagerData wagerData)
         {
-            return getHLWager.Any(x => x.betID != wagerData.BetID);
+            return getHLWager.Any(x => x.betID == wagerData.BetID);
         }
     }
 }

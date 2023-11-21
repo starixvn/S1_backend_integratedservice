@@ -139,6 +139,9 @@
         IM_Sports = 103,
         SPRIBE_RNG = 104,
         FaChai_RNG = 106,
-        HaoLong_Lottery = 110
+        BNG_RNG = 108,
+        SG_Table = 109,
+        HaoLong_4D = 110,
+        NLC_RNG = 111,
     }
 }

@@ -33,8 +33,8 @@ if (!string.IsNullOrEmpty(serviceType) && serviceType.Equals("worker", StringCom
 {
     builder.Services
         .AddHostedService<TransferWorkerService>()
-        .AddHostedService<SBSWCreateMemberWorker>();
-        //.AddHostedService<HLCreateMemberWorker>();
+        .AddHostedService<SBSWCreateMemberWorker>()
+        .AddHostedService<HLCreateMemberWorker>();
 }
 
 var app = builder.Build();

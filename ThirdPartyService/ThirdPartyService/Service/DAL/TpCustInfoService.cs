@@ -23,6 +23,7 @@ namespace ThirdPartyService.Service.DAL
         private readonly Common _common;
         private readonly IMemoryCache _cache;
         private readonly ServerInfoBLL _serverInfoBll;
+        private readonly IReadOnlyDictionary<int, CurrencyOption> _currencyList;
         private readonly MySqlClient _mainDbClient;
         private readonly MySqlClient _reportDbClient;
 
@@ -34,6 +35,7 @@ namespace ThirdPartyService.Service.DAL
             _common = provider.GetRequiredService<Common>();
             _cache = provider.GetRequiredService<IMemoryCache>();
             _serverInfoBll = provider.GetRequiredService<ServerInfoBLL>();
+            _currencyList = provider.GetRequiredService<IEnumerable<CurrencyOption>>().ToDictionary(d => d.CurrencyId, d => d);
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
         }
@@ -144,6 +146,15 @@ namespace ThirdPartyService.Service.DAL
             parameter.Add("_TpId", tpId);
             return _reportDbClient.Query<int>("Service_CustWithoutTpCustInfo_Get", parameter, commandType: CommandType.StoredProcedure);
         }
+        
+        public IEnumerable<int> GetCustCustCurrencySiteIdWithoutSabaId(int tpId, int siteId,int currencyId)
+        {
+            var parameter = new DynamicParameters();
+            parameter.Add("_TpId", tpId);
+            parameter.Add("_SiteId", siteId);
+            parameter.Add("_CurrencyId", currencyId);
+            return _reportDbClient.Query<int>("Service_CustCurrencySiteWithoutTpCustInfo_Get", parameter, commandType: CommandType.StoredProcedure);
+        }
 
         public TpCountryCode GetTpCurrencyCodeByCurrencyId(int tpId, string tpCurrencyId)
         {
@@ -195,6 +206,7 @@ namespace ThirdPartyService.Service.DAL
                 UserName = customer.UserName,
                 SiteId = customer.SiteId,
                 TpUserName = $"{serverInfo.SiteName}{currencyPrefixCode}_{customer.CustId}",
+                IsoCode = GetCurrencyIsoCode(customer.CurrencyId),
                 MemberType = customer.MemberType
             };
 
@@ -240,6 +252,7 @@ namespace ThirdPartyService.Service.DAL
                 else
                 {
                     apiResult.ErrorCode = createMemberResult.ErrorCode;
+                    apiResult.Message = createMemberResult.Message;
                     apiResult.RawMessage = createMemberResult.RawMessage;
                     apiResult.RawErrorCode = createMemberResult.RawErrorCode;
                 }
@@ -254,6 +267,11 @@ namespace ThirdPartyService.Service.DAL
                 apiResult.ErrorCode = ErrorCode.Success;
             }
             return apiResult;
+        }
+        
+        private string GetCurrencyIsoCode(int currencyId)
+        {
+            return _currencyList.GetValueOrDefault(currencyId).IsoCode;
         }
     }
 }

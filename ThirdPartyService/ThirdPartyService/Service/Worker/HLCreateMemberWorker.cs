@@ -15,6 +15,8 @@ namespace ThirdPartyService.Service.Worker
         private readonly TpCustInfoBLL _tpCustInfoBll;
         private readonly ThirdPartyBLL _thirdPartyBll;
         private readonly int _tpId = (int)TpEnum.HaoLong;
+        private readonly int _siteId = 1;
+        private readonly int _currencyId = 2;
         private Timer _timer;
         private List<int> _failCustIdList = new();
         
@@ -50,7 +52,7 @@ namespace ThirdPartyService.Service.Worker
 
                 _logger.LogInformation($"HLCreateMemberWorker Start.");
 
-                var custIdList = _tpCustInfoBll.GetCustIdWithoutSabaId(_tpId);
+                var custIdList = _tpCustInfoBll.GetCustCurrencySiteIdWithoutSabaId(_tpId, _siteId, _currencyId);
 
                 foreach (var custId in custIdList)
                 {
@@ -80,7 +82,7 @@ namespace ThirdPartyService.Service.Worker
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(5);
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(10);
                 if (_environment.IsDevelopment())
                 {
                     dueTimeSpan = TimeSpan.FromMinutes(3);
@@ -88,7 +90,7 @@ namespace ThirdPartyService.Service.Worker
 
                 if (isError)
                 {
-                    dueTimeSpan = TimeSpan.FromSeconds(5);
+                    dueTimeSpan = TimeSpan.FromSeconds(30);
                 }
 
                 _timer.Change(dueTimeSpan, TimeSpan.Zero);

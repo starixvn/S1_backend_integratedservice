@@ -94,7 +94,10 @@
         PNG_RNG = 105,
         FaChai_RNG = 106,
         Pegasus_RNG = 107,
-        HaoLong_Lottery = 110,
+        BNG_RNG = 108,
+        SG_Table = 109,
+        HaoLong_4D = 110,
+        NLC_RNG = 111,
     }
 
 }
