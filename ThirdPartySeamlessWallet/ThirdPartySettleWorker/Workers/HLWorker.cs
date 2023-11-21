@@ -55,8 +55,8 @@ namespace ThirdPartySettleWorker.Workers
 
             var forContinue = false;
             var isError = false;
-            var gameType = GameType.HaoLong_Lottery;
-            var tpCategory = TpCategory.Lottery;
+            var gameType = GameType.HaoLong_4D;
+            var tpCategory = TpCategory.FourDigit;
             var logName = $"Settle_HaoLong";
             var getSP = $"Service_TpWager_HL_Settle_Get";
             var setSP = $"Service_TpWager_HL_Settle_Set";
@@ -75,12 +75,18 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     dueTimeSpan = TimeSpan.FromMinutes(1);
                 }
-
+                
+                var getUnsettledList = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP, new {}, DataBase.Wager);
+                if(getUnsettledList == null || !getUnsettledList.Any())
+                {
+                    throw new UnsettleNotFoundException($"{_tpName} - HaoLong No Unsettled Data.");
+                }
+                
                 foreach (var transId in tpUnsettleList.Select(tpUnsettle => tpUnsettle.TransId))
                 {
                     try
                     {
-                        var unsettled = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP, new { TransId = transId }, DataBase.Wager).First();
+                        var unsettled = getUnsettledList.FirstOrDefault(x => x.TransId == transId);
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
                         if (tpCurrency.ExchangeRate > 1)

@@ -31,7 +31,7 @@ public class ApiHLBLL
     {
         var param = $"apiUser={_siteHLConfig.ApiUser}&apiPass={_siteHLConfig.ApiPass}&" +
                     $"user={_siteHLConfig.AgentUser}&pass={_siteHLConfig.AgentPass}&" +
-                    $"dateFrom={startTime}&dateTo={endTime}";
+                    $"dateFrom={DateTimeFormat(startTime)}&dateTo={DateTimeFormat(endTime)}";
                     //保留$"&page={page}";
 
         var r = await DoHttpClientAsync($"{_siteHLConfig.ApiUrl}betlistPage.aspx?", param, "betData");
@@ -97,5 +97,10 @@ public class ApiHLBLL
             node.Attributes.Append(attribute);
         }
         return JsonConvert.SerializeXmlNode(xmlDoc);
+    }
+
+    private string DateTimeFormat(string dateTime)
+    { 
+        return DateTime.Parse(dateTime).ToString("yyyy-MM-dd");
     }
 }   
