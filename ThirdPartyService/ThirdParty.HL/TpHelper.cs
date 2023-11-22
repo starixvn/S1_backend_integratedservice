@@ -1,7 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using ThirdPartyCore;
@@ -27,10 +23,10 @@ namespace ThirdParty.HL
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var oApiResult = new ApiResult();
-            if (CheckHaoLongBusyTime(1))
+            if (CheckHaoLongBusyTime(3))
             {
                 oApiResult.ErrorCode = ErrorCode.ServerIsBusy;
-                oApiResult.Message = _siteLanguageBLL.GetLanguageValue(tpCustInfo.SiteId,"HaoLongCreateMemberBusyTime",tpCustInfo.IsoCode);
+                oApiResult.RawMessage = _siteLanguageBLL.GetLanguageValue(tpCustInfo.SiteId,"HaoLongCreateMemberBusyTime",tpCustInfo.IsoCode);
                 return oApiResult;
             }
             
@@ -85,12 +81,6 @@ namespace ThirdParty.HL
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             var oApiResult = new ApiResult();
-            // if (CheckHaoLongBusyTime(3))
-            // {
-            //     oApiResult.ErrorCode = ErrorCode.ServerIsBusy;
-            //     oApiResult.Message = _siteLanguageBLL.GetLanguageValue(tpCustInfo.SiteId,"HaoLongCreateMemberBusyTime",TpLangId);
-            //     return oApiResult;
-            // }
             
             var getLoginInformationReq = new GetLoginInformationReq
             {
@@ -145,6 +135,13 @@ namespace ThirdParty.HL
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var oApiResult = new ApiResult<UserBalance>();
+            if (CheckHaoLongBusyTime(3))
+            {
+                oApiResult.ErrorCode = ErrorCode.ServerIsBusy;
+                oApiResult.RawMessage = "";
+                return oApiResult;
+            }
+            
             var getProfileReq = new GetProfileReq
             {
                 ApiUser = _siteHLConfig.ApiUser,
@@ -196,10 +193,10 @@ namespace ThirdParty.HL
             string ThirdPartyTransID)
         {
             var oApiResult = new ApiResult<TransferResult>();
-            if (CheckHaoLongBusyTime(2))
+            if (CheckHaoLongBusyTime(3))
             {
                 oApiResult.ErrorCode = ErrorCode.ServerIsBusy;
-                oApiResult.Message = "";
+                oApiResult.RawMessage = "";
                 return oApiResult;
             }
             
@@ -267,19 +264,19 @@ namespace ThirdParty.HL
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            // if (CheckHaoLongBusyTime(2))
-            // {
-            //     return new BaseDetail(getBetDetail.TpGameTypeOption)
-            //     {
-            //         TransId = getBetDetail.TransId,
-            //         Detail = "Busy Time",
-            //         TpCurrency = new TpCurrency()
-            //         {
-            //             ExchangeRate = tpCustInfo.ExchangeRate,
-            //             TpCurrencyId = tpCustInfo.TpCurrencyId,
-            //         }
-            //     };
-            // }
+            if (CheckHaoLongBusyTime(1))
+            {
+                return new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = "Tp - HaoLong Busy Time",
+                    TpCurrency = new TpCurrency()
+                    {
+                        ExchangeRate = tpCustInfo.ExchangeRate,
+                        TpCurrencyId = tpCustInfo.TpCurrencyId,
+                    }
+                };
+            }
             
             //最多抓兩天 多一秒都不行
             var timeStart = getBetDetail.SettledTime.Date;
@@ -367,6 +364,7 @@ namespace ThirdParty.HL
         {
             //1:創建帳號或拉細單
             //2:轉帳行為
+            //3:Test
             
             var utcNow = DateTime.UtcNow;
             var gmtPlus8 = TimeZoneInfo.FindSystemTimeZoneById("Singapore Standard Time");
