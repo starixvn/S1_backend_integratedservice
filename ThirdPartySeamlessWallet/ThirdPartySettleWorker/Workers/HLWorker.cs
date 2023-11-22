@@ -56,7 +56,7 @@ namespace ThirdPartySettleWorker.Workers
             var forContinue = false;
             var isError = false;
             var gameType = GameType.HaoLong_4D;
-            var tpCategory = TpCategory.FourDigit;
+            var tpCategory = TpCategory.Lottery;
             var logName = $"Settle_HaoLong";
             var getSP = $"Service_TpWager_HL_Settle_Get";
             var setSP = $"Service_TpWager_HL_Settle_Set";
