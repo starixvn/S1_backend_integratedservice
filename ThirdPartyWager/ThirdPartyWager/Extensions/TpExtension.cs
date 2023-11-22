@@ -19,7 +19,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.AG, AddAG},
                 { Tp.DG, AddDG},
                 { Tp.GPI, AddGPI},
-                { Tp.YL, AddYL},
+                //{ Tp.YL, AddYL},
                 { Tp.YGG, AddYGG},
                 { Tp.SG, AddSG},
                 { Tp.KM, AddKM},
