@@ -137,7 +137,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else
             {
-                if (req.args.bet != null)
+                if (req.args.bet == null)
                 {
                     return StatusCode(503, "Internal Server Error. Something went Wrong!");
                 }
