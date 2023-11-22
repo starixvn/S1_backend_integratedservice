@@ -120,6 +120,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             Task.Run(() =>
                             {
+                                _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, unsettled.TransId, isSuccess: true);
                                 _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gameType, transId, true, DataBase.Wager);
                             });
                         }
