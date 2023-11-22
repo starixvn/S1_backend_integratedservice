@@ -5,7 +5,6 @@ using Serilog.Exceptions;
 
 using ThirdPartySeamlessWallet;
 using ThirdPartySeamlessWallet.Core.Extensions;
-using ThirdPartySeamlessWallet.Service.Workers;
 
 using ThirdPartySettleWorker.Workers;
 
@@ -32,63 +31,60 @@ builder.Host.UseSerilog((context, Configuration) =>
 var startup = new Startup(builder.Configuration);
 startup.ConfigureServices(builder.Services);
 
-builder.Services
-    .AddHostedService<SettleWorker>()
-    .AddHostedService<TpReRequestWorker>()
-    .AddHostedService<TpRewardWorker>()
-    .AddHostedService<JokerWorker>()
-    .AddHostedService<MGWorker>()
-    .AddHostedService<APWorker>()
-    .AddHostedService<PPWorker>()
-    .AddHostedService<PGWorker>()
-    .AddHostedService<YGGWorker>()
-    .AddHostedService<TCGWorker>()
-    .AddHostedService<HBWorker>()
-    //.AddHostedService<MegaWorker>()
-    .AddHostedService<AMBWorker>()
-    .AddHostedService<SAWorker>()
-    .AddHostedService<SimplePlayWorker>()
-    .AddHostedService<SGWorker>()
-    .AddHostedService<AllbetWorker>()
-    //.AddHostedService<PTWorker>()
-    .AddHostedService<PlayTechWorker>()
-    .AddHostedService<SBOWorker>()
-    .AddHostedService<JILIWorker>()
-    //.AddHostedService<ATWorker>()
-    .AddHostedService<KMWoker>()
-    //.AddHostedService<OneGamingWorker>()
-    .AddHostedService<V8Worker>()
-    .AddHostedService<MPWorker>()
-    .AddHostedService<CQ9Worker>()
-    .AddHostedService<GPIWorker>()
-    .AddHostedService<NetentWorker>()
-    .AddHostedService<RedTigerWorker>()
-    .AddHostedService<YLWorker>()
-    .AddHostedService<Kiss918Worker>()
-    .AddHostedService<SkywindWorker>()
-    .AddHostedService<BTIWorker>()
-    .AddHostedService<NineWWorker>()
-    .AddHostedService<One789Worker>()
-    .AddHostedService<GPIWorker>()
-    .AddHostedService<YeebetWorker>()
-    .AddHostedService<BGWorker>()
-    .AddHostedService<TFGWorker>()
-    .AddHostedService<NextspinWorker>()
-    .AddHostedService<ENDWorker>()
-    .AddHostedService<IMWorker>()
-    .AddHostedService<SPRIBEWorker>()
-    .AddHostedService<SBSWWorker>()
-    .AddHostedService<DGWorker>()
-    .AddHostedService<AGWorker>()
-    .AddHostedService<EBetWorker>()
-    .AddHostedService<PNGWorker>()
-    .AddHostedService<SexyWorker>()
-    .AddHostedService<WMWorker>()
-    .AddHostedService<FaChaiWorker>()
-    .AddHostedService<EVOWorker>()
-    .AddHostedService<N2LiveWorker>()
-    .AddHostedService<N2LiveSmartWorker>()
-    .AddHostedService<PegasusWorker>();
+builder.Services.AddHostedService<TpReRequestWorker>();
+builder.Services.AddHostedService<TpRewardWorker>();
+builder.Services.AddHostedService<JokerWorker>();
+builder.Services.AddHostedService<MGWorker>();
+builder.Services.AddHostedService<APWorker>();
+builder.Services.AddHostedService<PPWorker>();
+builder.Services.AddHostedService<PGWorker>();
+builder.Services.AddHostedService<YGGWorker>();
+builder.Services.AddHostedService<TCGWorker>();
+builder.Services.AddHostedService<HBWorker>();
+//builder.Services.AddHostedService<MegaWorker>();
+builder.Services.AddHostedService<AMBWorker>();
+builder.Services.AddHostedService<SAWorker>();
+builder.Services.AddHostedService<SimplePlayWorker>();
+builder.Services.AddHostedService<SGWorker>();
+builder.Services.AddHostedService<AllbetWorker>();
+builder.Services.AddHostedService<PlayTechWorker>();
+builder.Services.AddHostedService<SBOWorker>();
+builder.Services.AddHostedService<JILIWorker>();
+//builder.Services.AddHostedService<ATWorker>();
+builder.Services.AddHostedService<KMWoker>();
+//builder.Services.AddHostedService<OneGamingWorker>();
+builder.Services.AddHostedService<V8Worker>();
+builder.Services.AddHostedService<MPWorker>();
+builder.Services.AddHostedService<CQ9Worker>();
+builder.Services.AddHostedService<GPIWorker>();
+builder.Services.AddHostedService<NetentWorker>();
+builder.Services.AddHostedService<RedTigerWorker>();
+builder.Services.AddHostedService<YLWorker>();
+builder.Services.AddHostedService<Kiss918Worker>();
+builder.Services.AddHostedService<SkywindWorker>();
+builder.Services.AddHostedService<BTIWorker>();
+builder.Services.AddHostedService<NineWWorker>();
+builder.Services.AddHostedService<One789Worker>();
+builder.Services.AddHostedService<GPIWorker>();
+builder.Services.AddHostedService<YeebetWorker>();
+builder.Services.AddHostedService<BGWorker>();
+builder.Services.AddHostedService<TFGWorker>();
+builder.Services.AddHostedService<NextspinWorker>();
+builder.Services.AddHostedService<ENDWorker>();
+builder.Services.AddHostedService<IMWorker>();
+builder.Services.AddHostedService<SPRIBEWorker>();
+builder.Services.AddHostedService<SBSWWorker>();
+builder.Services.AddHostedService<DGWorker>();
+builder.Services.AddHostedService<AGWorker>();
+builder.Services.AddHostedService<EBetWorker>();
+builder.Services.AddHostedService<PNGWorker>();
+builder.Services.AddHostedService<SexyWorker>();
+builder.Services.AddHostedService<WMWorker>();
+builder.Services.AddHostedService<FaChaiWorker>();
+builder.Services.AddHostedService<EVOWorker>();
+builder.Services.AddHostedService<N2LiveWorker>();
+builder.Services.AddHostedService<N2LiveSmartWorker>();
+builder.Services.AddHostedService<PegasusWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
