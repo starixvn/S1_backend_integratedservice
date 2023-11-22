@@ -51,11 +51,11 @@ namespace ThirdPartyWager.Workers.HL
                 var timerTime = dataTpTimer?.StartTime ?? nowTime.AddMinutes(-(iRangMins - 1));
                 var last = (dataTpTimer == null) ? iRangMins - 1 : iRangMins;
                 
-                if (CheckHaoLongBusyTime())
+                if (CheckHaoLongTime(1))
                 {
                     _logger.LogInformation($"TP - HaoLong Busy Time");
                     var time = _dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
-                    var result = _thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
+                    _thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
                     return;
                 }
                 
@@ -68,9 +68,9 @@ namespace ThirdPartyWager.Workers.HL
                          _thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
                      }
                     
-                     if(timerTime.Day < nowTime.Day)
+                     if(CheckHaoLongTime(2))
                      {
-                         _ = await _wagerHLBLL.SetSettledWager(time.startTime, time.endTime);
+                       _ = await _wagerHLBLL.SetSettledWager(time.startTime, time.endTime);
                      }
                 }
             }
@@ -94,12 +94,21 @@ namespace ThirdPartyWager.Workers.HL
             }
         }
 
-        private bool CheckHaoLongBusyTime()
+        private bool CheckHaoLongTime(int timeType)
         {
+            //1:拉單
+            //2:結算時間
+            
             var utcNow = DateTime.UtcNow;
             var gmtPlus8 = TimeZoneInfo.FindSystemTimeZoneById("Singapore Standard Time");
             var timeInGmtPlus8 = TimeZoneInfo.ConvertTimeFromUtc(utcNow, gmtPlus8);
-            return timeInGmtPlus8.TimeOfDay >= new TimeSpan(14, 55, 0) && timeInGmtPlus8.TimeOfDay <= new TimeSpan(20, 5, 0);
-        }
+            return timeType switch
+            {
+                1 => timeInGmtPlus8.TimeOfDay >= new TimeSpan(14, 55, 0) &&
+                     timeInGmtPlus8.TimeOfDay <= new TimeSpan(20, 5, 0),
+                2 => timeInGmtPlus8.TimeOfDay >= new TimeSpan(20, 30, 0) &&
+                     timeInGmtPlus8.TimeOfDay <= new TimeSpan(21, 30, 0),
+                _ => false
+            };}
     }
 }
