@@ -49,5 +49,10 @@ namespace ThirdPartyService.Service.BLL
         {
             return tpCustInfoService.GetCustIdWithoutSabaId(tpId);
         }
+        
+        public IEnumerable<int> GetCustCurrencySiteIdWithoutSabaId(int tpId, int siteId, int currencyId)
+        {
+            return tpCustInfoService.GetCustCustCurrencySiteIdWithoutSabaId(tpId, siteId, currencyId);
+        }
     }
 }

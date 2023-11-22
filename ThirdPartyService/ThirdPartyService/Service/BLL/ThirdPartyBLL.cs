@@ -118,6 +118,7 @@ namespace ThirdPartyService.Service.BLL
                 freeCustInfo.SiteId = tpInfo.SiteId;
                 freeCustInfo.CustId = tpInfo.CustId;
                 apiResult = tpHelper.Login(freeCustInfo, (AppType)tpInfo.AppType, tpLangId, inputs);
+
                 return apiResult;
             }
 

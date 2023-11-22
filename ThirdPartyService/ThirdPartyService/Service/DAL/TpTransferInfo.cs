@@ -214,7 +214,7 @@ namespace ThirdPartyService.Service.DAL
                 adminTpTransfer.Amount,
                 adminTpTransfer.Operator,
                 adminTpTransfer.Remarks,
-                adminTpTransfer.Category
+                adminTpTransfer.Category,
             });
 
             transId = _mainDbClient.QueryFirst<string>("Log_AdminAdjustWallet_Ins_V2", p);

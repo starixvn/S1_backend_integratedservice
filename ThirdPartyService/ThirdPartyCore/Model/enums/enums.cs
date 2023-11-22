@@ -148,7 +148,8 @@ namespace ThirdPartyCore.Model.enums
         VirtualSports = 7,
         P2P = 8,
         Games = 10,
-        Esports = 11
+        Esports = 11,
+        FourDigit = 12,
     }
 
     public enum FinancialType
@@ -225,6 +226,12 @@ namespace ThirdPartyCore.Model.enums
         Bonus = 4
     }
 
+    public enum RecentlyViewedTypeEnum
+    {
+        LobbyName = 1, // saba sport
+        GameName = 2, // Fishing War
+    }
+
     public enum CustomerMemberTypeEnum
     {
         Normal = 1,
@@ -232,13 +239,7 @@ namespace ThirdPartyCore.Model.enums
         LiveStreaming = 3
     }
 
-    public enum RecentlyViewedTypeEnum
-    {
-        LobbyName = 1, // saba sport
-        GameName = 2, // Fishing War
-    }
-    
-    public enum LoginGameTypeEnum
+	public enum LoginGameTypeEnum
     {
         // from memberSite action
         EntPage = 1, 

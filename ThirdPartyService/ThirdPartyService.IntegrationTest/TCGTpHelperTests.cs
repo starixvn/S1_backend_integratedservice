@@ -81,31 +81,31 @@ namespace ThirdParty.TCG.Tests
             //Arrange
             _tpHelper = new TpHelper(_provider);
 
-            _tpCustInfo = new TpCustInfo()
-            {
-                TpId = 33,
-                CustId = 249951,
-                SiteId = 1,
-                UserName = "hanstest01",
-                TpUserName = "xnova88x249951",
-                TpPwd = "h5N3Bjn",
-                TpCurrencyId = "MYR",
-                ExchangeRate = 1.0000m,
-                IsTest = false,
-                ActStatus = 2,
-                Status = 1,
-                CStatus = 1,
-            };
+            //_tpCustInfo = new TpCustInfo()
+            //{
+            //    TpId = 33,
+            //    CustId = 249951,
+            //    SiteId = 1,
+            //    UserName = "hanstest01",
+            //    TpUserName = "xnova88x249951",
+            //    TpPwd = "h5N3Bjn",
+            //    TpCurrencyId = "MYR",
+            //    ExchangeRate = 1.0000m,
+            //    IsTest = false,
+            //    ActStatus = 2,
+            //    Status = 1,
+            //    CStatus = 1,
+            //};
 
-            _inputs = new Dictionary<string, string>
-            {
-                { "GameUrl_MYR", "https://tcgmyr.nova88asia.com/" },
-                { "ApiUrl", "http://www.connect6play.com/doBusiness.do" },
-                { "HomeUrl", "https://www.nova88.net/" },
-                { "MerchantCode_MYR", "xpnovamyr" },
-                { "DESKey_MYR", "dHJoyySB" },
-                { "SHA256Key_MYR", "70tOVKomTbE5booC" },
-            };
+            //_inputs = new Dictionary<string, string>
+            //{
+            //    { "GameUrl_MYR", "https://tcgmyr.nova88asia.com/" },
+            //    { "ApiUrl", "http://www.connect6play.com/doBusiness.do" },
+            //    { "HomeUrl", "https://www.nova88.net/" },
+            //    { "MerchantCode_MYR", "xpnovamyr" },
+            //    { "DESKey_MYR", "dHJoyySB" },
+            //    { "SHA256Key_MYR", "70tOVKomTbE5booC" },
+            //};
         }
 
         [Test()]

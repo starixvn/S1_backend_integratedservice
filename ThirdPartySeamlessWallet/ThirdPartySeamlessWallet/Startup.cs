@@ -99,6 +99,7 @@ namespace ThirdPartySeamlessWallet
             services.AddTransient<ISBOBLL, SBOBLL>();
             services.AddTransient<INextspinBLL, NextspinBLL>();
             services.AddTransient<IJokerBLL, JokerBLL>();
+            services.AddTransient<ISBOBLL, SBOBLL>();
             services.AddTransient<IKiss918BLL, Kiss918BLL>();
             services.AddTransient<IYeebetBLL, YeebetBLL>();
             services.AddTransient<IBGBLL, BGBLL>();
@@ -106,6 +107,7 @@ namespace ThirdPartySeamlessWallet
             services.AddTransient<V8BLL>();
             services.AddTransient<IPNGBLL, PNGBLL>();
             services.AddTransient<IFaChaiBLL, FaChaiBLL>();
+            services.AddTransient<IBNGBLL, BNGBLL>();
             services.AddSingleton<TpUnSettledBLL>();
             services.AddSingleton<TpBetRecordExtendBLL>();
             services.AddSingleton<TpRequestFailBLL>();

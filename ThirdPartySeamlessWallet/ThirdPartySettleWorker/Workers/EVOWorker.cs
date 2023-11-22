@@ -39,7 +39,8 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     { Tp.EVO, GameType.EVO_LiveCasino },
                     { Tp.RedTiger, GameType.RedTiger_RNG },
-                    { Tp.Netent, GameType.Netent_RNG }
+                    { Tp.Netent, GameType.Netent_RNG },
+                    { Tp.NLC, GameType.NLC_RNG }
                 } ,
                 TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;

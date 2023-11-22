@@ -57,9 +57,11 @@
         IM = 52,
         SPRIBE = 53,
         FaChai = 55,
-        Pegasus = 56
+        Pegasus = 56,
+        BNG = 57,
+        HaoLong = 58,
+        NLC = 59,
     }
-
     public enum GameType
     {
         Allbet_LiveCasino = 6,
@@ -78,11 +80,11 @@
         SG_Fish = 31,
         SBO_Sports = 77,
         SBO_VirtualSports = 81,
+        YGG_RNG = 14,
         V8_Poker = 42,
         PT_RNG = 46,
         V8_Poker_None = 47, // without revenue games
         PT_LiveCasino = 48,
-        YGG_RNG = 14,
         AMB_RNG = 76,
         Skywind_RNG = 82,
         Skywind_LiveCasino = 84,
@@ -98,9 +100,11 @@
         Nextspin_RNG = 99,
         IM_ESports = 102,
         IM_Sports = 103,
-        FaChai_RNG = 106
+        FaChai_RNG = 106,
+        SG_Table = 109,
+        HaoLong_4D = 110,
+        NLC_RNG = 111,
     }
-
     public enum SettlementType
     {
         UnSettled = 0,

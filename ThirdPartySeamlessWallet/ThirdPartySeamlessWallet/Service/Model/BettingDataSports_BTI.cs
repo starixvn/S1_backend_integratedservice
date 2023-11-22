@@ -50,6 +50,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         public string req_id { get; set; }
 
+        public string purchase_id { get; set; }
+
         public string requestBody { get; set; }
     }
 
@@ -74,6 +76,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
             reserve_id = request.reserve_id;
             amount = request.amount;
             req_id = request.req_id;
+            purchase_id = request.purchase_id;
             var bet = XDocument.Parse(request.requestBody).Descendants("Bet").FirstOrDefault();
             BetID = bet.Attribute("BetID")?.Value ?? "";
             BetTypeID = bet.Attribute("BetTypeID")?.Value ?? "";
@@ -92,6 +95,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string reserve_id { get; set; }
         public decimal amount { get; set; }
         public string req_id { get; set; }
+        public string purchase_id { get; set; }
         public string BetID { get; set; }
         public string BetTypeID { get; set; }
         public string BetTypeName { get; set; }
@@ -113,6 +117,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
             cust_id = request.cust_id;
             amount = request.amount;
             req_id = request.req_id;
+            purchase_id = request.purchase_id;
             var xd = XDocument.Parse(request.requestBody);
             BetID = FindSettleBetID(xd);
             var purchase = xd.Descendants("Purchase").FirstOrDefault();
@@ -130,6 +135,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string reserve_id { get; set; }
         public decimal amount { get; set; }
         public string req_id { get; set; }
+        public string purchase_id { get; set; }
         public string BetID { get; set; }
         public string PurchaseID { get; set; }
         public string CurrentStatus { get; set; }

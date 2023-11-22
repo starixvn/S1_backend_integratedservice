@@ -57,6 +57,9 @@
         PNG = 54,
         FaChai = 55,
         Pegasus = 56,
+        BNG = 57,
+        HaoLong = 58,
+        NLC = 59,
     }
 
 }

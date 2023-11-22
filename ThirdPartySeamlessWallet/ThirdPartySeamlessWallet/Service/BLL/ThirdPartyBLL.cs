@@ -139,11 +139,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
         public GameType GetGameType_SG(string gameId)
         {
-            GameType gameType = GameType.SG_RNG;
+            var gameType = GameType.SG_RNG;
 
             if (gameId.StartsWith("F-", StringComparison.OrdinalIgnoreCase))
             {
                 gameType = GameType.SG_Fish;
+            }
+            else if (gameId.StartsWith("C-", StringComparison.OrdinalIgnoreCase))
+            {
+                gameType = GameType.SG_Table;
             }
 
             return gameType;
@@ -261,6 +265,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     if (chkRedtiger != null && chkRedtiger.GameId == gameId)
                     {
                         gameType = GameType.RedTiger_RNG;
+                        return gameType;
+                    }
+                    var nlc = GetGameCasinoWithCache((int)Tp.NLC);
+                    var chkNLC = nlc.FirstOrDefault(x => x.GameId == gameId);
+                    if (chkNLC != null && chkNLC.GameId == gameId)
+                    {
+                        gameType = GameType.NLC_RNG;
                         return gameType;
                     }
                     break;

@@ -176,20 +176,41 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
             bettingDataRNG_SG.amount *= -1;
             bettingDataRNG_SG.TicketStatus = (int)TicketStatus.UnSettled;
-            var p = new DynamicParameters(new { transferId = bettingDataRNG_SG.transferId, acctId = bettingDataRNG_SG.acctId, currency = bettingDataRNG_SG.currency, amount = bettingDataRNG_SG.amount, type = bettingDataRNG_SG.type, channel = bettingDataRNG_SG.channel, playerIp = bettingDataRNG_SG.playerIp, transferTime = new DateTimeOffset(bettingDataRNG_SG.transferTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(), gameCode = bettingDataRNG_SG.gameCode, ticketId = bettingDataRNG_SG.ticketId, referenceId = bettingDataRNG_SG.referenceId, specialGame = JsonConvert.SerializeObject(bettingDataRNG_SG.specialGame), refTicketIds = JsonConvert.SerializeObject(bettingDataRNG_SG.refTicketIds), TicketStatus = bettingDataRNG_SG.TicketStatus });
-
-            bool cash = false;
-            var category = TpCategory.Slots;
-            if (gameType == (int)GameType.SG_RNG)
+            var p = new DynamicParameters(new
             {
+                transferId = bettingDataRNG_SG.transferId,
+                acctId = bettingDataRNG_SG.acctId,
+                currency = bettingDataRNG_SG.currency,
+                amount = bettingDataRNG_SG.amount,
+                type = bettingDataRNG_SG.type,
+                channel = bettingDataRNG_SG.channel,
+                playerIp = bettingDataRNG_SG.playerIp,
+                transferTime = new DateTimeOffset(bettingDataRNG_SG.transferTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
+                gameCode = bettingDataRNG_SG.gameCode,
+                ticketId = bettingDataRNG_SG.ticketId,
+                referenceId = bettingDataRNG_SG.referenceId,
+                specialGame = JsonConvert.SerializeObject(bettingDataRNG_SG.specialGame),
+                refTicketIds = JsonConvert.SerializeObject(bettingDataRNG_SG.refTicketIds),
+                TicketStatus = bettingDataRNG_SG.TicketStatus
+            });
+
+            var cash = false;
+            var category = TpCategory.Slots;
+            if (gameType is (int)GameType.SG_RNG or (int)GameType.SG_Table)
+            {
+                if (gameType == (int)GameType.SG_Table)
+                {
+                    category = TpCategory.P2P;
+                }
                 result = _mainDbClient.Execute("Service_BettransRng_SGV2_Ins", p, conn, trans);
             }
-            else
+            else if (gameType == (int)GameType.SG_Fish)
             {
                 cash = true;
                 category = TpCategory.Fish;
                 result = _mainDbClient.Execute("Service_BettransFish_SG_Ins", p, conn, trans);
             }
+
 
             if (result > 0 && bettingDataRNG_SG.amount != 0)
             {
@@ -1060,6 +1081,101 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     throw;
                 }
+            }
+
+            return result;
+        }
+
+        #endregion
+
+        #region NLC
+
+        public int PlaceBetRNG_NLC(TpCustInfo tpCustInfo, BettingData_EVO bettingData_EVO, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            afterAmount = 0;
+            var result = 0;
+
+            var tpId = Tp.NLC;
+            var tpGameType = GameType.NLC_RNG;
+            var tpCategory = TpCategory.Slots;
+            var InsSpName = "Service_BettransRng_NLC_Ins";
+            var GetSpName = "Service_BettransRng_NLC_Get";
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                var partitionTime = DateTime.UtcNow;
+                var check = _partitionService.Query<BettransData_EVO>(partitionTime, GetSpName, new { TransactionRefId = bettingData_EVO.transaction.refId });
+                if (check.Where(x => x.TicketType == (int)BettransType.CancelBet && x.TransactionId == bettingData_EVO.transaction.id).Any())
+                {
+                    // cancelled
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    return -2;
+                }
+
+                bettingData_EVO.transaction.amount *= -1;
+                var p = new DynamicParameters(new
+                {
+                    TransactionId = bettingData_EVO.transaction.id,
+                    TransactionRefId = bettingData_EVO.transaction.refId,
+                    userId = bettingData_EVO.userId,
+                    uuid = bettingData_EVO.uuid,
+                    currency = bettingData_EVO.currency,
+                    amount = bettingData_EVO.transaction.amount,
+                    transaction = JsonConvert.SerializeObject(bettingData_EVO.transaction),
+                    game = JsonConvert.SerializeObject(bettingData_EVO.game),
+                    GameId = bettingData_EVO.game.id,
+                    GameType = bettingData_EVO.game.type,
+                    GameDetailsId = bettingData_EVO.game.details.table.id,
+                    SiteId = tpCustInfo.SiteId,
+                    CustId = tpCustInfo.CustId,
+                    CurrencyId = tpCustInfo.CurrencyId,
+                    TicketType = (int)BettransType.Bet,
+                    TicketStatus = (int)TicketStatus.UnSettled,
+                    SettleFlag = (int)SettleFlag.Running
+                });
+
+
+                result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
+                if (result > 0 && bettingData_EVO.transaction.amount != 0)
+                {
+                    result = PlaceBetV2(
+                        tpCustInfo,
+                        bettingData_EVO.transaction.amount,
+                        (int)tpId,
+                        bettingData_EVO.transaction.refId,
+                        (int)tpGameType,
+                        bettingData_EVO.transaction.id,
+                        null,
+                        tpCategory,
+                        out afterAmount,
+                        ref bonusId,
+                        conn,
+                        trans
+                    );
+                }
+
+                if (result > 0)
+                {
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+                throw;
             }
 
             return result;

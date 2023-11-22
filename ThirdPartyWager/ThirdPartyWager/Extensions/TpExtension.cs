@@ -1,7 +1,9 @@
 ﻿using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.BLL.HL;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
+using ThirdPartyWager.Workers.HL;
 
 namespace ThirdPartyWager.Extensions
 {
@@ -55,7 +57,10 @@ namespace ThirdPartyWager.Extensions
                 { Tp.IM, AddIM},
                 { Tp.SPRIBE, AddSPRIBE},
                 { Tp.FaChai, AddFaChai},
-                { Tp.Pegasus, AddPegasus}
+                { Tp.Pegasus, AddPegasus},
+                { Tp.BNG, AddBNG},
+                { Tp.HaoLong, AddHL},
+                { Tp.NLC, AddNLC}
             };
         }
         private IServiceCollection AddSA(IServiceCollection services)
@@ -604,6 +609,19 @@ namespace ThirdPartyWager.Extensions
             return services;
         }
 
+        private IServiceCollection AddPegasus(IServiceCollection services)
+        {
+            services.AddSingleton<WagerPegasusService>();
+
+            services.AddSingleton<ApiPegasusBLL>();
+            services.AddSingleton<FinancePegasusBLL>();
+            services.AddSingleton<WagerPegasusBLL>();
+
+            services.AddHostedService<WagerPegasus>();
+            services.AddHostedService<FinancePegasus>();
+            return services;
+        }
+
         private IServiceCollection AddFaChai(IServiceCollection services)
         {
             services.AddSingleton<WagerFaChaiService>();
@@ -618,18 +636,48 @@ namespace ThirdPartyWager.Extensions
 
             return services;
         }
-        
-        private IServiceCollection AddPegasus(IServiceCollection services)
+
+        private IServiceCollection AddBNG(IServiceCollection services)
         {
-            services.AddSingleton<WagerPegasusService>();
+            services.AddSingleton<WagerBNGService>();
 
-            services.AddSingleton<ApiPegasusBLL>();
-            services.AddSingleton<FinancePegasusBLL>();
-            services.AddSingleton<WagerPegasusBLL>();
+            services.AddSingleton<ApiBNGBLL>();
+            services.AddSingleton<WagerBNGBLL>();
+            services.AddSingleton<FinanceBNGBLL>();
 
-            services.AddHostedService<WagerPegasus>();
-            services.AddHostedService<FinancePegasus>();
+            services.AddHostedService<WagerBNG>();
+            services.AddHostedService<WagerRedoBNG>();
+            services.AddHostedService<FinanceBNG>();
 
+            return services;
+        }
+
+        private IServiceCollection AddHL(IServiceCollection services)
+        {
+            services.AddSingleton<WagerHLService>();
+
+            services.AddSingleton<ApiHLBLL>();
+            services.AddSingleton<FinanceHLBLL>();
+            services.AddSingleton<WagerHLBLL>();
+
+            services.AddHostedService<WagerHL>();
+            services.AddHostedService<FinanceHL>();
+
+            return services;
+        }
+
+        private IServiceCollection AddNLC(IServiceCollection services)
+        {
+            services.AddSingleton<WagerNLCService>();
+
+            services.AddSingleton<WagerNLCBLL>();
+            services.AddSingleton<ApiNLCBLL>();
+            services.AddSingleton<FinanceNLCBLL>();
+
+            services.AddHostedService<WagerNLC>();
+            services.AddHostedService<WagerRedoNLC>();
+            services.AddHostedService<WagerUnsettleNLC>();
+            services.AddHostedService<FinanceNLC>();
 
             return services;
         }
