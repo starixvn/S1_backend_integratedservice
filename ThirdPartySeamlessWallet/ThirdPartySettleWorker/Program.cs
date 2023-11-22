@@ -63,7 +63,7 @@ builder.Services
     .AddHostedService<GPIWorker>()
     .AddHostedService<NetentWorker>()
     .AddHostedService<RedTigerWorker>()
-    .AddHostedService<YLWorker>()
+    //.AddHostedService<YLWorker>()
     .AddHostedService<Kiss918Worker>()
     .AddHostedService<SkywindWorker>()
     .AddHostedService<BTIWorker>()
