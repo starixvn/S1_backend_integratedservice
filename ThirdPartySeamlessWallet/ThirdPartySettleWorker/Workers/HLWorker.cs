@@ -82,7 +82,12 @@ namespace ThirdPartySettleWorker.Workers
                     throw new UnsettleNotFoundException($"{_tpName} - HaoLong No Unsettled Data.");
                 }
                 
-                foreach (var transId in tpUnsettleList.Select(tpUnsettle => tpUnsettle.TransId))
+                var matchTrans = tpUnsettleList
+                    .Where(tp => getUnsettledList.Any(gu => gu.TransId == tp.TransId))
+                    .Select(tp => tp.TransId)
+                    .ToList();
+                
+                foreach (var transId in matchTrans)
                 {
                     try
                     {

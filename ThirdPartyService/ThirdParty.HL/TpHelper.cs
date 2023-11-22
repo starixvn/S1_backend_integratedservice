@@ -23,7 +23,7 @@ namespace ThirdParty.HL
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var oApiResult = new ApiResult();
-            if (CheckHaoLongBusyTime(3))
+            if (CheckHaoLongBusyTime(1))
             {
                 oApiResult.ErrorCode = ErrorCode.ServerIsBusy;
                 oApiResult.RawMessage = _siteLanguageBLL.GetLanguageValue(tpCustInfo.SiteId,"HaoLongCreateMemberBusyTime",tpCustInfo.IsoCode);
@@ -135,10 +135,10 @@ namespace ThirdParty.HL
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var oApiResult = new ApiResult<UserBalance>();
-            if (CheckHaoLongBusyTime(3))
+            if (CheckHaoLongBusyTime(2))
             {
                 oApiResult.ErrorCode = ErrorCode.ServerIsBusy;
-                oApiResult.RawMessage = "";
+                oApiResult.RawMessage = "4D Bonus Time";
                 return oApiResult;
             }
             
@@ -193,10 +193,10 @@ namespace ThirdParty.HL
             string ThirdPartyTransID)
         {
             var oApiResult = new ApiResult<TransferResult>();
-            if (CheckHaoLongBusyTime(3))
+            if (CheckHaoLongBusyTime(2))
             {
                 oApiResult.ErrorCode = ErrorCode.ServerIsBusy;
-                oApiResult.RawMessage = "";
+                oApiResult.RawMessage = "4D Bonus Time";
                 return oApiResult;
             }
             
@@ -377,17 +377,6 @@ namespace ThirdParty.HL
                 3 =>  timeInGmtPlus8.TimeOfDay >= new TimeSpan(00, 00, 0) &&
                       timeInGmtPlus8.TimeOfDay <= new TimeSpan(23, 59, 59),
                 _ => false
-            };
-        }
-
-        private string ConvertCurrencyToLang(string currencyId)
-        {
-            return currencyId switch
-            {
-                "RMB" => "cs",
-                "CNY" => "cs",
-                "MYR" => "my",
-                _ => "en"
             };
         }
     }
