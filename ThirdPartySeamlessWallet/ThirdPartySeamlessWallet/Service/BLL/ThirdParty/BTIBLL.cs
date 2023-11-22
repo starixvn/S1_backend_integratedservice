@@ -6,6 +6,7 @@ using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
+using static ThirdPartySeamlessWallet.Controllers.APController;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
@@ -16,6 +17,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly BettingService bettingService;
         private readonly SettledService settledService;
         private readonly ILogger<BTIBLL> _logger;
+        private readonly IHostEnvironment _environment;
         public Tp ThirdParty { get; set; }
         public GameType GameType { get; set; }
 
@@ -28,6 +30,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             bettingService = provider.GetRequiredService<BettingService>();
             settledService = provider.GetRequiredService<SettledService>();
             _logger = provider.GetService<ILogger<BTIBLL>>();
+            _environment = provider.GetRequiredService<IHostEnvironment>();
         }
 
         public BTIStatusObj Staus(string token)
@@ -127,7 +130,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return ReturnBTI(new Dictionary<string, string>
                 {
                     { "error_code", "-3" },
-                    { "error_message", ex.Message },
+                    { "error_message", $"Fail:{ex.Message}" },
                 });
             }
             catch (RestrictedCustomerException ex)
@@ -135,7 +138,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return ReturnBTI(new Dictionary<string, string>
                 {
                     { "error_code", "-6" },
-                    { "error_message", ex.Message },
+                    { "error_message",$"Fail:{ex.Message}" },
                 });
             }
         }
@@ -154,7 +157,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return ReturnBTI(new Dictionary<string, string>
                     {
                         { "error_code", "-1" },
-                        { "error_message", "general error." },
+                        { "error_message", "Fail:general error." },
                         { "trx_id",btiResult.Trx_id.ToString()},
                         { "balance", beforeBalance.ToString() }
                     });
@@ -177,7 +180,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return ReturnBTI(new Dictionary<string, string>
                     {
                         { "error_code", "-4" },
-                        { "error_message", "InsufficientFunds" },
+                        { "error_message", "Fail:InsufficientFunds" },
                         { "trx_id", btiResult.Trx_id.ToString()},
                          { "balance", beforeBalance.ToString() }
                     });
@@ -197,7 +200,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return ReturnBTI(new Dictionary<string, string>
                 {
                     { "error_code", "-2" },
-                    { "error_message", ex.Message },
+                    { "error_message", $"Fail:{ex.Message}" },
                     { "trx_id", $"{DateTime.UtcNow.ToFileTimeUtc()}"},
                     { "balance", "0" }
                 });
@@ -207,7 +210,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return ReturnBTI(new Dictionary<string, string>
                 {
                     { "error_code", "-6" },
-                    { "error_message", ex.Message },
+                    { "error_message", $"Fail:{ex.Message}" },
                     { "trx_id", $"{DateTime.UtcNow.ToFileTimeUtc()}"},
                     { "balance", "0" }
                 });
@@ -216,6 +219,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public async Task<string> DebitReserveAsync(BTIRequestObj request)
         {
+            var errorCode = "0"; //DEV MUST ALWAYS SET error_code=0 For BTI Test Case
             try
             {
                 var (tpCustInfo, tpCurrency) = GetTPInfo(request.cust_id);
@@ -234,21 +238,23 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         case -2:
                             errorMessage = $"reserve_id:{request.reserve_id} is debit done.";
                             break;
-                        default: //-1
+                        default: //-1:need BTI resend request
+                            if (!_environment.IsDevelopment()) //PRD
+                                errorCode = "-1";
                             errorMessage = $"reserve_id:{request.reserve_id} was not found.";
                             break;
                     }
                     return ReturnBTI(new Dictionary<string, string>
                     {
-                        { "error_code", "0" },
-                        { "error_message", errorMessage },
+                        { "error_code", errorCode },
+                        { "error_message", $"Fail:{errorMessage}" },
                         { "trx_id", btiResult.Trx_id.ToString()},
                         { "balance", btiResult.AfterAmount.ToString() }
                     });
                 }
                 return ReturnBTI(new Dictionary<string, string>
                 {
-                    { "error_code", "0" },
+                    { "error_code", errorCode },
                     { "error_message", "OK" },
                     { "trx_id", btiResult.Trx_id.ToString()},
                     { "balance", btiResult.AfterAmount.ToString() },
@@ -257,10 +263,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 _logger.LogError($"Exception：{ex.Message}");
+
+                if (!_environment.IsDevelopment()) //PRD
+                    errorCode = "-9";
+
                 return ReturnBTI(new Dictionary<string, string>
                 {
-                    { "error_code", "0" },
-                    { "error_message", "Exception happened." },
+                    { "error_code", errorCode },
+                    { "error_message", $"Fail:Exception happened." },
                     { "trx_id", $"{DateTime.UtcNow.ToFileTimeUtc()}"},
                     { "balance", "0" }
                 });
@@ -269,6 +279,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public async Task<string> CancelReserveAsync(BTIRequestObj request)
         {
+            var errorCode = "0"; //DEV MUST ALWAYS SET error_code=0 For BTI Test Case
             try
             {
                 var (tpCustInfo, tpCurrency) = GetTPInfo(request.cust_id);
@@ -287,14 +298,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         case -2:
                             errorMessage = $"reserve_id:{request.reserve_id} is debit done.";
                             break;
-                        default: //-1
+                        default: //-1:need BTI resend request
+                            if (!_environment.IsDevelopment()) //PRD
+                                errorCode = "-1";
                             errorMessage = $"reserve_id:{request.reserve_id} was not found.";
                             break;
                     }
                     return ReturnBTI(new Dictionary<string, string>
                     {
-                        { "error_code", "0" },
-                        { "error_message", errorMessage },
+                        { "error_code",errorCode },
+                        { "error_message",  $"Fail:{errorMessage}" },
                         { "balance", btiResult.AfterAmount.ToString() },
                     });
                 }
@@ -302,7 +315,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 btiResult.AfterAmount /= tpCurrency.ExchangeRate;
                 return ReturnBTI(new Dictionary<string, string>
                 {
-                    { "error_code", "0" },
+                    { "error_code", errorCode },
                     { "error_message", "OK" },
                     { "balance", btiResult.AfterAmount.ToString() },
                 });
@@ -310,10 +323,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 _logger.LogError($"Exception：{ex.Message}");
+
+                if (!_environment.IsDevelopment()) //PRD
+                    errorCode = "-9";
+
                 return ReturnBTI(new Dictionary<string, string>
                 {
-                    { "error_code", "0" },
-                    { "error_message", "Exception happened." },
+                    { "error_code", errorCode },
+                    { "error_message", "Fail:Exception happened." },
                     { "balance", "0" },
                 });
             }
@@ -321,6 +338,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public async Task<string> CommitReserve(BTIRequestObj request)
         {
+            var errorCode = "0"; //DEV MUST ALWAYS SET error_code=0 For BTI Test Case
             try
             {
                 var (tpCustInfo, tpCurrency) = GetTPInfo(request.cust_id);
@@ -330,20 +348,33 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var beforeBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, tpCustInfo.TpUserName, (int)GameType).Balance;
                 if (btiResult.SPResult < 1)
                 {
+                    var errorMessage = string.Empty;
+                    switch (btiResult.SPResult)
+                    {
+                        case 0:
+                            errorMessage = $"reserve_id:{request.reserve_id} is cancel/commit done.";
+                            break;
+                        default: //-1:need BTI resend request
+                            if (!_environment.IsDevelopment()) //PRD
+                                errorCode = "-1";
+                            errorMessage = $"reserve_id:{request.reserve_id} was not found.";
+                            break;
+                    }
+
                     return ReturnBTI(new Dictionary<string, string>
                     {
-                        { "error_code", "0" },
-                        { "error_message", btiResult.SPResult == 0 ?
-                        $"reserve_id:{request.reserve_id} is cancel/commit done." : $"reserve_id:{request.reserve_id} was not found." },
+                        { "error_code", errorCode },
+                        { "error_message", $"Fail:{errorMessage}" },
                         { "balance", beforeBalance.ToString() }
                     });
                 }
 
                 if (btiResult.ReturnAmount <= 0 && btiResult.AfterAmount == 0)
                 {
+                    _logger.LogInformation($"reserve_id:{request.reserve_id} and purchase_id:{request.purchase_id} ReturnAmount <=0 And AfterAmount=0.");
                     return ReturnBTI(new Dictionary<string, string>
                     {
-                        { "error_code", "0" },
+                        { "error_code", errorCode },
                         { "error_message", "OK" },
                         { "balance", beforeBalance.ToString() }
                     });
@@ -352,7 +383,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 btiResult.AfterAmount /= tpCurrency.ExchangeRate;
                 return ReturnBTI(new Dictionary<string, string>
                 {
-                    { "error_code", "0" },
+                    { "error_code", errorCode },
                     { "error_message", "OK" },
                     { "balance", btiResult.AfterAmount.ToString() }
                 });
@@ -360,10 +391,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             catch (Exception ex)
             {
                 _logger.LogError($"Exception：{ex.Message}");
+
+                if (!_environment.IsDevelopment()) //PRD
+                    errorCode = "-9";
+
                 return ReturnBTI(new Dictionary<string, string>
                 {
-                    { "error_code", "0" },
-                    { "error_message", "Exception happened." },
+                    { "error_code", errorCode },
+                    { "error_message", "Fail:Exception happened." },
                     { "balance", "0" }
                 });
             }
@@ -371,6 +406,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public async Task<string> Credit(BTIRequestObj request)
         {
+            var errorCode = "0"; //DEV MUST ALWAYS SET error_code=0 For BTI Test Case
             var (tpCustInfo, tpCurrency) = GetTPInfo(request.cust_id);
             request.amount *= tpCurrency.ExchangeRate;
 
@@ -389,21 +425,27 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     case -2:
                         errorMessage = $"reserve_id:{creditRequest.reserve_id} is credit done.";
                         break;
-                    case -3:
+                    case -3://:need BTI resend request
+                        if (!_environment.IsDevelopment()) //PRD
+                            errorCode = "-3";
                         errorMessage = $"reserve_id:{creditRequest.reserve_id} is not exist PurchaseBetID:{creditRequest.PurchaseID}.";
                         break;
-                    case -4:
+                    case -4://:need BTI resend request
+                        if (!_environment.IsDevelopment()) //PRD
+                            errorCode = "-4";
                         errorMessage = $"reserve_id:{creditRequest.reserve_id} PurchaseBetID not same with PurchaseID:{creditRequest.PurchaseID}.";
                         break;
-                    default: //-1
+                    default: //-1:need BTI resend request
+                        if (!_environment.IsDevelopment()) //PRD
+                            errorCode = "-1";
                         errorMessage = $"reserve_id:{creditRequest.reserve_id} was not found.";
                         break;
                 }
 
                 return ReturnBTI(new Dictionary<string, string>
                 {
-                    { "error_code", "0" },
-                    { "error_message", errorMessage },
+                    { "error_code", errorCode },
+                    { "error_message", $"Fail:{errorMessage}" },
                     { "trx_id", btiResult.Trx_id.ToString()},
                     { "balance", btiResult.AfterAmount.ToString() }
                 });
@@ -412,7 +454,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             btiResult.AfterAmount /= tpCurrency.ExchangeRate;
             return ReturnBTI(new Dictionary<string, string>
             {
-                { "error_code", "0" },
+                { "error_code", errorCode },
                 { "error_message", "OK" },
                 { "trx_id", btiResult.Trx_id.ToString()},
                 { "balance", btiResult.AfterAmount.ToString() }
