@@ -17,6 +17,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly AuthBLL _authBLL;
         private readonly IBNGBLL _bNGBLL;
+        private readonly ILogger<BNGController> _logger;
         public Tp ThirdParty { get; set; }
         public int gameType { get; set; }
 
@@ -29,6 +30,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _authBLL = provider.GetRequiredService<AuthBLL>();
             _bNGBLL = provider.GetRequiredService<IBNGBLL>();
+            _logger = provider.GetRequiredService<ILogger<BNGController>>();
         }
         #endregion
 
@@ -36,11 +38,30 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpPost]
         public IActionResult POST(BNGRequest req)
         {
-            var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(req.token)));
-            var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
-            string authToken = sessionKeyArr[0];
-            string sessionToken = sessionKeyArr[1];
-            string tpUserName = sessionKeyArr[2];
+            string authToken = string.Empty;
+            string sessionToken = string.Empty;
+            string tpUserName = string.Empty;
+
+            try
+            {
+                var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(req.token)));
+                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+                authToken = sessionKeyArr[0];
+                sessionToken = sessionKeyArr[1];
+                tpUserName = sessionKeyArr[2];
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, $"{req.token}");
+                return Ok(new BNGResponse()
+                {
+                    uid = req.uid,
+                    error = new error()
+                    {
+                        code = ErrorCode.INVALID_TOKEN.ToString()
+                    }
+                });
+            }
 
             return req.name switch
             {
