@@ -278,13 +278,12 @@ namespace ThirdParty.HL
                 };
             }
             
-            //最多抓兩天 多一秒都不行
-            var timeStart = getBetDetail.SettledTime.Date;
-            var timeEnd = timeStart.AddDays(2).AddSeconds(-1).ToString("yyyy-MM-dd"); 
+            //依照SettledTime當天的MM-dd去抓即可
+            var searchTime = getBetDetail.SettledTime.Date.ToString("yyyy-MM-dd");
             
             var postData = $"apiUser={_siteHLConfig.ApiUser}&apiPass={_siteHLConfig.ApiPass}&" +
                            $"user={_siteHLConfig.AgentUser}&pass={_siteHLConfig.AgentPass}&" +
-                           $"loginID={tpCustInfo.TpUserName}&dateFrom={timeStart:yyyy-MM-dd}&dateTo={timeEnd}";
+                           $"loginID={tpCustInfo.TpUserName}&dateFrom={searchTime}&dateTo={searchTime}";
             
             var result = HttpPost($"{_siteHLConfig.ApiUrl}betlistPage.aspx?",postData ,"application/x-www-form-urlencoded");
             if (IsXML(result))

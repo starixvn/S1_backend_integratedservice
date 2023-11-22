@@ -117,26 +117,31 @@ namespace ThirdParty.HL
     
     #region GetBetList
     
+    
     [XmlRoot(ElementName="response")]
-    public class GetBetListResponse : HLResponse
-    {
+    public class GetBetListResponse 
+    { 
+        [XmlElement(ElementName="errorCode")] 
+        public int ErrorCode { get; set; } 
+        [XmlElement(ElementName="desc")] 
+        public object Desc { get; set; }
         [XmlElement(ElementName="betData")]
         public List<BetData> BetDataList { get; set; }
     }
-
+    
     public class BetData
     {
         [XmlElement(ElementName="betID")]
         public string BetID { get; set; }
 
         [XmlElement(ElementName="dateTime")]
-        public DateTime DateTime { get; set; }
+        public string DateTime { get; set; }
 
         [XmlElement(ElementName="drawType")]
         public int DrawType { get; set; }
 
         [XmlElement(ElementName="drawDate")]
-        public DateTime DrawDate { get; set; }
+        public string DrawDate { get; set; }
 
         [XmlElement(ElementName="betNumber")]
         public string BetNumber { get; set; }
