@@ -102,7 +102,7 @@ namespace ThirdParty.KM
             var detail = ToJson(wagerDetail);
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
-                TpCategory.Games => new PokerDetail(getBetDetail.TpGameTypeOption)
+                TpCategory.Poker => new PokerDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
                     Detail = detail,

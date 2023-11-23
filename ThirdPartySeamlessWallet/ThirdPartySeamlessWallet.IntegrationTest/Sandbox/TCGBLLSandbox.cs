@@ -63,8 +63,8 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             builder.Configuration.AddRemoteJsonConfig(remoteUrls);
 
             var app = builder.Build();
-            _configuration = app.Configuration;
             _serviceCollection.AddSingleton(_configuration);
+            _configuration = app.Configuration;
 
             _serviceCollection.AddTransient(p => Substitute.For<ILogger<SettledService>>());
             _serviceCollection.AddTransient(p => Substitute.For<ILogger<BettingService>>());

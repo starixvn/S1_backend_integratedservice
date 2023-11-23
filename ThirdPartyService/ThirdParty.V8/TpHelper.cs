@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-
+using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
@@ -304,11 +304,11 @@ namespace ThirdParty.V8
                 {
                     var uri = new Uri(json.d.url);
                     var forward = json.d.url;
-                    //string pLang = HttpUtility.ParseQueryString(uri.Query).Get("lang");
-                    //if (pLang != TpLangId)
-                    //{
-                    //    forward = forward.Replace($"lang={pLang}", $"lang={TpLangId}");
-                    //}
+                    string pLang = HttpUtility.ParseQueryString(uri.Query).Get("lang");
+                    if (pLang != TpLangId)
+                    {
+                        forward = forward.Replace($"lang={pLang}", $"lang={TpLangId}");
+                    }
 
                     oApiResult.ErrorCode = ErrorCode.Success;
                     oApiResult.Message = forward;
@@ -412,20 +412,7 @@ namespace ThirdParty.V8
             var detail = ToJson(wagerDetail);
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
-                TpCategory.P2P => new PokerDetail(getBetDetail.TpGameTypeOption)
-                {
-                    TransId = getBetDetail.TransId,
-                    Detail = detail,
-                    TpCurrency = tpCurrency,
-                    RefTransId = wagerDetail.GetValueOrDefault("TableID")?.ToString(),
-                    TpUserName = wagerDetail.GetValueOrDefault("Accounts")?.ToString(),
-                    UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("GameStartTime", DateTime.MinValue),
-                    UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("GameEndTime", DateTime.MinValue),
-                    Stake = (decimal)wagerDetail.GetValueOrDefault("AllBet") * tpCurrency.ExchangeRate,
-                    WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("Profit") * tpCurrency.ExchangeRate,
-                    GameCode = wagerDetail.GetValueOrDefault("KindID")?.ToString(),
-                },
-                TpCategory.Games => new PokerDetail(getBetDetail.TpGameTypeOption)
+                TpCategory.Poker => new PokerDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
                     Detail = detail,
