@@ -183,7 +183,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
                 p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
 
-                _ = await _mainDbClient.ExecuteAsync("Service_BettransSports_BTI_Credit_Ins_V2", trans, p);
+                _ = await _mainDbClient.ExecuteAsync("Service_BettransSports_BTI_Credit_Ins_V3", trans, p);
                 var btiResult = new BTIResult()
                 {
                     SPResult = p.Get<short>("SPResult"),
