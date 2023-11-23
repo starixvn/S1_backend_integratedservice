@@ -182,7 +182,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             //檢查是否有這筆注單
             if (!betCheck.Any())
             {
-                _logger.LogInformation($"No BetData");
                 afterAmount = _tpCustInfoBLL.GetBalance((int)Tp.BNG, tpCustInfo.TpUserName, (int)GameType.BNG_RNG).Balance;
                 return (int)TransactionStatus.Success;
             }
@@ -192,7 +191,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             //檢查這個交易是否處理過
             if (rollBackCheck.Any())
             {
-                _logger.LogInformation($"Duplicate Data");
                 afterAmount = _tpCustInfoBLL.GetBalance((int)Tp.BNG, tpCustInfo.TpUserName, (int)GameType.BNG_RNG).Balance;
                 return (int)TransactionStatus.Success;
             }
@@ -233,7 +231,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             tempResult = _partitionService.Execute(partitionTime, "Service_BettransRng_BNG_Ins", bettingData, trans);
-            _logger.LogInformation($"1.{tempResult}");
+
             if (tempResult > 0)
             {
                 tempResult = _settledService.PayoutV2(
@@ -252,8 +250,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         conn,
                         trans
                     );
-                _logger.LogInformation($"2.{tempResult}");
-                _logger.LogInformation($"afterAmount:{afterAmount}");
             }
 
             if (tempResult > 0)
