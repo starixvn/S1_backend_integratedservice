@@ -84,14 +84,14 @@ namespace ThirdPartyWager.Service.BLL.HL
         }
 
 
-        public async Task<bool> SetSettledWager(string startTime, string endTime)
+        public async Task<bool> SetSettledWager()
         {
             var msg = "FATAL_ERROR";
             var guid = Guid.NewGuid().ToString();
             try
             {
                 var nowDate = DateTime.Now;
-                _logger.LogInformation($"HaoLong Job Time : {nowDate}");
+                _logger.LogInformation($"HaoLong SetSettledWager Job Time : +0 = {nowDate:yyyy-MM-ddTHH:mm:ss} | +8 = {nowDate.AddHours(8):yyyy-MM-ddTHH:mm:ss}");
                 var getDrawResult = await _apiHLBLL.GetDrawResult(nowDate);
                 var getHLUnSettledWager = _wagerHLService.GetHLBetUnSettledList();
 

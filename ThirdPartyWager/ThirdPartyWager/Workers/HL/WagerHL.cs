@@ -45,6 +45,9 @@ namespace ThirdPartyWager.Workers.HL
             try
             {
                 var nowTime = DateTime.Now;
+                _logger.LogInformation($"HaoLong Start DoHLReportTask Job Time : : +0 {nowTime:yyyy-MM-ddTHH:mm:ss} | +8 {nowTime.AddHours(8):yyyy-MM-ddTHH:mm:ss}");
+
+                var result = false;
                 quick = 0;
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(tpId, tpType);
                 
@@ -62,15 +65,27 @@ namespace ThirdPartyWager.Workers.HL
                 if (timerTime < nowTime)
                 {
                      var time = _dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
-                     var result = await _wagerHLBLL.GetWagersAsync(time.startTime, time.endTime);
+                     
+                     //測試發現，下注時間跟開彩時間有差異，所以要抓7天的開彩日期，要不然會有下注單當天沒回來的情形發生。
+                     var currentDate = DateTime.Parse(time.startTime);
+                     var nextSevenDays = Enumerable.Range(0, 7)
+                         .Select(day => currentDate.AddDays(day))
+                         .ToList();
+                     
+                     foreach(var day in nextSevenDays)
+                     {
+                         result = await _wagerHLBLL.GetWagersAsync(day.ToString("yyyy-MM-dd"), day.AddDays(1).ToString("yyyy-MM-dd"));
+                     }
+                     
                      if (result)
                      {
                          _thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
                      }
                     
                      if(CheckHaoLongTime(2))
-                     {
-                       _ = await _wagerHLBLL.SetSettledWager(time.startTime, time.endTime);
+                     { 
+                       _logger.LogInformation($"HaoLong Start SetSettledWager Job Time : +0 = {DateTime.Now:yyyy-MM-ddTHH:mm:ss} | +8 = {DateTime.Now.AddHours(8):yyyy-MM-ddTHH:mm:ss}");
+                       _ = await _wagerHLBLL.SetSettledWager();
                      }
                 }
             }
@@ -99,6 +114,7 @@ namespace ThirdPartyWager.Workers.HL
             //1:拉單
             //2:結算時間
             
+            _logger.LogInformation($"HaoLong Start CheckHaoLongTime Job Time : Type [{timeType}] | +0 = {DateTime.Now:yyyy-MM-ddTHH:mm:ss} | +8 = {DateTime.Now.AddHours(8):yyyy-MM-ddTHH:mm:ss}");
             var utcNow = DateTime.UtcNow;
             var gmtPlus8 = TimeZoneInfo.FindSystemTimeZoneById("Singapore Standard Time");
             var timeInGmtPlus8 = TimeZoneInfo.ConvertTimeFromUtc(utcNow, gmtPlus8);
