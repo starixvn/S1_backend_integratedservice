@@ -32,6 +32,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpBetRecordExtendBLL _tpBetRecordExtendBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
+        private readonly IHostEnvironment _environment;
 
         public SettledService(IServiceProvider provider)
         {
@@ -49,6 +50,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
             _partitionService = provider.GetRequiredService<PartitionService>();
+            _environment = provider.GetRequiredService<IHostEnvironment>();
         }
 
         private Dictionary<GameType, Dictionary<string, bool>> excludeRoll = new Dictionary<GameType, Dictionary<string, bool>>()
@@ -333,11 +335,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public int SettleTicket(TpCustInfo tpCustInfo, BetRecordInfo betRecord, MySqlConnection conn, MySqlTransaction trans, GetTpSeamlessBonusType getTpSeamlessBonusType = GetTpSeamlessBonusType.ByGameTypeAndTransId)
         {
-            int result = 0;        
+            int result = 0;
             try
             {
                 // 指定走新結算流程
-                if (tpCustInfo.CustId == 250713 || tpCustInfo.CustId == 22)
+                if (_environment.IsDevelopment() || tpCustInfo.CustId == 22)
                 {
                     var settleTicket = new SettleTicket(
                         tpCustInfo: tpCustInfo,
