@@ -79,6 +79,8 @@ namespace ThirdPartyBetHistory.Service.DAL
             return _mainDbClient.Execute("Service_TpBetRecordDetail_Ins_V3", props);
         }
 
+        #region Saba VGaming
+        
         public IEnumerable<VgamingUnSettle> GetVgamingUnSettleTicket(long TicketKey, int LimitCount)
         {
             return _reportDbClient.Query<VgamingUnSettle>("Service_SBSW_Vgaming_Unsettle_Get_V2",
@@ -94,5 +96,28 @@ namespace ThirdPartyBetHistory.Service.DAL
             var parameters = new { TicketKey };
             return _reportDbClient.QueryFirst<long>("Service_SBSW_Vgaming_TicketKey_Get_V2", parameters);
         }
+        
+        #endregion
+
+        #region HaoLong
+
+        public IEnumerable<HaoLongUnSettle> GetHaoLongUnSettleTicket(long TicketKey, int LimitCount)
+        {
+            return _reportDbClient.Query<HaoLongUnSettle>("BetDetail.Service_TpWager_HL_Unsettle_Get_V2",
+                new
+                {
+                    TicketKey,
+                    LimitCount,
+                }, 120);
+        }
+
+        public long GetHaoLongTicketKey(long TicketKey)
+        {
+            var parameters = new { TicketKey };
+            return _reportDbClient.QueryFirst<long>("BetDetail.Service_TpWager_HL_TicketKey_Get", parameters);
+        }
+
+        #endregion
+        
     }
 }

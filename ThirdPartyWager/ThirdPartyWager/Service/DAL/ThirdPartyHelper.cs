@@ -81,6 +81,18 @@ namespace ThirdPartyWager.Service.DAL
         {
             return _reportDbClient.Query<TpListModel>("Service_TpList_ByTpId_Get", new { _TpId = tpId });
         }
+        
+        public long GetSiteTicketKey(int SiteId, int TpId, WorkerType workerType)
+        {
+            var parameters = new { SiteId, TpId, WorkerType = (int)workerType };
+            return _mainDbClient.QueryFirst<long>("Service_SiteTicketKey_Get", parameters);
+        }
+
+        public int SetSiteTicketKey(int SiteId, int TpId, WorkerType workerType, long TicketKey)
+        {
+            var parameters = new { SiteId, TpId, WorkerType = (int)workerType, TicketKey };
+            return _mainDbClient.Execute("Service_SiteTicketKey_Set", parameters);
+        }
 
     }
 }
