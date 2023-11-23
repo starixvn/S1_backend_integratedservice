@@ -182,7 +182,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> CommitReserve([FromQuery] string cust_id, [FromQuery] string reserve_id)
+        public async Task<IActionResult> CommitReserve([FromQuery] string cust_id, [FromQuery] string reserve_id, [FromQuery] string purchase_id)
         {
             var errorCode = "0"; //DEV MUST ALWAYS SET error_code=0 For BTI Test Case
             try
@@ -204,6 +204,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     cust_id = cust_id,
                     reserve_id = reserve_id,
+                    purchase_id = purchase_id,
                 }));
             }
             catch (Exception ex)
