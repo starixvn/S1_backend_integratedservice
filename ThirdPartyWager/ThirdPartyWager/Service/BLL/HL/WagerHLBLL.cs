@@ -12,6 +12,7 @@ namespace ThirdPartyWager.Service.BLL.HL
         private readonly WagerHLService _wagerHLService;
         private readonly ILogger<WagerHLBLL> _logger;
         private readonly int _tpId = (int)Tp.HaoLong;
+        private readonly TpUnsettleService _tpUnsettleService;
         private readonly HLConfig _siteHLConfig;
 
         public WagerHLBLL(IServiceProvider provider)
@@ -19,6 +20,7 @@ namespace ThirdPartyWager.Service.BLL.HL
             _apiHLBLL = provider.GetRequiredService<ApiHLBLL>();
             _wagerHLService = provider.GetRequiredService<WagerHLService>();
             _logger = provider.GetRequiredService<ILogger<WagerHLBLL>>();
+            _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
             _siteHLConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<HLConfig>(Tp.Allbet.ToString());
         }
 
@@ -58,6 +60,7 @@ namespace ThirdPartyWager.Service.BLL.HL
                         if (!IsValidWager(getHLWager, wagerData))
                         {
                             _ =  _wagerHLService.InsertHLWager(wagerData);
+                            _ = _tpUnsettleService.InsertTpUnsettle(Tp.HaoLong, GameType.HaoLong_4D, wagerData.BetID);
                         }
                     }
                     catch (Exception ex)
@@ -81,14 +84,14 @@ namespace ThirdPartyWager.Service.BLL.HL
         }
 
 
-        public async Task<bool> SetSettledWager(string startTime, string endTime)
+        public async Task<bool> SetSettledWager()
         {
             var msg = "FATAL_ERROR";
             var guid = Guid.NewGuid().ToString();
             try
             {
                 var nowDate = DateTime.Now;
-                _logger.LogInformation($"HaoLong Job Time : {nowDate}");
+                _logger.LogInformation($"HaoLong SetSettledWager Job Time : +0 = {nowDate:yyyy-MM-ddTHH:mm:ss} | +8 = {nowDate.AddHours(8):yyyy-MM-ddTHH:mm:ss}");
                 var getDrawResult = await _apiHLBLL.GetDrawResult(nowDate);
                 var getHLUnSettledWager = _wagerHLService.GetHLBetUnSettledList();
 

@@ -14,7 +14,6 @@
         SBSW = 9,
         Mega888SlotRNGFishing = 10,
         ESports = 11,
-        FourDigit = 12,
     }
 
 }

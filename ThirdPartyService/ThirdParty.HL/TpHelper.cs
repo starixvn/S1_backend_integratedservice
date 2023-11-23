@@ -138,7 +138,7 @@ namespace ThirdParty.HL
             if (CheckHaoLongBusyTime(2))
             {
                 oApiResult.ErrorCode = ErrorCode.ServerIsBusy;
-                oApiResult.RawMessage = "4D Bonus Time";
+                oApiResult.RawMessage = _siteLanguageBLL.GetLanguageValue(tpCustInfo.SiteId,"HaoLongTransferBusyTime",tpCustInfo.IsoCode);
                 return oApiResult;
             }
             
@@ -196,7 +196,7 @@ namespace ThirdParty.HL
             if (CheckHaoLongBusyTime(2))
             {
                 oApiResult.ErrorCode = ErrorCode.ServerIsBusy;
-                oApiResult.RawMessage = "4D Bonus Time";
+                oApiResult.RawMessage = _siteLanguageBLL.GetLanguageValue(tpCustInfo.SiteId,"HaoLongTransferBusyTime",tpCustInfo.IsoCode);
                 return oApiResult;
             }
             

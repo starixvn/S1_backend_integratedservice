@@ -28,7 +28,13 @@ namespace ThirdPartyWager.Service.BLL.HL
 
         public TimeCast GetReportTime(DateTime startTime, int day)
         {
-            throw new NotImplementedException();
+            var reportTime = _dateTimeHelper.GetTimeByDay(1440, _timeZone, "yyyy-MM-dd HH:mm:ss", startTime);
+            var cvTime = DateTimeOffset.Now.AddDays(day).ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
+            if (reportTime.endUnix > cvTime)
+            {
+                reportTime = _dateTimeHelper.GetTimeByDay(1440, _timeZone, "yyyy-MM-dd HH:mm:ss", startTime.AddDays(-1));
+            }
+            return reportTime;
         }
 
         public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
@@ -52,7 +58,25 @@ namespace ThirdPartyWager.Service.BLL.HL
 
         public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
         {
-            throw new NotImplementedException();
+            var dailyData = new List<FincanceDailySummary>();
+            if (!reportData.Any())
+            {
+                return dailyData;
+            }
+
+            dailyData.AddRange(reportData.Select(item => new FincanceDailySummary()
+            {
+                SummaryType = SummaryType.TpBetRecord,
+                SummaryDate = reportDate,
+                TpId = tpId,
+                CurrencyId = item.CurrencyId,
+                Stake = item.Stake,
+                ValidBet = item.ValidBet,
+                Payout = item.Payout,
+                WinlostAmount = item.WinlostAmount
+            }));
+
+            return dailyData;
         }
     }
 }
