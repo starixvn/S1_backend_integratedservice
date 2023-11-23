@@ -147,6 +147,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
                     {
                         SetBonusWinLost(winnings, losses, memo);
                     }
+                    return this;
                 }
             }
             else // 有前一次結算紀錄，依據TicketStatus進行設定
@@ -165,6 +166,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
                     {
                         SetBonusWinLost(winnings, losses, memo);
                     }
+                    return this;
                 }
 
                 // 上次:Lost、Win、FreeBetWin
@@ -182,6 +184,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
                     {
                         SetBonusWinLost(winnings, losses, memo);
                     }
+                    return this;
                 }
 
                 // 上次:Lost、Win、Draw、FreeBetWin
@@ -202,6 +205,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
                             SetBonusWinLost(winnings, losses, memo);
                         }
                     }
+                    return this;
                 }
             }
 
@@ -306,6 +310,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
                     {
                         SetWithdrawalLimitTurnOver(turnOver, memo);
                         SetEffectiveBetSum(turnOver);
+                        return this;
                     }
                 }
                 else // 有前一次結算紀錄，依據TicketStatus進行設定
@@ -320,6 +325,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
                     {
                         SetWithdrawalLimitTurnOver(turnOver, memo);
                         SetEffectiveBetSum(turnOver);
+                        return this;
                     }
 
                     // 上次:Lost、Win、Draw
@@ -332,6 +338,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
                         memo = BetRecord.TicketStatus == TicketStatus.UnSettled ? "UnSettled" : "Re-Settled";
                         SetWithdrawalLimitTurnOver(turnOver, memo);
                         SetEffectiveBetSum(turnOver);
+                        return this;
                     }
 
                     // 上次:Lost、Win、Draw
@@ -345,6 +352,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
                             turnOver = turnOver - refTurnOver;
                             SetWithdrawalLimitTurnOver(turnOver, "Re-Settled");
                             SetEffectiveBetSum(turnOver);
+                            return this;
                         }
                     }
                 }
