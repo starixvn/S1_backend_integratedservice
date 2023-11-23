@@ -12,7 +12,7 @@ using ThirdPartySeamlessWallet.Service.Model.enums;
 
 using static ThirdPartySeamlessWallet.Extensions.MethodExtension;
 
-namespace ThirdPartySeamlessWallet.Service.Workers
+namespace ThirdPartySettleWorker.Workers
 {
     public class TpReRequestWorker : BackgroundService
     {

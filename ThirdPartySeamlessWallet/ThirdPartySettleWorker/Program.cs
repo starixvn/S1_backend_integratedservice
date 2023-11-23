@@ -5,7 +5,6 @@ using Serilog.Exceptions;
 
 using ThirdPartySeamlessWallet;
 using ThirdPartySeamlessWallet.Core.Extensions;
-using ThirdPartySeamlessWallet.Service.Workers;
 
 using ThirdPartySettleWorker.Workers;
 
@@ -33,7 +32,6 @@ var startup = new Startup(builder.Configuration);
 startup.ConfigureServices(builder.Services);
 
 builder.Services
-    .AddHostedService<SettleWorker>()
     .AddHostedService<TpReRequestWorker>()
     .AddHostedService<TpRewardWorker>()
     .AddHostedService<JokerWorker>()
