@@ -66,6 +66,7 @@ namespace ThirdPartyWager
             services.AddSingleton<ConfigBLL>();
 
             services.AddSingleton<ThirdPartyBLL>();
+            services.AddSingleton<TpUnSettledBLL>();
             services.AddSingleton<CommonBLL>();
 
             services.AddTpList();
