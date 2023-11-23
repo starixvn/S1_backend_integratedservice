@@ -18,11 +18,13 @@ namespace ThirdPartySeamlessWallet.Controllers
     public class BTIController : ControllerBase
     {
         private readonly ILogger<BTIController> logger;
+        private readonly IHostEnvironment _environment;
         private static BTIBLL _bTIBLL { get; set; }
 
         public BTIController(IServiceProvider provider, ILogger<BTIController> logger)
         {
             this.logger = logger;
+            _environment = provider.GetRequiredService<IHostEnvironment>();
             _bTIBLL = new BTIBLL(provider);
         }
 
@@ -50,7 +52,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return ReturnBTI(new Dictionary<string, string>
                     {
                         { "error_code", "-3" },
-                        { "error_message", $"Query auth_token is null." },
+                        { "error_message", $"Fail:Query auth_token is null." },
                     });
                 }
 
@@ -62,7 +64,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return ReturnBTI(new Dictionary<string, string>
                 {
                     { "error_code", "-1" },
-                    { "error_message", ex.Message },
+                    { "error_message", $"Fail:{ex.Message}" },
                 });
             }
         }
@@ -77,7 +79,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return ReturnBTI(new Dictionary<string, string>
                     {
                         { "error_code", "-10" },
-                        { "error_message", $"Wrong Request." },
+                        { "error_message", $"Fail:Wrong Request." },
+                        { "trx_id", $"{DateTime.UtcNow.ToFileTimeUtc()}"},
+                        { "balance", "0" }
                     });
                 }
 
@@ -94,14 +98,17 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return ReturnBTI(new Dictionary<string, string>
                 {
                     { "error_code", "-1" },
-                    { "error_message", ex.Message },
+                    { "error_message", $"Fail:{ex.Message}" },
+                    { "trx_id", $"{DateTime.UtcNow.ToFileTimeUtc()}"},
+                    { "balance", "0" }
                 });
             }
         }
 
         [HttpPost]
-        public async Task<IActionResult> DebitReserve([FromQuery] string cust_id, [FromQuery] string reserve_id, [FromQuery] decimal amount, [FromQuery] string req_id)
+        public async Task<IActionResult> DebitReserve([FromQuery] string cust_id, [FromQuery] string reserve_id, [FromQuery] decimal amount, [FromQuery] string req_id, [FromQuery] string purchase_id)
         {
+            var errorCode = "0"; //DEV MUST ALWAYS SET error_code=0 For BTI Test Case
             try
             {
                 using var requestBody = new StreamReader(Request.Body, Encoding.UTF8, true, 1024, true);
@@ -112,16 +119,23 @@ namespace ThirdPartySeamlessWallet.Controllers
                     reserve_id = reserve_id,
                     amount = amount,
                     req_id = req_id,
+                    purchase_id = purchase_id,
                     requestBody = await requestBody.ReadToEndAsync()
                 }));
             }
             catch (Exception ex)
             {
                 LogExceptionError(GetCurrentMethod(), ex);
+
+                if (!_environment.IsDevelopment()) //PRD
+                    errorCode = "-9";
+
                 return ReturnBTI(new Dictionary<string, string>
                 {
-                    { "error_code", "-1" },
-                    { "error_message", ex.Message },
+                    { "error_code", errorCode },
+                    { "error_message", $"Fail:{ex.Message}" },
+                    { "trx_id", $"{DateTime.UtcNow.ToFileTimeUtc()}"},
+                    { "balance", "0" }
                 });
             }
         }
@@ -129,14 +143,19 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpGet]
         public async Task<IActionResult> CancelReserve([FromQuery] string cust_id, [FromQuery] string reserve_id)
         {
+            var errorCode = "0"; //DEV MUST ALWAYS SET error_code=0 For BTI Test Case
             try
             {
                 if (string.IsNullOrEmpty(cust_id) || string.IsNullOrEmpty(reserve_id))
                 {
+                    if (!_environment.IsDevelopment()) //PRD
+                        errorCode = "-8";
+
                     return ReturnBTI(new Dictionary<string, string>
                     {
-                        { "error_code", "-10" },
-                        { "error_message", $"Wrong Request." },
+                        { "error_code", errorCode },
+                        { "error_message", $"Fail:Wrong Request." },
+                        { "balance", "0" }
                     });
                 }
 
@@ -149,10 +168,15 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 LogExceptionError(GetCurrentMethod(), ex);
+
+                if (!_environment.IsDevelopment()) //PRD
+                    errorCode = "-9";
+
                 return ReturnBTI(new Dictionary<string, string>
                 {
-                    { "error_code", "-1" },
-                    { "error_message", ex.Message },
+                    { "error_code", errorCode },
+                    { "error_message", $"Fail:{ex.Message}" },
+                    { "balance", "0" }
                 });
             }
         }
@@ -160,14 +184,19 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpGet]
         public async Task<IActionResult> CommitReserve([FromQuery] string cust_id, [FromQuery] string reserve_id)
         {
+            var errorCode = "0"; //DEV MUST ALWAYS SET error_code=0 For BTI Test Case
             try
             {
                 if (string.IsNullOrEmpty(cust_id) || string.IsNullOrEmpty(reserve_id))
                 {
+                    if (!_environment.IsDevelopment()) //PRD
+                        errorCode = "-8";
+
                     return ReturnBTI(new Dictionary<string, string>
                     {
-                        { "error_code", "-10" },
-                        { "error_message", $"Wrong Request." },
+                        { "error_code", errorCode },
+                        { "error_message", $"Fail:Wrong Request." },
+                        { "balance", "0" }
                     });
                 }
 
@@ -180,17 +209,23 @@ namespace ThirdPartySeamlessWallet.Controllers
             catch (Exception ex)
             {
                 LogExceptionError(GetCurrentMethod(), ex);
+
+                if (!_environment.IsDevelopment()) //PRD
+                    errorCode = "-9";
+
                 return ReturnBTI(new Dictionary<string, string>
                 {
-                    { "error_code", "-1" },
-                    { "error_message", ex.Message },
+                    { "error_code", errorCode },
+                    { "error_message", $"Fail:{ex.Message}" },
+                    { "balance", "0" }
                 });
             }
         }
 
         [HttpPost]
-        public async Task<IActionResult> DebitCustomer([FromQuery] string cust_id, [FromQuery] string req_id, [FromQuery] decimal amount)
+        public async Task<IActionResult> DebitCustomer([FromQuery] string cust_id, [FromQuery] string req_id, [FromQuery] decimal amount, [FromQuery] string purchase_id)
         {
+            var errorCode = "0"; //DEV MUST ALWAYS SET error_code=0 For BTI Test Case
             try
             {
                 using var requestBody = new StreamReader(Request.Body, Encoding.UTF8, true, 1024, true);
@@ -200,22 +235,31 @@ namespace ThirdPartySeamlessWallet.Controllers
                     cust_id = cust_id,
                     amount = amount * -1,
                     req_id = req_id,
+                    purchase_id = purchase_id,
                     requestBody = await requestBody.ReadToEndAsync()
                 }));
             }
             catch (Exception ex)
             {
+                LogExceptionError(GetCurrentMethod(), ex);
+
+                if (!_environment.IsDevelopment()) //PRD
+                    errorCode = "-9";
+
                 return ReturnBTI(new Dictionary<string, string>
                 {
-                    { "error_code", "-1" },
-                    { "error_message", ex.Message },
+                    { "error_code", errorCode },
+                    { "error_message", $"Fail:{ex.Message}" },
+                    { "trx_id", $"{DateTime.UtcNow.ToFileTimeUtc()}"},
+                    { "balance", "0" }
                 });
             }
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreditCustomer([FromQuery] string cust_id, [FromQuery] string req_id, [FromQuery] decimal amount)
+        public async Task<IActionResult> CreditCustomer([FromQuery] string cust_id, [FromQuery] string req_id, [FromQuery] decimal amount, [FromQuery] string purchase_id)
         {
+            var errorCode = "0"; //DEV MUST ALWAYS SET error_code=0 For BTI Test Case
             try
             {
                 using var requestBody = new StreamReader(Request.Body, Encoding.UTF8, true, 1024, true);
@@ -225,15 +269,23 @@ namespace ThirdPartySeamlessWallet.Controllers
                     cust_id = cust_id,
                     amount = amount,
                     req_id = req_id,
+                    purchase_id = purchase_id,
                     requestBody = await requestBody.ReadToEndAsync()
                 }));
             }
             catch (Exception ex)
             {
+                LogExceptionError(GetCurrentMethod(), ex);
+
+                if (!_environment.IsDevelopment()) //PRD
+                    errorCode = "-9";
+
                 return ReturnBTI(new Dictionary<string, string>
                 {
-                    { "error_code", "-1" },
-                    { "error_message", ex.Message },
+                    { "error_code", errorCode },
+                    { "error_message", $"Fail:{ex.Message}" },
+                    { "trx_id", $"{DateTime.UtcNow.ToFileTimeUtc()}"},
+                    { "balance", "0" }
                 });
             }
         }
