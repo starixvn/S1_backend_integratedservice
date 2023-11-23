@@ -57,7 +57,8 @@
         IM = 52,
         SPRIBE = 53,
         FaChai = 55,
-        Pegasus = 56
+        Pegasus = 56,
+        NLC = 59,
     }
 
     public enum GameType
@@ -98,7 +99,8 @@
         Nextspin_RNG = 99,
         IM_ESports = 102,
         IM_Sports = 103,
-        FaChai_RNG = 106
+        FaChai_RNG = 106,
+        NLC_RNG = 111,
     }
 
     public enum SettlementType
