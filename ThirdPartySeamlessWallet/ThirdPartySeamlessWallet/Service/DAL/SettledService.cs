@@ -333,11 +333,29 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public int SettleTicket(TpCustInfo tpCustInfo, BetRecordInfo betRecord, MySqlConnection conn, MySqlTransaction trans, GetTpSeamlessBonusType getTpSeamlessBonusType = GetTpSeamlessBonusType.ByGameTypeAndTransId)
         {
-            int result = 0;
-            var thirdPartySetting = _thirdPartyBLL.GetThirdPartyBySite(betRecord.TpId, tpCustInfo.SiteId);
-
+            int result = 0;        
             try
             {
+                // 指定走新結算流程
+                if (tpCustInfo.CustId == 250713 || tpCustInfo.CustId == 22)
+                {
+                    var settleTicket = new SettleTicket(
+                        tpCustInfo: tpCustInfo,
+                        betRecord: betRecord,
+                        mainDbClient: _mainDbClient,
+                        trans: trans,
+                        walletService: walletService,
+                        logger: logger,
+                        tpBetRecordExtendBLL: _tpBetRecordExtendBLL,
+                        thirdPartyBLL: _thirdPartyBLL
+                        );
+
+                    settleTicket.ExcuteSettleTicket(getTpSeamlessBonusType);
+                    return settleTicket.SettleResult ? 1 : 0;
+                }
+
+                var thirdPartySetting = _thirdPartyBLL.GetThirdPartyBySite(betRecord.TpId, tpCustInfo.SiteId);
+
                 // 取得前一次的結算結果
                 var RefBetRecord = GetTpBetRecord(betRecord.TpId, betRecord.TransId, (int)betRecord.GameType, conn, trans);
 
@@ -951,3 +969,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
     }
 }
+
+
+
+
