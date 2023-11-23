@@ -2,6 +2,7 @@
 {
     public enum Tp
     {
-        SBSW = 41
+        SBSW = 41,
+        HaoLong = 58,
     }
 }

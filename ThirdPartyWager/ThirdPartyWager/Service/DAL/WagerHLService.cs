@@ -41,9 +41,14 @@ namespace ThirdPartyWager.Service.DAL
             return _wagerDbClient.Execute("Service_TpWager_HL_Set", p);
         }
         
-        public IEnumerable<HLBetTrans> GetHLBetUnSettledList()
+        public IEnumerable<HLWagerTrans> GetHLBetUnSettledList(long TicketKey, int LimitCount = 1000)
         {
-            return _wagerDbClient.Query<HLBetTrans>("Service_TpWager_HL_UnSettle_Get");
+            return _wagerDbClient.Query<HLWagerTrans>("BetDetail.Service_TpWager_HL_Unsettle_Get_V2",
+                new
+                {
+                    TicketKey,
+                    LimitCount,
+                });
         }
     }
 }

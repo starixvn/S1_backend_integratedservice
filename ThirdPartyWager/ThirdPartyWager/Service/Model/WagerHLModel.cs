@@ -116,22 +116,16 @@ namespace ThirdPartyWager.Service.Model
     #endregion
     
     #region DataModel
-
-    public class HLBetTrans
+    
+    public class HLWagerTrans
     {
-	   public string betID { get; set; }
-	   public string loginID { get; set; }
-	   public DateTime dateTime { get; set; }
-	   public int drawType { get; set; }
-	   public DateTime drawDate { get; set; }
-	   public string betNumber { get; set; }
-	   public string betPosition { get; set; }
-	   public string strikePosition { get; set; }
-	   public decimal bet { get; set; }
-	   public decimal strike { get; set; }
-	   public string SettleTimeUnix { get; set; }
-	   public int SettleFlag { get; set; }
-	   public DateTime CreateTime { get; set; }
+	    public long TicketKey { get; set; }
+	    public int SiteId { get; set; }
+	    public string TransId { get; set; }
+	    public string TpUserName { get; set; }
+	    public int drawType { get; set; }
+	    public DateTime drawDate { get; set; }
+	    public int SettleFlag { get; set; }
     }
     
     #endregion

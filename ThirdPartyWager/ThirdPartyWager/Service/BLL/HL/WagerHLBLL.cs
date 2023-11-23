@@ -13,6 +13,8 @@ namespace ThirdPartyWager.Service.BLL.HL
         private readonly ILogger<WagerHLBLL> _logger;
         private readonly int _tpId = (int)Tp.HaoLong;
         private readonly TpUnsettleService _tpUnsettleService;
+        private readonly WorkerType workerType = WorkerType.MainWager;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly HLConfig _siteHLConfig;
 
         public WagerHLBLL(IServiceProvider provider)
@@ -21,6 +23,7 @@ namespace ThirdPartyWager.Service.BLL.HL
             _wagerHLService = provider.GetRequiredService<WagerHLService>();
             _logger = provider.GetRequiredService<ILogger<WagerHLBLL>>();
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _siteHLConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<HLConfig>(Tp.Allbet.ToString());
         }
 
@@ -33,6 +36,8 @@ namespace ThirdPartyWager.Service.BLL.HL
                 //先保留page
                 //var page = 1;
                 
+                var ticketKeyHowLong = _thirdPartyBLL.GetAllSiteTicketKey(workerType, _tpId);
+                var getHLWager = _wagerHLService.GetHLBetUnSettledList(ticketKeyHowLong);
                 
                 var result = await _apiHLBLL.GetBetListByTime(startTime,endTime,guid);
                 var dataWager = result.hl_Response;
@@ -51,7 +56,7 @@ namespace ThirdPartyWager.Service.BLL.HL
                     return true;
                 }
                 
-                var getHLWager = _wagerHLService.GetHLBetUnSettledList();
+                
                 
                 foreach (var wagerData in dataWager.WagerData)
                 {
@@ -93,7 +98,8 @@ namespace ThirdPartyWager.Service.BLL.HL
                 var nowDate = DateTime.Now;
                 _logger.LogInformation($"HaoLong SetSettledWager Job Time : +0 = {nowDate:yyyy-MM-ddTHH:mm:ss} | +8 = {nowDate.AddHours(8):yyyy-MM-ddTHH:mm:ss}");
                 var getDrawResult = await _apiHLBLL.GetDrawResult(nowDate);
-                var getHLUnSettledWager = _wagerHLService.GetHLBetUnSettledList();
+                var ticketKeyHowLong = _thirdPartyBLL.GetAllSiteTicketKey(workerType, _tpId);
+                var getHLUnSettledWager = _wagerHLService.GetHLBetUnSettledList(ticketKeyHowLong);
 
                 var uniqueDraw = getDrawResult.hl_Response.DrawResult.Distinct().ToList();
                 
@@ -111,17 +117,17 @@ namespace ThirdPartyWager.Service.BLL.HL
                     {
                         var tasks = matchedTransWager.Select(async item =>
                         {
-                            var result = await _apiHLBLL.GetWinningNumberByPlayer(item.loginID, nowDate);
+                            var result = await _apiHLBLL.GetWinningNumberByPlayer(item.TpUserName, nowDate);
 
                             HLWagerData insert;
                             if (result.hl_Response.ErrorCode == 0 && result.hl_Response.WagerData != null)
                             {
-                                var settledWager = result.hl_Response.WagerData.FirstOrDefault(x => x.BetID == item.betID);
+                                var settledWager = result.hl_Response.WagerData.FirstOrDefault(x => x.BetID == item.TransId);
                                 insert = CreateHLWagerData(settledWager.BetID, settledWager.StrikePosition, settledWager.SettleAmount);
                             }
                             else
                             {
-                                insert = CreateHLWagerData(item.betID, "NA", "0");
+                                insert = CreateHLWagerData(item.TransId, "NA", "0");
                             }
 
                             var insertResult = await _wagerHLService.UpdateHLWager(insert);
@@ -163,9 +169,9 @@ namespace ThirdPartyWager.Service.BLL.HL
             };
         }
         
-        private bool IsValidWager(IEnumerable<HLBetTrans> getHLWager, HLWagerData wagerData)
+        private bool IsValidWager(IEnumerable<HLWagerTrans> getHLWager, HLWagerData wagerData)
         {
-            return getHLWager.Any(x => x.betID == wagerData.BetID);
+            return getHLWager.Any(x => x.TransId == wagerData.BetID);
         }
     }
 }
