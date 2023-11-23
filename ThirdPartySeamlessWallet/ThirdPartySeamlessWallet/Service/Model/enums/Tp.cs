@@ -57,7 +57,8 @@
         PNG = 54,
         FaChai = 55,
         Pegasus = 56,
-        BNG = 57
+        BNG = 57,
+        NLC = 59,
     }
 
 }

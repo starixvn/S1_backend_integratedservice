@@ -443,7 +443,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 detail: new ConfirmDetail()
                 {
                     refId = request.message.refId,
-                    txId = request.message.txIds.First(),
+                    txId = request.message.txIds?.FirstOrDefault() ?? 0,
                     winlostDate = request.message.winLostDate,
                     creditAmount = request.message.creditAmount,
                     debitAmount = request.message.debitAmount,

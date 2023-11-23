@@ -1,0 +1,14 @@
+﻿using ThirdPartyCore.Model;
+
+namespace ThirdParty.NLC
+{
+    internal class NLCConfig : TpSiteConfig
+    {
+        public string EcId { get; set; }
+        public string Ua2Token { get; set; }
+        public string AuthToken { get; set; }
+        public string CasinoKey { get; set; }
+        public string GameProvider { get; set; }
+        public string GameHistoryApiToken { get; set; }
+    }
+}

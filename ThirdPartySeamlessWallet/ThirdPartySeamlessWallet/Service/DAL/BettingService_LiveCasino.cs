@@ -872,6 +872,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     return -1;
                 }
+                else if (check.Where(x => x.TicketType == (int)BettransType.CancelBet && x.TransactionId == bettingData_EVO.transaction.id).Any())
+                {
+                    // cancelled
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    return -2;
+                }
 
                 bettingData_EVO.transaction.amount *= -1;
                 var p = new DynamicParameters(new

@@ -20,15 +20,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
 
             var result = 0;
-            result = SettleTicket(
-                tpCustInfo,
-                betRecordInfo,
-                0,
-                out _,
-                conn,
-                trans,
-                false/*Don't need Payout*/
-            );
+            result = SettleTicket(tpCustInfo, betRecordInfo, conn, trans);
 
             if (result > 0)
             {
@@ -181,15 +173,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
 
             var result = 0;
-            result = SettleTicket(
-                tpCustInfo,
-                betRecordInfo,
-                0,
-                out _,
-                conn,
-                trans,
-                false/*Don't need Payout*/
-            );
+            result = SettleTicket(tpCustInfo, betRecordInfo, conn, trans);
 
             if (result > 0)
             {
@@ -671,15 +655,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
 
             var result = 0;
-            result = SettleTicket(
-                tpCustInfo,
-                betRecordInfo,
-                0,
-                out _,
-                conn,
-                trans,
-                false/*Don't need Payout*/
-            );
+            result = SettleTicket(tpCustInfo, betRecordInfo, conn, trans);
 
             if (result > 0)
             {

@@ -17,7 +17,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.AG, AddAG},
                 { Tp.DG, AddDG},
                 { Tp.GPI, AddGPI},
-                { Tp.YL, AddYL},
+                //{ Tp.YL, AddYL},
                 { Tp.YGG, AddYGG},
                 { Tp.SG, AddSG},
                 { Tp.KM, AddKM},
@@ -56,7 +56,8 @@ namespace ThirdPartyWager.Extensions
                 { Tp.SPRIBE, AddSPRIBE},
                 { Tp.FaChai, AddFaChai},
                 { Tp.Pegasus, AddPegasus},
-                { Tp.BNG, AddBNG}
+                { Tp.BNG, AddBNG},
+                { Tp.NLC, AddNLC}
             };
         }
         private IServiceCollection AddSA(IServiceCollection services)
@@ -646,6 +647,22 @@ namespace ThirdPartyWager.Extensions
             services.AddHostedService<WagerBNG>();
             services.AddHostedService<WagerRedoBNG>();
             services.AddHostedService<FinanceBNG>();
+
+            return services;
+        }
+
+        private IServiceCollection AddNLC(IServiceCollection services)
+        {
+            services.AddSingleton<WagerNLCService>();
+
+            services.AddSingleton<WagerNLCBLL>();
+            services.AddSingleton<ApiNLCBLL>();
+            services.AddSingleton<FinanceNLCBLL>();
+
+            services.AddHostedService<WagerNLC>();
+            services.AddHostedService<WagerRedoNLC>();
+            services.AddHostedService<WagerUnsettleNLC>();
+            services.AddHostedService<FinanceNLC>();
 
             return services;
         }
