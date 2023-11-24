@@ -258,4 +258,13 @@
         public string gameId { get; set; }
     }
 
+    public class TpBetFailureRecordInfo_HB
+    {
+        public decimal CurrentBalance { get; set; }
+        public decimal BetAmount { get; set; }
+        public decimal WinAmount { get; set; }
+        public decimal ExchangeRate { get; set; }
+        public decimal InsufficientBalance { get; set; }
+    }
+
 }
