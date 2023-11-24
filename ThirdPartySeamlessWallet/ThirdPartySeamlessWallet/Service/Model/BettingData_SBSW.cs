@@ -14,6 +14,8 @@
         public DateTime transactionTime { get; set; }
         public string refId { get; set; }
         public int sportType { get; set; }
+
+        public int baStatus { get; set; }
     }
     public class SettleSBSW
     {
