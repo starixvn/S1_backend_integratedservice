@@ -1633,7 +1633,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         {
                             trx_id = cancelBet_GPI.trx_id,
                             cust_id = cancelBet_GPI.cust_id,
-                            currency = cancelBet_GPI.currency,
+                            currency = !string.IsNullOrEmpty(cancelBet_GPI.currency) ? cancelBet_GPI.currency : tpCustInfo.TpCurrencyId,
                             amount = 0,
                             Operator = cancelBet_GPI.Operator,
                             game_id = cancelBet_GPI.game_id,
