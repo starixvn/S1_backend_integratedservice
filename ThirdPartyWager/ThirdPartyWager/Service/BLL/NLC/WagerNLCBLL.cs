@@ -57,7 +57,7 @@ namespace ThirdPartyWager.Service.BLL
             var quick = CheckQuick(wokerTime, 360);
             var time = _dateTimeHelper.GetTimeByHour(timeRange, _timeZone, _timeFormat, wokerTime, 0);
 
-            var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
+            var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).AddHours(-2).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
             {
                 // count interval wagers
