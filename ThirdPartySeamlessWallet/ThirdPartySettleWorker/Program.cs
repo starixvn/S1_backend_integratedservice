@@ -62,6 +62,7 @@ builder.Services
     .AddHostedService<NetentWorker>()
     .AddHostedService<RedTigerWorker>()
     .AddHostedService<NLCWorker>()
+    .AddHostedService<AmigoWorker>()
     //.AddHostedService<YLWorker>()
     .AddHostedService<Kiss918Worker>()
     .AddHostedService<SkywindWorker>()
