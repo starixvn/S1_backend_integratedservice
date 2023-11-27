@@ -150,7 +150,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
                     return this;
                 }
             }
-            else // 有前一次結算紀錄，依據TicketStatus進行設定
+            else if (RefBetRecord != null) // 有前一次結算紀錄，依據TicketStatus進行設定
             {
                 decimal refWinnings = RefBetRecord.WinlostAmount > 0 ? RefBetRecord.WinlostAmount : 0;
                 decimal refLosses = RefBetRecord.WinlostAmount < 0 ? RefBetRecord.WinlostAmount : 0;
@@ -254,7 +254,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
                     SetRollOverTurnOver(turnOver, memo);
                 }
             }
-            else // 有前一次結算紀錄，依據SettlementType進行設定
+            else if (RefBetRecord != null) // 有前一次結算紀錄，依據SettlementType進行設定
             {
                 decimal refTurnOver = RefBetRecord.ValidBet ?? RefBetRecord.Stake;
 
