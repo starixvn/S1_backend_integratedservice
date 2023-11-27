@@ -56,6 +56,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.SPRIBE, AddSPRIBE},
                 { Tp.FaChai, AddFaChai},
                 { Tp.Pegasus, AddPegasus},
+                { Tp.BNG, AddBNG},
                 { Tp.NLC, AddNLC}
             };
         }
@@ -619,7 +620,7 @@ namespace ThirdPartyWager.Extensions
 
             return services;
         }
-        
+
         private IServiceCollection AddPegasus(IServiceCollection services)
         {
             services.AddSingleton<WagerPegasusService>();
@@ -631,6 +632,21 @@ namespace ThirdPartyWager.Extensions
             services.AddHostedService<WagerPegasus>();
             services.AddHostedService<FinancePegasus>();
 
+
+            return services;
+        }
+
+        private IServiceCollection AddBNG(IServiceCollection services)
+        {
+            services.AddSingleton<WagerBNGService>();
+
+            services.AddSingleton<ApiBNGBLL>();
+            services.AddSingleton<WagerBNGBLL>();
+            services.AddSingleton<FinanceBNGBLL>();
+
+            services.AddHostedService<WagerBNG>();
+            services.AddHostedService<WagerRedoBNG>();
+            services.AddHostedService<FinanceBNG>();
 
             return services;
         }
