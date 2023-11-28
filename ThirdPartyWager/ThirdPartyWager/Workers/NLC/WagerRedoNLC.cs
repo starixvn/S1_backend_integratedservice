@@ -13,7 +13,7 @@ namespace ThirdPartyWager.Workers
         private readonly int tpType = (int)WagerTimerType.RedoWager;
         private readonly int timeRange = 60; //in minutes 
         private readonly int quickTime = 45; // in seconds
-        private readonly int runTime = 35; // in minutes
+        private readonly int runTime = 1; // in hours
         private readonly string _tpName = Tp.NLC.ToString();
 
         public WagerRedoNLC(IServiceProvider provider)
@@ -42,7 +42,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                var dueTimeSpan = quick ? TimeSpan.FromSeconds(quickTime) : TimeSpan.FromMinutes(runTime);
+                var dueTimeSpan = quick ? TimeSpan.FromSeconds(quickTime) : TimeSpan.FromHours(runTime);
                 timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
