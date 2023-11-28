@@ -29,14 +29,13 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Tp thisTp;
         private readonly string _tpName;
         public string[] promoTransactionTypeList { get; set; }
+        private readonly NLCConfig _siteConfigOfNLC;
+
         #endregion
 
         #region Constructors
 
-        public EVOController(
-            IServiceProvider provider,
-            ILogger<EVOController> logger
-        )
+        public EVOController(IServiceProvider provider, ILogger<EVOController> logger)
         {
             _logger = logger;
             _log2File = provider.GetRequiredService<Log2File>();
@@ -49,11 +48,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             provider.GetRequiredService<Tools>();
             thisTp = Tp.EVO;
             _tpName = Enum.GetName(typeof(Tp), thisTp);
-
             promoTransactionTypeList = new string[] { "JackpotWin",
                 "FreeRoundPlayableSpent",
                 "RewardGamePlayableSpent", "RewardGameWinCapReached", "RewardGameMinBetLimitReached",
                 "FromGame", "RtrMonetaryReward" };
+            // 取共用，設定依機器分為(nova、aiking)
+            _siteConfigOfNLC = provider.GetRequiredService<ConfigBLL>().GetConfigValue<NLCConfig>(Tp.NLC.ToString());
         }
 
         #endregion
@@ -160,6 +160,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/sid")]
         public async Task<dynamic> SidAsync([FromQuery] Dictionary<string, string> getQuery)
         {
+            // api: sid (only for test environments)
             string logName = $"{thisTp}_sid";
 
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
@@ -171,7 +172,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             getApiResponse.status = "UNKNOWN_ERROR";
 
             var authToken = getQuery["authToken"];
-            var check = CheckAuthorization(authToken);
+            // 因為是測試使用API，加上是共用Authorization，此使用預設TP.EVO
+            var check = CheckAuthorization(authToken, (int)thisTp);
             if (check.status != "OK")
             {
                 getApiResponse.status = check.status;
@@ -198,6 +200,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     tpId = (int)Tp.RedTiger;
                     gameType = (int)GameType.RedTiger_RNG;
+                }
+                else if (getReq.gameProvider != null && string.Equals(getReq.gameProvider, "nlc", StringComparison.OrdinalIgnoreCase))
+                {
+                    tpId = (int)Tp.NLC;
+                    gameType = (int)GameType.NLC_RNG;
                 }
 
                 var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(tpId, getReq.userId);
@@ -270,7 +277,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             logName = $"{(Tp)tpId}_check";
 
             var authToken = getQuery["authToken"];
-            var check = CheckAuthorization(authToken);
+            var check = CheckAuthorization(authToken, tpId);
             if (check.status != "OK")
             {
                 getApiResponse.status = check.status;
@@ -348,7 +355,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             logName = $"{(Tp)tpId}_balance";
 
             var authToken = getQuery["authToken"];
-            var check = CheckAuthorization(authToken);
+            var check = CheckAuthorization(authToken, tpId);
             if (check.status != "OK")
             {
                 getApiResponse.status = check.status;
@@ -417,7 +424,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             logName = $"{(Tp)tpId}_debit";
 
             var authToken = getQuery["authToken"];
-            var check = CheckAuthorization(authToken);
+            var check = CheckAuthorization(authToken, tpId);
             if (check.status != "OK")
             {
                 getApiResponse.status = check.status;
@@ -448,6 +455,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     (int)GameType.Netent_RNG => _bettingBLL.PlaceBetRNG_Netent(getReq, out tpAffterAmount),
                     (int)GameType.RedTiger_RNG => _bettingBLL.PlaceBetRNG_RedTiger(getReq, out tpAffterAmount),
+                    (int)GameType.NLC_RNG => _bettingBLL.PlaceBetRNG_NLC(getReq, out tpAffterAmount),
                     _ => _bettingBLL.PlaceBetLC_EVO(getReq, out tpAffterAmount),
                 };
                 if (result > 0)
@@ -480,6 +488,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.retransmission = false;
                     getApiResponse.uuid = getReq.uuid;
                 }
+                else if (result == -2)
+                {
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(tpId, getReq.userId, gameType);
+                    getApiResponse.status = "FINAL_ERROR_ACTION_FAILED";
+                    getApiResponse.balance = tpCustBalance.Balance;
+                    getApiResponse.retransmission = false;
+                    getApiResponse.uuid = getReq.uuid;
+                }
+
 
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
@@ -531,7 +548,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             logName = $"{(Tp)tpId}_cancel";
 
             var authToken = getQuery["authToken"];
-            var check = CheckAuthorization(authToken);
+            var check = CheckAuthorization(authToken, tpId);
             if (check.status != "OK")
             {
                 getApiResponse.status = check.status;
@@ -548,6 +565,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     (int)GameType.Netent_RNG => _settledBLL.CancelBetRNG_Netent(getReq, out tpAffterAmount),
                     (int)GameType.RedTiger_RNG => _settledBLL.CancelBetRNG_RedTiger(getReq, out tpAffterAmount),
+                    (int)GameType.NLC_RNG => _settledBLL.CancelBetRNG_NLC(getReq, out tpAffterAmount),
                     _ => _settledBLL.CancelBetLC_EVO(getReq, out tpAffterAmount),
                 };
                 if (result > 0)
@@ -632,7 +650,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             logName = $"{(Tp)tpId}_credit";
 
             var authToken = getQuery["authToken"];
-            var check = CheckAuthorization(authToken);
+            var check = CheckAuthorization(authToken, tpId);
             if (check.status != "OK")
             {
                 getApiResponse.status = check.status;
@@ -649,6 +667,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     (int)GameType.Netent_RNG => _settledBLL.PayoutRNG_Netent(getReq, out tpAffterAmount),
                     (int)GameType.RedTiger_RNG => _settledBLL.PayoutRNG_RedTiger(getReq, out tpAffterAmount),
+                    (int)GameType.NLC_RNG => _settledBLL.PayoutRNG_NLC(getReq, out tpAffterAmount),
                     _ => _settledBLL.PayoutLC_EVO(getReq, out tpAffterAmount),
                 };
 
@@ -750,7 +769,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 };
             }
 
-            var check = CheckAuthorization(authToken);
+            var check = CheckAuthorization(authToken, tpId);
             if (check.status != "OK")
             {
                 getApiResponse.status = check.status;
@@ -788,6 +807,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     (int)GameType.Netent_RNG => _settledBLL.PromoPayoutRNG_Netent(getReq, out tpAffterAmount),
                     (int)GameType.RedTiger_RNG => _settledBLL.PromoPayoutRNG_RedTiger(getReq, out tpAffterAmount),
+                    (int)GameType.NLC_RNG => _settledBLL.PromoPayoutRNG_NLC(getReq, out tpAffterAmount),
                     _ => _settledBLL.PromoPayoutLC_EVO(getReq, out tpAffterAmount),
                 };
 
@@ -831,7 +851,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
         }
 
-        private CommonResp CheckAuthorization(string authorization)
+        private CommonResp CheckAuthorization(string authorization, int tpId)
         {
             CommonResp checkResponse = new CommonResp();
 
@@ -841,8 +861,18 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return checkResponse;
             }
 
-            var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            if (HttpUtility.UrlDecode(authorization) != thirdPartySetting.TpSetting["AuthToken"])
+            string authToken;
+            if (tpId == (int)Tp.NLC)
+            {
+                authToken = _siteConfigOfNLC.AuthToken;
+            }
+            else
+            {
+                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting(tpId);
+                authToken = thirdPartySetting.TpSetting["AuthToken"];
+            }
+
+            if (HttpUtility.UrlDecode(authorization) != authToken)
             {
                 checkResponse.status = "UNKNOWN_ERROR";
                 return checkResponse;

@@ -20,15 +20,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
 
             var result = 0;
-            result = SettleTicket(
-                tpCustInfo,
-                betRecordInfo,
-                0,
-                out _,
-                conn,
-                trans,
-                false/*Don't need Payout*/
-            );
+            result = SettleTicket(tpCustInfo, betRecordInfo, conn, trans);
 
             if (result > 0)
             {
@@ -181,15 +173,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
 
             var result = 0;
-            result = SettleTicket(
-                tpCustInfo,
-                betRecordInfo,
-                0,
-                out _,
-                conn,
-                trans,
-                false/*Don't need Payout*/
-            );
+            result = SettleTicket(tpCustInfo, betRecordInfo, conn, trans);
 
             if (result > 0)
             {
@@ -671,15 +655,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
 
             var result = 0;
-            result = SettleTicket(
-                tpCustInfo,
-                betRecordInfo,
-                0,
-                out _,
-                conn,
-                trans,
-                false/*Don't need Payout*/
-            );
+            result = SettleTicket(tpCustInfo, betRecordInfo, conn, trans);
 
             if (result > 0)
             {
@@ -1657,7 +1633,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         {
                             trx_id = cancelBet_GPI.trx_id,
                             cust_id = cancelBet_GPI.cust_id,
-                            currency = cancelBet_GPI.currency,
+                            currency = !string.IsNullOrEmpty(cancelBet_GPI.currency) ? cancelBet_GPI.currency : tpCustInfo.TpCurrencyId,
                             amount = 0,
                             Operator = cancelBet_GPI.Operator,
                             game_id = cancelBet_GPI.game_id,
