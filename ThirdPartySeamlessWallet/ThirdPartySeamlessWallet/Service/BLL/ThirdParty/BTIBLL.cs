@@ -298,9 +298,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         case -2:
                             errorMessage = $"reserve_id:{request.reserve_id} is debit done.";
                             break;
-                        default: //-1:need BTI resend request
-                            if (!_environment.IsDevelopment()) //PRD
-                                errorCode = "-1";
+                        default: 
                             errorMessage = $"reserve_id:{request.reserve_id} was not found.";
                             break;
                     }
