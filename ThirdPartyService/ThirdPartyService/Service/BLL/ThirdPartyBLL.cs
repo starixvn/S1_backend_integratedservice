@@ -192,6 +192,7 @@ namespace ThirdPartyService.Service.BLL
                 else if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
                 {
                     apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
+                    apiResult.Message = tpCustInfoResult.Message;
                     apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode; /*3RD Error Code*/
                     apiResult.RawMessage = tpCustInfoResult.RawMessage; /*3RD Error Message*/
                     return apiResult;
