@@ -215,6 +215,7 @@ namespace ThirdPartyService.Service.BLL
                 if (balanceApiResult.ErrorCode != ErrorCode.Success)
                 {
                     apiResult.ErrorCode = ErrorCode.ServerIsBusy;
+                    apiResult.Message = balanceApiResult.Message;
                     apiResult.RawErrorCode = balanceApiResult.RawErrorCode; /*3RD Error Code*/
                     apiResult.RawMessage = balanceApiResult.RawMessage; /*3RD Error Message*/
                     return apiResult;

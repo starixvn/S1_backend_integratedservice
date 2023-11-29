@@ -138,7 +138,7 @@ namespace ThirdParty.HL
             if (CheckHaoLongBusyTime(2))
             {
                 oApiResult.ErrorCode = ErrorCode.ServerIsBusy;
-                oApiResult.Message = _siteLanguageBLL.GetLanguageValue(tpCustInfo.SiteId,"HaoLongTransferBusyTime",tpCustInfo.IsoCode);
+                oApiResult.Message = _siteLanguageBLL.GetLanguageValue(tpCustInfo.SiteId,"HaoLongTransferBusyTime","en");//先寫死en,要不然都會依照幣別固定語言
                 return oApiResult;
             }
             
@@ -196,7 +196,7 @@ namespace ThirdParty.HL
             if (CheckHaoLongBusyTime(2))
             {
                 oApiResult.ErrorCode = ErrorCode.ServerIsBusy;
-                oApiResult.Message = _siteLanguageBLL.GetLanguageValue(tpCustInfo.SiteId,"HaoLongTransferBusyTime",tpCustInfo.IsoCode);
+                oApiResult.Message = _siteLanguageBLL.GetLanguageValue(tpCustInfo.SiteId,"HaoLongTransferBusyTime","en"); //先寫死en,要不然都會依照幣別固定語言
                 return oApiResult;
             }
             

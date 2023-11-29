@@ -9,11 +9,13 @@ namespace ThirdPartyWager.Service.DAL
     public class WagerHLService
     {
         private readonly MySqlClient _wagerDbClient;
+        private readonly MySqlClient _reportDbClient;
         private readonly MySqlClient _mainDbClient;
 
         public WagerHLService(IServiceProvider provider)
         {
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
+            _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
 
@@ -43,12 +45,18 @@ namespace ThirdPartyWager.Service.DAL
         
         public IEnumerable<HLWagerTrans> GetHLBetUnSettledList(long TicketKey, int LimitCount = 1000)
         {
-            return _wagerDbClient.Query<HLWagerTrans>("BetDetail.Service_TpWager_HL_Unsettle_Get_V2",
+            return _wagerDbClient.Query<HLWagerTrans>("BetDetail.Service_TpWager_HL_UnSettle_Get",
                 new
                 {
                     TicketKey,
                     LimitCount,
                 });
+        }
+        
+        public long GetHaoLongTicketKey(long TicketKey)
+        {
+            var parameters = new { TicketKey };
+            return _reportDbClient.QueryFirst<long>("BetDetail.Service_TpWager_HL_TicketKey_Get", parameters);
         }
     }
 }

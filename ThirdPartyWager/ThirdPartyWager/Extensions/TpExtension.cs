@@ -1,4 +1,4 @@
-﻿using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.HL;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;
@@ -649,6 +649,7 @@ namespace ThirdPartyWager.Extensions
 
             services.AddHostedService<WagerHL>();
             services.AddHostedService<FinanceHL>();
+            services.AddHostedService<WagerTicketUnSettleHL>();
 
             return services;
         }
