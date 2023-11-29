@@ -25,6 +25,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public SettleTicket(
             TpCustInfo tpCustInfo,
             BetRecordInfo betRecord,
+            BetRecordInfo refBetRecord,
             MySqlClient mainDbClient,
             MySqlTransaction trans,
             WalletService walletService,
@@ -34,6 +35,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         {
             TpCustInfo = tpCustInfo;
             BetRecord = betRecord;
+            RefBetRecord = refBetRecord;
             _mainDbClient = mainDbClient;
             _trans = trans;
             _walletService = walletService;
@@ -64,12 +66,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         private GetTpSeamlessBonusType TpSeamlessBonusType { get; set; }
 
-        public SettleTicket ExcuteSettleTicket(GetTpSeamlessBonusType getTpSeamlessBonusType)
+        public SettleTicket ExcuteSettleTicket(WalletType walletType, GetTpSeamlessBonusType getTpSeamlessBonusType)
         {
             TpSeamlessBonusType = getTpSeamlessBonusType;
-            // 取得第三方錢包類型
-            var walletType = _thirdPartyBLL.GetThirdPartyBySite(BetRecord.TpId, TpCustInfo.SiteId).WalletType;          
-            RefBetRecord = _mainDbClient.QueryFirst<BetRecordInfo>("Service_TpBetRecord_Get", _trans, new { BetRecord.TpId, BetRecord.TransId, GameType = (int)BetRecord.GameType });
 
             SetData()
             .SetWinLost()
@@ -87,7 +86,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// <summary>
         /// 設定初始資料
         /// </summary>
-        private SettleTicket SetData()
+        public SettleTicket SetData()
         {
             // 本次結算Stake為0的話，使用前一次結算的Stake
             if (BetRecord.Stake == 0 && RefBetRecord != null)

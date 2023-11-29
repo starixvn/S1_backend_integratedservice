@@ -338,12 +338,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int result = 0;
             try
             {
+                // 取得第三方錢包類型
+                var thirdPartySetting = _thirdPartyBLL.GetThirdPartyBySite(betRecord.TpId, tpCustInfo.SiteId);
+                // 取得前一次的結算結果
+                var RefBetRecord = GetTpBetRecord(betRecord.TpId, betRecord.TransId, (int)betRecord.GameType, conn, trans);
+
                 // 指定走新結算流程
                 if (_environment.IsDevelopment() || tpCustInfo.CustId == 22)
                 {
                     var settleTicket = new SettleTicket(
                         tpCustInfo: tpCustInfo,
                         betRecord: betRecord,
+                        refBetRecord: RefBetRecord,
                         mainDbClient: _mainDbClient,
                         trans: trans,
                         walletService: walletService,
@@ -352,14 +358,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         thirdPartyBLL: _thirdPartyBLL
                         );
 
-                    settleTicket.ExcuteSettleTicket(getTpSeamlessBonusType);
+                    settleTicket.ExcuteSettleTicket(thirdPartySetting.WalletType, getTpSeamlessBonusType);
                     return settleTicket.SettleResult ? 1 : 0;
                 }
-
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartyBySite(betRecord.TpId, tpCustInfo.SiteId);
-
-                // 取得前一次的結算結果
-                var RefBetRecord = GetTpBetRecord(betRecord.TpId, betRecord.TransId, (int)betRecord.GameType, conn, trans);
 
                 #region 設定初始狀態
 
