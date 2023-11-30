@@ -1,6 +1,7 @@
 ﻿using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.HL;
+using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -12,6 +13,9 @@ namespace ThirdPartyWager.Workers.HL
         private readonly WagerHLBLL _wagerHLBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly DateTimeHelper _dateTimeHelper;
+        private readonly int _tpId = (int)Tp.HaoLong;
+        private readonly WagerHLService _wagerHLService;
+        private readonly WorkerType workerType = WorkerType.MainWager;
         private Timer timer;
         private readonly int intervalMins = 15;
         private readonly int iRangMins = 10;
@@ -27,6 +31,7 @@ namespace ThirdPartyWager.Workers.HL
             _logger = provider.GetRequiredService<ILogger<WagerAllBet>>();
             _wagerHLBLL = provider.GetRequiredService<WagerHLBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _wagerHLService = provider.GetRequiredService<WagerHLService>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _environment = provider.GetRequiredService<IHostEnvironment>();
         }
@@ -72,9 +77,13 @@ namespace ThirdPartyWager.Workers.HL
                          .Select(day => currentDate.AddDays(day))
                          .ToList();
                      
+                     //拿UnSettle資料
+                     var ticketKeyHowLong = _thirdPartyBLL.GetAllSiteTicketKey(workerType, _tpId);
+                     var unSettledWagerHLList = _wagerHLService.GetHLBetUnSettledList(ticketKeyHowLong);
+                     
                      foreach(var day in nextSevenDays)
                      {
-                         result = await _wagerHLBLL.GetWagersAsync(day.ToString("yyyy-MM-dd"), day.AddDays(1).ToString("yyyy-MM-dd"));
+                         result = await _wagerHLBLL.GetWagersAsync(unSettledWagerHLList,day.ToString("yyyy-MM-dd"), day.AddDays(1).ToString("yyyy-MM-dd"));
                      }
                      
                      if (result)

@@ -27,7 +27,7 @@ namespace ThirdPartyWager.Service.BLL.HL
             _siteHLConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<HLConfig>(Tp.Allbet.ToString());
         }
 
-        public async Task<bool> GetWagersAsync(string startTime, string endTime)
+        public async Task<bool> GetWagersAsync(IEnumerable<HLWagerTrans> unSettleDate,string startTime, string endTime)
         {
             var msg = "FATAL_ERROR";
             var guid = Guid.NewGuid().ToString();
@@ -35,9 +35,6 @@ namespace ThirdPartyWager.Service.BLL.HL
             {
                 //先保留page
                 //var page = 1;
-                
-                var ticketKeyHowLong = _thirdPartyBLL.GetAllSiteTicketKey(workerType, _tpId);
-                var getHLWager = _wagerHLService.GetHLBetUnSettledList(ticketKeyHowLong);
                 
                 var result = await _apiHLBLL.GetBetListByTime(startTime,endTime,guid);
                 var dataWager = result.hl_Response;
@@ -62,7 +59,7 @@ namespace ThirdPartyWager.Service.BLL.HL
                 {
                     try
                     {
-                        if (!IsValidWager(getHLWager, wagerData))
+                        if (!IsValidWager(unSettleDate, wagerData))
                         {
                             _ =  _wagerHLService.InsertHLWager(wagerData);
                             _ = _tpUnsettleService.InsertTpUnsettle(Tp.HaoLong, GameType.HaoLong_4D, wagerData.BetID);
