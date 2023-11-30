@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 
 using Microsoft.Extensions.Caching.Memory;
 
@@ -139,11 +139,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
         public GameType GetGameType_SG(string gameId)
         {
-            GameType gameType = GameType.SG_RNG;
+            var gameType = GameType.SG_RNG;
 
             if (gameId.StartsWith("F-", StringComparison.OrdinalIgnoreCase))
             {
                 gameType = GameType.SG_Fish;
+            }
+            else if (gameId.StartsWith("C-", StringComparison.OrdinalIgnoreCase))
+            {
+                gameType = GameType.SG_Table;
             }
 
             return gameType;
@@ -263,6 +267,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.RedTiger_RNG;
                         return gameType;
                     }
+                    var nlc = GetGameCasinoWithCache((int)Tp.NLC);
+                    var chkNLC = nlc.FirstOrDefault(x => x.GameId == gameId);
+                    if (chkNLC != null && chkNLC.GameId == gameId)
+                    {
+                        gameType = GameType.NLC_RNG;
+                        return gameType;
+                    }
                     break;
                 case (int)Tp.Skywind:
                     gameType = GameType.Skywind_RNG;
@@ -366,24 +377,5 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return ServerInfoData.ContainsKey(key) ? ServerInfoData[key] : null;
         }
-
-        #region TicketKey
-        
-        public long GetAllSiteTicketKey(WorkerType workerType, int tpId)
-        {
-            return thirdPartyService.GetSiteTicketKey(0, tpId, workerType);
-        }
-
-        /// <summary>
-        /// 不分SiteId，用WorkerType更新TicketKey
-        /// </summary>
-        public int SetAllSiteTicketKey(WorkerType workerType, int tpId, long ticketKey)
-        {
-            return thirdPartyService.SetSiteTicketKey(0, tpId, workerType, ticketKey);
-        }
-
-        
-
-        #endregion
     }
 }
