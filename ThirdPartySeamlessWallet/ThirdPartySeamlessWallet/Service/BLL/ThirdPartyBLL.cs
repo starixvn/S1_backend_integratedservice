@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 
 using Microsoft.Extensions.Caching.Memory;
 
@@ -377,24 +377,5 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return ServerInfoData.ContainsKey(key) ? ServerInfoData[key] : null;
         }
-
-        #region TicketKey
-        
-        public long GetAllSiteTicketKey(WorkerType workerType, int tpId)
-        {
-            return thirdPartyService.GetSiteTicketKey(0, tpId, workerType);
-        }
-
-        /// <summary>
-        /// 不分SiteId，用WorkerType更新TicketKey
-        /// </summary>
-        public int SetAllSiteTicketKey(WorkerType workerType, int tpId, long ticketKey)
-        {
-            return thirdPartyService.SetSiteTicketKey(0, tpId, workerType, ticketKey);
-        }
-
-        
-
-        #endregion
     }
 }

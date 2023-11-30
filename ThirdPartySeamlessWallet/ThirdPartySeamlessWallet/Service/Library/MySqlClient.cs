@@ -250,28 +250,6 @@ namespace ThirdPartySeamlessWallet.Service.Library
             return result;
         }
         
-        public int Execute(string name, object parameters)
-        {
-            int result;
-            var sw = Stopwatch.StartNew();
-            try
-            {
-                using var connection = new MySqlConnection(_connectionString);
-                result = connection.Execute(name, parameters, commandType: CommandType.StoredProcedure);
-                connection.Close();
-                connection.Dispose();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, name);
-                throw;
-            }
-
-            LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return result;
-        }
-        
         public T ExecuteScalar<T>(string name, object parameters)
         {
             T result;
