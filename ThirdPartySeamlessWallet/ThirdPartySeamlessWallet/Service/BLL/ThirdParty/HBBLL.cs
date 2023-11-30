@@ -166,6 +166,43 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var afterAmount = 0m;
             var transId = "";
 
+            // 檢查同時存在 bet & payout的下注額度是否足夠
+            if (request.funds.debitandcredit == true)
+            {
+                var custBalance = _tpCustInfoBLL.GetBalance((int)Tp.HB, (string)request.accountid, (int)GameType);
+                var tid = request.friendlygameinstanceid.ToString();
+                // 加總下注金額
+                Funds funds = JsonConvert.DeserializeObject<Funds>(JsonConvert.SerializeObject(request.funds));
+                var stake = funds.fundinfo.Where(x => x.amount < 0).Sum(x => x.amount);
+                if (tpCurrency.ExchangeRate != 0)
+                {
+                    stake *= tpCurrency.ExchangeRate;
+                    custBalance.Balance *= tpCurrency.ExchangeRate;
+                }
+
+                if (custBalance.Balance < 0)
+                {
+                    response.status = new ExpandoObject();
+                    response.status.success = false;
+                    response.status.nofunds = true;
+                    afterAmount = custBalance.Balance / tpCurrency.ExchangeRate;
+                    var TpCheckRecordParam = GetTpBetFailureParam_HB(tpCustInfo, custBalance, tpCurrency, funds, TpCheckRecordCode.InsufficientBalance, afterAmount, tid);
+                    _thirdPartyBLL.AddTpBetFailureRecord(TpCheckRecordParam);
+                    return response;
+                }
+                var checkBalance = custBalance.Balance - Math.Abs(stake);
+                if (checkBalance < 0)
+                {
+                    response.status = new ExpandoObject();
+                    response.status.success = false;
+                    response.status.nofunds = true;
+                    afterAmount = checkBalance / tpCurrency.ExchangeRate;
+                    var TpCheckRecordParam = GetTpBetFailureParam_HB(tpCustInfo, custBalance, tpCurrency, funds, TpCheckRecordCode.InsufficientBalance, afterAmount, tid);
+                    _thirdPartyBLL.AddTpBetFailureRecord(TpCheckRecordParam);
+                    return response;
+                }
+            }
+
             await using var conn = _mainDbClient.GetMySqlConnection();
             await conn.OpenAsync();
             await using var trans = await conn.BeginTransactionAsync();
@@ -346,6 +383,32 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 _logger.LogError($"invalid token:{token}");
                 return null;
             }
+        }
+
+        private TpBetFailureRecord GetTpBetFailureParam_HB(TpCustInfo tpCustInfo, TpCustBalance custBalance, TpCurrency tpCurrency, Funds funds, TpCheckRecordCode Code, decimal AfterAmount, string tid)
+        {
+            // BLL會經過匯率換算 下列還原為原始資料
+            TpBetFailureRecordInfo_HB InfoData = new TpBetFailureRecordInfo_HB
+            {
+                CurrentBalance = custBalance.Balance / tpCurrency.ExchangeRate,
+                BetAmount = funds.fundinfo.Where(x => x.amount < 0).Sum(x => x.amount) / tpCurrency.ExchangeRate,
+                WinAmount = funds.fundinfo.Where(x => x.amount > 0).Sum(x => x.amount) / tpCurrency.ExchangeRate,
+                InsufficientBalance = AfterAmount,
+                ExchangeRate = tpCurrency.ExchangeRate,
+            };
+
+            return new TpBetFailureRecord
+            {
+                TransId = tid,
+                TpId = (int)Tp.HB,
+                TpGameType = (int)GameType.HB_RNG,
+                SiteId = tpCustInfo.SiteId,
+                CustId = tpCustInfo.CustId,
+                UserName = tpCustInfo.UserName,
+                Code = (int)Code,
+                TransTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                Info = JsonConvert.SerializeObject(InfoData),
+            };
         }
     }
 }

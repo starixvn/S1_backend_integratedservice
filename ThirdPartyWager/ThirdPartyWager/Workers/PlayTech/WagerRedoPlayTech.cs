@@ -15,7 +15,7 @@ namespace ThirdPartyWager.Workers
         private readonly int tpType = (int)WagerTimerType.RedoWager;
         private readonly int timeRange = 15; //in minutes 
         private readonly int quickTime = 90; // in seconds
-        private readonly int runTime = 30; // in minutes
+        private readonly int runTime = 17; // in minutes
         private readonly string _tpName = Tp.PlayTech.ToString();
         private readonly int _tpId = (int)Tp.PlayTech;
 

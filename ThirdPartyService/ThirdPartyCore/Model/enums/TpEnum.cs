@@ -50,7 +50,9 @@
         Nextspin = 50,
         PNG = 54,
         FaChai = 55,
-        Pegasus = 56
+        Pegasus = 56,
+        BNG = 57,
+        NLC = 59,
     }
 
     public enum TpGameType
@@ -137,6 +139,8 @@
         IM_ESports = 102,
         IM_Sports = 103,
         SPRIBE_RNG = 104,
-        FaChai_RNG = 106
+        FaChai_RNG = 106,
+        BNG_RNG = 108,
+        NLC_RNG = 111,
     }
 }
