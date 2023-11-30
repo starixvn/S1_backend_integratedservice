@@ -360,7 +360,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getReq.userId, _gameType);
             getReq.TicketType = (int)BettransType.Bonus;
-            int result = PayoutRNG_Amigo(getReq, out decimal tpAffterAmount);
+            int result = BonusWinRNG_Amigo(getReq, out decimal tpAffterAmount);
             if (result > 0 || result == -1)
             {
                 if (tpAffterAmount == 0 || result == -1)
@@ -475,6 +475,24 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             var result = _settledService.PayoutRNG_Amigo(tpCustInfo, payoutData_Amigo, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        private int BonusWinRNG_Amigo(PayoutData_Amigo payoutData_Amigo, out decimal afterAmount)
+        {
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, payoutData_Amigo.userId);
+            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)_thisTp, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                payoutData_Amigo.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = _settledService.BonusWinRNG_Amigo(tpCustInfo, payoutData_Amigo, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;

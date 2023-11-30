@@ -2245,8 +2245,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("jackpotId", 0);
 
                 result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
-                if (result > 0 && bettingData_Amigo.amount != 0)
+                if (result > 0 && bettingData_Amigo.amount != 0 && string.IsNullOrEmpty(bettingData_Amigo.bonusCode))
                 {
+                    // bonuscode bet 無須異動額度
                     result = PlaceBetV2(
                         tpCustInfo,
                         bettingData_Amigo.amount,
