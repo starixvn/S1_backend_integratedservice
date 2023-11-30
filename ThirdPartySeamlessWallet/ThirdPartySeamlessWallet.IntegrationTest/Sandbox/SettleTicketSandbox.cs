@@ -1,10 +1,5 @@
 ﻿using System.Data;
 
-using Dapper;
-
-using FluentAssertions;
-using FluentAssertions.Common;
-
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -12,19 +7,18 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
+using MySql.Data.MySqlClient;
+
 using NSubstitute;
 
 using ThirdPartySeamlessWallet.Core.Extensions;
 using ThirdPartySeamlessWallet.IntegrationTest.Models;
 using ThirdPartySeamlessWallet.IntegrationTest.Stubs;
 using ThirdPartySeamlessWallet.Service.BLL;
-using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
-using ThirdPartySettleWorker.Workers;
 
 namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
 {
@@ -43,7 +37,9 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         private readonly WalletService _walletService;
         private readonly ILogger<SettledService> _logger;
         private readonly TpBetRecordExtendBLL _tpBetRecordExtendBLL;
-        private readonly ThirdPartyBLL _thirdPartyBLL;
+
+        public MySqlTransaction _trans;
+
 
         public SettleTicketSandbox()
         {
@@ -70,37 +66,50 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
 
             _serviceCollection.AddTransient(p => Substitute.For<ILogger<SettledService>>());
             _serviceCollection.AddTransient(p => Substitute.For<ILogger<BettingService>>());
-            var mySqlLog = Substitute.For<ILogger<MySqlClient>>();
-            _serviceCollection.AddTransient(p => mySqlLog);
-            var conn = _configuration.GetConnectionString("ConnectionString");
-            _serviceCollection.AddSingleton(new MySqlClient(conn, mySqlLog));
 
             var startUp = new StubStartUp(_configuration);
             startUp.ConfigureServices(_serviceCollection);
             _serviceProvider = _serviceCollection.BuildServiceProvider();
-            _mySqlClient = _serviceProvider.GetRequiredService<MySqlClient>();
+            _mySqlClient = _serviceProvider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
 
             _walletService = _serviceProvider.GetRequiredService<WalletService>();
             _logger = _serviceProvider.GetRequiredService<ILogger<SettledService>>();
             _tpBetRecordExtendBLL = _serviceProvider.GetRequiredService<TpBetRecordExtendBLL>();
-            _thirdPartyBLL = _serviceProvider.GetRequiredService<ThirdPartyBLL>();
+
+            var conn = _mySqlClient.GetMySqlConnection();
+            conn.Open();
+            _trans = conn.BeginTransaction();
         }
 
         public SettleTicket CreateSettleTicket(TpCustInfo tpCustInfo, BetRecordInfo betRecord, BetRecordInfo refBetRecord)
-        {
-            var conn = _mySqlClient.GetMySqlConnection();
-            conn.Open();
+        {         
             return new SettleTicket(
                         tpCustInfo: tpCustInfo,
                         betRecord: betRecord,
                         refBetRecord: refBetRecord,
                         mainDbClient: _mySqlClient,
-                        trans: conn.BeginTransaction(),
+                        trans: _trans,
                         walletService: _walletService,
                         logger: _logger,
-                        tpBetRecordExtendBLL: _tpBetRecordExtendBLL,
-                        thirdPartyBLL: _thirdPartyBLL
+                        tpBetRecordExtendBLL: _tpBetRecordExtendBLL
                         );
-        }        
+        }
+
+        public void Commit()
+        {
+            _trans.Commit();
+        }
+
+        public WinningsLog GetWinningsLog(string transId)
+        {   
+            var sqlScript = @$"SELECT * FROM WinningsLog_{DateTime.Now:yyyyMM} WHERE RefTransId='{transId}';"; 
+            return _mySqlClient.Query<WinningsLog>(sqlScript, CommandType.Text).First(); 
+        }
+
+        public LossesLog GetLossesLog(string transId)
+        {
+            var sqlScript = @$"SELECT * FROM LossesLog_{DateTime.Now:yyyyMM} WHERE RefTransId='{transId}';";
+            return _mySqlClient.Query<LossesLog>(sqlScript, CommandType.Text).First();
+        }
     }
 }

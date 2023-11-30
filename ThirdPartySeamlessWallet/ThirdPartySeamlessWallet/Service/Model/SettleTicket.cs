@@ -44,12 +44,12 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// <summary>
         /// 用戶資訊
         /// </summary>
-        private TpCustInfo TpCustInfo { get; set; }
+        public TpCustInfo TpCustInfo { get; set; }
 
         /// <summary>
         /// 本次的結算紀錄
         /// </summary>
-        private BetRecordInfo BetRecord { get; set; }
+        public BetRecordInfo BetRecord { get; set; }
 
         /// <summary>
         /// 上一次的結算紀錄
@@ -127,7 +127,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// <summary>
         /// 更新玩家輸贏總金額與BonusId輸贏總金額
         /// </summary>
-        private SettleTicket SetWinLost()
+        public SettleTicket SetWinLost()
         {
             decimal winnings = BetRecord.WinlostAmount > 0 ? BetRecord.WinlostAmount : 0;
             decimal losses = BetRecord.WinlostAmount < 0 ? BetRecord.WinlostAmount : 0;
