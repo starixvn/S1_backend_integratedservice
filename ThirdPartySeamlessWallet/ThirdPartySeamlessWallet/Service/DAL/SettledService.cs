@@ -354,8 +354,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         trans: trans,
                         walletService: walletService,
                         logger: logger,
-                        tpBetRecordExtendBLL: _tpBetRecordExtendBLL,
-                        thirdPartyBLL: _thirdPartyBLL
+                        tpBetRecordExtendBLL: _tpBetRecordExtendBLL
                         );
 
                     settleTicket.ExcuteSettleTicket(thirdPartySetting.WalletType, getTpSeamlessBonusType);
