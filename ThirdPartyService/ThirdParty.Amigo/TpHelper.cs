@@ -76,9 +76,8 @@ namespace ThirdParty.Amigo
             }
             var detail = ToJson(detailList);
             string gameCode = detailList.FirstOrDefault()?.GetValueOrDefault("gameId")?.ToString();
-            var stake = detailList.Where(i => (sbyte)i.GetValueOrDefault("TicketType") == 1).Sum(i => Math.Abs((decimal)i.GetValueOrDefault("amount")));
+            var stake = detailList.Where(i => (sbyte)i.GetValueOrDefault("TicketType") == 1 && (string)i.GetValueOrDefault("bonusCode") == "").Sum(i => Math.Abs((decimal)i.GetValueOrDefault("amount")));
             var payout = detailList.Where(i => (sbyte)i.GetValueOrDefault("TicketType") == 4).Sum(i => (decimal)i.GetValueOrDefault("amount"));
-            var bonus = detailList.Where(i => (sbyte)i.GetValueOrDefault("TicketType") == 7).Sum(i => (decimal)i.GetValueOrDefault("amount"));
             var details = JsonConvert.DeserializeObject<IList<BettransData_Amigo>>(JsonConvert.SerializeObject(detailList));
 
             return getBetDetail.TpGameTypeOption.CategoryId switch
@@ -93,7 +92,7 @@ namespace ThirdParty.Amigo
                     UTCBetTime = details.Min(i => DateTimeOffset.FromUnixTimeMilliseconds(i.timestamp).DateTime),
                     UTCSettledTime = details.Max(i => DateTimeOffset.FromUnixTimeMilliseconds(i.timestamp).DateTime),
                     Stake = stake,
-                    WinlostAmount = payout + bonus - stake,
+                    WinlostAmount = payout - stake,
                     GameCode = gameCode,
                     GameName = GetGameName(gameCode),
                 },
@@ -123,7 +122,7 @@ namespace ThirdParty.Amigo
             string gameCode = detailList.FirstOrDefault()?.GetValueOrDefault("gameId")?.ToString();
             var roundId = detailList.FirstOrDefault()?.GetValueOrDefault("roundId")?.ToString();
             var jackpotId = details.Max(x => x.jackpotId).ToString();
-            var bonusCode = details.Any(x => !string.IsNullOrEmpty(x.bonusCode)).ToString();
+            var bonusCode = detailList.FirstOrDefault()?.GetValueOrDefault("bonusCode")?.ToString();
 
             return tpGameType.CategoryId switch
             {
