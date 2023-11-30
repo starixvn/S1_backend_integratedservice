@@ -215,7 +215,6 @@ namespace ThirdPartySettleWorker.Workers
                             if (wagerData.ticket_extra_status.Equals("cashout", StringComparison.OrdinalIgnoreCase))
                             {
                                 betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
-                                betRecordInfo.TicketKey = 0; //cashout不記BA
                             }
 
                             // 只有體育類有Rollover
