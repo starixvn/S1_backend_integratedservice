@@ -98,26 +98,6 @@ namespace ThirdPartyBetHistory.Service.DAL
         }
         
         #endregion
-
-        #region HaoLong
-
-        public IEnumerable<HaoLongUnSettle> GetHaoLongUnSettleTicket(long TicketKey, int LimitCount)
-        {
-            return _reportDbClient.Query<HaoLongUnSettle>("BetDetail.Service_TpWager_HL_Unsettle_Get_V2",
-                new
-                {
-                    TicketKey,
-                    LimitCount,
-                }, 120);
-        }
-
-        public long GetHaoLongTicketKey(long TicketKey)
-        {
-            var parameters = new { TicketKey };
-            return _reportDbClient.QueryFirst<long>("BetDetail.Service_TpWager_HL_TicketKey_Get", parameters);
-        }
-
-        #endregion
         
     }
 }
