@@ -20,7 +20,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         private readonly WalletService _walletService;
         private readonly ILogger<SettledService> _logger;
         private readonly TpBetRecordExtendBLL _tpBetRecordExtendBLL;
-        private readonly ThirdPartyBLL _thirdPartyBLL;
 
         public SettleTicket(
             TpCustInfo tpCustInfo,
@@ -30,8 +29,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
             MySqlTransaction trans,
             WalletService walletService,
             ILogger<SettledService> logger,
-            TpBetRecordExtendBLL tpBetRecordExtendBLL,
-            ThirdPartyBLL thirdPartyBLL)
+            TpBetRecordExtendBLL tpBetRecordExtendBLL)
         {
             TpCustInfo = tpCustInfo;
             BetRecord = betRecord;
@@ -41,7 +39,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
             _walletService = walletService;
             _logger = logger;
             _tpBetRecordExtendBLL = tpBetRecordExtendBLL;
-            _thirdPartyBLL = thirdPartyBLL;
         }
 
         /// <summary>
@@ -411,18 +408,17 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// </summary>
         private SettleTicket AddTpBetRecordExtend()
         {
-            try
+            Task.Run(async () =>
             {
-                _ = Task.Run(() =>
+                try
                 {
-                    _ = _tpBetRecordExtendBLL.AddTpBetRecordExtend(BetRecord, TpCustInfo);
-                }).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"{ex.Message} || {JsonConvert.SerializeObject(BetRecord)}");
-            }
-
+                    await _tpBetRecordExtendBLL.AddTpBetRecordExtend(BetRecord, TpCustInfo);
+                }
+                catch (Exception ex )
+                {
+                    _logger.LogError(ex, $"AddTpBetRecordExtend Exception || {JsonConvert.SerializeObject(BetRecord)}");
+                }              
+            });
             return this;
         }
 
