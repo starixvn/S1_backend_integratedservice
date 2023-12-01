@@ -57,30 +57,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         private BetRecordInfo RefBetRecord { get; set; }
 
         /// <summary>
-        /// 本次Settle結果
-        /// </summary>
-        public bool SettleResult { get; set; } = false;
-
-        private GetTpSeamlessBonusType TpSeamlessBonusType { get; set; }
-
-        public SettleTicket ExcuteSettleTicket(WalletType walletType, GetTpSeamlessBonusType getTpSeamlessBonusType)
-        {
-            TpSeamlessBonusType = getTpSeamlessBonusType;
-
-            SetData()
-            .SetWinLost()
-            .AutoCancelCheck(walletType)
-            .SetBonusRollOver()
-            .SetWithdrawalLimitAndEffectiveBet()
-            .SetTpBetRecord()
-            .AddTpBetRecordExtend();
-
-            SettleResult = true;
-
-            return this;
-        }
-
-        /// <summary>
         /// 設定初始資料
         /// </summary>
         public SettleTicket SetData()
@@ -211,7 +187,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// <summary>
         /// Bonus AutoCancel檢查
         /// </summary>
-        private SettleTicket AutoCancelCheck(WalletType walletType)
+        public SettleTicket AutoCancelCheck(WalletType walletType)
         {
             // 只要本次注單狀態不是Unsettle都會執行AutoCancel檢查
             if (BetRecord.BonusId > 0 && BetRecord.TicketStatus != TicketStatus.UnSettled)
@@ -232,7 +208,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// <summary>
         /// 有Bonus將流水沖銷玩家Bonus的Rollover
         /// </summary>
-        private SettleTicket SetBonusRollOver()
+        public SettleTicket SetBonusRollOver()
         {
             if (BetRecord.BonusId == 0)
             {
@@ -293,7 +269,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// <summary>
         /// 沒Bonus將流水沖銷玩家的提款限額，並更新玩家有效下注總金額
         /// </summary>
-        private SettleTicket SetWithdrawalLimitAndEffectiveBet()
+        public SettleTicket SetWithdrawalLimitAndEffectiveBet(GetTpSeamlessBonusType getTpSeamlessBonusType)
         {
             var turnOver = BetRecord.ValidBet ?? BetRecord.Stake;
             var memo = "Settled";
@@ -356,7 +332,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
             else
             {
                 // 使用Bonus的要判斷是否有用到主錢包下注，主錢包下注的金額，第一次Settle時要沖提款限額
-                var useBonus = GetUseBonus();
+                var useBonus = GetUseBonus(getTpSeamlessBonusType);
                 var stakeWithoutBonus = turnOver - useBonus; // 沒有使用Bonus用主錢包下注的下注的金額
                 if (stakeWithoutBonus > 0 && (RefBetRecord == null || RefBetRecord.TicketStatus == TicketStatus.UnSettled))
                 {
@@ -373,7 +349,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// <summary>
         /// 寫入或更新結算資料
         /// </summary>
-        private SettleTicket SetTpBetRecord()
+        public SettleTicket SetTpBetRecord()
         {
             _mainDbClient.Execute("Service_TpBetRecord_Set_V3", _trans, new
             {
@@ -404,9 +380,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         }
 
         /// <summary>
-        /// 寫入TpBetRecordExtend資料
+        /// 寫入TpBetRecordExtend資料，提供給後台BetList查詢
         /// </summary>
-        private SettleTicket AddTpBetRecordExtend()
+        public SettleTicket AddTpBetRecordExtend()
         {
             Task.Run(async () =>
             {
@@ -529,9 +505,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
             return _mainDbClient.Execute("Service_RolloverTurnover_Set_V2", _trans, p);
         }
 
-        private decimal GetUseBonus()
+        private decimal GetUseBonus(GetTpSeamlessBonusType getTpSeamlessBonusType)
         {
-            var spName = TpSeamlessBonusType == GetTpSeamlessBonusType.ByGameTypeAndTransId ?
+            var spName = getTpSeamlessBonusType == GetTpSeamlessBonusType.ByGameTypeAndTransId ?
                "Service_TpSeamlessBonus_UseBonus_Get" : "Service_TpSeamlessBonus_UseBonus_GetByTransID";
             var p = new DynamicParameters(new { 
                 BetRecord.TpId, 
