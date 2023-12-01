@@ -55,4 +55,9 @@
         public int StyleName { get; set; }
         public string FunGameUrl { get; set; }
     }
+
+    public class SettleData_Amigo : SettleData
+    {
+        public string bonusCode { get; set; }
+    }
 }
