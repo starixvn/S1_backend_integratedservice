@@ -346,19 +346,31 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 // 指定走新結算流程
                 if (_environment.IsDevelopment() || tpCustInfo.CustId == 22)
                 {
-                    var settleTicket = new SettleTicket(
-                        tpCustInfo: tpCustInfo,
-                        betRecord: betRecord,
-                        refBetRecord: RefBetRecord,
-                        mainDbClient: _mainDbClient,
-                        trans: trans,
-                        walletService: walletService,
-                        logger: logger,
-                        tpBetRecordExtendBLL: _tpBetRecordExtendBLL
-                        );
+                    try
+                    {
+                            var settleTicket = new SettleTicket(tpCustInfo: tpCustInfo,
+                                         betRecord: betRecord,
+                                         refBetRecord: RefBetRecord,
+                                         mainDbClient: _mainDbClient,
+                                         trans: trans,
+                                         walletService: walletService,
+                                         logger: logger,
+                                         tpBetRecordExtendBLL: _tpBetRecordExtendBLL)
+                            .SetData()
+                            .SetWinLost()
+                            .AutoCancelCheck(thirdPartySetting.WalletType)
+                            .SetBonusRollOver()
+                            .SetWithdrawalLimitAndEffectiveBet(getTpSeamlessBonusType)
+                            .SetTpBetRecord()
+                            .AddTpBetRecordExtend();
 
-                    settleTicket.ExcuteSettleTicket(thirdPartySetting.WalletType, getTpSeamlessBonusType);
-                    return settleTicket.SettleResult ? 1 : 0;
+                        return 1;
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, $"{ex.Message} || {JsonConvert.SerializeObject(betRecord)}");
+                        return 0;
+                    }
                 }
 
                 #region 設定初始狀態
@@ -391,7 +403,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         betRecord.TicketStatus = TicketStatus.Lost;
                     }
-                }                          
+                }
 
                 decimal validBet = betRecord.ValidBet ?? betRecord.Stake;
 
@@ -468,7 +480,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         WalletType.TransferWallet => AutoCancelTransferBonus(bonusId, betRecord.TransId, tpCustInfo.CurrencyId, (int)betRecord.GameType, conn, trans),
                         WalletType.SeamlessWallet => AutoCancelSeamlessBonus(bonusId, tpCustInfo.CurrencyId, (int)betRecord.GameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, betRecord.TransId, conn, trans),
                         _ => throw new NotImplementedException()
-                    };                    
+                    };
                 }
 
                 #endregion
@@ -600,9 +612,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 try
                 {
-                    _ = Task.Run(() => 
-                    { 
-                        _ = _tpBetRecordExtendBLL.AddTpBetRecordExtend(betRecord, tpCustInfo); 
+                    _ = Task.Run(() =>
+                    {
+                        _ = _tpBetRecordExtendBLL.AddTpBetRecordExtend(betRecord, tpCustInfo);
                     }).ConfigureAwait(false);
                 }
                 catch (Exception ex)
@@ -695,7 +707,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 return 0;
             }
-            
+
             return _mainDbClient.Execute("Common_WithdrawalLimitTurnOver_Set", new { TpId = TpId, GameType = gameType, CustId = CustId, UserName = UserName, SiteId = SiteId, TurnOver = TurnOver, Memo = Memo, RefTransId = RefTransId }, conn, trans);
         }
 
@@ -708,7 +720,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 return 0;
             }
-            
+
             return _mainDbClient.Execute("Common_WinLostAmount_Set", new { TpId = TpId, CustId = CustId, UserName = UserName, SiteId = SiteId, Winnings = Winnings, Losses = Losses, Memo = Memo, RefTransId = RefTransId }, conn, trans);
         }
 
@@ -721,7 +733,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 return 0;
             }
-            
+
             return _mainDbClient.Execute("Service_EffectiveBetSum_Set", new { CustId = CustId, SiteId = SiteId, Stake = validBet }, conn, trans);
         }
 
@@ -732,20 +744,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         private int AutoCancelSeamlessBonus(int bonusId, int currencyId, int gameType, int custId, string userName, int siteId, string transId, MySqlConnection conn, MySqlTransaction trans)
         {
-            var p = new DynamicParameters(new { BonusId = bonusId, CurrencyId = currencyId, GameType = gameType, CustId = custId, UserName = userName, SiteId = siteId, TransId = transId });            
+            var p = new DynamicParameters(new { BonusId = bonusId, CurrencyId = currencyId, GameType = gameType, CustId = custId, UserName = userName, SiteId = siteId, TransId = transId });
             p.Add("Bonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("BonusStatus", dbType: DbType.Int32, direction: ParameterDirection.Output);
             var result = _mainDbClient.Execute("Service_AutoCancelSeamlessBonus_Set_V4", p, conn, trans);
             var bonus = p.Get<decimal?>("Bonus") ?? 0;
             var bonusStatus = p.Get<int?>("BonusStatus") ?? 0;
-            
+
             if (bonusStatus == 2)
             {
                 logger.LogWarning($"AutoCancelSeamlessBonus Success: BonusId={bonusId}, TransId={transId}, bonus={bonus}");
                 if (bonus > 0)
                 {
                     result = walletService.SetBalance(custId, siteId, userName, bonus, 0, TransType.Prize, $"Bonus: {Math.Abs(bonus):#,##0.##}", bonusId.ToString(), out _, conn, trans);
-                }                
+                }
             }
 
             return result;
