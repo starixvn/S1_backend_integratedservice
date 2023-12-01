@@ -38,8 +38,9 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         private readonly ILogger<SettledService> _logger;
         private readonly TpBetRecordExtendBLL _tpBetRecordExtendBLL;
 
-        public MySqlTransaction _trans;
+        public MySqlConnection _conn;
 
+        public MySqlTransaction _trans = null;
 
         public SettleTicketSandbox()
         {
@@ -76,13 +77,22 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             _logger = _serviceProvider.GetRequiredService<ILogger<SettledService>>();
             _tpBetRecordExtendBLL = _serviceProvider.GetRequiredService<TpBetRecordExtendBLL>();
 
-            var conn = _mySqlClient.GetMySqlConnection();
-            conn.Open();
-            _trans = conn.BeginTransaction();
+            _conn = _mySqlClient.GetMySqlConnection();
+            _conn.Open();
+            _trans = _conn.BeginTransaction();
+        }
+
+        private void BeginTransaction()
+        {       
+            if (_trans == null)
+            {
+                _trans = _conn.BeginTransaction();
+            }      
         }
 
         public SettleTicket CreateSettleTicket(TpCustInfo tpCustInfo, BetRecordInfo betRecord, BetRecordInfo refBetRecord)
-        {         
+        {
+            BeginTransaction();
             return new SettleTicket(
                         tpCustInfo: tpCustInfo,
                         betRecord: betRecord,
@@ -98,18 +108,20 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         public void Commit()
         {
             _trans.Commit();
+            _trans.Dispose();
+            _trans = null;
         }
 
         public WinningsLog GetWinningsLog(string transId)
         {   
             var sqlScript = @$"SELECT * FROM WinningsLog_{DateTime.Now:yyyyMM} WHERE RefTransId='{transId}';"; 
-            return _mySqlClient.Query<WinningsLog>(sqlScript, CommandType.Text).First(); 
+            return _mySqlClient.Query<WinningsLog>(sqlScript, CommandType.Text).FirstOrDefault(); 
         }
 
         public LossesLog GetLossesLog(string transId)
         {
             var sqlScript = @$"SELECT * FROM LossesLog_{DateTime.Now:yyyyMM} WHERE RefTransId='{transId}';";
-            return _mySqlClient.Query<LossesLog>(sqlScript, CommandType.Text).First();
+            return _mySqlClient.Query<LossesLog>(sqlScript, CommandType.Text).FirstOrDefault();
         }
     }
 }
