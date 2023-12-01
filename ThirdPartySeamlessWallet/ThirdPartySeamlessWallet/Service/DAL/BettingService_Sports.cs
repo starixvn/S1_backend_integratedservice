@@ -96,22 +96,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 var p = new DynamicParameters(debitReserve);
                 p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
-                _ = await _mainDbClient.ExecuteAsync("Service_BettransSports_BTI_DebitReserve_Ins", trans, p);
+                p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
+                _ = await _mainDbClient.ExecuteAsync("Service_BettransSports_BTI_DebitReserve_Ins_V2", trans, p);
 
                 var btiResult = new BTIResult()
                 {
+                    SPResult = p.Get<short>("SPResult"),
                     Trx_id = p.Get<long>("trx_id"),
                 };
-
-                if (btiResult.Trx_id > 0)
-                {
-                    await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
-                    btiResult.SPResult = 1;
-                }
-                else
+                if (btiResult.SPResult < 1)
                 {
                     await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
+                    return btiResult;
                 }
+
+                await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
 
                 return btiResult;
             }

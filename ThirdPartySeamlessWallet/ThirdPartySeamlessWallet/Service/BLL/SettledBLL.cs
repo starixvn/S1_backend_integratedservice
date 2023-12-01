@@ -11,22 +11,22 @@ namespace ThirdPartySeamlessWallet.Service.BLL
     public partial class SettledBLL
     {
         private readonly SettledService settledService;
-        private readonly MySqlClient _mainDbClient;
         private readonly TpCustInfoBLL tpCustInfoBLL;
         private readonly ThirdPartyBLL thirdPartyBLL;
 
-        public SettledBLL(SettledService settledService, TpCustInfoBLL tpCustInfoBLL, ThirdPartyBLL thirdPartyBLL)
+        public SettledBLL(IServiceProvider provider)
         {
-            this.settledService = settledService;
-            this.tpCustInfoBLL = tpCustInfoBLL;
-            this.thirdPartyBLL = thirdPartyBLL;
+            settledService = provider.GetRequiredService<SettledService>();
+            tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
 
         public int Settled(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo, TpCategory tpCategory, GetTpSeamlessBonusType getTpSeamlessBonusType = GetTpSeamlessBonusType.ByGameTypeAndTransId)
         {
-            var result = settledService.Settle(tpCustInfo, betRecordInfo, tpCategory, getTpSeamlessBonusType);
+            var result = settledService.Settle(tpCustInfo, betRecordInfo, getTpSeamlessBonusType);
             return result;
         }
+
         public int Settled(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo, PromotionCategory promotionCategory)
         {
             var promoCategoryId = (int)promotionCategory;
@@ -2202,6 +2202,61 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public int SetSettleFlag_RedTiger(string TransId)
         {
             return settledService.SetSettleFlag_RedTiger(TransId);
+        }
+
+        #endregion
+
+        #region NLC
+
+        public int CancelBetRNG_NLC(BettingData_EVO bettingData_EVO, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.NLC, bettingData_EVO.userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.NLC, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingData_EVO.transaction.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.CancelBetRNG_NLC(tpCustInfo, bettingData_EVO, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        public int PayoutRNG_NLC(BettingData_EVO bettingData_EVO, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.NLC, bettingData_EVO.userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.NLC, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingData_EVO.transaction.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.PayoutRNG_NLC(tpCustInfo, bettingData_EVO, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        public int PromoPayoutRNG_NLC(PromoData_EVO promoData_EVO, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.NLC, promoData_EVO.userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.NLC, tpCustInfo.CurrencyId);
+
+            var insertData = LoadReward_EVO(promoData_EVO, Tp.NLC, GameType.NLC_RNG, tpCurrency.ExchangeRate);
+
+            var result = settledService.PromoPayoutRNG_NLC(tpCustInfo, insertData, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
         }
 
         #endregion

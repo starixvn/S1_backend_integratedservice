@@ -22,6 +22,7 @@
     <ProjectReference Include="..\ThirdParty.AMB\ThirdParty.AMB.csproj" />
     <ProjectReference Include="..\ThirdParty.AP\ThirdParty.AP.csproj" />
     <ProjectReference Include="..\ThirdParty.AWC\ThirdParty.AWC.csproj" />
+    <ProjectReference Include="..\ThirdParty.BNG\ThirdParty.BNG.csproj" />
     <ProjectReference Include="..\ThirdParty.BTI\ThirdParty.BTI.csproj" />
     <ProjectReference Include="..\ThirdParty.CF\ThirdParty.CF.csproj" />
     <ProjectReference Include="..\ThirdParty.CQ9\ThirdParty.CQ9.csproj" />
@@ -44,6 +45,7 @@
     <ProjectReference Include="..\ThirdParty.N2Live\ThirdParty.N2Live.csproj" />
     <ProjectReference Include="..\ThirdParty.Netent\ThirdParty.Netent.csproj" />
     <ProjectReference Include="..\ThirdParty.Nextspin\ThirdParty.Nextspin.csproj" />
+    <ProjectReference Include="..\ThirdParty.NLC\ThirdParty.NLC.csproj" />
     <ProjectReference Include="..\ThirdParty.One789\ThirdParty.One789.csproj" />
     <ProjectReference Include="..\ThirdParty.Mega\ThirdParty.Mega.csproj" />
     <ProjectReference Include="..\ThirdParty.MG\ThirdParty.MG.csproj" />

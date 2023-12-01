@@ -23,13 +23,11 @@ namespace ThirdPartyBetHistory
             services.AddSingleton<ICacheHelper, RedisCacheHelper>();
 
             /*DAL*/
-            services.AddSingleton<SettledService>();
             services.AddSingleton<ThirdPartyService>();
             services.AddSingleton<ConfigService>();
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
-            services.AddSingleton<SettledBLL>();
 
             services.AddOptionListByDB<ConfigObject>("SiteConfig_Get", new { ConfigGroup = "TP" });
             services.RegisterSabaSiteHelper();

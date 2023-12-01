@@ -33,7 +33,6 @@ var startup = new Startup(builder.Configuration);
 startup.ConfigureServices(builder.Services);
 
 builder.Services
-    .AddHostedService<BonusWorker>()
     .AddHostedService<SettleWorker>()
     .AddHostedService<TpReRequestWorker>()
     .AddHostedService<TpRewardWorker>()
@@ -64,7 +63,8 @@ builder.Services
     .AddHostedService<GPIWorker>()
     .AddHostedService<NetentWorker>()
     .AddHostedService<RedTigerWorker>()
-    .AddHostedService<YLWorker>()
+    .AddHostedService<NLCWorker>()
+    //.AddHostedService<YLWorker>()
     .AddHostedService<Kiss918Worker>()
     .AddHostedService<SkywindWorker>()
     .AddHostedService<BTIWorker>()
@@ -90,6 +90,7 @@ builder.Services
     .AddHostedService<N2LiveWorker>()
     .AddHostedService<N2LiveSmartWorker>()
     .AddHostedService<PegasusWorker>()
+    .AddHostedService<BNGWorker>()
     .AddHostedService<HLWorker>();
 
 var app = builder.Build();

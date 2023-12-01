@@ -863,30 +863,44 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             var result = 0;
 
-            bettingData_EVO.transaction.amount *= -1;
-            var p = new DynamicParameters(new
-            {
-                TransactionId = bettingData_EVO.transaction.id,
-                TransactionRefId = bettingData_EVO.transaction.refId,
-                userId = bettingData_EVO.userId,
-                uuid = bettingData_EVO.uuid,
-                currency = bettingData_EVO.currency,
-                amount = bettingData_EVO.transaction.amount,
-                transaction = JsonConvert.SerializeObject(bettingData_EVO.transaction),
-                game = JsonConvert.SerializeObject(bettingData_EVO.game),
-                GameId = bettingData_EVO.game.id,
-                GameType = bettingData_EVO.game.type,
-                GameDetailsId = bettingData_EVO.game.details.table.id,
-                SiteId = tpCustInfo.SiteId,
-                CustId = tpCustInfo.CustId,
-                CurrencyId = tpCustInfo.CurrencyId,
-                TicketType = (int)BettransType.Bet,
-                TicketStatus = (int)TicketStatus.UnSettled,
-                SettleFlag = (int)SettleFlag.Running
-            });
-
             try
             {
+                var check = _mainDbClient.Query<BettransData_EVO>("Service_BettransLC_EVO_Get", commandType: CommandType.StoredProcedure, new { TransactionRefId = bettingData_EVO.transaction.refId });
+                if (check.Where(x => x.TicketType == (int)BettransType.Bet).Any())
+                {
+                    // alreay has this bet data
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    return -1;
+                }
+                else if (check.Where(x => x.TicketType == (int)BettransType.CancelBet && x.TransactionId == bettingData_EVO.transaction.id).Any())
+                {
+                    // cancelled
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    return -2;
+                }
+
+                bettingData_EVO.transaction.amount *= -1;
+                var p = new DynamicParameters(new
+                {
+                    TransactionId = bettingData_EVO.transaction.id,
+                    TransactionRefId = bettingData_EVO.transaction.refId,
+                    userId = bettingData_EVO.userId,
+                    uuid = bettingData_EVO.uuid,
+                    currency = bettingData_EVO.currency,
+                    amount = bettingData_EVO.transaction.amount,
+                    transaction = JsonConvert.SerializeObject(bettingData_EVO.transaction),
+                    game = JsonConvert.SerializeObject(bettingData_EVO.game),
+                    GameId = bettingData_EVO.game.id,
+                    GameType = bettingData_EVO.game.type,
+                    GameDetailsId = bettingData_EVO.game.details.table.id,
+                    SiteId = tpCustInfo.SiteId,
+                    CustId = tpCustInfo.CustId,
+                    CurrencyId = tpCustInfo.CurrencyId,
+                    TicketType = (int)BettransType.Bet,
+                    TicketStatus = (int)TicketStatus.UnSettled,
+                    SettleFlag = (int)SettleFlag.Running
+                });
+
                 var category = TpCategory.LiveCasino;
                 var gameType = (int)GameType.EVO_LiveCasino;
                 result = _mainDbClient.Execute("Service_BettransLC_EVO_Ins_V2", p, conn, trans);
