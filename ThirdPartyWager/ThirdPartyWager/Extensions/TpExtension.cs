@@ -1,5 +1,6 @@
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.BLL.HL;
+using ThirdPartyWager.Service.BLL.HL;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
@@ -666,7 +667,10 @@ namespace ThirdPartyWager.Extensions
             services.AddHostedService<WagerRedoNLC>();
             services.AddHostedService<WagerUnsettleNLC>();
             services.AddHostedService<FinanceNLC>();
-            
+
+            return services;
+        }
+
         private IServiceCollection AddHL(IServiceCollection services)
         {
             services.AddSingleton<WagerHLService>();

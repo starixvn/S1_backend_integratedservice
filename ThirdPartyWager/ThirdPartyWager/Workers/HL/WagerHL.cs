@@ -83,13 +83,11 @@ namespace ThirdPartyWager.Workers.HL
                      
                      foreach(var day in nextSevenDays)
                      {
-                         result = await _wagerHLBLL.GetWagersAsync(unSettledWagerHLList,day.ToString("yyyy-MM-dd"), day.AddDays(1).ToString("yyyy-MM-dd"));
+                         result =  await _wagerHLBLL.GetWagersAsync(unSettledWagerHLList,day.ToString("yyyy-MM-dd"), day.AddDays(1).ToString("yyyy-MM-dd"));
                      }
                      
-                     if (result)
-                     {
-                         _thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
-                     }
+                     //有無單都要往前走 要不然會導致其餘排程問題出現
+                     _thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
                     
                      if(CheckHaoLongTime(2))
                      { 
