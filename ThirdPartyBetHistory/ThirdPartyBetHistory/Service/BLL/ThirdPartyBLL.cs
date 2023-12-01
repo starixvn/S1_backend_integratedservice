@@ -51,9 +51,20 @@ namespace ThirdPartyBetHistory.Service.BLL
         /// <summary>
         /// 取得SBSW Vgaming五分鐘沒收到派彩的下注清單
         /// </summary>
-        public IEnumerable<VgamingUnSettle> GetVgamingUnSettleTicket(long TicketKey, int LimitCount = 1000)
+        public IEnumerable<VgamingUnSettle> GetVgamingUnSettleTicket(long TicketKey, int LimitCount = 2000)
         {
-            return _thirdPartyService.GetVgamingUnSettleTicket(TicketKey, LimitCount);
+            var result = new List<VgamingUnSettle>();
+            //先用Vgaming的局號整理資料
+            foreach (var transIdGroup in _thirdPartyService.GetVgamingUnSettleTicket(TicketKey, LimitCount).GroupBy(i => i.TransId))
+            {
+                // 排除有收到Cancel的局號
+                if (!transIdGroup.Any(i => i.TicketAction.Equals("CancelBetEnt", StringComparison.OrdinalIgnoreCase)))
+                {
+                    result.Add(transIdGroup.First());
+                }
+            }
+
+            return result;
         }
 
         /// <summary>

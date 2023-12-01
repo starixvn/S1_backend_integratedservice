@@ -43,13 +43,13 @@ namespace ThirdPartyBetHistory.Service.Worker
                 var ticketKey = _thirdPartyBLL.GetAllSiteTicketKey(workerType, (int)_tp);
                 var unSettleList = _thirdPartyBLL.GetVgamingUnSettleTicket(ticketKey);
 
-                _logger.LogInformation($"Start: {taskProperty} | Unsettle Count is :{unSettleList.Count()} | {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm.ss.fff}");
+                _logger.LogInformation($"Start: {taskProperty} | UnSettle Count is :{unSettleList.Count()}");
                 foreach (var unsettle in unSettleList)
                 {
                     _sabaSiteList[unsettle.SiteId].ResubmitProcess(unsettle);
                 }
 
-                _logger.LogInformation($"Success: {taskProperty} | {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm.ss.fff}");
+                _logger.LogInformation($"End: {taskProperty}");
             }
             catch (Exception ex)
             {
@@ -71,13 +71,23 @@ namespace ThirdPartyBetHistory.Service.Worker
             try
             {
                 var ticketKey = _thirdPartyBLL.GetAllSiteTicketKey(workerType, (int)_tp);
-                _logger.LogInformation($"Start: {taskProperty} | SQ is :{ticketKey} | {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm.ss.fff}");
-
-                //取得下一次要檢查的TicketKey
-                ticketKey = _thirdPartyBLL.GetVgamingTicketKey(ticketKey);
+                _logger.LogInformation($"Start: {taskProperty} | SQ is :{ticketKey}");
+                
+                // 先拿UnSettle資料
+                var unSettleList = _thirdPartyBLL.GetVgamingUnSettleTicket(ticketKey);
+                
+                // 判斷要用哪一個當下一次要檢查的TicketKey
+                if (unSettleList.Any())
+                {
+                    ticketKey = unSettleList.Min(i => i.TicketKey);
+                }
+                else
+                {     
+                    ticketKey = _thirdPartyBLL.GetVgamingTicketKey(ticketKey);
+                }
+                
                 _thirdPartyBLL.SetAllSiteTicketKey(workerType, (int)_tp, ticketKey);
-
-                _logger.LogInformation($"Success: {taskProperty} | SQ is :{ticketKey} | {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm.ss.fff}");
+                _logger.LogInformation($"End: {taskProperty} | SQ is :{ticketKey}");
             }
             catch (Exception ex)
             {
