@@ -112,6 +112,10 @@ public class N2LiveWorker : BackgroundService, ISettleWorker
                 }
             }
         }
+        catch (UnsettleNotFoundException ex)
+        {
+            _logger.LogInformation(ex, ex.Message);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, $"{logName}:{ex.Message}");
