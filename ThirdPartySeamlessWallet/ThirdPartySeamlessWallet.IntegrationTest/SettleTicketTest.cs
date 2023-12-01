@@ -111,7 +111,6 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
         #region SetWinLost
 
         [TestCase(10, null, ExpectedResult = 10)]
-
         public decimal SetWinLost_Winnings_Test(decimal winlostAmount, decimal? lastWinlostAmount)
         {
             var transId = $"test-{DateTime.UtcNow.Ticks}";
