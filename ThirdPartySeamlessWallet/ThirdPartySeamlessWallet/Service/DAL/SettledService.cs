@@ -343,36 +343,33 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 // 取得前一次的結算結果
                 var RefBetRecord = GetTpBetRecord(betRecord.TpId, betRecord.TransId, (int)betRecord.GameType, conn, trans);
 
-                if (_environment.IsDevelopment() && tpCustInfo.CustId != 644081)
+                // 指定走新結算流程
+                if (_environment.IsDevelopment() || tpCustInfo.CustId == 22)
                 {
-                    // 指定走新結算流程
-                    if (_environment.IsDevelopment() || tpCustInfo.CustId == 22)
+                    try
                     {
-                        try
-                        {
-                            var settleTicket = new SettleTicket(tpCustInfo: tpCustInfo,
-                                         betRecord: betRecord,
-                                         refBetRecord: RefBetRecord,
-                                         mainDbClient: _mainDbClient,
-                                         trans: trans,
-                                         walletService: walletService,
-                                         logger: logger,
-                                         tpBetRecordExtendBLL: _tpBetRecordExtendBLL)
-                            .SetData()
-                            .SetWinLost()
-                            .AutoCancelCheck(thirdPartySetting.WalletType)
-                            .SetBonusRollOver()
-                            .SetWithdrawalLimitAndEffectiveBet(getTpSeamlessBonusType)
-                            .SetTpBetRecord()
-                            .AddTpBetRecordExtend();
+                        var settleTicket = new SettleTicket(tpCustInfo: tpCustInfo,
+                                     betRecord: betRecord,
+                                     refBetRecord: RefBetRecord,
+                                     mainDbClient: _mainDbClient,
+                                     trans: trans,
+                                     walletService: walletService,
+                                     logger: logger,
+                                     tpBetRecordExtendBLL: _tpBetRecordExtendBLL)
+                        .SetData()
+                        .SetWinLost()
+                        .AutoCancelCheck(thirdPartySetting.WalletType)
+                        .SetBonusRollOver()
+                        .SetWithdrawalLimitAndEffectiveBet(getTpSeamlessBonusType)
+                        .SetTpBetRecord()
+                        .AddTpBetRecordExtend();
 
-                            return 1;
-                        }
-                        catch (Exception ex)
-                        {
-                            logger.LogError(ex, $"{ex.Message} || {JsonConvert.SerializeObject(betRecord)}");
-                            return 0;
-                        }
+                        return 1;
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, $"{ex.Message} || {JsonConvert.SerializeObject(betRecord)}");
+                        return 0;
                     }
                 }
 
