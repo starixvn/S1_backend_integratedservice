@@ -637,22 +637,7 @@ namespace ThirdPartyWager.Extensions
 
             return services;
         }
-
-        private IServiceCollection AddPegasus(IServiceCollection services)
-        {
-            services.AddSingleton<WagerPegasusService>();
-
-            services.AddSingleton<ApiPegasusBLL>();
-            services.AddSingleton<FinancePegasusBLL>();
-            services.AddSingleton<WagerPegasusBLL>();
-
-            services.AddHostedService<WagerPegasus>();
-            services.AddHostedService<FinancePegasus>();
-
-
-            return services;
-        }
-
+        
         private IServiceCollection AddBNG(IServiceCollection services)
         {
             services.AddSingleton<WagerBNGService>();
