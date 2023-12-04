@@ -1,23 +1,15 @@
 ﻿using System.ComponentModel;
 using System.Text;
-
 using Dapper;
-
-using Microsoft.Extensions.Logging;
-
 using Newtonsoft.Json;
-
 using Serilog.Context;
-
 using StackExchange.Redis;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 using ThirdPartySeamlessWallet.Service.Model.Options;
 using ThirdPartySeamlessWallet.Service.Model.SBSW;
-
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -159,7 +151,9 @@ namespace ThirdPartySettleWorker.Workers
                             SettlementType = settlementType,
                             TicketStatus = ticketStatus,
                             GameID = sport_type.ToString(),
-                            ReferenceNo = betData.FirstOrDefault()?.refId
+                            ReferenceNo = betData.FirstOrDefault()?.refId,
+                            TicketKey = betData.FirstOrDefault()?.baStatus ?? 0
+
                         };
                         settleFlowLog.AppendLine($"4.Set Default BetRecordInfo:");
                         settleFlowLog.AppendLine(JsonConvert.SerializeObject(betRecordInfo));
@@ -234,6 +228,7 @@ namespace ThirdPartySettleWorker.Workers
                             if (sport_type == 157)
                             {
                                 betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
+                                betRecordInfo.TicketKey = 0;  //主播打賞不記BA
                             }
                         }
                         else
@@ -277,7 +272,7 @@ namespace ThirdPartySettleWorker.Workers
                 _logger.LogInformation(ex, ex.Message);
             }
             catch (Exception ex)
-            {                
+            {
                 _logger.LogError(ex, $"SBSW Settle exception. {ex.Message}");
             }
             finally
@@ -484,7 +479,7 @@ namespace ThirdPartySettleWorker.Workers
             return betDetial.ticket_status.Equals("reject", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("refund", StringComparison.OrdinalIgnoreCase) || betDetial.ticket_status.Equals("void", StringComparison.OrdinalIgnoreCase);
         }
 
-        private BaseBetDetail GetWagerData (TpBetRecordDetail tpBetRecordDetail) 
+        private BaseBetDetail GetWagerData(TpBetRecordDetail tpBetRecordDetail)
         {
             return tpBetRecordDetail.GameType switch
             {
