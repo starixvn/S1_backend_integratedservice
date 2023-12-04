@@ -348,21 +348,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     try
                     {
-                            var settleTicket = new SettleTicket(tpCustInfo: tpCustInfo,
-                                         betRecord: betRecord,
-                                         refBetRecord: RefBetRecord,
-                                         mainDbClient: _mainDbClient,
-                                         trans: trans,
-                                         walletService: walletService,
-                                         logger: logger,
-                                         tpBetRecordExtendBLL: _tpBetRecordExtendBLL)
-                            .SetData()
-                            .SetWinLost()
-                            .AutoCancelCheck(thirdPartySetting.WalletType)
-                            .SetBonusRollOver()
-                            .SetWithdrawalLimitAndEffectiveBet(getTpSeamlessBonusType)
-                            .SetTpBetRecord()
-                            .AddTpBetRecordExtend();
+                        var settleTicket = new SettleTicket(tpCustInfo: tpCustInfo,
+                                     betRecord: betRecord,
+                                     refBetRecord: RefBetRecord,
+                                     mainDbClient: _mainDbClient,
+                                     trans: trans,
+                                     walletService: walletService,
+                                     logger: logger,
+                                     tpBetRecordExtendBLL: _tpBetRecordExtendBLL)
+                        .SetData()
+                        .SetWinLost()
+                        .AutoCancelCheck(thirdPartySetting.WalletType)
+                        .SetBonusRollOver()
+                        .SetWithdrawalLimitAndEffectiveBet(getTpSeamlessBonusType)
+                        .SetTpBetRecord()
+                        .AddTpBetRecordExtend();
 
                         return 1;
                     }
@@ -645,7 +645,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public int SetTpBetRecord(BetRecordInfo betRecordInfo, TpCustInfo tpCustInfo, MySqlConnection conn, MySqlTransaction trans)
         {
-            return _mainDbClient.Execute("Service_TpSettleBet_Set_V4", new
+            return _mainDbClient.Execute("Service_TpSettleBet_Set_V5", new
             {
                 betRecordInfo.TpId,
                 betRecordInfo.TransId,
@@ -666,14 +666,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 SettlementType = (int)betRecordInfo.SettlementType,
                 TicketStatus = (int)betRecordInfo.TicketStatus,
                 betRecordInfo.BonusId,
-                betRecordInfo.GameID
+                betRecordInfo.GameID,
+                betRecordInfo.TicketKey
             }, conn, trans);
         }
 
         public int AddTpBetRecord(BetRecordInfo betRecordInfo, TpCustInfo tpCustInfo, MySqlConnection conn, MySqlTransaction trans)
         {
 
-            return _mainDbClient.Execute("Service_TpSettleBet_Ins_V2", new
+            return _mainDbClient.Execute("Service_TpSettleBet_Ins_V3", new
             {
                 betRecordInfo.TpId,
                 betRecordInfo.TransId,
@@ -694,7 +695,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 SettlementType = (int)betRecordInfo.SettlementType,
                 TicketStatus = (int)betRecordInfo.TicketStatus,
                 betRecordInfo.BonusId,
-                betRecordInfo.GameID
+                betRecordInfo.GameID,
+                betRecordInfo.TicketKey
             }, conn, trans);
         }
 
