@@ -4,6 +4,7 @@ using FluentAssertions;
 
 using NUnit.Framework;
 
+using ThirdPartySeamlessWallet.IntegrationTest.Models;
 using ThirdPartySeamlessWallet.IntegrationTest.SandBox;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -114,30 +115,33 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
 
         #region SetWinLost
 
-        [TestCase("Settled", 5, TicketStatus.Win, null, TicketStatus.UnSettled, ExpectedResult = 5, Description = "正常結算")]
-        [TestCase(null, 0, TicketStatus.Win, null, TicketStatus.UnSettled, ExpectedResult = null, Description = "winlost為0不需更新")]
-        [TestCase("Settled", 5, TicketStatus.Win, 5, TicketStatus.UnSettled, ExpectedResult = 5, Description = "正常結算")]
-        [TestCase("Settled", 5, TicketStatus.Win, 10, TicketStatus.Refund, ExpectedResult = 5, Description = "正常結算")]
+        [TestCase("Settled", 5, TicketStatus.Win, null, TicketStatus.UnSettled, 5, Description = "正常結算")]
+        [TestCase(null, 0, TicketStatus.Win, null, TicketStatus.UnSettled, null, Description = "winlost為0不需更新")]
+        [TestCase("Settled", 5, TicketStatus.Win, 5, TicketStatus.UnSettled, 5, Description = "正常結算")]
+        [TestCase("Settled", 5, TicketStatus.Win, 10, TicketStatus.Refund, 5, Description = "正常結算")]
 
-        [TestCase("Re-Settled", 5, TicketStatus.Refund, 10, TicketStatus.Win, ExpectedResult = -10, Description = "Refund結算，扣回上次結算金額")]
-        [TestCase("UnSettled", 5, TicketStatus.UnSettled, 10, TicketStatus.Win, ExpectedResult = -10, Description = "UnSettled結算，扣回上次結算金額")]
-        [TestCase("Re-Settled", 5, TicketStatus.Refund, 10, TicketStatus.FreeBetWin, ExpectedResult = -10, Description = "Refund結算，扣回上次結算金額")]
-        [TestCase("UnSettled", 5, TicketStatus.UnSettled, 10, TicketStatus.FreeBetWin, ExpectedResult = -10, Description = "UnSettled結算，扣回上次結算金額")]
+        [TestCase("Re-Settled", 5, TicketStatus.Refund, 10, TicketStatus.Win, -10, Description = "Refund結算，扣回上次結算金額")]
+        [TestCase("UnSettled", 5, TicketStatus.UnSettled, 10, TicketStatus.Win, -10, Description = "UnSettled結算，扣回上次結算金額")]
+        [TestCase("Re-Settled", 5, TicketStatus.Refund, 10, TicketStatus.FreeBetWin, -10, Description = "Refund結算，扣回上次結算金額")]
+        [TestCase("UnSettled", 5, TicketStatus.UnSettled, 10, TicketStatus.FreeBetWin, -10, Description = "UnSettled結算，扣回上次結算金額")]
 
-        [TestCase("Re-Settled", 5, TicketStatus.Win, 10, TicketStatus.Win, ExpectedResult = -5, Description = "ReSettled結算，計算兩次差異金額")]
-        [TestCase("Re-Settled", 10, TicketStatus.Win, 5, TicketStatus.Win, ExpectedResult = 5, Description = "ReSettled結算，計算兩次差異金額")]
-        [TestCase("Re-Settled", 5, TicketStatus.Win, 10, TicketStatus.FreeBetWin, ExpectedResult = -5, Description = "ReSettled結算，計算兩次差異金額")]
-        [TestCase("Re-Settled", 10, TicketStatus.Win, 5, TicketStatus.FreeBetWin, ExpectedResult = 5, Description = "ReSettled結算，計算兩次差異金額")]
-        [TestCase("Re-Settled", 5, TicketStatus.FreeBetWin, 10, TicketStatus.FreeBetWin, ExpectedResult = -5, Description = "ReSettled結算，計算兩次差異金額")]
-        [TestCase("Re-Settled", 10, TicketStatus.FreeBetWin, 5, TicketStatus.FreeBetWin, ExpectedResult = 5, Description = "ReSettled結算，計算兩次差異金額")]
-        public decimal? SetWinLostAmount_Winnings_Test(string memo, decimal winlostAmount, TicketStatus ticketStatus, decimal? lastWinlostAmount, TicketStatus lastTicketStatus)
+        [TestCase("Re-Settled", 5, TicketStatus.Win, 10, TicketStatus.Win,  -5, Description = "ReSettled結算，計算兩次差異金額")]
+        [TestCase("Re-Settled", 10, TicketStatus.Win, 5, TicketStatus.Win, 5, Description = "ReSettled結算，計算兩次差異金額")]
+        [TestCase("Re-Settled", 5, TicketStatus.Win, 10, TicketStatus.FreeBetWin, -5, Description = "ReSettled結算，計算兩次差異金額")]
+        [TestCase("Re-Settled", 10, TicketStatus.Win, 5, TicketStatus.FreeBetWin, 5, Description = "ReSettled結算，計算兩次差異金額")]
+        [TestCase("Re-Settled", 5, TicketStatus.FreeBetWin, 10, TicketStatus.FreeBetWin,    -5, Description = "ReSettled結算，計算兩次差異金額")]
+        [TestCase("Re-Settled", 10, TicketStatus.FreeBetWin, 5, TicketStatus.FreeBetWin, 5, Description = "ReSettled結算，計算兩次差異金額")]
+        public void SetWinLost_Winnings_Test(string memo, decimal winlostAmount, TicketStatus ticketStatus, decimal? lastWinlostAmount, TicketStatus lastTicketStatus, decimal? expected)
         {
             var transId = $"test-{DateTime.UtcNow.Ticks}";
             var betRecord = new BetRecordInfo()
             {
                 TicketStatus = ticketStatus,
                 WinlostAmount = winlostAmount,
-                TransId = transId,
+                TransId = transId,        
+                TpId = 41,
+                GameType = GameType.SBSW_Sports,
+                BonusId = 100,
             };
 
             BetRecordInfo refBetRecord = null;
@@ -148,33 +152,65 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
                     TicketStatus = lastTicketStatus,
                     WinlostAmount = lastWinlostAmount.Value,
                     TransId = transId,
+                    TpId = 41,
+                    GameType = GameType.SBSW_Sports,
+                    BonusId = 100,
                 };
             }
+
+            var custWinLost = _settleTicketSandbox.GetCustWinLost(_tpCustInfo.CustId);
+            var custBonusWinLoss = _settleTicketSandbox.GetCustBonusWinLoss(betRecord.BonusId);
 
             var SettleTicket = _settleTicketSandbox.CreateSettleTicket(_tpCustInfo, betRecord, refBetRecord);
             SettleTicket.SetWinLost();
             _settleTicketSandbox.Commit();
+
+            if (expected.HasValue)
+            {
+                var assertCustWinLost = _settleTicketSandbox.GetCustWinLost(_tpCustInfo.CustId);
+                var assertCustBonusWinLoss = _settleTicketSandbox.GetCustBonusWinLoss(betRecord.BonusId);
+
+                assertCustWinLost.Winnings.Should().Be(custWinLost.Winnings + expected.Value);
+                assertCustBonusWinLoss.Winnings.Should().Be(custBonusWinLoss.Winnings + expected.Value);
+            }
 
             var winningsLog = _settleTicketSandbox.GetWinningsLog(transId);
             if (winningsLog != null)
             {
+                winningsLog.ChangeWinnings.Should().Be(expected.Value);
                 winningsLog.Memo.Should().Be(memo);
             }
-            return winningsLog?.ChangeWinnings;
+            else
+            {
+                winningsLog.Should().Be(expected);
+            }
+
+            var bonusWinningsLog = _settleTicketSandbox.GetBonusWinningsLog(transId);
+            if (bonusWinningsLog != null)
+            {
+
+                bonusWinningsLog.ChangeWinnings.Should().Be(Math.Abs(expected.Value));
+                bonusWinningsLog.Memo.Should().Be(memo);
+            }
+            else
+            {
+                bonusWinningsLog.Should().Be(expected);
+            }
+
         }
 
 
-        [TestCase("Settled", -5, TicketStatus.Lost, null, TicketStatus.UnSettled, ExpectedResult = -5, Description = "正常結算")]
-        [TestCase(null, 0, TicketStatus.Win, null, TicketStatus.UnSettled, ExpectedResult = null, Description = "winlost為0不需更新")]
-        [TestCase("Settled", -5, TicketStatus.Win, -5, TicketStatus.UnSettled, ExpectedResult = -5, Description = "正常結算")]
-        [TestCase("Settled", -5, TicketStatus.Win, -10, TicketStatus.Refund, ExpectedResult = -5, Description = "正常結算")]
+        [TestCase("Settled", -5, TicketStatus.Lost, null, TicketStatus.UnSettled, -5, Description = "正常結算")]
+        [TestCase(null, 0, TicketStatus.Win, null, TicketStatus.UnSettled, null, Description = "winlost為0不需更新")]
+        [TestCase("Settled", -5, TicketStatus.Win, -5, TicketStatus.UnSettled,  -5, Description = "正常結算")]
+        [TestCase("Settled", -5, TicketStatus.Win, -10, TicketStatus.Refund, -5, Description = "正常結算")]
 
-        [TestCase("Re-Settled", 5, TicketStatus.Refund, -10, TicketStatus.Lost, ExpectedResult = 10, Description = "Refund結算，扣回上次結算金額")]
-        [TestCase("UnSettled", 5, TicketStatus.UnSettled, -10, TicketStatus.Lost, ExpectedResult = 10, Description = "UnSettled結算，扣回上次結算金額")]
+        [TestCase("Re-Settled", 5, TicketStatus.Refund, -10, TicketStatus.Lost, 10, Description = "Refund結算，扣回上次結算金額")]
+        [TestCase("UnSettled", 5, TicketStatus.UnSettled, -10, TicketStatus.Lost, 10, Description = "UnSettled結算，扣回上次結算金額")]
 
-        [TestCase("Re-Settled", -5, TicketStatus.Lost, -10, TicketStatus.Lost, ExpectedResult = 5, Description = "ReSettled結算，計算兩次差異金額")]
-        [TestCase("Re-Settled", -10, TicketStatus.Lost, -5, TicketStatus.Lost, ExpectedResult = -5, Description = "ReSettled結算，計算兩次差異金額")]
-        public decimal? SetWinLostAmount_Losses_Test(string memo, decimal winlostAmount, TicketStatus ticketStatus, decimal? lastWinlostAmount, TicketStatus lastTicketStatus)
+        [TestCase("Re-Settled", -5, TicketStatus.Lost, -10, TicketStatus.Lost, 5, Description = "ReSettled結算，計算兩次差異金額")]
+        [TestCase("Re-Settled", -10, TicketStatus.Lost, -5, TicketStatus.Lost, -5, Description = "ReSettled結算，計算兩次差異金額")]
+        public void SetWinLost_Losses_Test(string memo, decimal winlostAmount, TicketStatus ticketStatus, decimal? lastWinlostAmount, TicketStatus lastTicketStatus, decimal? expected)
         {
             var transId = $"test-{DateTime.UtcNow.Ticks}";
             var betRecord = new BetRecordInfo()
@@ -182,6 +218,9 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
                 TicketStatus = ticketStatus,
                 WinlostAmount = winlostAmount,
                 TransId = transId,
+                TpId = 41,
+                GameType = GameType.SBSW_Sports,
+                BonusId = 100,
             };
 
             BetRecordInfo refBetRecord = null;
@@ -192,20 +231,52 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
                     TicketStatus = lastTicketStatus,
                     WinlostAmount = lastWinlostAmount.Value,
                     TransId = transId,
+                    TpId = 41,
+                    GameType = GameType.SBSW_Sports,
+                    BonusId = 100,
                 };
             }
+
+            var custWinLost = _settleTicketSandbox.GetCustWinLost(_tpCustInfo.CustId);
+            var custBonusWinLoss = _settleTicketSandbox.GetCustBonusWinLoss(betRecord.BonusId);
 
             var SettleTicket = _settleTicketSandbox.CreateSettleTicket(_tpCustInfo, betRecord, refBetRecord);
             SettleTicket.SetWinLost();
             _settleTicketSandbox.Commit();
 
+            if (expected.HasValue)
+            {
+                var assertCustWinLost = _settleTicketSandbox.GetCustWinLost(_tpCustInfo.CustId);
+                var assertCustBonusWinLoss = _settleTicketSandbox.GetCustBonusWinLoss(betRecord.BonusId);
+
+                assertCustWinLost.Losses.Should().Be(custWinLost.Losses + expected.Value);
+                assertCustBonusWinLoss.Losses.Should().Be(custBonusWinLoss.Losses + expected.Value);
+            }
+
             var lossesLog = _settleTicketSandbox.GetLossesLog(transId);
             if (lossesLog != null)
             {
+                lossesLog.ChangeLosses.Should().Be(expected.Value);
                 lossesLog.Memo.Should().Be(memo);
             }
-            return lossesLog?.ChangeLosses;
+            else
+            {
+                lossesLog.Should().Be(expected);
+            }
+
+            var bonusLossesLog = _settleTicketSandbox.GetBonusLossesLog(transId);
+            if (bonusLossesLog != null)
+            {
+                bonusLossesLog.ChangeLosses.Should().Be(Math.Abs(expected.Value));
+                bonusLossesLog.Memo.Should().Be(memo);
+            }
+            else
+            {
+                bonusLossesLog.Should().Be(expected);
+            }
+
         }
+
 
         #endregion
     }

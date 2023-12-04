@@ -112,6 +112,18 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             _trans = null;
         }
 
+        public CustWinLost GetCustWinLost(int custId)
+        {
+            var sqlScript = @$"SELECT * FROM CustWinLost WHERE CustId='{custId}';";
+            return _mySqlClient.Query<CustWinLost>(sqlScript, CommandType.Text).FirstOrDefault();
+        }
+
+        public CustWinLost GetCustBonusWinLoss(int bonusId)
+        {
+            var sqlScript = @$"SELECT * FROM CustBonusWinLoss WHERE BonusId='{bonusId}';";
+            return _mySqlClient.Query<CustWinLost>(sqlScript, CommandType.Text).FirstOrDefault();
+        }
+
         public WinningsLog GetWinningsLog(string transId)
         {   
             var sqlScript = @$"SELECT * FROM WinningsLog_{DateTime.Now:yyyyMM} WHERE RefTransId='{transId}';"; 
@@ -121,6 +133,18 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         public LossesLog GetLossesLog(string transId)
         {
             var sqlScript = @$"SELECT * FROM LossesLog_{DateTime.Now:yyyyMM} WHERE RefTransId='{transId}';";
+            return _mySqlClient.Query<LossesLog>(sqlScript, CommandType.Text).FirstOrDefault();
+        }
+
+        public WinningsLog GetBonusWinningsLog(string transId)
+        {
+            var sqlScript = @$"SELECT * FROM BonusWinningsLog WHERE RefTransId='{transId}';";
+            return _mySqlClient.Query<WinningsLog>(sqlScript, CommandType.Text).FirstOrDefault();
+        }
+
+        public LossesLog GetBonusLossesLog(string transId)
+        {
+            var sqlScript = @$"SELECT * FROM BonusLossesLog WHERE RefTransId='{transId}';";
             return _mySqlClient.Query<LossesLog>(sqlScript, CommandType.Text).FirstOrDefault();
         }
     }
