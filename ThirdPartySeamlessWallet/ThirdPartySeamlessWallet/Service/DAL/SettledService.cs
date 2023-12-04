@@ -343,11 +343,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 // 取得前一次的結算結果
                 var RefBetRecord = GetTpBetRecord(betRecord.TpId, betRecord.TransId, (int)betRecord.GameType, conn, trans);
 
-                // 指定走新結算流程
-                if (_environment.IsDevelopment() || tpCustInfo.CustId == 22)
+                if (_environment.IsDevelopment() && tpCustInfo.CustId != 644081)
                 {
-                    try
+                    // 指定走新結算流程
+                    if (_environment.IsDevelopment() || tpCustInfo.CustId == 22)
                     {
+                        try
+                        {
                             var settleTicket = new SettleTicket(tpCustInfo: tpCustInfo,
                                          betRecord: betRecord,
                                          refBetRecord: RefBetRecord,
@@ -364,12 +366,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             .SetTpBetRecord()
                             .AddTpBetRecordExtend();
 
-                        return 1;
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.LogError(ex, $"{ex.Message} || {JsonConvert.SerializeObject(betRecord)}");
-                        return 0;
+                            return 1;
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError(ex, $"{ex.Message} || {JsonConvert.SerializeObject(betRecord)}");
+                            return 0;
+                        }
                     }
                 }
 
