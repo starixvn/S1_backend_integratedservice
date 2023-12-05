@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -13,69 +14,17 @@ using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.PP
 {
-    public class TpHelper : ThirdPartyHelperBase
+    public class TpHelper : ThirdPartyHelperBase , IThirdPartyEventParticular
     {
-
-
-        public class UserReq
-        {
-            public string username { get; set; }
-            public string password { get; set; }
-            public string providerId { get; set; }
-        }
-        public class gameReq
-        {
-            public string gameID { get; set; }
-            public string gameName { get; set; }
-            public string gameTypeID { get; set; }
-            public string typeDescription { get; set; }
-            public string technology { get; set; }
-            public string platform { get; set; }
-            public bool demoGameAvailable { get; set; }
-            public string aspectRatio { get; set; }
-            public string technologyID { get; set; }
-            public int gameIdNumeric { get; set; }
-            public List<string> jurisdictions { get; set; }
-        }
-        public class LoginReq
-        {
-            public string token { get; set; } //由玩家的运营商生成的安全令牌
-            public string symbol { get; set; } //游戏的唯一标识符，如 vs20bl、vs15ad 等
-            public string technology { get; set; } // H5 或 F（用于 WEB 平台）或 H5（用于 MOBILE 平台）
-            public string platform { get; set; } //WEB（用于桌面设备）或 MOBILE（用于移动设备）
-            public string language { get; set; } //ISO 639 - 1 标准的玩家语言（如 en、fr、it）
-            public string cashierUrl { get; set; } //用于打开运营商网站收银台页面的 URL；
-            public string lobbyUrl { get; set; } //用于打开运营商网站大厅页面的 URL；
-            public string operatorGameHistoryUrl { get; set; }  //用于在运营商侧打开游戏历史记录页面的 URL
-            //public string secureLogin { get; set; }  //运营商在 Pragmatic Play 侧的唯一标识符。
-        }
-
-        public class LoginResult
-        {
-            public int error { get; set; }
-            public string description { get; set; }
-            public string gameURL { get; set; }
-        }
-
-        public class UserResult
-        {
-            public string userId { get; set; }
-            public string currency { get; set; }
-            public decimal cash { get; set; }
-            public decimal bonus { get; set; }
-            public int error { get; set; }
-            public string description { get; set; }
-
-            //"userId":"421", "currency":"USD", "cash": 99999.99, "bonus": 99.99, "error":0, "description":"Success"
-        }
-
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
         private readonly Dictionary<int, string> _siteSuffixList;
+        private readonly SitePPConfig _sitePPConfig;
 
         public TpHelper(IServiceProvider provider)
         {
             _siteSuffixList = provider.GetRequiredService<IEnumerable<ServerInfoObject>>().ToDictionary(k => k.SiteId, v => v.SiteName.ToLower());
             _gameNameList = TpBetRecordProvider.GetGameCasinoList(5).ToDictionary(d => d.GameId, d => d.Name);
+            _sitePPConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SitePPConfig>(TpEnum.PP.ToString());
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -253,6 +202,59 @@ namespace ThirdParty.PP
                 IP = string.Empty,
             };
         }
+        public ApiResult AddFreeSpinToPlayer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var oApiResult = new ApiResult();
+            var ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            var SecureLogin = inputs.ContainsKey("SecureLogin") && !string.IsNullOrEmpty(inputs["SecureLogin"]) ? inputs["SecureLogin"] : throw new Exception();
+            var SecureKey = inputs.ContainsKey("SecureKey") && !string.IsNullOrEmpty(inputs["SecureKey"]) ? inputs["SecureKey"] : throw new Exception("SecureKey");
+            var bonusCode = inputs.ContainsKey("bonusCode") && !string.IsNullOrEmpty(inputs["bonusCode"]) ? inputs["bonusCode"] : throw new Exception();
+            var requestId = inputs.ContainsKey("requestId")  && !string.IsNullOrEmpty(inputs["requestId"]) ? inputs["requestId"] : throw new Exception();
+            var Uri = "/v3/http/FreeRoundsBonusAPI/v2/players/add";
+            //var requestId = Guid.NewGuid().ToString();
+
+            var playerList = new List<string> { tpCustInfo.TpUserName };
+            
+            var serializePlayerList = JsonConvert.SerializeObject(new Dictionary<string, object>
+            {
+                { "playerList", playerList }
+            });
+            
+            var parameters = new Dictionary<string, string>()
+            {
+                { "secureLogin", SecureLogin },
+                { "bonusCode", bonusCode },
+                { "requestId", requestId } 
+                //{ "playerList", tpCustInfo.TpUserName }
+            };
+            
+            var sParam = string.Join("&", parameters.OrderBy(kp => kp.Key).Select(kp => $"{kp.Key}={kp.Value}"));
+            sParam += $"&hash={ToMD5($"{sParam}{SecureKey}")}";
+            
+            var result = HttpPost($"{ApiUrl}{Uri}?{sParam}", serializePlayerList, "application/json");
+            
+            if (!IsJSON(result))
+            {
+                oApiResult.RawMessage = "No Result";
+                oApiResult.RawErrorCode = "1";
+                oApiResult.ErrorCode = ErrorCode.Fail;
+                return oApiResult;
+            }
+
+            var json = JsonConvert.DeserializeObject<AddFreeSpinResult>(result);
+            if (json.error == 0)
+            {
+                oApiResult.ErrorCode = ErrorCode.Success;
+            }
+            else
+            {
+                oApiResult.ErrorCode = ErrorCode.Fail;
+                oApiResult.RawMessage = json.description;
+                oApiResult.RawErrorCode = json.error.ToString();
+            }
+
+            return oApiResult;
+        }
 
         public class DetailResult
         {
@@ -270,8 +272,5 @@ namespace ThirdParty.PP
             var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
             return (dic != null) ? dic.TryGetValue("en", out var result) ? result : string.Empty : string.Empty;
         }
-
     }
-
-
 }

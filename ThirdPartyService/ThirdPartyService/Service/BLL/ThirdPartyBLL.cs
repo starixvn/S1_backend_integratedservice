@@ -1203,6 +1203,39 @@ namespace ThirdPartyService.Service.BLL
         {
             return tpCustInfoService.CreateMember(custId, tpId, isNeedSendRequest);
         }
+        
+        public ApiResult AddFreeSpinToPlayer(AddFreeSpin addFreeSpin)
+        {
+            var apiResult = new ApiResult();
+
+            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(addFreeSpin.CustId, addFreeSpin.TpId);
+            if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
+            {
+                var tpCustInfo = tpCustInfoResult.Data;
+                var tpHelper = (IThirdPartyEventParticular)thirdPartyHelper.GetThirdPartyHelper(addFreeSpin.TpId, tpCustInfo.SiteId);
+                var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper
+                    .GetThirdPartyBySite(addFreeSpin.TpId, tpCustInfo.SiteId).Setting);
+                if (addFreeSpin.inputs != null)
+                {
+                    foreach (var infoI in addFreeSpin.inputs)
+                    {
+                        inputs.Add(infoI.Key, infoI.Value);
+                    }
+                }
+                
+                apiResult = tpHelper.AddFreeSpinToPlayer(tpCustInfoResult.Data, inputs);
+            }
+            else
+            {
+                apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
+                apiResult.Message = tpCustInfoResult.Message;
+                apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode; /*3RD Error Code*/
+                apiResult.RawMessage = tpCustInfoResult.RawMessage; /*3RD Error Message*/
+            }
+
+            return apiResult;
+        }
+        
 
         #region Private Methods
 
