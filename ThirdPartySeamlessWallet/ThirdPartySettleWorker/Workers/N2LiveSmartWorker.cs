@@ -90,7 +90,7 @@ public class N2LiveSmartWorker : BackgroundService, ISettleWorker
                             ValidBet = wager.ValidBet,
                             WinlostAmount = wager.WinLostAmount,
                             TransId = wager.TransId,
-                            GameType = (GameType)gameType,
+                            GameType = gameType,
                             TpUserName = unsettledData.Account,
                             SettledTime = wager.SettleTime,
                             TransTime = wager.TransTime,
@@ -115,6 +115,10 @@ public class N2LiveSmartWorker : BackgroundService, ISettleWorker
                     _logger.LogError(ex, $"{logName}:{ex.Message}");
                 }
             }
+        }
+        catch (UnsettleNotFoundException ex)
+        {
+            _logger.LogInformation(ex, ex.Message);
         }
         catch (Exception ex)
         {
