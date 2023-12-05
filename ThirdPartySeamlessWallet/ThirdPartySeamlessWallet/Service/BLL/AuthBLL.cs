@@ -39,5 +39,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return false;
         }
+        public bool AuthenticateByTpToken<T>(string sTpToken, out T t)
+        {
+            string sPermissionData = "";
+            t = default;
+            sPermissionData = authService.AuthenticateByTpToken(sTpToken);
+
+            if (!string.IsNullOrEmpty(sPermissionData))
+            {
+                t = Newtonsoft.Json.JsonConvert.DeserializeObject<T>(sPermissionData);
+                return true;
+            }
+
+            return false;
+        }
     }
 }
