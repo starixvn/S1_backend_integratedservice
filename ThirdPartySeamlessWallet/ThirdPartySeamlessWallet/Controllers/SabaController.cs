@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -21,6 +22,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly ThirdPartyBLL _thirdPartyBll;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly string _sabaSecretKey;
+        private readonly PartitionService _partitionService;
         public Tp ThirdParty { get; set; }
 
         public SabaController(IServiceProvider provider)
@@ -31,12 +33,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _tools = provider.GetRequiredService<Tools>();
             ThirdParty = Tp.SBSW;
+            _partitionService = provider.GetRequiredService<PartitionService>();
         }
 
+        #region CheckOnlineMember
+      
         [HttpPost]
         public ContentResult CheckOnlineMember([FromForm] CheckOnlineMemberInput input)
         {
-
             try
             {
                 if (input.Secret_Key != _sabaSecretKey)
@@ -90,5 +94,37 @@ namespace ThirdPartySeamlessWallet.Controllers
                 StatusCode = statusCode
             };
         }
+
+        #endregion
+
+        #region GetUserData
+
+        [HttpPost]
+        public IEnumerable<FinancialLog> GetFinancialLog(GetDataInput input)
+        {
+            var result = Enumerable.Empty<FinancialLog>();
+            try
+            {
+                var custId = input.CustId;
+                if (custId == 0)
+                {
+                    custId = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, input.TpUserName).CustId;
+                }
+
+                //Search range table
+                var parameters = new GetFinancialLogSpInput(custId);
+                result = _partitionService
+                    .MonthlyQuery<FinancialLog>(parameters.StartDate, parameters.EndDate, "Service_FinancialLog_Get", parameters)
+                    .Where(log => log.FinancialType == FinancialType.Deposit || log.FinancialType == FinancialType.Withdrawal);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"GetFinancialLog Exception:{e.Message}");   
+            }
+
+            return result;
+        }
+
+        #endregion
     }
 }
