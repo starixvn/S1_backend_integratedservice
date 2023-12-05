@@ -115,6 +115,48 @@ namespace ThirdParty.HL
     
     #endregion
     
+    #region TransferCheck
+    
+    [XmlRoot(ElementName="txnLog")]
+    public class TxnLog { 
+
+        [XmlElement(ElementName="dateTime")] 
+        public DateTime DateTime { get; set; } 
+
+        [XmlElement(ElementName="mode")] 
+        public string Mode { get; set; } 
+
+        [XmlElement(ElementName="previousBalance")] 
+        public double PreviousBalance { get; set; } 
+
+        [XmlElement(ElementName="amount")] 
+        public double Amount { get; set; } 
+
+        [XmlElement(ElementName="balance")] 
+        public double Balance { get; set; } 
+
+        [XmlElement(ElementName="remarks")] 
+        public int Remarks { get; set; } 
+
+        [XmlElement(ElementName="ipAddress")] 
+        public string IpAddress { get; set; } 
+    }
+
+    [XmlRoot(ElementName="response")]
+    public class TransferCheckResponse { 
+
+        [XmlElement(ElementName="errorCode")] 
+        public int ErrorCode { get; set; } 
+
+        [XmlElement(ElementName="desc")] 
+        public object Desc { get; set; } 
+
+        [XmlElement(ElementName="txnLog")] 
+        public TxnLog TxnLog { get; set; } 
+    }
+    
+    #endregion
+    
     #region GetBetList
     
     
