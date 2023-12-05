@@ -733,6 +733,10 @@ namespace ThirdPartyCore
 
             return false;
         }
+        public bool UpdateTpToken(string token, string tpToken)
+        {
+            return AuthProvider.UpdateTpToken(token, tpToken);
+        }
         public abstract ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
         public abstract ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs);
         public abstract ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);

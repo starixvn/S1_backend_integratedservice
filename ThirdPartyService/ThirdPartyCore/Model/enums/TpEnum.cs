@@ -53,6 +53,7 @@
         Pegasus = 56,
         BNG = 57,
         NLC = 59,
+        Amigo = 60,
     }
 
     public enum TpGameType
@@ -142,5 +143,6 @@
         FaChai_RNG = 106,
         BNG_RNG = 108,
         NLC_RNG = 111,
+        Amigo_RNG = 112,
     }
 }
