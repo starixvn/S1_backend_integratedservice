@@ -328,5 +328,22 @@ namespace ThirdPartyService.Controllers
                 };
             }
         }
+        
+        [HttpPost]
+        public ActionResult<ApiResult> AddFreeSpinToPlayer([FromBody]AddFreeSpin addFreeSpin)
+        {
+            var apiResult = new ApiResult();
+            try
+            {
+                apiResult = _thirdPartyBLL.AddFreeSpinToPlayer(addFreeSpin);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                apiResult.ErrorCode = ErrorCode.SystemError;
+                apiResult.RawMessage = ex.Message;
+            }
+            return apiResult;
+        }
     }
 }
