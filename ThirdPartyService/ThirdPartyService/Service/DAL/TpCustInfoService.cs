@@ -146,7 +146,7 @@ namespace ThirdPartyService.Service.DAL
             return _reportDbClient.Query<int>("Service_CustWithoutTpCustInfo_Get", parameter, commandType: CommandType.StoredProcedure);
         }
         
-        public IEnumerable<int> GetCustCustCurrencySiteIdWithoutSabaId(int tpId, int siteId,int currencyId)
+        public IEnumerable<int> GetCustCurrencySiteIdWithoutSabaId(int tpId, int siteId,int currencyId)
         {
             var parameter = new DynamicParameters();
             parameter.Add("_TpId", tpId);

@@ -3,6 +3,8 @@
 using System.Diagnostics;
 using Newtonsoft.Json;
 using Serilog.Context;
+using ThirdParty.HL;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Service.BLL;
 
@@ -14,8 +16,8 @@ namespace ThirdPartyService.Service.Worker
         private readonly ILogger<HLCreateMemberWorker> _logger;
         private readonly TpCustInfoBLL _tpCustInfoBll;
         private readonly ThirdPartyBLL _thirdPartyBll;
+        private readonly Dictionary<int,HLConfig> _siteHLConfig;
         private readonly int _tpId = (int)TpEnum.HaoLong;
-        private readonly int _siteId = 1;
         private readonly int _currencyId = 2;
         private Timer _timer;
         private List<int> _failCustIdList = new();
@@ -26,6 +28,8 @@ namespace ThirdPartyService.Service.Worker
             _logger = provider.GetRequiredService<ILogger<HLCreateMemberWorker>>();
             _tpCustInfoBll = provider.GetRequiredService<TpCustInfoBLL>();
             _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
+            _siteHLConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<HLConfig>(TpEnum.HaoLong.ToString());
+
         }
         
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -52,28 +56,29 @@ namespace ThirdPartyService.Service.Worker
 
                 _logger.LogInformation($"HLCreateMemberWorker Start.");
 
-                var custIdList = _tpCustInfoBll.GetCustCurrencySiteIdWithoutSabaId(_tpId, _siteId, _currencyId);
-
-                foreach (var custId in custIdList)
+                foreach (var siteId in _siteHLConfig.Select(siteIdKey => siteIdKey.Key))
                 {
-                    var result = _thirdPartyBll.CreateMember(custId, _tpId, true);
-                    if (result.ErrorCode is not ErrorCode.Success)
+                    var custIdList = _tpCustInfoBll.GetCustCurrencySiteIdWithoutSabaId(_tpId, siteId, _currencyId);
+
+                    foreach (var custId in custIdList)
                     {
-                        _failCustIdList.Add(custId);
-                        _logger.LogInformation($"HLCreateMemberWorker-Create Member Fail. custId={custId}. " +
-                                               $"result={JsonConvert.SerializeObject(result)}");
+                        var result = _thirdPartyBll.CreateMember(custId, _tpId, true);
+                        if (result.ErrorCode is not ErrorCode.Success)
+                        {
+                            _failCustIdList.Add(custId);
+                            _logger.LogInformation($"HLCreateMemberWorker-Create Member Fail. custId={custId}. " +
+                                                   $"result={JsonConvert.SerializeObject(result)}");
+                        }
+                        Thread.Sleep(5 * 1000); //休息5秒
                     }
-                    Thread.Sleep(2 * 1000); //休息5秒
-                }
 
-                if (_failCustIdList.Any())
-                {
-                    _logger.LogInformation($"HLCreateMemberWorker-Create Member Fail List={JsonConvert.SerializeObject(_failCustIdList)}. ");
+                    if (_failCustIdList.Any())
+                    {
+                        _logger.LogInformation($"HLCreateMemberWorker-Create Member Fail List={JsonConvert.SerializeObject(_failCustIdList)}. ");
+                    }
                 }
-
                 _logger.LogInformation($"HLCreateMemberWorker End.\r\n" +
-                    $"Finish Time(m: s.ms): {Math.Round(sw.Elapsed.TotalMinutes)}:{Math.Round(sw.Elapsed.TotalMinutes)}.{Math.Round(sw.Elapsed.TotalMilliseconds)}.");
-
+                                       $"Finish Time(m: s.ms): {Math.Round(sw.Elapsed.TotalMinutes)}:{Math.Round(sw.Elapsed.TotalMinutes)}.{Math.Round(sw.Elapsed.TotalMilliseconds)}.");
             }
             catch (Exception ex)
             {

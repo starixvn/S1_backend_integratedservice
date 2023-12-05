@@ -4,7 +4,7 @@ using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model.TpSiteConfig;
 
-namespace ThirdPartyWager.Service.BLL.HL
+namespace ThirdPartyWager.Service.BLL
 {
     public class WagerHLBLL
     {
@@ -15,7 +15,7 @@ namespace ThirdPartyWager.Service.BLL.HL
         private readonly TpUnsettleService _tpUnsettleService;
         private readonly WorkerType workerType = WorkerType.MainWager;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly HLConfig _siteHLConfig;
+
 
         public WagerHLBLL(IServiceProvider provider)
         {
@@ -24,7 +24,6 @@ namespace ThirdPartyWager.Service.BLL.HL
             _logger = provider.GetRequiredService<ILogger<WagerHLBLL>>();
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _siteHLConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<HLConfig>(Tp.Allbet.ToString());
         }
 
         public async Task<bool> GetWagersAsync(IEnumerable<HLWagerTrans> unSettleDate,string startTime, string endTime)
@@ -93,15 +92,26 @@ namespace ThirdPartyWager.Service.BLL.HL
             try
             {
                 var nowDate = DateTime.Now;
-                _logger.LogInformation($"HaoLong SetSettledWager Job Time : +0 = {nowDate:yyyy-MM-ddTHH:mm:ss} | +8 = {nowDate.AddHours(8):yyyy-MM-ddTHH:mm:ss}");
+                _logger.LogInformation($"HaoLong SetSettledWager Job Time : +0 = {nowDate:yyyy-MM-ddTHH:mm:ss}");
                 var getDrawResult = await _apiHLBLL.GetDrawResult(nowDate);
                 var ticketKeyHowLong = _thirdPartyBLL.GetAllSiteTicketKey(workerType, _tpId);
                 var getHLUnSettledWager = _wagerHLService.GetHLBetUnSettledList(ticketKeyHowLong);
 
                 var uniqueDraw = getDrawResult.hl_Response.DrawResult.Distinct().ToList();
+
+                var updatedDrawDateList = getHLUnSettledWager.Select(trans => new HLWagerTrans
+                {
+                    TicketKey = trans.TicketKey,
+                    SiteId = trans.SiteId,
+                    TransId = trans.TransId,
+                    TpUserName = trans.TpUserName,
+                    drawType = trans.drawType,
+                    drawDate = ConvertTimeToPlusEight(trans.drawDate),
+                    SettleFlag = trans.SettleFlag
+                });
                 
                 var matchedTransWager = uniqueDraw
-                    .Join(getHLUnSettledWager,
+                    .Join(updatedDrawDateList,
                         extracted => new { extracted.drawType, extracted.drawDate },
                         hlBet => new { hlBet.drawType, hlBet.drawDate },
                         (extracted, hlBet) => hlBet)
@@ -169,6 +179,12 @@ namespace ThirdPartyWager.Service.BLL.HL
         private bool IsValidWager(IEnumerable<HLWagerTrans> getHLWager, HLWagerData wagerData)
         {
             return getHLWager.Any(x => x.TransId == wagerData.BetID);
+        }
+
+        private DateTime ConvertTimeToPlusEight(DateTime dateTime)
+        {
+            var gmtPlus8 = TimeZoneInfo.FindSystemTimeZoneById("Singapore Standard Time");
+            return TimeZoneInfo.ConvertTimeFromUtc(dateTime, gmtPlus8);
         }
     }
 }

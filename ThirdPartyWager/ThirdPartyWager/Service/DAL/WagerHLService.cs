@@ -24,9 +24,9 @@ namespace ThirdPartyWager.Service.DAL
             var p = new DynamicParameters();
             p.Add("betID", wager.BetID);
             p.Add("loginID", wager.UserName);
-            p.Add("dateTime", wager.DateTime);
+            p.Add("dateTime", ConvertToUtcTime(wager.DateTime));
             p.Add("drawType", wager.DrawType);
-            p.Add("drawDate", wager.DrawDate);
+            p.Add("drawDate", ConvertToUtcTime(wager.DrawDate));
             p.Add("betNumber", wager.BetNumber);
             p.Add("betPosition", wager.BetPosition);
             p.Add("bet", wager.BetAmount);
@@ -57,6 +57,12 @@ namespace ThirdPartyWager.Service.DAL
         {
             var parameters = new { TicketKey };
             return _reportDbClient.QueryFirst<long>("BetDetail.Service_TpWager_HL_TicketKey_Get", parameters);
+        }
+
+        private DateTime ConvertToUtcTime(DateTime dateTime)
+        {
+            var localDateTimeOffset = new DateTimeOffset(dateTime, TimeZoneInfo.Local.GetUtcOffset(dateTime));
+            return localDateTimeOffset.ToUniversalTime().DateTime;
         }
     }
 }

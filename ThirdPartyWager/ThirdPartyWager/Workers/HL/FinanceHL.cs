@@ -1,12 +1,10 @@
 ﻿using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.BLL.HL;
 using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Workers.HL;
+namespace ThirdPartyWager.Workers;
 
 public class FinanceHL : BackgroundService
 {
