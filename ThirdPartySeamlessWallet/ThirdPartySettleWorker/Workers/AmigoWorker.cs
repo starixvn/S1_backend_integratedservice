@@ -74,7 +74,7 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         string TransId = unsettled.TransId;
 
-                        var bettrans = _partitionService.GetUnsettleDataList<SettleData>(bettransGet, unsettled);
+                        var bettrans = _partitionService.GetUnsettleDataList<SettleData_Amigo>(bettransGet, unsettled);
                         if (!bettrans.Any())
                         {
                             LogContext.PushProperty("TP", _tpName);
@@ -90,7 +90,7 @@ namespace ThirdPartySettleWorker.Workers
                         var gameId = bettrans.FirstOrDefault().GameId;
                         var settledTime = bettrans.Max(x => x.SettleTime) / 1000;
                         var transTime = bettrans.Min(x => x.TransTime) / 1000;
-
+                        var bonusCode = bettrans.FirstOrDefault().bonusCode;
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
 
                         var betRecordInfo = new BetRecordInfo
@@ -108,6 +108,11 @@ namespace ThirdPartySettleWorker.Workers
                             ProgressiveWin = progressiveWin,
                             GameID = gameId,
                         };
+
+                        if (!string.IsNullOrEmpty(bonusCode))
+                        {
+                            betRecordInfo.TicketStatus = TicketStatus.FreeBetWin;
+                        }
 
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)

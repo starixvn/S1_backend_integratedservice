@@ -6942,8 +6942,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 result = _partitionService.Execute(partitionTime, SetSpName, p, trans);
                 if (result > 0)
                 {
-                    if (bettingData_Amigo.amount != 0)
+                    if (bettingData_Amigo.amount != 0 && string.IsNullOrEmpty(bettingData_Amigo.bonusCode))
                     {
+                        // bonuscode bet/refund 無須異動額度
                         result = PayoutV2(
                             tpCustInfo,
                             Math.Abs(bettingData_Amigo.amount),
@@ -7028,6 +7029,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int result;
             try
             {
+                var bonusCode = (!string.IsNullOrEmpty(payoutData_Amigo.bonusCode)) ? $" ({payoutData_Amigo.bonusCode})" : "";
                 var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(payoutData_Amigo.timestamp).DateTime;
                 var p = new DynamicParameters(payoutData_Amigo);
                 p.Add("SettleFlag", (int)SettleFlag.EndGame);
@@ -7058,7 +7060,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             TransType.Payout,
                             null,
                             out afterAmount,
-                            "Payout",
+                            $"Payout{bonusCode}",
                             out bonusId,
                             conn,
                             trans
@@ -7078,6 +7080,54 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                     }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+                throw;
+            }
+
+            return result;
+        }
+
+        public int BonusWinRNG_Amigo(TpCustInfo tpCustInfo, PayoutData_Amigo payoutData_Amigo, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            var InsSpName = "Service_BettransRng_Amigo_Ins";
+            var GetSpName = "Service_BettransRng_Amigo_Get";
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            int result;
+            try
+            {
+                var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(payoutData_Amigo.timestamp).DateTime;
+                var p = new DynamicParameters(payoutData_Amigo);
+                p.Add("SettleFlag", (int)SettleFlag.Settled);
+                p.Add("TicketStatus", (int)TicketStatus.UnSettled);
+
+                var check = _partitionService.Query<BettingData_Amigo>(partitionTime, GetSpName, new { roundId = payoutData_Amigo.roundId });
+                if (!check.Any())
+                {
+                    // no bet or cancel data
+                    return -2;
+                }
+
+                result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
+
+                if (result > 0)
+                {
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                 }
             }
             catch (MySqlException mySqlEx)
