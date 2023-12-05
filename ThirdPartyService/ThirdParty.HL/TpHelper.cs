@@ -200,11 +200,10 @@ namespace ThirdParty.HL
                 return oApiResult;
             }
             
-            //TODO 第三方沒有轉帳單號 這個在看看怎麼處理 ThirdID
             var apiUrl = _siteHLConfig.ApiUrl;
             var postData = $"apiUser={_siteHLConfig.ApiUser}&apiPass={_siteHLConfig.ApiPass}&" +
                                 $"user={_siteHLConfig.AgentUser}&pass={_siteHLConfig.AgentPass}&" +
-                                $"loginID={tpCustInfo.TpUserName}&amount={Amount}";
+                                $"loginID={tpCustInfo.TpUserName}&amount={Amount}&remarks={TransID}";
             apiUrl = direction switch
             {
                 Direction.ToTp => apiUrl + "deposit.aspx?",
@@ -252,7 +251,54 @@ namespace ThirdParty.HL
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID,
             string ThirdPartyTransID)
         {
-            throw new NotImplementedException();
+            var oApiResult = new ApiResult<TransferResult>();
+            if (CheckHaoLongBusyTime(2))
+            {
+                oApiResult.ErrorCode = ErrorCode.ServerIsBusy;
+                oApiResult.Message = _siteLanguageBLL.GetLanguageValue(tpCustInfo.SiteId,"HaoLongTransferBusyTime","en"); //先寫死en,要不然都會依照幣別固定語言
+                return oApiResult;
+            }
+            
+            var postData = $"apiUser={_siteHLConfig.ApiUser}&apiPass={_siteHLConfig.ApiPass}&" +
+                                $"user={_siteHLConfig.AgentUser}&pass={_siteHLConfig.AgentPass}&" +
+                                $"loginID={tpCustInfo.TpUserName}&remarks={TransID}";
+            
+            var result = HttpPost($"{_siteHLConfig.ApiUrl}txnList.aspx",postData ,"application/x-www-form-urlencoded");
+
+            if (IsXML(result))
+            {
+                TransferCheckResponse transferCheckResponse;
+                try
+                {
+                    transferCheckResponse = XMLDeserialize<TransferCheckResponse>(result);
+                }
+                catch (Exception)
+                {
+                    transferCheckResponse = XMLDeserialize<TransferCheckResponse>(result);
+                }
+
+                if (transferCheckResponse.ErrorCode != 0)
+                {
+                    return new ApiResult<TransferResult>()
+                    {
+                        ErrorCode = ErrorCode.TransferPending,
+                        RawErrorCode = transferCheckResponse.ErrorCode.ToString(),
+                        RawMessage = transferCheckResponse.Desc.ToString(),
+                        Data = new TransferResult()
+                        {
+                            Status = TransferStatus.Pending,
+                        }
+                    };
+                }
+            }
+            return new ApiResult<TransferResult>()
+            {
+                ErrorCode = ErrorCode.Success,
+                Data = new TransferResult()
+                {
+                    Status = TransferStatus.Success
+                }
+            };
         }
 
         public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)

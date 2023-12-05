@@ -1,10 +1,7 @@
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.BLL.HL;
-using ThirdPartyWager.Service.BLL.HL;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
-using ThirdPartyWager.Workers.HL;
 
 namespace ThirdPartyWager.Extensions
 {
