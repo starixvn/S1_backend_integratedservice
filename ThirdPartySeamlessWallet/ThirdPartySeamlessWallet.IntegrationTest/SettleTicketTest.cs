@@ -1,4 +1,6 @@
-﻿using FluentAssertions;
+﻿using System.Security.Policy;
+
+using FluentAssertions;
 
 using NUnit.Framework;
 
@@ -6,6 +8,8 @@ using ThirdPartySeamlessWallet.IntegrationTest.Models;
 using ThirdPartySeamlessWallet.IntegrationTest.SandBox;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
+using static ThirdPartySeamlessWallet.Controllers.EBetController;
 
 namespace ThirdPartySeamlessWallet.IntegrationTest
 {
@@ -398,7 +402,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
                 assertCustBonusRollover.Turnover.Should().Be(custBonusRollover.Turnover + expected.Value);
 
                 // 檢查TurnOverLog的紀錄有增加          
-                turnOverLog.ChangeTurnOver.Should().Be(Math.Abs(expected.Value));//SP有加上ABS
+                turnOverLog.ChangeTurnOver.Should().Be(expected.Value);//SP有加上ABS
                 turnOverLog.Memo.Should().Be(memo);
             }
             else
@@ -411,9 +415,25 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
 
         #region SetWithdrawalLimitAndEffectiveBet
 
-        [TestCase("Settled", 0, 10, TicketStatus.Win, null, TicketStatus.UnSettled, 10, Description = "正常結算")]
-        [TestCase("Settled", 0, 0, TicketStatus.Win, null, TicketStatus.UnSettled, null, Description = "stake為0不需更新")]
-        public void WithdrawalLimitAndEffectiveBe_Test(string memo, int bonusId, decimal stake, TicketStatus ticketStatus, decimal? lastStake, TicketStatus lastTicketStatus, decimal? expected)
+        [TestCase("Settled", 10, TicketStatus.Win, null, TicketStatus.Refund, 10, Description = "正常結算")]
+        [TestCase("Settled", 10, TicketStatus.Win, null, TicketStatus.UnSettled, 10, Description = "正常結算")]
+        [TestCase("Settled", 0, TicketStatus.Win, null, TicketStatus.UnSettled, null, Description = "stake為0不需更新")]
+
+        [TestCase("Settled", 10, TicketStatus.Lost, 10, TicketStatus.UnSettled, 10, Description = "正常結算")]
+        [TestCase("Settled", 10, TicketStatus.Draw, 10, TicketStatus.Refund, 10, Description = "正常結算")]
+        
+        [TestCase("Re-Settled", 10, TicketStatus.Refund, 20, TicketStatus.Lost, -20, Description = "Refund的Re-Settled")]
+        [TestCase("Re-Settled", 10, TicketStatus.Refund, 20, TicketStatus.Win, -20, Description = "Refund的Re-Settled")]
+        [TestCase("Re-Settled", 10, TicketStatus.Refund, 20, TicketStatus.Draw, -20, Description = "Refund的Re-Settled")]
+
+        [TestCase("UnSettled", 10, TicketStatus.UnSettled, 30, TicketStatus.Lost, -30, Description = "UnSettled結算")]
+        [TestCase("UnSettled", 10, TicketStatus.UnSettled, 30, TicketStatus.Win, -30, Description = "UnSettled結算")]
+        [TestCase("UnSettled", 10, TicketStatus.UnSettled, 30, TicketStatus.Draw, -30, Description = "UnSettled結算")]
+
+        [TestCase("Re-Settled", -50, TicketStatus.Lost, -40, TicketStatus.Lost, -10, Description = "Re-Settled結算")]
+        [TestCase("Re-Settled", 60, TicketStatus.Win, 40, TicketStatus.Win, 20, Description = "Re-Settled結算")]
+        [TestCase("Re-Settled", 30, TicketStatus.Draw, 20, TicketStatus.Draw, 10, Description = "Re-Settled結算")]
+        public void WithdrawalLimitAndEffectiveBet_Test(string memo, decimal stake, TicketStatus ticketStatus, decimal? lastStake, TicketStatus lastTicketStatus, decimal? expected)
         {
             var transId = $"test-{DateTime.UtcNow.Ticks}";
             var betRecord = new BetRecordInfo()
@@ -426,7 +446,6 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
                 TransId = transId,
                 TpId = 41,
                 GameType = GameType.SBSW_Sports,
-                BonusId = bonusId,
             };
 
             BetRecordInfo refBetRecord = null;
@@ -442,7 +461,6 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
                     TransId = transId,
                     TpId = 41,
                     GameType = GameType.SBSW_Sports,
-                    BonusId = bonusId,
                 };
             }
 
@@ -464,12 +482,11 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
                 var assertCustWithdrawalLimit = _settleTicketSandbox.GetCustWithdrawalLimit(_tpCustInfo.CustId);
                 assertCustWithdrawalLimit.TurnOver.Should().Be(custWithdrawalLimit.TurnOver + expected.Value);
 
-                // 檢查CustWithdrawalLimit的Turnover正確
+                // 檢查EffectiveBetSum的ValidBet正確
                 var assertCustTransSummary = _settleTicketSandbox.GetCustTransSummary(_tpCustInfo.CustId);
                 assertCustTransSummary.EffectiveBetSum.Should().Be(custTransSummary.EffectiveBetSum + expected.Value);
 
-                //SP有加上ABS
-                turnOverLog.ChangeTurnOver.Should().Be(Math.Abs(expected.Value));
+                turnOverLog.ChangeTurnOver.Should().Be(expected.Value);
                 turnOverLog.Memo.Should().Be(memo);
             }
             else
@@ -477,6 +494,84 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
                 turnOverLog.Should().Be(expected);
             }
         }
+
+
+        [TestCase("Settled", 100, 5, 10, TicketStatus.Win, null, TicketStatus.UnSettled, 5, Description = "正常結算")]
+        [TestCase("Settled", 100, 20, 100, TicketStatus.Win, 10, TicketStatus.UnSettled, 80, Description = "正常結算")]
+        [TestCase("Re-Settled結算", 100, 10, 100, TicketStatus.Win, 20, TicketStatus.Win, null, Description = "Re-Settled，不行沖銷提款限額")]
+
+        public void WithdrawalLimitAndEffectiveBet_Bonus_Test(string memo, int bonusId, decimal bonusAmount, decimal stake, TicketStatus ticketStatus, decimal? lastStake, TicketStatus lastTicketStatus, decimal? expected)
+        {
+            var transId = $"test-{DateTime.UtcNow.Ticks}";
+            var betRecord = new BetRecordInfo()
+            {
+                TicketStatus = ticketStatus,
+                SettlementType = SettlementType.SettledForValid,
+                Stake = stake,
+                ValidBet = stake,
+                WinlostAmount = -100,
+                TransId = transId,
+                TpId = 41,
+                GameType = GameType.SBSW_Sports,
+                BonusId = bonusId
+            };
+
+            BetRecordInfo refBetRecord = null;
+            if (lastStake.HasValue)
+            {
+                refBetRecord = new BetRecordInfo()
+                {
+                    TicketStatus = lastTicketStatus,
+                    SettlementType = SettlementType.SettledForValid,
+                    Stake = lastStake.Value,
+                    ValidBet = lastStake.Value,
+                    WinlostAmount = -100,
+                    TransId = transId,
+                    TpId = 41,
+                    GameType = GameType.SBSW_Sports,
+                    BonusId = bonusId
+                };
+            }
+
+            _settleTicketSandbox.ResetCustWithdrawalLimit(_tpCustInfo.CustId);
+            _settleTicketSandbox.AddTpSeamlessBonus(new TpSeamlessBonus()
+            {
+                PromotionCategoryId = 9,
+                TpId = 41,
+                TransId = transId,
+                GameType = (int)GameType.SBSW_Sports,
+                CustId = _tpCustInfo.CustId,
+                UserName = _tpCustInfo.UserName,
+                CurrencyId = _tpCustInfo.CurrencyId,
+                SiteId = _tpCustInfo.SiteId,
+                Stake = bonusAmount,
+                BonusId = bonusId,
+            });
+
+            var custWithdrawalLimit = _settleTicketSandbox.GetCustWithdrawalLimit(_tpCustInfo.CustId);
+
+            var SettleTicket = _settleTicketSandbox.CreateSettleTicket(_tpCustInfo, betRecord, refBetRecord);
+            SettleTicket.SetWithdrawalLimitAndEffectiveBet(GetTpSeamlessBonusType.ByTransId);
+            _settleTicketSandbox.Commit();
+
+
+            // 檢查TurnOverLog的紀錄有增加
+            var turnOverLog = _settleTicketSandbox.GetTurnOverLog(transId);
+            if (expected.HasValue)
+            {
+                // 檢查CustWithdrawalLimit的Turnover正確
+                var assertCustWithdrawalLimit = _settleTicketSandbox.GetCustWithdrawalLimit(_tpCustInfo.CustId);
+                assertCustWithdrawalLimit.TurnOver.Should().Be(custWithdrawalLimit.TurnOver + expected.Value);
+
+                turnOverLog.ChangeTurnOver.Should().Be(expected.Value);
+                turnOverLog.Memo.Should().Be(memo);
+            }
+            else
+            {
+                turnOverLog.Should().Be(expected);
+            }
+        }
+
 
         #endregion
     }

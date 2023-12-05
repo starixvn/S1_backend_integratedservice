@@ -211,7 +211,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
 
         public BonusStatus ResetCustWithdrawalLimit(int custId)
         {
-            var sqlScript = @$"UPDATE CustWithdrawalLimit SET WithdrawalLimit=10000,TurnOver=0 WHERE CustId='{custId}';";
+            var sqlScript = @$"UPDATE CustWithdrawalLimit SET WithdrawalLimit=100000,TurnOver=10000 WHERE CustId='{custId}';";
             return _mySqlClient.Query<BonusStatus>(sqlScript, CommandType.Text).FirstOrDefault();
         }
 
@@ -219,6 +219,11 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         {
             var sqlScript = @$"SELECT * FROM CustTransSummary WHERE CustId='{custId}';";
             return _mySqlClient.Query<CustTransSummary>(sqlScript, CommandType.Text).FirstOrDefault();
+        }
+
+        public int AddTpSeamlessBonus(TpSeamlessBonus tpSeamlessBonus)
+        {
+            return _mySqlClient.Execute("Service_TpSeamlessBonus_Ins", CommandType.StoredProcedure, tpSeamlessBonus);
         }
 
 
