@@ -23,30 +23,32 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             return _mainDbClient.QueryFirst<ThirdPartySetting>("Tp_Get", new { TpId = tpId });
         }
+
         public ThirdPartySetting GetThirdPartyBySite(int tpId, int siteId)
         {
             return _mainDbClient.QueryFirst<ThirdPartySetting>("Common_Tp_Get", new { TpId = tpId, SiteId = siteId });
         }
+
         public TpCurrency GetTpCurrency(int tpId, int currencyId)
         {
             return _mainDbClient.QueryFirst<TpCurrency>("TpCurrency_Get", new { TpId = tpId, CurrencyId = currencyId });
         }
+
         public IEnumerable<BonusCategory> GetBonusCategoryList()
         {
             return _mainDbClient.Query<BonusCategory>("Service_BonusCategory_Get");
         }
-        public IEnumerable<BonusMinBet> GetBonusMinBetList()
-        {
-            return _mainDbClient.Query<BonusMinBet>("Service_BonusMinBet_Get");
-        }
+
         public IEnumerable<TpGameCasino> GetGameCasino(int tpId)
         {
             return _mainDbClient.Query<TpGameCasino>("Service_GameCasino_Get_V2", commandType: CommandType.StoredProcedure, new { TpId = tpId });
         }
+
         public int AddTpBetFailureRecord(TpBetFailureRecord tpBetFailureRecord)
         {
             return _mainDbClient.Execute("Service_TpBetFailureRecord_Ins", commandType: CommandType.StoredProcedure, tpBetFailureRecord);
         }
+
         public IEnumerable<FinancialLog> GetFinancialLogTransactionCheck(string RefTransId, string YYYYMM)
         {
             return _mainDbClient.Query<FinancialLog>("Service_FinancialLog_TransactionCheck_Get", commandType: CommandType.StoredProcedure, new { _RefTransId = RefTransId, _YYYYMM = YYYYMM });
