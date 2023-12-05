@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -209,15 +209,13 @@ namespace ThirdParty.PP
             var SecureLogin = inputs.ContainsKey("SecureLogin") && !string.IsNullOrEmpty(inputs["SecureLogin"]) ? inputs["SecureLogin"] : throw new Exception();
             var SecureKey = inputs.ContainsKey("SecureKey") && !string.IsNullOrEmpty(inputs["SecureKey"]) ? inputs["SecureKey"] : throw new Exception("SecureKey");
             var bonusCode = inputs.ContainsKey("bonusCode") && !string.IsNullOrEmpty(inputs["bonusCode"]) ? inputs["bonusCode"] : throw new Exception();
-            var requestId = inputs.ContainsKey("requestId")  && !string.IsNullOrEmpty(inputs["requestId"]) ? inputs["requestId"] : throw new Exception();
+            //var requestId = inputs.ContainsKey("requestId")  && !string.IsNullOrEmpty(inputs["requestId"]) ? inputs["requestId"] : throw new Exception();
             var Uri = "/v3/http/FreeRoundsBonusAPI/v2/players/add";
-            //var requestId = Guid.NewGuid().ToString();
-
-            var playerList = new List<string> { tpCustInfo.TpUserName };
+            var requestId = Guid.NewGuid().ToString();
             
-            var serializePlayerList = JsonConvert.SerializeObject(new Dictionary<string, object>
+            var serializedPlayerList = JsonConvert.SerializeObject(new Dictionary<string, object>
             {
-                { "playerList", playerList }
+                { "playerList", new List<string> { tpCustInfo.TpUserName } }
             });
             
             var parameters = new Dictionary<string, string>()
@@ -225,13 +223,12 @@ namespace ThirdParty.PP
                 { "secureLogin", SecureLogin },
                 { "bonusCode", bonusCode },
                 { "requestId", requestId } 
-                //{ "playerList", tpCustInfo.TpUserName }
             };
             
             var sParam = string.Join("&", parameters.OrderBy(kp => kp.Key).Select(kp => $"{kp.Key}={kp.Value}"));
             sParam += $"&hash={ToMD5($"{sParam}{SecureKey}")}";
             
-            var result = HttpPost($"{ApiUrl}{Uri}?{sParam}", serializePlayerList, "application/json");
+            var result = HttpPost($"{ApiUrl}{Uri}?{sParam}", serializedPlayerList, "application/json");
             
             if (!IsJSON(result))
             {
