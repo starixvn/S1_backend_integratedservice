@@ -238,9 +238,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
                     SetRollOverTurnOver(turnOver, memo);
                 }
 
-                //上次: 不等於SettledForValid
-                //本次: SettledForValid
-                //UnSettled結算，UnSettled結算，扣回上次結算金額
+                //上次: 等於SettledForValid
+                //本次: UnSettled、不等於SettledForValid
+                //UnSettled結算，Re-Settled結算，扣回上次結算金額
                 if ((RefBetRecord.SettlementType == SettlementType.SettledForValid && BetRecord.SettlementType == SettlementType.UnSettled ) ||
                     (RefBetRecord.SettlementType == SettlementType.SettledForValid && BetRecord.SettlementType != SettlementType.SettledForValid))
                 {

@@ -24,6 +24,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             TpCurrencyList = new ConcurrentDictionary<string, TpCurrency>();
             ServerInfoData = new ConcurrentDictionary<string, ServerInfo>();
         }
+
         public ThirdPartySetting GetThirdPartySetting(int tpId)
         {
             if (!ThirdPartySettingContainer.ContainsKey(tpId))
@@ -48,6 +49,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return ThirdPartyModelContainer.ContainsKey(sKet) ? ThirdPartyModelContainer[sKet] : null;
         }
+
         public TpCheck ThirdPartyCheckWithCache(int tpId, string tpUserName)
         {
             string key = $"TpCheck_{tpId}_{tpUserName}";
@@ -61,6 +63,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return tpCheck;
         }
+
         public TpCheck ThirdPartyCheck(int tpId, string tpUserName)
         {
             var tpCheck = thirdPartyService.ThirdPartyCheck(tpId, tpUserName);
@@ -94,19 +97,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return dBonusCategoryList;
         }
 
-        public BonusMinBet GetBonusMinBet(int gameType, int currencyId)
-        {
-            string key = $"BonusMinBetList";
-            var dBonusMinBetList = cache.Get<IEnumerable<BonusMinBet>>(key);
-            if (dBonusMinBetList == null)
-            {
-                dBonusMinBetList = thirdPartyService.GetBonusMinBetList();
-                cache.Set(key, dBonusMinBetList, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
-            }
-
-            return dBonusMinBetList.FirstOrDefault(x => x.GameType == gameType && x.CurrencyId == currencyId);
-        }
-
         public BonusCategory GetBonusCategory(int gameType)
         {
             return GetBonusCategoryList().TryGetValue(gameType, out var bonusCategory) ? bonusCategory : default;
@@ -137,6 +127,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return gameType;
         }
+
         public GameType GetGameType_SG(string gameId)
         {
             GameType gameType = GameType.SG_RNG;
@@ -148,6 +139,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return gameType;
         }
+
         public GameType GetGameType(int tpId, string gameId)
         {
             GameType gameType = 0;
