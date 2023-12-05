@@ -14,7 +14,7 @@ using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.PP
 {
-    public class TpHelper : ThirdPartyHelperBase , IThirdPartyEventParticular
+    public class TpHelper : ThirdPartyHelperBase
     {
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
         private readonly Dictionary<int, string> _siteSuffixList;
@@ -202,7 +202,7 @@ namespace ThirdParty.PP
                 IP = string.Empty,
             };
         }
-        public ApiResult AddFreeSpinToPlayer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        public override ApiResult AddFreeSpinToPlayer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var oApiResult = new ApiResult();
             var ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
