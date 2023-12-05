@@ -3,7 +3,7 @@ using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Workers.HL;
+namespace ThirdPartyWager.Workers;
 
 public class WagerTicketUnSettleHL : BackgroundService
 {

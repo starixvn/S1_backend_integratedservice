@@ -1,10 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.HL
@@ -264,76 +264,28 @@ namespace ThirdParty.HL
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            if (CheckHaoLongBusyTime(1))
+            //改為全拿wager資料
+            var tpCurrency = new TpCurrency()
             {
-                return new BaseDetail(getBetDetail.TpGameTypeOption)
-                {
-                    TransId = getBetDetail.TransId,
-                    Detail = "Tp - HaoLong Busy Time",
-                    TpCurrency = new TpCurrency()
-                    {
-                        ExchangeRate = tpCustInfo.ExchangeRate,
-                        TpCurrencyId = tpCustInfo.TpCurrencyId,
-                    }
-                };
-            }
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+            var spName = "Service_TpWager_HL_Detail_Get";
+            var db = DataBase.Wager;
+            var detailList = TpBetRecordProvider.DbQuery(spName, new{getBetDetail.TransId}, db);
+            var getDetail = detailList.FirstOrDefault();
+            var detail = ToJson(detailList);
             
-            //依照SettledTime當天的MM-dd去抓即可
-            var searchTime = getBetDetail.SettledTime.Date.ToString("yyyy-MM-dd");
-            
-            var postData = $"apiUser={_siteHLConfig.ApiUser}&apiPass={_siteHLConfig.ApiPass}&" +
-                           $"user={_siteHLConfig.AgentUser}&pass={_siteHLConfig.AgentPass}&" +
-                           $"loginID={tpCustInfo.TpUserName}&dateFrom={searchTime}&dateTo={searchTime}";
-            
-            var result = HttpPost($"{_siteHLConfig.ApiUrl}betlistPage.aspx?",postData ,"application/x-www-form-urlencoded");
-            if (IsXML(result))
-            {
-                GetBetListResponse getBetListResponse;
-                try
-                {
-                    getBetListResponse = XMLDeserialize<GetBetListResponse>(result);
-                }
-                catch (Exception)
-                {
-                    getBetListResponse = XMLDeserialize<GetBetListResponse>(result);
-                }
-
-                if (getBetListResponse.ErrorCode == 0)
-                {
-                   var betDetail = getBetListResponse.BetDataList.FirstOrDefault(x => x.BetID == getBetDetail.TransId);
-                   return new BaseDetail(getBetDetail.TpGameTypeOption)
-                   {
-                       TransId = getBetDetail.TransId,
-                       Detail = JsonConvert.SerializeObject(betDetail),
-                       TpCurrency = new TpCurrency()
-                       {
-                           ExchangeRate = tpCustInfo.ExchangeRate,
-                           TpCurrencyId = tpCustInfo.TpCurrencyId
-                       }
-                   };
-                }
-                
-                return new BaseDetail(getBetDetail.TpGameTypeOption)
-                {
-                    TransId = getBetDetail.TransId,
-                    Detail = JsonConvert.SerializeObject(getBetListResponse),
-                    TpCurrency = new TpCurrency()
-                    {
-                        ExchangeRate = tpCustInfo.ExchangeRate,
-                        TpCurrencyId = tpCustInfo.TpCurrencyId
-                    }
-                };
-            }
-            
-            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            return new LotteryDetail(getBetDetail.TpGameTypeOption)
             {
                 TransId = getBetDetail.TransId,
-                Detail = string.Empty,
-                TpCurrency = new TpCurrency()
-                {
-                    ExchangeRate = tpCustInfo.ExchangeRate,
-                    TpCurrencyId = tpCustInfo.TpCurrencyId,
-                }
+                Detail = detail,
+                TpCurrency = tpCurrency,
+                TpUserName = getDetail.GetValueOrDefault("loginID")?.ToString(),
+                UTCBetTime = DateTime.Parse(getDetail.GetValueOrDefault("dateTime")?.ToString()),
+                UTCSettledTime = DateTimeOffset.FromUnixTimeSeconds(long.Parse(getDetail.GetValueOrDefault("SettleTimeUnix").ToString())).DateTime,
+                Stake = detailList.Sum(i => Math.Abs((decimal)i.GetValueOrDefault("bet"))) * tpCurrency.ExchangeRate,
+                WinlostAmount = detailList.Sum(i => Math.Abs((decimal)i.GetValueOrDefault("strike"))) * tpCurrency.ExchangeRate - detailList.Sum(i => Math.Abs((decimal)i.GetValueOrDefault("bet"))) * tpCurrency.ExchangeRate,
             };
         }
 
@@ -347,13 +299,13 @@ namespace ThirdParty.HL
             
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
-                GameID = detailList.GetFirstStringValue("betID"),
-                Game = string.Empty,
+                GameID = TpGameType.HaoLong_4D.ToString(),
+                Game = GetGameName(detailList.GetFirstStringValue("drawType")),
                 RefNo = string.Empty,
                 Title = tpGameType.TypeName,
-                BetType = detailList.GetFirstStringValue("drawType"),
+                BetType = detailList.GetFirstStringValue("betPosition"),
                 BetChoice = detailList.GetFirstStringValue("betNumber"),
-                Result = string.Empty,
+                Result = detailList.GetFirstStringValue("drawType"),
                 DeviceType = DeviceType.None,
                 IP = string.Empty,
             };
@@ -377,6 +329,23 @@ namespace ThirdParty.HL
                 3 =>  timeInGmtPlus8.TimeOfDay >= new TimeSpan(00, 00, 0) &&
                       timeInGmtPlus8.TimeOfDay <= new TimeSpan(23, 59, 59),
                 _ => false
+            };
+        }
+
+        private string GetGameName(string drawType)
+        {
+            return drawType switch
+            {
+                "1" => "MAGNUM",
+                "2" => "PMP",
+                "3" => "TOTO",
+                "4" => "SINGAPORE",
+                "5" => "SABAH",
+                "6" => "SANDAKAN",
+                "7" => "SARAWAK",
+                "8" => "GDLOTTO",
+                "9" => "9LOTTO",
+                _ => "NA"
             };
         }
     }

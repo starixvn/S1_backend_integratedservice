@@ -1,8 +1,5 @@
-﻿using Newtonsoft.Json;
-using Serilog.Context;
+﻿using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL;
-using ThirdPartySeamlessWallet.Service.DAL;
-using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySettleWorker.Model.Exceptions;
@@ -22,7 +19,6 @@ namespace ThirdPartySettleWorker.Workers
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly ILogger<HLWorker> _logger;
         private readonly string _tpName;
-        private readonly MySqlClient _wagerDbClient;
         
         
         public HLWorker(IServiceProvider provider)
@@ -32,7 +28,6 @@ namespace ThirdPartySettleWorker.Workers
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _logger = provider.GetRequiredService<ILogger<HLWorker>>();
-            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
             _tpName = Enum.GetName(typeof(Tp), Tp);
         }
 
@@ -71,10 +66,7 @@ namespace ThirdPartySettleWorker.Workers
                 }
 
                 //forContinue
-                if (tpUnsettleList.Count() == 200)
-                {
-                    dueTimeSpan = TimeSpan.FromMinutes(1);
-                }
+                forContinue = tpUnsettleList.Count() == 200;
                 
                 var getUnsettledList = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP, new {}, DataBase.Wager);
                 if(getUnsettledList == null || !getUnsettledList.Any())
@@ -127,6 +119,7 @@ namespace ThirdPartySettleWorker.Workers
                     }
                     catch (Exception ex1)
                     {
+                        isError = true;
                         _logger.LogError(ex1, $"{logName} exMessage:{ex1.Message} || TransId : {transId}");
                     }
                 }
@@ -137,10 +130,19 @@ namespace ThirdPartySettleWorker.Workers
             }
             catch (Exception ex)
             {
+                isError = true;
                 _logger.LogError(ex, $"{logName} exMessage:{ex.Message}");
             }
             finally
             {
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(10);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                }
                 _timer?.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }

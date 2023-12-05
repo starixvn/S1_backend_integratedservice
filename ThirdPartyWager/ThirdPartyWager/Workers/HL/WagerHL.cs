@@ -1,15 +1,14 @@
 ﻿using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.BLL.HL;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Workers.HL
+namespace ThirdPartyWager.Workers
 {
     public class WagerHL : BackgroundService
     {
-        private readonly ILogger<WagerAllBet> _logger;
+        private readonly ILogger<WagerHL> _logger;
         private readonly WagerHLBLL _wagerHLBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly DateTimeHelper _dateTimeHelper;
@@ -24,16 +23,14 @@ namespace ThirdPartyWager.Workers.HL
         private readonly int tpType = (int)WagerTimerType.Wager;
         private int quick = 0;
         private readonly int timeZone = 8;
-        private readonly IHostEnvironment _environment;
 
         public WagerHL(IServiceProvider provider)
         {
-            _logger = provider.GetRequiredService<ILogger<WagerAllBet>>();
+            _logger = provider.GetRequiredService<ILogger<WagerHL>>();
             _wagerHLBLL = provider.GetRequiredService<WagerHLBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _wagerHLService = provider.GetRequiredService<WagerHLService>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
-            _environment = provider.GetRequiredService<IHostEnvironment>();
         }
         
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -50,7 +47,7 @@ namespace ThirdPartyWager.Workers.HL
             try
             {
                 var nowTime = DateTime.Now;
-                _logger.LogInformation($"HaoLong Start DoHLReportTask Job Time : : +0 {nowTime:yyyy-MM-ddTHH:mm:ss} | +8 {nowTime.AddHours(8):yyyy-MM-ddTHH:mm:ss}");
+                _logger.LogInformation($"HaoLong Start DoHLReportTask Job Time : : +0 {nowTime:yyyy-MM-ddTHH:mm:ss}");
 
                 var result = false;
                 quick = 0;
@@ -91,7 +88,7 @@ namespace ThirdPartyWager.Workers.HL
                     
                      if(CheckHaoLongTime(2))
                      { 
-                       _logger.LogInformation($"HaoLong Start SetSettledWager Job Time : +0 = {DateTime.Now:yyyy-MM-ddTHH:mm:ss} | +8 = {DateTime.Now.AddHours(8):yyyy-MM-ddTHH:mm:ss}");
+                       _logger.LogInformation($"HaoLong Start SetSettledWager Job Time : +0 = {DateTime.Now:yyyy-MM-ddTHH:mm:ss}");
                        _ = await _wagerHLBLL.SetSettledWager();
                      }
                 }
@@ -121,7 +118,7 @@ namespace ThirdPartyWager.Workers.HL
             //1:拉單
             //2:結算時間
             
-            _logger.LogInformation($"HaoLong Start CheckHaoLongTime Job Time : Type [{timeType}] | +0 = {DateTime.Now:yyyy-MM-ddTHH:mm:ss} | +8 = {DateTime.Now.AddHours(8):yyyy-MM-ddTHH:mm:ss}");
+            _logger.LogInformation($"HaoLong Start CheckHaoLongTime Job Time : Type [{timeType}] | +0 = {DateTime.Now:yyyy-MM-ddTHH:mm:ss}");
             var utcNow = DateTime.UtcNow;
             var gmtPlus8 = TimeZoneInfo.FindSystemTimeZoneById("Singapore Standard Time");
             var timeInGmtPlus8 = TimeZoneInfo.ConvertTimeFromUtc(utcNow, gmtPlus8);
