@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -21,6 +22,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly ThirdPartyBLL _thirdPartyBll;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly string _sabaSecretKey;
+        private readonly PartitionService _partitionService;
         public Tp ThirdParty { get; set; }
 
         public SabaController(IServiceProvider provider)
@@ -31,12 +33,21 @@ namespace ThirdPartySeamlessWallet.Controllers
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _tools = provider.GetRequiredService<Tools>();
             ThirdParty = Tp.SBSW;
+            _partitionService = provider.GetRequiredService<PartitionService>();
         }
+
+        Dictionary<string, int> siteIdDic = new Dictionary<string, int>() {
+            {"N88",1 },
+            {"N8G",2 },
+            {"N8B",3 },
+            {"N8I",5 }
+        };
+
+        #region CheckOnlineMember
 
         [HttpPost]
         public ContentResult CheckOnlineMember([FromForm] CheckOnlineMemberInput input)
         {
-
             try
             {
                 if (input.Secret_Key != _sabaSecretKey)
@@ -90,5 +101,82 @@ namespace ThirdPartySeamlessWallet.Controllers
                 StatusCode = statusCode
             };
         }
+
+        #endregion
+
+        #region GetUserData
+
+        [HttpPost]
+        public IEnumerable<FinancialLog> GetFinancialLog(GetDataInput input)
+        {
+            var result = Enumerable.Empty<FinancialLog>();
+            try
+            {
+                int siteId = 0;
+                siteIdDic.TryGetValue(input.SiteId, out siteId);
+
+                var custProfile = _tpCustInfoBLL.GetCustProfileWithCacheByUserName(siteId, input.UserName);
+
+                //Search range table
+                var parameters = new GetFinancialLogSpInput(custProfile.CustId);
+                result = _partitionService
+                    .MonthlyQuery<FinancialLog>(parameters.StartDate, parameters.EndDate, "Service_FinancialLog_Get", parameters)
+                    .Where(log => log.FinancialType == FinancialType.Deposit || log.FinancialType == FinancialType.Withdrawal);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"GetFinancialLog Exception:{e.Message}");
+            }
+
+            return result;
+        }
+
+        #endregion
+
+        #region GetUserData
+        [HttpPost]
+        public CustInfo GetCustInfo(GetDataInput input)
+        {
+            var result = new CustInfo();
+            try
+            {
+                int siteId = 0;
+                siteIdDic.TryGetValue(input.SiteId, out siteId);
+                var custProfile = _tpCustInfoBLL.GetCustProfileWithCacheByUserName(siteId, input.UserName);
+
+                result.RegisteredName = custProfile.UserName;
+                result.Email = custProfile.Email;
+                result.Mobile = $"({custProfile.AreaCode}){custProfile.PhoneNo}";
+                result.Active = custProfile.Status == CustStatus.Running;
+                result.Locked = custProfile.Status == CustStatus.Lock;
+                result.DateOfRegistration = custProfile.RegTime;
+                result.RegistrationIP = custProfile.SignupIp;
+                result.CurrentAddress = custProfile.CurrentAddress;
+                result.DateOfBirth = $"{custProfile.Birth_y}/{custProfile.Birth_m}/{custProfile.Birth_d}";
+                result.Nationality = custProfile.Nationality;
+                result.Occupation = GetOccupation(custProfile.Occupation);
+
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"GetCustProfile Exception:{e.Message}");
+            }
+
+            return result;
+        }
+        #endregion
+
+        private string GetOccupation(Occupation occupation)
+        {
+            return occupation switch
+            {
+                Occupation.SelfEmployed => "Self Employed",
+                Occupation.Employed => "Employed",
+                Occupation.Retired => "Retired",
+                Occupation.Others => "Others",
+                _ => string.Empty
+            };
+        }
+
     }
 }
