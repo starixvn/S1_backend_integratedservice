@@ -27,7 +27,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
                 SiteId = 1,
                 UserName = "hanstest01",
                 CurrencyId = 2,
-                TpUserName = "XNova88249951",
+                TpUserName = "Nova88_249951",
                 TpPwd = "h5N3Bjn",
                 TpCurrencyId = "2",
             };
@@ -337,6 +337,78 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
             }
         }
 
+
+        [Test(Description = "先測試有未結算單不用Cancel，把注單改結算後正常Cancel")]
+        public void UnSettle_AutoCancelCheck_Test()
+        {
+            long ticks = DateTime.UtcNow.Ticks;
+            var unSettleTransId = $"test-{ticks - 1}";
+            var transId = $"test-{ticks}";
+
+            var betRecord = new BetRecordInfo()
+            {
+                TicketStatus = TicketStatus.Lost,
+                WinlostAmount = -100,
+                TransId = transId,
+                TpId = 41,
+                GameType = GameType.SBSW_Sports,
+                BonusId = 100,
+            };
+
+            // 初始化Bonus，指定剩餘Bonus金額
+            _settleTicketSandbox.ResetBonusStatusAndBonusAmount(betRecord.BonusId, 0);
+            // 移除相同BonusId的結算紀錄
+            _settleTicketSandbox.ResetTpBetRecord(betRecord.TpId, _tpCustInfo.CustId, betRecord.BonusId);
+            // 新增一筆同BonusId的未結算紀錄
+            var testRecord = new BetRecordInfo()
+            {
+                TicketStatus = TicketStatus.UnSettled,
+                SettlementType = SettlementType.UnSettled,
+                Stake = 100,
+                ValidBet = 100,
+                WinlostAmount = 0,
+                TransId = unSettleTransId,
+                TpId = 41,
+                GameType = GameType.SBSW_Sports,
+                BonusId = 100,
+            };
+            _settleTicketSandbox.SetTpBetRecord(_tpCustInfo, testRecord);
+
+            var SettleTicket = _settleTicketSandbox.CreateSettleTicket(_tpCustInfo, betRecord, null);
+            SettleTicket.AutoCancelCheck(WalletType.SeamlessWallet);
+            _settleTicketSandbox.Commit();
+
+            // 檢查Bonus狀態為未取消
+            var custBonus = _settleTicketSandbox.GetCustBonus(betRecord.BonusId);
+            custBonus.Status.Should().Be(1);
+
+            var bonusInfo = _settleTicketSandbox.GetBonusInfo(betRecord.BonusId);
+            bonusInfo.Status.Should().Be(1);
+
+            var custBonusRollover = _settleTicketSandbox.GetCustBonusRollover(betRecord.BonusId);
+            custBonusRollover.Status.Should().Be(1);
+
+
+            //更新為結算狀態
+            testRecord.TicketStatus = TicketStatus.Win;
+            testRecord.SettlementType = SettlementType.SettledForValid;
+            _settleTicketSandbox.SetTpBetRecord(_tpCustInfo, testRecord);
+
+            _settleTicketSandbox.BeginTransaction();
+            SettleTicket.AutoCancelCheck(WalletType.SeamlessWallet);
+            _settleTicketSandbox.Commit();
+
+            // 檢查Bonus狀態為取消
+            custBonus = _settleTicketSandbox.GetCustBonus(betRecord.BonusId);
+            custBonus.Status.Should().Be(2);
+
+            bonusInfo = _settleTicketSandbox.GetBonusInfo(betRecord.BonusId);
+            bonusInfo.Status.Should().Be(2);
+
+            custBonusRollover = _settleTicketSandbox.GetCustBonusRollover(betRecord.BonusId);
+            custBonusRollover.Status.Should().Be(2);
+        }
+
         #endregion
 
         #region SetBonusRollOver
@@ -421,7 +493,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
 
         [TestCase("Settled", 10, TicketStatus.Lost, 10, TicketStatus.UnSettled, 10, Description = "正常結算")]
         [TestCase("Settled", 10, TicketStatus.Draw, 10, TicketStatus.Refund, 10, Description = "正常結算")]
-        
+
         [TestCase("Re-Settled", 10, TicketStatus.Refund, 20, TicketStatus.Lost, -20, Description = "Refund的Re-Settled")]
         [TestCase("Re-Settled", 10, TicketStatus.Refund, 20, TicketStatus.Win, -20, Description = "Refund的Re-Settled")]
         [TestCase("Re-Settled", 10, TicketStatus.Refund, 20, TicketStatus.Draw, -20, Description = "Refund的Re-Settled")]
@@ -572,6 +644,114 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
             }
         }
 
+
+        #endregion
+
+        #region TpBetRecord
+
+        [Test(Description = "測試結算紀錄正常寫入，二次結算有正常更新")]
+        public void SetTpBetRecord_Test()
+        {
+            var tpId = 41;
+            var transId = $"test-{DateTime.UtcNow.Ticks}";
+            var gameType = GameType.SBSW_Sports;
+            var nowUnix = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
+
+            var unSettled = new BetRecordInfo()
+            {
+                TpId = tpId,
+                TransId = transId,
+                GameType = gameType,
+                TpUserName = _tpCustInfo.TpUserName,
+                SettledTime = nowUnix,
+                TransTime = nowUnix,
+                Stake = 1,
+                ValidBet = 2,
+                Revenue = 3,
+                WinlostAmount = 4,
+                ProgressiveBet = 5,
+                ProgressiveWin = 6,
+                SettlementType = SettlementType.UnSettled,
+                TicketStatus = TicketStatus.UnSettled,
+                OriginalState = "unSettled",
+                TicketKey = 123,
+                BonusId = 100,
+                GameID = "unSettled-GameID"
+            };
+            var unSettledTicket = _settleTicketSandbox.CreateSettleTicket(_tpCustInfo, unSettled, null);
+            unSettledTicket.SetTpBetRecord();
+            _settleTicketSandbox.Commit();
+
+            //檢查寫入的未結算紀錄
+            var unSettledbetRecord = _settleTicketSandbox.GetTpBetRecord(tpId, transId, (int)gameType);         
+            unSettledbetRecord.TpId.Should().Be(tpId);
+            unSettledbetRecord.TransId.Should().Be(transId);
+            unSettledbetRecord.GameType.Should().Be(gameType);
+            unSettledbetRecord.TpUserName.Should().Be(_tpCustInfo.TpUserName);
+            unSettledbetRecord.SettledTime.Should().Be(nowUnix);
+            unSettledbetRecord.TransTime.Should().Be(nowUnix);
+            unSettledbetRecord.Stake.Should().Be(1);
+            unSettledbetRecord.ValidBet.Should().Be(2);
+            unSettledbetRecord.Revenue.Should().Be(3);
+            unSettledbetRecord.WinlostAmount.Should().Be(4);
+            unSettledbetRecord.ProgressiveBet.Should().Be(5);
+            unSettledbetRecord.ProgressiveWin.Should().Be(6);
+            unSettledbetRecord.SettlementType.Should().Be(SettlementType.UnSettled);
+            unSettledbetRecord.TicketStatus.Should().Be(TicketStatus.UnSettled);
+            unSettledbetRecord.OriginalState.Should().Be("unSettled");
+            unSettledbetRecord.TicketKey.Should().Be(123);
+            unSettledbetRecord.BonusId.Should().Be(100);
+            unSettledbetRecord.GameID.Should().Be("unSettled-GameID");
+
+
+            //更新結算紀錄
+            var settled = new BetRecordInfo()
+            {
+                TpId = tpId,
+                TransId = transId,
+                GameType = gameType,
+                TpUserName = _tpCustInfo.TpUserName,
+                SettledTime = nowUnix + 100,
+                TransTime = nowUnix + 100 ,
+                Stake = 11,
+                ValidBet = 22,
+                Revenue = 33,
+                WinlostAmount = 44,
+                ProgressiveBet = 55,
+                ProgressiveWin = 66,
+                SettlementType = SettlementType.SettledForValid,
+                TicketStatus = TicketStatus.Win,
+                OriginalState = "Settled",
+                TicketKey = 123456,
+                BonusId = 1000,
+                GameID = "Settled-GameID"
+            };
+
+            var settleTicket = _settleTicketSandbox.CreateSettleTicket(_tpCustInfo, settled, null);
+            settleTicket.SetTpBetRecord();
+            _settleTicketSandbox.Commit();
+
+            //檢查二次結算紀錄
+            var settledbetRecord = _settleTicketSandbox.GetTpBetRecord(tpId, transId, (int)gameType);
+            settledbetRecord.TpId.Should().Be(tpId);
+            settledbetRecord.TransId.Should().Be(transId);
+            settledbetRecord.GameType.Should().Be(gameType);
+            settledbetRecord.TpUserName.Should().Be(_tpCustInfo.TpUserName);
+            settledbetRecord.SettledTime.Should().Be(nowUnix + 100);
+            settledbetRecord.TransTime.Should().Be(nowUnix + 100);
+            settledbetRecord.Stake.Should().Be(11);
+            settledbetRecord.ValidBet.Should().Be(22);
+            settledbetRecord.Revenue.Should().Be(33);
+            settledbetRecord.WinlostAmount.Should().Be(44);
+            settledbetRecord.ProgressiveBet.Should().Be(55);
+            settledbetRecord.ProgressiveWin.Should().Be(66);
+            settledbetRecord.SettlementType.Should().Be(SettlementType.SettledForValid);
+            settledbetRecord.TicketStatus.Should().Be(TicketStatus.Win);
+            settledbetRecord.OriginalState.Should().Be("Settled");
+            settledbetRecord.TicketKey.Should().Be(123456);
+            settledbetRecord.BonusId.Should().Be(1000);
+            settledbetRecord.GameID.Should().Be("Settled-GameID");
+        }
 
         #endregion
     }
