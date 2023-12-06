@@ -191,8 +191,8 @@ namespace CommonService.Service.BLL.Tests
         [TestCase(5, ExpectedResult = "NxCloud")]
         public string SMSSupport_GetConfigValuesBySiteIdTest(int siteId)
         {
-            var actual = _configBLL.GetConfigValuesBySiteId<SMSSupportConfig>("SMSSupport");
-            return actual[siteId].SMSSupport["Default"];
+            var actual = _configBLL.GetConfigValuesBySiteId<SMSSupportConfig>("SMSAutoSupport");
+            return actual[siteId].SMSSupport["Default"].FirstOrDefault().ToString();
         }
 
 
