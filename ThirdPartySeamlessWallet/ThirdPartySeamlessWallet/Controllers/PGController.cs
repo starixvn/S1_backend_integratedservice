@@ -258,11 +258,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             if (!string.IsNullOrEmpty(getBalanceReq.OperatorPlayerSession))
             {
-                string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(getBalanceReq.OperatorPlayerSession)));
-                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
-                string authToken = sessionKeyArr[0]; /* 1 Time*/
-                string sessionToken = sessionKeyArr[1];/* Long Time*/
-
                 var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getBalanceReq.PlayerName);
                 if (tpCheck == null)
                 {
@@ -270,16 +265,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         code = "1308",
                         message = "Invalid request."
-                    };
-                    log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
-                    return resp;
-                }
-                else if (tpCheck.Token != sessionToken)
-                {
-                    resp.error = new Error
-                    {
-                        code = "1308",
-                        message = "Player session is expired"
                     };
                     log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                     return resp;
