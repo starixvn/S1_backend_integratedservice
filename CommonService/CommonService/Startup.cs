@@ -8,6 +8,8 @@ using Elastic.Apm.AspNetCore;
 using Elastic.Apm.DiagnosticSource;
 using Elastic.Apm.SqlClient;
 
+using StackExchange.Redis;
+
 namespace CommonService
 {
     public class Startup
@@ -24,6 +26,9 @@ namespace CommonService
         {
             services.AddLogging();
             services.AddMemoryCache();
+            services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(Configuration.GetValue<string>("RedisConnection")));
+            services.AddSingleton<ICacheHelper, RedisCacheHelper>();
+
             services.AddDatabaseConnection(Configuration);
             HttpHelper.proxyHost = Configuration.GetValue<string>("ProxyHost");
             HttpHelper.proxyPort = Configuration.GetValue<int>("ProxyPort");
