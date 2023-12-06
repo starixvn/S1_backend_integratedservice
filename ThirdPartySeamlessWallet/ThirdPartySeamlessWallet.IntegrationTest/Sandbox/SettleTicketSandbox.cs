@@ -85,7 +85,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             _trans = _conn.BeginTransaction();
         }
 
-        private void BeginTransaction()
+        public void BeginTransaction()
         {       
             if (_trans == null)
             {
@@ -224,6 +224,72 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         public int AddTpSeamlessBonus(TpSeamlessBonus tpSeamlessBonus)
         {
             return _mySqlClient.Execute("Service_TpSeamlessBonus_Ins", CommandType.StoredProcedure, tpSeamlessBonus);
+        }
+
+        public int ResetTpBetRecord(int tpId, int custId, int bonusId)
+        {
+            var sqlScript = @$"DELETE FROM TpBetRecord WHERE TpId ='{tpId}' and CustId ='{custId}' and BonusId ='{bonusId}';";
+            return _mySqlClient.Execute(sqlScript, CommandType.Text);
+        }
+
+        public int SetTpBetRecord(TpCustInfo tpCustInfo, BetRecordInfo betRecord)
+        {
+            var result = _mySqlClient.Execute("Service_TpBetRecord_Set_V3", CommandType.StoredProcedure, new
+            {
+                betRecord.TpId,
+                betRecord.TransId,
+                GameType = (int)betRecord.GameType,
+                tpCustInfo.CustId,
+                tpCustInfo.UserName,
+                tpCustInfo.CurrencyId,
+                tpCustInfo.SiteId,
+                tpCustInfo.TpUserName,
+                betRecord.SettledTime,
+                betRecord.TransTime,
+                betRecord.Stake,
+                betRecord.ValidBet,
+                betRecord.Revenue,
+                betRecord.WinlostAmount,
+                betRecord.ProgressiveBet,
+                betRecord.ProgressiveWin,
+                SettlementType = (int)betRecord.SettlementType,
+                TicketStatus = (int)betRecord.TicketStatus,
+                betRecord.OriginalState,
+                betRecord.TicketKey,
+                betRecord.BonusId,
+                betRecord.GameID
+            });
+            return result;
+        }
+
+        public BetRecordInfo GetTpBetRecord(int tpId, string transId, int gameType)
+        {
+            var sqlScript =     
+                @$"SELECT " +
+                "TpId,"+
+                "TransId,"+
+                "GameType,"+
+                "CustId,"+
+                "UserName,"+
+                "CurrencyId,"+
+                "SiteId,"+
+                "TpUserName,"+
+                "UNIX_TIMESTAMP(TransTime) as TransTime," +
+                "UNIX_TIMESTAMP(SettledTime) as SettledTime," +
+                "Stake,"+
+                "ValidBet,"+
+                "Revenue,"+
+                "WinlostAmount,"+
+                "ProgressiveBet,"+
+                "ProgressiveWin,"+
+                "SettlementType,"+
+                "TicketStatus,"+
+                "OriginalState,"+
+                "TicketKey,"+
+                "BonusId,"+
+                "GameID"+
+                @$" FROM TpBetRecord WHERE TpId ='{tpId}' and TransId ='{transId}' and GameType ='{gameType}';";
+            return _mySqlClient.Query<BetRecordInfo>(sqlScript, CommandType.Text).FirstOrDefault();
         }
 
 
