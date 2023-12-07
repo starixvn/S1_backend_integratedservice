@@ -57,12 +57,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 Stake = stake,
                 BonusId = bonusId,
             };
-            return AddTpSeamlessBonus(tpSeamlessBonus, conn, trans);
-        }
-
-        public int AddTpSeamlessBonus(TpSeamlessBonus tpSeamlessBonus, MySqlConnection conn, MySqlTransaction trans)
-        {
-            return _mainDbClient.Execute("Service_TpSeamlessBonus_Ins", trans, tpSeamlessBonus);
+            return AddTpSeamlessBonus(tpSeamlessBonus, trans);
         }
 
         public int PlaceBetV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, string refId, string betData, TpCategory tpCategory, out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans, string memo = "")
@@ -97,7 +92,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             Stake = afterAmount < 0 ? stake + afterAmount : stake, // 紀錄實際使用的Bonus金額
                             BonusId = bonusId,
                         };
-                        AddTpSeamlessBonus(tpSeamlessBonus, conn, trans);
+                        AddTpSeamlessBonus(tpSeamlessBonus, trans);
                     }
 
                     if (afterAmount < 0)
@@ -135,6 +130,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
 
             return result;
+        }
+
+        private int AddTpSeamlessBonus(TpSeamlessBonus tpSeamlessBonus, MySqlTransaction trans)
+        {
+            return _mainDbClient.Execute("Service_TpSeamlessBonus_Ins", trans, tpSeamlessBonus);
         }
     }
 }
