@@ -149,6 +149,7 @@ namespace ThirdParty.Amigo
             var apiUrl = config.ApiUrl;
             var styleName = config.StyleName;
             var secretKey = config.SecretKey;
+            var demoId = config.DemoID;
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
             string fun = inputs.GetValueOrDefault("fun") ?? "0";
             string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
@@ -156,8 +157,7 @@ namespace ThirdParty.Amigo
 
             if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
             {
-                var rand = new Random();
-                var funGameUrl = $"{config.FunGameUrl}/api/link/id/{rand.Next(1, 10000)}/?gameSymbol={gameId}&lobbyurl={HttpUtility.UrlEncode(homeUrl)}";
+                var funGameUrl = $"{config.FunGameUrl}/api/link/id/{demoId}/?gameSymbol={gameId}&lobbyurl={HttpUtility.UrlEncode(homeUrl)}";
 
                 return new ApiResult()
                 {
