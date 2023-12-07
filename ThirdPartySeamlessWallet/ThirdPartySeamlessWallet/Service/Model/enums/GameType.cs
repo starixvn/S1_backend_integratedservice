@@ -95,6 +95,7 @@
         FaChai_RNG = 106,
         Pegasus_RNG = 107,
         BNG_RNG = 108,
+        SG_Table = 109,
         NLC_RNG = 111,
         Amigo_RNG = 112,
     }

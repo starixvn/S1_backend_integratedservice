@@ -101,7 +101,8 @@
         IM_ESports = 102,
         IM_Sports = 103,
         FaChai_RNG = 106,
-        NLC_RNG = 111,
+        SG_Table = 109,
+        NLC_RNG = 111
     }
 
     public enum SettlementType
