@@ -101,6 +101,7 @@
         IM_ESports = 102,
         IM_Sports = 103,
         FaChai_RNG = 106,
+        SG_Table = 109,
         NLC_RNG = 111,
     }
 
