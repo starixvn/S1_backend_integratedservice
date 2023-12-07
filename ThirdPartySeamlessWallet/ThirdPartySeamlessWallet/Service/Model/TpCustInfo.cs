@@ -74,8 +74,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public int BonusId { get; set; }
         public decimal Bonus { get; set; }
-        public PromotionCategory PromoCategoryId { get; set; }
-        public int GameType { get; set; }
-        public int TpId { get; set; }
+        public int PromoCategoryId { get; set; }
     }
 }

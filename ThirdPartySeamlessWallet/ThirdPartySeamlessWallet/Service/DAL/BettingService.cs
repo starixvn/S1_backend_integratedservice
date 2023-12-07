@@ -19,11 +19,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         private readonly Tools tools;
         private readonly ILogger<BettingService> logger;
         private readonly MySqlClient _mainDbClient;
-        private readonly MySqlClient _reportDbClient;
         private readonly PartitionService _partitionService;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly TpUnsettleService _tpUnsettleService;
-        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly BonusWalletBLL _bonusWalletBLL;
 
         public BettingService(IServiceProvider provider)
         {
@@ -33,8 +32,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _partitionService = provider.GetRequiredService<PartitionService>();
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
+            _bonusWalletBLL = provider.GetRequiredService<BonusWalletBLL>();
         }
 
         public int AddTpBonus(int tpId, string transId, int gameType, int custId, string userName, int currencyId, int siteId, decimal stake, int bonusId, TpCategory tpCategory, MySqlConnection conn, MySqlTransaction trans)
@@ -44,11 +43,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 return 0;
             }
 
-            //用GameType取回PromoCategoryId，在新增到TpSeamlessBonus
-            var tpGameType = _mainDbClient.QueryFirst<TpGameType>("Service_TpGameType_GetByType", new { GameType = gameType });
+            var custBonus = _bonusWalletBLL.GetCustBonusByBonusId(bonusId);
             var tpSeamlessBonus = new TpSeamlessBonus
             {
-                PromotionCategoryId = (int)tpGameType.PromoCategoryId,
+                PromotionCategoryId = custBonus.PromoCategoryId,
                 TpId = tpId,
                 TransId = transId,
                 GameType = gameType,
@@ -73,16 +71,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             int result = 0;
             try
             {
-                var bonusCategory = _thirdPartyBLL.GetBonusCategory(gameType);
-
-                // 1.先找到用戶還在Running的CustBonusList
-                // 2.再找出符合條件的找到用戶還在Running的CustBonus加到Balance
-                // 符合條件:
-                //  1.CustBonus.PromoCategoryId = TpGameType.PromoCategoryId
-                //  2.CustBonus.PromoCategoryId = 0 (不分類皆可使用，但不包含捕魚類遊戲)
-                var custBonus = walletService.GetCustBonusList(tpCustInfo.CustId)
-                    .FirstOrDefault(i => (int)i.PromoCategoryId == bonusCategory?.Id ||
-                    (i.PromoCategoryId == PromotionCategory.ALL && bonusCategory != null && bonusCategory.CategoryId != (int)TpCategory.Fish));
+                var custBonus = _bonusWalletBLL.GetCustBonus(tpCustInfo.CustId, gameType);
 
                 if (custBonus != null)
                 {
@@ -97,7 +86,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         var stake = Math.Abs(amount);
                         var tpSeamlessBonus = new TpSeamlessBonus
                         {
-                            PromotionCategoryId = (int)custBonus.PromoCategoryId,
+                            PromotionCategoryId = custBonus.PromoCategoryId,
                             TpId = tpId,
                             TransId = tpTransId,
                             GameType = gameType,

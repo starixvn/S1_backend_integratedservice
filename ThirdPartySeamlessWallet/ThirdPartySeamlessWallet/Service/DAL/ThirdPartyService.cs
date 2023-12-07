@@ -34,11 +34,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.QueryFirst<TpCurrency>("TpCurrency_Get", new { TpId = tpId, CurrencyId = currencyId });
         }
 
-        public IEnumerable<BonusCategory> GetBonusCategoryList()
-        {
-            return _mainDbClient.Query<BonusCategory>("Service_BonusCategory_Get");
-        }
-
         public IEnumerable<TpGameCasino> GetGameCasino(int tpId)
         {
             return _mainDbClient.Query<TpGameCasino>("Service_GameCasino_Get_V2", commandType: CommandType.StoredProcedure, new { TpId = tpId });

@@ -1,15 +1,10 @@
-﻿using System.Security.Policy;
-
-using FluentAssertions;
+﻿using FluentAssertions;
 
 using NUnit.Framework;
 
-using ThirdPartySeamlessWallet.IntegrationTest.Models;
 using ThirdPartySeamlessWallet.IntegrationTest.SandBox;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
-using static ThirdPartySeamlessWallet.Controllers.EBetController;
 
 namespace ThirdPartySeamlessWallet.IntegrationTest
 {
@@ -305,7 +300,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
             _settleTicketSandbox.ResetBonusStatusAndBonusAmount(betRecord.BonusId, bonusAmount);
 
             var SettleTicket = _settleTicketSandbox.CreateSettleTicket(_tpCustInfo, betRecord, null);
-            SettleTicket.AutoCancelCheck(WalletType.SeamlessWallet);
+            SettleTicket.AutoCancelCheck();
             _settleTicketSandbox.Commit();
 
             // 檢查Bonus狀態符合預期
@@ -375,7 +370,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
             _settleTicketSandbox.SetTpBetRecord(_tpCustInfo, testRecord);
 
             var SettleTicket = _settleTicketSandbox.CreateSettleTicket(_tpCustInfo, betRecord, null);
-            SettleTicket.AutoCancelCheck(WalletType.SeamlessWallet);
+            SettleTicket.AutoCancelCheck();
             _settleTicketSandbox.Commit();
 
             // 檢查Bonus狀態為未取消
@@ -395,7 +390,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
             _settleTicketSandbox.SetTpBetRecord(_tpCustInfo, testRecord);
 
             _settleTicketSandbox.BeginTransaction();
-            SettleTicket.AutoCancelCheck(WalletType.SeamlessWallet);
+            SettleTicket.AutoCancelCheck();
             _settleTicketSandbox.Commit();
 
             // 檢查Bonus狀態為取消

@@ -77,13 +77,5 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             bonusId = p.Get<int?>("BonusId") ?? 0;
             return result;
         }
-
-        /// <summary>
-        /// 找到用戶還在Running的CustBonus
-        /// </summary>
-        public IEnumerable<CustBonus> GetCustBonusList(int CustId)
-        {
-            return _mainDbClient.Query<CustBonus>("Service_Bonus_Get_V2", parameters: new { CustId });
-        }
     }
 }
