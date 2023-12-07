@@ -27,16 +27,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public int Settled(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo, PromotionCategory promotionCategory)
-        {
-            var promoCategoryId = (int)promotionCategory;
-            if (settledService.GetBonusIdByPromoCategoryId(tpCustInfo.CustId, promoCategoryId, out var bonusId))
-            {
-                betRecordInfo.BonusId = bonusId;
-            }
-            var result = settledService.Settle(tpCustInfo, betRecordInfo);
-            return result;
-        }
         public SettlementType GetSettlementType(GameType gameType, string gameId)
         {
             return settledService.GetSettlementType(gameType, gameId);

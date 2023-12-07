@@ -15,6 +15,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         private readonly Tools tools;
         private ConcurrentDictionary<string, TpCountryCode> tpCountryCodeCache = new();
         private readonly ICacheHelper _redisHelper;
+        private readonly BonusWalletBLL _bonusWalletBLL;
 
         public TpCustInfoBLL(IServiceProvider provider)
         {
@@ -23,6 +24,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             tpCustInfoService = provider.GetRequiredService<TpCustInfoService>();
             tools = provider.GetRequiredService<Tools>();
             _redisHelper = provider.GetRequiredService<ICacheHelper>();
+            _bonusWalletBLL = provider.GetRequiredService<BonusWalletBLL>();
         }
 
         public TpCustBalance GetBalanceByHalfSecCache(int tpId, string tpUserName, int gameType = 0)
@@ -40,17 +42,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var tpCustInfo = GetTpCustInfoWithCache(tpId, tpUserName);
             var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
             var balance = walletService.GetBalance(tpCustInfo.CustId);
-            var bonusCategory = thirdPartyBLL.GetBonusCategory(gameType);
-
-            // 1.先找到用戶還在Running的CustBonusList
-            // 2.再找出符合條件的找到用戶還在Running的CustBonus加到Balance
-            // 符合條件:
-            //  1.CustBonus.PromoCategoryId = TpGameType.PromoCategoryId
-            //  2.CustBonus.PromoCategoryId = 0 (不分類皆可使用，但不包含捕魚類遊戲)
-            var custBonus = walletService.GetCustBonusList(tpCustInfo.CustId)
-                .FirstOrDefault(i => (int)i.PromoCategoryId == bonusCategory?.Id ||
-                (i.PromoCategoryId == PromotionCategory.ALL && bonusCategory != null && bonusCategory.CategoryId != (int)TpCategory.Fish));
-
+            
+            var custBonus = _bonusWalletBLL.GetCustBonus(tpCustInfo.CustId, gameType);
             if (custBonus != null)
             {
                 balance += custBonus.Bonus;
@@ -97,18 +90,22 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return tpCustInfoService.SetCustGotoGame(custId, tpId, gameType);
         }
+
         public int GetCustGotoGameType(int custId, int tpId)
         {
             return tpCustInfoService.GetCustGotoGameType(custId, tpId);
         }
+
         public int SetTpPwd(int tpId, string tpUserName, string tpPwd)
         {
             return tpCustInfoService.SetTpPwd(tpId, tpUserName, tpPwd);
         }
+
         public void AddLoginRecord(int custId, int siteId, string ip, out string token)
         {
             tpCustInfoService.AddLoginRecord(custId, siteId, ip, out token);
         }
+
         public void AddUserLoginLog(int custId, string userName, int siteId, string loginIp, string fromUrl, string userAgent)
         {
             tpCustInfoService.AddUserLoginLog(custId, userName, siteId, loginIp, fromUrl, userAgent);

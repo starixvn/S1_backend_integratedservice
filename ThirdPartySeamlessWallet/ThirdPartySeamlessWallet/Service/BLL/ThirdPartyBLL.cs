@@ -17,10 +17,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         private static ConcurrentDictionary<int, ThirdPartySetting> ThirdPartySettingContainer = new ConcurrentDictionary<int, ThirdPartySetting>();
         private static ConcurrentDictionary<string, ThirdPartySetting> ThirdPartyModelContainer = new ConcurrentDictionary<string, ThirdPartySetting>();
 
-        public ThirdPartyBLL(IMemoryCache cache, ThirdPartyService thirdPartyService)
+        public ThirdPartyBLL(IServiceProvider provider)
         {
-            this.thirdPartyService = thirdPartyService;
-            this.cache = cache;
+            thirdPartyService = provider.GetRequiredService<ThirdPartyService>();
+            cache = provider.GetRequiredService<IMemoryCache>();
             TpCurrencyList = new ConcurrentDictionary<string, TpCurrency>();
             ServerInfoData = new ConcurrentDictionary<string, ServerInfo>();
         }
@@ -80,26 +80,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             var tpCurrency = TpCurrencyList[key];
             return tpCurrency;
-        }
-
-        private Dictionary<int, BonusCategory> GetBonusCategoryList()
-        {
-            string key = $"GetBonusCategoryList";
-            var dBonusCategoryList = cache.Get<Dictionary<int, BonusCategory>>(key);
-            if (dBonusCategoryList == null)
-            {
-                dBonusCategoryList = thirdPartyService.GetBonusCategoryList()
-                    .Where(x => x.WalletType == (int)WalletType.SeamlessWallet)
-                    .ToDictionary(i => i.Type, i => i);
-                cache.Set(key, dBonusCategoryList, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
-            }
-
-            return dBonusCategoryList;
-        }
-
-        public BonusCategory GetBonusCategory(int gameType)
-        {
-            return GetBonusCategoryList().TryGetValue(gameType, out var bonusCategory) ? bonusCategory : default;
         }
 
         public GameType GetGameType_PP(string gameId)

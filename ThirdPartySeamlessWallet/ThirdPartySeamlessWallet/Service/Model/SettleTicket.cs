@@ -187,19 +187,12 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// <summary>
         /// Bonus AutoCancel檢查
         /// </summary>
-        public SettleTicket AutoCancelCheck(WalletType walletType)
+        public SettleTicket AutoCancelCheck()
         {
             // 只要本次注單狀態不是Unsettle都會執行AutoCancel檢查
             if (BetRecord.BonusId > 0 && BetRecord.TicketStatus != TicketStatus.UnSettled)
             {
-                if (walletType == WalletType.TransferWallet)
-                {
-                    AutoCancelTransferBonus();
-                }
-                else
-                {
-                    AutoCancelSeamlessBonus();
-                }
+                AutoCancelSeamlessBonus();             
             }
 
             return this;
@@ -440,18 +433,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
                 RefTransId = BetRecord.TransId
             };
             return _mainDbClient.Execute("Service_BonusWinLost_Set", _trans, p);
-        }
-
-        private int AutoCancelTransferBonus()
-        {
-            var p = new
-            {
-                BetRecord.BonusId,
-                BetRecord.TransId,
-                TpCustInfo.CurrencyId,
-                GameType = (int)BetRecord.GameType,
-            };
-            return _mainDbClient.Execute("Service_AutoCancelTransferBonus_Set_V2", _trans, p);
         }
 
         private int AutoCancelSeamlessBonus()
