@@ -149,7 +149,6 @@ namespace ThirdParty.Amigo
             var apiUrl = config.ApiUrl;
             var styleName = config.StyleName;
             var secretKey = config.SecretKey;
-            var demoId = config.DemoID;
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
             string fun = inputs.GetValueOrDefault("fun") ?? "0";
             string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
@@ -157,13 +156,19 @@ namespace ThirdParty.Amigo
 
             if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
             {
-                var funGameUrl = $"{config.FunGameUrl}/api/link/id/{demoId}/?gameSymbol={gameId}&lobbyurl={HttpUtility.UrlEncode(homeUrl)}";
-
-                return new ApiResult()
-                {
-                    ErrorCode = ErrorCode.Success,
-                    Message = funGameUrl
-                };
+                string funGameUrl = $"{config.FunGameUrl}/api/link/id/{styleName}/?gameSymbol={gameId}&lobbyurl={HttpUtility.UrlEncode(homeUrl)}";
+                string sContent = HttpGet(funGameUrl, "", "text/html; charset=UTF-8");
+                return string.IsNullOrEmpty(sContent)
+                    ? new ApiResult()
+                    {
+                        ErrorCode = ErrorCode.Fail,
+                        Message = sContent
+                    }
+                    : new ApiResult()
+                    {
+                        ErrorCode = ErrorCode.Success,
+                        Message = sContent
+                    };
             }
 
             // insert uuid and token mapping
