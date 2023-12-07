@@ -16,6 +16,7 @@ namespace CommonService.Controllers
         private readonly Dictionary<int, SMSSupportConfig> _supportOTPConfig;
         private readonly OTPSMSBLL _oTPSMSBLL;
         private readonly Tools _tools;
+        private readonly ICacheHelper _redisHelper;
 
         private readonly SkyLineBLL _skyLineBLL;
         private readonly Dictionary<OTPProvider, Func<OTPRequestObject, Task<ApiResult>>> _requestHandler;
@@ -24,9 +25,10 @@ namespace CommonService.Controllers
         {
             _logger = provider.GetRequiredService<ILogger<OTPSMSController>>();
             _custInfoBLL = provider.GetRequiredService<CustInfoBLL>();
-            _supportOTPConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SMSSupportConfig>("SMSSupport");
+            _supportOTPConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SMSSupportConfig>("SMSAutoSupport");
             _oTPSMSBLL = provider.GetRequiredService<OTPSMSBLL>();
             _tools = provider.GetRequiredService<Tools>();
+            _redisHelper = provider.GetRequiredService<ICacheHelper>();
 
             _skyLineBLL = provider.GetRequiredService<SkyLineBLL>();
             _requestHandler = new Dictionary<OTPProvider, Func<OTPRequestObject, Task<ApiResult>>>()
@@ -185,9 +187,41 @@ namespace CommonService.Controllers
         {
             try
             {
+                // 依Site取得簡訊設定
                 var sMSSupport = _supportOTPConfig[custInfo.SiteId].SMSSupport;
-                var otpProvider = sMSSupport.TryGetValue(custInfo.AreaCode, out var areaSupportOTP) ? areaSupportOTP : sMSSupport["Default"];
-                return Enum.TryParse(otpProvider, out OTPProvider oTPProvider) ? oTPProvider : OTPProvider.NxCloud;
+                // 使用電話國碼取得簡訊供應商支援列表
+                var otpProviderList = sMSSupport.TryGetValue(custInfo.AreaCode, out var areaSupportOTP) ? areaSupportOTP : sMSSupport["Default"];
+                
+                // 先使用第一個當預設值
+                var result = otpProviderList[0];
+
+                // 檢查玩家之前發送紀錄
+                var key = $"UserGetSupportOTP:{custInfo.CustId}";
+                var alreadyTryProviderList = _redisHelper.GetListByRange<string>(key, 0, -1);
+
+                // 比對發送紀錄與簡訊供應商支援列表，發送過就換下一間
+                if (otpProviderList.Count != alreadyTryProviderList.Count)
+                {
+                    foreach (var otpProvider in otpProviderList)
+                    {
+                        if (!alreadyTryProviderList.Contains(otpProvider.ToString()))
+                        {
+                            result = otpProvider;
+                            break;
+                        }
+                    }
+                }
+                else
+                {   
+                    // 全部試過一輪，清掉重來
+                    _redisHelper.KeyDelete(key);
+                }
+                
+
+                //記錄這一次選擇的結果
+                _redisHelper.InsertList(key, TimeSpan.FromDays(1), new List<string> { result.ToString() });
+
+                return result;
             }
             catch
             {

@@ -1,6 +1,8 @@
-﻿namespace CommonService.Service.Model;
+﻿using CommonService.Service.Model.enums;
+
+namespace CommonService.Service.Model;
 
 public class SMSSupportConfig
 {
-    public Dictionary<string, string> SMSSupport { get; set; }
+    public Dictionary<string, List<OTPProvider>> SMSSupport { get; set; }
 }
