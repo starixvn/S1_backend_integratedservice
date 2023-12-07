@@ -146,7 +146,7 @@ namespace ThirdPartyCore.Model.enums
         Cockfighting = 5,
         Lottery = 6,
         VirtualSports = 7,
-        Poker = 8,
+        P2P = 8,
         Games = 10,
         Esports = 11
     }
