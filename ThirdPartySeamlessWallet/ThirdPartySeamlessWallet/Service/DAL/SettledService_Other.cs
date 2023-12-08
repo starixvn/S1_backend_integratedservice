@@ -20,7 +20,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
 
             var result = 0;
-            result = SettleTicket(tpCustInfo, betRecordInfo, conn, trans);
+            result = SettleTicket(tpCustInfo, betRecordInfo, trans);
 
             if (result > 0)
             {
@@ -173,7 +173,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
 
             var result = 0;
-            result = SettleTicket(tpCustInfo, betRecordInfo, conn, trans);
+            result = SettleTicket(tpCustInfo, betRecordInfo, trans);
 
             if (result > 0)
             {
@@ -643,7 +643,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return isError ? 0 : result;
         }
 
-        public IEnumerable<SettleCF_AWC> GetUnsettledListCF_AWC()
+        public IEnumerable<SettleCF_AWC> GetUnsettledListCF_AWC()   
         {
             return _mainDbClient.Query<SettleCF_AWC>("Service_BettransCF_AWC_Unsettle_Get", commandType: CommandType.StoredProcedure);
         }
@@ -655,7 +655,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
 
             var result = 0;
-            result = SettleTicket(tpCustInfo, betRecordInfo, conn, trans);
+            result = SettleTicket(tpCustInfo, betRecordInfo, trans);
 
             if (result > 0)
             {
