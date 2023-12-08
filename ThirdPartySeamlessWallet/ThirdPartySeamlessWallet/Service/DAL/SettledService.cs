@@ -237,20 +237,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public bool GetBonusIdByPromoCategoryId(int custId, int promoCategoryId, out int bonusId)
-        {
-            bonusId = 0;
-            var p = new DynamicParameters(new { CustId = custId, PromoCategoryId = promoCategoryId });
-            p.Add("BonusId", dbType: DbType.Int32, direction: ParameterDirection.Output);
-            var result = _mainDbClient.Execute("Service_BonusIdByPromoCategoryId_Get", CommandType.StoredProcedure, p);
-            if (result > 0)
-            {
-                bonusId = p.Get<int?>("BonusId") ?? 0;
-            }
-
-            return result > 0 && bonusId != 0;
-        }
-
         public SettlementType GetSettlementType(GameType gameType, string gameId)
         {
             SettlementType settlementType = SettlementType.SettledForValid;
@@ -284,7 +270,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
-            int result = SettleTicket(tpCustInfo, betRecordInfo, conn, trans, getTpSeamlessBonusType);
+            int result = SettleTicket(tpCustInfo, betRecordInfo, trans, getTpSeamlessBonusType);
 
             if (result > 0)
             {
@@ -298,25 +284,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public int Settle(TpCustInfo tpCustInfo, BetRecordInfo betRecordInfo)
-        {
-            using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
-            using var trans = conn.BeginTransaction();
-            int result = SettleTicket(tpCustInfo, betRecordInfo, conn, trans);
-
-            if (result > 0)
-            {
-                _mainDbClient.CommitAndDisposeConnection(conn, trans);
-            }
-            else
-            {
-                _mainDbClient.RollbackAndDisposeConnection(conn, trans);
-            }
-            return result;
-        }
-
-        public int SettleTicket(TpCustInfo tpCustInfo, BetRecordInfo betRecord, MySqlConnection conn, MySqlTransaction trans, GetTpSeamlessBonusType getTpSeamlessBonusType = GetTpSeamlessBonusType.ByGameTypeAndTransId)
+        public int SettleTicket(TpCustInfo tpCustInfo, BetRecordInfo betRecord, MySqlTransaction trans, GetTpSeamlessBonusType getTpSeamlessBonusType = GetTpSeamlessBonusType.ByGameTypeAndTransId)
         {
             int result;
             try
