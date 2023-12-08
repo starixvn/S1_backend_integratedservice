@@ -43,7 +43,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 return 0;
             }
 
-            var custBonus = _bonusWalletBLL.GetCustBonusByBonusId(bonusId);
+            var custBonus = _bonusWalletBLL.GetCustBonus(bonusId);
             var tpSeamlessBonus = new TpSeamlessBonus
             {
                 PromotionCategoryId = custBonus.PromoCategoryId,

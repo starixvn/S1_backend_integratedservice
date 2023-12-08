@@ -118,7 +118,6 @@ namespace ThirdPartySeamlessWallet
             services.AddControllers();
 
             services.AddOptionListByDB<SabaSportTypeOption>("Service_SabaSportType_Get");
-            services.AddOptionListByDB<PromotionCategoryGameTypeOption>("Service_PromotionCategoryGameType_Get");
             //設定SiteConfig
             services.AddOptionListByDB<ServerInfo>("ServerInfoList_Get");
             services.AddOptionListByDB<ConfigObject>("SiteConfig_Get", new { ConfigGroup = "TP" });
