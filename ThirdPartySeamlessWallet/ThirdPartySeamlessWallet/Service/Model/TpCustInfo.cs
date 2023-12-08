@@ -87,7 +87,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string Birth_m { get; set; }
         public string Birth_y { get; set; }
         public string CurrentAddress { get; set; }
-        public string Nationality { get; set; }
         public Occupation Occupation { get; set; }
         public SourceOfIncome SourceOfIncome { get; set; }
         public string Email { get; set; }
@@ -98,6 +97,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string AreaCode { get; set; }
         public string PhoneNo { get; set; }
         public string SignupIp { get; set; }
+        public int CurrencyId { get; set; }
     }
     public class CustInfo
     {
