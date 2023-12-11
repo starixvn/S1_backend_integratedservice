@@ -112,7 +112,7 @@ namespace ThirdPartyWager.Service.BLL
                 return GameType.SG_Table;
             }
 
-            return GameType.SG_Fish;
+            return GameType.SG_RNG;
         }
     }
 }
