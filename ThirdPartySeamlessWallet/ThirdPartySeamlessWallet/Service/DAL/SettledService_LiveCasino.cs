@@ -2548,11 +2548,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        var insertTpResults = _tpUnsettleService.InsertTpUnsettle(Tp.N2Live, GameType.N2Live_LiveCasino, TransId, trans);
-                        if (insertTpResults <= 0)
+                        if (!payoutDataLC_N2Live.IsVoid)
                         {
-                            result = 0;
+                            var insertTpResults = _tpUnsettleService.InsertTpUnsettle(Tp.N2Live, GameType.N2Live_LiveCasino, TransId, trans);
+                            if (insertTpResults <= 0)
+                            {
+                                result = 0;
+                            }
                         }
+
                         _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     }
                     else
