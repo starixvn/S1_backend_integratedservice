@@ -104,6 +104,11 @@ namespace ThirdPartySettleWorker.Workers
                             };
 
                             var winLossAmountComparison = DG_WinLossAmountComparison(wager.WinLostAmount, settleData);
+                            if (tpCurrency.ExchangeRate > 10 && !winLossAmountComparison.Comparison)
+                            {
+                                // 因為幣值會有小數點差異
+                                winLossAmountComparison.Comparison = CheckWinLostAmountRange(wager.WinLostAmount, winLossAmountComparison.WinLossAmount);
+                            }
                             if (!winLossAmountComparison.Comparison)
                             {
                                 _logger.LogWarning($"{logName}:DG WinLossAmount Comparison Incompatible TransId : {betRecordInfo.TransId} - WagerWinLossAmount {wager.WinLostAmount:F2}, betTrans : {winLossAmountComparison.WinLossAmount}");
@@ -179,6 +184,11 @@ namespace ThirdPartySettleWorker.Workers
             return result;
         }
 
+        private static bool CheckWinLostAmountRange(decimal wagerAmount, decimal bettransAmount)
+        {
+            var diff = wagerAmount - bettransAmount;
+            return Math.Abs(diff) <= 5;
+        }
         #endregion
     }
 }
