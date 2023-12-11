@@ -66,7 +66,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         betRecordInfo.BonusId,
                         OriginalState = betRecordInfo.OriginalState ?? string.Empty,
                         betRecordInfo.TicketKey,
-                        betRecordInfo.GameID
+                        GameID = betRecordInfo.GameID ?? default
                     });
                     parameters.AddDynamicParams(result.Data);
                     _mainDbClient.Execute("Service_TpBetRecordExtend_Ins_V2", parameters: parameters);
