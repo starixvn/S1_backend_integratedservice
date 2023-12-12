@@ -68,7 +68,7 @@ namespace ThirdPartySettleWorker.Workers
                 //forContinue
                 forContinue = tpUnsettleList.Count() == 200;
                 
-                var getUnsettledList = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP, new {}, DataBase.Wager);
+                var getUnsettledList = _tpUnSettledBLL.GetTpUnsettleData<SettleDataHL>(getSP, new {}, DataBase.Wager);
                 if(getUnsettledList == null || !getUnsettledList.Any())
                 {
                     throw new UnsettleNotFoundException($"{_tpName} - HaoLong No Unsettled Data.");
@@ -86,13 +86,20 @@ namespace ThirdPartySettleWorker.Workers
                         var unsettled = getUnsettledList.FirstOrDefault(x => x.TransId == transId);
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
+                        
                         if (tpCurrency.ExchangeRate > 1)
                         {
                             unsettled.Stake *= tpCurrency.ExchangeRate;
                             unsettled.ValidBet *= tpCurrency.ExchangeRate;
                             unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
                         }
-                        
+
+                        var transType = unsettled.StrikerPosition switch
+                        {
+                            "Void" => SettlementType.SettledForInvalid,
+                            _ => SettlementType.SettledForValid
+                        };
+
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
@@ -104,9 +111,10 @@ namespace ThirdPartySettleWorker.Workers
                             GameType = gameType,
                             SettledTime = unsettled.SettleTime,
                             TransTime = unsettled.TransTime,
-                            SettlementType = SettlementType.SettledForValid,
+                            SettlementType = transType,
                             GameID = unsettled.GameId,
                         };
+                        
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)
                         {
@@ -146,5 +154,15 @@ namespace ThirdPartySettleWorker.Workers
                 _timer?.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
+        
+        #region Model
+        
+        private class SettleDataHL : SettleData
+        {
+            public string StrikerPosition { get; set; }
+        }
+        
+        #endregion
+        
     }
 }
