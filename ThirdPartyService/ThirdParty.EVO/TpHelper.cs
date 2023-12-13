@@ -222,6 +222,7 @@ namespace ThirdParty.EVO
             var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerLC_EVO_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
             if (detail != null)
             {
+                string roundId = detail.GetStringValue("RoundId").Length <= 40 ? detail.GetStringValue("RoundId") : detail.GetStringValue("RoundId")[..40];
                 return tpGameType.CategoryId switch
                 {
                     TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
@@ -230,7 +231,7 @@ namespace ThirdParty.EVO
                         Game = detail.GetStringValue("gameType"),
                         RefNo = detail.GetStringValue("transactionId"),
                         Title = detail.GetStringValue("description"),
-                        MatchID = detail.GetStringValue("RoundId"),
+                        MatchID = roundId,
                         BetType = string.Empty,
                         BetChoice = string.Empty,
                         Result = detail.GetStringValue("result"),
