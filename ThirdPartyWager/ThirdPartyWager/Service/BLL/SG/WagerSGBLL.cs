@@ -70,8 +70,8 @@ namespace ThirdPartyWager.Service.BLL
                             }
 
                             var gameType = GetGameType(bet.gameCode);
-                            result = (gameType == GameType.SG_RNG) ? _wagerSGService.InsertWagerRng(bet) : _wagerSGService.InsertWager(bet);
-
+                            result = gameType is GameType.SG_RNG or GameType.SG_Table ? _wagerSGService.InsertWagerRng(bet) : _wagerSGService.InsertWager(bet);
+                            
                             if (result > 0)
                             {
                                 _tpUnsettleService.InsertTpUnsettle(Tp.SG, gameType, bet.referenceId);
@@ -102,13 +102,17 @@ namespace ThirdPartyWager.Service.BLL
 
         private GameType GetGameType(string gameCode)
         {
-            if (!gameCode.StartsWith("F-", StringComparison.OrdinalIgnoreCase))
+            if (gameCode.StartsWith("F-", StringComparison.OrdinalIgnoreCase))
             {
-                // slot
-                return GameType.SG_RNG;
+                return GameType.SG_Fish;
             }
 
-            return GameType.SG_Fish;
+            if (gameCode.StartsWith("C-", StringComparison.OrdinalIgnoreCase))
+            {
+                return GameType.SG_Table;
+            }
+
+            return GameType.SG_RNG;
         }
     }
 }

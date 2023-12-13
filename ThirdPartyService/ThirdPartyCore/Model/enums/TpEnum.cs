@@ -142,6 +142,7 @@
         SPRIBE_RNG = 104,
         FaChai_RNG = 106,
         BNG_RNG = 108,
+        SG_Table = 109,
         NLC_RNG = 111,
         Amigo_RNG = 112,
     }
