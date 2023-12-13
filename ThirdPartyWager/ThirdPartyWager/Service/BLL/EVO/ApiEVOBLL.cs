@@ -88,19 +88,15 @@ namespace ThirdPartyWager.Service.BLL
             }
             else
             {
-                var word = "error";
-                if (!result.Contains(word))
+                var word = "}\n{";
+                if (result.Contains(word))
                 {
-                    word = "}\n{";
-                    if (result.Contains(word))
-                    {
-                        var tmp = result.Replace(word, "},{");
-                        result = $"[{tmp}]";
-                    }
-                    else
-                    {
-                        result = $"[{result}]";
-                    }
+                    var tmp = result.Replace(word, "},{");
+                    result = $"[{tmp}]";
+                }
+                else
+                {
+                    result = $"[{result}]";
                 }
             }
             return result;
