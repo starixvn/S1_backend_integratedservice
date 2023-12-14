@@ -99,6 +99,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     }
     public class CustInfo
     {
+        public int IBCCustID { get; set; }
         public string RegisteredName { get; set; }
         public string Email { get; set; }
         public string Mobile { get; set; }

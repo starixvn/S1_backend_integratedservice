@@ -175,6 +175,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 result.DateOfBirth = dateOfBirth;
                 result.Nationality = nationality;
                 result.Occupation = GetOccupation(custProfile.Occupation);
+                result.IBCCustID = custProfile.CustId;
 
             }
             catch (Exception e)
