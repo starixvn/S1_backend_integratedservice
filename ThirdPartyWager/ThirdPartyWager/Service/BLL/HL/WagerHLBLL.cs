@@ -58,10 +58,15 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     try
                     {
-                        if (!IsValidWager(unSettleDate, wagerData))
+                        if (IsValidWager(unSettleDate, wagerData))
                         {
                             _ =  _wagerHLService.InsertHLWager(wagerData);
                             _ = _tpUnsettleService.InsertTpUnsettle(Tp.HaoLong, GameType.HaoLong_4D, wagerData.BetID);
+                        }
+                        else
+                        {
+                            var insert = CreateHLWagerData(wagerData.BetID, "Void", "0");
+                            _ =  _wagerHLService.UpdateHLWager(insert);
                         }
                     }
                     catch (Exception ex)
@@ -175,10 +180,10 @@ namespace ThirdPartyWager.Service.BLL
                 SettleFlag = 2
             };
         }
-        
+
         private bool IsValidWager(IEnumerable<HLWagerTrans> getHLWager, HLWagerData wagerData)
         {
-            return getHLWager.Any(x => x.TransId == wagerData.BetID);
+            return !getHLWager.Any(x => x.TransId != wagerData.BetID);
         }
 
         private DateTime ConvertTimeToPlusEight(DateTime dateTime)

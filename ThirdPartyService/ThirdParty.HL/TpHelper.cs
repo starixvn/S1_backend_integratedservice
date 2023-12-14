@@ -237,15 +237,26 @@ namespace ThirdParty.HL
                         }
                     };
                 }
+                
+                return new ApiResult<TransferResult>()
+                {
+                    ErrorCode = ErrorCode.Success,
+                    Data = new TransferResult()
+                    {
+                        Status = TransferStatus.Success
+                    }
+                };
             }
+            
             return new ApiResult<TransferResult>()
             {
-                ErrorCode = ErrorCode.Success,
+                ErrorCode = ErrorCode.TransferPending,
                 Data = new TransferResult()
                 {
-                    Status = TransferStatus.Success
+                    Status = TransferStatus.Pending
                 }
             };
+            
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID,
@@ -290,13 +301,23 @@ namespace ThirdParty.HL
                         }
                     };
                 }
+                
+                return new ApiResult<TransferResult>()
+                {
+                    ErrorCode = ErrorCode.Success,
+                    Data = new TransferResult()
+                    {
+                        Status = TransferStatus.Success
+                    }
+                };
             }
+            
             return new ApiResult<TransferResult>()
             {
-                ErrorCode = ErrorCode.Success,
+                ErrorCode = ErrorCode.TransferPending,
                 Data = new TransferResult()
-                {
-                    Status = TransferStatus.Success
+                { 
+                    Status = TransferStatus.Pending,
                 }
             };
         }
