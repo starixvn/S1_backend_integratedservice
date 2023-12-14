@@ -120,11 +120,6 @@ namespace ThirdPartySettleWorker.Workers
                             _logger.LogError(ex1, $"{logName}:{JsonConvert.SerializeObject(unsettledData)}");
                         }
                     }
-                    else if (wagerData == null && unsettledData.TicketStatus == 1)
-                    {
-                        // 因下注時會寫TpUnsettle，該筆注單被取消則更新狀態為成功並不執行結算入TpBetRecord
-                        _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, true);
-                    }
                 }
             }
             catch (UnsettleNotFoundException ex)
