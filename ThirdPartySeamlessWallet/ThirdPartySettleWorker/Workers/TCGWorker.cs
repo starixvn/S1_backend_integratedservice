@@ -102,10 +102,15 @@ namespace ThirdPartySettleWorker.Workers
                             //settle amount check
                             var chcekData = _tpUnSettledBLL.GetTpUnsettleData<TCGCheckData>("Service_BettransLottery_TCG_Check",
                                new { TpUserName = unsettled.Account, unsettled.OrderNum }, DataBase.Main)?.FirstOrDefault();
+                            if (chcekData == null)
+                            {
+                                _logger.LogWarning($"TCG Bettrans empty || TransId : {transId}  OrderNum: {unsettled.OrderNum}");
+                                continue;
+                            }
+
                             var payout = Math.Round(chcekData.Payout / tpCurrency.ExchangeRate, 2, MidpointRounding.AwayFromZero);
                             var stake = Math.Round(chcekData.Stake / tpCurrency.ExchangeRate, 2, MidpointRounding.AwayFromZero);
-                            if (chcekData == null
-                                || unsettled.Stake != Math.Round(chcekData.Stake / tpCurrency.ExchangeRate, 2, MidpointRounding.AwayFromZero)
+                            if (unsettled.Stake != Math.Round(chcekData.Stake / tpCurrency.ExchangeRate, 2, MidpointRounding.AwayFromZero)
                                 || unsettled.WinLostAmount != (payout - stake))
                             {
                                 _logger.LogWarning($"TCG settle amount check fail || TransId : {transId}  OrderNum: {unsettled.OrderNum}");
