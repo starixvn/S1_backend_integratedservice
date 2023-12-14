@@ -45,7 +45,7 @@ namespace ThirdPartyWager.Service.DAL
         
         public IEnumerable<HLWagerTrans> GetHLBetUnSettledList(long TicketKey, int LimitCount = 1000)
         {
-            return _wagerDbClient.Query<HLWagerTrans>("BetDetail.Service_TpWager_HL_UnSettle_Get",
+            return _wagerDbClient.Query<HLWagerTrans>("Service_TpWager_HL_UnSettle_Get",
                 new
                 {
                     TicketKey,
@@ -56,7 +56,7 @@ namespace ThirdPartyWager.Service.DAL
         public long GetHaoLongTicketKey(long TicketKey)
         {
             var parameters = new { TicketKey };
-            return _reportDbClient.QueryFirst<long>("BetDetail.Service_TpWager_HL_TicketKey_Get", parameters);
+            return _reportDbClient.QueryFirst<long>("Service_TpWager_HL_TicketKey_Get", parameters);
         }
 
         private DateTime ConvertToUtcTime(DateTime dateTime)

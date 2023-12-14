@@ -83,6 +83,8 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
+                        var betRecordInfo = new BetRecordInfo();
+                        
                         var unsettled = getUnsettledList.FirstOrDefault(x => x.TransId == transId);
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
@@ -94,29 +96,52 @@ namespace ThirdPartySettleWorker.Workers
                             unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
                         }
 
-                        var transType = unsettled.StrikerPosition switch
+                        var transType = unsettled.StrikePosition switch
                         {
                             "Void" => SettlementType.SettledForInvalid,
+                            "0" => SettlementType.UnSettled,
                             _ => SettlementType.SettledForValid
                         };
 
-                        var betRecordInfo = new BetRecordInfo
+
+                        if (transType != SettlementType.UnSettled)
                         {
-                            TpId = (int)Tp,
-                            Stake = unsettled.Stake,
-                            TpUserName = unsettled.Account,
-                            ValidBet = unsettled.ValidBet,
-                            WinlostAmount = unsettled.WinLostAmount,
-                            TransId = unsettled.TransId,
-                            GameType = gameType,
-                            SettledTime = unsettled.SettleTime,
-                            TransTime = unsettled.TransTime,
-                            SettlementType = transType,
-                            GameID = unsettled.GameId,
-                        };
-                        
+
+                            betRecordInfo = new BetRecordInfo
+                            {
+                                TpId = (int)Tp,
+                                Stake = unsettled.Stake,
+                                TpUserName = unsettled.Account,
+                                ValidBet = unsettled.ValidBet,
+                                WinlostAmount = unsettled.WinLostAmount,
+                                TransId = unsettled.TransId,
+                                GameType = gameType,
+                                SettledTime = unsettled.SettleTime,
+                                TransTime = unsettled.TransTime,
+                                SettlementType = transType,
+                                GameID = unsettled.GameId,
+                            };
+                        }
+                        else
+                        {
+                            betRecordInfo = new BetRecordInfo
+                            {
+                                TpId = (int)Tp,
+                                Stake = unsettled.Stake,
+                                TpUserName = unsettled.Account,
+                                ValidBet = unsettled.ValidBet,
+                                WinlostAmount = 0,
+                                TransId = unsettled.TransId,
+                                GameType = gameType,
+                                SettledTime = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds(),
+                                TransTime = unsettled.TransTime,
+                                SettlementType = transType,
+                                GameID = unsettled.GameId,
+                            };
+                        }
+
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
-                        if (result == 1)
+                        if (result == 1 && transType != SettlementType.UnSettled)
                         {
                             Task.Run(() =>
                             {
@@ -159,7 +184,7 @@ namespace ThirdPartySettleWorker.Workers
         
         private class SettleDataHL : SettleData
         {
-            public string StrikerPosition { get; set; }
+            public string StrikePosition { get; set; }
         }
         
         #endregion

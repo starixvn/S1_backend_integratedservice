@@ -18,7 +18,6 @@ namespace ThirdPartyService.Service.Worker
         private readonly ThirdPartyBLL _thirdPartyBll;
         private readonly Dictionary<int,HLConfig> _siteHLConfig;
         private readonly int _tpId = (int)TpEnum.HaoLong;
-        private readonly int _currencyId = 2;
         private Timer _timer;
         private List<int> _failCustIdList = new();
         
@@ -55,10 +54,12 @@ namespace ThirdPartyService.Service.Worker
                 var sw = Stopwatch.StartNew();
 
                 _logger.LogInformation($"HLCreateMemberWorker Start.");
+                
+                var tpCurrency = _tpCustInfoBll.GetTpCurrencyCodeByCurrencyId( _tpId,"MYR");
 
                 foreach (var siteId in _siteHLConfig.Select(siteIdKey => siteIdKey.Key))
                 {
-                    var custIdList = _tpCustInfoBll.GetCustCurrencySiteIdWithoutSabaId(_tpId, siteId, _currencyId);
+                    var custIdList = _tpCustInfoBll.GetCustCurrencySiteIdWithoutSabaId(_tpId, siteId, tpCurrency.CurrencyId);
 
                     foreach (var custId in custIdList)
                     {
