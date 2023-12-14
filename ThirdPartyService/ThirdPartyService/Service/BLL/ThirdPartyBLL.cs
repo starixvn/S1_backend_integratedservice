@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Memory;
 using System.Collections.Concurrent;
 
 using Newtonsoft.Json;
@@ -122,7 +122,7 @@ namespace ThirdPartyService.Service.BLL
                 return apiResult;
             }
 
-            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
+            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId, tpInfo.LangId);
             if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
             {
                 var tpCustInfo = tpCustInfoResult.Data;
@@ -211,6 +211,11 @@ namespace ThirdPartyService.Service.BLL
                 var oThirdPartyModel =
                     thirdPartyHelper.GetThirdPartyBySite(tpTransfer.TpId, tpCustInfoResult.Data.SiteId);
                 var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
+
+                if (!string.IsNullOrEmpty(tpTransfer.LangId))
+                {
+                    inputs.Add("langId", tpTransfer.LangId);
+                }
 
                 var balanceApiResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
                 if (balanceApiResult.ErrorCode != ErrorCode.Success)

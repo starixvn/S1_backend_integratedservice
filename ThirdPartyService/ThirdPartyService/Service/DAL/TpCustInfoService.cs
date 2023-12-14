@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 
 using Dapper;
 
@@ -40,7 +40,7 @@ namespace ThirdPartyService.Service.DAL
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
         }
 
-        public ApiResult<TpCustInfo> GetTpCustInfo(int custId, int tpId)
+        public ApiResult<TpCustInfo> GetTpCustInfo(int custId, int tpId, string langId = "")
         {
             var apiResult = new ApiResult<TpCustInfo>();
 
@@ -73,7 +73,7 @@ namespace ThirdPartyService.Service.DAL
                         return apiResult;
                     }
 
-                    return CreateMember(customer, tpId, true);
+                    return CreateMember(customer, tpId, true , langId);
                 }
                 else if (tpCustInfo.Status is (int)CustStatus.Closed or (int)CustStatus.Suspend ||
                          tpCustInfo.CStatus is (int)CustStatus.Closed or (int)CustStatus.Suspend)
@@ -184,7 +184,7 @@ namespace ThirdPartyService.Service.DAL
             return false;
         }
 
-        private ApiResult<TpCustInfo> CreateMember(Customer customer, int tpId, bool isNeedSendRequest)
+        private ApiResult<TpCustInfo> CreateMember(Customer customer, int tpId, bool isNeedSendRequest ,string langId = "")
         {
             var apiResult = new ApiResult<TpCustInfo>();
 
@@ -230,6 +230,11 @@ namespace ThirdPartyService.Service.DAL
             regTpCustInfo.TpCurrencyId = tpCurrency.TpCurrencyId;
             regTpCustInfo.ExchangeRate = tpCurrency.ExchangeRate;
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(_thirdPartyHelper.GetThirdPartyBySite(tpId, customer.SiteId).Setting);
+
+            if (!string.IsNullOrEmpty(langId))
+            {
+                inputs.Add("langId", langId);
+            }
 
             if (inputs == null)
             {

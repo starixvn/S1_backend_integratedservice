@@ -25,8 +25,13 @@ namespace ThirdParty.HL
             var oApiResult = new ApiResult();
             if (CheckHaoLongBusyTime(1))
             {
+                var langId = inputs["langId"];
+                if(string.IsNullOrEmpty(langId))
+                {
+                    langId = "en";
+                }
                 oApiResult.ErrorCode = ErrorCode.ServerIsBusy;
-                oApiResult.Message = _siteLanguageBLL.GetLanguageValue(tpCustInfo.SiteId,"HaoLongCreateMemberBusyTime",tpCustInfo.IsoCode);
+                oApiResult.Message = _siteLanguageBLL.GetLanguageValue(tpCustInfo.SiteId,"HaoLongCreateMemberBusyTime",langId);
                 return oApiResult;
             }
             
@@ -137,8 +142,13 @@ namespace ThirdParty.HL
             var oApiResult = new ApiResult<UserBalance>();
             if (CheckHaoLongBusyTime(2))
             {
+                var langId = inputs["langId"];
+                if(string.IsNullOrEmpty(langId))
+                {
+                    langId = "en";
+                }
                 oApiResult.ErrorCode = ErrorCode.ServerIsBusy;
-                oApiResult.Message = _siteLanguageBLL.GetLanguageValue(tpCustInfo.SiteId,"HaoLongTransferBusyTime","en");//先寫死en,要不然都會依照幣別固定語言
+                oApiResult.Message = _siteLanguageBLL.GetLanguageValue(tpCustInfo.SiteId,"HaoLongTransferBusyTime",langId);
                 return oApiResult;
             }
             
@@ -195,8 +205,13 @@ namespace ThirdParty.HL
             var oApiResult = new ApiResult<TransferResult>();
             if (CheckHaoLongBusyTime(2))
             {
+                var langId = inputs["langId"];
+                if(string.IsNullOrEmpty(langId))
+                {
+                    langId = "en";
+                }
                 oApiResult.ErrorCode = ErrorCode.ServerIsBusy;
-                oApiResult.Message = _siteLanguageBLL.GetLanguageValue(tpCustInfo.SiteId,"HaoLongTransferBusyTime","en"); //先寫死en,要不然都會依照幣別固定語言
+                oApiResult.Message = _siteLanguageBLL.GetLanguageValue(tpCustInfo.SiteId,"HaoLongTransferBusyTime",langId);
                 return oApiResult;
             }
             
