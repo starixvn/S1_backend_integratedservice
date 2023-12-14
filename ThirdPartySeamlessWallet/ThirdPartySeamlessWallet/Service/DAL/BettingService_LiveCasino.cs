@@ -574,20 +574,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 if (result > 0)
                 {
-                    // WM如果下注後輸的話不會再發settled 會導致如果只有輸的單的話會沒辦法正常結算
-                    // 故改成先把下注單先寫入tpunsettle 但又會有重複單號問題 故塞入之前先檢查有沒有單 若沒單在往下做
-                    // 排除小費單
-                    var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp.WM, GameType.WM_LiveCasino);
-                    if (tpUnsettleList.All(x => x.TransId != mixUniqueId) && bettingDataLC_WM.category == "1")
-                    {
-                        var insertTpResults =
-                            _tpUnsettleService.InsertTpUnsettle(Tp.WM, GameType.WM_LiveCasino, mixUniqueId, trans);
-                        if (insertTpResults <= 0)
-                        {
-                            result = 0;
-                        }
-                    }
-
                     _mainDbClient.CommitAndDisposeConnection(conn, trans);
                 }
                 else
