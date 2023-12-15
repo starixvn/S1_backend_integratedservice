@@ -246,7 +246,7 @@ namespace ThirdPartyWager.Service.Model.NineW
         public decimal txStake { get; set; }
         public string matchType { get; set; }
         public string placed { get; set; }
-        public int fancyBetRuns { get; set; }
+        public int? fancyBetRuns { get; set; } = 0;
         public decimal txLiability { get; set; }
         public string betStatus { get; set; }
     }
