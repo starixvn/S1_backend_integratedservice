@@ -363,6 +363,7 @@ namespace ThirdParty.HL
                 TransId = getBetDetail.TransId,
                 Detail = detail,
                 TpCurrency = tpCurrency,
+                RefTransId = getBetDetail.TransId,
                 TpUserName = getDetail.GetValueOrDefault("loginID")?.ToString(),
                 UTCBetTime = DateTime.Parse(getDetail.GetValueOrDefault("dateTime")?.ToString()),
                 UTCSettledTime = DateTimeOffset.FromUnixTimeSeconds(long.Parse(getDetail.GetValueOrDefault("SettleTimeUnix").ToString())).DateTime,
@@ -381,9 +382,9 @@ namespace ThirdParty.HL
             
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
+                RefNo = detailList.GetFirstStringValue("betID"),
                 GameID = TpGameType.HaoLong_4D.ToString(),
                 Game = GetGameName(detailList.GetFirstStringValue("drawType")),
-                RefNo = string.Empty,
                 Title = tpGameType.TypeName,
                 BetType = detailList.GetFirstStringValue("betPosition"),
                 BetChoice = detailList.GetFirstStringValue("betNumber"),
