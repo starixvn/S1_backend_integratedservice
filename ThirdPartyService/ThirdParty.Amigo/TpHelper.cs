@@ -156,14 +156,19 @@ namespace ThirdParty.Amigo
 
             if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
             {
-                var rand = new Random();
-                var funGameUrl = $"{config.FunGameUrl}/api/link/id/{rand.Next(1, 10000)}/?gameSymbol={gameId}&lobbyurl={HttpUtility.UrlEncode(homeUrl)}";
-
-                return new ApiResult()
-                {
-                    ErrorCode = ErrorCode.Success,
-                    Message = funGameUrl
-                };
+                string funGameUrl = $"{config.FunGameUrl}/api/link/id/{styleName}/?gameSymbol={gameId}&lobbyurl={HttpUtility.UrlEncode(homeUrl)}";
+                string sContent = HttpGet(funGameUrl, "", "text/html; charset=UTF-8");
+                return string.IsNullOrEmpty(sContent)
+                    ? new ApiResult()
+                    {
+                        ErrorCode = ErrorCode.Fail,
+                        Message = sContent
+                    }
+                    : new ApiResult()
+                    {
+                        ErrorCode = ErrorCode.Success,
+                        Message = sContent
+                    };
             }
 
             // insert uuid and token mapping

@@ -68,6 +68,7 @@
         AG_LiveCasino = 8,
         SA_LiveCasino = 9,
         GPI_RNG = 11,
+        WM_LiveCasino = 32,
         One789_Lottery = 35,
         One789_Lottery_789 = 36,
         One789_LiveCasino = 37,
@@ -101,7 +102,8 @@
         IM_ESports = 102,
         IM_Sports = 103,
         FaChai_RNG = 106,
-        NLC_RNG = 111,
+        SG_Table = 109,
+        NLC_RNG = 111
     }
 
     public enum SettlementType

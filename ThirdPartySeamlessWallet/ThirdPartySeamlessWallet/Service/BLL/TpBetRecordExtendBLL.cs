@@ -41,6 +41,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 var response = await _httpHelper.GetWithoutProxyClient().PostAsync(_apiUrl, httpContent);
                 var responseBody = await response.Content.ReadAsStringAsync();
                 var result = JsonConvert.DeserializeObject<ApiResult<TpBetRecordExtend>>(responseBody);
+                if (result.Data.GameID is null)
+                    result.Data.GameID = betRecordInfo.GameID ?? "0";
                 if (result.ErrorCode == 0)
                 {
                     var parameters = new DynamicParameters(new
@@ -66,6 +68,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         betRecordInfo.BonusId,
                         OriginalState = betRecordInfo.OriginalState ?? string.Empty,
                         betRecordInfo.TicketKey,
+                        GameID = betRecordInfo.GameID ?? "0"
                     });
                     parameters.AddDynamicParams(result.Data);
                     _mainDbClient.Execute("Service_TpBetRecordExtend_Ins_V2", parameters: parameters);

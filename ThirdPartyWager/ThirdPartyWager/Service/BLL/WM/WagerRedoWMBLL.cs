@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -14,6 +13,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<WagerRedoWMBLL> _logger;
         private readonly IEnumerable<TpCurrency> _tpCurrency;
         private readonly IHostEnvironment _environment;
+        private readonly TpUnsettleService _tpUnsettleService;
 
         public WagerRedoWMBLL(IServiceProvider provider)
         {
@@ -23,6 +23,7 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<WagerRedoWMBLL>>();
             _tpCurrency = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList((int)Tp.WM);
             _environment = provider.GetRequiredService<IHostEnvironment>();
+            _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
         }
 
         public async Task<bool> RedoWagersAsync(int tpId, string startTime, string endTime, long startUnix, long endUnix)
@@ -78,7 +79,11 @@ namespace ThirdPartyWager.Service.BLL
                         try
                         {
                             bet.Currency = currency.TpCurrencyId;
-                            _wagerWMService.InsertWager(bet);
+                            var result = _wagerWMService.InsertWager(bet);
+                            if (result > 0)
+                            {
+                                _tpUnsettleService.InsertTpUnsettle(Tp.WM, GameType.WM_LiveCasino, bet.TransId);
+                            }
                         }
                         catch (Exception ex)
                         {
