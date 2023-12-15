@@ -172,7 +172,8 @@ namespace ThirdPartyWager.Service.BLL
                 var totalPage = 1;
                 while (page <= totalPage)
                 {
-                    await Task.Delay(1500);
+                    // Frequency: 1 time per minute (by userId + reportType + pageNumber)
+                    await Task.Delay(65000);
                     var httpContent = new FormUrlEncodedContent(new Dictionary<string, string>
                     {
                         { "cert", config.Cert },
@@ -190,7 +191,8 @@ namespace ThirdPartyWager.Service.BLL
                     }
 
                     var json = await response.Content.ReadAsStringAsync();
-                    _logger.LogInformation(json);
+                    _logger.LogInformation($"Url={apiurl}, Input={httpContent.ReadAsStringAsync().Result}, Output={json}");
+
                     var queryReuslt = _common.FromJson<QuerySettleBetHistoryObj<ReSettleBet>>(json);
                     if (queryReuslt.status != "1")
                     {
