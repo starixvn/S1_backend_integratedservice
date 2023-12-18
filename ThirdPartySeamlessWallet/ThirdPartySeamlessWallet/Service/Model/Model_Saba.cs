@@ -30,4 +30,26 @@ namespace ThirdPartySeamlessWallet.Service.Model
         [XmlElement(ElementName = "message")]
         public string Message { get; set; }
     }
+
+    public class GetDataInput
+    {
+        public string SiteId { get; set; }
+
+        public string UserName { get; set; }
+    }
+
+    public class GetFinancialLogSpInput
+    {
+        public int CustId { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public string RefTransId { get; set; } = null;
+
+        public GetFinancialLogSpInput(int custId) 
+        {
+            CustId = custId;
+            StartDate = DateTime.UtcNow.AddDays(-60);
+            EndDate = DateTime.UtcNow;
+        }
+    }
 }

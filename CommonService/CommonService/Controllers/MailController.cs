@@ -34,6 +34,13 @@ namespace CommonService.Controllers
         {
             var apiResult = new ApiResult();
             var custInfo = _custInfoBll.GetCustInfoProfile(req.custId);
+            
+            //IvorySport跳過發送
+            if (custInfo.SiteId == 5)
+            {
+                apiResult.ErrorCode = ErrorCode.Success;
+                return apiResult;
+            }
 
             if (custInfo != null)
             {
