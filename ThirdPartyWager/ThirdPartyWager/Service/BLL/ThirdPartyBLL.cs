@@ -188,5 +188,22 @@ namespace ThirdPartyWager.Service.BLL
 
             return setting;
         }
+        
+        /// <summary>
+        /// 不分SiteId，用WorkerType取回TicketKey
+        /// </summary>
+        public long GetAllSiteTicketKey(WorkerType workerType, int tpId)
+        {
+            return thirdPartyHelper.GetSiteTicketKey(0, tpId, workerType);
+        }
+
+        /// <summary>
+        /// 不分SiteId，用WorkerType更新TicketKey
+        /// </summary>
+        public int SetAllSiteTicketKey(WorkerType workerType, int tpId, long ticketKey)
+        {
+            return thirdPartyHelper.SetSiteTicketKey(0, tpId, workerType, ticketKey);
+        }
+        
     }
 }

@@ -52,6 +52,7 @@
         FaChai = 55,
         Pegasus = 56,
         BNG = 57,
+        HaoLong = 58,
         NLC = 59,
         Amigo = 60,
     }
@@ -143,6 +144,7 @@
         FaChai_RNG = 106,
         BNG_RNG = 108,
         SG_Table = 109,
+        HaoLong_4D = 110,
         NLC_RNG = 111,
         Amigo_RNG = 112,
     }

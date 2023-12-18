@@ -249,7 +249,7 @@ namespace ThirdPartySeamlessWallet.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
-
+        
         public T ExecuteScalar<T>(string name, object parameters)
         {
             T result;

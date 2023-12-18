@@ -2,8 +2,10 @@
 {
     public class TpCurrency
     {
+        public int CurrencyId { get; set; }
         public string TpCurrencyId { set; get; }
         public decimal ExchangeRate { set; get; }
+        public int IsSubCurrency { get; set; }
     }
 
     public class TpCountryCode
