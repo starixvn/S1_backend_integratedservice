@@ -148,5 +148,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return tpCustInfoService.UpdateOnline(custId, isOnline, token, ip);
         }
+
+        public CustProfile GetCustProfileWithCacheByUserName(int siteId, string userName)
+        {
+            var custProfile = _redisHelper.TryGetOrCreate(
+               $"CustProfile:{siteId}:{userName}",
+               TimeSpan.FromMinutes(10),
+              () => GetCustProfileByUserName(siteId, userName));
+            return custProfile;
+        }
+        public CustProfile GetCustProfileByUserName(int siteId, string userName)
+        {
+            var custProfile = tpCustInfoService.GetCustProfileByUserName(siteId, userName);
+            return custProfile;
+        }
     }
 }
