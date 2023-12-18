@@ -181,7 +181,7 @@ namespace ThirdPartyService.Service.BLL
                     return result;
                 }
 
-                var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpTransfer.CustId, tpTransfer.TpId);
+                var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpTransfer.CustId, tpTransfer.TpId ,tpTransfer.LangId);
 
                 // Test account create 3rd party only for saba
                 if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production" && tpTransfer.TpId != 1)
@@ -339,7 +339,7 @@ namespace ThirdPartyService.Service.BLL
 
             try
             {
-                var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
+                var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId, tpInfo.LangId);
                 if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
                 {
                     if (tpCustInfoResult.Data.IsTest == false && ThirdPartyIsMaintain(tpCustInfoResult.Data.SiteId, tpInfo.TpId))
@@ -355,6 +355,11 @@ namespace ThirdPartyService.Service.BLL
                     var oThirdPartyModel =
                         thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
                     var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
+                    
+                    if (!string.IsNullOrEmpty(tpInfo.LangId))
+                    {
+                        inputs.Add("langId",tpInfo.LangId);
+                    }
 
                     apiResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
 
