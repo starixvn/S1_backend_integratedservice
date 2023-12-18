@@ -55,7 +55,7 @@ namespace ThirdPartySettleWorker.Workers
             var isError = false;
             var gameType = (GameType)state;
             var logName = "AGDoSettleLiveCasinoWork";
-            var bettransGet = "Service_BettransLC_AGV2_Payout_ByBillNo_Get";
+            var bettransGet = "Service_BettransLC_AGV2_Payout_ByBillNo_Get_V2";
             try
             {
                 var tpUnsettleList = _tpUnSettledBll.GetTpUnsettleList(Tp, gameType);
