@@ -243,12 +243,12 @@ namespace ThirdParty.HL
                 {
                     return new ApiResult<TransferResult>()
                     {
-                        ErrorCode = ErrorCode.TransferPending,
+                        ErrorCode = ErrorCode.TransferFail,
                         RawErrorCode = profileResponse.ErrorCode.ToString(),
                         RawMessage = profileResponse.Desc.ToString(),
                         Data = new TransferResult()
                         {
-                            Status = TransferStatus.Pending,
+                            Status = TransferStatus.Fail,
                         }
                     };
                 }
@@ -265,10 +265,10 @@ namespace ThirdParty.HL
             
             return new ApiResult<TransferResult>()
             {
-                ErrorCode = ErrorCode.TransferPending,
+                ErrorCode = ErrorCode.TransferFail,
                 Data = new TransferResult()
                 {
-                    Status = TransferStatus.Pending
+                    Status = TransferStatus.Fail
                 }
             };
             
@@ -307,12 +307,12 @@ namespace ThirdParty.HL
                 {
                     return new ApiResult<TransferResult>()
                     {
-                        ErrorCode = ErrorCode.TransferPending,
+                        ErrorCode = ErrorCode.TransferFail,
                         RawErrorCode = transferCheckResponse.ErrorCode.ToString(),
                         RawMessage = transferCheckResponse.Desc.ToString(),
                         Data = new TransferResult()
                         {
-                            Status = TransferStatus.Pending,
+                            Status = TransferStatus.Fail,
                         }
                     };
                 }
@@ -329,10 +329,10 @@ namespace ThirdParty.HL
             
             return new ApiResult<TransferResult>()
             {
-                ErrorCode = ErrorCode.TransferPending,
+                ErrorCode = ErrorCode.TransferFail,
                 Data = new TransferResult()
                 { 
-                    Status = TransferStatus.Pending,
+                    Status = TransferStatus.Fail,
                 }
             };
         }
