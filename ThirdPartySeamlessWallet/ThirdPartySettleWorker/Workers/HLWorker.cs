@@ -141,12 +141,15 @@ namespace ThirdPartySettleWorker.Workers
                         }
 
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
-                        if (result == 1 && transType != SettlementType.UnSettled)
+                        if (result == 1)
                         {
+                            if (transType != SettlementType.UnSettled)
+                            {
+                                _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gameType, transId, true, DataBase.Wager);
+                            }
                             Task.Run(() =>
                             {
                                 _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, unsettled.TransId, isSuccess: true);
-                                _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gameType, transId, true, DataBase.Wager);
                             });
                         }
                     }
