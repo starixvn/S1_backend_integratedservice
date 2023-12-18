@@ -156,6 +156,14 @@ namespace ThirdPartyService.Service.DAL
             return _reportDbClient.Query<int>("Service_CustCurrencySiteWithoutTpCustInfo_Get", parameter, commandType: CommandType.StoredProcedure);
         }
 
+        public IEnumerable<TpCurrency> GetTpCurrency(int tpId)
+        {
+            var parameter = new DynamicParameters();
+            parameter.Add("_TpId", tpId);
+            return _reportDbClient.Query<TpCurrency>("Service_TpCurrency_Get", new { TpId = tpId });
+        }
+        
+
         public TpCountryCode GetTpCurrencyCodeByCurrencyId(int tpId, string tpCurrencyId)
         {
             return _mainDbClient.QueryFirst<TpCountryCode>("Service_TpCountryCodeByTpCurrencyId_Get", new { TpId = tpId, TpCurrencyId = tpCurrencyId });

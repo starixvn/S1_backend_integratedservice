@@ -55,29 +55,21 @@ namespace ThirdPartyService.Service.Worker
 
                 _logger.LogInformation($"HLCreateMemberWorker Start.");
                 
-                var tpCurrency = _tpCustInfoBll.GetTpCurrencyCodeByCurrencyId( _tpId,"MYR");
-
+                var tpCurrency = _tpCustInfoBll.GetTpCurrency( _tpId);
+                
                 foreach (var siteId in _siteHLConfig.Select(siteIdKey => siteIdKey.Key))
                 {
-                    var custIdList = _tpCustInfoBll.GetCustCurrencySiteIdWithoutSabaId(_tpId, siteId, tpCurrency.CurrencyId);
-
-                    foreach (var custId in custIdList)
+                    foreach (var tpCurrencyId in tpCurrency)
                     {
-                        var result = _thirdPartyBll.CreateMember(custId, _tpId, true);
-                        if (result.ErrorCode is not ErrorCode.Success)
-                        {
-                            _failCustIdList.Add(custId);
-                            _logger.LogInformation($"HLCreateMemberWorker-Create Member Fail. custId={custId}. " +
-                                                   $"result={JsonConvert.SerializeObject(result)}");
-                        }
-                        Thread.Sleep(5 * 1000); //休息5秒
-                    }
-
-                    if (_failCustIdList.Any())
-                    {
-                        _logger.LogInformation($"HLCreateMemberWorker-Create Member Fail List={JsonConvert.SerializeObject(_failCustIdList)}. ");
+                        ProcessCustomer(siteId, tpCurrencyId.CurrencyId);
                     }
                 }
+
+                if (_failCustIdList.Any())
+                {
+                    _logger.LogInformation($"HLCreateMemberWorker-Create Member Fail List={JsonConvert.SerializeObject(_failCustIdList)}. ");
+                }
+                
                 _logger.LogInformation($"HLCreateMemberWorker End.\r\n" +
                                        $"Finish Time(m: s.ms): {Math.Round(sw.Elapsed.TotalMinutes)}:{Math.Round(sw.Elapsed.TotalMinutes)}.{Math.Round(sw.Elapsed.TotalMilliseconds)}.");
             }
@@ -110,6 +102,7 @@ namespace ThirdPartyService.Service.Worker
             return Task.CompletedTask;
         }
         
+        #region Private
         private bool CheckHaoLongBusyTime()
         {
             var utcNow = DateTime.UtcNow;
@@ -117,5 +110,28 @@ namespace ThirdPartyService.Service.Worker
             var timeInGmtPlus8 = TimeZoneInfo.ConvertTimeFromUtc(utcNow, gmtPlus8);
             return timeInGmtPlus8.TimeOfDay >= new TimeSpan(14,55,0) && timeInGmtPlus8.TimeOfDay <= new TimeSpan(20, 5, 0);
         }
+        
+        private void ProcessCustomer(int siteId, int tpCurrencyId)
+        {
+            var custIdList = _tpCustInfoBll.GetCustCurrencySiteIdWithoutSabaId(_tpId, siteId, tpCurrencyId);
+            foreach (var custId in custIdList)
+            {
+                HandleCustomerCreation(custId);
+            }
+        }
+        
+        private void HandleCustomerCreation(int custId)
+        {
+            var result = _thirdPartyBll.CreateMember(custId, _tpId, true);
+            if (result.ErrorCode is not ErrorCode.Success)
+            {
+                _failCustIdList.Add(custId);
+                _logger.LogInformation($"HLCreateMemberWorker-Create Member Fail. custId={custId}. " +
+                                       $"result={JsonConvert.SerializeObject(result)}");
+            }
+            Thread.Sleep(5 * 1000); //休息5秒
+        }
+        
+        #endregion
     }
 }
