@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -17,7 +17,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ApiAPBLL _apiAPBLL;
-        private readonly CommonBLL _commonBLL;
         private readonly WagerAPService _wagerAPService;
         private readonly ILogger<WagerAPBLL> _logger;
 
@@ -25,16 +24,16 @@ namespace ThirdPartyWager.Service.BLL
         private readonly int _gameType = (int)GameTypeOfAP.Mini;
         private readonly int _timeZone = 0;
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm";
-
+        private readonly Dictionary<int, APConfig> _siteConfigDic;
 
         public WagerAPBLL(IServiceProvider provider)
         {
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _apiAPBLL = provider.GetRequiredService<ApiAPBLL>();
             _wagerAPService = provider.GetRequiredService<WagerAPService>();
-            _commonBLL = provider.GetRequiredService<CommonBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _logger = provider.GetRequiredService<ILogger<WagerAPBLL>>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<APConfig>(Tp.AP.ToString());
         }
 
         public async Task<bool> ExecWagerWorker(int siteId, int type, int timeRange)
@@ -82,7 +81,7 @@ namespace ThirdPartyWager.Service.BLL
             try
             {
                 // get api info
-                var setting = _thirdPartyBLL.GetThirdPartyBySite(_tpId, siteId);
+                var setting = _siteConfigDic[siteId];
 
                 // pagination
                 var page = 1;
