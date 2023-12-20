@@ -1,15 +1,16 @@
 ﻿using Serilog.Context;
-
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Workers
 {
     public class FinanceSA : BackgroundService
     {
+        private Timer _timer;
         private readonly ILogger<FinanceSA> _logger;
         private readonly FinanceSABLL _financeSABLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
@@ -18,7 +19,7 @@ namespace ThirdPartyWager.Workers
         private readonly string _tpName = Tp.SA.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
         private readonly int _beyond = 2;
-        private Timer timer;
+        private readonly SAConfig _siteConfig;
 
         public FinanceSA(IServiceProvider provider)
         {
@@ -26,11 +27,12 @@ namespace ThirdPartyWager.Workers
             _financeSABLL = provider.GetRequiredService<FinanceSABLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _fincanceService = provider.GetRequiredService<FincanceService>();
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SAConfig>(_tpName);
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            timer = new Timer(DoReport, null, TimeSpan.Zero, TimeSpan.Zero);
+            _timer = new Timer(DoReport, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -53,16 +55,8 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                if (quick == 1)
-                {
-                    var dueTimeSpan = TimeSpan.FromHours(1);
-                    timer.Change(dueTimeSpan, TimeSpan.Zero);
-                }
-                else
-                {
-                    var dueTimeSpan = TimeSpan.FromHours(4);
-                    timer.Change(dueTimeSpan, TimeSpan.Zero);
-                }
+                var dueTimeSpan = (quick == 1) ? TimeSpan.FromHours(1) : TimeSpan.FromHours(4);
+                _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 
@@ -73,7 +67,7 @@ namespace ThirdPartyWager.Workers
             try
             {
                 // get setting
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+                var setting = _siteConfig;
 
                 // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
@@ -134,7 +128,7 @@ namespace ThirdPartyWager.Workers
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            timer?.Change(Timeout.Infinite, 0);
+            _timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }
