@@ -1,12 +1,11 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using System.Web;
-
 using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -26,11 +25,11 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<ApiAPBLL>>();
         }
 
-        public async Task<BetList_AdvantPlayMini> GetBetListByTime(dynamic setting, string startTime, string endTime, int page)
+        public async Task<BetList_AdvantPlayMini> GetBetListByTime(APConfig setting, string startTime, string endTime, int page)
         {
-            var apiUrl = setting["WagerUrl_MiniGame"];
-            var secretKey = setting["SecretKey_MiniGame"];
-            var apiKey = setting["APIKey_MiniGame"];
+            string apiUrl = setting.WagerUrl_MiniGame;
+            string secretKey = setting.SecretKey_MiniGame;
+            string apiKey = setting.APIKey_MiniGame;
 
             // param
             var url = $"{apiUrl}/api/v2/client/history";
@@ -62,11 +61,11 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task<CurrencyStats_AdvantPlayMini> GetBetListByTimeOfMini(dynamic setting, string startTime, string endTime)
+        public async Task<CurrencyStats_AdvantPlayMini> GetBetListByTimeOfMini(APConfig setting, string startTime, string endTime)
         {
-            var apiUrl = setting["WagerUrl_MiniGame"];
-            var secretKey = setting["SecretKey_MiniGame"];
-            var apiKey = setting["APIKey_MiniGame"];
+            string apiUrl = setting.WagerUrl_MiniGame;
+            string secretKey = setting.SecretKey_MiniGame;
+            string apiKey = setting.APIKey_MiniGame;
 
             // param
             var url = $"{apiUrl}/api/v2/Client/summary";
@@ -96,10 +95,10 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task<CurrencyStats_AP> GetBetSummaryByTime(dynamic setting, string startTime, string endTime)
+        public async Task<CurrencyStats_AP> GetBetSummaryByTime(APConfig setting, string startTime, string endTime)
         {
-            var apiUrl = setting["ApiUrl"];
-            var siteCode = setting["SiteCode"];
+            string apiUrl = setting.ApiUrl;
+            string siteCode = setting.SiteCode;
 
             // param
             var url = $"{apiUrl}GetTransSummary";
@@ -160,22 +159,22 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        private string HmacSha256(string json, string key)
+        private static string HmacSha256(string json, string key)
         {
-            using (HMACSHA256 hmac = new HMACSHA256(Encoding.UTF8.GetBytes(key)))
+            using (HMACSHA256 hmac = new(Encoding.UTF8.GetBytes(key)))
             {
-                var encryptValue = hmac.ComputeHash(Encoding.UTF8.GetBytes(json));
+                byte[] encryptValue = hmac.ComputeHash(Encoding.UTF8.GetBytes(json));
                 return Convert.ToBase64String(encryptValue);
             };
         }
 
-        private string AesEncryptV2(string jsonObject, string secretKey)
+        private static string AesEncryptV2(string jsonObject, string secretKey)
         {
             byte[] toEncryptArray = Encoding.UTF8.GetBytes(jsonObject);
             byte[] keyBytes = new byte[16];
             byte[] secretKeyBytes = Encoding.UTF8.GetBytes(secretKey);
             Array.Copy(secretKeyBytes, keyBytes, Math.Min(keyBytes.Length, secretKeyBytes.Length));
-            RijndaelManaged rm = new RijndaelManaged
+            RijndaelManaged rm = new()
             {
                 Mode = CipherMode.CBC,
                 Padding = PaddingMode.PKCS7,
