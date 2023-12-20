@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -56,7 +55,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
         {
             var reportData = new List<dynamic>();
-            var getWagerSummary = await _apiSABLL.GetBetSummaryByTime(setting["WagerUrl"], setting[$"EncrypKey"], setting["MD5Key"], setting["SecretKey"], reportTime.startTime, reportTime.endTime, Guid.NewGuid().ToString());
+            var getWagerSummary = await _apiSABLL.GetBetSummaryByTime(setting, reportTime.startTime, reportTime.endTime);
 
             // error condition
             var errorCode = getWagerSummary.GetTransactionDetailsResponse?.ErrorMsgId ?? getWagerSummary.APIResponse.ErrorMsgId;
