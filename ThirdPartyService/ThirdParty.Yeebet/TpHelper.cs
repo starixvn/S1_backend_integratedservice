@@ -79,7 +79,7 @@ namespace ThirdParty.Yeebet
             string apiAppId = inputs.ContainsKey($"ApiAppId_{word}") && !string.IsNullOrEmpty(inputs[$"ApiAppId_{word}"]) ? inputs[$"ApiAppId_{word}"] : throw new Exception($"ApiAppId_{word}");
             string secretKey = inputs.ContainsKey($"ApiSecretKey_{word}") && !string.IsNullOrEmpty(inputs[$"ApiSecretKey_{word}"]) ? inputs[$"ApiSecretKey_{word}"] : throw new Exception($"ApiSecretKey_{word}");
             var homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
-            apiUrl = $"{apiUrl}/api/login";
+            apiUrl = $"{apiUrl}api/login";
 
             //var lang = 2; //default en
             //if (_langList.ContainsKey(TpLangId))
