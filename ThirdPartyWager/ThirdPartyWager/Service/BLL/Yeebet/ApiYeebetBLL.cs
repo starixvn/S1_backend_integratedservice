@@ -27,7 +27,7 @@ public class ApiYeebetBLL
     public async Task<WagerYeebet_GetbetsResponseModel> Getbets(string apiUrl, string appid, int size, string apiKey)
     {
         // param
-        var url = $"{apiUrl}/api/data/getbets/";
+        var url = $"{apiUrl}api/data/getbets/";
         var sign = _common.ToMD5($"appid={appid}&size={size}&key={apiKey}").ToLower();
 
         // request
@@ -39,7 +39,7 @@ public class ApiYeebetBLL
     public async Task<WagerYeebet_RemovebetsResponseModel> Removebets(string apiUrl, string appid, string ids, string apiKey)
     {
         // param
-        var url = $"{apiUrl}/api/data/removebets/";
+        var url = $"{apiUrl}api/data/removebets/";
         var sign = _common.ToMD5($"appid={appid}&ids={ids}&key={apiKey}").ToLower();
 
         // request
