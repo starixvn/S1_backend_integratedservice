@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -14,6 +14,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<WagerRedoSABLL> _logger;
         private readonly MySqlClient _wagerDbClient;
         private readonly TpUnsettleService _tpUnsettleService;
+        private readonly SAConfig _siteConfig;
 
         public WagerRedoSABLL(IServiceProvider provider)
         {
@@ -23,22 +24,22 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<WagerRedoSABLL>>();
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SAConfig>(Tp.SA.ToString());
         }
 
         public async Task<bool> RedoWagersAsync(int tpId, string startTime, string endTime, long startUnix, long endUnix)
         {
             var msg = "FATAL_ERROR";
-            var guid = Guid.NewGuid().ToString();
+
             try
             {
-                // get api info
-                var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
+                var setting = _siteConfig;
 
                 // count interval wagers
                 var getWagerCount = _wagerSAService.GetWagerTotal(startUnix, endUnix);
                 var wagerCount = getWagerCount.wagerCount;
 
-                var getWagerSummary = await _apiSABLL.GetBetSummaryByTime(setting["WagerUrl"], setting["EncrypKey"], setting["MD5Key"], setting["SecretKey"], startTime, endTime, guid);
+                var getWagerSummary = await _apiSABLL.GetBetSummaryByTime(setting, startTime, endTime);
 
                 // error condition
                 var errorCode = getWagerSummary.GetTransactionDetailsResponse?.ErrorMsgId ?? getWagerSummary.APIResponse.ErrorMsgId;
@@ -68,7 +69,7 @@ namespace ThirdPartyWager.Service.BLL
                     return true;
                 }
 
-                var dataWager = await _apiSABLL.GetBetListByTime(setting["WagerUrl"], setting["EncrypKey"], setting["MD5Key"], setting["SecretKey"], startTime, endTime, guid);
+                var dataWager = await _apiSABLL.GetBetListByTime(setting, startTime, endTime);
 
                 // error condition
                 errorCode = dataWager.GetAllBetDetailsForTimeIntervalResponse?.ErrorMsgId ?? dataWager.APIResponse.ErrorMsgId;
