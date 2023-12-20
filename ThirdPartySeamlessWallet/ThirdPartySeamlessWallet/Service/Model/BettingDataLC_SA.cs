@@ -47,4 +47,13 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public new string Gameid { get; set; }
     }
+
+    public class SAConfig : TpSiteConfig
+    {
+        public string SecretKey { get; set; }
+
+        public string EncrypKey { get; set; }
+
+        public string Md5Key { get; set; }
+    }
 }

@@ -1,5 +1,5 @@
-﻿using NUnit.Framework;
-
+﻿using Microsoft.Extensions.DependencyInjection;
+using NUnit.Framework;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 
@@ -12,12 +12,19 @@ namespace ThirdParty.SA.Tests
         private TpCustInfo _tpCustInfo;
         private Dictionary<string, string> _inputs;
         private string tpLangId = "ch";
+        private IServiceProvider _provider;
+
+        public SabaTpHelperTests()
+        {
+            var services = new ServiceCollection();
+            _provider = services.BuildServiceProvider();
+        }
 
         [SetUp]
         public void Setup()
         {
             //Arrange
-            _tpHelper = new TpHelper();
+            _tpHelper = new TpHelper(_provider);
 
             _tpCustInfo = new TpCustInfo()
             {
