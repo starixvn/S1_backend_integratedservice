@@ -127,7 +127,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 int siteId = 0;
                 siteIdDic.TryGetValue(input.SiteId, out siteId);
 
-                var custProfile = _tpCustInfoBLL.GetCustProfileWithCacheByUserName(siteId, input.UserName);
+                var custProfile = _tpCustInfoBLL.GetCustProfileWithCacheByUserName(siteId, input.UserName, input.SabaId);
+                if (custProfile == null)
+                    return result;
 
                 //Search range table
                 var parameters = new GetFinancialLogSpInput(custProfile.CustId);
@@ -154,7 +156,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 int siteId = 0;
                 siteIdDic.TryGetValue(input.SiteId, out siteId);
-                var custProfile = _tpCustInfoBLL.GetCustProfileWithCacheByUserName(siteId, input.UserName);
+                var custProfile = _tpCustInfoBLL.GetCustProfileWithCacheByUserName(siteId, input.UserName, input.SabaId);
+
+                if(custProfile == null)
+                    return result;
 
                 var nationality = string.Empty;
                 counrtyDic.TryGetValue(custProfile.CurrencyId, out nationality);
