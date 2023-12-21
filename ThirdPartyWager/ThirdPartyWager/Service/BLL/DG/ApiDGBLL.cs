@@ -1,11 +1,10 @@
 ﻿using System.Net;
 using System.Text;
-
 using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -14,7 +13,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly HttpHelper _httpHelper;
         private readonly Common _common;
         private readonly Log2File _log2File;
-        private readonly ILogger<ApiDGBLL> _logger;
         private readonly string _tpName = Tp.DG.ToString();
 
         public ApiDGBLL(IServiceProvider provider)
@@ -22,16 +20,15 @@ namespace ThirdPartyWager.Service.BLL
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
-            _logger = provider.GetRequiredService<ILogger<ApiDGBLL>>();
         }
 
-        public async Task<WagerDGModel> GetBetList(string apiUrl, string agentName, string apiKey)
+        public async Task<WagerDGModel> GetBetList(DGConfig setting)
         {
             // param
             var uri = "/game/getReport/";
             var random = _common.GetRandomString(8);
-            var url = $"{apiUrl}{uri}{agentName}";
-            var token = _common.ToMD5($"{agentName}{apiKey}{random}").ToLower();
+            var url = $"{setting.ApiUrl}{uri}{setting.AgentAccount}";
+            var token = _common.ToMD5($"{setting.AgentAccount}{setting.APIkey}{random}").ToLower();
             var param = new
             {
                 token = token,
@@ -44,13 +41,13 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task MarkGotBetList(string apiUrl, string agentName, string apiKey, IEnumerable<long> wagerIds)
+        public async Task MarkGotBetList(DGConfig setting, IEnumerable<long> wagerIds)
         {
             // param
             var uri = "/game/markReport/";
             var random = _common.GetRandomString(8);
-            var url = $"{apiUrl}{uri}{agentName}";
-            var token = _common.ToMD5($"{agentName}{apiKey}{random}").ToLower();
+            var url = $"{setting.ApiUrl}{uri}{setting.AgentAccount}";
+            var token = _common.ToMD5($"{setting.AgentAccount}{setting.APIkey}{random}").ToLower();
             var param = new
             {
                 token = token,
@@ -69,19 +66,19 @@ namespace ThirdPartyWager.Service.BLL
             return;
         }
 
-        public async Task<WagerRedoDGModel> GetBetListByTime(string apiUrl, string agentName, string apiKey, string beginTime, string endTime, int pageNow)
+        public async Task<WagerRedoDGModel> GetBetListByTime(DGConfig setting, string beginTime, string endTime, int pageNow)
         {
             // param
             var uri = "/game/getReport";
-            var url = $"{apiUrl}{uri}";
-            var token = _common.ToMD5($"{agentName}{apiKey}").ToLower();
+            var url = $"{setting.WagerUrl}{uri}";
+            var token = _common.ToMD5($"{setting.AgentAccount}{setting.APIkey}").ToLower();
 
             var param = new
             {
                 token = token,
                 beginTime = beginTime,
                 endTime = endTime,
-                agentName = agentName,
+                agentName = setting.AgentAccount,
                 pageNow = pageNow
             };
 
