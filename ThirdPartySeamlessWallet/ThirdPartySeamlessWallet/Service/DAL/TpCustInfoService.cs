@@ -87,9 +87,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.QueryFirst<TpCountryCode>("Service_TpCountryCode_Get", parameters: parameters);
         }
 
-        public CustProfile GetCustProfileByUserName(int siteId, string userName)
+        public CustProfile GetCustProfileByUserName(int? custId, int siteId, string userName)
         {
-            return _mainDbClient.QueryFirst<CustProfile>("Service_CustProfileByUserName_Get", new { _SiteId = siteId, _UserName = userName });
+            var tempUserName = string.IsNullOrWhiteSpace(userName) ? null : userName;
+            return _mainDbClient.QueryFirst<CustProfile>("Service_CustProfileByUserName_Get_V2", new { _SiteId = siteId, _UserName = tempUserName, _CustId = custId });
         }
     }
 }
