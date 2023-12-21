@@ -36,6 +36,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string SiteId { get; set; }
 
         public string UserName { get; set; }
+        public string SabaId { get; set; }
     }
 
     public class GetFinancialLogSpInput
