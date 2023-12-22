@@ -1,22 +1,19 @@
-﻿namespace ThirdParty.PP
+﻿using ThirdPartyCore.Model;
+
+namespace ThirdParty.PP
 {
-    public class SitePPConfig
+    public class PPConfig : TpSiteConfig
     {
-        public string ApiUrl { get; set; }
-        public string GameUrl { get; set; }
         public string SecureKey { get; set; }
         public string FunGameUrl { get; set; }
         public string ProviderId { get; set; }
         public string SecureLogin { get; set; }
         public string ApiUrl_Stream { get; set; }
         public string SecurePassword { get; set; }
-        public string SecureKey_Stream_nova { get; set; }
-        public string SecureKey_Stream_bwing { get; set; }
-        public string SecureLogin_Stream_nova { get; set; }
-        public string SecureKey_Stream_goal123 { get; set; }
-        public string SecureLogin_Stream_bwing { get; set; }
-        public string SecureLogin_Stream_goal123 { get; set; }
+        public string SecureKey_Stream { get; set; }
+        public string SecureLogin_Stream { get; set; }
     }
+
     public class UserReq
     {
         public string username { get; set; }
