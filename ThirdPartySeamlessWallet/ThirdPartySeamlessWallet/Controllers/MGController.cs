@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-
+using System.Web;
 using ThirdPartySeamlessWallet.Extensions.ActionFilters;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -22,6 +22,16 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpGet]
         [Route("ping")]
         public string Ping() => "pong";
+
+        [HttpGet]
+        [Route("monitor")]
+        public MonitorResponse_MG Monitor([FromQuery] MonitorData_MG getReq)
+        {
+            return new MonitorResponse_MG
+            {
+                pong = getReq.ping
+            };
+        }
 
         /// <summary>
         /// 登入
