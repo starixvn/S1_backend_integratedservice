@@ -155,4 +155,14 @@
         public long SettleTimeNew { get; set; }
         public long TransTimeNew { get; set; }
     }
+
+    public class MonitorData_MG
+    {
+        public string ping { get; set; }
+    }
+
+    public class MonitorResponse_MG
+    {
+        public string pong { get; set; }
+    }
 }
