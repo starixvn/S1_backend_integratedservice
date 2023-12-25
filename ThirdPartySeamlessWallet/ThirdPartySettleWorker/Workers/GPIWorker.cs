@@ -108,7 +108,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             LogContext.PushProperty("TP", tpName);
                             isError = true;
-                            _logger.LogError(ex1,$"SettleGPI:{JsonConvert.SerializeObject(unsettled)}");
+                            _logger.LogError(ex1, $"SettleGPI:{JsonConvert.SerializeObject(unsettled)}");
                         }
                     }
                 }
@@ -116,7 +116,7 @@ namespace ThirdPartySettleWorker.Workers
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", tpName);
-                _logger.LogError(ex,$"SettleGPI:{ex.Message}");
+                _logger.LogError(ex, ex.Message);
                 isError = true;
             }
             finally
@@ -168,7 +168,7 @@ namespace ThirdPartySettleWorker.Workers
                         // 取消情形
                         bool cancel = false;
 
-                        var bettrans = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(bettransGet, new { TransId = unsettled.TransId }, DataBase.Main).FirstOrDefault();
+                        var bettrans = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(bettransGet, new { unsettled.TransId }, DataBase.Main).FirstOrDefault();
                         var wager = _tpUnSettledBLL.GetTpUnsettleData<SettleDataRNG_GPI>(wagerGet, new { round_id = unsettled.TransId }, DataBase.Wager).FirstOrDefault();
 
                         // 判斷是否bettrans是否有收過rollback
@@ -270,7 +270,7 @@ namespace ThirdPartySettleWorker.Workers
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", _tpName);
-                _logger.LogError(ex, $"{logName}:{ex.Message}");
+                _logger.LogError(ex, ex.Message);
                 isError = true;
             }
             finally
@@ -301,7 +301,7 @@ namespace ThirdPartySettleWorker.Workers
                         _timerLT_Fast3?.Change(dueTimeSpan, TimeSpan.Zero);
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        break;
                 }
             }
         }

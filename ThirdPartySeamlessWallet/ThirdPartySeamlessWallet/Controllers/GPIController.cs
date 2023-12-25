@@ -1,9 +1,6 @@
 ﻿using System.Xml.Serialization;
-
 using Microsoft.AspNetCore.Mvc;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -20,20 +17,13 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly BettingBLL _bettingBLL;
         private readonly SettledBLL _settledBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
-        private readonly ILogger<GPIController> _logger;
         private readonly Log2File _log2File;
         private readonly Tp _thisTp;
-        private readonly IHostEnvironment _environment;
+        private readonly string _tpName = Tp.GPI.ToString();
 
-        public GPIController(
-            IServiceProvider provider,
-            ILogger<GPIController> logger,
-            IHostEnvironment environment
-        )
+        public GPIController(IServiceProvider provider)
         {
-            _logger = logger;
             _log2File = provider.GetRequiredService<Log2File>();
-            _environment = environment;
             _authBLL = provider.GetRequiredService<AuthBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
@@ -195,13 +185,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/ms/validateticket")]
         [HttpPost]
         [Produces("application/xml")]
-        public ValidateTicketResp validateticket([FromForm] string ticket)
+        public ValidateTicketResp Validateticket([FromForm] string ticket)
         {
-            string logName = $"{_thisTp}_validateticket";
+            string logName = $"{_tpName}_validateticket";
 
-            ValidateTicketResp validateTicketResp = new ValidateTicketResp();
-            TpCustInfoAuth tpCustInfoAuth = null;
-            if (_authBLL.Authenticate(ticket, out tpCustInfoAuth))
+            ValidateTicketResp validateTicketResp = new();
+            if (_authBLL.Authenticate(ticket, out TpCustInfoAuth tpCustInfoAuth))
             {
                 var tpCountryCode = _tpCustInfoBLL.GetTpCurrencyCodeByCurrencyId((int)_thisTp, tpCustInfoAuth.TpCurrencyId);
                 if (tpCountryCode == null)
@@ -252,11 +241,11 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/ms/getbalance")]
         [HttpPost]
         [Produces("application/xml")]
-        public GetbalanceResp getbalance([FromForm] GetbalanceReq getbalanceReq)
+        public GetbalanceResp Getbalance([FromForm] GetbalanceReq getbalanceReq)
         {
-            string logName = $"{_thisTp}_getbalance";
+            string logName = $"{_tpName}_getbalance";
 
-            GetbalanceResp getbalanceResp = new GetbalanceResp();
+            GetbalanceResp getbalanceResp = new();
 
             var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, getbalanceReq.game_id);
             var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getbalanceReq.cust_id, (int)gameType);
@@ -279,13 +268,15 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/ms/debit")]
         [HttpPost]
         [Produces("application/xml")]
-        public DebitResp debit([FromForm] DebitReq debitReq)
+        public DebitResp Debit([FromForm] DebitReq debitReq)
         {
-            string logName = $"{_thisTp}_debit";
+            string logName = $"{_tpName}_debit";
 
-            DebitResp debitResp = new DebitResp();
-            debitResp.Error_code = -1;
-            debitResp.Error_msg = "Unknown error";
+            DebitResp debitResp = new()
+            {
+                Error_code = -1,
+                Error_msg = "Unknown error"
+            };
 
             var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, debitReq.cust_id);
             if (tpCheck == null)
@@ -302,11 +293,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 try
                 {
-                    decimal tpAffterAmount = 0;
-                    var TransId = "";
-
                     var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, debitReq.game_id);
-                    int result = (gameType == GameType.GPI_RNG) ? _bettingBLL.PlaceBetRNG_GPI(debitReq, out tpAffterAmount, out TransId) : _bettingBLL.PlaceBetLT_GPI(debitReq, (int)gameType, out tpAffterAmount, out TransId);
+                    int result = (gameType == GameType.GPI_RNG) ? _bettingBLL.PlaceBetRNG_GPI(debitReq, out decimal tpAffterAmount, out string TransId) : _bettingBLL.PlaceBetLT_GPI(debitReq, (int)gameType, out tpAffterAmount, out TransId);
 
                     if (result > 0)
                     {
@@ -356,20 +344,18 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/ms/credit")]
         [HttpPost]
         [Produces("application/xml")]
-        public CreditResp credit([FromForm] CreditReq creditReq)
+        public CreditResp Credit([FromForm] CreditReq creditReq)
         {
-            string logName = $"{_thisTp}_credit";
+            string logName = $"{_tpName}_credit";
 
-            CreditResp creditResp = new CreditResp();
-            creditResp.Exchange_rate = 1;
-            creditResp.Error_code = -1;
-            //CreditReq creditReq = JsonConvert.DeserializeObject<CreditReq>(@" {""merch_id"":""NVCASH"",""merch_pwd"":""D9988E76-BFC9-42D8-91AC-26DD98B624C9"",""cust_id"":""DNova88_9"",""currency"":""VND"",""amount"":0.0,""trx_id"":""5392eb41-2f83-4395-aea8-2fa85e93e0ae"",""Operator"":null,""game_id"":""200018"",""round_id"":""114165222"",""bundle_id"":null,""jackpot_win"":0.0,""platform"":""1"",""rake"":null,""rakedhands"":null}");
-            //logger.LogCritical(JsonConvert.SerializeObject(creditReq));
+            CreditResp creditResp = new()
+            {
+                Exchange_rate = 1,
+                Error_code = -1
+            };
+
             try
             {
-                decimal tpAffterAmount = 0;
-                var TransId = "";
-
                 var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, creditReq.game_id);
                 if (gameType != GameType.GPI_RNG && creditReq.amount == 0)
                 {
@@ -379,7 +365,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     _log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(creditResp)}", logName);
                     return creditResp;
                 }
-                int result = (gameType == GameType.GPI_RNG) ? _settledBLL.PayoutRNG_GPI(creditReq, out tpAffterAmount, out TransId) : _settledBLL.PayoutLT_GPI(creditReq, (int)gameType, out tpAffterAmount, out TransId);
+                int result = (gameType == GameType.GPI_RNG) ? _settledBLL.PayoutRNG_GPI(creditReq, out decimal tpAffterAmount, out string TransId) : _settledBLL.PayoutLT_GPI(creditReq, (int)gameType, out tpAffterAmount, out TransId);
 
                 if (result > 0)
                 {
@@ -433,13 +419,16 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/ms/changeBalance")]
         [HttpPost]
         [Produces("application/xml")]
-        public VoidBetResp changeBalance([FromForm] VoidBetReq voidBetReq)
+        public VoidBetResp ChangeBalance([FromForm] VoidBetReq voidBetReq)
         {
-            string logName = $"{_thisTp}_changeBalance";
+            string logName = $"{_tpName}_changeBalance";
 
-            VoidBetResp voidBetResp = new VoidBetResp();
-            voidBetResp.Exchange_rate = 1;
-            voidBetResp.Error_code = -1;
+            VoidBetResp voidBetResp = new()
+            {
+                Exchange_rate = 1,
+                Error_code = -1
+            };
+
             try
             {
                 var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, voidBetReq.game_id);
@@ -493,15 +482,17 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/ms/editResult")]
         [HttpPost]
         [Produces("application/xml")]
-        public EditBetResp editResult([FromForm] EditBetReq editBetReq)
+        public EditBetResp EditResult([FromForm] EditBetReq editBetReq)
         {
-
-            string logName = $"{_thisTp}_editResult";
-
-            EditBetResp editBetResp = new EditBetResp();
-            editBetResp.Exchange_rate = 1;
-            editBetResp.Error_code = -1;
             // Gameplay，上午 10:50 是的，目前彩票类暂不使用此API
+            string logName = $"{_tpName}_editResult";
+
+            EditBetResp editBetResp = new()
+            {
+                Exchange_rate = 1,
+                Error_code = -1
+            };
+            _log2File.Error($"{JsonConvert.SerializeObject(editBetReq)}\r\n{JsonConvert.SerializeObject(editBetResp)}", logName);
             return editBetResp;
             /*
             try
@@ -559,13 +550,16 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/ms/rollback")]
         [HttpPost]
         [Produces("application/xml")]
-        public CancelBetResp rollback([FromForm] CancelBetReq cancelBetReq)
+        public CancelBetResp Rollback([FromForm] CancelBetReq cancelBetReq)
         {
-            string logName = $"{_thisTp}_rollback";
+            string logName = $"{_tpName}_rollback";
 
-            CancelBetResp cancelBetResp = new CancelBetResp();
-            cancelBetResp.Exchange_rate = 1;
-            cancelBetResp.Error_code = -1;
+            CancelBetResp cancelBetResp = new()
+            {
+                Exchange_rate = 1,
+                Error_code = -1
+            };
+
             try
             {
                 var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, cancelBetReq.game_id);
@@ -619,12 +613,15 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/ms/endgame")]
         [HttpPost]
         [Produces("application/xml")]
-        public EndgameResp endgame([FromForm] EndgameReq endgameReq)
+        public EndgameResp Endgame([FromForm] EndgameReq endgameReq)
         {
-            string logName = $"{_thisTp}_endgame";
-            EndgameResp endgameResp = new EndgameResp();
-            endgameResp.Error_code = -1;
-            endgameResp.Error_msg = "Unknown error";
+            string logName = $"{_tpName}_endgame";
+
+            EndgameResp endgameResp = new()
+            {
+                Error_code = -1,
+                Error_msg = "Unknown error"
+            };
 
             try
             {
