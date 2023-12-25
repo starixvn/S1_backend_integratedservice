@@ -1,10 +1,7 @@
 ﻿using System.Text;
 using System.Web;
-
 using Microsoft.AspNetCore.Mvc;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -30,7 +27,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly IHostEnvironment environment;
         private readonly Log2File log2File;
         private readonly string _tpName = Tp.AP.ToString();
-        private readonly List<string> _gameOfMiniList = new List<string> { "crash", "cardracing" };
+        private readonly List<string> _gameOfMiniList = new() { "crash", "cardracing" };
+        private readonly Dictionary<int, APConfig> _siteConfigDic;
 
         #endregion
 
@@ -44,10 +42,13 @@ namespace ThirdPartySeamlessWallet.Controllers
             settledBLL = provider.GetRequiredService<SettledBLL>();
             tools = provider.GetRequiredService<Tools>();
             logger = provider.GetRequiredService<ILogger<APController>>();
-            thisTp = Tp.AP;
-            gameType = (int)GameType.AP_RNG;
             environment = provider.GetRequiredService<IHostEnvironment>();
             log2File = provider.GetRequiredService<Log2File>();
+            thisTp = Tp.AP;
+            gameType = (int)GameType.AP_RNG;
+
+            // 取共用，設定依機器分為(nova、aiking)
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<APConfig>(_tpName);
         }
         #endregion
 
@@ -113,7 +114,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             public string transactionReferenceId { get; set; }
         }
-
         public class ResultMiniResp
         {
             public string processId { get; set; }
@@ -125,13 +125,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string processId { get; set; }
             public long timestamp { get; set; }
         }
-
         public class WinResult
         {
             public string userReferenceId { get; set; }
             public decimal balance { get; set; }
         }
-
         public class RefundMiniResp
         {
             public string refundId { get; set; }
@@ -209,7 +207,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string signature { get; set; }
             public long timestamp { get; set; }
         }
-
         public class SplitTransactionReferenceId
         {
             public string GameId { get; set; }
@@ -279,14 +276,12 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 #region Check Hash
                 Request.Headers.TryGetValue("ap-hash", out var ApHash);
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
-                string Hash = tools.ToMD5($"{SecretKey}{Content}").ToLower();
-                if (ApHash != Hash)
+                var verifyHash = false;
+                verifyHash = CheckHashOfSlot(ApHash, Content);
+                if (!verifyHash)
                 {
                     result.ErrorCode = (int)ErrorCode.HashInvalid;
                     result.ErrorDescription = ErrorCode.HashInvalid.ToString();
-                    logger.LogError($"{Content}\r\n{JsonConvert.SerializeObject(result)}\r\n ApHash:{ApHash}\r\n Hash:{Hash}");
                     return result;
                 }
                 #endregion
@@ -381,14 +376,12 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 #region Check Hash
                 Request.Headers.TryGetValue("ap-hash", out var ApHash);
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
-                string Hash = tools.ToMD5($"{SecretKey}{Content}").ToLower();
-                if (ApHash != Hash)
+                var verifyHash = false;
+                verifyHash = CheckHashOfSlot(ApHash, Content);
+                if (!verifyHash)
                 {
                     result.ErrorCode = (int)ErrorCode.HashInvalid;
                     result.ErrorDescription = ErrorCode.HashInvalid.ToString();
-                    logger.LogError($"{Content}\r\n{JsonConvert.SerializeObject(result)}\r\n{ApHash}\r\n{Hash}");
                     return result;
                 }
                 #endregion
@@ -452,7 +445,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     //}
                     #endregion
 
-                    BettingDataRNG_AP betReq = new BettingDataRNG_AP()
+                    BettingDataRNG_AP betReq = new()
                     {
                         seq = getReq.Seq,
                         sitecode = getReq.SiteCode,
@@ -512,19 +505,17 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 #region Check Hash
                 Request.Headers.TryGetValue("ap-hash", out var ApHash);
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
-                string Hash = tools.ToMD5($"{SecretKey}{Content}").ToLower();
-                if (ApHash != Hash)
+                var verifyHash = false;
+                verifyHash = CheckHashOfSlot(ApHash, Content);
+                if (!verifyHash)
                 {
                     result.ErrorCode = (int)ErrorCode.HashInvalid;
                     result.ErrorDescription = ErrorCode.HashInvalid.ToString();
-                    logger.LogError($"{Content}\r\n{JsonConvert.SerializeObject(result)}\r\n{ApHash}\r\n{Hash}");
                     return result;
                 }
                 #endregion
 
-                CancelBetDataRNG_AP cancel = new CancelBetDataRNG_AP()
+                CancelBetDataRNG_AP cancel = new()
                 {
                     seq = getReq.Seq,
                     sitecode = getReq.SiteCode,
@@ -589,14 +580,12 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 #region Check Hash
                 Request.Headers.TryGetValue("ap-hash", out var ApHash);
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
-                string Hash = tools.ToMD5($"{SecretKey}{Content}").ToLower();
-                if (ApHash != Hash)
+                var verifyHash = false;
+                verifyHash = CheckHashOfSlot(ApHash, Content);
+                if (!verifyHash)
                 {
                     result.ErrorCode = (int)ErrorCode.HashInvalid;
                     result.ErrorDescription = ErrorCode.HashInvalid.ToString();
-                    logger.LogError($"{Content}\r\n{JsonConvert.SerializeObject(result)}\r\n{ApHash}\r\n{Hash}");
                     return result;
                 }
                 #endregion
@@ -610,7 +599,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return result;
                 }
 
-                BettingDataRNG_AP bettingData = new BettingDataRNG_AP()
+                BettingDataRNG_AP bettingData = new()
                 {
                     timestamp = getReq.Timestamp,
                     seq = getReq.Seq,
@@ -679,15 +668,12 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 #region Check Hash
                 Request.Headers.TryGetValue("ap-hash", out var ApHash);
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
-                string Hash = tools.ToMD5($"{SecretKey}{Content}").ToLower();
-
-                if (ApHash != Hash)
+                var verifyHash = false;
+                verifyHash = CheckHashOfSlot(ApHash, Content);
+                if (!verifyHash)
                 {
                     result.ErrorCode = (int)ErrorCode.HashInvalid;
                     result.ErrorDescription = ErrorCode.HashInvalid.ToString();
-                    logger.LogError($"{Content}\r\n{JsonConvert.SerializeObject(result)}\r\n{ApHash}\r\n{Hash}");
                     return result;
                 }
                 #endregion
@@ -700,7 +686,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return result;
                 }
 
-                BettingDataRNG_AP bettingData = new BettingDataRNG_AP()
+                BettingDataRNG_AP bettingData = new()
                 {
                     timestamp = getReq.Timestamp,
                     seq = getReq.Seq,
@@ -769,14 +755,12 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 #region Check Hash
                 Request.Headers.TryGetValue("ap-hash", out var ApHash);
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
-                string Hash = tools.ToMD5($"{SecretKey}{Content}").ToLower();
-                if (ApHash != Hash)
+                var verifyHash = false;
+                verifyHash = CheckHashOfSlot(ApHash, Content);
+                if (!verifyHash)
                 {
                     result.ErrorCode = (int)ErrorCode.HashInvalid;
                     result.ErrorDescription = ErrorCode.HashInvalid.ToString();
-                    logger.LogError($"{Content}\r\n{JsonConvert.SerializeObject(result)}\r\n{ApHash}\r\n{Hash}");
                     return result;
                 }
                 #endregion
@@ -856,15 +840,12 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 #region Check Hash
                 Request.Headers.TryGetValue("ap-hash", out var ApHash);
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                string SecretKey = thirdPartySetting.TpSetting["SecretKey"];
-                string Hash = tools.ToMD5($"{SecretKey}{Content}").ToLower();
-
-                if (ApHash != Hash)
+                var verifyHash = false;
+                verifyHash = CheckHashOfSlot(ApHash, Content);
+                if (!verifyHash)
                 {
                     result.ErrorCode = (int)ErrorCode.HashInvalid;
                     result.ErrorDescription = ErrorCode.HashInvalid.ToString();
-                    logger.LogError($"{Content}\r\n{JsonConvert.SerializeObject(result)}\r\n{ApHash}\r\n{Hash}");
                     return result;
                 }
                 #endregion
@@ -877,7 +858,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return result;
                 }
 
-                CPSettleDataRNG_AP settleData = new CPSettleDataRNG_AP()
+                CPSettleDataRNG_AP settleData = new()
                 {
                     timestamp = DateTime.Parse(getReq.Timestamp),
                     seq = getReq.Seq,
@@ -920,6 +901,19 @@ namespace ThirdPartySeamlessWallet.Controllers
             return result;
         }
 
+        private bool CheckHashOfSlot(string ApHash, string Content)
+        {
+            // 因Slot SecretKey都是同一組共用，只取第一筆即可，如要使用其他欄位請先確認是否可共用
+            var config = _siteConfigDic.FirstOrDefault().Value;
+            string SecretKey = config.SecretKey;
+            string Hash = tools.ToMD5($"{SecretKey}{Content}").ToLower();
+            if (ApHash != Hash)
+            {
+                logger.LogError($"{Content}\r\nApHash:{ApHash}\r\nHash:{Hash}");
+                return false;
+            }
+            return true;
+        }
         #endregion
 
         #region Mini Game
@@ -1087,14 +1081,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     log2File.Error($"PlaceBet data not found", logName);
                     return errResponse;
                 }
-                
+
                 if (betTrans.Sum(x => x.Amount) != getReq.StakeAmount)
                 {
                     errResponse.errorMessage = "Wrong stake amount";
                     log2File.Error($"Wrong stake amount , StakeAmount:{getReq.StakeAmount}", logName);
                     return errResponse;
                 }
-                
+
                 //var split = splitTransactionReferenceId(getReq.TransactionReferenceId);
                 getReq.GameId = betting.First().GameId;
                 getReq.MiniGameCode = betting.First().MiniGameCode;
@@ -1454,7 +1448,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/{sitename}/api/v1/cardracing/wallet/refundPayoutByPostman")]
-        public async Task<dynamic> refundPayoutByPostmanOfMiniAsync(string sitename)
+        public async Task<dynamic> RefundPayoutByPostmanOfMiniAsync(string sitename)
         {
             /*
               單筆處理
@@ -1533,7 +1527,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/{sitename}/api/v1/cardracing/wallet/refundPlaceBetByPostman")]
-        public async Task<dynamic> refundPlaceBetByPostmanOfMiniAsync(string sitename)
+        public async Task<dynamic> RefundPlaceBetByPostmanOfMiniAsync(string sitename)
         {
             /*
              單筆處理
@@ -1624,13 +1618,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                 throw new Exception("DecrypeRequest SiteName empty");
             }
             var siteId = serverInfo.SiteId;
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartyBySite((int)thisTp, siteId);
-            if (thirdPartySetting == null || !thirdPartySetting.TpSetting.ContainsKey("SecretKey_MiniGame"))
+            var config = _siteConfigDic[siteId];
+            if (config == null || string.IsNullOrEmpty(config.SecretKey_MiniGame))
             {
                 throw new Exception("SecretKey_MiniGame NotFound TpSetting");
             }
 
-            var secretKey = thirdPartySetting.TpSetting["SecretKey_MiniGame"];
+            var secretKey = config.SecretKey_MiniGame;
             return tools.AesDecryptV2(payload, secretKey);
         }
 

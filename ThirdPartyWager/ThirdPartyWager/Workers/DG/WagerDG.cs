@@ -1,5 +1,4 @@
 ﻿using Serilog.Context;
-
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -7,10 +6,10 @@ namespace ThirdPartyWager.Workers
 {
     public class WagerDG : BackgroundService
     {
+        private Timer _timer;
         private readonly ILogger<WagerDG> _logger;
         private readonly WagerDGBLL _wagerDGBLL;
         private readonly IHostEnvironment _environment;
-        private Timer _timer;
         private readonly string _tpName = Tp.DG.ToString();
 
         public WagerDG(IServiceProvider provider)
@@ -41,7 +40,7 @@ namespace ThirdPartyWager.Workers
             finally
             {
                 var dueTimeSpan = TimeSpan.FromMinutes(1);
-                if (_environment.IsDevelopment() || _environment.IsEnvironment("QA") || isContinue)
+                if (!_environment.IsProduction() || isContinue)
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(10);
                 }

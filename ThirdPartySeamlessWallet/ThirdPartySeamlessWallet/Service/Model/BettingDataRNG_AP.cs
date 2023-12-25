@@ -162,15 +162,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class CancelBetData_AdvantPlayMini
     {
-        //public string TransId
-        //{
-        //    get
-        //    {
-        //        var prefixGameId = GameId.Split('-')[0];
-        //        return $"{prefixGameId}_{SessionId}_{UserReferenceId}";
-        //    }
-        //}
-
         public string GameId { get; set; }
         public string SessionId { get; set; }
         public long refundTime { get; set; }
@@ -223,5 +214,17 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string MiniGameCode { get; set; }
         public string status { get; set; }
         public long RefundTime { get; set; }
+    }
+
+    public class APConfig : TpSiteConfig
+    {
+        public string SiteCode { get; set; }
+        public string SecretKey { get; set; }
+        public string MiniGame_Crash { get; set; }
+        public string APIKey_MiniGame { get; set; }
+        public string GameUrl_MiniGame { get; set; }
+        public string WagerUrl_MiniGame { get; set; }
+        public string SecretKey_MiniGame { get; set; }
+        public string MiniGame_CardRacing { get; set; }
     }
 }

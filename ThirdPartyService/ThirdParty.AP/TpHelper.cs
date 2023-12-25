@@ -1,10 +1,10 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using System.Web;
-
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -16,13 +16,19 @@ namespace ThirdParty.AP
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private const string _formatOfMini = "yyyy-MM-ddTHH:mm:ss";
+        private const string _formatOfSlot = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private readonly List<string> _gameListOfMini;
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
-        public TpHelper()
+        private readonly Dictionary<int, APConfig> _siteConfigDic;
+
+        public TpHelper(IServiceProvider provider)
         {
             _gameListOfMini = new List<string> { "Crash", "CardRacing" };
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList(39).ToDictionary(d => d.AppId, d => d.Name);
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.AP).ToDictionary(d => d.AppId, d => d.Name);
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<APConfig>(TpEnum.AP.ToString());
         }
+
         public class GetPlayerTokenrep
         {
             public string Timestamp { get; set; }
@@ -31,6 +37,7 @@ namespace ThirdParty.AP
             public string ErrorDescription { get; set; }
             public string Token { get; set; }
         }
+
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -64,24 +71,27 @@ namespace ThirdParty.AP
             var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
             var sessionKey = HttpUtility.UrlEncode(Convert.ToBase64String(bytes));
             #endregion
-            string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception();
-            string SiteCode = inputs.ContainsKey("SiteCode") && !string.IsNullOrEmpty(inputs["SiteCode"]) ? inputs["SiteCode"] : throw new Exception();
-            string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
-            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception();
-            string LangId = TpLangId;
-            bool FunPlay = fun == "1" ? true : false;
 
-            ApiResult oApiResult = new ApiResult();
+            var Config = _siteConfigDic[tpCustInfo.SiteId];
+            string GameUrl = Config.GameUrl;
+            string SiteCode = Config.SiteCode;
+
+            string LangId = TpLangId;
+            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception();
+            string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
+            bool FunPlay = fun == "1";
+
+            ApiResult oApiResult = new();
             if (_gameListOfMini.Contains(gameId))
             {
                 // mini game
                 if (FunPlay)
                 {
-                    var DefaultTpCurrencyId = ServerInfoProvider.GetDefaultTpCurrencyIdByTpId(tpCustInfo.SiteId, (int)TpEnum.AP);
+                    DefTpCurrencyId DefaultTpCurrencyId = ServerInfoProvider.GetDefaultTpCurrencyIdByTpId(tpCustInfo.SiteId, (int)TpEnum.AP);
                     tpCustInfo.TpUserName = "";
                     tpCustInfo.TpCurrencyId = (DefaultTpCurrencyId != null) ? DefaultTpCurrencyId.TpCurrencyId : "";
                 }
-                string URL = GetLoginOfMiniGame(tpCustInfo, TpLangId, inputs, gameId, SiteCode);
+                string URL = GetLoginOfMiniGame(tpCustInfo, TpLangId, Config, gameId, SiteCode);
                 oApiResult.ErrorCode = ErrorCode.Success;
                 oApiResult.Message = URL;
             }
@@ -103,12 +113,13 @@ namespace ThirdParty.AP
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception();
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
-            string SiteCode = inputs.ContainsKey("SiteCode") && !string.IsNullOrEmpty(inputs["SiteCode"]) ? inputs["SiteCode"] : throw new Exception();
+            var Config = _siteConfigDic[tpCustInfo.SiteId];
+            string GameUrl = Config.GameUrl;
+            string ApiUrl = Config.ApiUrl;
+            string SiteCode = Config.SiteCode;
             string GameRoundId = getBetDetail.TransId;
 
-            var tpCurrency = new TpCurrency()
+            TpCurrency tpCurrency = new()
             {
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
@@ -118,8 +129,8 @@ namespace ThirdParty.AP
             var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerRng_AP_Mini_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
             if (wagerDetail != null && wagerDetail.Count > 0)
             {
-                var detail = ToJson(wagerDetail);
-                var GameId = wagerDetail.GetValueOrDefault("gameId")?.ToString();
+                string detail = ToJson(wagerDetail);
+                string GameId = wagerDetail.GetValueOrDefault("gameId")?.ToString();
 
                 return getBetDetail.TpGameTypeOption.CategoryId switch
                 {
@@ -142,21 +153,17 @@ namespace ThirdParty.AP
             }
 
             // slot
-            var gamecode = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_AP_Unsettle_Get", new { YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId }, DataBase.Report)
-                .GetValueOrDefault("gamecode").ToString();
-
             #region GetPlayerToken
             string uuid = Guid.NewGuid().ToString();
-            string Timestamp = DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffffK");
             var sParam = new
             {
-                Timestamp = Timestamp,
+                Timestamp = DateTime.Now.ToString(_formatOfSlot),
                 Seq = uuid,
                 SiteCode = SiteCode,
                 PlayerId = tpCustInfo.TpUserName,
             };
             var param = ToJson(sParam);
-            var result = HttpPost($"{ApiUrl}/GetPlayerToken", param, "application/json");
+            var result = HttpPost($"{ApiUrl}GetPlayerToken", param, "application/json");
 
             if (!IsJSON(result))
             {
@@ -167,14 +174,14 @@ namespace ThirdParty.AP
             string PlayerToken = response.Token;
             #endregion
 
+            var gamecode = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_AP_Unsettle_Get", new { YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId }, DataBase.Report)
+                .GetValueOrDefault("gamecode").ToString();
             string Params = $"Token={PlayerToken}&SiteCode={SiteCode}&GameCode={gamecode}&GameRoundId={GameRoundId}";
-
-            string URL = $"{GameUrl}GameDetail?{Params}";
 
             return new BaseDetail(getBetDetail.TpGameTypeOption)
             {
                 TransId = getBetDetail.TransId,
-                DetailUrl = URL,
+                DetailUrl = $"{GameUrl}GameDetail?{Params}",
                 TpCurrency = tpCurrency,
             };
         }
@@ -226,46 +233,53 @@ namespace ThirdParty.AP
 
         private string GetGameName(string gameCode)
         {
-            if (!_gameNameList.TryGetValue(gameCode, out var name))
+            if (!_gameNameList.TryGetValue(gameCode, out string name))
             {
                 return string.Empty;
             }
             var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
-            return dic.TryGetValue("en", out var result) ? result : string.Empty;
+            return dic.TryGetValue("en", out string result) ? result : string.Empty;
         }
 
-        private string GetGameNameOfMini(Dictionary<string, string> inputs, string GameId)
+        private static string GetGameNameOfMini(Dictionary<string, string> inputs, string GameId)
         {
             var flip = inputs.ToDictionary(x => x.Value, x => x.Key);
-            var GameName = flip.ContainsKey(GameId) && !string.IsNullOrEmpty(flip[GameId]) ? flip[GameId].Split("_")[1] : "";
+            string GameName = flip.ContainsKey(GameId) && !string.IsNullOrEmpty(flip[GameId]) ? flip[GameId].Split("_")[1] : "";
             return GameName;
         }
 
-        private string GetLoginOfMiniGame(TpCustInfo tpCustInfo, string TpLangId, Dictionary<string, string> inputs, string gameId, string SiteCode)
+        private string GetLoginOfMiniGame(TpCustInfo tpCustInfo, string TpLangId, APConfig config, string gameId, string SiteCode)
         {
-            string GameUrl = inputs.ContainsKey("GameUrl_MiniGame") && !string.IsNullOrEmpty(inputs["GameUrl_MiniGame"]) ? inputs["GameUrl_MiniGame"] : throw new Exception("GameUrl_MiniGame");
-            string SecretKey = inputs.ContainsKey("SecretKey_MiniGame") && !string.IsNullOrEmpty(inputs["SecretKey_MiniGame"]) ? inputs["SecretKey_MiniGame"] : throw new Exception("SecretKey_MiniGame");
-            string MiniGameId = inputs.ContainsKey($"MiniGame_{gameId}") && !string.IsNullOrEmpty(inputs[$"MiniGame_{gameId}"]) ? inputs[$"MiniGame_{gameId}"] : throw new Exception($"MiniGame_{gameId}");
+            string GameUrl = config.GameUrl_MiniGame;
+            string SecretKey = config.SecretKey_MiniGame;
+
+            Dictionary<string, string> MiniGameId = new()
+            {
+                { "crash", config.MiniGame_Crash },
+                { "cardracing", config.MiniGame_CardRacing },
+            };
+
             var Param = new
             {
-                gameId = MiniGameId,
+                gameId = MiniGameId[gameId.ToLower()],
                 userReferenceId = tpCustInfo.TpUserName,
                 currency = tpCustInfo.TpCurrencyId,
                 balance = 0,
                 language = TpLangId,
-                requestTime = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss"),
+                requestTime = DateTime.UtcNow.ToString(_formatOfMini),
             };
+
             var sParam = ToJson(Param);
             var payload = AesEncryptV2(sParam, SecretKey);
             var signature = HmacSha256(payload, SecretKey);
             return $"{GameUrl}/client/auth?payload={HttpUtility.UrlEncode(payload)}&signature={HttpUtility.UrlEncode(signature)}&platform={SiteCode}";
         }
 
-        private string HmacSha256(string json, string key)
+        private static string HmacSha256(string json, string key)
         {
-            using (HMACSHA256 hmac = new HMACSHA256(Encoding.UTF8.GetBytes(key)))
+            using (HMACSHA256 hmac = new(Encoding.UTF8.GetBytes(key)))
             {
-                var encryptValue = hmac.ComputeHash(Encoding.UTF8.GetBytes(json));
+                byte[] encryptValue = hmac.ComputeHash(Encoding.UTF8.GetBytes(json));
                 return Convert.ToBase64String(encryptValue);
             };
         }

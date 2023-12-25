@@ -1,11 +1,8 @@
 ﻿using System.Text;
 using System.Web;
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -29,7 +26,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly int _thisTp;
         private readonly int _gameType = 0;
         private readonly string _tpName = Tp.SA.ToString();
-        private readonly IHostEnvironment _environment;
+        private readonly SAConfig _siteConfig;
 
         public SAController(IServiceProvider provider)
         {
@@ -42,12 +39,26 @@ namespace ThirdPartySeamlessWallet.Controllers
             _log2File = provider.GetRequiredService<Log2File>();
             _thisTp = (int)Tp.SA;
             _gameType = (int)GameType.SA_LiveCasino;
-            _environment = provider.GetRequiredService<IHostEnvironment>();
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SAConfig>(_tpName);
         }
 
-        public class requestReturn
+        public enum Error
         {
-            public requestReturn()
+            Success = 0,
+            CustNotExists = 1000,
+            CurrencyInvaild = 1001,
+            AmountInvaild = 1002,
+            CustLocked = 1003,
+            BalanceNotEnough = 1004,
+            Error = 1005,
+            DecryptInvaild = 1006,
+            SessionExpird = 1007,
+            SystemError = 9999
+        }
+
+        public class RequestReturn
+        {
+            public RequestReturn()
             {
                 error = (int)Error.SystemError;
             }
@@ -56,6 +67,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             public decimal amount { get; set; }
             public int error { get; set; }
         }
+
         public class UserBalance
         {
             public string username { get; set; }
@@ -64,18 +76,17 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Produces("application/xml")]
-        public async Task<requestReturn> GetUserBalanceAsync()
+        public async Task<RequestReturn> GetUserBalanceAsync()
         {
             string Content = "";
-            var resp = new requestReturn();
+            var resp = new RequestReturn();
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 Content = await reader.ReadToEndAsync();
                 var content = HttpUtility.UrlDecode(Content);
 
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting(_thisTp);
-                var uriQuery = _tools.DESDecrypt(content, thirdPartySetting.TpSetting["EncrypKey"]);
+                var uriQuery = _tools.DESDecrypt(content, _siteConfig.EncrypKey);
                 var p = QueryHelpers.ParseQuery(uriQuery).ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
 
                 var userBalance = JsonConvert.DeserializeObject<UserBalance>(JsonConvert.SerializeObject(p));
@@ -116,20 +127,19 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Produces("application/xml")]
-        public async Task<requestReturn> PlaceBetAsync()
+        public async Task<RequestReturn> PlaceBetAsync()
         {
             string logName = $"{_tpName}_PlaceBet";
             string Content = "";
             string uriQuery = "";
-            var resp = new requestReturn();
+            var resp = new RequestReturn();
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 Content = await reader.ReadToEndAsync();
                 var content = HttpUtility.UrlDecode(Content);
 
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting(_thisTp);
-                uriQuery = _tools.DESDecrypt(content, thirdPartySetting.TpSetting["EncrypKey"]);
+                uriQuery = _tools.DESDecrypt(content, _siteConfig.EncrypKey);
                 var p = QueryHelpers.ParseQuery(uriQuery).ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
 
                 var bettingDataLC_SA = JsonConvert.DeserializeObject<BettingDataLC_SA>(JsonConvert.SerializeObject(p));
@@ -202,12 +212,12 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Produces("application/xml")]
-        public async Task<requestReturn> PlayerWinAsync()
+        public async Task<RequestReturn> PlayerWinAsync()
         {
             string logName = $"{_tpName}_PlayerWin";
             string Content = "";
             string uriQuery = "";
-            var resp = new requestReturn();
+            var resp = new RequestReturn();
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
@@ -215,8 +225,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 _logger.LogInformation(Content);
                 var content = HttpUtility.UrlDecode(Content);
 
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting(_thisTp);
-                uriQuery = _tools.DESDecrypt(content, thirdPartySetting.TpSetting["EncrypKey"]);
+                uriQuery = _tools.DESDecrypt(content, _siteConfig.EncrypKey);
                 var p = QueryHelpers.ParseQuery(uriQuery).ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
 
                 var payoutDataLC_SA = JsonConvert.DeserializeObject<PayoutDataLC_SA>(JsonConvert.SerializeObject(p));
@@ -265,12 +274,12 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Produces("application/xml")]
-        public async Task<requestReturn> PlayerLostAsync()
+        public async Task<RequestReturn> PlayerLostAsync()
         {
             string logName = $"{_tpName}_PlayerLost";
             string Content = "";
             string uriQuery = "";
-            var resp = new requestReturn();
+            var resp = new RequestReturn();
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
@@ -278,8 +287,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 _logger.LogInformation(Content);
                 var content = HttpUtility.UrlDecode(Content);
 
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting(_thisTp);
-                uriQuery = _tools.DESDecrypt(content, thirdPartySetting.TpSetting["EncrypKey"]);
+                uriQuery = _tools.DESDecrypt(content, _siteConfig.EncrypKey);
                 var p = QueryHelpers.ParseQuery(uriQuery).ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
 
                 var payoutDataLC_SA = JsonConvert.DeserializeObject<PayoutDataLC_SA>(JsonConvert.SerializeObject(p));
@@ -319,12 +327,12 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Produces("application/xml")]
-        public async Task<requestReturn> PlaceBetCancelAsync()
+        public async Task<RequestReturn> PlaceBetCancelAsync()
         {
             string logName = $"{_tpName}_PlaceBetCancel";
             string Content = "";
             string uriQuery = "";
-            var resp = new requestReturn();
+            var resp = new RequestReturn();
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
@@ -332,8 +340,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 _logger.LogInformation(Content);
                 var content = HttpUtility.UrlDecode(Content);
 
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting(_thisTp);
-                uriQuery = _tools.DESDecrypt(content, thirdPartySetting.TpSetting["EncrypKey"]);
+                uriQuery = _tools.DESDecrypt(content, _siteConfig.EncrypKey);
                 var p = QueryHelpers.ParseQuery(uriQuery).ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
 
                 var bettingDataLC_SA = JsonConvert.DeserializeObject<BettingDataLC_SA>(JsonConvert.SerializeObject(p));
@@ -388,12 +395,12 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Produces("application/xml")]
-        public async Task<requestReturn> PlaceBetCancelFixAsync()
+        public async Task<RequestReturn> PlaceBetCancelFixAsync()
         {
             string logName = $"{_tpName}_PlaceBetCancelFix";
             string Content = "";
             string uriQuery = "";
-            var resp = new requestReturn();
+            var resp = new RequestReturn();
 
             if (_tools.GetClientIP(HttpContext) != "211.75.236.133" && _tools.GetClientIP(HttpContext) != "220.130.219.4")
             {
@@ -455,18 +462,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             return resp;
         }
-        public enum Error
-        {
-            Success = 0,
-            CustNotExists = 1000,
-            CurrencyInvaild = 1001,
-            AmountInvaild = 1002,
-            CustLocked = 1003,
-            BalanceNotEnough = 1004,
-            Error = 1005,
-            DecryptInvaild = 1006,
-            SessionExpird = 1007,
-            SystemError = 9999
-        }
+
     }
 }
