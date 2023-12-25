@@ -1,6 +1,7 @@
-﻿using Newtonsoft.Json;
-
+﻿using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -11,6 +12,13 @@ namespace ThirdParty.DG
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly DGConfig _siteConfig;
+
+        public TpHelper(IServiceProvider provider)
+        {
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<DGConfig>(TpEnum.DG.ToString());
+        }
+
         Dictionary<int, string> ErrorMassage = new Dictionary<int, string>()
         {   {1,"Parameter Error"},
             {2,"Token Verification Failed"},
@@ -132,19 +140,18 @@ namespace ThirdParty.DG
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            //throw new NotImplementedException();
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
-            string AgentName = inputs.ContainsKey("AgentAccount") && !string.IsNullOrEmpty(inputs["AgentAccount"]) ? inputs["AgentAccount"] : throw new Exception();
-            string APIkey = inputs.ContainsKey("APIkey") && !string.IsNullOrEmpty(inputs["APIkey"]) ? inputs["APIkey"] : throw new Exception();
+            var config = _siteConfig;
+
+            string ApiUrl = config.ApiUrl;
+            string AgentName = config.AgentAccount;
+            string APIkey = config.APIkey;
             ApiUrl = $"{ApiUrl}/user/signup/{AgentName}";
 
             SignupReq SignUp = new SignupReq();
             SignUp.member = new SignupMember();
 
-            //KEY MD5(agentName+API key + Random)
-            string MD5Key = "", Random = "";
-            Random = GetRandomString(8);
-            MD5Key = ToMD5($"{AgentName}{APIkey}{Random}").ToLower();
+            string Random = GetRandomString(8);
+            string MD5Key = ToMD5($"{AgentName}{APIkey}{Random}").ToLower();
             SignUp.token = MD5Key;
             SignUp.random = Random;
             SignUp.data = limitGroupNoMapping.ContainsKey(tpCustInfo.TpCurrencyId)
@@ -197,18 +204,18 @@ namespace ThirdParty.DG
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
-            string AgentName = inputs.ContainsKey("AgentAccount") && !string.IsNullOrEmpty(inputs["AgentAccount"]) ? inputs["AgentAccount"] : throw new Exception();
-            string APIkey = inputs.ContainsKey("APIkey") && !string.IsNullOrEmpty(inputs["APIkey"]) ? inputs["APIkey"] : throw new Exception();
+            var config = _siteConfig;
+
+            string ApiUrl = config.ApiUrl;
+            string AgentName = config.AgentAccount;
+            string APIkey = config.APIkey;
             ApiUrl = $"{ApiUrl}/user/login/{AgentName}";
 
             LoginReq Login = new LoginReq();
             Login.member = new Member();
 
-            //KEY MD5(agentName+API key + Random)
-            string MD5Key = "", Random = "";
-            Random = GetRandomString(8);
-            MD5Key = ToMD5($"{AgentName}{APIkey}{Random}").ToLower();
+            string Random = GetRandomString(8);
+            string MD5Key = ToMD5($"{AgentName}{APIkey}{Random}").ToLower();
             Login.token = MD5Key;
             Login.random = Random;
             Login.lang = TpLangId;
@@ -316,7 +323,7 @@ namespace ThirdParty.DG
             };
         }
 
-        private DeviceType GetDeviceType(string device)
+        private static DeviceType GetDeviceType(string device)
         {
             return device switch
             {
@@ -348,6 +355,7 @@ namespace ThirdParty.DG
                 return DefaultLimitGroup;
             }
         }
+
         private class BetSetting
         {
             public int GameTypeId { get; set; }

@@ -22,4 +22,13 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal Amount { get; set; }
         public new TransferType TicketType { get; set; }
     }
+
+    public class DGConfig : TpSiteConfig
+    {
+        public string APIkey { get; set; }
+
+        public string WalletUrl { get; set; }
+
+        public string AgentAccount { get; set; }
+    }
 }
