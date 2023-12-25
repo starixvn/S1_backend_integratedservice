@@ -1,5 +1,4 @@
 ﻿using Serilog.Context;
-
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -7,11 +6,10 @@ namespace ThirdPartyWager.Workers
 {
     public class WagerRedoGPI : BackgroundService
     {
-        private readonly ILogger<WagerRedoGPI> _logger;
-        private readonly WagerGPIBLL _wagerGPIBLL;
-
         private Timer timerLT;
         private Timer timerRNG;
+        private readonly ILogger<WagerRedoGPI> _logger;
+        private readonly WagerGPIBLL _wagerGPIBLL;
         private readonly int tpType = (int)WagerTimerType.RedoWager;
         private readonly int timeRange = 60; //in minutes 
         private readonly int quickTime = 307; // in seconds
@@ -20,8 +18,10 @@ namespace ThirdPartyWager.Workers
 
         public WagerRedoGPI(IServiceProvider provider)
         {
+            _logger = provider.GetRequiredService<ILogger<WagerRedoGPI>>();
             _wagerGPIBLL = provider.GetRequiredService<WagerGPIBLL>();
         }
+
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             // lottery 統一使用一款取得注單即可
