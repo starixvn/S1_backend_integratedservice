@@ -34,14 +34,14 @@ namespace ThirdPartySettleWorker.Workers
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _timerLC = new Timer(DoSettleLC, GameType.EVO_LiveCasino, TimeSpan.Zero, TimeSpan.Zero);
-            _timerReward = new Timer(DoSettleReward, 
-                new Dictionary<Tp,GameType>
+            _timerReward = new Timer(DoSettleReward,
+                new Dictionary<Tp, GameType>
                 {
                     { Tp.EVO, GameType.EVO_LiveCasino },
                     { Tp.RedTiger, GameType.RedTiger_RNG },
                     { Tp.Netent, GameType.Netent_RNG },
                     { Tp.NLC, GameType.NLC_RNG }
-                } ,
+                },
                 TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
@@ -57,7 +57,7 @@ namespace ThirdPartySettleWorker.Workers
         {
             LogContext.PushProperty("TP", _tpName);
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-            
+
             var forContinue = false;
             var isError = false;
             var gameType = (GameType)state;
@@ -124,7 +124,7 @@ namespace ThirdPartySettleWorker.Workers
                             }
 
                             var result = _settledBll.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
-                            
+
                             if (result == 1)
                             {
                                 Task.Run(() =>
@@ -134,6 +134,43 @@ namespace ThirdPartySettleWorker.Workers
                                 });
                             }
                         }
+                        /*
+                        else if (wager == null && unsettled.PartitionTime < DateTime.UtcNow.AddHours(-1) && unsettledData.GameId == "crazycoinflip")
+                        {
+                            // 因Crazy Coin Flip對方異常API取不到資料 直接取bettrans結算
+                            var betRecordInfo = new BetRecordInfo
+                            {
+                                TpId = (int)Tp,
+                                Stake = unsettledData.Stake,
+                                ValidBet = unsettledData.Stake,
+                                WinlostAmount = unsettledData.WinLostAmount,
+                                TransId = unsettledData.TransId,
+                                GameType = gameType,
+                                TpUserName = unsettledData.Account,
+                                SettledTime = unsettledData.SettleTime,
+                                TransTime = unsettledData.TransTime,
+                                SettlementType = SettlementType.SettledForValid,
+                                GameID = unsettledData.GameId,
+                            };
+
+                            if (betRecordInfo.WinlostAmount == 0)
+                            {
+                                betRecordInfo.TicketStatus = TicketStatus.Draw;
+                            }
+
+                            var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)Tp, unsettledData.Account);
+                            var result = _settledBll.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
+
+                            if (result == 1)
+                            {
+                                Task.Run(() =>
+                                {
+                                    _tpUnSettledBll.SetTpUnsettle(Tp, gameType, unsettledData.TransId, isSuccess: true);
+                                    _settledBll.SetSettleFlag_EVO(unsettledData.TransId);
+                                });
+                            }
+                        }
+                        */
                     }
                     catch (Exception ex1)
                     {
@@ -168,7 +205,7 @@ namespace ThirdPartySettleWorker.Workers
         {
             var forContinue = false;
             var isError = false;
-            var tpList = (Dictionary<Tp,GameType>)state;
+            var tpList = (Dictionary<Tp, GameType>)state;
             var logName = "EVODoSettleRewardWork";
             try
             {
@@ -177,12 +214,12 @@ namespace ThirdPartySettleWorker.Workers
                     var tpName = Enum.GetName(typeof(Tp), tp);
                     LogContext.PushProperty("TP", tpName);
                     LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-                    
+
                     var tpUnsettleList = _tpUnSettledBll.GetTpUnsettleList(tp, gameType);
                     if (!tpUnsettleList.Any())
                     {
                         _logger.LogInformation($"{tpName} {gameType} no unsettle data.");
-                       continue;
+                        continue;
                     }
 
                     var forContinueDetail = tpUnsettleList.Count() == 200;
@@ -195,9 +232,9 @@ namespace ThirdPartySettleWorker.Workers
                             {
                                 continue;
                             }
-                            
+
                             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache(rewardData.TpId, rewardData.userId);
-                          
+
                             var betRecordInfo = new BetRecordInfo
                             {
                                 TpId = rewardData.TpId,
@@ -213,7 +250,7 @@ namespace ThirdPartySettleWorker.Workers
                             };
 
                             var tpCategory = rewardData.TpId == (int)Tp.EVO ? TpCategory.LiveCasino : TpCategory.Slots;
-                            
+
                             var result = _settledBll.Settled(tpCustInfo, betRecordInfo, tpCategory);
                             if (result == 1)
                             {
@@ -235,7 +272,7 @@ namespace ThirdPartySettleWorker.Workers
                             _logger.LogError(ex1, $"{logName}:{JsonConvert.SerializeObject(unsettled)}");
                         }
                     }
-                    
+
                     //check tpList forContinue
                     if (forContinueDetail)
                     {
@@ -259,7 +296,7 @@ namespace ThirdPartySettleWorker.Workers
                 _timerReward.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
-        
+
         private static TimeSpan GetDueTimeSpan(bool forContinue, bool isError)
         {
             var dueTimeSpan = TimeSpan.FromMinutes(1);
