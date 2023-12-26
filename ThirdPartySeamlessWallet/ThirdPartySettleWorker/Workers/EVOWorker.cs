@@ -134,6 +134,7 @@ namespace ThirdPartySettleWorker.Workers
                                 });
                             }
                         }
+                        /*
                         else if (wager == null && unsettled.PartitionTime < DateTime.UtcNow.AddHours(-1) && unsettledData.GameId == "crazycoinflip")
                         {
                             // 因Crazy Coin Flip對方異常API取不到資料 直接取bettrans結算
@@ -169,6 +170,7 @@ namespace ThirdPartySettleWorker.Workers
                                 });
                             }
                         }
+                        */
                     }
                     catch (Exception ex1)
                     {
