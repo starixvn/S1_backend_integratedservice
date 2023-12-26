@@ -393,6 +393,33 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return getApiResponse;
         }
 
+        public BettransDataPK_V8 GetBettransByOrderId(OrderDataPK_V8 orderData)
+        {
+            // orderId 只會取出一筆
+            var bettransData = GetRecordPK_V8(orderData);
+            if (!bettransData.Any() || bettransData == null)
+            {
+                return null;
+            }
+
+            // 檢查是否為下注狀態資料
+            var bettrans = bettransData.First();
+            if (bettrans.TicketType != BettransType.Bet)
+            {
+                return null;
+            }
+
+            // 匯率還原
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(_thisTp, bettrans.account);
+            var tpCurrency = _thirdPartyBLL.GetTpCurrency(_thisTp, tpCustInfo.CurrencyId);
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                bettrans.money /= tpCurrency.ExchangeRate;
+            }
+
+            return bettrans;
+        }
+
         #endregion
 
         #region ExchangeRate & Service
