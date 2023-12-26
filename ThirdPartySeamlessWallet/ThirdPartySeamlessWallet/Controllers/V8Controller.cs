@@ -1,9 +1,6 @@
 ﻿using System.Web;
-
 using Microsoft.AspNetCore.Mvc;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -38,7 +35,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         #endregion
 
         private readonly ILogger<V8Controller> _logger;
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly V8BLL _v8BLL;
         private readonly Log2File _log2File;
         private readonly Tools _tools;
@@ -49,7 +45,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             _logger = provider.GetRequiredService<ILogger<V8Controller>>();
             _log2File = provider.GetRequiredService<Log2File>();
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _v8BLL = provider.GetRequiredService<V8BLL>();
             _tools = provider.GetRequiredService<Tools>();
             _thisTp = Tp.V8;
@@ -145,6 +140,93 @@ namespace ThirdPartySeamlessWallet.Controllers
             return getApiResponse;
         }
 
+        [HttpPost]
+        [Route("[controller]/CancelBetByOrderIdOfPostman")]
+        public dynamic CancelBetByOrderIdOfPostman([FromQuery] CancelBetOfPostmanReq getReq)
+        {
+            string logName = $"{_thisTp}_CancelBetByOrderIdOfPostman";
+            GetApiResp getApiResponse = new()
+            {
+                s = (int)SubTypeOfV8.CancelBet,
+                m = "/channelHandle",
+                d = new info
+                {
+                    code = 999
+                }
+            };
+
+            try
+            {
+                if (string.IsNullOrEmpty(getReq.currency))
+                {
+                    getApiResponse.d.code = (int)ErrorCodeOfV8.Format;
+                    _log2File.Error($"Currency Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+
+                getReq.agent = GetAgentByCurrency(getReq.currency);
+                getReq.s = (int)SubTypeOfV8.CancelBet;
+                getReq.key = EncryptKey(getReq.timestamp, getReq.agent);
+
+                if (string.IsNullOrEmpty(getReq.agent))
+                {
+                    getApiResponse.d.code = (int)ErrorCodeOfV8.Agent;
+                    _log2File.Error($"Agent Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+                if (string.IsNullOrEmpty(getReq.orderId))
+                {
+                    getApiResponse.d.code = (int)ErrorCodeOfV8.Format;
+                    _log2File.Error($"orderId Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+
+                var verifyKey = false;
+                if (!string.IsNullOrEmpty(getReq.key))
+                {
+                    verifyKey = CheckKey(getReq.key, getReq.timestamp, getReq.agent);
+                }
+                if (!verifyKey)
+                {
+                    getApiResponse.d.code = (int)ErrorCodeOfV8.Md5;
+                    _log2File.Error($"CheckKey Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+
+                var param = new OrderDataPK_V8
+                {
+                    s = getReq.s,
+                    orderId = getReq.orderId,
+                    timestamp = getReq.timestamp
+                };
+
+                var bettrans = _v8BLL.GetBettransByOrderId(param);
+                if (bettrans == null)
+                {
+                    _log2File.Error($"bettrans Error", logName);
+                    return getApiResponse;
+                }
+
+                bettrans.s = getReq.s;
+                var req = new ApiReq
+                {
+                    agent = getReq.agent,
+                    param = "",
+                    timestamp = getReq.timestamp,
+                    key = ""
+                };
+
+                return _v8BLL.CancelBet(req, JsonConvert.SerializeObject(bettrans));
+            }
+            catch (Exception ex)
+            {
+                _log2File.Error($"{ex.Message}", logName, ex);
+            }
+
+            _log2File.Error($"Unknow Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
+            return getApiResponse;
+        }
+
         private string DecryptParam(string getReq, string agent)
         {
             var param = getReq;
@@ -178,6 +260,22 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             _logger.LogError($"CheckKey Error\r\nkey={key}\r\nencryptKey={encryptKey}");
             return false;
+        }
+
+        private string EncryptKey(long timestamp, string agent)
+        {
+            var currencyData = _config.CurrencyData.Values.ToList();
+            var md5key = currencyData.Find(x => x.Agent == agent).Md5key;
+
+            return _tools.ToMD5($"{agent}{timestamp}{md5key}").ToLower();
+        }
+
+        private string GetAgentByCurrency(string currency)
+        {
+            var currencyAgentData = _config.CurrencyData[currency.ToUpper()];
+            var agent = currencyAgentData.Agent;
+
+            return agent;
         }
 
     }
