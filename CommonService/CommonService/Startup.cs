@@ -61,6 +61,7 @@ namespace CommonService
             services.AddSingleton<SkyLineBLL>();
             services.AddSingleton<YCBLL>();
             services.AddSingleton<AWSBLL>();
+            services.AddSingleton<SmsCloudBLL>();
 
             services.AddOptionListByDB<ServerInfo>("ServerInfoList_Get");
             //處理SiteConfig
