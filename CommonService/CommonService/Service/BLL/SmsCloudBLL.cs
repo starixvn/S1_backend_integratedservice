@@ -69,7 +69,7 @@ namespace CommonService.Service.BLL
                     {"appcode", config.Appcode},
                     {"appsecret",config.AppSecret},
                     {"phone", phoneNo},
-                    {"msg",  Uri.EscapeDataString(smsMessage)},
+                    {"msg",  smsMessage},
                 };
               
                 using var httpResponse = await _httpHelper.HttpGetAsync(config.ResourceURL, null, parameters, null , 9090);
