@@ -59,6 +59,7 @@ namespace CommonService.Service.BLL
                 Content = smsMessage,
                 OTPNum = otpNum
             };
+            oTpLog.Request_id = Guid.NewGuid().ToString();
 
             try
             {
@@ -81,7 +82,6 @@ namespace CommonService.Service.BLL
                     {
                         var resultDetail = response.result.FirstOrDefault(x => x.phone == phoneNo);
                         oTpLog.OTPResponse = $"{resultDetail.status} || {resultDetail.desc}";
-                        oTpLog.Request_id = response.uid;
                         
                         if (resultDetail.status.Equals("00000"))
                         {
