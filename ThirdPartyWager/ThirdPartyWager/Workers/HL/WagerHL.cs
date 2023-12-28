@@ -1,4 +1,4 @@
-﻿using Serilog.Context;
+using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
@@ -78,10 +78,7 @@ namespace ThirdPartyWager.Workers
                      var ticketKeyHowLong = _thirdPartyBLL.GetAllSiteTicketKey(workerType, _tpId);
                      var unSettledWagerHLList = _wagerHLService.GetHLBetUnSettledList(ticketKeyHowLong);
                      
-                     foreach(var day in nextSevenDays)
-                     {
-                         result =  await _wagerHLBLL.GetWagersAsync(unSettledWagerHLList,day.ToString("yyyy-MM-dd"), day.AddDays(1).ToString("yyyy-MM-dd"));
-                     }
+                     result =  await _wagerHLBLL.GetWagersAsync(unSettledWagerHLList,nextSevenDays);
                      
                      //有無單都要往前走 要不然會導致其餘排程問題出現
                      _thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
