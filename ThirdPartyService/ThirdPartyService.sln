@@ -126,9 +126,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.BNG", "ThirdPart
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.NLC", "ThirdParty.NLC\ThirdParty.NLC.csproj", "{AF725081-FEAC-4E30-A9A0-87FA9F26FAE8}"
 EndProject
+<<<<<<< HEAD
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.HL", "ThirdParty.HL\ThirdParty.HL.csproj", "{031184BE-A6CD-4476-9247-EBC915AEAE90}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.Amigo", "ThirdParty.Amigo\ThirdParty.Amigo.csproj", "{D527C40B-15EB-498C-9DC4-AEBC22197214}"
+=======
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.Amigo", "ThirdParty.Amigo\ThirdParty.Amigo.csproj", "{D527C40B-15EB-498C-9DC4-AEBC22197214}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.HL", "ThirdParty.HL\ThirdParty.HL.csproj", "{031184BE-A6CD-4476-9247-EBC915AEAE90}"
+>>>>>>> PRD
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
