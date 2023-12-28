@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -8,17 +7,15 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class FinanceGPIBLL : ITpReportBLL
     {
-        private readonly ILogger<FinanceGPIBLL> _logger;
         private readonly CommonBLL _commonBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = 0;
+        private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
         private readonly IEnumerable<TpCurrency> _tpCurrencyList;
         private readonly int _tpId = (int)Tp.GPI;
 
-
         public FinanceGPIBLL(IServiceProvider provider)
         {
-            _logger = provider.GetRequiredService<ILogger<FinanceGPIBLL>>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _tpCurrencyList = _commonBLL.GetTpCurrencyList(_tpId);
@@ -75,11 +72,11 @@ namespace ThirdPartyWager.Service.BLL
 
         public TimeCast GetReportTime(DateTime startTime, int day)
         {
-            var reportTime = _dateTimeHelper.GetTimeByDay(1440, _timeZone, "yyyy-MM-dd HH:mm:ss", startTime);
+            var reportTime = _dateTimeHelper.GetTimeByDay(1440, _timeZone, _timeFormat, startTime);
             var cvTime = DateTimeOffset.Now.AddDays(day).ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (reportTime.endUnix > cvTime)
             {
-                reportTime = _dateTimeHelper.GetTimeByDay(1440, _timeZone, "yyyy-MM-dd HH:mm:ss", startTime.AddDays(-1));
+                reportTime = _dateTimeHelper.GetTimeByDay(1440, _timeZone, _timeFormat, startTime.AddDays(-1));
             }
             return reportTime;
         }
