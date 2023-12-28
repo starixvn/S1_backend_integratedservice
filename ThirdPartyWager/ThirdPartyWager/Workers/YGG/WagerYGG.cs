@@ -1,5 +1,4 @@
 ﻿using Serilog.Context;
-
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
