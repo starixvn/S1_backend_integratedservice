@@ -3,6 +3,7 @@ using ThirdPartyCore.Model.enums;
 
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
+using ThirdPartyService.Service.Model;
 
 namespace ThirdPartyService.Extensions
 {
@@ -54,6 +55,26 @@ namespace ThirdPartyService.Extensions
                 var siteConfig = siteConfigGroup.FirstOrDefault(i => i.Key == serverInfo.SiteId) ?? siteConfigGroup.First(i => i.Key == 0);
                 var config = siteConfig.ToDictionary(i => i.ConfigKey, i => i.ConfigValue);
                 services.AddSingleton(new SiteConfig(serverInfo, config));
+            }
+
+            return services;
+        }
+        
+        public static IServiceCollection AddSiteLanguage(this IServiceCollection services)
+        {
+            var provider = services.BuildServiceProvider();
+            // 準備ServerInfo
+            var serverInfoList = new List<ServerInfoObject>() { new ServerInfoObject() { SiteId = 0, SiteName = "default" } };
+            serverInfoList.AddRange(provider.GetRequiredService<IEnumerable<ServerInfoObject>>());
+
+            // 準備SiteLanguage
+            var siteLanguageGroup = provider.GetRequiredService<IEnumerable<SiteLanguageObject>>().GroupBy(i => i.SiteId);
+
+            foreach (var serverInfo in serverInfoList)
+            {
+                //設定SiteLanguage
+                var siteLanguages = siteLanguageGroup.FirstOrDefault(i => i.Key == serverInfo.SiteId) ?? siteLanguageGroup.First(i => i.Key == 0);
+                services.AddSingleton(new SiteLanguage(serverInfo, siteLanguages.ToList()));
             }
 
             return services;

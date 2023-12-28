@@ -59,9 +59,9 @@
         FaChai = 55,
         Pegasus = 56,
         BNG = 57,
+        HaoLong = 58,
         NLC = 59,
     }
-
     public enum GameType
     {
         Allbet_LiveCasino = 6,
@@ -103,9 +103,9 @@
         IM_Sports = 103,
         FaChai_RNG = 106,
         SG_Table = 109,
-        NLC_RNG = 111
+        HaoLong_4D = 110,
+        NLC_RNG = 111,
     }
-
     public enum SettlementType
     {
         UnSettled = 0,
@@ -158,5 +158,13 @@
         ReSettle = 6,//重新結帳
         UserReport = 7,//用戶報表
         UnSettle = 8,//未結算注單
+    }
+    
+    public enum WorkerType
+    {
+        MainWager = 1,                  //使用TicketKey固定持續拉單
+        ByTransIdUnSettleWager = 3,     //檢查未結算注單
+        RngWager = 5,
+        VgamingUnSettle = 6,            //檢查Vgaming未結算，重打Saba Resubmit Process
     }
 }

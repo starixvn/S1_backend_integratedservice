@@ -17,6 +17,7 @@ namespace ThirdPartyCore.Model
     {
         public int TpId { set; get; }
         public int CustId { set; get; }
+        public string LangId { set; get; }
         public decimal Amount { set; get; }
         public Direction direction { set; get; }
         public Dictionary<string, string> inputs { set; get; }
