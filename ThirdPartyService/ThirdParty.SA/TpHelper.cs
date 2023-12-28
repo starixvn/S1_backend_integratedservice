@@ -1,7 +1,8 @@
-﻿using System.Web;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System.Web;
 using System.Xml.Serialization;
-
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -12,6 +13,12 @@ namespace ThirdParty.SA
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly SAConfig _siteConfig;
+
+        public TpHelper(IServiceProvider provider)
+        {
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SAConfig>(TpEnum.SA.ToString());
+        }
 
         [XmlRoot("APIResponse")]
         public class Result
@@ -78,41 +85,13 @@ namespace ThirdParty.SA
 
         #endregion
 
-        #region SaConfig
-
-        private class SaConfig
-        {
-            public string ApiUrl { get; set; }
-
-            public string SecretKey { get; set; }
-
-            public string EncryptKey { get; set; }
-
-            public string Md5Key { get; set; }
-
-            public string Url { get; set; }
-
-            public SaConfig(Dictionary<string, string> inputs)
-            {
-                ApiUrl = inputs.ContainsKey("ApiUrl") && !String.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
-                SecretKey = inputs.ContainsKey("SecretKey") && !string.IsNullOrEmpty(inputs["SecretKey"]) ? inputs["SecretKey"] : throw new Exception();
-                EncryptKey = inputs.ContainsKey("EncrypKey") && !string.IsNullOrEmpty(inputs["EncrypKey"]) ? inputs["EncrypKey"] : throw new Exception();
-                Md5Key = inputs.ContainsKey("MD5Key") && !string.IsNullOrEmpty(inputs["MD5Key"]) ? inputs["MD5Key"] : throw new Exception();
-                Url = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"])
-                    ? inputs["GameUrl"]
-                    : string.Empty;
-            }
-        }
-
-        #endregion
-
         #region SetBetLimit 
 
         public class SetBetLimitReq : BaseRequest { }
 
         #endregion
 
-        private string Time
+        private static string Time
         {
             get
             {
@@ -124,7 +103,7 @@ namespace ThirdParty.SA
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var config = new SaConfig(inputs);
+            var config = _siteConfig;
 
             tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x");
             var input = new CreateMemberReq
@@ -138,7 +117,7 @@ namespace ThirdParty.SA
             input.Time = time;
 
             var queryString = $"method={input.Method}&Key={config.SecretKey}&Time={time}&Username={tpCustInfo.TpUserName}&CurrencyType={tpCustInfo.TpCurrencyId}";
-            var q = HttpUtility.UrlEncode(DESEncryptSA(queryString, config.EncryptKey));
+            var q = HttpUtility.UrlEncode(DESEncryptSA(queryString, config.EncrypKey));
             var s = ToMD5(queryString + config.Md5Key + time + config.SecretKey).ToLower();
             input.Key = s;
 
@@ -180,14 +159,14 @@ namespace ThirdParty.SA
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string langid, Dictionary<string, string> inputs)
         {
-            var config = new SaConfig(inputs);
-            if (string.IsNullOrEmpty(config.Url)) throw new Exception("url Error");
+            var config = _siteConfig;
+            if (string.IsNullOrEmpty(config.GameUrl)) throw new Exception("GameUrl Error");
 
             SetBetLimit(config, tpCustInfo, inputs);
 
             var time = Time;
             var queryString = $"method=LoginRequest&Key={config.SecretKey}&Time={time}&Username={tpCustInfo.TpUserName}&CurrencyType={tpCustInfo.TpCurrencyId}";
-            var q = HttpUtility.UrlEncode(DESEncryptSA(queryString, config.EncryptKey));
+            var q = HttpUtility.UrlEncode(DESEncryptSA(queryString, config.EncrypKey));
             var s = ToMD5(queryString + config.Md5Key + time + config.SecretKey).ToLower();
             var postData = "q=" + q + "&s=" + s;
 
@@ -225,7 +204,7 @@ namespace ThirdParty.SA
                     }
 
                     var deviceName = GetDeviceName(appType);
-                    oApiResult.Message = $"{config.Url}?username={tpCustInfo.TpUserName}&token={token}&lobby={lobby}&lang={langid}&returnurl={homeUrl}&{deviceName}=true";
+                    oApiResult.Message = $"{config.GameUrl}?username={tpCustInfo.TpUserName}&token={token}&lobby={lobby}&lang={langid}&returnurl={homeUrl}&{deviceName}=true";
                 }
                 else
                 {
@@ -334,7 +313,7 @@ namespace ThirdParty.SA
 
         #region private method
 
-        private DeviceType GetDeviceType(string device)
+        private static DeviceType GetDeviceType(string device)
         {
             switch (device)
             {
@@ -365,7 +344,7 @@ namespace ThirdParty.SA
             }
         }
 
-        private string GetGameName(string gameCode)
+        private static string GetGameName(string gameCode)
         {
             return gameCode switch
             {
@@ -378,7 +357,7 @@ namespace ThirdParty.SA
             };
         }
 
-        private string GetDeviceName(AppType appType)
+        private static string GetDeviceName(AppType appType)
         {
             string deviceName;
             switch (appType)
@@ -396,7 +375,7 @@ namespace ThirdParty.SA
             return deviceName;
         }
 
-        private string GetBetLimitQueryString(string tpCurrencyId, Dictionary<string, string> inputs)
+        private static string GetBetLimitQueryString(string tpCurrencyId, Dictionary<string, string> inputs)
         {
             //用第三方提供的文件設定好RuleID
             var dictMapInputKey = new Dictionary<string, string>()
@@ -420,14 +399,14 @@ namespace ThirdParty.SA
         /// <param name="config"></param>
         /// <param name="tpCustInfo"></param>
         /// <param name="inputs"></param>
-        private void SetBetLimit(SaConfig config, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        private void SetBetLimit(SAConfig config, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             try
             {
                 var betLimitQueryString = GetBetLimitQueryString(tpCustInfo.TpCurrencyId, inputs);
                 if (string.IsNullOrEmpty(betLimitQueryString)) return;
 
-                var time = this.Time;
+                var time = Time;
                 var input = new SetBetLimitReq()
                 {
                     Method = "SetAllBetLimit",
@@ -439,13 +418,13 @@ namespace ThirdParty.SA
 
                 var queryString =
                     $"method={input.Method}&Key={input.Key}&Time={time}&Username={input.UserName}&Currency={input.Currency}&{betLimitQueryString}";
-                var q = HttpUtility.UrlEncode(DESEncryptSA(queryString, config.EncryptKey));
+                var q = HttpUtility.UrlEncode(DESEncryptSA(queryString, config.EncrypKey));
                 var s = ToMD5(queryString + config.Md5Key + time + config.SecretKey).ToLower();
                 var postData = "q=" + q + "&s=" + s;
 
                 var result = HttpPost(config.ApiUrl, postData, "application/x-www-form-urlencoded");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 //Exception 暫不處理，設定 BetLimit 失敗不該影響玩家正常進入遊戲
             }

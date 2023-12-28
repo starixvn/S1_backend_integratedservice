@@ -1,8 +1,7 @@
 ﻿using System.Data;
-
 using Dapper;
-
 using ThirdPartySeamlessWallet.Service.Library;
+using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
@@ -31,6 +30,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
 
             _mainDbClient.Execute("Common_AuthToken_Sel", trans, p);
+            var permissionData = p.Get<string>("PermissionData");
+            _mainDbClient.CommitAndDisposeConnection(conn, trans);
+
+            return permissionData;
+        }
+
+        public string AuthenticateByTpToken(string sTpToken)
+        {
+            var p = new DynamicParameters(new { TpToken = sTpToken });
+            p.Add("PermissionData", dbType: DbType.String, direction: ParameterDirection.Output);
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            _mainDbClient.Execute("Common_AuthToken_ByTpToken_Get", trans, p);
             var permissionData = p.Get<string>("PermissionData");
             _mainDbClient.CommitAndDisposeConnection(conn, trans);
 

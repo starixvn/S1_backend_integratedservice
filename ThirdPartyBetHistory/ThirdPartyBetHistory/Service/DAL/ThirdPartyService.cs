@@ -83,7 +83,7 @@ namespace ThirdPartyBetHistory.Service.DAL
         
         public IEnumerable<VgamingUnSettle> GetVgamingUnSettleTicket(long TicketKey, int LimitCount)
         {
-            return _reportDbClient.Query<VgamingUnSettle>("Service_SBSW_Vgaming_Unsettle_Get_V2",
+            return _reportDbClient.Query<VgamingUnSettle>("Service_SBSW_Vgaming_Unsettle_Get_V3",
                 new
                 {
                     TicketKey,

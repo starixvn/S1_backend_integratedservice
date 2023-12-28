@@ -1,4 +1,5 @@
-﻿using Serilog.Context;
+﻿using Newtonsoft.Json;
+using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -11,14 +12,14 @@ public class N2LiveWorker : BackgroundService, ISettleWorker
 {
     public Tp Tp => Tp.N2Live;
     private Timer _timerLC;
-    
+
     private readonly SettledBLL _settledBLL;
     private readonly TpCustInfoBLL _tpCustInfoBLL;
     private readonly TpUnSettledBLL _tpUnSettledBLL;
     private readonly ILogger<N2LiveWorker> _logger;
     private readonly ThirdPartyBLL _thirdPartyBLL;
     private readonly string _tpName;
-    
+
     public N2LiveWorker(IServiceProvider provider)
     {
         _settledBLL = provider.GetRequiredService<SettledBLL>();
@@ -29,7 +30,7 @@ public class N2LiveWorker : BackgroundService, ISettleWorker
         _tpName = Enum.GetName(typeof(Tp), Tp);
         LogContext.PushProperty("TP", _tpName);
     }
-    
+
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _timerLC = new Timer(DoSettleN2LiveWork, GameType.N2Live_LiveCasino, TimeSpan.Zero, TimeSpan.Zero);
@@ -46,7 +47,7 @@ public class N2LiveWorker : BackgroundService, ISettleWorker
         var gameType = (GameType)state;
         var tpId = (int)Tp.N2Live;
         var logName = "N2LiveDoSettleLiveCasinoWork";
-        
+
         try
         {
             var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
@@ -54,7 +55,7 @@ public class N2LiveWorker : BackgroundService, ISettleWorker
             {
                 throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
             }
-            
+
             forContinue = tpUnsettleList.Count() == 200;
             //過濾是否為Smart
             tpUnsettleList = tpUnsettleList.Where(x => x.TransId.Length > 10).ToList();
@@ -67,7 +68,13 @@ public class N2LiveWorker : BackgroundService, ISettleWorker
                         new { tpUnsettle.TransId }, DataBase.Main).FirstOrDefault();
                     var wagerData = _tpUnSettledBLL.GetTpUnsettleData<SettleData_N2Live>("Service_TpWagerLC_N2Live_Get_V2",
                         new { tpUnsettle.TransId }, DataBase.Wager).FirstOrDefault();
-                    
+
+                    if (wagerData == null)
+                    {
+                        _logger.LogWarning($"{logName}:wager not found ({gameType})\r\n{JsonConvert.SerializeObject(tpUnsettle)}");
+                        continue;
+                    }
+
                     var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(tpId, wagerData.Account);
                     var tpCurrency = _thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
                     if (tpCurrency.ExchangeRate > 1)
@@ -85,7 +92,7 @@ public class N2LiveWorker : BackgroundService, ISettleWorker
                         ValidBet = wagerData.ValidBet,
                         WinlostAmount = wagerData.WinLostAmount,
                         TransId = unsettledData.TransId,
-                        GameType = (GameType)gameType,
+                        GameType = gameType,
                         TpUserName = unsettledData.Account,
                         SettledTime = wagerData.SettleTime,
                         TransTime = wagerData.TransTime,
@@ -111,6 +118,10 @@ public class N2LiveWorker : BackgroundService, ISettleWorker
 
                 }
             }
+        }
+        catch (UnsettleNotFoundException ex)
+        {
+            _logger.LogInformation(ex, ex.Message);
         }
         catch (Exception ex)
         {

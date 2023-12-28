@@ -36,7 +36,7 @@ namespace ThirdPartyWager.Service.BLL
                     CurrencyId = item.CurrencyId,
                     Stake = item.Stake,
                     ValidBet = item.ValidBet,
-                    Payout = item.Payout,
+                    Payout = item.Stake + item.WinlostAmount,
                     WinlostAmount = item.WinlostAmount,
                     ProgressiveBet = item.ProgressiveBet,
                     ProgressiveWin = item.ProgressiveWin

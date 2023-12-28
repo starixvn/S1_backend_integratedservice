@@ -35,7 +35,7 @@ namespace ThirdPartyWager.Workers
         {
             _settleTimer = new Timer(DoSettle, null, TimeSpan.FromSeconds(1), TimeSpan.Zero);
             _settleTimerByDate = new Timer(DoSettleByDate, null, TimeSpan.FromSeconds(3), TimeSpan.Zero);
-            _reSttleTimer = new Timer(DoReSettle, null, TimeSpan.FromSeconds(5), TimeSpan.Zero);
+            _reSttleTimer = new Timer(DoReSettle, null, TimeSpan.FromMinutes(2), TimeSpan.Zero);
             _reportTimer = new Timer(GetReportByDate, null, TimeSpan.FromSeconds(7), TimeSpan.Zero);
             _financeTimer = new Timer(DoTpDailySummary, null, TimeSpan.FromSeconds(7), TimeSpan.Zero);
 

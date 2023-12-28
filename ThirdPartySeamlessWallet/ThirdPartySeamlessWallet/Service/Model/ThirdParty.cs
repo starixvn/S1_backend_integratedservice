@@ -1,5 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
+using Newtonsoft.Json;
+
+using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
@@ -75,18 +78,45 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class FinancialLog
     {
-        public long Id { set; get; }
-        public int CustId { set; get; }
-        public string UserName { set; get; }
-        public int SiteId { set; get; }
+        [System.Text.Json.Serialization.JsonIgnore]
         public int Type { set; get; }
-        public int Direction { set; get; }
-        public decimal ChangeAmount { set; get; }
-        public decimal BeforeAmount { set; get; }
-        public decimal AfterAmount { set; get; }
-        public string Memo { set; get; }
+
+        [JsonPropertyName("TransId")]
         public string RefTransId { set; get; }
+
+        [JsonPropertyName("Amount")]
+        public decimal ChangeAmount { set; get; }
+
+        [JsonPropertyName("Time")]
         public DateTime CreateTime { set; get; }
+
+        [JsonPropertyName("FinancialType")]
+        public FinancialType FinancialType
+        {
+            get
+            {
+                if (Type == (int)FinancialType.Deposit || Type.IsBetween(101, 1000))
+                {
+                    return FinancialType.Deposit;
+                }
+
+                if (Type.IsBetween(1001, 2000))
+                {
+                    return FinancialType.Withdrawal;
+                }
+
+                return FinancialType.Others;
+            }
+        }
+
+        [JsonPropertyName("TypeName")]
+        public string TypeName
+        {
+            get
+            {
+                return FinancialType.GetEnumDescription();
+            }
+        }
     }
 
     public class BonusLog

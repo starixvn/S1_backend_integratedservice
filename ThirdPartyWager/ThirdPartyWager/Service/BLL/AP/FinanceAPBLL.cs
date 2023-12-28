@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -14,6 +14,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiAPBLL _apiAPBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = 0;
+        private readonly Dictionary<int, APConfig> _siteConfigDic;
 
         public FinanceAPBLL(IServiceProvider provider)
         {
@@ -22,6 +23,7 @@ namespace ThirdPartyWager.Service.BLL
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _apiAPBLL = provider.GetRequiredService<ApiAPBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<APConfig>(Tp.AP.ToString());
         }
 
         public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
@@ -68,7 +70,8 @@ namespace ThirdPartyWager.Service.BLL
             foreach (var siteData in siteList)
             {
                 // 分Site取得TpList
-                setting = _thirdPartyBLL.GetThirdPartyBySite(tpId, siteData.SiteId);
+                setting = _siteConfigDic[siteData.SiteId];
+
                 foreach (var type in new List<string> { "slot", "mini" })
                 {
                     switch (type)

@@ -1,5 +1,5 @@
 ﻿using System.Collections.Concurrent;
-
+using System.Text.RegularExpressions;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -147,6 +147,38 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public int UpdateOnline(int custId, bool isOnline, string token, string ip)
         {
             return tpCustInfoService.UpdateOnline(custId, isOnline, token, ip);
+        }
+
+        public CustProfile GetCustProfileWithCacheByUserName(int siteId, string userName, string sabaId)
+        {
+            var custProfile = _redisHelper.TryGetOrCreate(
+               $"CustProfile:{siteId}:{userName}:{sabaId}",
+               TimeSpan.FromMinutes(10),
+              () => GetCustProfileByUserName(siteId, userName, sabaId));
+            return custProfile;
+        }
+        public CustProfile GetCustProfileByUserName(int siteId, string userName, string sabaId)
+        {
+            var custId = TpIdToCustId(string.IsNullOrEmpty(sabaId) ? string.Empty : sabaId);
+            return tpCustInfoService.GetCustProfileByUserName(custId, siteId, userName);
+        }
+        private int? TpIdToCustId(string TpId)
+        {
+            TpId = TpId.Trim();
+
+            if (TpId.IndexOf("_") > -1)
+            {
+                TpId = TpId.Substring(TpId.LastIndexOf("_"), TpId.Length - TpId.LastIndexOf("_"));
+            }
+            else if (TpId.IndexOf("x") > -1)
+            {
+                TpId = TpId.Substring(TpId.LastIndexOf("x"), TpId.Length - TpId.LastIndexOf("x"));
+            }
+
+            var m = Regex.Match(TpId, @"\d+");
+            var _custId = int.TryParse(m.Value, out var custId) ? custId : (int?)null;
+
+            return _custId;
         }
     }
 }
