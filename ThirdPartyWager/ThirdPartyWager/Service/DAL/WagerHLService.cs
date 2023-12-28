@@ -33,7 +33,7 @@ namespace ThirdPartyWager.Service.DAL
             return _wagerDbClient.Execute("Service_TpWager_HL_Ins", p);
         }
 
-        public async Task<bool> UpdateHLWager(HLWagerData wager)
+        public bool UpdateHLWager(HLWagerData wager)
         {
             var p = new DynamicParameters();
             p.Add("betID", wager.BetID);
