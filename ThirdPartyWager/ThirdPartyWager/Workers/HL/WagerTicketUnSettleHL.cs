@@ -45,8 +45,10 @@ public class WagerTicketUnSettleHL : BackgroundService
             {
                 ticketKey = _wagerHLService.GetHaoLongTicketKey(ticketKey);
             }
-                
-            _thirdPartyBLL.SetAllSiteTicketKey(workerType, (int)_tp, ticketKey);
+            else
+            {
+                _thirdPartyBLL.SetAllSiteTicketKey(workerType, (int)_tp, unSettleList.FirstOrDefault().TicketKey);
+            }
             _logger.LogInformation($"Success: {taskProperty} | SQ is :{ticketKey} | {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm.ss.fff}");
 
         }

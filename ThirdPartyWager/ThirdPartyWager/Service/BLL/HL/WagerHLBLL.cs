@@ -26,7 +26,7 @@ namespace ThirdPartyWager.Service.BLL
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
 
-        public async Task<bool> GetWagersAsync(IEnumerable<HLWagerTrans> unSettleDate,string startTime, string endTime)
+        public async Task<bool> GetWagersAsync(IEnumerable<HLWagerTrans> unSettleDate,List<DateTime> dayList)
         {
             var msg = "FATAL_ERROR";
             var guid = Guid.NewGuid().ToString();
@@ -34,51 +34,64 @@ namespace ThirdPartyWager.Service.BLL
             {
                 //先保留page
                 //var page = 1;
-                
-                var result = await _apiHLBLL.GetBetListByTime(startTime,endTime,guid);
-                var dataWager = result.hl_Response;
 
-                if (dataWager.ErrorCode != 0 && dataWager.ErrorCode != 998)
+                var allWagerList = new List<HLWagerData>();
+                
+                foreach(var day in dayList)
                 {
-                    msg = "THIRD_PARTY_ERROR";
-                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                    return false;
-                }
-                
-                if (dataWager.ErrorCode == 3 && dataWager.Desc == "Data NOT Found")
-                {
-                    msg = "NO_DATA";
-                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                    return true;
-                }
-                
-                
-                
-                foreach (var wagerData in dataWager.WagerData)
-                {
-                    try
+                    var nowDay = day.ToString("yyyy-MM-dd");
+                    var nextDay = day.AddDays(1).ToString("yyyy-MM-dd");
+
+                    var wagerData = await _apiHLBLL.GetBetListByTime(nowDay, nextDay,guid);
+                    
+                    var dataWager = wagerData.hl_Response;
+                    
+                    if (dataWager.ErrorCode != 0 && dataWager.ErrorCode != 998)
                     {
-                        if (IsValidWager(unSettleDate, wagerData))
-                        {
-                            _ =  _wagerHLService.InsertHLWager(wagerData);
-                            _ = _tpUnsettleService.InsertTpUnsettle(Tp.HaoLong, GameType.HaoLong_4D, wagerData.BetID);
-                        }
-                        else
-                        {
-                            var insert = CreateHLWagerData(wagerData.BetID, "Void", "0");
-                            _ =  _wagerHLService.UpdateHLWager(insert);
-                        }
+                        msg = "THIRD_PARTY_ERROR";
+                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)} , Date:{nowDay} ~ {nextDay}");
+                        break;
                     }
-                    catch (Exception ex)
+                
+                    if (dataWager.ErrorCode == 3 && dataWager.Desc == "Data NOT Found")
                     {
-                        msg = $"INSERT_WAGER(WAGERID: {wagerData.BetID} )";
-                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(wagerData)}\r\n{ex.Message}");
-                        return false;
+                        msg = "NO_DATA";
+                        _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)} , Date:{nowDay} ~ {nextDay}");
+                        break;
+                    }
+                    
+                    allWagerList.AddRange(dataWager.WagerData);
+                }
+                
+                var distinctWagerData = allWagerList
+                    .GroupBy(wager => wager.BetID)
+                    .Select(group => group.First())
+                    .OrderBy(wager => wager.DrawDate)
+                    .ToList();
+
+                var allWagerValid = AllWagerValid(unSettleDate, distinctWagerData);
+
+                foreach (var wagerData in allWagerValid)
+                {
+                    Console.WriteLine($"TrandID : {wagerData.BetID} , Status : {wagerData.Status}");
+                    switch (wagerData.Status)
+                    {
+                        // 0:duplicate
+                        // 1:void
+                        // 2:new
+                        case 1:
+                            UpdateWager(wagerData.BetID);
+                            break;
+                        case 2:
+                            InsertNewWager(wagerData);
+                            break;
+                        case 0:
+                            break;
                     }
                 }
                 
                 msg = "FINISH";
-                _logger.LogInformation($"GetWagersAsync {msg}\r\n{startTime} ~ {endTime}");
+                _logger.LogInformation($"GetWagersAsync {msg}\r\n{dayList.First():yyyy-MM-dd} ~ {dayList.Last():yyyy-MM-dd}");
                 return true;
             }
             catch (Exception ex)
@@ -142,7 +155,7 @@ namespace ThirdPartyWager.Service.BLL
                                 insert = CreateHLWagerData(item.TransId, "NA", "0");
                             }
 
-                            var insertResult = await _wagerHLService.UpdateHLWager(insert);
+                            var insertResult = _wagerHLService.UpdateHLWager(insert);
                             if (!insertResult)
                             {
                                 msg = $"UPDATE_WAGER(WAGERID: {insert.BetID} )";
@@ -180,10 +193,83 @@ namespace ThirdPartyWager.Service.BLL
                 SettleFlag = 2
             };
         }
-
-        private bool IsValidWager(IEnumerable<HLWagerTrans> getHLWager, HLWagerData wagerData)
+        
+        private IEnumerable<HLWagerData> AllWagerValid(IEnumerable<HLWagerTrans> allUnSettleHLWager, IEnumerable<HLWagerData> wagerData)
         {
-            return !getHLWager.Any(x => x.TransId != wagerData.BetID);
+            var result = new List<HLWagerData>();
+            var filteredAndSortedWagers = allUnSettleHLWager
+                .Where(wager => wager.SettleFlag != 1 && wager.SettleFlag != 2)
+                .Where(wager => wager.StrikePosition == "0")
+                .OrderBy(wager => wager.drawDate)
+                .ToList();
+            
+            // 情境 1: A 和 B 有符合的項，Status 為 0
+            var matched = from a in filteredAndSortedWagers
+                join b in wagerData
+                    on a.TransId equals b.BetID
+                select new HLWagerData
+                {
+                    BetID = b.BetID,
+                    UserName = b.UserName,
+                    DateTime = b.DateTime,
+                    DrawType = b.DrawType,
+                    DrawDate = b.DrawDate,
+                    BetNumber = b.BetNumber,
+                    BetPosition = b.BetPosition,
+                    StrikePosition = b.StrikePosition,
+                    BetAmount = b.BetAmount,
+                    SettleAmount = b.SettleAmount,
+                    Status = 0  // Status 為 0 表示 Duplicate
+                };
+
+            // 添加情境 1 的結果
+            result.AddRange(matched);
+
+            // 情境 2: B 沒有 A 有的項，標記為取消（Status 設置為 1）
+            var unmatchedInB = filteredAndSortedWagers
+                .Where(a => !wagerData.Any(b => b.BetID == a.TransId))
+                .Select(a => new HLWagerData
+                {
+                    BetID = a.TransId,
+                    Status = 1  // Status 為 1 表示情境 Void
+                });
+            
+            result.AddRange(unmatchedInB);
+
+            // 情境 3: A 沒有 B 有的項，標記為新注單（Status 設置為 2）
+            var unmatchedInA = wagerData
+                .Where(b => !filteredAndSortedWagers.Any(a => a.TransId == b.BetID))
+                .Select(b => new HLWagerData
+                {
+                    BetID = b.BetID,
+                    UserName = b.UserName,
+                    DateTime = b.DateTime,
+                    DrawType = b.DrawType,
+                    DrawDate = b.DrawDate,
+                    BetNumber = b.BetNumber,
+                    BetPosition = b.BetPosition,
+                    StrikePosition = b.StrikePosition,
+                    BetAmount = b.BetAmount,
+                    SettleAmount = b.SettleAmount,
+                    Status = 2  //Status 為 2 表示 New
+                });
+            
+            result.AddRange(unmatchedInA);
+
+            return result;
+        }
+
+        private void InsertNewWager(HLWagerData wagerData)
+        {
+            _ = _wagerHLService.InsertHLWager(wagerData);
+            _ = _tpUnsettleService.InsertTpUnsettle(Tp.HaoLong, GameType.HaoLong_4D, wagerData.BetID);
+        }
+
+        private void UpdateWager(string TransId)
+        {
+            var insert = CreateHLWagerData(TransId, "Void", "0");
+            _ = _wagerHLService.UpdateHLWager(insert);
+            _ = _tpUnsettleService.InsertTpUnsettle(Tp.HaoLong, GameType.HaoLong_4D, TransId);
         }
 
         private DateTime ConvertTimeToPlusEight(DateTime dateTime)

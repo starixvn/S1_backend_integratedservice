@@ -44,6 +44,7 @@ namespace ThirdPartyWager.Service.Model
         [JsonProperty("strike")]
         public string SettleAmount { get; set; }
         public int SettleFlag { get; set; }
+        public int Status { get; set; }
     }
     
     #region WagerSettledData
@@ -123,6 +124,7 @@ namespace ThirdPartyWager.Service.Model
 	    public int SiteId { get; set; }
 	    public string TransId { get; set; }
 	    public string TpUserName { get; set; }
+	    public string StrikePosition { get; set; }
 	    public int drawType { get; set; }
 	    public DateTime drawDate { get; set; }
 	    public int SettleFlag { get; set; }
