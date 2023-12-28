@@ -141,8 +141,9 @@ namespace ThirdPartyService.Service.BLL
                 var configEnv = configuration.GetValue<string>("Environment");
 
                 // Test account only allow login for saba
+                // 先讓HL過 後續確定有一家轉帳制 到時候一起處理
                 if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production" && configEnv == null &&
-                    tpInfo.TpId != 1)
+                    tpInfo.TpId != 1 || tpInfo.TpId != 58)
                 {
                     apiResult.ErrorCode = ErrorCode.NoAuthority;
                     apiResult.RawMessage = apiResult.Message = "This Account not allow for access";
@@ -185,7 +186,8 @@ namespace ThirdPartyService.Service.BLL
                 var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpTransfer.CustId, tpTransfer.TpId ,tpTransfer.LangId);
 
                 // Test account create 3rd party only for saba
-                if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production" && tpTransfer.TpId != 1)
+                // 先讓HL過 後續確定有一家轉帳制 到時候一起處理
+                if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production" && tpTransfer.TpId != 1 || tpTransfer.TpId != 58)
                 {
                     apiResult.ErrorCode = ErrorCode.NoAuthority;
                     apiResult.RawMessage = "This Account is for Testing.";
