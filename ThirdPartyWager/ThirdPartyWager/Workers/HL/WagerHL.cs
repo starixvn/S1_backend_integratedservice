@@ -58,6 +58,7 @@ namespace ThirdPartyWager.Workers
                 
                 if (CheckHaoLongTime(1))
                 {
+                    // 14:55 ~ 22:30不拉單
                     _logger.LogInformation($"TP - HaoLong Busy Time");
                     var time = _dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
                     _thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
@@ -70,8 +71,8 @@ namespace ThirdPartyWager.Workers
                      
                      //測試發現，下注時間跟開彩時間有差異，所以要抓7天的開彩日期，要不然會有下注單當天沒回來的情形發生。
                      var currentDate = DateTime.Parse(time.startTime);
-                     var nextSevenDays = Enumerable.Range(0, 7)
-                         .Select(day => currentDate.AddDays(day))
+                     var nextSevenDays = Enumerable.Range(0,8)
+                         .Select(day => currentDate.AddDays(day - 1))
                          .ToList();
                      
                      //拿UnSettle資料
@@ -85,6 +86,7 @@ namespace ThirdPartyWager.Workers
                     
                      if(CheckHaoLongTime(2))
                      { 
+                         //21:30 ~ 23:59開始結算
                        _logger.LogInformation($"HaoLong Start SetSettledWager Job Time : +0 = {DateTime.Now:yyyy-MM-ddTHH:mm:ss}");
                        _ = await _wagerHLBLL.SetSettledWager();
                      }
@@ -122,9 +124,9 @@ namespace ThirdPartyWager.Workers
             return timeType switch
             {
                 1 => timeInGmtPlus8.TimeOfDay >= new TimeSpan(14, 55, 0) &&
-                     timeInGmtPlus8.TimeOfDay <= new TimeSpan(20, 5, 0),
-                2 => timeInGmtPlus8.TimeOfDay >= new TimeSpan(20, 30, 0) &&
-                     timeInGmtPlus8.TimeOfDay <= new TimeSpan(21, 30, 0),
+                     timeInGmtPlus8.TimeOfDay <= new TimeSpan(22, 30, 0),
+                2 => timeInGmtPlus8.TimeOfDay >= new TimeSpan(21, 30, 0) &&
+                     timeInGmtPlus8.TimeOfDay <= new TimeSpan(23, 59, 0),
                 _ => false
             };}
     }
