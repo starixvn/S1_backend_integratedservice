@@ -50,14 +50,14 @@ namespace ThirdPartyWager.Service.BLL
                     {
                         msg = "THIRD_PARTY_ERROR";
                         _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)} , Date:{nowDay} ~ {nextDay}");
-                        break;
+                        continue;
                     }
                 
                     if (dataWager.ErrorCode == 3 && dataWager.Desc == "Data NOT Found")
                     {
                         msg = "NO_DATA";
                         _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)} , Date:{nowDay} ~ {nextDay}");
-                        break;
+                        continue;
                     }
                     
                     allWagerList.AddRange(dataWager.WagerData);
@@ -140,31 +140,37 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     try 
                     {
-                        var tasks = matchedTransWager.Select(async item =>
-                        {
-                            var result = await _apiHLBLL.GetWinningNumberByPlayer(item.TpUserName, nowDate);
+                        var result = await _apiHLBLL.GetWinningNumberByDay(nowDate);
+                        var hlWagerData = result.hl_Response.WagerData;
+                        
+                        var winMatchedData = from trans in matchedTransWager
+                            join data in hlWagerData on trans.TransId equals data.BetID
+                            select data; 
+                        
+                        var insertList = winMatchedData.Select
+                            (winWager => CreateHLWagerData(winWager.BetID, winWager.StrikePosition, winWager.SettleAmount)).ToList();
 
-                            HLWagerData insert;
-                            if (result.hl_Response.ErrorCode == 0 && result.hl_Response.WagerData != null)
+                        var unmatchedTrans = matchedTransWager.Where
+                            (trans => !hlWagerData.Any(m => m.BetID == trans.TransId));
+
+                        insertList.AddRange(unmatchedTrans.Select
+                            (loseWager => CreateHLWagerData(loseWager.TransId, "NA", "0")));
+
+                        foreach (var item in insertList)
+                        {
+
+                            var insertResult = _wagerHLService.UpdateHLWager(item);
+                            
+                            if (!insertResult)
                             {
-                                var settledWager = result.hl_Response.WagerData.FirstOrDefault(x => x.BetID == item.TransId);
-                                insert = CreateHLWagerData(settledWager.BetID, settledWager.StrikePosition, settledWager.SettleAmount);
+                                msg = $"UPDATE_WAGER(WAGERID: {item.TransId} )";
+                                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(item)}");
                             }
                             else
                             {
-                                insert = CreateHLWagerData(item.TransId, "NA", "0");
+                                _ = _tpUnsettleService.InsertTpUnsettle(Tp.HaoLong, GameType.HaoLong_4D, item.TransId);
                             }
-
-                            var insertResult = _wagerHLService.UpdateHLWager(insert);
-                            if (!insertResult)
-                            {
-                                msg = $"UPDATE_WAGER(WAGERID: {insert.BetID} )";
-                                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(insert)}");
-                            }
-                        });
-
-                        await Task.WhenAll(tasks);
-
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -183,11 +189,11 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
         
-        private HLWagerData CreateHLWagerData(string betId, string strikePosition, string settleAmount)
+        private HLSettleInsertData CreateHLWagerData(string betId, string strikePosition, string settleAmount)
         {
-            return new HLWagerData()
+            return new HLSettleInsertData()
             {
-                BetID = betId,
+                TransId = betId,
                 StrikePosition = strikePosition,
                 SettleAmount = settleAmount,
                 SettleFlag = 2
@@ -198,8 +204,8 @@ namespace ThirdPartyWager.Service.BLL
         {
             var result = new List<HLWagerData>();
             var filteredAndSortedWagers = allUnSettleHLWager
-                .Where(wager => wager.SettleFlag != 1 && wager.SettleFlag != 2)
-                .Where(wager => wager.StrikePosition == "0")
+                .Where(wager => wager.SettleFlag != 1)
+                //.Where(wager => wager.StrikePosition == "0")
                 .OrderBy(wager => wager.drawDate)
                 .ToList();
             
@@ -226,15 +232,15 @@ namespace ThirdPartyWager.Service.BLL
             result.AddRange(matched);
 
             // 情境 2: B 沒有 A 有的項，標記為取消（Status 設置為 1）
-            var unmatchedInB = filteredAndSortedWagers
-                .Where(a => !wagerData.Any(b => b.BetID == a.TransId))
-                .Select(a => new HLWagerData
-                {
-                    BetID = a.TransId,
-                    Status = 1  // Status 為 1 表示情境 Void
-                });
-            
-            result.AddRange(unmatchedInB);
+            // var unmatchedInB = filteredAndSortedWagers
+            //     .Where(a => !wagerData.Any(b => b.BetID == a.TransId))
+            //     .Select(a => new HLWagerData
+            //     {
+            //         BetID = a.TransId,
+            //         Status = 1  // Status 為 1 表示情境 Void
+            //     });
+            //
+            // result.AddRange(unmatchedInB);
 
             // 情境 3: A 沒有 B 有的項，標記為新注單（Status 設置為 2）
             var unmatchedInA = wagerData

@@ -64,6 +64,18 @@ public class ApiHLBLL
         
         return result;
     }
+    
+    public async Task<HLResponse> GetWinningNumberByDay(DateTime drawTime)
+    {
+        var param = $"apiUser={_siteHLConfig.ApiUser}&apiPass={_siteHLConfig.ApiPass}&" +
+                    $"user={_siteHLConfig.AgentUser}&pass={_siteHLConfig.AgentPass}&" +
+                    $"dateFrom={drawTime.Date:yyyy-MM-dd}&dateTo={drawTime.Date:yyyy-MM-dd}";
+        
+        var r = await DoHttpClientAsync($"{_siteHLConfig.ApiUrl}winNumber.aspx?", param, "betData");
+        var result = JsonConvert.DeserializeObject<HLResponse>(r);
+        
+        return result;
+    }
 
     private async Task<string> DoHttpClientAsync(string url, string param, string tagName)
     {

@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 
 using Dapper;
 
@@ -183,7 +183,8 @@ namespace ThirdPartyService.Service.DAL
                         return false;
                     }
                 }
-                var _forbiddenTpId = new List<int> { (int)TpEnum.PT };
+
+                var _forbiddenTpId = new List<int> { (int)TpEnum.PT, (int)TpEnum.HaoLong };
                 if (_forbiddenTpId.Contains(tpId))
                 {
                     return true;
