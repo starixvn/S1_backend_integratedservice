@@ -327,7 +327,7 @@ namespace ThirdParty.AP
              * 此次開發不含mini的部分，但您可透過GetLaunchDomain得知目前使用的主域名，再替換成mini。
              * 舉例 https://game.apchicken.online 轉換為https://mini.apchicken.online
              */
-            if (!string.IsNullOrEmpty(SubGameUrl) && !IsDevelopment)
+            if (!string.IsNullOrEmpty(SubGameUrl))
             {
                 GameUrl = SubGameUrl.Replace(_domainRule["PRD_SLOT"], _domainRule["PRD_MINI"]);
             }
