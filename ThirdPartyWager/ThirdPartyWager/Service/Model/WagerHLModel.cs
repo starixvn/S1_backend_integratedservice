@@ -46,6 +46,14 @@ namespace ThirdPartyWager.Service.Model
         public int SettleFlag { get; set; }
         public int Status { get; set; }
     }
+
+    public class HLSettleInsertData
+    {
+	    public string TransId { get; set; }
+	    public string StrikePosition  { get; set; }
+	    public string SettleAmount { get; set; }
+	    public int SettleFlag { get; set; }
+    }
     
     #region WagerSettledData
 
