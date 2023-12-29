@@ -178,7 +178,9 @@ namespace CommonService.Service.BLL
 
             if (result.StatusCode == HttpStatusCode.OK)
             {
-                var resultResp = JsonConvert.DeserializeObject<SKYLineSMSResult>(result.Content.ReadAsStringAsync().Result);
+                var response = result.Content.ReadAsStringAsync().Result;
+                var resultResp = JsonConvert.DeserializeObject<SKYLineOTPResult>(response);
+                var responseDetail = resultResp.array.FirstOrDefault(x => x.number == phoneNo);
                 oTPLog.OTPResponse = $"{resultResp.status} || {resultResp.reason}";
 
                 if (resultResp.status == 0)
@@ -186,7 +188,7 @@ namespace CommonService.Service.BLL
                     _logger.LogInformation($"SkyLine - {phoneNo},{custInfo.UserName},{otpNum},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_OTP");
                     apiResult.ErrorCode = ErrorCode.Success;
                     oTPLog.OTPStatus = (int)OTPStatus.SendToProvider;
-                    oTPLog.Request_id = GetRequestid(resultResp);
+                    oTPLog.Request_id = responseDetail.msgId;
                 }
                 else
                 {

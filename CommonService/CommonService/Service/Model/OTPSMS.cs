@@ -48,6 +48,21 @@
         public string[][] array { get; set; }
     }
 
+    public class SKYLineOTPResult
+    {
+        public int status { get; set; }
+        public string success { get; set; }
+        public string fail { get; set; }
+        public string reason { get; set; }
+        public List<SKYLineOTPResultDetail> array { get; set; }
+    }
+
+    public class SKYLineOTPResultDetail
+    {
+        public string msgId { get; set; }
+        public string number { get; set; }
+        public string orderId { get; set; }
+    }
 
     public class YcSmsSendOtpResult
     {
