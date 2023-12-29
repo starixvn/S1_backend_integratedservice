@@ -21,6 +21,11 @@ namespace ThirdParty.AP
         private readonly List<string> _gameListOfMini;
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
         private readonly Dictionary<int, APConfig> _siteConfigDic;
+        Dictionary<string, string> _domainRule = new Dictionary<string, string>() {
+            {"DEV_SLOT","https://sit." },
+            {"PRD_SLOT","https://game." },
+            {"PRD_MINI","https://mini." },
+        };
 
         public TpHelper(IServiceProvider provider)
         {
@@ -29,7 +34,9 @@ namespace ThirdParty.AP
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<APConfig>(TpEnum.AP.ToString());
         }
 
-        public class GetPlayerTokenrep
+        #region Response
+
+        public class GetPlayerTokenResp
         {
             public string Timestamp { get; set; }
             public string Seq { get; set; }
@@ -37,6 +44,26 @@ namespace ThirdParty.AP
             public string ErrorDescription { get; set; }
             public string Token { get; set; }
         }
+
+        public class GetLaunchDomainResp
+        {
+            public string Timestamp { get; set; }
+            public string Seq { get; set; }
+            public int ErrorCode { get; set; }
+            public string ErrorDescription { get; set; }
+            public string LaunchDomain { get; set; }
+        }
+
+        public class GetLaunchURLResp
+        {
+            public string Timestamp { get; set; }
+            public string Seq { get; set; }
+            public int ErrorCode { get; set; }
+            public string ErrorDescription { get; set; }
+            public string LaunchURL { get; set; }
+        }
+
+        #endregion
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -73,6 +100,7 @@ namespace ThirdParty.AP
             #endregion
 
             var Config = _siteConfigDic[tpCustInfo.SiteId];
+            string ApiUrl = Config.ApiUrl;
             string GameUrl = Config.GameUrl;
             string SiteCode = Config.SiteCode;
 
@@ -82,8 +110,23 @@ namespace ThirdParty.AP
             bool FunPlay = fun == "1";
 
             ApiResult oApiResult = new();
+
             if (_gameListOfMini.Contains(gameId))
             {
+                var subGameUrl = "";
+                // 取得最新的遊戲網址
+                var domainResult = HttpGet($"{ApiUrl}GetLaunchDomain", "", "application/json");
+
+                if (IsJSON(domainResult))
+                {
+                    var domainResponse = JsonConvert.DeserializeObject<GetLaunchDomainResp>(domainResult);
+                    // DEV & PRD 網址不同，排除DEV使用替換網址
+                    if (domainResponse.ErrorCode == 0 && !string.IsNullOrEmpty(domainResponse.LaunchDomain) && !domainResponse.LaunchDomain.Contains(_domainRule["DEV_SLOT"]))
+                    {
+                        subGameUrl = domainResponse.LaunchDomain;
+                    }
+                }
+
                 // mini game
                 if (FunPlay)
                 {
@@ -91,14 +134,41 @@ namespace ThirdParty.AP
                     tpCustInfo.TpUserName = "";
                     tpCustInfo.TpCurrencyId = (DefaultTpCurrencyId != null) ? DefaultTpCurrencyId.TpCurrencyId : "";
                 }
-                string URL = GetLoginOfMiniGame(tpCustInfo, TpLangId, Config, gameId, SiteCode);
+                string URL = GetLoginOfMiniGame(tpCustInfo, TpLangId, Config, gameId, SiteCode, subGameUrl);
                 oApiResult.ErrorCode = ErrorCode.Success;
                 oApiResult.Message = URL;
             }
             else
             {
-                string Params = $"Token={sessionKey}&SiteCode={SiteCode}&GameCode={gameId}&LangCode={LangId}&FunPlay={FunPlay}";
-                string URL = $"{GameUrl}LaunchGame?{Params}";
+                // 取得進入遊戲網址
+                var sParam = new
+                {
+                    Timestamp = DateTime.Now.ToString(_formatOfSlot),
+                    Seq = Guid.NewGuid().ToString(),
+                    SiteCode = SiteCode,
+                    Token = sessionKey,
+                    GameCode = gameId,
+                    LangCode = LangId,
+                    FunPlay = FunPlay,
+                };
+                string URL = "";
+                var param = ToJson(sParam);
+                var launchResult = HttpPost($"{ApiUrl}GetLaunchURL", param, "application/json");
+                if (IsJSON(launchResult))
+                {
+                    var launchResponse = JsonConvert.DeserializeObject<GetLaunchURLResp>(launchResult);
+                    // 有取到進入遊戲網址 替換原本遊戲網址
+                    if (launchResponse.ErrorCode == 0 && !string.IsNullOrEmpty(launchResponse.LaunchURL))
+                    {
+                        URL = launchResponse.LaunchURL;
+                    }
+                }
+                else
+                {
+                    // 取不到進入遊戲網址 使用原本組連結方式
+                    string Params = $"Token={sessionKey}&SiteCode={SiteCode}&GameCode={gameId}&LangCode={LangId}&FunPlay={FunPlay}";
+                    URL = $"{GameUrl}LaunchGame?{Params}";
+                }
 
                 oApiResult.ErrorCode = ErrorCode.Success;
                 oApiResult.Message = URL;
@@ -170,7 +240,7 @@ namespace ThirdParty.AP
                 throw new BetDetailNotFoundException();
             }
 
-            var response = JsonConvert.DeserializeObject<GetPlayerTokenrep>(result);
+            var response = JsonConvert.DeserializeObject<GetPlayerTokenResp>(result);
             string PlayerToken = response.Token;
             #endregion
 
@@ -248,10 +318,19 @@ namespace ThirdParty.AP
             return GameName;
         }
 
-        private string GetLoginOfMiniGame(TpCustInfo tpCustInfo, string TpLangId, APConfig config, string gameId, string SiteCode)
+        private string GetLoginOfMiniGame(TpCustInfo tpCustInfo, string TpLangId, APConfig config, string gameId, string SiteCode, string SubGameUrl)
         {
             string GameUrl = config.GameUrl_MiniGame;
             string SecretKey = config.SecretKey_MiniGame;
+
+            /*
+             * 此次開發不含mini的部分，但您可透過GetLaunchDomain得知目前使用的主域名，再替換成mini。
+             * 舉例 https://game.apchicken.online 轉換為https://mini.apchicken.online
+             */
+            if (!string.IsNullOrEmpty(SubGameUrl) && !IsDevelopment)
+            {
+                GameUrl = SubGameUrl.Replace(_domainRule["PRD_SLOT"], _domainRule["PRD_MINI"]);
+            }
 
             Dictionary<string, string> MiniGameId = new()
             {
