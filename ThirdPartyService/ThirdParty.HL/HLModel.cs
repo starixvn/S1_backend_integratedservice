@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
 
@@ -127,13 +127,13 @@ namespace ThirdParty.HL
         public string Mode { get; set; } 
 
         [XmlElement(ElementName="previousBalance")] 
-        public double PreviousBalance { get; set; } 
+        public decimal PreviousBalance { get; set; } 
 
         [XmlElement(ElementName="amount")] 
-        public double Amount { get; set; } 
+        public decimal Amount { get; set; } 
 
         [XmlElement(ElementName="balance")] 
-        public double Balance { get; set; } 
+        public decimal Balance { get; set; } 
 
         [XmlElement(ElementName="remarks")] 
         public int Remarks { get; set; } 
