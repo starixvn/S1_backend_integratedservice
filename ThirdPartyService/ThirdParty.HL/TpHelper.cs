@@ -239,26 +239,27 @@ namespace ThirdParty.HL
                     profileResponse = XMLDeserialize<HLResponse>(result);
                 }
 
-                if (profileResponse.ErrorCode != 0)
+                return profileResponse.ErrorCode switch
                 {
-                    return new ApiResult<TransferResult>()
+                    5 => new ApiResult<TransferResult>()
                     {
-                        ErrorCode = ErrorCode.TransferPending,
+                        ErrorCode = ErrorCode.TransferFail,
                         RawErrorCode = profileResponse.ErrorCode.ToString(),
-                        RawMessage = profileResponse.Desc.ToString(),
-                        Data = new TransferResult()
-                        {
-                            Status = TransferStatus.Pending,
-                        }
-                    };
-                }
-                
-                return new ApiResult<TransferResult>()
-                {
-                    ErrorCode = ErrorCode.Success,
-                    Data = new TransferResult()
+                        RawMessage = "Invalid Amount",
+                        Data = new TransferResult() { Status = TransferStatus.Fail, }
+                    },
+                    99 => new ApiResult<TransferResult>()
                     {
-                        Status = TransferStatus.Success
+                        ErrorCode = ErrorCode.TransferFail,
+                        RawErrorCode = profileResponse.ErrorCode.ToString(),
+                        RawMessage =
+                            "Grand Dragon Transfer is currently undergoing maintenance, temporarily unavailable to transfer. Please try again after.",
+                        Data = new TransferResult() { Status = TransferStatus.Fail, }
+                    },
+                    _ => new ApiResult<TransferResult>()
+                    {
+                        ErrorCode = ErrorCode.Success,
+                        Data = new TransferResult() { Status = TransferStatus.Success }
                     }
                 };
             }
@@ -303,16 +304,16 @@ namespace ThirdParty.HL
                     transferCheckResponse = XMLDeserialize<TransferCheckResponse>(result);
                 }
 
-                if (transferCheckResponse.ErrorCode != 0)
+                if (transferCheckResponse.ErrorCode is 3 or 99)
                 {
                     return new ApiResult<TransferResult>()
                     {
-                        ErrorCode = ErrorCode.TransferPending,
+                        ErrorCode = ErrorCode.TransferFail,
                         RawErrorCode = transferCheckResponse.ErrorCode.ToString(),
                         RawMessage = transferCheckResponse.Desc.ToString(),
                         Data = new TransferResult()
                         {
-                            Status = TransferStatus.Pending,
+                            Status = TransferStatus.Fail,
                         }
                     };
                 }
