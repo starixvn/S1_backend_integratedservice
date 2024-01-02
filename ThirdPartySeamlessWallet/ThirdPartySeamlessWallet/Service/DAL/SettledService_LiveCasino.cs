@@ -615,7 +615,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         betRecordInfo.SettlementType = SettlementType.SettledForValid;
                         betRecordInfo.BonusId = bonusId;
 
-                        result = SettleTicket(txn.tpCustInfo, betRecordInfo, conn, trans);
+                        result = SettleTicket(txn.tpCustInfo, betRecordInfo, trans);
 
                         if (result > 0)
                         {
@@ -706,7 +706,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         betRecordInfo.TicketStatus = TicketStatus.UnSettled;
                         betRecordInfo.BonusId = bonusId;
 
-                        result = SettleTicket(txn.tpCustInfo, betRecordInfo, conn, trans);
+                        result = SettleTicket(txn.tpCustInfo, betRecordInfo, trans);
 
                         if (result > 0)
                         {
@@ -802,7 +802,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             betRecordInfo.TicketStatus = TicketStatus.Refund;
                             betRecordInfo.BonusId = bonusId;
 
-                            result = SettleTicket(txn.tpCustInfo, betRecordInfo, conn, trans);
+                            result = SettleTicket(txn.tpCustInfo, betRecordInfo, trans);
 
                             if (result > 0)
                             {
@@ -879,7 +879,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         betRecordInfo.TicketStatus = TicketStatus.Refund;
                         betRecordInfo.BonusId = bonusId;
 
-                        result = SettleTicket(txn.tpCustInfo, betRecordInfo, conn, trans);
+                        result = SettleTicket(txn.tpCustInfo, betRecordInfo, trans);
 
                         if (result > 0)
                         {
