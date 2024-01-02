@@ -493,7 +493,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         TicketStatus = TicketStatus.Refund
                     };
 
-                    result = SettleTicket(tpCustInfo, betRecordInfo, conn, trans);
+                    result = SettleTicket(tpCustInfo, betRecordInfo, trans);
 
                     if (result > 0)
                     {
@@ -748,7 +748,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         BonusId = bonusId
                     };
 
-                    result = SettleTicket(tpCustInfo, betRecordInfo, conn, trans);
+                    result = SettleTicket(tpCustInfo, betRecordInfo, trans);
 
                     if (result > 0)
                     {

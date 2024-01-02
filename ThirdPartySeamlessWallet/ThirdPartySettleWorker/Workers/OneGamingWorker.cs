@@ -18,7 +18,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly SettledBLL _settledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly ILogger<PTWorker> _logger;
+        private readonly ILogger<OneGamingWorker> _logger;
 
         public OneGamingWorker(IServiceProvider provider)
         {
