@@ -2789,13 +2789,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     );
                 }
 
-                if (bettingDataRNG_MG.completed)
-                {
-                    result = _tpUnsettleService.InsertTpUnsettle(Tp.MG, GameType.MG_RNG, bettingDataRNG_MG.betId, trans);
-                }
-
                 if (result > 0)
                 {
+                    if (bettingDataRNG_MG.completed)
+                    {
+                        _tpUnsettleService.InsertTpUnsettle(Tp.MG, GameType.MG_RNG, bettingDataRNG_MG.betId, trans);
+                    }
                     await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 }
                 else
