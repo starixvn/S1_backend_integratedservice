@@ -174,7 +174,7 @@ namespace ThirdPartySettleWorker.Workers
             }
             finally
             {
-                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(3);
+                TimeSpan dueTimeSpan = TimeSpan.FromSeconds(30);
                 if (forContinue)
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(5);
