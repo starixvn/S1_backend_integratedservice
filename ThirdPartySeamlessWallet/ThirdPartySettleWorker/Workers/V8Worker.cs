@@ -90,19 +90,27 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         string TransId = unsettled.TransId;
 
-                        var bettrans = _partitionService.GetUnsettleDataList<SettleData>(bettransGet, unsettled);
-                        if (!bettrans.Any())
-                        {
-                            LogContext.PushProperty("TP", _tpName);
-                            _logger.LogInformation($"{logName}:bettrans not found ({gametype})\r\n{JsonConvert.SerializeObject(unsettled)}");
-                            continue;
-                        }
-
                         var wager = _tpUnSettledBLL.GetTpUnsettleData<SettleDataPK_V8>(wagerGet, new { TransId = TransId }, DataBase.Wager).FirstOrDefault();
                         if (wager == null)
                         {
                             LogContext.PushProperty("TP", _tpName);
                             _logger.LogWarning($"{logName}:wager not found ({gametype})\r\n{JsonConvert.SerializeObject(unsettled)}");
+                            continue;
+                        }
+
+                        var bettrans = _partitionService.GetUnsettleDataList<SettleData>(bettransGet, unsettled);
+                        if (!bettrans.Any())
+                        {
+                            LogContext.PushProperty("TP", _tpName);
+                            if (wager != null && wager.Stake == 0m && wager.ValidBet == 0m && wager.WinLostAmount == 0m)
+                            {
+                                _ = _tpUnSettledBLL.SetSettleFlag(wagerSet, Tp, gametype, TransId, true, DataBase.Wager);
+                                _logger.LogInformation($"{logName}:wager amount 0 no need settle\r\n{JsonConvert.SerializeObject(wager)}");
+                            }
+                            else
+                            {
+                                _logger.LogInformation($"{logName}:bettrans not found ({gametype})\r\n{JsonConvert.SerializeObject(unsettled)}");
+                            }
                             continue;
                         }
 
