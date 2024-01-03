@@ -190,7 +190,7 @@ namespace ThirdParty.SBSW
 
             if (!string.IsNullOrEmpty(_matchId) && _matchId != "0")
             {
-                return $"{result}&matchid={_matchId}&sportid={_sportType}&leaguekey={_leagueId}";
+                return $"&matchid={_matchId}&sportid={_sportType}&leaguekey={_leagueId}";
             }
 
             if (!string.IsNullOrEmpty(_betType))
