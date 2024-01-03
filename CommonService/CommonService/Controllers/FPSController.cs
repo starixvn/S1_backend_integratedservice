@@ -1,7 +1,6 @@
 ﻿using CommonService.Service.BLL;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-
 using Microsoft.AspNetCore.Mvc;
 
 namespace CommonService.Controllers
@@ -10,24 +9,24 @@ namespace CommonService.Controllers
     [ApiController]
     public class FPSController : ControllerBase
     {
-        private readonly CustInfoBLL _custInfoBLL;
-        private readonly FPSBLL _fpsBLL;
+        private readonly CustInfoBLL _custInfoBll;
+        private readonly FPSBLL _fpsBll;
 
         public FPSController(IServiceProvider provider)
         {
-            _fpsBLL = provider.GetRequiredService<FPSBLL>();
-            _custInfoBLL = provider.GetRequiredService<CustInfoBLL>();
+            _fpsBll = provider.GetRequiredService<FPSBLL>();
+            _custInfoBll = provider.GetRequiredService<CustInfoBLL>();
         }
 
         [HttpPost]
         public async Task<ApiResult> FPSChecksAsync(FPSChecksRequest fpsChecksRequest)
         {
             var apiResult = new ApiResult();
-            var custInfo = _custInfoBLL.GetCustInfoProfile(fpsChecksRequest.account);
+            var custInfo = _custInfoBll.GetCustInfoProfile(fpsChecksRequest.Account);
 
             if (custInfo != null && !string.IsNullOrEmpty(custInfo.TpUserName))
             {
-                var resultResp = await _fpsBLL.FPSChecksAsync(custInfo, fpsChecksRequest);
+                var resultResp = await _fpsBll.FPSChecksAsync(custInfo, fpsChecksRequest);
                 apiResult.ErrorCode = resultResp.ErrorCode;
                 apiResult.Message = resultResp.Message;
             }
