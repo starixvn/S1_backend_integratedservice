@@ -43,17 +43,17 @@ namespace ThirdPartySeamlessWallet.Controllers
             {"N8I",5 }
         };
 
-        Dictionary<int, string> counrtyDic = new Dictionary<int, string>() {
-            {2,"Malaysia" },
-            {3,"United States of America" },
-            {4,"Thailand" },
-            {13,"China" },
-            {15,"Indonesia" },
-            {51,"Viet Nam" },
-            {61,"India" },
-            {72,"Cambodia" },
-            {74,"Bangladesh" },
-        };
+        //Dictionary<int, string> counrtyDic = new Dictionary<int, string>() {
+        //    {2,"Malaysia" },
+        //    {3,"United States of America" },
+        //    {4,"Thailand" },
+        //    {13,"China" },
+        //    {15,"Indonesia" },
+        //    {51,"Viet Nam" },
+        //    {61,"India" },
+        //    {72,"Cambodia" },
+        //    {74,"Bangladesh" },
+        //};
 
         #region CheckOnlineMember
 
@@ -161,13 +161,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                 if(custProfile == null)
                     return result;
 
-                var nationality = string.Empty;
-                counrtyDic.TryGetValue(custProfile.CurrencyId, out nationality);
-
+                var currentAddress = string.Empty;
                 var dateOfBirth = string.Empty;
                 if (custProfile.Birth_y != null && custProfile.Birth_m != null && custProfile.Birth_d != null)
                 {
                     dateOfBirth = $"{custProfile.Birth_y}/{custProfile.Birth_m}/{custProfile.Birth_d}";
+                }
+                if (custProfile.Country != null && custProfile.City != null && custProfile.PostCode != null && custProfile.LineFirst != null)
+                {
+                    currentAddress = $"{custProfile.PostCode},{custProfile.Country},{custProfile.City},{custProfile.LineFirst}";
                 }
                 result.RegisteredName = custProfile.UserName;
                 result.Email = custProfile.Email;
@@ -176,9 +178,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 result.Locked = custProfile.Status == CustStatus.Lock;
                 result.DateOfRegistration = custProfile.RegTime;
                 result.RegistrationIP = custProfile.SignupIp;
-                result.CurrentAddress = custProfile.CurrentAddress;
+                result.CurrentAddress = currentAddress;
                 result.DateOfBirth = dateOfBirth;
-                result.Nationality = nationality;
+                result.Nationality = custProfile.Nationality;
                 result.Occupation = GetOccupation(custProfile.Occupation);
                 result.IBCCustID = custProfile.CustId;
 
