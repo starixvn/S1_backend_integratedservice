@@ -187,19 +187,12 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// <summary>
         /// Bonus AutoCancel檢查
         /// </summary>
-        public SettleTicket AutoCancelCheck(WalletType walletType)
+        public SettleTicket AutoCancelCheck()
         {
             // 只要本次注單狀態不是Unsettle都會執行AutoCancel檢查
             if (BetRecord.BonusId > 0 && BetRecord.TicketStatus != TicketStatus.UnSettled)
             {
-                if (walletType == WalletType.TransferWallet)
-                {
-                    AutoCancelTransferBonus();
-                }
-                else
-                {
-                    AutoCancelSeamlessBonus();
-                }
+                AutoCancelSeamlessBonus();             
             }
 
             return this;
@@ -238,9 +231,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
                     SetRollOverTurnOver(turnOver, memo);
                 }
 
-                //上次: 不等於SettledForValid
-                //本次: SettledForValid
-                //UnSettled結算，UnSettled結算，扣回上次結算金額
+                //上次: 等於SettledForValid
+                //本次: UnSettled、不等於SettledForValid
+                //UnSettled結算，Re-Settled結算，扣回上次結算金額
                 if ((RefBetRecord.SettlementType == SettlementType.SettledForValid && BetRecord.SettlementType == SettlementType.UnSettled ) ||
                     (RefBetRecord.SettlementType == SettlementType.SettledForValid && BetRecord.SettlementType != SettlementType.SettledForValid))
                 {
@@ -439,19 +432,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
                 BetRecord.BonusId, 
                 RefTransId = BetRecord.TransId
             };
-            return _mainDbClient.Execute("Service_BonusWinLost_Set", _trans, p);
-        }
-
-        private int AutoCancelTransferBonus()
-        {
-            var p = new
-            {
-                BetRecord.BonusId,
-                BetRecord.TransId,
-                TpCustInfo.CurrencyId,
-                GameType = (int)BetRecord.GameType,
-            };
-            return _mainDbClient.Execute("Service_AutoCancelTransferBonus_Set_V2", _trans, p);
+            return _mainDbClient.Execute("Service_BonusWinLost_Set_V2", _trans, p);
         }
 
         private int AutoCancelSeamlessBonus()
@@ -502,7 +483,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
             });
 
             p.Add("BonusId", value: BetRecord.BonusId, dbType: DbType.Int32, direction: ParameterDirection.InputOutput);
-            return _mainDbClient.Execute("Service_RolloverTurnover_Set_V2", _trans, p);
+            return _mainDbClient.Execute("Service_RolloverTurnover_Set_V3", _trans, p);
         }
 
         private decimal GetUseBonus(GetTpSeamlessBonusType getTpSeamlessBonusType)

@@ -5,7 +5,6 @@ using Dapper;
 using MySql.Data.MySqlClient;
 
 using ThirdPartySeamlessWallet.Service.Library;
-using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
@@ -72,18 +71,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             p.Add("AfterBonus", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             p.Add("BonusId", value: bonusId, dbType: DbType.Int32, direction: ParameterDirection.InputOutput);
 
-            result = _mainDbClient.Execute("Service_BonusWallet_Set_V3", p, conn, trans);
+            result = _mainDbClient.Execute("Service_BonusWallet_Set_V4", p, conn, trans);
             afterBonus = p.Get<decimal>("AfterBonus");
             bonusId = p.Get<int?>("BonusId") ?? 0;
             return result;
-        }
-
-        /// <summary>
-        /// 找到用戶還在Running的CustBonus
-        /// </summary>
-        public IEnumerable<CustBonus> GetCustBonusList(int CustId)
-        {
-            return _mainDbClient.Query<CustBonus>("Service_Bonus_Get_V2", parameters: new { CustId });
         }
     }
 }

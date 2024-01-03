@@ -148,7 +148,7 @@ namespace ThirdPartyCore.Model.enums
         VirtualSports = 7,
         P2P = 8,
         Games = 10,
-        Esports = 11
+        Esports = 11,
     }
 
     public enum FinancialType

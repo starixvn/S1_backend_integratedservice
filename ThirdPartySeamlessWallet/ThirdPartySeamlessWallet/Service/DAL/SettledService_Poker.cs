@@ -159,7 +159,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
 
             var result = 0;
-            result = SettleTicket(tpCustInfo,betRecordInfo, conn, trans);
+            result = SettleTicket(tpCustInfo,betRecordInfo, trans);
 
             if (result > 0)
             {

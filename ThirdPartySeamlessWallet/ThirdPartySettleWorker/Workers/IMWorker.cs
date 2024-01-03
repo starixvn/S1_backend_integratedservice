@@ -317,7 +317,7 @@ namespace ThirdPartySettleWorker.Workers
 
         private static TimeSpan GetDueTimeSpan(bool forContinue, bool isError)
         {
-            var dueTimeSpan = TimeSpan.FromMinutes(1);
+            var dueTimeSpan = TimeSpan.FromSeconds(30);
 
             if (forContinue)
             {
@@ -325,7 +325,7 @@ namespace ThirdPartySettleWorker.Workers
             }
             else if (isError)
             {
-                dueTimeSpan = TimeSpan.FromMinutes(1);
+                dueTimeSpan = TimeSpan.FromSeconds(30);
             }
 
             return dueTimeSpan;

@@ -1,4 +1,5 @@
-﻿using ThirdPartySeamlessWallet.Service.Model.enums;
+﻿using System.ComponentModel.DataAnnotations;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -74,8 +75,41 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public int BonusId { get; set; }
         public decimal Bonus { get; set; }
-        public PromotionCategory PromoCategoryId { get; set; }
-        public int GameType { get; set; }
-        public int TpId { get; set; }
+        public int PromoCategoryId { get; set; }
+    }
+
+    public class CustProfile 
+    { 
+        public int CustId { get; set; }
+        public string Birth_d { get; set; }
+        public string Birth_m { get; set; }
+        public string Birth_y { get; set; }
+        public string CurrentAddress { get; set; }
+        public Occupation Occupation { get; set; }
+        public SourceOfIncome SourceOfIncome { get; set; }
+        public string Email { get; set; }
+        public string AccountName { get; set; }
+        public string UserName { get; set; }
+        public CustStatus Status { get; set; }
+        public DateTime RegTime { get; set; }
+        public string AreaCode { get; set; }
+        public string PhoneNo { get; set; }
+        public string SignupIp { get; set; }
+        public int CurrencyId { get; set; }
+    }
+    public class CustInfo
+    {
+        public int IBCCustID { get; set; }
+        public string RegisteredName { get; set; }
+        public string Email { get; set; }
+        public string Mobile { get; set; }
+        public bool Active { get; set; }
+        public bool Locked { get; set; }
+        public DateTime DateOfRegistration { get; set; }
+        public string RegistrationIP { get; set; }
+        public string DateOfBirth { get; set; }
+        public string CurrentAddress { get; set; }
+        public string Nationality { get; set; }
+        public string Occupation { get; set; }
     }
 }

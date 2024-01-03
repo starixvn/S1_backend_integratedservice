@@ -615,7 +615,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         betRecordInfo.SettlementType = SettlementType.SettledForValid;
                         betRecordInfo.BonusId = bonusId;
 
-                        result = SettleTicket(txn.tpCustInfo, betRecordInfo, conn, trans);
+                        result = SettleTicket(txn.tpCustInfo, betRecordInfo, trans);
 
                         if (result > 0)
                         {
@@ -706,7 +706,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         betRecordInfo.TicketStatus = TicketStatus.UnSettled;
                         betRecordInfo.BonusId = bonusId;
 
-                        result = SettleTicket(txn.tpCustInfo, betRecordInfo, conn, trans);
+                        result = SettleTicket(txn.tpCustInfo, betRecordInfo, trans);
 
                         if (result > 0)
                         {
@@ -802,7 +802,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             betRecordInfo.TicketStatus = TicketStatus.Refund;
                             betRecordInfo.BonusId = bonusId;
 
-                            result = SettleTicket(txn.tpCustInfo, betRecordInfo, conn, trans);
+                            result = SettleTicket(txn.tpCustInfo, betRecordInfo, trans);
 
                             if (result > 0)
                             {
@@ -879,7 +879,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         betRecordInfo.TicketStatus = TicketStatus.Refund;
                         betRecordInfo.BonusId = bonusId;
 
-                        result = SettleTicket(txn.tpCustInfo, betRecordInfo, conn, trans);
+                        result = SettleTicket(txn.tpCustInfo, betRecordInfo, trans);
 
                         if (result > 0)
                         {
@@ -2548,11 +2548,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        var insertTpResults = _tpUnsettleService.InsertTpUnsettle(Tp.N2Live, GameType.N2Live_LiveCasino, TransId, trans);
-                        if (insertTpResults <= 0)
+                        if (!payoutDataLC_N2Live.IsVoid)
                         {
-                            result = 0;
+                            var insertTpResults = _tpUnsettleService.InsertTpUnsettle(Tp.N2Live, GameType.N2Live_LiveCasino, TransId, trans);
+                            if (insertTpResults <= 0)
+                            {
+                                result = 0;
+                            }
                         }
+
                         _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     }
                     else
@@ -3010,7 +3014,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         $"Payout: {Math.Abs(bettingDataRNG_MG.amount):#,##0.##}",
                         out bonusId,
                         conn,
-                        trans);
+                        trans,
+                        AllowNegative.Allow
+                        );
                 }
                 if (result > 0)
                 {

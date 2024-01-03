@@ -1,4 +1,4 @@
-﻿using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
@@ -57,6 +57,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.FaChai, AddFaChai},
                 { Tp.Pegasus, AddPegasus},
                 { Tp.BNG, AddBNG},
+                { Tp.HaoLong, AddHL},
                 { Tp.NLC, AddNLC}
             };
         }
@@ -663,6 +664,21 @@ namespace ThirdPartyWager.Extensions
             services.AddHostedService<WagerRedoNLC>();
             services.AddHostedService<WagerUnsettleNLC>();
             services.AddHostedService<FinanceNLC>();
+
+            return services;
+        }
+
+        private IServiceCollection AddHL(IServiceCollection services)
+        {
+            services.AddSingleton<WagerHLService>();
+
+            services.AddSingleton<ApiHLBLL>();
+            services.AddSingleton<FinanceHLBLL>();
+            services.AddSingleton<WagerHLBLL>();
+
+            services.AddHostedService<WagerHL>();
+            services.AddHostedService<FinanceHL>();
+            services.AddHostedService<WagerTicketUnSettleHL>();
 
             return services;
         }

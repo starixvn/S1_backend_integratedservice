@@ -86,5 +86,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var parameters = new DynamicParameters(new { TpId = tpId, CurrencyId = currencyId });
             return _mainDbClient.QueryFirst<TpCountryCode>("Service_TpCountryCode_Get", parameters: parameters);
         }
+
+        public CustProfile GetCustProfileByUserName(int? custId, int siteId, string userName)
+        {
+            var tempUserName = string.IsNullOrWhiteSpace(userName) ? null : userName;
+            return _mainDbClient.QueryFirst<CustProfile>("Service_CustProfileByUserName_Get_V2", new { _SiteId = siteId, _UserName = tempUserName, _CustId = custId });
+        }
     }
 }

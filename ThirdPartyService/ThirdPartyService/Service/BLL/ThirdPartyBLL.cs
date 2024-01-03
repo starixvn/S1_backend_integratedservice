@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Memory;
+using System.Collections.Concurrent;
 
 using Newtonsoft.Json;
 
@@ -121,7 +122,7 @@ namespace ThirdPartyService.Service.BLL
                 return apiResult;
             }
 
-            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
+            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId, tpInfo.LangId);
             if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
             {
                 var tpCustInfo = tpCustInfoResult.Data;
@@ -139,8 +140,9 @@ namespace ThirdPartyService.Service.BLL
                 var configEnv = configuration.GetValue<string>("Environment");
 
                 // Test account only allow login for saba
+                // 先讓HL過 後續確定有一家轉帳制 到時候一起處理
                 if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production" && configEnv == null &&
-                    tpInfo.TpId != 1)
+                    tpInfo.TpId != 1 && tpInfo.TpId != 58)
                 {
                     apiResult.ErrorCode = ErrorCode.NoAuthority;
                     apiResult.RawMessage = apiResult.Message = "This Account not allow for access";
@@ -180,10 +182,11 @@ namespace ThirdPartyService.Service.BLL
                     return result;
                 }
 
-                var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpTransfer.CustId, tpTransfer.TpId);
+                var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpTransfer.CustId, tpTransfer.TpId ,tpTransfer.LangId);
 
                 // Test account create 3rd party only for saba
-                if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production" && tpTransfer.TpId != 1)
+                // 先讓HL過 後續確定有一家轉帳制 到時候一起處理
+                if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production" && tpTransfer.TpId != 1 && tpTransfer.TpId != 58)
                 {
                     apiResult.ErrorCode = ErrorCode.NoAuthority;
                     apiResult.RawMessage = "This Account is for Testing.";
@@ -192,6 +195,7 @@ namespace ThirdPartyService.Service.BLL
                 else if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
                 {
                     apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
+                    apiResult.Message = tpCustInfoResult.Message;
                     apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode; /*3RD Error Code*/
                     apiResult.RawMessage = tpCustInfoResult.RawMessage; /*3RD Error Message*/
                     return apiResult;
@@ -210,10 +214,16 @@ namespace ThirdPartyService.Service.BLL
                     thirdPartyHelper.GetThirdPartyBySite(tpTransfer.TpId, tpCustInfoResult.Data.SiteId);
                 var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
 
+                if (!string.IsNullOrEmpty(tpTransfer.LangId))
+                {
+                    inputs.Add("langId", tpTransfer.LangId);
+                }
+
                 var balanceApiResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
                 if (balanceApiResult.ErrorCode != ErrorCode.Success)
                 {
                     apiResult.ErrorCode = ErrorCode.ServerIsBusy;
+                    apiResult.Message = balanceApiResult.Message;
                     apiResult.RawErrorCode = balanceApiResult.RawErrorCode; /*3RD Error Code*/
                     apiResult.RawMessage = balanceApiResult.RawMessage; /*3RD Error Message*/
                     return apiResult;
@@ -331,7 +341,7 @@ namespace ThirdPartyService.Service.BLL
 
             try
             {
-                var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
+                var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId, tpInfo.LangId);
                 if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
                 {
                     if (tpCustInfoResult.Data.IsTest == false && ThirdPartyIsMaintain(tpCustInfoResult.Data.SiteId, tpInfo.TpId))
@@ -347,6 +357,11 @@ namespace ThirdPartyService.Service.BLL
                     var oThirdPartyModel =
                         thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
                     var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
+                    
+                    if (!string.IsNullOrEmpty(tpInfo.LangId))
+                    {
+                        inputs.Add("langId",tpInfo.LangId);
+                    }
 
                     apiResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
 

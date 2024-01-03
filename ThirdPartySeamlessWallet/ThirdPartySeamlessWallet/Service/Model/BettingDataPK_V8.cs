@@ -60,6 +60,17 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string Agent { get; set; }
         public string Md5key { get; set; }
     }
+
+    public class CancelBetOfPostmanReq
+    {
+        public string orderId { get; set; }
+        public string agent { get; set; }
+        public string currency { get; set; }
+        public long timestamp { get; set; }
+        public string key { get; set; }
+        public int s { get; set; }
+    }
+
     public class V8Config
     {
         public string WagerUrl { get; set; }

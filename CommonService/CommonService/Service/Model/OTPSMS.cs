@@ -11,6 +11,8 @@
         public string ResourceURL { get; set; }
         public string Account { get; set; }
         public string Password { get; set; }
+        public string ApiKey { get; set; }
+        public string ApiSecret { get; set; }
     }
 
     public class YcSmsServiceTypeConfig
@@ -46,6 +48,21 @@
         public string[][] array { get; set; }
     }
 
+    public class SKYLineOTPResult
+    {
+        public int status { get; set; }
+        public string success { get; set; }
+        public string fail { get; set; }
+        public string reason { get; set; }
+        public List<SKYLineOTPResultDetail> array { get; set; }
+    }
+
+    public class SKYLineOTPResultDetail
+    {
+        public string msgId { get; set; }
+        public string number { get; set; }
+        public string orderId { get; set; }
+    }
 
     public class YcSmsSendOtpResult
     {

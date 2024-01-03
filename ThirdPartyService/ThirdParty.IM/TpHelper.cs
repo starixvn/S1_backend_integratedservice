@@ -20,8 +20,8 @@ namespace ThirdParty.IM
 
         Dictionary<TpGameType, int> _productWallet = new()
         {
-            {TpGameType.IM_Sports, (int)ProductWallet.IMSB},
-            {TpGameType.IM_ESports, (int)ProductWallet.ESportsbull},
+            { TpGameType.IM_Sports, (int)ProductWallet.IMSB },
+            { TpGameType.IM_ESports, (int)ProductWallet.ESportsbull },
         };
 
         #endregion
@@ -280,7 +280,7 @@ namespace ThirdParty.IM
                 TpCategory.Esports => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
                     GameID = wagerDetail.GetValueOrDefault("GameID")?.ToString(),
-                    Game = detailESportModel?.SportsName,
+                    Game = detailESportModel?.SportsName ?? "",
                     RefNo = wagerDetail.GetValueOrDefault("BetId")?.ToString(),
                     Title = detailESportModel?.EventName,
                     MatchID = detailESportModel?.EventId,

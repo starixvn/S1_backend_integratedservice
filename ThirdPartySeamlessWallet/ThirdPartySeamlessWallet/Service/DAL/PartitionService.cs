@@ -62,5 +62,26 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             return result;
         }
+
+        public IEnumerable<TResult> MonthlyQuery<TResult>(DateTime StartDate, DateTime endDate, string spName, object parameters)
+        {
+            var tasks = new List<Task<IEnumerable<TResult>>>();
+            foreach (var partitionKey in StartDate.GetMonthlyPartitionRange(endDate))
+            {
+                var p = new DynamicParameters(parameters);
+                p.Add("YYYYMM", partitionKey);
+                var task = _mainDbClient.QueryAsync<TResult>(spName, parameters: p);
+                tasks.Add(task);
+            }
+
+            Task.WhenAll(tasks);
+
+            var result = Enumerable.Empty<TResult>();
+            foreach (var item in tasks)
+            {
+                result = result.Concat(item.Result);
+            }
+            return result;
+        }
     }
 }

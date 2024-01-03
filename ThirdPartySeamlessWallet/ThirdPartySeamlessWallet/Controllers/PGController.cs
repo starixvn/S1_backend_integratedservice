@@ -46,7 +46,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string operator_token { get; set; }
         }
 
-        
+
         public class Error
         {
             public string code { get; set; }
@@ -98,7 +98,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             };
 
             var verifySessionReq = JsonConvert.DeserializeObject<VerifySessionReq>(JsonConvert.SerializeObject(reqq));
-            
+
             var secret_key = _config.secret_key;
             var operator_token = _config.operator_token;
 
@@ -241,7 +241,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             };
 
             var getBalanceReq = JsonConvert.DeserializeObject<GetBalanceReq>(JsonConvert.SerializeObject(reqq));
-          
+
             var secret_key = _config.secret_key;
             var operator_token = _config.operator_token;
 
@@ -258,11 +258,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             if (!string.IsNullOrEmpty(getBalanceReq.OperatorPlayerSession))
             {
-                string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(getBalanceReq.OperatorPlayerSession)));
-                var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
-                string authToken = sessionKeyArr[0]; /* 1 Time*/
-                string sessionToken = sessionKeyArr[1];/* Long Time*/
-
                 var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getBalanceReq.PlayerName);
                 if (tpCheck == null)
                 {
@@ -270,16 +265,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         code = "1308",
                         message = "Invalid request."
-                    };
-                    log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
-                    return resp;
-                }
-                else if (tpCheck.Token != sessionToken)
-                {
-                    resp.error = new Error
-                    {
-                        code = "1308",
-                        message = "Player session is expired"
                     };
                     log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                     return resp;
@@ -386,7 +371,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             var transferOutReqq = JsonConvert.DeserializeObject<TransferOutReqq>(JsonConvert.SerializeObject(reqq));
 
             //transferOutReqq = JsonConvert.DeserializeObject<TransferOutReqq>(@"{""operator_token"":""5884cec7905af23c1586a6819ae0b1e1"",""secret_key"":""645b1f5db5c7c6e3d0fb087f11f62e50"",""operator_player_session"":""WyJldW9WN1BqNDFVQ2dTaUhnSzVmQWxRIiwiS2VSbDRhbm5qVXl0eTdFSlBZRmZ3Il0%3D"",""game_id"":""1"",""parent_bet_id"":""6669305"",""bet_id"":""6669305"",""player_name"":""DNova88_156"",""currency_code"":""THB"",""transfer_amount"":""30.00"",""wallet_type"":""C"",""bet_type"":""1"",""transaction_id"":""6669305-6669305-201-0"",""updated_time"":""1592192524927"",""is_feature"":""False"",""is_minus_count"":""False"",""is_wager"":""True"",""platform"":""1"",""create_time"":""1592192524927"",""is_parent_zero_stake"":""False"",""jackpot_rtp_contribution_amount"":""0"",""jackpot_win_amount"":""0""}");
-            
+
             var secret_key = _config.secret_key;
             var operator_token = _config.operator_token;
 
@@ -609,7 +594,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             };
 
             var transferInReqq = JsonConvert.DeserializeObject<TransferInReqq>(JsonConvert.SerializeObject(reqq));
-            
+
             var secret_key = _config.secret_key;
             var operator_token = _config.operator_token;
 
@@ -730,7 +715,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             };
 
             var transferInOutReqq = JsonConvert.DeserializeObject<TransferInOutReqq>(JsonConvert.SerializeObject(reqq));
-            
+
             var secret_key = _config.secret_key;
             var operator_token = _config.operator_token;
 
@@ -801,6 +786,21 @@ namespace ThirdPartySeamlessWallet.Controllers
                             log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                             return resp;
                         }
+                    }
+                    /*
+                     * 不會直接使用TransferAmount進行金額異動，因為我們其他遊戲曾碰過會員會用此方式套利
+                     * 若貴司不直接使用TransferAmount進行金額異動，可以在win_amount  - bet_amount != TransferAmount返回錯誤訊息
+                     * 3073 BetFailedException
+                     */
+                    if ((transferInOutReqq.WinAmount - transferInOutReqq.BetAmount) != transferInOutReqq.TransferAmount)
+                    {
+                        resp.error = new Error
+                        {
+                            code = "3073",
+                            message = "BetFailedException"
+                        };
+                        log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                        return resp;
                     }
 
                     BalanceData respData = new BalanceData();
@@ -908,7 +908,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             };
 
             var adjustmentReqq = JsonConvert.DeserializeObject<AdjustmentDataRNG_PG>(JsonConvert.SerializeObject(reqq));
-         
+
             var secret_key = _config.secret_key;
             var operator_token = _config.operator_token;
 
