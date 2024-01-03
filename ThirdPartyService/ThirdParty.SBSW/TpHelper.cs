@@ -104,7 +104,7 @@ namespace ThirdParty.SBSW
 
             // 檢查matchid
             GameDetail gameDetail = null;
-            if (inputs.TryGetValue("matchid", out var matchid))
+            if (inputs.TryGetValue("matchid", out var matchid) && !string.IsNullOrEmpty(matchid))
             {
                 var getGameDetailResult = GetGameDetail(config, matchid);
                 if (getGameDetailResult.error_code == 0)
@@ -488,11 +488,18 @@ namespace ThirdParty.SBSW
 
         private GetGameDetailResult GetGameDetail(SabaConfig config, string matchid)
         {
-            var apiUrl = $"{config.ApiUrl}/GetGameDetail";
-            var sParam = $"vendor_id={config.VendorId}&match_ids={matchid}";
-            var json = HttpPost(apiUrl, sParam, ContentType);
-            var result = FromJson<GetGameDetailResult>(json);
-            return result;
+            try
+            {
+                var apiUrl = $"{config.ApiUrl}/GetGameDetail";
+                var sParam = $"vendor_id={config.VendorId}&match_ids={matchid}";
+                var json = HttpPost(apiUrl, sParam, ContentType);
+                var result = FromJson<GetGameDetailResult>(json);
+                return result;
+            }
+            catch
+            {
+                return default;
+            }
         }
     }
 }
