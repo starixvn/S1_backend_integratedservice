@@ -23,6 +23,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly IHostEnvironment _environment;
         private readonly Tp _thisTp;
         private readonly int _gameType = 0;
+        private readonly YGGConfig _siteConfig;
 
         #endregion
 
@@ -39,6 +40,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             _environment = provider.GetRequiredService<IHostEnvironment>();
             _thisTp = Tp.YGG;
             _gameType = (int)GameType.YGG_RNG;
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<YGGConfig>(_thisTp.ToString());
         }
 
         #endregion
@@ -252,13 +254,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else
                     {
-                        var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)_thisTp);
+                        var thirdPartySetting = _siteConfig;
                         var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, tpCustInfoAuth.TpUserName, _gameType);
                         var playerInfoData = new PlayerInfoData()
                         {
                             balance = tpCustBalance.Balance,
                             playerId = tpCustInfoAuth.TpUserName,
-                            organization = thirdPartySetting.TpSetting["org"],
+                            organization = thirdPartySetting.org,
                             currency = tpCustInfoAuth.TpCurrencyId,
                             homeCurrency = tpCustInfoAuth.TpCurrencyId,
                             applicableBonus = 0
@@ -738,7 +740,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else
             {
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)_thisTp);
+                var thirdPartySetting = _siteConfig;
                 var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, balanceReq.playerid, _gameType);
 
                 getBalanceData = new GetbalanceData()
@@ -746,7 +748,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     currency = tpCustBalance.TpCurrencyId,
                     applicableBonus = 0,
                     homeCurrency = tpCustBalance.TpCurrencyId,
-                    organization = thirdPartySetting.TpSetting["org"],
+                    organization = thirdPartySetting.org,
                     balance = tpCustBalance.Balance,
                     playerId = balanceReq.playerid,
                     bonus = 0
