@@ -3014,7 +3014,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         $"Payout: {Math.Abs(bettingDataRNG_MG.amount):#,##0.##}",
                         out bonusId,
                         conn,
-                        trans);
+                        trans,
+                        AllowNegative.Allow
+                        );
                 }
                 if (result > 0)
                 {
