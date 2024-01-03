@@ -1,10 +1,12 @@
 ﻿using System.Text;
 
+using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 
-namespace ThirdPartyCore.Model
+namespace ThirdParty.SBSW
+
 {
-    public class SabaDeepLinkHelper
+    public class SBSWDeepLinkHelper
     {
         public string GameUrl
         {
@@ -62,7 +64,7 @@ namespace ThirdPartyCore.Model
 
         private readonly Dictionary<string, Func<string>> _sportTypeHandler;
 
-        public SabaDeepLinkHelper(string sabaUrl, TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
+        public SBSWDeepLinkHelper(string sabaUrl, TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs, GameDetail gameDetail)
         {
             _sportTypeHandler = new Dictionary<string, Func<string>>
             {
@@ -81,6 +83,13 @@ namespace ThirdPartyCore.Model
             _matchId = inputs.GetValueOrDefault("matchid");
             _leagueId = inputs.GetValueOrDefault("leagueid");
             _betType = inputs.GetValueOrDefault("bettype");
+
+            if (gameDetail != null)
+            {
+                _sportType = gameDetail.sport_type.ToString();
+                _matchId = gameDetail.match_id.ToString();
+                _leagueId = gameDetail.league_id.ToString();
+            }
 
             // 共用參數
             var resultUrl = new StringBuilder(sabaUrl);
@@ -143,12 +152,14 @@ namespace ThirdPartyCore.Model
 
             if (!string.IsNullOrEmpty(_matchId) && _matchId != "0")
             {
-                return $"&act={act}&matchid={_matchId}";
+                return $"&act={_sportType}&matchid={_matchId}&sportid={_sportType}&leaguekey={_leagueId}";
             }
+
             if (!string.IsNullOrEmpty(_betType))
             {
                 return $"&act={act}&gameid={_betType}&menutype={_menuType}";
             }
+
             if (_sportType == "997")
             {
                 // Saba Soccer deeplink
@@ -179,8 +190,9 @@ namespace ThirdPartyCore.Model
 
             if (!string.IsNullOrEmpty(_matchId) && _matchId != "0")
             {
-                return $"{result}&matchid={_matchId}";
+                return $"{result}&matchid={_matchId}&sportid={_sportType}&leaguekey={_leagueId}";
             }
+
             if (!string.IsNullOrEmpty(_betType))
             {
                 return $"{result}&gameid={_betType}";
