@@ -123,6 +123,7 @@ namespace ThirdPartySeamlessWallet
             services.AddOptionListByDB<ConfigObject>("SiteConfig_Get", new { ConfigGroup = "TP" });
             services.AddSiteConfig();
             services.AddSingleton<ConfigBLL>();
+            services.AddOptionListByDB<TpBetLimit>("Service_TpBetLimit_Get");
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
