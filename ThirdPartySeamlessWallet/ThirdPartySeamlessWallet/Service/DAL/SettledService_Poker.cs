@@ -159,7 +159,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
 
             var result = 0;
-            result = SettleTicket(tpCustInfo,betRecordInfo, trans);
+            result = SettleTicket(tpCustInfo, betRecordInfo, trans);
 
             if (result > 0)
             {
@@ -1009,10 +1009,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataPK_V8.timestamp).DateTime;
 
                 var bettrans = _partitionService.Query<BettransDataPK_V8>(partitionTime, "Service_BettransPK_V8_gameNo_Get", new { gameNo = bettingDataPK_V8.gameNo });
-                if (!bettrans.Any(i => (i.TicketType == BettransType.Bet)))
+
+                // 檢查是否有下注該round
+                if (!bettrans.Any(i => i.TicketType == BettransType.Bet))
                 {
-                    // 檢查是否有下注該round
-                    return -2;
+                    // 我方游戏目前只有财神到有免费游戏机制，进行免费游戏是无需进行下注的，此部分再劳烦贵司进行调整哦
+                    if (bettingDataPK_V8.kindId != "8910")
+                    {
+                        return -2;
+                    }
                 }
 
                 result = _partitionService.Execute(partitionTime, "Service_BettransPK_V8_Ins", p, trans);
