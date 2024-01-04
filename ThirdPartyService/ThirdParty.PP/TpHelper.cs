@@ -1,9 +1,6 @@
 using System.Text.RegularExpressions;
-
 using Microsoft.Extensions.DependencyInjection;
-
 using Newtonsoft.Json;
-
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
@@ -14,17 +11,15 @@ using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.PP
 {
-    public class TpHelper : ThirdPartyHelperBase , IThirdPartyEventParticular
+    public class TpHelper : ThirdPartyHelperBase, IThirdPartyEventParticular
     {
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
-        private readonly Dictionary<int, string> _siteSuffixList;
-        private readonly SitePPConfig _sitePPConfig;
+        private readonly Dictionary<int, PPConfig> _siteConfigDic;
 
         public TpHelper(IServiceProvider provider)
         {
-            _siteSuffixList = provider.GetRequiredService<IEnumerable<ServerInfoObject>>().ToDictionary(k => k.SiteId, v => v.SiteName.ToLower());
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList(5).ToDictionary(d => d.GameId, d => d.Name);
-            _sitePPConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SitePPConfig>(TpEnum.PP.ToString());
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.PP).ToDictionary(d => d.GameId, d => d.Name);
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<PPConfig>(TpEnum.PP.ToString());
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -34,7 +29,6 @@ namespace ThirdParty.PP
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            //throw new NotImplementedException();
             ApiResult oApiResult = new ApiResult();
             oApiResult.ErrorCode = ErrorCode.Success;
             return oApiResult;
@@ -54,38 +48,37 @@ namespace ThirdParty.PP
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
-            string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception();
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+
+            string ApiUrl = config.ApiUrl;
+            string GameUrl = config.GameUrl;
+            string SecureLogin = config.SecureLogin;
+            string SecureKey = config.SecureKey;
+            if (tpCustInfo.MemberType == CustomerMemberTypeEnum.LiveStreaming)
+            {
+                ApiUrl = config.ApiUrl_Stream;
+                SecureKey = config.SecureKey_Stream;
+                SecureLogin = config.SecureLogin_Stream;
+            }
+
             string cashierUrl = inputs.ContainsKey("CashierUrl") && !string.IsNullOrEmpty(inputs["CashierUrl"]) ? inputs["CashierUrl"] : "";
-            string SecureLogin = inputs.ContainsKey("SecureLogin") && !string.IsNullOrEmpty(inputs["SecureLogin"]) ? inputs["SecureLogin"] : throw new Exception();
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
             string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "";
-            string SecureKey = inputs.ContainsKey("SecureKey") && !string.IsNullOrEmpty(inputs["SecureKey"]) ? inputs["SecureKey"] : throw new Exception("SecureKey");
+
             string Uri = "/v3/http/CasinoGameAPI/game/url/";
-
-            if (tpCustInfo.MemberType == CustomerMemberTypeEnum.LiveStreaming)
-            {
-                ApiUrl = inputs.ContainsKey("ApiUrl_Stream") && !string.IsNullOrEmpty(inputs["ApiUrl_Stream"]) ? inputs["ApiUrl_Stream"] : throw new Exception();
-                var suffix = _siteSuffixList[tpCustInfo.SiteId];
-                SecureKey = inputs.ContainsKey($"SecureKey_Stream_{suffix}") && !String.IsNullOrEmpty(inputs[$"SecureKey_Stream_{suffix}"])
-                    ? inputs[$"SecureKey_Stream_{suffix}"] : throw new Exception($"SecureKey_Stream_{suffix} is empty");
-                SecureLogin = inputs.ContainsKey($"SecureLogin_Stream_{suffix}") && !String.IsNullOrEmpty(inputs[$"SecureLogin_Stream_{suffix}"])
-                    ? inputs[$"SecureLogin_Stream_{suffix}"] : throw new Exception($"SecureLogin_Stream_{suffix} is empty");
-            }
-
             var parameters = new Dictionary<string, string>()
             {
-                { "secureLogin",SecureLogin },
-                { "token",ApplyToken(tpCustInfo) },
-                { "symbol",gameId },
-                { "technology","H5"},
-                { "platform",(appType == AppType.Desktop) ? "WEB" : "MOBILE" },
-                { "language",TpLangId },
-                { "lobbyUrl",lobbyUrl },
-                { "cashierUrl",cashierUrl },
-                { "playMode",(fun.Equals("1", StringComparison.OrdinalIgnoreCase)) ? "DEMO" : "REAL" },
-                { "stylename",SecureLogin },
+                { "secureLogin", SecureLogin },
+                { "token", ApplyToken(tpCustInfo) },
+                { "symbol", gameId },
+                { "technology", "H5"},
+                { "platform", (appType == AppType.Desktop) ? "WEB" : "MOBILE" },
+                { "language", TpLangId },
+                { "lobbyUrl", lobbyUrl },
+                { "cashierUrl", cashierUrl },
+                { "playMode", (fun.Equals("1", StringComparison.OrdinalIgnoreCase)) ? "DEMO" : "REAL" },
+                { "stylename", SecureLogin },
             };
 
             var sParam = string.Join("&", parameters.OrderBy(kp => kp.Key).Select(kp => $"{kp.Key}={kp.Value}"));
@@ -124,24 +117,23 @@ namespace ThirdParty.PP
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+
+            string ApiUrl = config.ApiUrl;
+            string SecureLogin = config.SecureLogin;
+            string SecureKey = config.SecureKey;
+            if (tpCustInfo.MemberType == CustomerMemberTypeEnum.LiveStreaming)
+            {
+                ApiUrl = config.ApiUrl_Stream;
+                SecureKey = config.SecureKey_Stream;
+                SecureLogin = config.SecureLogin_Stream;
+            }
+
             var tpCurrency = new TpCurrency()
             {
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var apiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception();
-            var secureLogin = inputs.GetValueOrDefault("SecureLogin") ?? throw new Exception();
-            var secureKey = inputs.GetValueOrDefault("SecureKey") ?? throw new Exception();
-
-            if (tpCustInfo.MemberType == CustomerMemberTypeEnum.LiveStreaming)
-            {
-                apiUrl = inputs.GetValueOrDefault("ApiUrl_Stream") ?? throw new Exception();
-                var suffix = _siteSuffixList[tpCustInfo.SiteId];
-                secureKey = inputs.ContainsKey($"SecureKey_Stream_{suffix}") && !String.IsNullOrEmpty(inputs[$"SecureKey_Stream_{suffix}"])
-                    ? inputs[$"SecureKey_Stream_{suffix}"] : throw new Exception($"SecureKey_Stream_{suffix} is empty");
-                secureLogin = inputs.ContainsKey($"SecureLogin_Stream_{suffix}") && !String.IsNullOrEmpty(inputs[$"SecureLogin_Stream_{suffix}"])
-                    ? inputs[$"SecureLogin_Stream_{suffix}"] : throw new Exception($"SecureLogin_Stream_{suffix} is empty");
-            }
 
             if (Regex.IsMatch(getBetDetail.TransId, @"[a-z]"))
             {
@@ -151,18 +143,18 @@ namespace ThirdParty.PP
             var gameId = TpBetRecordProvider.DbQueryFirst("Service_Bettrans_PP_GameId_Get",
                 new { getBetDetail.TransId, GameType = getBetDetail.TpGameTypeOption.Type }, DataBase.Report).GetValueOrDefault("gameId")?.ToString();
 
-            var url = $"{apiUrl}/v3/http/HistoryAPI/OpenHistoryExtended/";
+            var url = $"{ApiUrl}/v3/http/HistoryAPI/OpenHistoryExtended/";
             var parameters = new Dictionary<string, string>()
             {
-                { "secureLogin",secureLogin },
-                { "playerId",tpCustInfo.TpUserName },
-                { "gameId",gameId },
-                { "roundId",getBetDetail.TransId},
-                { "language","en"}
+                { "secureLogin", SecureLogin },
+                { "playerId", tpCustInfo.TpUserName },
+                { "gameId", gameId },
+                { "roundId", getBetDetail.TransId},
+                { "language", "en"}
             };
 
             var sParam = string.Join("&", parameters.OrderBy(kp => kp.Key).Select(kp => $"{kp.Key}={kp.Value}"));
-            sParam += $"&hash={ToMD5($"{sParam}{secureKey}")}";
+            sParam += $"&hash={ToMD5($"{sParam}{SecureKey}")}";
             var json = HttpPost(url, sParam, "application/x-www-form-urlencoded");
             var result = FromJson<DetailResult>(json);
             if (result.error != "0")
@@ -202,34 +194,37 @@ namespace ThirdParty.PP
                 IP = string.Empty,
             };
         }
+
         public ApiResult AddFreeSpinToPlayer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+            string ApiUrl = config.ApiUrl;
+            string SecureLogin = config.SecureLogin;
+            string SecureKey = config.SecureKey;
+
             var oApiResult = new ApiResult();
-            var ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
-            var SecureLogin = inputs.ContainsKey("SecureLogin") && !string.IsNullOrEmpty(inputs["SecureLogin"]) ? inputs["SecureLogin"] : throw new Exception();
-            var SecureKey = inputs.ContainsKey("SecureKey") && !string.IsNullOrEmpty(inputs["SecureKey"]) ? inputs["SecureKey"] : throw new Exception("SecureKey");
             var bonusCode = inputs.ContainsKey("bonusCode") && !string.IsNullOrEmpty(inputs["bonusCode"]) ? inputs["bonusCode"] : throw new Exception();
             //var requestId = inputs.ContainsKey("requestId")  && !string.IsNullOrEmpty(inputs["requestId"]) ? inputs["requestId"] : throw new Exception();
             var Uri = "/v3/http/FreeRoundsBonusAPI/v2/players/add";
             var requestId = Guid.NewGuid().ToString();
-            
+
             var serializedPlayerList = JsonConvert.SerializeObject(new Dictionary<string, object>
             {
                 { "playerList", new List<string> { tpCustInfo.TpUserName } }
             });
-            
+
             var parameters = new Dictionary<string, string>()
             {
                 { "secureLogin", SecureLogin },
                 { "bonusCode", bonusCode },
-                { "requestId", requestId } 
+                { "requestId", requestId }
             };
-            
+
             var sParam = string.Join("&", parameters.OrderBy(kp => kp.Key).Select(kp => $"{kp.Key}={kp.Value}"));
             sParam += $"&hash={ToMD5($"{sParam}{SecureKey}")}";
-            
+
             var result = HttpPost($"{ApiUrl}{Uri}?{sParam}", serializedPlayerList, "application/json");
-            
+
             if (!IsJSON(result))
             {
                 oApiResult.RawMessage = "No Result";
