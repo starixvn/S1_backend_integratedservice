@@ -123,8 +123,7 @@ namespace ThirdPartySettleWorker.Workers
                             continue;
                         }
 
-                        var tpUserName = bettrans.FirstOrDefault().Account;
-
+                        var tpUserName = (skip) ? wager.Account.Split("_")[1] : bettrans.FirstOrDefault().Account;
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
                         if (tpCurrency.ExchangeRate != 0)
