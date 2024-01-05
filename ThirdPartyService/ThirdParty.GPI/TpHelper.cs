@@ -1,4 +1,6 @@
-﻿using ThirdPartyCore;
+﻿using Microsoft.Extensions.DependencyInjection;
+using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -9,18 +11,27 @@ namespace ThirdParty.GPI
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        Dictionary<int, string> ErrorMassage = new Dictionary<int, string>()
-        {   {-1,"Unknown error"},
-            {-2,"Customer not found"},
-            {-7,"Customer is blocked"},
-            {-27,"Data type mismatch"},
-            {-29,"Currency mismatch"},
-            {-33,"Invalid amount"},
-            {-48,"Invalid password"},
-            {-119,"Missing input parameter"},
-            {-201,"Transaction not exist"},
-            {-202,"Operator not exist"}
+        private readonly GPIConfig _siteConfig;
+
+        public TpHelper(IServiceProvider provider)
+        {
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<GPIConfig>(TpEnum.GPI.ToString());
+        }
+
+        private readonly Dictionary<int, string> ErrorMassage = new()
+        {
+            { -1, "Unknown error" },
+            { -2, "Customer not found" },
+            { -7, "Customer is blocked" },
+            { -27, "Data type mismatch" },
+            { -29, "Currency mismatch" },
+            { -33, "Invalid amount" },
+            { -48, "Invalid password" },
+            { -119, "Missing input parameter" },
+            { -201, "Transaction not exist" },
+            { -202, "Operator not exist" }
         };
+
         private class LoginResult
         {
             public int error_code { get; set; }
@@ -42,7 +53,6 @@ namespace ThirdParty.GPI
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            //throw new NotImplementedException();
             ApiResult oApiResult = new ApiResult();
             oApiResult.ErrorCode = ErrorCode.Success;
             return oApiResult;
@@ -62,12 +72,14 @@ namespace ThirdParty.GPI
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            //throw new NotImplementedException();
-            string RslotUrl = inputs.ContainsKey("RslotUrl") && !string.IsNullOrEmpty(inputs["RslotUrl"]) ? inputs["RslotUrl"] : throw new Exception();
-            string LiveCasinoUrl = inputs.ContainsKey("LiveCasinoUrl") && !string.IsNullOrEmpty(inputs["LiveCasinoUrl"]) ? inputs["LiveCasinoUrl"] : throw new Exception();
-            string LotteryUrl = inputs.ContainsKey("LotteryUrl") && !string.IsNullOrEmpty(inputs["LotteryUrl"]) ? inputs["LotteryUrl"] : throw new Exception();
-            string P2PUrl = inputs.ContainsKey("P2PUrl") && !string.IsNullOrEmpty(inputs["P2PUrl"]) ? inputs["P2PUrl"] : throw new Exception();
-            string OperatorId = inputs.ContainsKey("OperatorId") && !string.IsNullOrEmpty(inputs["OperatorId"]) ? inputs["OperatorId"] : throw new Exception();
+            var config = _siteConfig;
+
+            string RslotUrl = config.RslotUrl;
+            string LiveCasinoUrl = config.LiveCasinoUrl;
+            string LotteryUrl = config.LotteryUrl;
+            string P2PUrl = config.P2PUrl;
+            string OperatorId = config.OperatorId;
+
             string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
             string cashierUrl = inputs.ContainsKey("CashierUrl") && !string.IsNullOrEmpty(inputs["CashierUrl"]) ? inputs["CashierUrl"] : "";
             string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "";
@@ -228,7 +240,7 @@ namespace ThirdParty.GPI
             };
         }
 
-        private string GetGameName(string gameCode)
+        private static string GetGameName(string gameCode)
         {
             return gameCode switch
             {
@@ -347,23 +359,16 @@ namespace ThirdParty.GPI
             };
         }
 
-        private DeviceType GetDeviceType(string device)
+        private static DeviceType GetDeviceType(string device)
         {
-            switch (device)
+            return device switch
             {
-                case "1":
-                case "2":
-                case "3":
-                    return DeviceType.Desktop;
-                case "4":
-                    return DeviceType.Mobile;
-                case "5":
-                    return DeviceType.Android;
-                case "6":
-                    return DeviceType.iOS;
-                default:
-                    return DeviceType.None;
-            }
+                "1" or "2" or "3" => DeviceType.Desktop,
+                "4" => DeviceType.Mobile,
+                "5" => DeviceType.Android,
+                "6" => DeviceType.iOS,
+                _ => DeviceType.None,
+            };
         }
     }
 }

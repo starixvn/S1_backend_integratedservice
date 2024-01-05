@@ -1,9 +1,9 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -19,11 +19,12 @@ namespace ThirdPartyWager.Service.BLL
         private readonly int _tpId = (int)Tp.GPI;
         private readonly int _timeZone = 8;
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
+        private readonly GPIConfig _siteConfig;
 
         public class CompareParam
         {
-            public decimal bet { get; set; }
-            public decimal winlose { get; set; }
+            public decimal Bet { get; set; }
+            public decimal Winlose { get; set; }
         }
 
         public WagerGPIBLL(IServiceProvider provider)
@@ -34,6 +35,7 @@ namespace ThirdPartyWager.Service.BLL
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _logger = provider.GetRequiredService<ILogger<WagerGPIBLL>>();
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<GPIConfig>(Tp.GPI.ToString());
         }
 
         public async Task<bool> ExecWagerWorker(int type, int gameType, int timeRange)
@@ -81,7 +83,7 @@ namespace ThirdPartyWager.Service.BLL
             try
             {
                 // get api info
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+                var setting = _siteConfig;
 
                 // pagination
                 var page = 1;
@@ -112,8 +114,8 @@ namespace ThirdPartyWager.Service.BLL
 
                     totalPage = dataWager.resp.items.total_page;
 
-                    cp.bet += dataWager.resp.items.item.Sum(x => x.bet);
-                    cp.winlose += dataWager.resp.items.item.Sum(x => x.winlose);
+                    cp.Bet += dataWager.resp.items.item.Sum(x => x.bet);
+                    cp.Winlose += dataWager.resp.items.item.Sum(x => x.winlose);
 
                     wagerData.Add(dataWager.resp.items);
 
@@ -181,7 +183,7 @@ namespace ThirdPartyWager.Service.BLL
             var summaryStake = summary.Sum(x => x.Stake);
             var summaryWinlose = summary.Sum(x => x.WinlostAmount);
 
-            return (cp.bet == summaryStake && cp.winlose == summaryWinlose) ? true : false;
+            return (cp.Bet == summaryStake && cp.Winlose == summaryWinlose);
         }
 
         private DateTime GetWorkerTime(int type, int vary, int gameType)
@@ -190,7 +192,7 @@ namespace ThirdPartyWager.Service.BLL
             return (lastTime == null) ? DateTime.Now.AddHours(-7) : lastTime.StartTime.AddSeconds(vary);
         }
 
-        private bool CheckQuick(DateTime workTime, int excess)
+        private static bool CheckQuick(DateTime workTime, int excess)
         {
             var diff = DateTime.Now - workTime;
             return DateTime.Now > workTime && diff.TotalMinutes > excess;

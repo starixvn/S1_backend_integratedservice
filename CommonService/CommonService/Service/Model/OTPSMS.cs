@@ -101,4 +101,31 @@
         public int Verified { get; set; }
         public DateTime? VerifiedTime { get; set; }
     }
+    
+    public class SmsCloudTypeConfig
+    {
+        public List<SmsCloudConfig> OTP { get; set; }
+    }
+    public class SmsCloudConfig
+    {
+        public string AreaCode { get; set; }
+        public string ResourceURL { get; set; }
+        public string AppKey { get; set; }
+        public string AppSecret { get; set; }
+        public string Appcode { get; set; }
+    }
+    public class SmsCloudResult
+    {
+        public string code { get; set; }
+        public string desc { get; set; }
+        public string uid { get; set; }
+        public List<SmsCloudResultDetail> result { get; set; }
+    }
+    
+    public class SmsCloudResultDetail
+    {
+        public string status { get; set; }
+        public string phone { get; set; }
+        public string desc { get; set; }
+    }
 }

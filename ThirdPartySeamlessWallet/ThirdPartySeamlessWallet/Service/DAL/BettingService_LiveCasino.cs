@@ -252,7 +252,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     result = 0;
                     result = _mainDbClient.Execute("Service_BettransLC_AWC_Sexy_Ins", p, conn, trans);
-
                     if (result > 0)
                     {
                         result = PlaceBetV2(
@@ -276,6 +275,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     }
                     else
                     {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                         return result;
                     }
                 }
@@ -296,7 +296,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             if (cntExet == cntTxn)
             {
-                trans.Commit();
+                _mainDbClient.CommitAndDisposeConnection(conn, trans);
                 return result;
             }
             return 0;
