@@ -32,6 +32,9 @@ namespace ThirdPartySettleWorker.Workers
             3101, 3890, 8100, 8540, 8600,
             8700, 1101, 1102
         };
+        private readonly int[] _skipKindId = {
+            510
+        };
 
         public V8Worker(IServiceProvider provider)
         {
@@ -86,6 +89,7 @@ namespace ThirdPartySettleWorker.Workers
                 forContinue = tpUnsettleList.Count() == 200;
                 foreach (var unsettled in tpUnsettleList)
                 {
+                    var skip = false;
                     try
                     {
                         string TransId = unsettled.TransId;
@@ -97,9 +101,14 @@ namespace ThirdPartySettleWorker.Workers
                             _logger.LogWarning($"{logName}:wager not found ({gametype})\r\n{JsonConvert.SerializeObject(unsettled)}");
                             continue;
                         }
+                        if (_skipKindId.Contains(wager.KindID))
+                        {
+                            // 排除捕魚不比對
+                            skip = true;
+                        }
 
                         var bettrans = _partitionService.GetUnsettleDataList<SettleData>(bettransGet, unsettled);
-                        if (!bettrans.Any())
+                        if (!bettrans.Any() && !skip)
                         {
                             LogContext.PushProperty("TP", _tpName);
                             if (wager != null && wager.Stake == 0m && wager.ValidBet == 0m && wager.WinLostAmount == 0m)
@@ -126,7 +135,7 @@ namespace ThirdPartySettleWorker.Workers
                             wager.WinLostAmount *= tpCurrency.ExchangeRate;
                         }
 
-                        if (!CheckAmount(bettrans, wager))
+                        if (!CheckAmount(bettrans, wager, skip))
                         {
                             LogContext.PushProperty("TP", _tpName);
                             _logger.LogWarning($"{logName}:amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}");
@@ -215,8 +224,12 @@ namespace ThirdPartySettleWorker.Workers
             _ = _settledBLL.SetSettleFlagOfMonthlyBettrans(bettransSet, betRecordInfo);
         }
 
-        private bool CheckAmount(IEnumerable<SettleData> bettrans, SettleDataPK_V8 wager)
+        private bool CheckAmount(IEnumerable<SettleData> bettrans, SettleDataPK_V8 wager, bool skip)
         {
+            if (skip)
+            {
+                return true;
+            }
             var dWagerWinLost = _tools.Floor(wager.WinLostAmount, 2);
             var dBettransWinLost = _tools.Floor(bettrans.Sum(x => x.WinLostAmount), 2);
             var dDiffWinLost = Math.Abs(dWagerWinLost - dBettransWinLost);
