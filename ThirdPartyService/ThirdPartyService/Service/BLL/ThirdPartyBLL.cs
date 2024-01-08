@@ -1134,7 +1134,7 @@ namespace ThirdPartyService.Service.BLL
             gameTypeOption.TpName = GetTpName(gameTypeOption.TpId);
 
             var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(request.CustId, gameTypeOption.TpId);
-            if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
+            if (tpCustInfoResult.Data == null)
             {
                 return new ApiResult<object>()
                 {
