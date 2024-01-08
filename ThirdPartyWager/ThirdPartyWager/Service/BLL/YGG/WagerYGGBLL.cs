@@ -1,19 +1,18 @@
 ﻿using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class WagerYGGBLL
     {
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ILogger<WagerYGGBLL> _logger;
         private readonly HttpHelper _httpHelper;
         private readonly Common _common;
         private readonly MySqlClient _wagerDbClient;
-        private readonly YggConfig _config;
+        private readonly YGGConfig _siteConfig;
 
-        private const int TpId = (int)Tp.YGG;
         private const int SuccessCode = 0;
 
         private int _jobRunCounter = 0; // Job計數器，每一分鐘執行一次，每1小時會累積到 60
@@ -27,9 +26,7 @@ namespace ThirdPartyWager.Service.BLL
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            var setting = _thirdPartyBLL.GetThirdPartySetting(TpId);
-            _config = new YggConfig(setting);
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<YGGConfig>(Tp.YGG.ToString());
         }
 
         /// <summary>
@@ -42,7 +39,7 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {
-                await QueryBetRecordAsync(_config, startTime, endTime);
+                await QueryBetRecordAsync(_siteConfig, startTime, endTime);
                 _jobRunCounter++;
                 if (_jobRunCounter != _JobCounterLimit) return true;
 
@@ -55,7 +52,7 @@ namespace ThirdPartyWager.Service.BLL
                     var redoStartTime = DateTime.Parse(endTime).AddHours(hours);
                     var redoEndTime = redoStartTime.AddHours(addHours);
 
-                    await QueryBetRecordAsync(_config, redoStartTime.ToString(DateTimeFormat), redoEndTime.ToString(DateTimeFormat));
+                    await QueryBetRecordAsync(_siteConfig, redoStartTime.ToString(DateTimeFormat), redoEndTime.ToString(DateTimeFormat));
                     hours += addHours;
                 }
 
@@ -73,16 +70,16 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        private async Task QueryBetRecordAsync(YggConfig config, string startTime, string endTime)
+        private async Task QueryBetRecordAsync(YGGConfig config, string startTime, string endTime)
         {
             var httpContent = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                { "topOrg", config.TopOrg },
-                { "org", config.Org },
+                { "topOrg", config.topOrg },
+                { "org", config.org },
                 { "lastId", "0"},
                 { "startTime", startTime},
                 { "endTime",endTime },
-                { "sign", _common.ToMD5($"{config.TopOrg}{config.Org}{config.Key}") },
+                { "sign", _common.ToMD5($"{config.topOrg}{config.org}{config.key}") },
                 { "gametype", "yg" }
             });
 
