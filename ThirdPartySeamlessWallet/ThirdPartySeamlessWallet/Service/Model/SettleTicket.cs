@@ -1,6 +1,9 @@
 ﻿using System.Data;
+using System.Security.Policy;
 
 using Dapper;
+
+using K4os.Compression.LZ4.Internal;
 
 using MySql.Data.MySqlClient;
 
@@ -10,6 +13,8 @@ using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
+using static ThirdPartySeamlessWallet.Controllers.EBetController;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -97,6 +102,25 @@ namespace ThirdPartySeamlessWallet.Service.Model
                 BetRecord.BonusId = RefBetRecord.BonusId;
             }
 
+            return this;
+        }
+
+        /// <summary>
+        /// 設定初始資料
+        /// </summary>
+        public SettleTicket CheckRebateExcludeGame()
+        {
+            var isExcludeGame = _mainDbClient.QueryFirst<bool>("Service_RebateExcludeGame_Check", _trans, new
+            {
+                TpCustInfo.SiteId,
+                TpCustInfo.CurrencyId,
+                GameType = (int)BetRecord.GameType,
+                GameId = BetRecord.GameID,
+            });
+            if (isExcludeGame)
+            {
+                BetRecord.SettlementType = SettlementType.SettledForValidNotRollover;
+            }
             return this;
         }
 
