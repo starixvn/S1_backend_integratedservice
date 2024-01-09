@@ -15,13 +15,12 @@ namespace CommonService.Service.BLL
         private readonly IovationServicesConfig _iovationServicesConfig;
         private readonly IovationService _iovationService;
         private readonly HttpHelper _httpHelper;
-        private readonly IHostEnvironment _env;
         private readonly string _storagePath;
 
         public IovationBLL(IServiceProvider provider)
         {
-            _env = provider.GetRequiredService<IHostEnvironment>();
-            _storagePath = $@"{_env.ContentRootPath}/Storage/Iovation";
+            var env = provider.GetRequiredService<IWebHostEnvironment>();
+            _storagePath = $@"{env.ContentRootPath}/Storage/Iovation";
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _iovationService = provider.GetRequiredService<IovationService>();
             _iovationServicesConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<IovationServicesConfig>("Iovation");
