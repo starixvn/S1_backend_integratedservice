@@ -21,7 +21,7 @@ namespace CommonService.Service.BLL
         public IovationBLL(IServiceProvider provider)
         {
             _env = provider.GetRequiredService<IHostEnvironment>();
-            _storagePath = $@"{_env.ContentRootPath}\Storage\Iovation";
+            _storagePath = $@"{_env.ContentRootPath}/Storage/Iovation";
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _iovationService = provider.GetRequiredService<IovationService>();
             _iovationServicesConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<IovationServicesConfig>("Iovation");
