@@ -29,16 +29,7 @@ namespace CommonService.Service.BLL
         public async Task<ApiResult<IovationCheckResult>> IovationChecksAsync(IovationChecksRequest iovationChecksRequest)
         {
             var apiResult = new ApiResult<IovationCheckResult>();
-
-            var sendIovationChecksPara = new Dictionary<string, string>
-            {
-                { "accountCode", iovationChecksRequest.accountCode.ToString() },
-                { "blackbox", iovationChecksRequest.blackbox },
-                { "statedIp", iovationChecksRequest.statedIp },
-                { "transactionInsight",iovationChecksRequest.transactionInsight.ToString()},
-                { "type",iovationChecksRequest.type}
-            };
-
+            
             var authToken = $"{_iovationServicesConfig.SubscriberID}/{_iovationServicesConfig.SubscriberAccount}:{_iovationServicesConfig.Password}";
             var bytes = Encoding.GetEncoding("utf-8").GetBytes(authToken);
             //編成 Base64 字串
@@ -51,7 +42,7 @@ namespace CommonService.Service.BLL
             var certificate = GetCertificate();
             using var result = await _httpHelper.HttpPostWithX509(
                 _iovationServicesConfig.ResourceURL, 
-                sendIovationChecksPara , 
+                JsonConvert.SerializeObject(iovationChecksRequest) , 
                 "application/json",
                 authorization,
                 certificate
