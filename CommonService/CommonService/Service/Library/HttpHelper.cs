@@ -172,21 +172,22 @@ namespace CommonService.Service.Library
             return response;
         }
         
-        public async Task<HttpResponseMessage> HttpPostWithX509(string url, Dictionary<string, string> parameters, string contentType, Dictionary<string, string> headers = null, X509Certificate2 certificate = null)
+        public async Task<HttpResponseMessage> HttpPostWithX509(string url, string parameters, string contentType, Dictionary<string, string> headers = null, X509Certificate2 certificate = null)
         {
             using var handler = new HttpClientHandler();
             if (certificate != null)
             {
-                // handler.ClientCertificates.Add(new X509Certificate2(certificate["path"], certificate["password"], X509KeyStorageFlags.MachineKeySet));
                 handler.ClientCertificates.Add(new X509Certificate2(certificate));
-                
             }
             
-            //ignore Certificate
             handler.ServerCertificateCustomValidationCallback = delegate { return true; };
 
             using var client = new HttpClient(handler);
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(contentType));
+            var httpRequestMessage = new HttpRequestMessage();
+            httpRequestMessage.Content = new StringContent(parameters);
+            httpRequestMessage.Method = HttpMethod.Post;
+            httpRequestMessage.RequestUri = new Uri(url);
+            httpRequestMessage.Content.Headers.ContentType = new MediaTypeWithQualityHeaderValue(contentType);
             
             if (headers != null)
             {
@@ -195,8 +196,9 @@ namespace CommonService.Service.Library
                     client.DefaultRequestHeaders.Add(item.Key, item.Value ?? string.Empty);
                 }
             }
-            var formData = new FormUrlEncodedContent(parameters);
-            var response = await client.PostAsync(url, formData);
+
+            var response = await client.SendAsync(httpRequestMessage);
+            
             _logger.LogInformation($"HttpHelper.Request.Response:{response.Content.ReadAsStringAsync().Result}");
             return response;
         }
