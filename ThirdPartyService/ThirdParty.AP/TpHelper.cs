@@ -14,7 +14,7 @@ using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.AP
 {
-    public class TpHelper : ThirdPartyHelperBase , IThirdPartyEventParticular
+    public class TpHelper : ThirdPartyHelperBase
     {
         private const string _formatOfMini = "yyyy-MM-ddTHH:mm:ss";
         private const string _formatOfSlot = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
@@ -63,7 +63,7 @@ namespace ThirdParty.AP
             public string LaunchURL { get; set; }
         }
         
-        public class GetAddFreeSpinToPlayerResp
+        public class GetAddPrizeToPlayerResp
         {
             public string Timestamp { get; set; }
             public string Seq { get; set; }
@@ -311,7 +311,7 @@ namespace ThirdParty.AP
             };
         }
 
-        public ApiResult AddFreeSpinToPlayer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        public override ApiResult AddPrizeToPlayer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var Config = _siteConfigDic[tpCustInfo.SiteId];
             var ApiUrl = Config.ApiUrl;
@@ -320,22 +320,15 @@ namespace ThirdParty.AP
             var operatorUser = inputs.ContainsKey("operatorUser") && !string.IsNullOrEmpty(inputs["operatorUser"]) ? inputs["operatorUser"] : throw new Exception();
             var oApiResult = new ApiResult();
             
-            var serializedPlayerList = JsonConvert.SerializeObject(new Dictionary<string, object>
-            {
-                { "playerList", new List<string> { tpCustInfo.TpUserName } }
-            });
-            
             var uuid = Guid.NewGuid().ToString();
             var sParam = new
             {
                 Timestamp = DateTime.Now.ToString(_formatOfSlot),
                 Seq = uuid,
-                //BrandCode = "",
                 SiteCode = SiteCode,
                 CampaignId = campaignId,
-                PlayerList = serializedPlayerList,
+                PlayerList = new List<string> { tpCustInfo.TpUserName},
                 Operator = operatorUser,
-                PlayerId = tpCustInfo.TpUserName,
             };
             var param = ToJson(sParam);
             var result = HttpPost($"{ApiUrl}CPAddPlayer", param, "application/json");
@@ -348,7 +341,7 @@ namespace ThirdParty.AP
                 return oApiResult;
             }
             
-            var response = JsonConvert.DeserializeObject<GetAddFreeSpinToPlayerResp>(result);
+            var response = JsonConvert.DeserializeObject<GetAddPrizeToPlayerResp>(result);
             if (response.ErrorCode == 0)
             {
                 oApiResult.ErrorCode = ErrorCode.Success;

@@ -765,9 +765,9 @@ namespace ThirdPartyCore
         /// <summary>
         /// 呼叫第三方API發放獎勵
         /// </summary>
-        public virtual ApiResult AddFreeSpinToPlayer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        public virtual ApiResult AddPrizeToPlayer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException($"TpId:{tpCustInfo.TpId} AddFreeSpinToPlayer NotImplemented.");
+            throw new NotImplementedException($"TpId:{tpCustInfo.TpId} AddPrizeToPlayer NotImplemented.");
         }
     }
 }

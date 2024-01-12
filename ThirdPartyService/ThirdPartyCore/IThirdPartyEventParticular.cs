@@ -4,6 +4,6 @@ namespace ThirdPartyCore
 {
     public interface IThirdPartyEventParticular
     {
-        ApiResult AddFreeSpinToPlayer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
+        ApiResult AddPrizeToPlayer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
     }
 }
