@@ -11,6 +11,7 @@ namespace ThirdPartySeamlessWallet.Controllers
     [ApiController]
     public class FaChaiController : ControllerBase
     {
+        private readonly ILogger<FaChaiController> _logger;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly IFaChaiBLL _faChaiBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
@@ -25,6 +26,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             ThirdParty = Tp.FaChai;
             gameType = (int)GameType.FaChai_RNG;
+            _logger = provider.GetRequiredService<ILogger<FaChaiController>>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _faChaiBLL = provider.GetRequiredService<IFaChaiBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
@@ -67,13 +69,15 @@ namespace ThirdPartySeamlessWallet.Controllers
             var siteConfig = _configList.Find(x => x["AgentCode"] == req.AgentCode);
             var para = _tools.AesDecrypt(req.Params, siteConfig["Key"], false);
 
-            if(para == null)
+            if (para == null)
             {
                 return new FCResponse()
                 {
                     Result = (int)FCErrorMessage.Verification_failed
                 };
             }
+            _logger.LogInformation(para);
+
             var getBalanceReq = JsonConvert.DeserializeObject<GetBalanceData>(para);
             var tpCustBalance = _tpCustInfoBLL.GetBalance((int)Tp.FaChai, getBalanceReq.MemberAccount, gameType);
 
@@ -99,6 +103,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     Result = (int)FCErrorMessage.Verification_failed
                 };
             }
+            _logger.LogInformation(para);
+
 
             var bettingData = JsonConvert.DeserializeObject<BettingDataRNG_FaChai>(para);
 
@@ -159,6 +165,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     Result = (int)FCErrorMessage.Verification_failed
                 };
             }
+            _logger.LogInformation(para);
 
             var cancelData = JsonConvert.DeserializeObject<CnacelData_FaChai>(para);
 
