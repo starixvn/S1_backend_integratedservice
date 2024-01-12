@@ -1220,7 +1220,7 @@ namespace ThirdPartyService.Service.BLL
             return tpCustInfoService.CreateMember(custId, tpId, isNeedSendRequest);
         }
         
-        public ApiResult AddFreeSpinToPlayer(AddFreeSpin addFreeSpin)
+        public ApiResult AddPrizeToPlayer(AddFreeSpin addFreeSpin)
         {
             var apiResult = new ApiResult();
 
@@ -1239,7 +1239,7 @@ namespace ThirdPartyService.Service.BLL
                     }
                 }
                 
-                apiResult = tpHelper.AddFreeSpinToPlayer(tpCustInfoResult.Data, inputs);
+                apiResult = tpHelper.AddPrizeToPlayer(tpCustInfoResult.Data, inputs);
             }
             else
             {

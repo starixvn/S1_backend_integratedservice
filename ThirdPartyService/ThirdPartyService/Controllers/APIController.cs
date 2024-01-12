@@ -330,12 +330,12 @@ namespace ThirdPartyService.Controllers
         }
         
         [HttpPost]
-        public ActionResult<ApiResult> AddFreeSpinToPlayer([FromBody]AddFreeSpin addFreeSpin)
+        public ActionResult<ApiResult> AddPrizeToPlayer([FromBody]AddFreeSpin addFreeSpin)
         {
             var apiResult = new ApiResult();
             try
             {
-                apiResult = _thirdPartyBLL.AddFreeSpinToPlayer(addFreeSpin);
+                apiResult = _thirdPartyBLL.AddPrizeToPlayer(addFreeSpin);
             }
             catch (Exception ex)
             {
