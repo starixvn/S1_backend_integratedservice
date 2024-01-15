@@ -110,6 +110,36 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
 
         #endregion
 
+        #region CheckRebateExcludeGame
+
+        [TestCase(6, 11, "200046", ExpectedResult = SettlementType.SettledForValidNotRollover)]
+        [TestCase(6, 11, "fourguardians", ExpectedResult = SettlementType.SettledForValidNotRollover)]
+        [TestCase(6, 11, "test-fourguardians", ExpectedResult = SettlementType.SettledForValid)]
+        [TestCase(6, 11, "test", ExpectedResult = SettlementType.SettledForValid)]
+        [TestCase(6, 11, "123", ExpectedResult = SettlementType.SettledForValid)]
+        public SettlementType CheckRebateExcludeGame_Test(int tpId, int gameType, string gameID)
+        {
+            var transId = $"test-{DateTime.UtcNow.Ticks}";
+            var betRecord = new BetRecordInfo()
+            {
+                SettlementType = SettlementType.SettledForValid,
+                TicketStatus = TicketStatus.Lost,
+                WinlostAmount = -100,
+                TransId = transId,
+                TpId = tpId,
+                GameType = (GameType)gameType,
+                GameID = gameID,
+            };
+
+            var SettleTicket = _settleTicketSandbox.CreateSettleTicket(_tpCustInfo, betRecord, null);
+            SettleTicket.CheckRebateExcludeGame();
+            _settleTicketSandbox.Commit();
+
+            return SettleTicket.BetRecord.SettlementType;
+        }
+
+        #endregion
+
         #region SetWinLost
 
         [TestCase("Settled", 5, TicketStatus.Win, null, TicketStatus.UnSettled, 5, Description = "正常結算")]
@@ -195,7 +225,6 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
             }
         }
 
-
         [TestCase("Settled", -5, TicketStatus.Lost, null, TicketStatus.UnSettled, -5, Description = "正常結算")]
         [TestCase(null, 0, TicketStatus.Win, null, TicketStatus.UnSettled, null, Description = "winlost為0不需更新")]
         [TestCase("Settled", -5, TicketStatus.Win, -5, TicketStatus.UnSettled, -5, Description = "正常結算")]
@@ -273,7 +302,6 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
             }
 
         }
-
 
         #endregion
 
@@ -678,7 +706,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
             _settleTicketSandbox.Commit();
 
             //檢查寫入的未結算紀錄
-            var unSettledbetRecord = _settleTicketSandbox.GetTpBetRecord(tpId, transId, (int)gameType);         
+            var unSettledbetRecord = _settleTicketSandbox.GetTpBetRecord(tpId, transId, (int)gameType);
             unSettledbetRecord.TpId.Should().Be(tpId);
             unSettledbetRecord.TransId.Should().Be(transId);
             unSettledbetRecord.GameType.Should().Be(gameType);
@@ -707,7 +735,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
                 GameType = gameType,
                 TpUserName = _tpCustInfo.TpUserName,
                 SettledTime = nowUnix + 100,
-                TransTime = nowUnix + 100 ,
+                TransTime = nowUnix + 100,
                 Stake = 11,
                 ValidBet = 22,
                 Revenue = 33,
