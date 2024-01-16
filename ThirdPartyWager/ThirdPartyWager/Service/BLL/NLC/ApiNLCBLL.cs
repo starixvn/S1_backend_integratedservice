@@ -22,7 +22,7 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<List<WagerEVOModel>> GetBetListByTime(NLCConfig setting, string startTime, string endTime)
         {
-            var wagerUrl = setting.ApiUrl;
+            var wagerUrl = setting.ApiUrl_Backup;
             var casinoKey = setting.CasinoKey;
             var gameHistoryApiToken = setting.GameHistoryApiToken;
             var gameProvider = setting.GameProvider;
@@ -46,7 +46,7 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<List<WagerEVOModel>> GetBetListByTransId(NLCConfig setting, string TransId, string startTime)
         {
-            var wagerUrl = setting.ApiUrl;
+            var wagerUrl = setting.ApiUrl_Backup;
             var casinoKey = setting.CasinoKey;
             var gameHistoryApiToken = setting.GameHistoryApiToken;
             var gameProvider = setting.GameProvider;
