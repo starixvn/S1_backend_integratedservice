@@ -83,7 +83,7 @@ namespace ThirdPartyWager.Service.BLL
             var guid = Guid.NewGuid().ToString();
             var reportData = new List<dynamic>();
 
-            List<WagerEVOModel> getWagerSummary = await _apiEVOBLL.GetBetListByTime(setting["ApiUrl"], setting["CasinoKey"], setting["gameHistoryApiToken"], setting["GameProvider"], reportTime.startTime, reportTime.endTime, guid);
+            List<WagerEVOModel> getWagerSummary = await _apiEVOBLL.GetBetListByTime(setting["ApiUrl_Backup"], setting["CasinoKey"], setting["gameHistoryApiToken"], setting["GameProvider"], reportTime.startTime, reportTime.endTime, guid);
 
             var error = getWagerSummary.Select(x => x.error).FirstOrDefault();
 
