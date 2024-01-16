@@ -26,7 +26,7 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<List<WagerEVOModel>> GetBetListByTime(dynamic setting, string startTime, string endTime)
         {
-            var wagerUrl = setting["ApiUrl"];
+            var wagerUrl = setting["ApiUrl_Backup"];
             var casinoKey = setting["CasinoKey"];
             var gameHistoryApiToken = setting["gameHistoryApiToken"];
             var gameProvider = setting["GameProvider"];

@@ -78,7 +78,7 @@ namespace ThirdParty.NLC
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var config = _siteConfig;
-            string ApiUrl = config.ApiUrl;
+            string ApiUrl = config.ApiUrl_Backup;
             string GameHistoryApiToken = config.GameHistoryApiToken;
             string CasinoKey = config.CasinoKey;
 
@@ -203,7 +203,7 @@ namespace ThirdParty.NLC
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             var config = _siteConfig;
-            string ApiUrl = config.ApiUrl;
+            string ApiUrl = config.ApiUrl_Backup;
             string Ua2Token = config.Ua2Token;
             string CasinoKey = config.CasinoKey;
 
