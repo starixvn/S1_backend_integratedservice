@@ -122,6 +122,7 @@
 
     public class NLCConfig
     {
+        public string ApiUrl_Backup { get; set; }
         public string EcId { get; set; }
         public string ApiUrl { get; set; }
         public string Ua2Token { get; set; }
