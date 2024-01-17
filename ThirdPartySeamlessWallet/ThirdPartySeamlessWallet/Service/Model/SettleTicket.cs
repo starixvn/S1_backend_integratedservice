@@ -106,7 +106,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         }
 
         /// <summary>
-        /// 設定初始資料
+        /// 檢查Rebate排除遊戲
         /// </summary>
         public SettleTicket CheckRebateExcludeGame()
         {
@@ -121,6 +121,23 @@ namespace ThirdPartySeamlessWallet.Service.Model
             {
                 BetRecord.SettlementType = SettlementType.SettledForValidNotRollover;
             }
+            return this;
+        }
+
+        /// <summary>
+        /// 把TpSeamlessBonus的Flag改成已結算
+        /// </summary>
+        public SettleTicket SetTpSeamlessBonusFlag()
+        {
+            if (BetRecord.BonusId > 0 && BetRecord.TicketStatus != TicketStatus.UnSettled)
+            {
+                _mainDbClient.Execute("Service_TpSeamlessBonus_Flag_Set", _trans, new
+                {
+                    BetRecord.TpId,
+                    TransId = string.IsNullOrEmpty(BetRecord.ReferenceNo) ? BetRecord.TransId : BetRecord.ReferenceNo,
+                });
+            }
+
             return this;
         }
 

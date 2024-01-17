@@ -2,6 +2,7 @@
 
 using NUnit.Framework;
 
+using ThirdPartySeamlessWallet.IntegrationTest.Models;
 using ThirdPartySeamlessWallet.IntegrationTest.SandBox;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -774,6 +775,54 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
             settledbetRecord.TicketKey.Should().Be(123456);
             settledbetRecord.BonusId.Should().Be(1000);
             settledbetRecord.GameID.Should().Be("Settled-GameID");
+        }
+
+        #endregion
+
+        #region SetTpSeamlessBonusFlag
+
+        [TestCase(TicketStatus.UnSettled, ExpectedResult = 0)]
+        [TestCase(TicketStatus.Win, ExpectedResult = 1)]
+        [TestCase(TicketStatus.Lost, ExpectedResult = 1)]
+        public int SetTpSeamlessBonusFlag_Test(TicketStatus ticketStatus)
+        {
+            var transId = $"test-{DateTime.UtcNow.Ticks}";
+            var bonusId = 100;
+            var stake = 100;
+            var tpId = 41;
+            var gameType = GameType.SBSW_Sports;
+            var betRecord = new BetRecordInfo()
+            {
+                SettlementType = SettlementType.SettledForValid,
+                TicketStatus = ticketStatus,
+                WinlostAmount = -100,
+                TransId = transId,
+                TpId = tpId,
+                GameType = gameType,
+                Stake = stake,
+                BonusId = bonusId,
+            };
+            _settleTicketSandbox.AddTpSeamlessBonus(new TpSeamlessBonus()
+            {
+                PromotionCategoryId = 9,
+                TpId = tpId,
+                TransId = transId,
+                GameType = (int)gameType,
+                CustId = _tpCustInfo.CustId,
+                UserName = _tpCustInfo.UserName,
+                CurrencyId = _tpCustInfo.CurrencyId,
+                SiteId = _tpCustInfo.SiteId,
+                Stake = stake,
+                BonusId = bonusId,
+            });
+
+
+            var SettleTicket = _settleTicketSandbox.CreateSettleTicket(_tpCustInfo, betRecord, null);
+            SettleTicket.SetTpSeamlessBonusFlag();
+            _settleTicketSandbox.Commit();
+
+            var flag = _settleTicketSandbox.GetTpSeamlessBonusFlag(tpId, transId);
+            return flag;
         }
 
         #endregion
