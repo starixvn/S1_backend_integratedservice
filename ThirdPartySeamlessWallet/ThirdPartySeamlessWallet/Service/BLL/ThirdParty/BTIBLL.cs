@@ -298,7 +298,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         case -2:
                             errorMessage = $"reserve_id:{request.reserve_id} is debit done.";
                             break;
-                        default: 
+                        default:
                             errorMessage = $"reserve_id:{request.reserve_id} was not found.";
                             break;
                     }
@@ -465,6 +465,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(auth_token));
                 var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+                _logger.LogInformation($"{sessionKeyArr[2]}");
                 return (sessionKeyArr[0], sessionKeyArr[1], sessionKeyArr[2]);
             }
             catch
@@ -485,6 +486,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 throw new RestrictedCustomerException($"CurrencyId:{tpCustInfo.CurrencyId} not supported.");
             }
+            _logger.LogInformation($"{tpCustInfo.TpUserName}");
             return (tpCustInfo, tpCurrency);
         }
 
