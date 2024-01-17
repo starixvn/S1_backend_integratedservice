@@ -303,6 +303,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         tpBetRecordExtendBLL: _tpBetRecordExtendBLL)
                     .SetData()
                     .CheckRebateExcludeGame()
+                    .SetTpSeamlessBonusFlag()
                     .SetWinLost()
                     .AutoCancelCheck()
                     .SetBonusRollOver()
