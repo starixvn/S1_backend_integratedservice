@@ -4671,7 +4671,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         (int)GameType.AP_RNG,
                         TpCategory.Slots,
                         rewardDataRNG_AP.seq,
-                        TransType.Prize,
+                        TransType.Payout,
                         null,
                         out afterAmount,
                         $"{rewardDataRNG_AP.cpid} Prize",
