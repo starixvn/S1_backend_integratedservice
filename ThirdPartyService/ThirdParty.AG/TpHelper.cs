@@ -1,5 +1,6 @@
 ﻿using System.Xml;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
@@ -15,9 +16,11 @@ namespace ThirdParty.AG
     public class TpHelper : ThirdPartyHelperBase
     {
         private readonly AGConfig _siteAGConfig;
+        private readonly ILogger<TpHelper> _logger;
         public TpHelper(IServiceProvider provider)
         {
             _siteAGConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AGConfig>(TpEnum.AG.ToString());
+            _logger = provider.GetRequiredService<ILogger<TpHelper>>();
         }
         
         Dictionary<string, string> oddsTypeDic = new Dictionary<string, string>() {
@@ -84,6 +87,7 @@ namespace ThirdParty.AG
             string oddtype = _oddtype;
 
             string sParams = $"cagent={cagent}/\\\\/loginname={tpCustInfo.TpUserName}/\\\\/method=lg/\\\\/actype={actype}/\\\\/password={tpCustInfo.TpPwd}/\\\\/oddtype={oddtype}/\\\\/cur={tpCustInfo.TpCurrencyId}";
+            _logger.LogInformation(sParams);
             string eParams = DESEncrypt(sParams, _siteAGConfig.DesKey);
             string oMD5 = $"{eParams}{Md5key}";
             string postParams = $"params={eParams}&key={ToMD5(oMD5).ToLower()}";
@@ -168,6 +172,7 @@ namespace ThirdParty.AG
             string token = "";
             inputs.TryGetValue("Token", out token);
             string postParams = $"productid={data_cagent}&username={tpCustInfo.TpUserName}&session_token={token}&credit={balance}";
+            _logger.LogInformation(postParams);
             Dictionary<string, string> header = new Dictionary<string, string>();
             header["User-Agent"] = $"WEB_LIB_GI_{cagent}";
 
