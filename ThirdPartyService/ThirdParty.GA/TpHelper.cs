@@ -1,0 +1,116 @@
+﻿using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
+using System.Web;
+using ThirdPartyCore;
+using ThirdPartyCore.BLL;
+using ThirdPartyCore.Model;
+using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordExtend;
+
+namespace ThirdParty.GA
+{
+    public class TpHelper : ThirdPartyHelperBase
+    {
+        private readonly Dictionary<int, GAConfig> _siteGAConfig;
+
+        public TpHelper(IServiceProvider provider)
+        {
+            _siteGAConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<GAConfig>(TpEnum.GA.ToString());
+        }
+        public class GAConfig : TpSiteConfig
+        {
+            public string PrivateKey { get; set; }
+            public string PartnerAccountID { get; set; }
+            public string GameClientID { get; set; }
+        }
+        public class LoginResponse
+        {
+            public string token { get; set; }
+            public string game_client_url { get; set; }
+            public Member member { get; set; }
+        }
+        public class Member
+        {
+            public string member_ref_id { get; set; }
+            public string display_name { get; set; }
+            public string account_id { get; set; }
+            public bool enable { get; set; }
+            public bool freeze { get; set; }
+        }
+        public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            return new ApiResult()
+            {
+                ErrorCode = ErrorCode.Success,
+            };
+        }
+
+        public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
+        {
+            ApiResult oApiResult = new ApiResult();
+            var config = _siteGAConfig[tpCustInfo.SiteId];
+            string apiUrl = config.ApiUrl;
+
+            // Header
+            Dictionary<string, string> headerReq = new Dictionary<string, string>();
+            headerReq.Add("Authorization", config.PrivateKey);
+
+            var sParam = new
+            {
+                member_ref_id = tpCustInfo.TpUserName,
+                display_name = tpCustInfo.TpUserName,
+                account_id = config.PartnerAccountID
+            };
+
+            var param = ToJson(sParam);
+            var result = HttpPost($"{apiUrl}/api/v1/members/login", param, "application/json", headerReq);
+
+            var tpData = JsonConvert.DeserializeObject<LoginResponse>(result);
+
+            if (tpData.member.enable && !tpData.member.freeze)
+            {
+                oApiResult.ErrorCode = ErrorCode.Success;
+                oApiResult.Message = tpData.game_client_url;
+            }
+            else
+            {
+                var enable = tpData.member.enable ? "Yes" : "No";
+                var freeze = tpData.member.freeze ? "Yes" : "No";
+                oApiResult.Message = $"enable:{enable}, freeze:{freeze}";
+                oApiResult.ErrorCode = ErrorCode.Fail;
+            }
+
+            return oApiResult;
+        }
+
+        public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}
