@@ -1,10 +1,7 @@
 ﻿using System.Text;
 using System.Web;
-
 using Microsoft.AspNetCore.Mvc;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -17,38 +14,33 @@ namespace ThirdPartySeamlessWallet.Controllers
     {
         #region Fields
 
-        private readonly AuthBLL _authBll;
-        private readonly ThirdPartyBLL _thirdPartyBll;
-        private readonly TpCustInfoBLL _tpCustInfoBll;
-        private readonly BettingBLL _bettingBll;
-        private readonly SettledBLL _settledBll;
+        private readonly AuthBLL _authBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly BettingBLL _bettingBLL;
+        private readonly SettledBLL _settledBLL;
         private readonly Log2File _log2File;
         private readonly IHostEnvironment _environment;
         private readonly Tp _thisTp;
         private readonly int _gameType = 0;
+        private readonly YGGConfig _siteConfig;
 
         #endregion
 
         #region Constructors
 
-        public YGGController(IHostEnvironment environment,
-                             AuthBLL authBLL,
-                             ThirdPartyBLL thirdPartyBLL,
-                             TpCustInfoBLL tpCustInfoBLL,
-                             BettingBLL bettingBLL,
-                             SettledBLL settledBLL,
-                             Log2File log2File)
+        public YGGController(IServiceProvider provider)
         {
-            this._authBll = authBLL;
-            this._thirdPartyBll = thirdPartyBLL;
-            this._tpCustInfoBll = tpCustInfoBLL;
-            this._bettingBll = bettingBLL;
-            this._settledBll = settledBLL;
-            this._log2File = log2File;
-            this._environment = environment;
-
+            _authBLL = provider.GetRequiredService<AuthBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _bettingBLL = provider.GetRequiredService<BettingBLL>();
+            _settledBLL = provider.GetRequiredService<SettledBLL>();
+            _log2File = provider.GetRequiredService<Log2File>();
+            _environment = provider.GetRequiredService<IHostEnvironment>();
             _thisTp = Tp.YGG;
             _gameType = (int)GameType.YGG_RNG;
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<YGGConfig>(_thisTp.ToString());
         }
 
         #endregion
@@ -245,9 +237,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var authToken = sessionKeyArr[0]; /* 1 Time*/
                 var sessionToken = sessionKeyArr[1];/* Long Time*/
 
-                if (_authBll.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
+                if (_authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
                 {
-                    var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)_thisTp, tpCustInfoAuth.TpUserName);
+                    var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, tpCustInfoAuth.TpUserName);
                     if (tpCheck == null)
                     {
                         playerInfoRep.code = 1000;
@@ -262,13 +254,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else
                     {
-                        var thirdPartySetting = _thirdPartyBll.GetThirdPartySetting((int)_thisTp);
-                        var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)_thisTp, tpCustInfoAuth.TpUserName, _gameType);
+                        var thirdPartySetting = _siteConfig;
+                        var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, tpCustInfoAuth.TpUserName, _gameType);
                         var playerInfoData = new PlayerInfoData()
                         {
                             balance = tpCustBalance.Balance,
                             playerId = tpCustInfoAuth.TpUserName,
-                            organization = thirdPartySetting.TpSetting["org"],
+                            organization = thirdPartySetting.org,
                             currency = tpCustInfoAuth.TpCurrencyId,
                             homeCurrency = tpCustInfoAuth.TpCurrencyId,
                             applicableBonus = 0
@@ -327,7 +319,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
             var sessionToken = sessionKeyArr[1];/* Long Time*/
 
-            var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)_thisTp, wagerReq.playerid);
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, wagerReq.playerid);
             if (tpCheck == null)
             {
                 statusCode = 1008;
@@ -353,12 +345,12 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 try
                 {
-                    var result = _bettingBll.PlaceBetRNG_YGG(wagerReq, out decimal tpAfterAmount, out string countryCode);
+                    var result = _bettingBLL.PlaceBetRNG_YGG(wagerReq, out decimal tpAfterAmount, out string countryCode);
                     if (result > 0)
                     {
                         if (wagerReq.amount == 0)
                         {
-                            var tpCustBalance = _tpCustInfoBll.GetBalance((int)_thisTp, wagerReq.playerid, _gameType);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, wagerReq.playerid, _gameType);
                             wagerData.balance = tpCustBalance.Balance;
                         }
                         else
@@ -370,13 +362,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (tpAfterAmount < 0)
                     {
-                        var tpCustBalance = _tpCustInfoBll.GetBalance((int)_thisTp, wagerReq.playerid, _gameType);
+                        var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, wagerReq.playerid, _gameType);
                         wagerData.balance = tpCustBalance.Balance;
                         statusCode = 1006;
                     }
                     else if (result == -1)
                     {
-                        var tpCustBalance = _tpCustInfoBll.GetBalance((int)_thisTp, wagerReq.playerid, _gameType);
+                        var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, wagerReq.playerid, _gameType);
                         wagerData.balance = tpCustBalance.Balance;
                         statusCode = 0;
                     }
@@ -404,7 +396,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return wagerRep;
                 }
             }
-
 
             wagerRep = new WagerRep()
             {
@@ -442,7 +433,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 var payoutDataRngYgg = JsonConvert.DeserializeObject<PayoutDataRNG_YGG>(Content);
-                var result = _settledBll.PayoutRNG_YGG(payoutDataRngYgg, out decimal tpAfterAmount, out string countryCode, SettleFlag.EndGame);
+                var result = _settledBLL.PayoutRNG_YGG(payoutDataRngYgg, out decimal tpAfterAmount, out string countryCode, SettleFlag.EndGame);
 
                 wagerData = new WagerData()
                 {
@@ -463,14 +454,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (payoutDataRngYgg.amount == 0)
                     {
-                        var tpCustBalance = _tpCustInfoBll.GetBalance((int)_thisTp, payoutDataRngYgg.playerid, _gameType);
+                        var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, payoutDataRngYgg.playerid, _gameType);
                         wagerData.balance = tpCustBalance.Balance;
                         statusCode = 0;
                     }
                 }
                 else if (result == -1)
                 {
-                    var tpCustBalance = _tpCustInfoBll.GetBalance((int)_thisTp, payoutDataRngYgg.playerid, _gameType);
+                    var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, payoutDataRngYgg.playerid, _gameType);
                     wagerData.balance = tpCustBalance.Balance;
                     statusCode = 0;
                 }
@@ -519,13 +510,13 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             var wagerReq = JsonConvert.DeserializeObject<WagerReq>(Content);
-            var result = _settledBll.CancelBetRNG_YGG(wagerReq, out decimal tpAfterAmount);
+            var result = _settledBLL.CancelBetRNG_YGG(wagerReq, out decimal tpAfterAmount);
 
             if (result > 0)
             {
                 var tpCustBalance = _environment.IsDevelopment()
-                    ? _tpCustInfoBll.GetBalance((int)Tp.YGG, wagerReq.playerid, _gameType)
-                    : _tpCustInfoBll.GetBalanceByHalfSecCache((int)Tp.YGG, wagerReq.playerid, _gameType);
+                    ? _tpCustInfoBLL.GetBalance((int)Tp.YGG, wagerReq.playerid, _gameType)
+                    : _tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.YGG, wagerReq.playerid, _gameType);
 
                 statusCode = 0;
                 cancelWagerData = new CancelwagerData()
@@ -538,14 +529,14 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 if (tpAfterAmount == 0)
                 {
-                    tpCustBalance = _tpCustInfoBll.GetBalance((int)Tp.YGG, wagerReq.playerid, _gameType);
+                    tpCustBalance = _tpCustInfoBLL.GetBalance((int)Tp.YGG, wagerReq.playerid, _gameType);
                     cancelWagerData.balance = tpCustBalance.Balance;
                     cancelWagerData.currency = tpCustBalance.TpCurrencyId;
                 }
             }
             else if (result == -1)
             {
-                var tpCustBalance = _tpCustInfoBll.GetBalance((int)Tp.YGG, wagerReq.playerid, _gameType);
+                var tpCustBalance = _tpCustInfoBLL.GetBalance((int)Tp.YGG, wagerReq.playerid, _gameType);
 
                 statusCode = 0;
                 cancelWagerData = new CancelwagerData()
@@ -592,7 +583,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 var payoutDataRngYgg = JsonConvert.DeserializeObject<PayoutDataRNG_YGG>(Content);
-                var result = _settledBll.PayoutRNG_YGG(payoutDataRngYgg, out decimal tpAfterAmount, out string countryCode, SettleFlag.Running);
+                var result = _settledBLL.PayoutRNG_YGG(payoutDataRngYgg, out decimal tpAfterAmount, out string countryCode, SettleFlag.Running);
 
                 wagerData = new WagerData()
                 {
@@ -613,14 +604,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else if (payoutDataRngYgg.amount == 0)
                     {
-                        var tpCustBalance = _tpCustInfoBll.GetBalance((int)_thisTp, payoutDataRngYgg.playerid, _gameType);
+                        var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, payoutDataRngYgg.playerid, _gameType);
                         wagerData.balance = tpCustBalance.Balance;
                         statusCode = 0;
                     }
                 }
                 else if (result == -1)
                 {
-                    var tpCustBalance = _tpCustInfoBll.GetBalance((int)_thisTp, payoutDataRngYgg.playerid, _gameType);
+                    var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, payoutDataRngYgg.playerid, _gameType);
                     wagerData.balance = tpCustBalance.Balance;
                     statusCode = 0;
                 }
@@ -631,7 +622,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     data = wagerData
                 };
 
-                _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(wagerRep)}", "YGG_Appendwagerresult");
+                _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(wagerRep)}", logName);
             }
             catch (Exception ex)
             {
@@ -641,7 +632,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     data = wagerData
                 };
 
-                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(wagerRep)}\r\n{ex}", "YGG_Appendwagerresult", ex);
+                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(wagerRep)}\r\n{ex}", logName, ex);
             }
 
             return wagerRep;
@@ -683,7 +674,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
             var sessionToken = sessionKeyArr[1];/* Long Time*/
 
-            var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)_thisTp, wagerReq.playerid);
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, wagerReq.playerid);
             if (tpCheck == null)
             {
                 wagerRep.code = 1008;
@@ -734,7 +725,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
             var sessionToken = sessionKeyArr[1];/* Long Time*/
 
-            var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)_thisTp, balanceReq.playerid);
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, balanceReq.playerid);
             if (tpCheck == null)
             {
                 statusCode = 1008;
@@ -749,15 +740,15 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else
             {
-                var thirdPartySetting = _thirdPartyBll.GetThirdPartySetting((int)_thisTp);
-                var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)_thisTp, balanceReq.playerid, _gameType);
+                var thirdPartySetting = _siteConfig;
+                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, balanceReq.playerid, _gameType);
 
                 getBalanceData = new GetbalanceData()
                 {
                     currency = tpCustBalance.TpCurrencyId,
                     applicableBonus = 0,
                     homeCurrency = tpCustBalance.TpCurrencyId,
-                    organization = thirdPartySetting.TpSetting["org"],
+                    organization = thirdPartySetting.org,
                     balance = tpCustBalance.Balance,
                     playerId = balanceReq.playerid,
                     bonus = 0

@@ -1,5 +1,4 @@
 ﻿using Serilog.Context;
-
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -13,7 +12,7 @@ namespace ThirdPartyWager.Workers
         private Timer timerLT;
         private Timer timerRNG;
         private readonly int tpType = (int)WagerTimerType.Wager;
-        private readonly int timeRange = 20; //in minutes 
+        private readonly int timeRange = 15; //in minutes 
         private readonly int quickTime = 45; // in seconds
         private readonly int runTime = 89; // in seconds
         private readonly string _tpName = Tp.GPI.ToString();

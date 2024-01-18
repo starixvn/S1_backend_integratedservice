@@ -70,24 +70,29 @@ namespace ThirdPartyBetHistory.Service.Worker
             var taskProperty = $"{tpName}:{workerType}:UpdateSiteTicketKey";
             try
             {
-                var ticketKey = _thirdPartyBLL.GetAllSiteTicketKey(workerType, (int)_tp);
-                _logger.LogInformation($"Start: {taskProperty} | SQ is :{ticketKey}");
-                
+                var lastTicketKey = _thirdPartyBLL.GetAllSiteTicketKey(workerType, (int)_tp);
+                LogContext.PushProperty("LastTicketKey", lastTicketKey);              
                 // 先拿UnSettle資料
-                var unSettleList = _thirdPartyBLL.GetVgamingUnSettleTicket(ticketKey);
-                
+                var unSettleList = _thirdPartyBLL.GetVgamingUnSettleTicket(lastTicketKey);
+
                 // 判斷要用哪一個當下一次要檢查的TicketKey
+                long nextTicketKey;
                 if (unSettleList.Any())
                 {
-                    ticketKey = unSettleList.Min(i => i.TicketKey);
+                    nextTicketKey = unSettleList.Min(i => i.TicketKey);
                 }
                 else
-                {     
-                    ticketKey = _thirdPartyBLL.GetVgamingTicketKey(ticketKey);
+                {
+                    nextTicketKey = _thirdPartyBLL.GetVgamingTicketKey(lastTicketKey);
                 }
+                LogContext.PushProperty("NextTicketKey", nextTicketKey);
+
+                if (nextTicketKey > lastTicketKey)
+                {
+                    _thirdPartyBLL.SetAllSiteTicketKey(workerType, (int)_tp, nextTicketKey);
+                }     
                 
-                _thirdPartyBLL.SetAllSiteTicketKey(workerType, (int)_tp, ticketKey);
-                _logger.LogInformation($"End: {taskProperty} | SQ is :{ticketKey}");
+                _logger.LogInformation($"Success: {taskProperty} | TicketKey range: {lastTicketKey} ~ {nextTicketKey}");
             }
             catch (Exception ex)
             {

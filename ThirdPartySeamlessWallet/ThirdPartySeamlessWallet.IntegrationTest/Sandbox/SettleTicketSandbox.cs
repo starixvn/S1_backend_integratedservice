@@ -292,6 +292,12 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             return _mySqlClient.Query<BetRecordInfo>(sqlScript, CommandType.Text).FirstOrDefault();
         }
 
+        public int GetTpSeamlessBonusFlag(int tpId, string transId)
+        {
+            var sqlScript = @$"SELECT Flag FROM TpSeamlessBonus WHERE TpId='{tpId}' AND TransId='{transId}';";
+            return _mySqlClient.Query<int>(sqlScript, CommandType.Text).FirstOrDefault();
+        }
+
 
     }
 }

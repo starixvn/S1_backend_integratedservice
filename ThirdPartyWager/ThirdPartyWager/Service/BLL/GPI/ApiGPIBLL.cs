@@ -1,11 +1,11 @@
-﻿using System.Web;
+﻿using System.Text;
+using System.Web;
 using System.Xml;
-
 using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -14,25 +14,29 @@ namespace ThirdPartyWager.Service.BLL
         private readonly HttpHelper _httpHelper;
         private readonly Common _common;
         private readonly Log2File _log2File;
-        private readonly ILogger<ApiGPIBLL> _logger;
         private readonly string _tpName = Tp.GPI.ToString();
+        private readonly ProxyConfig _tokyoProxy;
+        private readonly IWebHostEnvironment _env;
+
         private readonly Dictionary<int, string> _productList = new Dictionary<int, string>() {
             {(int)GameType.GPI_RNG, "slots"},
             {(int)GameType.GPI_Keno, "lottery"},//使用一款代表取lottery資料
         };
+
         public ApiGPIBLL(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
-            _logger = provider.GetRequiredService<ILogger<ApiGPIBLL>>();
+            _tokyoProxy = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ProxyConfig>("TokyoProxy");
+            _env = provider.GetRequiredService<IWebHostEnvironment>();
         }
 
-        public async Task<WagerGPIModel> GetBetListByTime(dynamic setting, int gameType, int page, string startTime, string endTime)
+        public async Task<WagerGPIModel> GetBetListByTime(GPIConfig setting, int gameType, int page, string startTime, string endTime)
         {
-            var apiUrl = setting["WagerUrl"];
-            var merchId = setting["OperatorId"];
-            var merchPwd = setting["WagerMerchPwd"];
+            var apiUrl = setting.WagerUrl;
+            var merchId = setting.OperatorId;
+            var merchPwd = setting.WagerMerchPwd;
             var pageSize = 500;
             var product = _productList[gameType];
 
@@ -59,14 +63,27 @@ namespace ThirdPartyWager.Service.BLL
         private async Task<string> DoHttpClientAsync(string url, object param, string tagName)
         {
             var dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(param));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            string sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
             _log2File.InsertRequestLog(_tpName, url, sParam, "1");
 
             url = $"{url}?{sParam}";
-            var request = new HttpRequestMessage(HttpMethod.Get, url);
-            var response = await _httpHelper.GetClient().SendAsync(request);
-            var result = response.Content.ReadAsStringAsync().Result;
+            HttpResponseMessage response;
+            string result;
+
+            if (!_env.IsProduction())
+            {
+                using var client = _httpHelper.GetClientWithHandler(_httpHelper.CreateProxyConfigHandler(_tokyoProxy));
+                response = await client.GetAsync(url);
+                using var sr = new StreamReader(await response.Content.ReadAsStreamAsync(), Encoding.UTF8);
+                result = await sr.ReadToEndAsync();
+            }
+            else
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                response = await _httpHelper.GetClient().SendAsync(request);
+                result = response.Content.ReadAsStringAsync().Result;
+            }
 
             if (!response.IsSuccessStatusCode)
             {
