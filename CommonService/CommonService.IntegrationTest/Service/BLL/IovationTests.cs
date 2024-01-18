@@ -1,4 +1,6 @@
-﻿using CommonService.Extensions;
+﻿using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using CommonService.Extensions;
 using CommonService.IntegrationTest.Models;
 using CommonService.IntegrationTest.Stubs;
 using CommonService.Service.Library;
@@ -23,6 +25,8 @@ namespace CommonService.Service.BLL.Tests
     {
         private IConfiguration _configuration;
         private readonly IovationBLL _iovationBLL;
+        private readonly IHostEnvironment _env;
+        private readonly string _storagePath;
 
         public IovationBLLTests()
         {
@@ -58,6 +62,8 @@ namespace CommonService.Service.BLL.Tests
             var provider = services.BuildServiceProvider();
 
             _iovationBLL = provider.GetRequiredService<IovationBLL>();
+            _env = provider.GetRequiredService<IHostEnvironment>();
+            _storagePath = $@"{_env.ContentRootPath}Storage\Iovation";
         }
 
         [TestCase("Nova88", ExpectedResult = ErrorCode.Success)]
