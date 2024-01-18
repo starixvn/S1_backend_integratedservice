@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json;
-
-namespace ThirdPartyBetHistory.Service.Model
+﻿namespace ThirdPartyBetHistory.Service.Model
 {
     public class TpCustInfo
     {
