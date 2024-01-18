@@ -21,7 +21,7 @@ namespace ThirdPartyBetHistory.Service.Worker
             var betHelperList = provider.GetServices<IThirdPartyBetHelper>();
             _tp = betHelperList.First().Tp;
             _sabaSiteList = betHelperList.ToDictionary(i => i.SiteId, i => i);
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();         
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -43,7 +43,7 @@ namespace ThirdPartyBetHistory.Service.Worker
                 var ticketKey = _thirdPartyBLL.GetAllSiteTicketKey(workerType, (int)_tp);
                 var unSettleList = _thirdPartyBLL.GetVgamingUnSettleTicket(ticketKey);
 
-                _logger.LogInformation($"Start: {taskProperty} | UnSettle Count is :{unSettleList.Count()}");
+                _logger.LogInformation($"Start: {taskProperty} | Vgaming UnSettle Count is :{unSettleList.Count()}");
                 foreach (var unsettle in unSettleList)
                 {
                     _sabaSiteList[unsettle.SiteId].ResubmitProcess(unsettle);
@@ -71,7 +71,7 @@ namespace ThirdPartyBetHistory.Service.Worker
             try
             {
                 var lastTicketKey = _thirdPartyBLL.GetAllSiteTicketKey(workerType, (int)_tp);
-                LogContext.PushProperty("LastTicketKey", lastTicketKey);              
+                LogContext.PushProperty("LastTicketKey", lastTicketKey);
                 // 先拿UnSettle資料
                 var unSettleList = _thirdPartyBLL.GetVgamingUnSettleTicket(lastTicketKey);
 
@@ -90,8 +90,8 @@ namespace ThirdPartyBetHistory.Service.Worker
                 if (nextTicketKey > lastTicketKey)
                 {
                     _thirdPartyBLL.SetAllSiteTicketKey(workerType, (int)_tp, nextTicketKey);
-                }     
-                
+                }
+
                 _logger.LogInformation($"Success: {taskProperty} | TicketKey range: {lastTicketKey} ~ {nextTicketKey}");
             }
             catch (Exception ex)

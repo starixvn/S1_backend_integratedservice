@@ -44,7 +44,37 @@ namespace ThirdPartyBetHistory.Service.Library
                 _logger.LogError(ex, $"{key} | {ex.Message}");
                 return factory();
             }
-        }      
+        }
+
+        public string StringGet(string key, RedisDataBase redisDataBase = RedisDataBase.Tp)
+        {
+            key = $"{redisDataBase}:{RemoveSpecialChars(key)}";
+            try
+            {
+                var db = _multiplexer.GetDatabase((int)redisDataBase);
+                return db.StringGet(key);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{key} | {ex.Message}");
+                return string.Empty;
+            }
+        }
+
+        public bool StringSet(string key, RedisValue value, TimeSpan? timeSpan = null, RedisDataBase redisDataBase = RedisDataBase.Tp)
+        {
+            key = $"{redisDataBase}:{RemoveSpecialChars(key)}";
+            try
+            {
+                var db = _multiplexer.GetDatabase((int)redisDataBase);
+                return db.StringSet(key, value, timeSpan);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"{key} | {ex.Message}");
+                return false;
+            }
+        }
 
         private string RemoveSpecialChars(string key)
         {
