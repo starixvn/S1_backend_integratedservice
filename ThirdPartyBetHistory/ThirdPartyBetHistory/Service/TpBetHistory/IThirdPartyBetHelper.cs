@@ -9,7 +9,7 @@ namespace ThirdPartyBetHistory.Service
         Tp Tp { set; get; }
         string TpName { get; }
         SabaConfig SabaConfig { set; get; }
-        Task UpdateBetRecordByTransId(UnSettle ticket);
+        void UpdateBetRecordByTransId(UnSettle ticket);
         Task<long> AddTpBetRecordDetail(WorkerType workerType, long siteTicketKey);
         Task ResubmitProcess(VgamingUnSettle unSettle);
     }

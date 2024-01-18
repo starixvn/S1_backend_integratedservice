@@ -23,7 +23,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             };
         }
 
-        public override async Task UpdateBetRecordByTransId(UnSettle ticket)
+        public override void UpdateBetRecordByTransId(UnSettle ticket)
         {
             try
             {
@@ -36,7 +36,7 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
                 };
 
                 var p = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
-                var result = await HttpPostAsync(url, p, "application/x-www-form-urlencoded");
+                var result = HttpPostAsync(url, p, "application/x-www-form-urlencoded").Result;
                 var getBetDetail = FromJson<GetBetDetail>(result);
                 if (getBetDetail.error_code != 0)
                 {
