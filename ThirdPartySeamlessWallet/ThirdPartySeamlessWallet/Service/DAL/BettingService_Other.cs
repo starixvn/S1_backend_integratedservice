@@ -513,26 +513,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         out afterAmount,
                         ref bonusId,
                         conn,
-                        trans
+                        trans,
+                        memo: $"{mixUniqueId}"
                     );
-
-                    //if (bonusId > 0 && result > 0)
-                    //{
-                    //    AddTpBonus(
-                    //        (int)Tp.One789,
-                    //        bettingDataLT_One789.Tx,
-                    //        gameType,
-                    //        tpCustInfo.CustId,
-                    //        tpCustInfo.UserName,
-                    //        tpCustInfo.CurrencyId,
-                    //        tpCustInfo.SiteId,
-                    //        Math.Abs(bettingDataLT_One789.Amount),
-                    //        bonusId,
-                    //        category,
-                    //        conn,
-                    //        trans
-                    //    );
-                    //}
 
                     if (result > 0)
                     {
