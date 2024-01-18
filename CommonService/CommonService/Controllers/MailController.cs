@@ -15,13 +15,15 @@ namespace CommonService.Controllers
         private readonly SendGridBLL _sendGridBll;
         private readonly RestPasswordBLL _restPasswordBll;
         private readonly OTPEmailBLL _otpEmailBll;
-
+        private readonly Dictionary<int, int> _welComeMailConfig;
+        
         public MailController(IServiceProvider provider)
         {
             _custInfoBll = provider.GetRequiredService<CustInfoBLL>();
             _sendGridBll = provider.GetRequiredService<SendGridBLL>();
             _restPasswordBll = provider.GetRequiredService<RestPasswordBLL>();
             _otpEmailBll = provider.GetRequiredService<OTPEmailBLL>();
+            _welComeMailConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<int>("WelComeMail");
         }
 
         public class Req
@@ -35,22 +37,20 @@ namespace CommonService.Controllers
             var apiResult = new ApiResult();
             var custInfo = _custInfoBll.GetCustInfoProfile(req.custId);
             
-            //IvorySport跳過發送
-            if (custInfo.SiteId == 5)
-            {
-                apiResult.ErrorCode = ErrorCode.Success;
-                return apiResult;
-            }
-
-            if (custInfo != null)
+            var config = _welComeMailConfig[custInfo.SiteId];
+            if (config == 1)
             {
                 var resultResp = await _sendGridBll.SendMailAsync(custInfo, null, TemplateType.WelcomeMail);
-
                 apiResult.ErrorCode = resultResp.ErrorCode;
                 apiResult.Message = resultResp.Message;
                 apiResult.RawMessage = resultResp.RawMessage;
             }
-
+            else
+            {
+                apiResult.ErrorCode = ErrorCode.Success;
+                return apiResult;
+            }
+            
             return apiResult;
         }
 
