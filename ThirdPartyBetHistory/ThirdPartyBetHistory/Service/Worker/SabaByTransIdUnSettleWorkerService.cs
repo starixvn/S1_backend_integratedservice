@@ -56,6 +56,7 @@ namespace ThirdPartyBetHistory.Service.Worker
 
                 //再一起從TpBetRecord拿過去14天至1小時前的未結算資料
                 var unSettleList = _thirdPartyBLL.GetTpBetRecordUnSettleList((int)_tp, startTime, endTime, SQList)
+                    .DistinctBy(i => i.SQ)
                     .Where(i => i.SettlementType == SettlementType.UnSettled);
 
                 _logger.LogInformation($"Start: {taskProperty} | TpBetRecord UnSettle Count is :{unSettleList.Count()}");
