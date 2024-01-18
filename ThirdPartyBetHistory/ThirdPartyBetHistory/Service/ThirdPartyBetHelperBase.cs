@@ -30,7 +30,7 @@ namespace ThirdPartyBetHistory.Service
 
         protected ThirdPartyService _thirdPartyService;
 
-        public abstract Task UpdateBetRecordByTransId(UnSettle ticket);
+        public abstract void UpdateBetRecordByTransId(UnSettle ticket);
 
         protected async Task<string> HttpPostAsync(string url, string parameters, string contentType)
         {
