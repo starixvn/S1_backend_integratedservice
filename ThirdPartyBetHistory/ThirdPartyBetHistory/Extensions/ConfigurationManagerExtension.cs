@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ThirdPartyBetHistory.Extensions
+﻿namespace ThirdPartyBetHistory.Extensions
 {
     public static class ConfigurationManagerExtension
     {
