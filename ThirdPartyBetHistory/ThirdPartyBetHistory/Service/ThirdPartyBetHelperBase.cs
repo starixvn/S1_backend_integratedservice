@@ -30,7 +30,7 @@ namespace ThirdPartyBetHistory.Service
 
         protected ThirdPartyService _thirdPartyService;
 
-        public abstract Task UpdateBetRecordByTransId(WorkerType workerType, DateTime startTime, DateTime endTime, IEnumerable<SettlementType> settlementTypeList);                     
+        public abstract Task UpdateBetRecordByTransId(UnSettle ticket);
 
         protected async Task<string> HttpPostAsync(string url, string parameters, string contentType)
         {
@@ -55,7 +55,7 @@ namespace ThirdPartyBetHistory.Service
             }
 
         }
-        
+
         protected T FromJson<T>(string jsonString)
         {
             if (!string.IsNullOrEmpty(jsonString))

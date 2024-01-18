@@ -1,10 +1,4 @@
-﻿using System.Data;
-
-using Dapper;
-
-using Microsoft.Extensions.Caching.Memory;
-
-using Newtonsoft.Json;
+﻿using Dapper;
 
 using ThirdPartyBetHistory.Service.Library;
 using ThirdPartyBetHistory.Service.Model;
@@ -40,20 +34,6 @@ namespace ThirdPartyBetHistory.Service.DAL
             return _mainDbClient.QueryFirst<TpCustInfo>("Common_TpCustInfoByTpUserName_Get", parameters);
         }
 
-        public IEnumerable<UnSettle> GetTpBetRecordReSettleTicket(Tp tp, int siteId, IEnumerable<SettlementType> settlementTypeList, DateTime startTime, DateTime endTime)
-        {
-            return _reportDbClient.Query<UnSettle>("Service_TpBetRecord_ReSettle_Get",
-                new
-                {
-                    _TpId = (int)tp,
-                    _SiteId = siteId,
-                    SettlementTypeList = JsonConvert.SerializeObject(settlementTypeList.Select(i => (int)i)),
-                    settlementTypeList,
-                    StartTime = startTime,
-                    EndTime = endTime
-                }, 120);
-        }
-
         public long GetSiteTicketKey(int SiteId, int TpId, WorkerType workerType)
         {
             var parameters = new { SiteId, TpId, WorkerType = (int)workerType };
@@ -79,8 +59,6 @@ namespace ThirdPartyBetHistory.Service.DAL
             return _mainDbClient.Execute("Service_TpBetRecordDetail_Ins_V3", props);
         }
 
-        #region Saba VGaming
-        
         public IEnumerable<VgamingUnSettle> GetVgamingUnSettleTicket(long TicketKey, int LimitCount)
         {
             return _reportDbClient.Query<VgamingUnSettle>("Service_SBSW_Vgaming_Unsettle_Get_V3",
@@ -96,8 +74,24 @@ namespace ThirdPartyBetHistory.Service.DAL
             var parameters = new { TicketKey };
             return _reportDbClient.QueryFirst<long>("Service_SBSW_Vgaming_TicketKey_Get_V2", parameters);
         }
-        
-        #endregion
-        
+
+        public IEnumerable<UnSettle> GetTpBetRecordUnSettleList(int TpId, DateTime StartTime, DateTime EndTime, string SQList)
+        {
+            return _reportDbClient.Query<UnSettle>(
+                "Service_TpBetRecord_UnSettle_Get",
+                new
+                {
+                    TpId,
+                    StartTime,
+                    EndTime,
+                    SQList = string.IsNullOrEmpty(SQList) ? "[]" : SQList,
+                },
+                120);
+        }
+
+        public UnSettle GetUnSettleTicket(long SQ)
+        {
+            return _reportDbClient.QueryFirst<UnSettle>("Service_TpBetRecord_GetBySQ", new { SQ });
+        }
     }
 }
