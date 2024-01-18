@@ -15,6 +15,7 @@ namespace CommonService.Service.BLL
         private readonly IovationServicesConfig _iovationServicesConfig;
         private readonly IovationService _iovationService;
         private readonly HttpHelper _httpHelper;
+        private readonly bool _IsProduction;
         private readonly string _storagePath;
 
         public IovationBLL(IServiceProvider provider)
@@ -24,6 +25,7 @@ namespace CommonService.Service.BLL
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _iovationService = provider.GetRequiredService<IovationService>();
             _iovationServicesConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<IovationServicesConfig>("Iovation");
+            _IsProduction = env.IsProduction();
         }
 
         public async Task<ApiResult<IovationCheckResult>> IovationChecksAsync(IovationChecksRequest iovationChecksRequest)
@@ -79,8 +81,22 @@ namespace CommonService.Service.BLL
         
         private X509Certificate2 GetCertificate()
         {
-            var pem = Path.Combine(_storagePath, "1054302-ci-cert.pem");
-            var key = Path.Combine(_storagePath, "1054302-ci-cert.key");
+            string pem;
+            string key;
+            
+            if (_IsProduction)
+            {
+                // PRD
+                 pem = Path.Combine(_storagePath, "959500-api-cert.pem");
+                 key = Path.Combine(_storagePath, "959500-api-cert.key");
+            }
+            else
+            {
+                // DEV
+                 pem = Path.Combine(_storagePath, "1054302-ci-cert.pem");
+                 key = Path.Combine(_storagePath, "1054302-ci-cert.key");
+            }
+           
             var cert = X509Certificate2.CreateFromPemFile(pem, key);
             return new X509Certificate2(cert.Export(X509ContentType.Pfx));
         }
