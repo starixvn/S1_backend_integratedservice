@@ -79,6 +79,8 @@ namespace ThirdPartyWager.Service.BLL
                 var currency = item.TpCurrencyId;
 
                 var getWagerSummary = await _apiKMBLL.GetBetSummaryByTime(currency, reportTime.startTime, reportTime.endTime);
+                // 我司将会限制 ** 历史注单 ** 相关的API请求频率 ( 允许商户每五秒请求一次 )
+                Thread.Sleep(8000);
 
                 if (getWagerSummary == null)
                 {
