@@ -20,7 +20,7 @@ using ThirdPartyCore.Model.TpMerchantBalance.Response;
 namespace ThirdPartyCore
 {
     public delegate void InsertLogEventHandler(string url, string input, string output);
-    public abstract class ThirdPartyHelperBase : IThirdPartyHelper, IThirdPartyTpBetRecordDetail, IThirdPartyTpGetMerchantBalance
+    public abstract class ThirdPartyHelperBase : IThirdPartyHelper, IThirdPartyTpBetRecordDetail, IThirdPartyTpGetMerchantBalance, IThirdPartyEventParticular
     {
         public static string proxyHost;
 
@@ -761,5 +761,13 @@ namespace ThirdPartyCore
         /// 回傳後台BetList所需要的注單明細
         /// </summary>
         public abstract TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs);
+
+        /// <summary>
+        /// 呼叫第三方API發放獎勵
+        /// </summary>
+        public virtual ApiResult AddPrizeToPlayer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException($"TpId:{tpCustInfo.TpId} AddPrizeToPlayer NotImplemented.");
+        }
     }
 }

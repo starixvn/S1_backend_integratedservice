@@ -2942,7 +2942,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 txnId = txnId
             });
-
             var slot = _mainDbClient.QueryFirst<BettransRng_MG>("Service_BettransRng_MG_txnId_Get", p);
 
             if (slot != null)
@@ -5078,7 +5077,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        trans.Commit();
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                     }
                 }
             }

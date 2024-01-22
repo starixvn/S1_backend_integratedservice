@@ -5,7 +5,8 @@
         SkyLine,
         NxCloud,
         YC,
-        AWS
+        AWS,
+        SmsCloud
     }
 
 }

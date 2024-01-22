@@ -2392,6 +2392,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlag_BettransRng_AP_Mini(spName, transId, settleTime);
         }
 
+
         #endregion
 
         #region YGG

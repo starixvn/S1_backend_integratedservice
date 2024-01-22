@@ -120,7 +120,7 @@ namespace CommonService.Service.Library
 
         }
 
-        public async Task<HttpResponseMessage> HttpGetAsync(string url, Dictionary<string, string> headerParams, Dictionary<string, string> parameters, string contentType)
+        public async Task<HttpResponseMessage> HttpGetAsync(string url, Dictionary<string, string> headerParams, Dictionary<string, string> parameters, string contentType ,int? port)
         {
             HttpClientHandler handler;
             if (!string.IsNullOrEmpty(proxyHost))
@@ -152,8 +152,9 @@ namespace CommonService.Service.Library
 
             var builder = new UriBuilder(url)
             {
-                Port = -1
+                Port =  port ?? -1
             };
+            
             var query = HttpUtility.ParseQueryString(builder.Query);
             if (parameters != null)
             {
