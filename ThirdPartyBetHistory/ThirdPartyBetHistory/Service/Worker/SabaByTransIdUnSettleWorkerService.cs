@@ -16,7 +16,7 @@ namespace ThirdPartyBetHistory.Service.Worker
         private readonly ICacheHelper _redisHelper;
         private Timer _timer;
         private readonly WorkerType workerType = WorkerType.ByTransIdUnSettleWager;
-        private const int SubtractDays = -14;// 檢查幾天前的資料
+        private const int SubtractDays = -7;// 檢查幾天前的資料
         private readonly Tp _tp;
 
 
@@ -48,18 +48,18 @@ namespace ThirdPartyBetHistory.Service.Worker
             try
             {
                 var startTime = DateTime.UtcNow.Date.AddDays(SubtractDays);
-                var endTime = DateTime.UtcNow.AddHours(-1);
+                var endTime = DateTime.UtcNow.AddMinutes(-30);
                 taskProperty += $" | {startTime:yyyy-MM-dd HH:mm} ~ {endTime:yyyy-MM-dd HH:mm}";
 
-                //先從Redis拿取超過14天未結算清單的SQList
+                //先從Redis拿取超過7天未結算清單的SQList
                 var SQList = _redisHelper.StringGet(redisKey);
 
-                //再一起從TpBetRecord拿過去14天至1小時前的未結算資料
+                //再一起從TpBetRecord拿過去7天至1小時前的未結算資料
                 var unSettleList = _thirdPartyBLL.GetTpBetRecordUnSettleList((int)_tp, startTime, endTime, SQList)
                     .DistinctBy(i => i.SQ)
                     .Where(i => i.SettlementType == SettlementType.UnSettled);
 
-                _logger.LogInformation($"Start: {taskProperty} | TpBetRecord UnSettle Count is :{unSettleList.Count()}");
+                _logger.LogInformation($"Start: {taskProperty} | SBSW UnSettle Count is : {unSettleList.Count()}");
                 foreach (var unSettle in unSettleList.OrderBy(i => i.SettledTime).ThenBy(i => i.TransId))
                 {
                     _sabaSiteList[unSettle.SiteId].UpdateBetRecordByTransId(unSettle);
@@ -76,7 +76,7 @@ namespace ThirdPartyBetHistory.Service.Worker
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Saba UnSettleWager Exception: {taskProperty}");
+                _logger.LogError(ex, $"SBSW UnSettleWager Exception: {taskProperty}");
             }
             finally
             {
