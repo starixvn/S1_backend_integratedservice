@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http.Headers;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Web;
 
@@ -167,6 +168,37 @@ namespace CommonService.Service.Library
             LogContext.PushProperty("HttpHelper.Request.URL", newurl);
             using var data = new HttpRequestMessage(HttpMethod.Get, newurl);
             var response = await client.SendAsync(data);
+            _logger.LogInformation($"HttpHelper.Request.Response:{response.Content.ReadAsStringAsync().Result}");
+            return response;
+        }
+        
+        public async Task<HttpResponseMessage> HttpPostWithX509(string url, string parameters, string contentType, Dictionary<string, string> headers = null, X509Certificate2 certificate = null)
+        {
+            using var handler = new HttpClientHandler();
+            if (certificate != null)
+            {
+                handler.ClientCertificates.Add(new X509Certificate2(certificate));
+            }
+            
+            handler.ServerCertificateCustomValidationCallback = delegate { return true; };
+
+            using var client = new HttpClient(handler);
+            var httpRequestMessage = new HttpRequestMessage();
+            httpRequestMessage.Content = new StringContent(parameters);
+            httpRequestMessage.Method = HttpMethod.Post;
+            httpRequestMessage.RequestUri = new Uri(url);
+            httpRequestMessage.Content.Headers.ContentType = new MediaTypeWithQualityHeaderValue(contentType);
+            
+            if (headers != null)
+            {
+                foreach (var item in headers)
+                {
+                    client.DefaultRequestHeaders.Add(item.Key, item.Value ?? string.Empty);
+                }
+            }
+
+            var response = await client.SendAsync(httpRequestMessage);
+            
             _logger.LogInformation($"HttpHelper.Request.Response:{response.Content.ReadAsStringAsync().Result}");
             return response;
         }

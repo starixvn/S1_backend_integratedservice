@@ -26,6 +26,9 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<bool> GetWagersAsync(string startTime, string endTime)
         {
             var kmWagers = await _apiKMBLL.QueryBetHistoryAsync(startTime, endTime);
+            // 我司将会限制 ** 历史注单 ** 相关的API请求频率 ( 允许商户每五秒请求一次 )
+            Thread.Sleep(6000);
+
             // 呼叫API失敗
             if (kmWagers == null)
             {

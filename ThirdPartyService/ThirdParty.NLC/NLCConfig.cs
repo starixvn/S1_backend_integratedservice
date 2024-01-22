@@ -4,6 +4,7 @@ namespace ThirdParty.NLC
 {
     internal class NLCConfig : TpSiteConfig
     {
+        public string ApiUrl_Backup { get; set; }
         public string EcId { get; set; }
         public string Ua2Token { get; set; }
         public string AuthToken { get; set; }

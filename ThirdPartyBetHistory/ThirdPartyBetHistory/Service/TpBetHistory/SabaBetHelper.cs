@@ -23,80 +23,76 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             };
         }
 
-        public override async Task UpdateBetRecordByTransId(WorkerType workerType, DateTime startTime, DateTime endTime, IEnumerable<SettlementType> settlementTypeList)
+        public override void UpdateBetRecordByTransId(UnSettle ticket)
         {
-            var tickets = _thirdPartyService.GetTpBetRecordReSettleTicket(Tp, SiteId, settlementTypeList, startTime, endTime);
-            foreach (var ticket in tickets.OrderBy(i => i.SettledTime).ThenBy(i => i.TransId))
+            try
             {
-                try
+                var api = _kenoGameTypeList.Contains(ticket.GameType) ? "GetKenoDetailByTransID" : "GetBetDetailByTransID";
+                var url = $"{SabaConfig.ApiUrl}/{api}";
+                var parameters = new Dictionary<string, string>
                 {
-                    var api = _kenoGameTypeList.Contains(ticket.GameType) ? "GetKenoDetailByTransID" : "GetBetDetailByTransID";
-                    var url = $"{SabaConfig.ApiUrl}/{api}";
-                    var parameters = new Dictionary<string, string>
-                    {
-                        { "vendor_id", SabaConfig.VendorId },
-                        { "trans_id", ticket.TransId}
-                    };
+                    { "vendor_id", SabaConfig.VendorId },
+                    { "trans_id", ticket.TransId}
+                };
 
-                    var p = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
-                    var result = await HttpPostAsync(url, p, "application/x-www-form-urlencoded");
-                    var getBetDetail = FromJson<GetBetDetail>(result);
-                    if (getBetDetail.error_code != 0)
+                var p = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
+                var result = HttpPostAsync(url, p, "application/x-www-form-urlencoded").Result;
+                var getBetDetail = FromJson<GetBetDetail>(result);
+                if (getBetDetail.error_code != 0)
+                {
+                    throw new Exception(getBetDetail.message);
+                }
+
+                if (!DataNotExists(getBetDetail))
+                {
+                    var gameType = (GameType)ticket.GameType;
+
+                    var betDetail = getBetDetail.Data?.BetDetails?.First();
+                    if (betDetail != null)
                     {
-                        throw new Exception(getBetDetail.message);
+                        var tpBetRecordDetail = new BetDetailsModel()
+                        {
+                            last_version_key = getBetDetail.Data.last_version_key,
+                            BetDetails = new List<BetDetail>()
+                            {
+                                betDetail
+                            }
+                        };
+                        ProcessTpBetRecordDetailData(betDetail.vendor_member_id, betDetail.trans_id.ToString(), betDetail.transaction_time, gameType, tpBetRecordDetail);
                     }
 
-                    if (!DataNotExists(getBetDetail))
+                    var betNumberDetail = getBetDetail.Data?.BetNumberDetails?.First();
+                    if (betNumberDetail != null)
                     {
-                        var gameType = (GameType)ticket.GameType;
-
-                        var betDetail = getBetDetail.Data?.BetDetails?.First();
-                        if (betDetail != null)
+                        var tpBetRecordDetail = new BetNumberDetailModel()
                         {
-                            var tpBetRecordDetail = new BetDetailsModel()
+                            last_version_key = getBetDetail.Data.last_version_key,
+                            BetNumberDetails = new List<BetNumberDetail>()
                             {
-                                last_version_key = getBetDetail.Data.last_version_key,
-                                BetDetails = new List<BetDetail>()
-                                {
-                                    betDetail
-                                }
-                            };
-                            ProcessTpBetRecordDetailData(betDetail.vendor_member_id, betDetail.trans_id.ToString(), betDetail.transaction_time, gameType, tpBetRecordDetail);
-                        }
+                                betNumberDetail
+                            }
+                        };
+                        ProcessTpBetRecordDetailData(betNumberDetail.vendor_member_id, betNumberDetail.trans_id.ToString(), betNumberDetail.transaction_time, gameType, tpBetRecordDetail);
+                    }
 
-                        var betNumberDetail = getBetDetail.Data?.BetNumberDetails?.First();
-                        if (betNumberDetail != null)
+                    var betVirtualSportDetail = getBetDetail.Data?.BetVirtualSportDetails?.First();
+                    if (betVirtualSportDetail != null)
+                    {
+                        var tpBetRecordDetail = new BetVirtualSportDetailModel()
                         {
-                            var tpBetRecordDetail = new BetNumberDetailModel()
+                            last_version_key = getBetDetail.Data.last_version_key,
+                            BetVirtualSportDetails = new List<BetVirtualSportDetail>()
                             {
-                                last_version_key = getBetDetail.Data.last_version_key,
-                                BetNumberDetails = new List<BetNumberDetail>()
-                                {
-                                    betNumberDetail
-                                }
-                            };
-                            ProcessTpBetRecordDetailData(betNumberDetail.vendor_member_id, betNumberDetail.trans_id.ToString(), betNumberDetail.transaction_time, gameType, tpBetRecordDetail);
-                        }
-
-                        var betVirtualSportDetail = getBetDetail.Data?.BetVirtualSportDetails?.First();
-                        if (betVirtualSportDetail != null)
-                        {
-                            var tpBetRecordDetail = new BetVirtualSportDetailModel()
-                            {
-                                last_version_key = getBetDetail.Data.last_version_key,
-                                BetVirtualSportDetails = new List<BetVirtualSportDetail>()
-                                {
-                                    betVirtualSportDetail
-                                }
-                            };
-                            ProcessTpBetRecordDetailData(betVirtualSportDetail.vendor_member_id, betVirtualSportDetail.trans_id.ToString(), betVirtualSportDetail.transaction_time, gameType, tpBetRecordDetail);
-                        }
+                                betVirtualSportDetail
+                            }
+                        };
+                        ProcessTpBetRecordDetailData(betVirtualSportDetail.vendor_member_id, betVirtualSportDetail.trans_id.ToString(), betVirtualSportDetail.transaction_time, gameType, tpBetRecordDetail);
                     }
                 }
-                catch (Exception e)
-                {
-                    _logger.LogError(e, $"UpdateBetRecordByTransId, TransId={ticket.TransId}");
-                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"UpdateBetRecordByTransId, TransId={ticket.TransId}");
             }
         }
 
@@ -288,6 +284,9 @@ namespace ThirdPartyBetHistory.Service.TpBetHistory
             return GetRNGBetDetail.Data.last_version_key;
         }
 
+        /// <summary>
+        /// 寫入細單與TpUnSettle，由SettleWorker接手進行結算流程
+        /// </summary>
         private void ProcessTpBetRecordDetailData<T>(string tpUserName, string transId, DateTime settledTime, GameType gameType, T betDetail)
         {
             try
