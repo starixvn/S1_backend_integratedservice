@@ -41,13 +41,15 @@ public class WagerTicketUnSettleHL : BackgroundService
                 
             var unSettleList = _wagerHLService.GetHLBetUnSettledList(ticketKey);    
                 
-            if (!unSettleList.Any())
+            if (unSettleList.Any())
             {
-                ticketKey = _wagerHLService.GetHaoLongTicketKey(ticketKey);
+                _thirdPartyBLL.SetAllSiteTicketKey(workerType, (int)_tp, unSettleList.FirstOrDefault().TicketKey);
             }
             else
             {
-                _thirdPartyBLL.SetAllSiteTicketKey(workerType, (int)_tp, unSettleList.FirstOrDefault().TicketKey);
+                ticketKey = _wagerHLService.GetHaoLongTicketKey(ticketKey - 1);
+                _thirdPartyBLL.SetAllSiteTicketKey(workerType, (int)_tp, ticketKey);
+                
             }
             _logger.LogInformation($"Success: {taskProperty} | SQ is :{ticketKey} | {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm.ss.fff}");
 
