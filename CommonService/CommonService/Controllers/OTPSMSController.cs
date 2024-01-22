@@ -37,6 +37,7 @@ namespace CommonService.Controllers
                 { OTPProvider.NxCloud, provider.GetRequiredService<NxCloudSMSBLL>().SendOTP},
                 { OTPProvider.YC, provider.GetRequiredService<YCBLL>().SendOTP},
                 { OTPProvider.AWS, provider.GetRequiredService<AWSBLL>().SendOTP},
+                { OTPProvider.SmsCloud, provider.GetRequiredService<SmsCloudBLL>().SendOTP},
             };
         }
 

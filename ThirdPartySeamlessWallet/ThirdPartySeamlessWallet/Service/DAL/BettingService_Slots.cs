@@ -178,19 +178,19 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             bettingDataRNG_SG.TicketStatus = (int)TicketStatus.UnSettled;
             var p = new DynamicParameters(new
             {
-                transferId = bettingDataRNG_SG.transferId, 
+                transferId = bettingDataRNG_SG.transferId,
                 acctId = bettingDataRNG_SG.acctId,
-                currency = bettingDataRNG_SG.currency, 
+                currency = bettingDataRNG_SG.currency,
                 amount = bettingDataRNG_SG.amount,
-                type = bettingDataRNG_SG.type, 
+                type = bettingDataRNG_SG.type,
                 channel = bettingDataRNG_SG.channel,
                 playerIp = bettingDataRNG_SG.playerIp,
                 transferTime = new DateTimeOffset(bettingDataRNG_SG.transferTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds(),
-                gameCode = bettingDataRNG_SG.gameCode, 
+                gameCode = bettingDataRNG_SG.gameCode,
                 ticketId = bettingDataRNG_SG.ticketId,
                 referenceId = bettingDataRNG_SG.referenceId,
-                specialGame = JsonConvert.SerializeObject(bettingDataRNG_SG.specialGame), 
-                refTicketIds = JsonConvert.SerializeObject(bettingDataRNG_SG.refTicketIds), 
+                specialGame = JsonConvert.SerializeObject(bettingDataRNG_SG.specialGame),
+                refTicketIds = JsonConvert.SerializeObject(bettingDataRNG_SG.refTicketIds),
                 TicketStatus = bettingDataRNG_SG.TicketStatus
             });
 
@@ -198,7 +198,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var category = TpCategory.Slots;
             if (gameType is (int)GameType.SG_RNG or (int)GameType.SG_Table)
             {
-                if (gameType == (int) GameType.SG_Table)
+                if (gameType == (int)GameType.SG_Table)
                 {
                     category = TpCategory.P2P;
                 }
@@ -210,7 +210,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 category = TpCategory.Fish;
                 result = _mainDbClient.Execute("Service_BettransFish_SG_Ins", p, conn, trans);
             }
-           
+
 
             if (result > 0 && bettingDataRNG_SG.amount != 0)
             {

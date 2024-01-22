@@ -35,7 +35,7 @@ namespace CommonService.Service.BLL
 
             };
 
-            using var result = await _httpHelper.HttpGetAsync(url, null, liveStreaming, null);
+            using var result = await _httpHelper.HttpGetAsync(url, null, liveStreaming, null ,null);
             var resultResp = JsonConvert.DeserializeObject<LiveStreamingLinkResult>(result.Content.ReadAsStringAsync().Result); ;
 
             if (result.StatusCode == HttpStatusCode.OK && resultResp.Status == "OK")
