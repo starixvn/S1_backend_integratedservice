@@ -134,6 +134,7 @@ namespace ThirdPartyWager.Service.Model
 	    public string TpUserName { get; set; }
 	    public string StrikePosition { get; set; }
 	    public int drawType { get; set; }
+	    public DateTime dateTime { get; set; }
 	    public DateTime drawDate { get; set; }
 	    public int SettleFlag { get; set; }
     }
