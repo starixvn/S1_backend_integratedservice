@@ -2,6 +2,7 @@
 
 using NUnit.Framework;
 
+using ThirdPartySeamlessWallet.IntegrationTest.Models;
 using ThirdPartySeamlessWallet.IntegrationTest.SandBox;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -110,6 +111,36 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
 
         #endregion
 
+        #region CheckRebateExcludeGame
+
+        [TestCase(6, 11, "200046", ExpectedResult = SettlementType.SettledForValidNotRollover)]
+        [TestCase(6, 11, "fourguardians", ExpectedResult = SettlementType.SettledForValidNotRollover)]
+        [TestCase(6, 11, "test-fourguardians", ExpectedResult = SettlementType.SettledForValid)]
+        [TestCase(6, 11, "test", ExpectedResult = SettlementType.SettledForValid)]
+        [TestCase(6, 11, "123", ExpectedResult = SettlementType.SettledForValid)]
+        public SettlementType CheckRebateExcludeGame_Test(int tpId, int gameType, string gameID)
+        {
+            var transId = $"test-{DateTime.UtcNow.Ticks}";
+            var betRecord = new BetRecordInfo()
+            {
+                SettlementType = SettlementType.SettledForValid,
+                TicketStatus = TicketStatus.Lost,
+                WinlostAmount = -100,
+                TransId = transId,
+                TpId = tpId,
+                GameType = (GameType)gameType,
+                GameID = gameID,
+            };
+
+            var SettleTicket = _settleTicketSandbox.CreateSettleTicket(_tpCustInfo, betRecord, null);
+            SettleTicket.CheckRebateExcludeGame();
+            _settleTicketSandbox.Commit();
+
+            return SettleTicket.BetRecord.SettlementType;
+        }
+
+        #endregion
+
         #region SetWinLost
 
         [TestCase("Settled", 5, TicketStatus.Win, null, TicketStatus.UnSettled, 5, Description = "正常結算")]
@@ -195,7 +226,6 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
             }
         }
 
-
         [TestCase("Settled", -5, TicketStatus.Lost, null, TicketStatus.UnSettled, -5, Description = "正常結算")]
         [TestCase(null, 0, TicketStatus.Win, null, TicketStatus.UnSettled, null, Description = "winlost為0不需更新")]
         [TestCase("Settled", -5, TicketStatus.Win, -5, TicketStatus.UnSettled, -5, Description = "正常結算")]
@@ -273,7 +303,6 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
             }
 
         }
-
 
         #endregion
 
@@ -678,7 +707,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
             _settleTicketSandbox.Commit();
 
             //檢查寫入的未結算紀錄
-            var unSettledbetRecord = _settleTicketSandbox.GetTpBetRecord(tpId, transId, (int)gameType);         
+            var unSettledbetRecord = _settleTicketSandbox.GetTpBetRecord(tpId, transId, (int)gameType);
             unSettledbetRecord.TpId.Should().Be(tpId);
             unSettledbetRecord.TransId.Should().Be(transId);
             unSettledbetRecord.GameType.Should().Be(gameType);
@@ -707,7 +736,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
                 GameType = gameType,
                 TpUserName = _tpCustInfo.TpUserName,
                 SettledTime = nowUnix + 100,
-                TransTime = nowUnix + 100 ,
+                TransTime = nowUnix + 100,
                 Stake = 11,
                 ValidBet = 22,
                 Revenue = 33,
@@ -746,6 +775,54 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
             settledbetRecord.TicketKey.Should().Be(123456);
             settledbetRecord.BonusId.Should().Be(1000);
             settledbetRecord.GameID.Should().Be("Settled-GameID");
+        }
+
+        #endregion
+
+        #region SetTpSeamlessBonusFlag
+
+        [TestCase(TicketStatus.UnSettled, ExpectedResult = 0)]
+        [TestCase(TicketStatus.Win, ExpectedResult = 1)]
+        [TestCase(TicketStatus.Lost, ExpectedResult = 1)]
+        public int SetTpSeamlessBonusFlag_Test(TicketStatus ticketStatus)
+        {
+            var transId = $"test-{DateTime.UtcNow.Ticks}";
+            var bonusId = 100;
+            var stake = 100;
+            var tpId = 41;
+            var gameType = GameType.SBSW_Sports;
+            var betRecord = new BetRecordInfo()
+            {
+                SettlementType = SettlementType.SettledForValid,
+                TicketStatus = ticketStatus,
+                WinlostAmount = -100,
+                TransId = transId,
+                TpId = tpId,
+                GameType = gameType,
+                Stake = stake,
+                BonusId = bonusId,
+            };
+            _settleTicketSandbox.AddTpSeamlessBonus(new TpSeamlessBonus()
+            {
+                PromotionCategoryId = 9,
+                TpId = tpId,
+                TransId = transId,
+                GameType = (int)gameType,
+                CustId = _tpCustInfo.CustId,
+                UserName = _tpCustInfo.UserName,
+                CurrencyId = _tpCustInfo.CurrencyId,
+                SiteId = _tpCustInfo.SiteId,
+                Stake = stake,
+                BonusId = bonusId,
+            });
+
+
+            var SettleTicket = _settleTicketSandbox.CreateSettleTicket(_tpCustInfo, betRecord, null);
+            SettleTicket.SetTpSeamlessBonusFlag();
+            _settleTicketSandbox.Commit();
+
+            var flag = _settleTicketSandbox.GetTpSeamlessBonusFlag(tpId, transId);
+            return flag;
         }
 
         #endregion

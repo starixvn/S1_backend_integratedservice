@@ -14,12 +14,14 @@ namespace ThirdParty.FaChai
     public class TpHelper : ThirdPartyHelperBase
     {
         private readonly Dictionary<int, Dictionary<string, string>> siteConfigDic;
+        private readonly IReadOnlyDictionary<string, string> _gameNameList;
 
         public TpHelper(IServiceProvider provider)
         {
             siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>((TpEnum.FaChai).ToString());
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.FaChai).ToDictionary(d => d.GameId, d => d.Name);
         }
-        
+
 
         public class CreateMemberRequest
         {
@@ -166,7 +168,7 @@ namespace ThirdParty.FaChai
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
                 GameID = detail.GetStringValue("gameID"),
-                Game = tpGameType.TypeName,
+                Game = GetGameName(detail.GetStringValue("gameID")),
                 RefNo = string.Empty,
                 Title = tpGameType.TypeName,
                 MatchID = betRecordInfo.TransId,
@@ -335,6 +337,15 @@ namespace ThirdParty.FaChai
             No_points_is_returned = 607,
             [Description("Revert Cancel Bet")]
             Revert_Cancel_Bet = 799,
+        }
+        private string GetGameName(string gameCode)
+        {
+            if (!_gameNameList.TryGetValue(gameCode, out var name))
+            {
+                return string.Empty;
+            }
+            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
+            return (dic != null) ? dic.TryGetValue("en", out var result) ? result : string.Empty : string.Empty;
         }
     }
 }

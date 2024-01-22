@@ -1,6 +1,9 @@
 ﻿using System.Data;
+using System.Security.Policy;
 
 using Dapper;
+
+using K4os.Compression.LZ4.Internal;
 
 using MySql.Data.MySqlClient;
 
@@ -10,6 +13,8 @@ using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
+using static ThirdPartySeamlessWallet.Controllers.EBetController;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -95,6 +100,42 @@ namespace ThirdPartySeamlessWallet.Service.Model
             if (RefBetRecord != null && RefBetRecord.BonusId > 0)
             {
                 BetRecord.BonusId = RefBetRecord.BonusId;
+            }
+
+            return this;
+        }
+
+        /// <summary>
+        /// 檢查Rebate排除遊戲
+        /// </summary>
+        public SettleTicket CheckRebateExcludeGame()
+        {
+            var isExcludeGame = _mainDbClient.QueryFirst<bool>("Service_RebateExcludeGame_Check", _trans, new
+            {
+                TpCustInfo.SiteId,
+                TpCustInfo.CurrencyId,
+                GameType = (int)BetRecord.GameType,
+                GameId = BetRecord.GameID,
+            });
+            if (isExcludeGame)
+            {
+                BetRecord.SettlementType = SettlementType.SettledForValidNotRollover;
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// 把TpSeamlessBonus的Flag改成已結算
+        /// </summary>
+        public SettleTicket SetTpSeamlessBonusFlag()
+        {
+            if (BetRecord.BonusId > 0 && BetRecord.TicketStatus != TicketStatus.UnSettled)
+            {
+                _mainDbClient.Execute("Service_TpSeamlessBonus_Flag_Set", _trans, new
+                {
+                    BetRecord.TpId,
+                    TransId = string.IsNullOrEmpty(BetRecord.ReferenceNo) ? BetRecord.TransId : BetRecord.ReferenceNo,
+                });
             }
 
             return this;

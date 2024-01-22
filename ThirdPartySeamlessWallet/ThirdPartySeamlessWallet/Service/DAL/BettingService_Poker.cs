@@ -387,7 +387,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         amount,
                         (int)Tp.MP,
                         TransType.Wagers,
-                        $"Transfer Out: {transferData_MP.requestAmount:#,##0.##}",
+                        $"Transfer Out {transferData_MP.roundId} : {transferData_MP.requestAmount:#,##0.##}",
                         transferData_MP.orderId,
                         out afterAmount,
                         conn,

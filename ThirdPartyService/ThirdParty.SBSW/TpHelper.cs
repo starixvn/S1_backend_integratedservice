@@ -23,51 +23,6 @@ namespace ThirdParty.SBSW
             siteSabaConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SabaConfig>(TpEnum.SBSW.ToString());
         }
 
-        private class Result
-        {
-            public int error_code { get; set; }
-            public string message { get; set; }
-        }
-
-        private class Req
-        {
-            public string vendor_id { set; get; }
-            public string vendor_member_id { set; get; }
-        }
-
-        private class CreateMemberReq : Req
-        {
-            public string operatorId { set; get; }
-            public string userName { set; get; }
-            public string oddsType { set; get; }
-            public int currency { set; get; }
-            public decimal maxtransfer { set; get; }
-            public decimal mintransfer { set; get; }
-        }
-
-        private class LoginResult : Result
-        {
-            public string Data { set; get; }
-        }
-
-        private class SetMemberBetSettingReq : Req
-        {
-            public string bet_setting { get; set; }
-        }
-
-        public class GetBetSettingLimitReq
-        {
-            public string vendor_id { set; get; }
-            public string currency { set; get; }
-        }
-
-        private class SetMemberBetSettingResult
-        {
-            public int error_code { get; set; }
-            public string message { get; set; }
-        }
-
-
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -147,10 +102,21 @@ namespace ThirdParty.SBSW
                 };
             }
 
+            // 檢查matchid
+            GameDetail gameDetail = null;
+            if (inputs.TryGetValue("matchid", out var matchid) && !string.IsNullOrEmpty(matchid))
+            {
+                var getGameDetailResult = GetGameDetail(config, matchid);
+                if (getGameDetailResult.error_code == 0)
+                {
+                    gameDetail = getGameDetailResult.Data.FirstOrDefault();
+                }
+            }
+
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Success,
-                Message = new SabaDeepLinkHelper(loginResult.Data, tpCustInfo, appType, TpLangId, inputs).GameUrl
+                Message = new SBSWDeepLinkHelper(loginResult.Data, tpCustInfo, appType, TpLangId, inputs, gameDetail).GameUrl
             };
         }
 
@@ -518,6 +484,22 @@ namespace ThirdParty.SBSW
         private string GetGameID(TpGameTypeOption tpGameType, string sportType)
         {
             return tpGameType.Type == (int)TpGameType.SBSW_Vgaming ? "171" : sportType;
+        }
+
+        private GetGameDetailResult GetGameDetail(SabaConfig config, string matchid)
+        {
+            try
+            {
+                var apiUrl = $"{config.ApiUrl}/GetGameDetail";
+                var sParam = $"vendor_id={config.VendorId}&match_ids={matchid}";
+                var json = HttpPost(apiUrl, sParam, ContentType);
+                var result = FromJson<GetGameDetailResult>(json);
+                return result;
+            }
+            catch
+            {
+                return default;
+            }
         }
     }
 }

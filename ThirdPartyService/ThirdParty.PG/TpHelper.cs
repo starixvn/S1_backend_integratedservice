@@ -158,7 +158,8 @@ namespace ThirdParty.PG
             var secretKey = config.secret_key;
             var uri = $"external/Login/v1/LoginProxy";
 
-            var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_PG_Detail_Get", new { getBetDetail.TransId }, DataBase.Report);
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_PG_Detail_Get", new { getBetDetail.TransId }, DataBase.Report) 
+                ?? throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found.");
 
             var traceId = detail.GetValueOrDefault("TraceId")?.ToString();
             var parentBetId = detail.GetValueOrDefault("ParentBetId").ToString();

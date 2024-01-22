@@ -45,12 +45,20 @@ namespace ThirdPartyBetHistory.Service.Worker
             LogContext.PushProperty("SiteId", tpBetHelp.SiteId);
 
             var lastTicketKey = _thirdPartyBLL.GetSiteTicketKey(workerType, tpBetHelp);
+            LogContext.PushProperty("LastTicketKey", lastTicketKey);
+
             var taskProperty = $"{tpBetHelp.TpName}:{workerType} | SiteId:{tpBetHelp.SiteId} | siteTicketKey:{lastTicketKey}";
             try
             {
                 var nextTicketKey = tpBetHelp.AddTpBetRecordDetail(workerType, lastTicketKey).Result;
-                _thirdPartyBLL.SetSiteTicketKey(workerType, tpBetHelp, nextTicketKey);
-                _logger.LogInformation($"Success: {taskProperty} at: {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm.ss.fff}");
+                LogContext.PushProperty("NextTicketKey", nextTicketKey);
+
+                if (nextTicketKey > lastTicketKey)
+                {
+                    _thirdPartyBLL.SetSiteTicketKey(workerType, tpBetHelp, nextTicketKey);
+                }
+
+                _logger.LogInformation($"Success: {taskProperty} | TicketKey range: {lastTicketKey} ~ {nextTicketKey}");
 
             }
             catch (Exception ex)

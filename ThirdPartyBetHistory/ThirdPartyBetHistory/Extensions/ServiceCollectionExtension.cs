@@ -33,7 +33,7 @@ namespace ThirdPartyBetHistory.Extensions
                 services.AddSingleton(provider =>
                 {
                     var TpBetHelper = (IThirdPartyBetHelper)Activator.CreateInstance(type, new object[] { provider });
-                    TpBetHelper.Tp = tp;                 
+                    TpBetHelper.Tp = tp;
                     TpBetHelper.SiteId = siteConfig.SiteId;
                     TpBetHelper.SabaConfig = JsonConvert.DeserializeObject<SabaConfig>(siteConfig.ConfigValue);
                     return TpBetHelper;
