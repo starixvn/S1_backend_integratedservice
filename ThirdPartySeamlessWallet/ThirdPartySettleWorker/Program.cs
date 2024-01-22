@@ -77,7 +77,6 @@ builder.Services
     .AddHostedService<SBSWWorker>()
     .AddHostedService<PNGWorker>()
     .AddHostedService<DGWorker>()
-    .AddHostedService<FaChaiWorker>()
     .AddHostedService<PegasusWorker>()
     .AddHostedService<SexyWorker>()
     .AddHostedService<AGWorker>()
@@ -87,7 +86,6 @@ builder.Services
     .AddHostedService<EVOWorker>()
     .AddHostedService<N2LiveWorker>()
     .AddHostedService<N2LiveSmartWorker>()
-    .AddHostedService<PegasusWorker>()
     .AddHostedService<BNGWorker>()
     .AddHostedService<HLWorker>();
 
