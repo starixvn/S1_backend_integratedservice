@@ -55,6 +55,7 @@
         HaoLong = 58,
         NLC = 59,
         Amigo = 60,
+        GA = 63
     }
 
     public enum TpGameType
@@ -147,5 +148,6 @@
         HaoLong_4D = 110,
         NLC_RNG = 111,
         Amigo_RNG = 112,
+        GA_CockFighting = 115
     }
 }
