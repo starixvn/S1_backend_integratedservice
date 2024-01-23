@@ -5,6 +5,7 @@ using Elastic.Apm.SerilogEnricher;
 
 using Serilog;
 using Serilog.Exceptions;
+using Serilog.Formatting.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,7 +26,26 @@ builder.Host.UseSerilog((context, Configuration) =>
                 excludesApiEndpoints.Any(item => p.Value.ToString().Contains(item))
                 || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item))))
         .Enrich.WithExceptionDetails();
+
+    OverrideLoggerWriteToLFile(Configuration);
 });
+
+void OverrideLoggerWriteToLFile(LoggerConfiguration configuration)
+{
+    const string cashSiteBrand = "Nova";
+
+    var brand = Environment.GetEnvironmentVariable("Brand") ?? string.Empty;
+    if (brand != cashSiteBrand) return;
+
+    var logFilePath = $"/common/common-{DateTime.Now:yyyyMMddHHmmssfff}.log";
+    configuration
+        .WriteTo.File(new JsonFormatter(),
+            logFilePath,
+            rollingInterval: RollingInterval.Day,
+            retainedFileCountLimit: 60,
+            fileSizeLimitBytes: 10485760,
+            rollOnFileSizeLimit: true);
+}
 
 var startup = new Startup(builder.Configuration);
 startup.ConfigureServices(builder.Services);

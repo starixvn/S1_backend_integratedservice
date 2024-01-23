@@ -347,7 +347,7 @@ namespace ThirdPartySettleWorker.Workers
                 timerFish?.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
-        
+
         private bool SettleAmountCheck(SettleData unsettled, SettleData_SG wager)
         {
             if (wager.GameId.StartsWith("C-", StringComparison.OrdinalIgnoreCase))
@@ -357,6 +357,5 @@ namespace ThirdPartySettleWorker.Workers
 
             return wager.Stake == unsettled.Stake && Math.Round(wager.WinLostAmount, 2) == unsettled.WinLostAmount;
         }
-
     }
 }

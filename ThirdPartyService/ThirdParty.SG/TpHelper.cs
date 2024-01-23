@@ -70,8 +70,10 @@ namespace ThirdParty.SG
             byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
             string sessionKey = Convert.ToBase64String(bytes);
 
+
             oApiResult.ErrorCode = ErrorCode.Success;
             oApiResult.Message = $"{GameUrl}?acctId={tpCustInfo.TpUserName}&language={TpLangId}&token={HttpUtility.UrlEncode(sessionKey)}&game={gameId}&menumode=off&mobile={mobile}";
+
             return oApiResult;
         }
 

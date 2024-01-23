@@ -88,7 +88,7 @@ namespace ThirdPartyWager.Service.Library
             {
                 using var connection = new MySqlConnection(_connectionString);
                 var command = new CommandDefinition(name,
-                    commandType: CommandType.Text,
+                    commandType: CommandType.StoredProcedure,
                     flags: CommandFlags.NoCache);
                 result = connection.Query<T>(command);
                 connection.Close();
@@ -256,7 +256,7 @@ namespace ThirdPartyWager.Service.Library
             try
             {
                 using var connection = new MySqlConnection(_connectionString);
-                result = connection.Execute(command, CommandType.Text);
+                result = connection.Execute(command, commandType: CommandType.StoredProcedure);
                 connection.Close();
                 connection.Dispose();
             }

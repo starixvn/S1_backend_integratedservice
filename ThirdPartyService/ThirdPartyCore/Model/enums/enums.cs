@@ -225,6 +225,12 @@ namespace ThirdPartyCore.Model.enums
         Bonus = 4
     }
 
+    public enum RecentlyViewedTypeEnum
+    {
+        LobbyName = 1, // saba sport
+        GameName = 2, // Fishing War
+    }
+
     public enum CustomerMemberTypeEnum
     {
         Normal = 1,
@@ -232,13 +238,7 @@ namespace ThirdPartyCore.Model.enums
         LiveStreaming = 3
     }
 
-    public enum RecentlyViewedTypeEnum
-    {
-        LobbyName = 1, // saba sport
-        GameName = 2, // Fishing War
-    }
-    
-    public enum LoginGameTypeEnum
+	public enum LoginGameTypeEnum
     {
         // from memberSite action
         EntPage = 1, 

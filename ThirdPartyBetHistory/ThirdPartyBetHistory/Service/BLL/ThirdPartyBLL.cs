@@ -46,8 +46,6 @@ namespace ThirdPartyBetHistory.Service.BLL
             return _thirdPartyService.GetTpCustInfoWithCache(tpId, tpUserName);
         }
 
-        #region SBSW Vgaming
-
         /// <summary>
         /// 取得SBSW Vgaming五分鐘沒收到派彩的下注清單
         /// </summary>
@@ -77,8 +75,6 @@ namespace ThirdPartyBetHistory.Service.BLL
             return _thirdPartyService.GetVgamingTicketKey(TicketKey);
         }
 
-        #endregion
-        
         /// <summary>
         /// 不分SiteId，用WorkerType取回TicketKey
         /// </summary>
@@ -93,6 +89,22 @@ namespace ThirdPartyBetHistory.Service.BLL
         public int SetAllSiteTicketKey(WorkerType workerType, int tpId, long ticketKey)
         {
             return _thirdPartyService.SetSiteTicketKey(0, tpId, workerType, ticketKey);
+        }
+
+        /// <summary>
+        /// 取得TpBetRecord未結算清單
+        /// </summary>
+        public IEnumerable<UnSettle> GetTpBetRecordUnSettleList(int tpId, DateTime startTime, DateTime endTime, string SQList)
+        {
+            return _thirdPartyService.GetTpBetRecordUnSettleList(tpId, startTime, endTime, SQList);
+        }
+
+        /// <summary>
+        /// 使用SQ取得TpBetRecord未結算注單
+        /// </summary>
+        public UnSettle GetTpBetRecordBySQ(long SQ)
+        {
+            return _thirdPartyService.GetUnSettleTicket(SQ);
         }
     }
 }

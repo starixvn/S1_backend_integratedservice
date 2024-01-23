@@ -56,22 +56,13 @@ namespace ThirdPartyWager.Workers
                 var timerTime = dataTpTimer?.StartTime ?? nowTime.AddMinutes(-(iRangMins - 1));
                 var last = (dataTpTimer == null) ? iRangMins - 1 : iRangMins;
                 
-                if (CheckHaoLongTime(1))
-                {
-                    // 14:55 ~ 22:30不拉單
-                    _logger.LogInformation($"TP - HaoLong Busy Time");
-                    var time = _dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
-                    _thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
-                    return;
-                }
-                
                 if (timerTime < nowTime)
                 {
                      var time = _dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
                      
-                     //測試發現，下注時間跟開彩時間有差異，所以要抓7天的開彩日期，要不然會有下注單當天沒回來的情形發生。
+                     //測試發現，下注時間跟開彩時間有差異，抓3天的開彩日期即可，太多反而不好搞。
                      var currentDate = DateTime.Parse(time.startTime);
-                     var nextSevenDays = Enumerable.Range(0,8)
+                     var nextSevenDays = Enumerable.Range(0,4)
                          .Select(day => currentDate.AddDays(day - 1))
                          .ToList();
                      
@@ -81,15 +72,13 @@ namespace ThirdPartyWager.Workers
                      
                      result =  await _wagerHLBLL.GetWagersAsync(unSettledWagerHLList,nextSevenDays);
                      
+                     if (result)
+                     {
+                         _ = await _wagerHLBLL.SetSettledWager();
+                     }
+
                      //有無單都要往前走 要不然會導致其餘排程問題出現
                      _thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
-                    
-                     if(CheckHaoLongTime(2))
-                     { 
-                         //21:30 ~ 23:59開始結算
-                       _logger.LogInformation($"HaoLong Start SetSettledWager Job Time : +0 = {DateTime.Now:yyyy-MM-ddTHH:mm:ss}");
-                       _ = await _wagerHLBLL.SetSettledWager();
-                     }
                 }
             }
             catch (Exception ex)
@@ -108,7 +97,6 @@ namespace ThirdPartyWager.Workers
                     var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
-
             }
         }
 
@@ -128,6 +116,7 @@ namespace ThirdPartyWager.Workers
                 2 => timeInGmtPlus8.TimeOfDay >= new TimeSpan(21, 30, 0) &&
                      timeInGmtPlus8.TimeOfDay <= new TimeSpan(23, 59, 0),
                 _ => false
-            };}
+            };
+        }
     }
 }

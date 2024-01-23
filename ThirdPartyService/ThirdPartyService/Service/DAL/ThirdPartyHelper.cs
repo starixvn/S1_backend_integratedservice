@@ -1,7 +1,9 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Data;
 using System.Reflection;
-
+using System.Text.Json;
+using MongoDB.Bson.IO;
 using Serilog.Context;
 
 using ThirdPartyCore;
@@ -29,14 +31,16 @@ namespace ThirdPartyService.Service.DAL
 
         public ThirdPartyModel GetThirdPartyBySite(int tpId, int siteId)
         {
+            _logger.LogInformation($"GetThirdPartyBySite=SiteId:{siteId},tpId:{tpId}");
             var sKet = $"{tpId}_{siteId}";
+            _logger.LogInformation($"ThirdPartyModelContainer=SiteId:{JsonSerializer.Serialize(ThirdPartyModelContainer)}");
             if (!ThirdPartyModelContainer.ContainsKey(sKet))
             {
                 var thirdPartyModel = _mainDbClient.QueryFirst<ThirdPartyModel>("Common_Tp_Get", new { TpId = tpId, SiteId = siteId });
                 if (thirdPartyModel != null)
                     ThirdPartyModelContainer.TryAdd(sKet, thirdPartyModel);
             }
-
+            _logger.LogInformation($"ThirdPartyModelContainer=SiteId:{JsonSerializer.Serialize(ThirdPartyModelContainer)}");
             return ThirdPartyModelContainer.ContainsKey(sKet) ? ThirdPartyModelContainer[sKet] : null;
         }
 
