@@ -61,6 +61,7 @@
         HaoLong = 58,
         NLC = 59,
         Amigo = 60,
+        GA = 63
     }
 
 }
