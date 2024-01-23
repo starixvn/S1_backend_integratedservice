@@ -2,11 +2,8 @@
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model;
-using Org.BouncyCastle.Crypto.Agreement.JPake;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
-using Microsoft.Extensions.DependencyInjection;
-using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 
 namespace ThirdPartySeamlessWallet.Controllers
 {
@@ -30,23 +27,26 @@ namespace ThirdPartySeamlessWallet.Controllers
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<GAConfig>(Tp.GA.ToString());
             _gABLL = provider.GetRequiredService<IGABLL>();
         }
-        public class GetBalanceReq
-        {
-            public string member_ref_id { get; set; }
-        }
         public class GetBalanceResp
         {
-            public decimal balance { get; set; }
+            public string balance { get; set; }
         }
         [HttpGet]
         [Route("[controller]/balance")]
-        public IActionResult GetBalance(GetBalanceReq req)
+        public IActionResult GetBalance(string member_ref_id)
         {
             string logName = $"{_thisTp}_GetBalance";
 
             try
             {
-                var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, req.member_ref_id);
+                var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, member_ref_id);
+
+                if(tpCustInfo == null)
+                {
+                    _log2File.Error($"tpCustInfo is null", logName);
+                    return BadRequest();
+                }
+
                 var thirdPartySetting = _siteConfigDic[tpCustInfo.SiteId];
 
                 Request.Headers.TryGetValue("Authorization", out var authorization);
@@ -57,8 +57,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return BadRequest();
                 }
 
-                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, req.member_ref_id, (int)GameType.GA_CockFighting);
-                GetBalanceResp result = new GetBalanceResp() { balance = tpCustBalance.Balance };
+                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, member_ref_id, (int)GameType.GA_CockFighting);
+                var result = new GetBalanceResp() { balance = tpCustBalance.Balance.ToString() };
                 return Ok(result);
             }
             catch (Exception ex)
@@ -71,7 +71,15 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             Bet = 0,
             TicketWinnings = 1,
-            TicketLoss = 2
+            TicketLoss = 2,
+            TicketDraw = 3,
+            TicketCancelation = 4,
+            TicketRollback = 6,
+            Void = 9,
+            Adjustment = 10,
+            Unsettle = 11,
+            Uncancel = 12,
+            Jackpot = 13
         }
 
         [HttpPost]
@@ -93,24 +101,26 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return BadRequest();
                 }
 
-                return req.type switch
+                var result = req.type switch
                 {
                     (int)Type.Bet => _gABLL.Bet(tpCustInfo, req),
-                    (int)Type.TicketWinnings => Transaction(tpUserName, req),
-                    (int)Type.TicketLoss => Rollback(tpUserName, req),
-                    _ => GetBalance(tpUserName, req)
+                    (int)Type.TicketWinnings => _gABLL.Payout(tpCustInfo, req),
+                    (int)Type.TicketLoss => _gABLL.Payout(tpCustInfo, req),
+                    (int)Type.TicketDraw => _gABLL.Payout(tpCustInfo, req),
+                    (int)Type.Uncancel => _gABLL.Bet(tpCustInfo, req),
+                    (int)Type.Void => _gABLL.RollBack(tpCustInfo, req),
+                    (int)Type.TicketRollback => _gABLL.RollBack(tpCustInfo, req),
+                    (int)Type.TicketCancelation => _gABLL.RollBack(tpCustInfo, req),
+                    _ => (int)GATransactionStatus.Fail
                 };
+
+                return result == (int)GATransactionStatus.Success ? Ok() : BadRequest();
             }
             catch (Exception ex)
             {
                 _log2File.Error($"Transfer\r\n{ex.ToString()}", logName);
                 return BadRequest();
             }
-        }
-
-        private IActionResult Bet(TransferReq req)
-        {
-
         }
     }
 }

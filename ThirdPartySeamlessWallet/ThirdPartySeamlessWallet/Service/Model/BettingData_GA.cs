@@ -22,7 +22,7 @@
         public int status { get; set; }
         public decimal win_loss_amount { get; set; }
         public decimal amount { get; set; }
-
+        public int TicketType { get; set; }
     }
 
     public class GAConfig : TpSiteConfig
@@ -49,7 +49,7 @@
         public string ante_amount { get; set; }
         public DateTime created_date_time { get; set; }
         public string currency_code { get; set; }
-        public string fight_number { get; set; }
+        public int fight_number { get; set; }
         public string match_day_code { get; set; }
         public string member_ref_id { get; set; }
         public DateTime modified_date_time { get; set; }
