@@ -104,6 +104,7 @@ namespace ThirdPartySeamlessWallet
             services.AddTransient<IBGBLL, BGBLL>();
             services.AddTransient<ITFGBLL, TFGBLL>();
             services.AddTransient<V8BLL>();
+            services.AddTransient<MaxGameBLL>();
             services.AddTransient<AmigoBLL>();
             services.AddTransient<IPNGBLL, PNGBLL>();
             services.AddTransient<IFaChaiBLL, FaChaiBLL>();
@@ -124,6 +125,7 @@ namespace ThirdPartySeamlessWallet
             services.AddOptionListByDB<ConfigObject>("SiteConfig_Get", new { ConfigGroup = "TP" });
             services.AddSiteConfig();
             services.AddSingleton<ConfigBLL>();
+            services.AddOptionListByDB<TpBetLimit>("Service_TpBetLimit_Get");
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
