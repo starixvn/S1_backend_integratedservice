@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using Newtonsoft.Json;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -26,7 +25,7 @@ namespace ThirdPartyWager.Service.DAL
             p.Add("loginID", wager.UserName);
             p.Add("dateTime", wager.DateTime.ToUniversalTime());
             p.Add("drawType", wager.DrawType);
-            p.Add("drawDate", wager.DateTime.ToUniversalTime());
+            p.Add("drawDate", wager.DateTime.Date.ToUniversalTime());
             p.Add("betNumber", wager.BetNumber);
             p.Add("betPosition", wager.BetPosition);
             p.Add("bet", wager.BetAmount);

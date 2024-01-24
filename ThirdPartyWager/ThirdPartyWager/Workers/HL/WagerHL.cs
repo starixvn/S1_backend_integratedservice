@@ -74,7 +74,11 @@ namespace ThirdPartyWager.Workers
                      
                      if (result)
                      {
-                         _ = await _wagerHLBLL.SetSettledWager();
+                         var tryResult = await _wagerHLBLL.TryGetSettledResult();
+                         if (tryResult)
+                         {
+                             _ = await _wagerHLBLL.SetSettledWager(unSettledWagerHLList);
+                         }
                      }
 
                      //有無單都要往前走 要不然會導致其餘排程問題出現
