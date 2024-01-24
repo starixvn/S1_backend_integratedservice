@@ -5,8 +5,8 @@ using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.Library;
-using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySeamlessWallet.Service.Model.MaxGame;
 
 namespace ThirdPartySeamlessWallet.Controllers
 {
@@ -26,7 +26,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             _logger = provider.GetRequiredService<ILogger<MaxGameController>>();
             _log2File = provider.GetRequiredService<Log2File>();
-            _maxGameBLL = provider.GetRequiredService<MaxGameBLL>();
+            _maxGameBLL = new MaxGameBLL(provider);
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tools = provider.GetRequiredService<Tools>();
             _thisTp = Tp.MaxGame;
@@ -34,60 +34,25 @@ namespace ThirdPartySeamlessWallet.Controllers
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MaxGameConfig>(_tpName);
         }
 
-        #region Request
-
-        public class CommonReq
-        {
-            public string Seq { get; set; }
-            public string TimeStamp { get; set; }
-        }
-
-        #endregion
-
-        #region Response
-
-        public class ErrorResp
-        {
-            public string Seq { get; set; }
-            public int ErrorCode { get; set; }
-            public string ErrorMessage { get; set; }
-            public string TimeStamp { get; set; }
-        }
-
-        #endregion
-
         [HttpPost]
         [Route("[controller]/{sitename}/GetPlayerInfo")]
         public async Task<dynamic> GetPlayerInfo(string sitename)
         {
             string logName = $"{_thisTp}_GetPlayerInfo";
-            ErrorResp getErrorResponse = new()
-            {
-                Seq = Guid.NewGuid().ToString(),
-                ErrorCode = (int)ErrorCodeOfMaxGame.OpSideUnspecifiedError,
-                ErrorMessage = ErrorCodeOfMaxGame.OpSideUnspecifiedError.GetEnumDescription(),
-                TimeStamp = _maxGameBLL.GetCurrentTimeFormat(),
-            };
+
             try
             {
-                IHeaderDictionary header = Request.Headers;
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-                string Content = await reader.ReadToEndAsync();
-
-                var getReq = JsonConvert.DeserializeObject<CommonReq>(Content);
-
-                var verifyHeader = false;
-                verifyHeader = CheckHeader(header, Content, sitename, logName);
+                string content = await reader.ReadToEndAsync();
+                
+                var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
-                    getErrorResponse.Seq = getReq.Seq;
-                    getErrorResponse.TimeStamp = _maxGameBLL.GetCurrentTimeFormat();
-                    getErrorResponse.ErrorCode = (int)ErrorCodeOfMaxGame.OpSideSignInvalid;
-                    getErrorResponse.ErrorMessage = ErrorCodeOfMaxGame.OpSideSignInvalid.GetEnumDescription();
-                    return getErrorResponse;
+                    var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
+                    return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
                 }
 
-                return _maxGameBLL.GetPlayerInfo(Content);
+                return _maxGameBLL.GetPlayerInfo(content);
             }
             catch (Exception ex)
             {
@@ -95,7 +60,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             _logger.LogInformation("6");
-            return getErrorResponse;
+            return new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
         }
 
         [HttpPost]
@@ -103,41 +68,27 @@ namespace ThirdPartySeamlessWallet.Controllers
         public async Task<dynamic> GetBalance(string sitename)
         {
             string logName = $"{_thisTp}_GetBalance";
-            ErrorResp getErrorResponse = new()
-            {
-                Seq = Guid.NewGuid().ToString(),
-                ErrorCode = (int)ErrorCodeOfMaxGame.OpSideUnspecifiedError,
-                ErrorMessage = ErrorCodeOfMaxGame.OpSideUnspecifiedError.GetEnumDescription(),
-                TimeStamp = _maxGameBLL.GetCurrentTimeFormat(),
-            };
 
             try
             {
-                IHeaderDictionary header = Request.Headers;
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-                string Content = await reader.ReadToEndAsync();
+                string content = await reader.ReadToEndAsync();
 
-                var getReq = JsonConvert.DeserializeObject<CommonReq>(Content);
-
-                var verifyHeader = false;
-                verifyHeader = CheckHeader(header, Content, sitename, logName);
+                var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
-                    getErrorResponse.Seq = getReq.Seq;
-                    getErrorResponse.TimeStamp = _maxGameBLL.GetCurrentTimeFormat();
-                    getErrorResponse.ErrorCode = (int)ErrorCodeOfMaxGame.OpSideSignInvalid;
-                    getErrorResponse.ErrorMessage = ErrorCodeOfMaxGame.OpSideSignInvalid.GetEnumDescription();
-                    return getErrorResponse;
+                    var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
+                    return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
                 }
 
-                return _maxGameBLL.GetBalance(Content);
+                return _maxGameBLL.GetBalance(content);
             }
             catch (Exception ex)
             {
                 _log2File.Error($"{ex.Message}", logName, ex);
             }
 
-            return getErrorResponse;
+            return new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
         }
 
         [HttpPost]
@@ -145,41 +96,28 @@ namespace ThirdPartySeamlessWallet.Controllers
         public async Task<dynamic> PlaceBet(string sitename)
         {
             string logName = $"{_thisTp}_PlaceBet";
-            ErrorResp getErrorResponse = new()
-            {
-                Seq = Guid.NewGuid().ToString(),
-                ErrorCode = (int)ErrorCodeOfMaxGame.OpSideUnspecifiedError,
-                ErrorMessage = ErrorCodeOfMaxGame.OpSideUnspecifiedError.GetEnumDescription(),
-                TimeStamp = _maxGameBLL.GetCurrentTimeFormat(),
-            };
 
             try
             {
-                IHeaderDictionary header = Request.Headers;
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-                string Content = await reader.ReadToEndAsync();
-
-                var getReq = JsonConvert.DeserializeObject<CommonReq>(Content);
+                string content = await reader.ReadToEndAsync();
 
                 var verifyHeader = false;
-                verifyHeader = CheckHeader(header, Content, sitename, logName);
+                verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
-                    getErrorResponse.Seq = getReq.Seq;
-                    getErrorResponse.TimeStamp = _maxGameBLL.GetCurrentTimeFormat();
-                    getErrorResponse.ErrorCode = (int)ErrorCodeOfMaxGame.OpSideSignInvalid;
-                    getErrorResponse.ErrorMessage = ErrorCodeOfMaxGame.OpSideSignInvalid.GetEnumDescription();
-                    return getErrorResponse;
+                    var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
+                    return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
                 }
 
-                return _maxGameBLL.PlaceBet(Content);
+                return _maxGameBLL.PlaceBet(content);
             }
             catch (Exception ex)
             {
                 _log2File.Error($"{ex.Message}", logName, ex);
             }
 
-            return getErrorResponse;
+            return new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
         }
 
         [HttpPost]
@@ -187,41 +125,27 @@ namespace ThirdPartySeamlessWallet.Controllers
         public async Task<dynamic> EndGame(string sitename)
         {
             string logName = $"{_thisTp}_EndGame";
-            ErrorResp getErrorResponse = new()
-            {
-                Seq = Guid.NewGuid().ToString(),
-                ErrorCode = (int)ErrorCodeOfMaxGame.OpSideUnspecifiedError,
-                ErrorMessage = ErrorCodeOfMaxGame.OpSideUnspecifiedError.GetEnumDescription(),
-                TimeStamp = _maxGameBLL.GetCurrentTimeFormat(),
-            };
 
             try
             {
-                IHeaderDictionary header = Request.Headers;
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-                string Content = await reader.ReadToEndAsync();
-
-                var getReq = JsonConvert.DeserializeObject<CommonReq>(Content);
-
-                var verifyHeader = false;
-                verifyHeader = CheckHeader(header, Content, sitename, logName);
+                string content = await reader.ReadToEndAsync();
+                
+                var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
-                    getErrorResponse.Seq = getReq.Seq;
-                    getErrorResponse.TimeStamp = _maxGameBLL.GetCurrentTimeFormat();
-                    getErrorResponse.ErrorCode = (int)ErrorCodeOfMaxGame.OpSideSignInvalid;
-                    getErrorResponse.ErrorMessage = ErrorCodeOfMaxGame.OpSideSignInvalid.GetEnumDescription();
-                    return getErrorResponse;
+                    var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
+                    return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
                 }
 
-                return _maxGameBLL.EndGame(Content);
+                return _maxGameBLL.EndGame(content);
             }
             catch (Exception ex)
             {
                 _log2File.Error($"{ex.Message}", logName, ex);
             }
 
-            return getErrorResponse;
+            return new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
         }
 
         [HttpPost]
@@ -229,41 +153,27 @@ namespace ThirdPartySeamlessWallet.Controllers
         public async Task<dynamic> VoidGame(string sitename)
         {
             string logName = $"{_thisTp}_VoidGame";
-            ErrorResp getErrorResponse = new()
-            {
-                Seq = Guid.NewGuid().ToString(),
-                ErrorCode = (int)ErrorCodeOfMaxGame.OpSideUnspecifiedError,
-                ErrorMessage = ErrorCodeOfMaxGame.OpSideUnspecifiedError.GetEnumDescription(),
-                TimeStamp = _maxGameBLL.GetCurrentTimeFormat(),
-            };
 
             try
             {
-                IHeaderDictionary header = Request.Headers;
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-                string Content = await reader.ReadToEndAsync();
+                string content = await reader.ReadToEndAsync();
 
-                var getReq = JsonConvert.DeserializeObject<CommonReq>(Content);
-
-                var verifyHeader = false;
-                verifyHeader = CheckHeader(header, Content, sitename, logName);
+                var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
-                    getErrorResponse.Seq = getReq.Seq;
-                    getErrorResponse.TimeStamp = _maxGameBLL.GetCurrentTimeFormat();
-                    getErrorResponse.ErrorCode = (int)ErrorCodeOfMaxGame.OpSideSignInvalid;
-                    getErrorResponse.ErrorMessage = ErrorCodeOfMaxGame.OpSideSignInvalid.GetEnumDescription();
-                    return getErrorResponse;
+                    var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
+                    return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
                 }
 
-                return _maxGameBLL.VoidGame(Content);
+                return _maxGameBLL.VoidGame(content);
             }
             catch (Exception ex)
             {
                 _log2File.Error($"{ex.Message}", logName, ex);
             }
 
-            return getErrorResponse;
+            return new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
         }
 
         [HttpPost]
@@ -272,41 +182,27 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             // Bonus 的部分MaxGame不支援 (如要使用要請測試)
             string logName = $"{_thisTp}_Bonus";
-            ErrorResp getErrorResponse = new()
-            {
-                Seq = Guid.NewGuid().ToString(),
-                ErrorCode = (int)ErrorCodeOfMaxGame.OpSideUnspecifiedError,
-                ErrorMessage = ErrorCodeOfMaxGame.OpSideUnspecifiedError.GetEnumDescription(),
-                TimeStamp = _maxGameBLL.GetCurrentTimeFormat(),
-            };
 
             try
             {
-                IHeaderDictionary header = Request.Headers;
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-                string Content = await reader.ReadToEndAsync();
+                string content = await reader.ReadToEndAsync();
 
-                var getReq = JsonConvert.DeserializeObject<CommonReq>(Content);
-
-                var verifyHeader = false;
-                verifyHeader = CheckHeader(header, Content, sitename, logName);
+                var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
-                    getErrorResponse.Seq = getReq.Seq;
-                    getErrorResponse.TimeStamp = _maxGameBLL.GetCurrentTimeFormat();
-                    getErrorResponse.ErrorCode = (int)ErrorCodeOfMaxGame.OpSideSignInvalid;
-                    getErrorResponse.ErrorMessage = ErrorCodeOfMaxGame.OpSideSignInvalid.GetEnumDescription();
-                    return getErrorResponse;
+                    var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
+                    return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
                 }
 
-                return _maxGameBLL.Bonus(Content);
+                return _maxGameBLL.Bonus(content);
             }
             catch (Exception ex)
             {
                 _log2File.Error($"{ex.Message}", logName, ex);
             }
 
-            return getErrorResponse;
+            return new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
         }
 
         private bool CheckHeader(IHeaderDictionary header, string param, string siteName, string logName)

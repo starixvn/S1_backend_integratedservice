@@ -4,6 +4,9 @@ using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySeamlessWallet.Service.Model.MaxGame;
+
+using GetBalanceResp = ThirdPartySeamlessWallet.Service.Model.MaxGame.GetBalanceResp;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
@@ -34,205 +37,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _log2File = provider.GetRequiredService<Log2File>();
         }
 
-        #region Model
-
-        private class Limit
-        {
-            public decimal Min { get; set; }
-            public decimal Max { get; set; }
-        }
-
-        #endregion
-
-        #region Response
-
-        public class ErrorResp
-        {
-            public string Seq { get; set; }
-            public int ErrorCode { get; set; }
-            public string ErrorMessage { get; set; }
-            public string TimeStamp { get; set; }
-        }
-
-
-        public class GetPlayerInfoResp
-        {
-            public string Seq { get; set; }
-            public int ErrorCode { get; set; }
-            public string ErrorMessage { get; set; }
-            public string TimeStamp { get; set; }
-            public Payload_GetPlayerInfoResp Payload { get; set; }
-        }
-
-        public class Payload_GetPlayerInfoResp
-        {
-            private decimal _Balance = 0m;
-            private decimal _MinBet = 0m;
-            private decimal _MaxBet = 0m;
-            public string OperatorCustId { get; set; }
-            public string UserName { get; set; }
-            public string CurrencyISO { get; set; }
-            public string Currency { get; set; }
-            public decimal Balance
-            {
-                get
-                {
-                    _ = decimal.TryParse(_Balance.ToString("N2"), out _Balance);
-                    return _Balance;
-                }
-                set
-                {
-                    _Balance = value;
-                }
-            }
-            public decimal MinBet
-            {
-                get
-                {
-                    _ = decimal.TryParse(_MinBet.ToString("N2"), out _MinBet);
-                    return _MinBet;
-                }
-                set
-                {
-                    _MinBet = value;
-                }
-            }
-            public decimal MaxBet
-            {
-                get
-                {
-                    _ = decimal.TryParse(_MaxBet.ToString("N2"), out _MaxBet);
-                    return _MaxBet;
-                }
-                set
-                {
-                    _MaxBet = value;
-                }
-            }
-            public string BetGroup { get; set; }
-            public string WalletSideToken { get; set; }
-        }
-
-        public class GetBalanceResp
-        {
-            public string Seq { get; set; }
-            public int ErrorCode { get; set; }
-            public string ErrorMessage { get; set; }
-            public string TimeStamp { get; set; }
-            public Payload_GetBalanceResp Payload { get; set; }
-        }
-
-        public class Payload_GetBalanceResp
-        {
-            private decimal _Balance = 0m;
-            public decimal Balance
-            {
-                get
-                {
-                    _ = decimal.TryParse(_Balance.ToString("N2"), out _Balance);
-                    return _Balance;
-                }
-                set
-                {
-                    _Balance = value;
-                }
-            }
-        }
-
-        public class PlaceBetResp
-        {
-            public string Seq { get; set; }
-            public int ErrorCode { get; set; }
-            public string ErrorMessage { get; set; }
-            public string TimeStamp { get; set; }
-            public Payload_PlaceBetResp Payload { get; set; }
-        }
-
-        public class Payload_PlaceBetResp
-        {
-            private decimal _Balance = 0m;
-            public string OperatorCustId { get; set; }
-            public decimal Balance
-            {
-                get
-                {
-                    _ = decimal.TryParse(_Balance.ToString("N2"), out _Balance);
-                    return _Balance;
-                }
-                set
-                {
-                    _Balance = value;
-                }
-            }
-            public List<BetDataSetList_MaxGame> BetDataSet { get; set; }
-        }
-
-        //public class BetDataSet_PlaceBetResp
-        //{
-        //    public string TicketNo { get; set; }
-        //    public string RefNo { get; set; }
-        //}
-
-        public class EndGameResp
-        {
-            public string Seq { get; set; }
-            public int ErrorCode { get; set; }
-            public string ErrorMessage { get; set; }
-            public string TimeStamp { get; set; }
-            public Payload_EndGameResp Payload { get; set; }
-        }
-
-        public class Payload_EndGameResp
-        {
-            private decimal _Balance = 0m;
-            public string OperatorCustId { get; set; }
-            public decimal Balance
-            {
-                get
-                {
-                    _ = decimal.TryParse(_Balance.ToString("N2"), out _Balance);
-                    return _Balance;
-                }
-                set
-                {
-                    _Balance = value;
-                }
-            }
-        }
-
-        public class VoidGameResp : EndGameResp
-        {
-        }
-
-        public class BonusResp
-        {
-            public string Seq { get; set; }
-            public int ErrorCode { get; set; }
-            public string ErrorMessage { get; set; }
-            public string TimeStamp { get; set; }
-            public Payload_BonusResp Payload { get; set; }
-        }
-
-        public class Payload_BonusResp
-        {
-            private decimal _Balance = 0m;
-            public string OperatorCustId { get; set; }
-            public decimal Balance
-            {
-                get
-                {
-                    _ = decimal.TryParse(_Balance.ToString("N2"), out _Balance);
-                    return _Balance;
-                }
-                set
-                {
-                    _Balance = value;
-                }
-            }
-            public string RefNo { get; set; }
-        }
-
-        #endregion
 
         #region Api Verify & Process
 
@@ -240,44 +44,24 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var getReq = JsonConvert.DeserializeObject<GetPlayerInfoReq_MaxGame>(request);
 
-            ErrorResp getErrorResponse = new()
-            {
-                Seq = Guid.NewGuid().ToString(),
-                ErrorCode = (int)ErrorCodeOfMaxGame.OpSideUnspecifiedError,
-                ErrorMessage = ErrorCodeOfMaxGame.OpSideUnspecifiedError.GetEnumDescription(),
-                TimeStamp = GetCurrentTimeFormat(),
-            };
-
             if (string.IsNullOrEmpty(getReq.Payload.WalletSideToken))
             {
-                getErrorResponse.ErrorCode = (int)ErrorCodeOfMaxGame.OpSideTokenInvalid;
-                getErrorResponse.ErrorMessage = ErrorCodeOfMaxGame.OpSideTokenInvalid.GetEnumDescription();
-                getErrorResponse.TimeStamp = GetCurrentTimeFormat();
-                return getErrorResponse;
+                return new BaseResp(ErrorCodeOfMaxGame.OpSideTokenInvalid);
             }
 
             if (!_authBLL.Authenticate(getReq.Payload.WalletSideToken, out TpCustInfoAuth tpCustInfoAuth))
             {
-                getErrorResponse.ErrorCode = (int)ErrorCodeOfMaxGame.OpSideTokenExpired;
-                getErrorResponse.ErrorMessage = ErrorCodeOfMaxGame.OpSideTokenExpired.GetEnumDescription();
-                getErrorResponse.TimeStamp = GetCurrentTimeFormat();
-                return getErrorResponse;
+                return new BaseResp(ErrorCodeOfMaxGame.OpSideTokenExpired);
             }
 
             var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, tpCustInfoAuth.TpUserName);
             if (tpCheck == null)
             {
-                getErrorResponse.ErrorCode = (int)ErrorCodeOfMaxGame.OpSideLoginFailed;
-                getErrorResponse.ErrorMessage = ErrorCodeOfMaxGame.OpSideLoginFailed.GetEnumDescription();
-                getErrorResponse.TimeStamp = GetCurrentTimeFormat();
-                return getErrorResponse;
+                return new BaseResp(ErrorCodeOfMaxGame.OpSideLoginFailed);
             }
             if (tpCheck.Locked)
             {
-                getErrorResponse.ErrorCode = (int)ErrorCodeOfMaxGame.OpSideAccountLocked;
-                getErrorResponse.ErrorMessage = ErrorCodeOfMaxGame.OpSideAccountLocked.GetEnumDescription();
-                getErrorResponse.TimeStamp = GetCurrentTimeFormat();
-                return getErrorResponse;
+                return new BaseResp(ErrorCodeOfMaxGame.OpSideAccountLocked);
             }
 
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, tpCustInfoAuth.TpUserName);
@@ -285,12 +69,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             // 取出對方支援的Min/Max預設設定
             var limit = JsonConvert.DeserializeObject<Limit>(_tpBetLimitData[tpCustInfo.CurrencyId].LimitGroup);
 
-            GetPlayerInfoResp response = new()
+            GetPlayerInfoResp response = new(ErrorCodeOfMaxGame.Success, getReq.Seq)
             {
-                Seq = getReq.Seq,
-                ErrorCode = (int)ErrorCodeOfMaxGame.Success,
-                ErrorMessage = ErrorCodeOfMaxGame.Success.GetEnumDescription(),
-                TimeStamp = GetCurrentTimeFormat(),
                 Payload = new Payload_GetPlayerInfoResp()
                 {
                     OperatorCustId = tpCustInfoAuth.TpUserName,
@@ -309,31 +89,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             var getReq = JsonConvert.DeserializeObject<GetBalanceReq_MaxGame>(request);
 
-            ErrorResp getErrorResponse = new()
-            {
-                Seq = Guid.NewGuid().ToString(),
-                ErrorCode = (int)ErrorCodeOfMaxGame.OpSideUnspecifiedError,
-                ErrorMessage = ErrorCodeOfMaxGame.OpSideUnspecifiedError.GetEnumDescription(),
-                TimeStamp = GetCurrentTimeFormat(),
-            };
-
             // check player account exist
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, getReq.Payload.OperatorCustId);
             if (tpCustInfo == null)
             {
-                getErrorResponse.ErrorCode = (int)ErrorCodeOfMaxGame.OpSideAccountNotExist;
-                getErrorResponse.ErrorMessage = ErrorCodeOfMaxGame.OpSideAccountNotExist.GetEnumDescription();
-                getErrorResponse.TimeStamp = GetCurrentTimeFormat();
-                return getErrorResponse;
+                return new BaseResp(ErrorCodeOfMaxGame.OpSideAccountNotExist);
             }
 
             var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, getReq.Payload.OperatorCustId, _gameType);
-            GetBalanceResp response = new()
+            GetBalanceResp response = new(ErrorCodeOfMaxGame.Success, getReq.Seq)
             {
-                Seq = getReq.Seq,
-                ErrorCode = (int)ErrorCodeOfMaxGame.Success,
-                ErrorMessage = ErrorCodeOfMaxGame.Success.GetEnumDescription(),
-                TimeStamp = GetCurrentTimeFormat(),
                 Payload = new Payload_GetBalanceResp()
                 {
                     Balance = _tools.Floor(tpCustBalance.Balance, 2),
@@ -347,28 +112,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             string logName = $"{_thisTp}_PlaceBet";
             var getReq = JsonConvert.DeserializeObject<BettingData_MaxGame>(request);
 
-            ErrorResp getErrorResponse = new()
-            {
-                Seq = Guid.NewGuid().ToString(),
-                ErrorCode = (int)ErrorCodeOfMaxGame.OpSideUnspecifiedError,
-                ErrorMessage = ErrorCodeOfMaxGame.OpSideUnspecifiedError.GetEnumDescription(),
-                TimeStamp = GetCurrentTimeFormat(),
-            };
-
             var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, getReq.Payload.OperatorCustId);
             if (tpCheck == null)
             {
-                getErrorResponse.ErrorCode = (int)ErrorCodeOfMaxGame.OpSideLoginFailed;
-                getErrorResponse.ErrorMessage = ErrorCodeOfMaxGame.OpSideLoginFailed.GetEnumDescription();
-                getErrorResponse.TimeStamp = GetCurrentTimeFormat();
-                return getErrorResponse;
+                return new BaseResp(ErrorCodeOfMaxGame.OpSideLoginFailed);
             }
             if (tpCheck.Locked)
             {
-                getErrorResponse.ErrorCode = (int)ErrorCodeOfMaxGame.OpSideAccountLocked;
-                getErrorResponse.ErrorMessage = ErrorCodeOfMaxGame.OpSideAccountLocked.GetEnumDescription();
-                getErrorResponse.TimeStamp = GetCurrentTimeFormat();
-                return getErrorResponse;
+                return new BaseResp(ErrorCodeOfMaxGame.OpSideAccountLocked);
             }
 
             int result = PlaceBetPK_MaxGame(getReq, out decimal tpAffterAmount, out List<BetDataSetList_MaxGame> refData);
@@ -379,12 +130,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, getReq.Payload.OperatorCustId, _gameType);
                     tpAffterAmount = tpCustBalance.Balance;
                 }
-                PlaceBetResp response = new()
+                PlaceBetResp response = new(ErrorCodeOfMaxGame.Success, getReq.Seq)
                 {
-                    Seq = getReq.Seq,
-                    ErrorCode = (int)ErrorCodeOfMaxGame.Success,
-                    ErrorMessage = ErrorCodeOfMaxGame.Success.GetEnumDescription(),
-                    TimeStamp = GetCurrentTimeFormat(),
                     Payload = new Payload_PlaceBetResp()
                     {
                         OperatorCustId = getReq.Payload.OperatorCustId,
@@ -398,12 +145,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             else if (result == -1)
             {
                 var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, getReq.Payload.OperatorCustId, _gameType);
-                PlaceBetResp response = new()
+                PlaceBetResp response = new(ErrorCodeOfMaxGame.OpSideDuplicateRequest, getReq.Seq)
                 {
-                    Seq = getReq.Seq,
-                    ErrorCode = (int)ErrorCodeOfMaxGame.OpSideDuplicateRequest,
-                    ErrorMessage = ErrorCodeOfMaxGame.OpSideDuplicateRequest.GetEnumDescription(),
-                    TimeStamp = GetCurrentTimeFormat(),
                     Payload = new Payload_PlaceBetResp()
                     {
                         OperatorCustId = getReq.Payload.OperatorCustId,
@@ -415,12 +158,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             else if (tpAffterAmount < 0)
             {
-                PlaceBetResp response = new()
+                PlaceBetResp response = new(ErrorCodeOfMaxGame.OpSidePlayerHasInsufficientFunds, getReq.Seq)
                 {
-                    Seq = getReq.Seq,
-                    ErrorCode = (int)ErrorCodeOfMaxGame.OpSidePlayerHasInsufficientFunds,
-                    ErrorMessage = ErrorCodeOfMaxGame.OpSidePlayerHasInsufficientFunds.GetEnumDescription(),
-                    TimeStamp = GetCurrentTimeFormat(),
                     Payload = new Payload_PlaceBetResp()
                     {
                         OperatorCustId = getReq.Payload.OperatorCustId,
@@ -432,21 +171,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             _log2File.Error($"result={result}", logName);
-            return _tools.ToJson(getErrorResponse);
+            return _tools.ToJson(new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError));
         }
 
         public dynamic EndGame(string request)
         {
             string logName = $"{_thisTp}_EndGame";
             var getReq = JsonConvert.DeserializeObject<PayoutData_MaxGame>(request);
-
-            ErrorResp getErrorResponse = new()
-            {
-                Seq = Guid.NewGuid().ToString(),
-                ErrorCode = (int)ErrorCodeOfMaxGame.OpSideUnspecifiedError,
-                ErrorMessage = ErrorCodeOfMaxGame.OpSideUnspecifiedError.GetEnumDescription(),
-                TimeStamp = GetCurrentTimeFormat(),
-            };
 
             int result = PayoutPK_MaxGame(getReq, out decimal tpAffterAmount);
             if (result > 0)
@@ -457,12 +188,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     tpAffterAmount = tpCustBalance.Balance;
                 }
 
-                EndGameResp response = new()
+                EndGameResp response = new(ErrorCodeOfMaxGame.Success, getReq.Seq)
                 {
-                    Seq = getReq.Seq,
-                    ErrorCode = (int)ErrorCodeOfMaxGame.Success,
-                    ErrorMessage = ErrorCodeOfMaxGame.Success.GetEnumDescription(),
-                    TimeStamp = GetCurrentTimeFormat(),
                     Payload = new Payload_EndGameResp()
                     {
                         OperatorCustId = getReq.Payload.OperatorCustId,
@@ -474,12 +201,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             else if (result == -1)
             {
                 var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, getReq.Payload.OperatorCustId, _gameType);
-                EndGameResp response = new()
+                EndGameResp response = new(ErrorCodeOfMaxGame.OpSideDuplicateRequest, getReq.Seq)
                 {
-                    Seq = getReq.Seq,
-                    ErrorCode = (int)ErrorCodeOfMaxGame.OpSideDuplicateRequest,
-                    ErrorMessage = ErrorCodeOfMaxGame.OpSideDuplicateRequest.GetEnumDescription(),
-                    TimeStamp = GetCurrentTimeFormat(),
                     Payload = new Payload_EndGameResp()
                     {
                         OperatorCustId = getReq.Payload.OperatorCustId,
@@ -490,31 +213,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             else if (result == -2)
             {
-                getErrorResponse = new()
-                {
-                    Seq = Guid.NewGuid().ToString(),
-                    ErrorCode = (int)ErrorCodeOfMaxGame.OpSideTransactionFailed,
-                    ErrorMessage = ErrorCodeOfMaxGame.OpSideTransactionFailed.GetEnumDescription(),
-                    TimeStamp = GetCurrentTimeFormat(),
-                };
+                return _tools.ToJson(new BaseResp(ErrorCodeOfMaxGame.OpSideTransactionFailed));
             }
 
             _log2File.Error($"result={result}", logName);
-            return _tools.ToJson(getErrorResponse);
+            return _tools.ToJson(new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError));
         }
 
         public dynamic VoidGame(string request)
         {
             string logName = $"{_thisTp}_VoidGame";
             var getReq = JsonConvert.DeserializeObject<CancelBetData_MaxGame>(request);
-
-            ErrorResp getErrorResponse = new()
-            {
-                Seq = Guid.NewGuid().ToString(),
-                ErrorCode = (int)ErrorCodeOfMaxGame.OpSideUnspecifiedError,
-                ErrorMessage = ErrorCodeOfMaxGame.OpSideUnspecifiedError.GetEnumDescription(),
-                TimeStamp = GetCurrentTimeFormat(),
-            };
 
             int result = CancelBetPK_MaxGame(getReq, out decimal tpAffterAmount);
             if (result > 0)
@@ -525,12 +234,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     tpAffterAmount = tpCustBalance.Balance;
                 }
 
-                VoidGameResp response = new()
+                VoidGameResp response = new(ErrorCodeOfMaxGame.Success, getReq.Seq)
                 {
-                    Seq = getReq.Seq,
-                    ErrorCode = (int)ErrorCodeOfMaxGame.Success,
-                    ErrorMessage = ErrorCodeOfMaxGame.Success.GetEnumDescription(),
-                    TimeStamp = GetCurrentTimeFormat(),
                     Payload = new Payload_EndGameResp()
                     {
                         OperatorCustId = getReq.Payload.OperatorCustId,
@@ -542,12 +247,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             else if (result == -1)
             {
                 var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, getReq.Payload.OperatorCustId, _gameType);
-                VoidGameResp response = new()
+                VoidGameResp response = new(ErrorCodeOfMaxGame.OpSideDuplicateRequest, getReq.Seq)
                 {
-                    Seq = getReq.Seq,
-                    ErrorCode = (int)ErrorCodeOfMaxGame.OpSideDuplicateRequest,
-                    ErrorMessage = ErrorCodeOfMaxGame.OpSideDuplicateRequest.GetEnumDescription(),
-                    TimeStamp = GetCurrentTimeFormat(),
                     Payload = new Payload_EndGameResp()
                     {
                         OperatorCustId = getReq.Payload.OperatorCustId,
@@ -558,21 +259,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             _log2File.Error($"result={result}", logName);
-            return _tools.ToJson(getErrorResponse);
+            return _tools.ToJson(new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError));
         }
 
         public dynamic Bonus(string request)
         {
             string logName = $"{_thisTp}_Bonus";
             var getReq = JsonConvert.DeserializeObject<BonusData_MaxGame>(request);
-
-            ErrorResp getErrorResponse = new()
-            {
-                Seq = Guid.NewGuid().ToString(),
-                ErrorCode = (int)ErrorCodeOfMaxGame.OpSideUnspecifiedError,
-                ErrorMessage = ErrorCodeOfMaxGame.OpSideUnspecifiedError.GetEnumDescription(),
-                TimeStamp = GetCurrentTimeFormat(),
-            };
 
             int result = BonusPK_MaxGame(getReq, out decimal tpAffterAmount, out string refNo);
             if (result > 0)
@@ -583,12 +276,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     tpAffterAmount = tpCustBalance.Balance;
                 }
 
-                BonusResp response = new()
+                BonusResp response = new(ErrorCodeOfMaxGame.Success, getReq.Seq)
                 {
-                    Seq = getReq.Seq,
-                    ErrorCode = (int)ErrorCodeOfMaxGame.Success,
-                    ErrorMessage = ErrorCodeOfMaxGame.Success.GetEnumDescription(),
-                    TimeStamp = GetCurrentTimeFormat(),
                     Payload = new Payload_BonusResp()
                     {
                         OperatorCustId = getReq.Payload.OperatorCustId,
@@ -601,12 +290,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             else if (result == -1)
             {
                 var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, getReq.Payload.OperatorCustId, _gameType);
-                BonusResp response = new()
+                BonusResp response = new(ErrorCodeOfMaxGame.OpSideDuplicateRequest, getReq.Seq)
                 {
-                    Seq = getReq.Seq,
-                    ErrorCode = (int)ErrorCodeOfMaxGame.OpSideDuplicateRequest,
-                    ErrorMessage = ErrorCodeOfMaxGame.OpSideDuplicateRequest.GetEnumDescription(),
-                    TimeStamp = GetCurrentTimeFormat(),
                     Payload = new Payload_BonusResp()
                     {
                         OperatorCustId = getReq.Payload.OperatorCustId,
@@ -617,7 +302,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             _log2File.Error($"result={result}", logName);
-            return _tools.ToJson(getErrorResponse);
+            return _tools.ToJson(new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError));
         }
 
         #endregion
@@ -759,10 +444,5 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         }
 
         #endregion
-
-        public string GetCurrentTimeFormat()
-        {
-            return DateTime.UtcNow.ToString("O");
-        }
     }
 }
