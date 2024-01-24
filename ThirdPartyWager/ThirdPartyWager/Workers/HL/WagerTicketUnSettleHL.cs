@@ -39,11 +39,13 @@ public class WagerTicketUnSettleHL : BackgroundService
             var ticketKey = _thirdPartyBLL.GetAllSiteTicketKey(workerType, (int)_tp);
             _logger.LogInformation($"Start: {taskProperty} | SQ is :{ticketKey} | {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm.ss.fff}");
                 
-            var unSettleList = _wagerHLService.GetHLBetUnSettledList(ticketKey);    
+            var wagerList = _wagerHLService.GetHLBetUnSettledList(ticketKey);
+
+            var getUnSettledList = wagerList.Where(wager => wager.SettleFlag == 0).ToList();
                 
-            if (unSettleList.Any())
+            if (getUnSettledList.Any())
             {
-                _thirdPartyBLL.SetAllSiteTicketKey(workerType, (int)_tp, unSettleList.FirstOrDefault().TicketKey);
+                _thirdPartyBLL.SetAllSiteTicketKey(workerType, (int)_tp, getUnSettledList.FirstOrDefault().TicketKey);
             }
             else
             {
