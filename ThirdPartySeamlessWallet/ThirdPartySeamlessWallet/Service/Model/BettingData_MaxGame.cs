@@ -1,6 +1,8 @@
-﻿using ThirdPartySeamlessWallet.Service.Model.enums;
+﻿using ThirdPartySeamlessWallet.Extensions;
+using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySeamlessWallet.Service.Model.MaxGame;
 
-namespace ThirdPartySeamlessWallet.Service.Model
+namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
 {
     public class GetPlayerInfoReq_MaxGame
     {
@@ -193,6 +195,215 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class BetDataSetList_MaxGame
     {
         public string TicketNo { get; set; }
+        public string RefNo { get; set; }
+    }
+
+    public class BaseResp
+    {
+        public string Seq { get; set; }
+        public int ErrorCode { get; set; }
+        public string ErrorMessage { get; set; }
+        public string TimeStamp { get; set; }
+
+        public BaseResp(ErrorCodeOfMaxGame errorCode)
+        {
+            Seq = Guid.NewGuid().ToString();
+            ErrorCode = (int)errorCode;
+            ErrorMessage = errorCode.GetEnumDescription();
+            TimeStamp = DateTime.UtcNow.ToString("O");
+        }
+
+        public BaseResp(ErrorCodeOfMaxGame errorCode, string seq)
+        {
+            Seq = seq;
+            ErrorCode = (int)errorCode;
+            ErrorMessage = errorCode.GetEnumDescription();
+            TimeStamp = DateTime.UtcNow.ToString("O");
+        }
+    }
+
+    public class CommonReq
+    {
+        public string Seq { get; set; }
+        public string TimeStamp { get; set; }
+    }
+
+    public class Limit
+    {
+        public decimal Min { get; set; }
+        public decimal Max { get; set; }
+    }
+
+
+    public class GetPlayerInfoResp : BaseResp
+    {
+        public GetPlayerInfoResp(ErrorCodeOfMaxGame errorCode, string seq) : base(errorCode, seq)
+        {
+        }
+
+        public Payload_GetPlayerInfoResp Payload { get; set; }
+    }
+
+    public class Payload_GetPlayerInfoResp
+    {
+        private decimal _Balance = 0m;
+        private decimal _MinBet = 0m;
+        private decimal _MaxBet = 0m;
+        public string OperatorCustId { get; set; }
+        public string UserName { get; set; }
+        public string CurrencyISO { get; set; }
+        public string Currency { get; set; }
+        public decimal Balance
+        {
+            get
+            {
+                _ = decimal.TryParse(_Balance.ToString("N2"), out _Balance);
+                return _Balance;
+            }
+            set
+            {
+                _Balance = value;
+            }
+        }
+        public decimal MinBet
+        {
+            get
+            {
+                _ = decimal.TryParse(_MinBet.ToString("N2"), out _MinBet);
+                return _MinBet;
+            }
+            set
+            {
+                _MinBet = value;
+            }
+        }
+        public decimal MaxBet
+        {
+            get
+            {
+                _ = decimal.TryParse(_MaxBet.ToString("N2"), out _MaxBet);
+                return _MaxBet;
+            }
+            set
+            {
+                _MaxBet = value;
+            }
+        }
+        public string BetGroup { get; set; }
+        public string WalletSideToken { get; set; }
+    }
+
+    public class GetBalanceResp : BaseResp
+    {
+        public GetBalanceResp(ErrorCodeOfMaxGame errorCode, string seq) : base(errorCode, seq)
+        {
+        }
+        public Payload_GetBalanceResp Payload { get; set; }
+    }
+
+    public class Payload_GetBalanceResp
+    {
+        private decimal _Balance = 0m;
+        public decimal Balance
+        {
+            get
+            {
+                _ = decimal.TryParse(_Balance.ToString("N2"), out _Balance);
+                return _Balance;
+            }
+            set
+            {
+                _Balance = value;
+            }
+        }
+    }
+
+    public class PlaceBetResp : BaseResp
+    {
+        public PlaceBetResp(ErrorCodeOfMaxGame errorCode, string seq) : base(errorCode, seq)
+        {
+        }
+
+        public Payload_PlaceBetResp Payload { get; set; }
+    }
+
+    public class Payload_PlaceBetResp
+    {
+        private decimal _Balance = 0m;
+        public string OperatorCustId { get; set; }
+        public decimal Balance
+        {
+            get
+            {
+                _ = decimal.TryParse(_Balance.ToString("N2"), out _Balance);
+                return _Balance;
+            }
+            set
+            {
+                _Balance = value;
+            }
+        }
+        public List<BetDataSetList_MaxGame> BetDataSet { get; set; }
+    }
+
+
+    public class EndGameResp : BaseResp
+    {
+        public EndGameResp(ErrorCodeOfMaxGame errorCode, string seq) : base(errorCode, seq)
+        {
+        }
+        public Payload_EndGameResp Payload { get; set; }
+    }
+
+    public class Payload_EndGameResp
+    {
+        private decimal _Balance = 0m;
+        public string OperatorCustId { get; set; }
+        public decimal Balance
+        {
+            get
+            {
+                _ = decimal.TryParse(_Balance.ToString("N2"), out _Balance);
+                return _Balance;
+            }
+            set
+            {
+                _Balance = value;
+            }
+        }
+    }
+
+    public class VoidGameResp : EndGameResp
+    {
+        public VoidGameResp(ErrorCodeOfMaxGame errorCode, string seq) : base(errorCode, seq)
+        {
+        }
+    }
+
+    public class BonusResp : BaseResp
+    {
+        public BonusResp(ErrorCodeOfMaxGame errorCode, string seq) : base(errorCode, seq)
+        {
+        }
+        public Payload_BonusResp Payload { get; set; }
+    }
+
+    public class Payload_BonusResp
+    {
+        private decimal _Balance = 0m;
+        public string OperatorCustId { get; set; }
+        public decimal Balance
+        {
+            get
+            {
+                _ = decimal.TryParse(_Balance.ToString("N2"), out _Balance);
+                return _Balance;
+            }
+            set
+            {
+                _Balance = value;
+            }
+        }
         public string RefNo { get; set; }
     }
 }
