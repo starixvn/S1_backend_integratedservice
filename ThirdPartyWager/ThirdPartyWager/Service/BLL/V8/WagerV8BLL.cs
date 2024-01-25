@@ -52,7 +52,7 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> ExecWagerRedoWorker(int type, int timeRange, string tpCurrencyId)
         {
-            var wokerTime = GetWorkerTime(type, 1);
+            var wokerTime = GetRedoWorkerTime(type, 1, tpCurrencyId);
             var quick = CheckQuick(wokerTime, 120);
             var time = _dateTimeHelper.GetTimeByHour(timeRange, _timeZone, _timeFormat, wokerTime);
 
@@ -62,8 +62,10 @@ namespace ThirdPartyWager.Service.BLL
                 var result = await GetWagersAsync(time, tpCurrencyId, true);
                 if (result)
                 {
-                    _thirdPartyBLL.SetThirdPartyTimer(_tpId, type, time.endUnix);
+                    _thirdPartyBLL.SetThirdPartyTimerByCurrency(_tpId, type, time.endUnix, tpCurrencyId);
                 }
+                // 拉单过于频繁(两次拉单时间间隔必须大于 60 秒)
+                Thread.Sleep(67000);
             }
 
             return quick;
@@ -182,6 +184,12 @@ namespace ThirdPartyWager.Service.BLL
         {
             var lastTime = _thirdPartyBLL.GetThirdPartyTimer(_tpId, type);
             return (lastTime == null) ? DateTime.Now.AddHours(-7) : lastTime.StartTime.AddSeconds(vary);
+        }
+
+        private DateTime GetRedoWorkerTime(int type, int vary, string tpCurrencyId)
+        {
+            var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(_tpId, type, tpCurrencyId);
+            return (lastTime == null) ? DateTime.Now.AddHours(-3) : lastTime.StartTime.AddSeconds(vary);
         }
 
         private bool CheckQuick(DateTime workTime, int excess)
