@@ -333,7 +333,6 @@ namespace ThirdPartyWager.Extensions
 
             services.AddSingleton<WagerV8BLL>();
             services.AddSingleton<ApiV8BLL>();
-            services.AddSingleton<WagerRedoV8BLL>();
             services.AddSingleton<FinanceV8BLL>();
 
             services.AddHostedService<WagerV8>();

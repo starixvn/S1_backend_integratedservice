@@ -1,5 +1,4 @@
 ﻿using Serilog.Context;
-
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -7,10 +6,10 @@ namespace ThirdPartyWager.Workers
 {
     public class WagerRedoV8 : BackgroundService
     {
+        private Timer timer;
         private readonly ILogger<WagerRedoV8> _logger;
         private readonly WagerV8BLL _wagerV8BLL;
         private readonly CommonBLL _commonBLL;
-        private Timer timer;
         private readonly int tpType = (int)WagerTimerType.RedoWager;
         private readonly int timeRange = 60; //in minutes
         private readonly int quickTime = 75; // in seconds
