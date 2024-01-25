@@ -111,6 +111,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     (int)Type.Void => _gABLL.RollBack(tpCustInfo, req),
                     (int)Type.TicketRollback => _gABLL.RollBack(tpCustInfo, req),
                     (int)Type.TicketCancelation => _gABLL.RollBack(tpCustInfo, req),
+                    (int)Type.Jackpot => _gABLL.Jackpot(tpCustInfo, req),
                     _ => (int)GATransactionStatus.Fail
                 };
 

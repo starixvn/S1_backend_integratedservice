@@ -5,22 +5,22 @@
         public string id { get; set; }
         public string member_ref_id { get; set; }
         public int type { get; set; }
-        public string account_id { get; set; }
-        public string arena_code { get; set; }
-        public decimal bet_amount { get; set; }
-        public decimal ticket_amount { get; set; }
-        public decimal ante_amount { get; set; }
-        public DateTime created_date_time { get; set; }
-        public int fight_number { get; set; }
-        public string match_day_code { get; set; }
-        public DateTime modified_date_time { get; set; }
-        public decimal odds { get; set; }
-        public string result { get; set; }
-        public string selection { get; set; }
-        public DateTime? settled_date_time { get; set; }
-        public string sid { get; set; }
-        public int status { get; set; }
-        public decimal win_loss_amount { get; set; }
+        public string account_id { get; set; } = string.Empty;
+        public string arena_code { get; set; } = string.Empty;
+        public decimal bet_amount { get; set; } = 0;
+        public decimal ticket_amount { get; set; } = 0;
+        public decimal ante_amount { get; set; } = 0;
+        public DateTime created_date_time { get; set; } = DateTime.Now;
+        public int fight_number { get; set; } = 0;
+        public string match_day_code { get; set; } = string.Empty;
+        public DateTime modified_date_time { get; set; } = DateTime.Now;
+        public decimal odds { get; set; } = 0;
+        public string result { get; set; } = string.Empty;
+        public string selection { get; set; } = string.Empty;
+        public DateTime? settled_date_time { get; set; } = DateTime.Now;
+        public string sid { get; set; } = string.Empty;
+        public int status { get; set; } = 0;
+        public decimal win_loss_amount { get; set; } = 0;
         public decimal amount { get; set; }
         public int TicketType { get; set; }
     }

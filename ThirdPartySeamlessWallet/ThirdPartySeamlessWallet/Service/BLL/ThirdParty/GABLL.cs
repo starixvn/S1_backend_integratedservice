@@ -6,6 +6,7 @@ using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using static ThirdPartySeamlessWallet.Controllers.EBetController;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
@@ -152,6 +153,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 bettingData.ticket_amount *= tpCurrency.ExchangeRate;
                 bettingData.ante_amount *= tpCurrency.ExchangeRate;
                 bettingData.win_loss_amount *= tpCurrency.ExchangeRate;
+                bettingData.amount *= tpCurrency.ExchangeRate;
             }
 
             tempResult = _partitionService.Execute(partitionTime, "Service_Bettrans_GA_Ins", bettingData, trans);
@@ -235,6 +237,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 TicketType = (int)BettransType.CancelBet
             };
 
+            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp.GA, tpCustInfo.CurrencyId);
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingData.bet_amount *= tpCurrency.ExchangeRate;
+                bettingData.ticket_amount *= tpCurrency.ExchangeRate;
+                bettingData.ante_amount *= tpCurrency.ExchangeRate;
+                bettingData.win_loss_amount *= tpCurrency.ExchangeRate;
+                bettingData.amount *= tpCurrency.ExchangeRate;
+            }
+
             tempResult = _partitionService.Execute(partitionTime, "Service_Bettrans_GA_Ins", bettingData, trans);
 
             if (tempResult > 0)
@@ -258,6 +270,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             
             if (tempResult > 0)
             {
+                _ = _tpUnsettleService.InsertTpUnsettle(Tp.GA, GameType.GA_CockFighting, bettingData.sid, trans);
                 _mainDbClient.CommitAndDisposeConnection(conn, trans);
             }
             else
@@ -312,6 +325,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 TicketType = (int)BettransType.Reserve
             };
 
+            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp.GA, tpCustInfo.CurrencyId);
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingData.bet_amount *= tpCurrency.ExchangeRate;
+                bettingData.ticket_amount *= tpCurrency.ExchangeRate;
+                bettingData.ante_amount *= tpCurrency.ExchangeRate;
+                bettingData.win_loss_amount *= tpCurrency.ExchangeRate;
+                bettingData.amount *= tpCurrency.ExchangeRate;
+            }
+
             tempResult = _partitionService.Execute(partitionTime, "Service_Bettrans_GA_Ins", bettingData, trans);
 
             if(tempResult > 0)
@@ -336,6 +359,74 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (tempResult > 0)
             {
                 _ = _tpUnsettleService.InsertTpUnsettle(Tp.GA, GameType.GA_CockFighting, bettingData.sid, trans);
+                _mainDbClient.CommitAndDisposeConnection(conn, trans);
+            }
+            else
+            {
+                _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+            }
+
+            return tempResult > 0 ? (int)GATransactionStatus.Success : (int)GATransactionStatus.Fail;
+        }
+
+        public int Jackpot(TpCustInfo tpCustInfo, GATransferReq reqData)
+        {
+            var tempResult = 0;
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            var trans = conn.BeginTransaction();
+
+            int bonusId = 0;
+            decimal afterAmount = 0;
+            var partitionTime = DateTime.Now;
+
+            var check = _partitionService.Query<BettingData_GA>(partitionTime, "Service_Bettrans_GA_Check", new { id = reqData.id });
+
+            //檢查是否重複
+            if (check.Any())
+            {
+                return (int)GATransactionStatus.Fail;
+            }
+
+            var bettingData = new BettingData_GA()
+            {
+                id = reqData.id,
+                member_ref_id = reqData.member_ref_id,
+                type = reqData.type,
+                amount = Convert.ToDecimal(reqData.amount),
+                TicketType = (int)BettransType.Jackpot
+            };
+
+            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp.GA, tpCustInfo.CurrencyId);
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingData.amount *= tpCurrency.ExchangeRate;
+            }
+
+            tempResult = _partitionService.Execute(partitionTime, "Service_Bettrans_GA_Ins", bettingData, trans);
+
+            if (tempResult > 0)
+            {
+                tempResult = _settledService.PayoutV2(
+                        tpCustInfo,
+                        bettingData.amount,
+                        (int)Tp.GA,
+                        bettingData.id,
+                        (int)GameType.GA_CockFighting,
+                        TpCategory.Cockfighting,
+                        bettingData.id,
+                        TransType.Prize,
+                        null,
+                        out afterAmount,
+                        $"Payout",
+                        out bonusId,
+                        conn,
+                        trans);
+            }
+
+            if (tempResult > 0)
+            {
+                _ = _tpUnsettleService.InsertTpUnsettle(Tp.GA, GameType.GA_CockFighting, bettingData.id, trans);
                 _mainDbClient.CommitAndDisposeConnection(conn, trans);
             }
             else

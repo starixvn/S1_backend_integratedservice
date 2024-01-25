@@ -8,5 +8,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface
         int Payout(TpCustInfo tpCustInfo, GATransferReq reqData);
         int RollBack(TpCustInfo tpCustInfo, GATransferReq reqData);
         int Unsettle(TpCustInfo tpCustInfo, GATransferReq reqData);
+        int Jackpot(TpCustInfo tpCustInfo, GATransferReq reqData);
     }
 }
