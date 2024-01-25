@@ -41,6 +41,7 @@ namespace ThirdPartyWager.Workers
                 var TpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
                 foreach (var item in TpCurrencyList)
                 {
+                    _logger.LogWarning(item.TpCurrencyId);
                     quick = await _wagerV8BLL.ExecWagerRedoWorker(tpType, timeRange, item.TpCurrencyId);
                     if (!isFast && quick) isFast = true;
                 }
@@ -51,7 +52,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                var dueTimeSpan = quick ? TimeSpan.FromSeconds(quickTime) : TimeSpan.FromHours(runTime);
+                var dueTimeSpan = isFast ? TimeSpan.FromSeconds(quickTime) : TimeSpan.FromHours(runTime);
                 timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
