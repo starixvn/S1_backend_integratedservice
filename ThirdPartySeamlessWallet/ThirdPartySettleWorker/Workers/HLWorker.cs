@@ -55,7 +55,7 @@ namespace ThirdPartySettleWorker.Workers
             var gameType = GameType.HaoLong_4D;
             var tpCategory = TpCategory.Lottery;
             var logName = $"Settle_HaoLong";
-            var getSP = $"Service_TpWager_HL_Settle_Get";
+            var getSP = $"Service_TpWager_HL_Settle_Get_V2";
             var setSP = $"Service_TpWager_HL_Settle_Set";
             var dueTimeSpan = TimeSpan.FromMinutes(15);
             
@@ -66,28 +66,24 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
                 }
-
+                
                 //forContinue
                 forContinue = tpUnsettleList.Count() == 200;
-                
-                var getUnsettledList = _tpUnSettledBLL.GetTpUnsettleData<SettleDataHL>(getSP, new {}, DataBase.Wager);
-                if(getUnsettledList == null || !getUnsettledList.Any())
+
+                foreach (var wager in tpUnsettleList)
                 {
-                    throw new UnsettleNotFoundException($"{_tpName} - HaoLong No Unsettled Data.");
-                }
-                
-                var matchTrans = tpUnsettleList
-                    .Where(tp => getUnsettledList.Any(gu => gu.TransId == tp.TransId))
-                    .Select(tp => tp.TransId)
-                    .ToList();
-                
-                foreach (var transId in matchTrans)
-                {
+                    
+                    var getUnsettledList = _tpUnSettledBLL.GetTpUnsettleData<SettleDataHL>(getSP, new { wager.TransId }, DataBase.Wager);
+                    if(getUnsettledList == null || !getUnsettledList.Any())
+                    {
+                        throw new UnsettleNotFoundException($"{_tpName} - HaoLong Can fount TransId : {wager.TransId}.");
+                    }
+                    
                     try
                     {
                         var betRecordInfo = new BetRecordInfo();
                         
-                        var unsettled = getUnsettledList.FirstOrDefault(x => x.TransId == transId);
+                        var unsettled = getUnsettledList.FirstOrDefault(x => x.TransId == wager.TransId);
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
                         
@@ -147,7 +143,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             if (transType != SettlementType.UnSettled)
                             {
-                                _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gameType, transId, true, DataBase.Wager);
+                                _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gameType, wager.TransId, true, DataBase.Wager);
                             }
                             Task.Run(() =>
                             {
@@ -158,7 +154,7 @@ namespace ThirdPartySettleWorker.Workers
                     catch (Exception ex1)
                     {
                         isError = true;
-                        _logger.LogError(ex1, $"{logName} exMessage:{ex1.Message} || TransId : {transId}");
+                        _logger.LogError(ex1, $"{logName} exMessage:{ex1.Message} || TransId : {wager.TransId}");
                     }
                 }
             }

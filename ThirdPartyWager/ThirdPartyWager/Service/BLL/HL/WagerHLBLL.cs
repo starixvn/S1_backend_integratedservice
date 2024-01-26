@@ -52,7 +52,7 @@ namespace ThirdPartyWager.Service.BLL
                 
                 var lastWagerDate = unSettleDate.LastOrDefault().dateTime;
                 var allWagerValid =  distinctWagerData
-                    .Where(wager => wager.DateTime.ToUniversalTime() > lastWagerDate)
+                    .Where(wager => ConvertTimeToUTCTime(wager.DateTime) > lastWagerDate)
                     .OrderBy(wager => wager.DrawDate)
                     .ToList();
                 
@@ -83,7 +83,7 @@ namespace ThirdPartyWager.Service.BLL
                 var tryGetWinNumber  = await _apiHLBLL.GetWinningNumberByDay(nowDate);
                 if (tryGetWinNumber.hl_Response.ErrorCode == 998)
                 {
-                    msg = "THIRD_PARTY_ERROR_BUSY_TIME";
+                    msg = "THIRD_PARTY_ERROR_BUSY_TIME_BY_SETTLED";
                     _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(tryGetWinNumber)}");
                     return false;
                 }
@@ -110,9 +110,22 @@ namespace ThirdPartyWager.Service.BLL
                 
                 var uniqueDrawDates = unSettleDate
                     .Where(wager => wager.SettleFlag == 0)
-                    .Select(wager => ConvertTimeToPlusEight(wager.drawDate).Date)
-                    .Distinct()
+                    .Select(wager => ConvertDateTime(wager.drawDate).Date)
+                    .Distinct() 
                     .ToList();
+                
+                var updatedDrawDateList = unSettleDate
+                    .Where(x => x.SettleFlag == 0)
+                    .Select(trans => new HLWagerTrans
+                    {
+                        TicketKey = trans.TicketKey,
+                        SiteId = trans.SiteId,
+                        TransId = trans.TransId,
+                        TpUserName = trans.TpUserName,
+                        drawType = trans.drawType,
+                        drawDate = ConvertDateTime(trans.drawDate),
+                        SettleFlag = trans.SettleFlag
+                    });
 
                 foreach (var days in uniqueDrawDates)
                 {
@@ -125,18 +138,7 @@ namespace ThirdPartyWager.Service.BLL
                     }
                     
                     var uniqueDraw = getDrawResult.hl_Response.DrawResult.Distinct().ToList();
-
-                    var updatedDrawDateList = unSettleDate.Select(trans => new HLWagerTrans
-                    {
-                        TicketKey = trans.TicketKey,
-                        SiteId = trans.SiteId,
-                        TransId = trans.TransId,
-                        TpUserName = trans.TpUserName,
-                        drawType = trans.drawType,
-                        drawDate = ConvertTimeToPlusEight(trans.drawDate),
-                        SettleFlag = trans.SettleFlag
-                    });
-                
+                    
                     var matchedTransWager = uniqueDraw
                         .Join(updatedDrawDateList,
                             extracted => new { extracted.drawType, extracted.drawDate },
@@ -199,7 +201,7 @@ namespace ThirdPartyWager.Service.BLL
             var tryNowDay = dayList.FirstOrDefault().ToString("yyyy-MM-dd");
             var tryGetWager = await _apiHLBLL.GetBetListByTime(tryNowDay, tryNowDay,guid);
             if (tryGetWager.hl_Response.ErrorCode != 998) return true;
-            var msg = "THIRD_PARTY_ERROR_BUSY_TIME";
+            var msg = "THIRD_PARTY_ERROR_BUSY_TIME_BY_GET_WAGER";
             _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(tryGetWager)}");
             return false;
         }
@@ -284,8 +286,31 @@ namespace ThirdPartyWager.Service.BLL
 
         private DateTime ConvertTimeToPlusEight(DateTime dateTime)
         {
-            var gmtPlus8 = TimeZoneInfo.FindSystemTimeZoneById("Singapore Standard Time");
-            return TimeZoneInfo.ConvertTimeFromUtc(dateTime, gmtPlus8);
+
+            var result = new DateTimeOffset(dateTime, TimeSpan.Zero).ToOffset(new TimeSpan(8, 0, 0)).DateTime;
+            return result;
+        }
+
+        private DateTime ConvertDateTime(DateTime dateTime)
+        {
+            if (dateTime.Hour == 16)
+            {
+                dateTime = new DateTimeOffset(dateTime, TimeSpan.Zero).ToOffset(new TimeSpan(8, 0, 0)).DateTime;
+            }
+
+            if (dateTime.Hour == 0)
+            {
+                return dateTime;
+            }
+            return dateTime;
+
+        }
+    
+
+        private DateTime ConvertTimeToUTCTime(DateTime dateTime)
+        {
+            var result = new DateTimeOffset(dateTime, new TimeSpan(8, 0, 0)).UtcDateTime;
+            return result;
         }
         
         #endregion
