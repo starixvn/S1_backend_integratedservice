@@ -162,5 +162,4 @@ namespace ThirdPartyWager.Service.Model
             }
         }
     }
-
 }
