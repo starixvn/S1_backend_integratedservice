@@ -7,17 +7,17 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class ApiGABLL
     {
-        private readonly Common _common;
         private readonly HttpHelper _httpHelper;
         public ApiGABLL(IServiceProvider provider)
         {
-            _common = provider.GetRequiredService<Common>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
         }
 
         public async Task<List<GATickets>> GetRecordListAsync(GAConfig setting, string startTime, string endTime)
         {
-            var url = $"{setting.ApiUrl}/api/v1/tickets?from_modified_date_time={startTime}&to_modified_date_time={endTime}";
+            var starttDate = DateTime.Parse(startTime).ToString("yyyy-MM-ddTHH:mm:ssZ");
+            var endDate = DateTime.Parse(endTime).ToString("yyyy-MM-ddTHH:mm:ssZ");
+            var url = $"{setting.ApiUrl}/api/v1/tickets/?from_modified_date_time={starttDate}&to_modified_date_time={endDate}";
             var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Add("Authorization", setting.PrivateKey);
             var response = await _httpHelper.GetClient().SendAsync(request);
