@@ -50,7 +50,7 @@ namespace ThirdPartyWager.Service.BLL
                     .OrderBy(wager => wager.DrawDate)
                     .ToList();
                 
-                var lastWagerDate = unSettleDate.LastOrDefault().dateTime;
+                var lastWagerDate = unSettleDate.MaxBy(x => x.dateTime).dateTime;
                 var allWagerValid =  distinctWagerData
                     .Where(wager => ConvertTimeToUTCTime(wager.DateTime) > lastWagerDate)
                     .OrderBy(wager => wager.DrawDate)
@@ -132,7 +132,7 @@ namespace ThirdPartyWager.Service.BLL
                     var getDrawResult = await _apiHLBLL.GetDrawResult(days);
                     if (getDrawResult.hl_Response.ErrorCode == 3)
                     {
-                        msg = $"HL Settled Prize : {ConvertTimeToPlusEight(DateTime.Now).Date:yyyy-MM-dd} , The lottery results have not yet been released.";
+                        msg = $"HL Settled Prize : {days:yyyy-MM-dd} +8, The lottery results have not yet been released.";
                         _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(getDrawResult)}");
                         break;
                     }
@@ -297,8 +297,7 @@ namespace ThirdPartyWager.Service.BLL
             {
                 dateTime = new DateTimeOffset(dateTime, TimeSpan.Zero).ToOffset(new TimeSpan(8, 0, 0)).DateTime;
             }
-
-            if (dateTime.Hour == 0)
+            else if (dateTime.Hour == 0)
             {
                 return dateTime;
             }
