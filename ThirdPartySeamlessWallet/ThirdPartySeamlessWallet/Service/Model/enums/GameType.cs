@@ -99,6 +99,7 @@
         HaoLong_4D = 110,
         NLC_RNG = 111,
         Amigo_RNG = 112,
+        NTConnect_Lottery = 114,
     }
 
 }
