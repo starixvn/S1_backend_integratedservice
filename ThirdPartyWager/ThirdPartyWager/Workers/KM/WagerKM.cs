@@ -1,5 +1,4 @@
 ﻿using Serilog.Context;
-
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -18,6 +17,7 @@ namespace ThirdPartyWager.Workers
         private readonly string _tpName = Tp.KM.ToString();
         private const int TpType = 52; // (int)WagerTimerType.Wager
         private const int TimeZone = 8;
+        private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
 
         public WagerKM(IServiceProvider provider)
         {
@@ -45,7 +45,6 @@ namespace ThirdPartyWager.Workers
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var doQuickly = false;
-            var timerType = 1; //Settle
             var dataRangeMins = 20;
             var intervalMins = 3;
             var intervalSec = 30;
@@ -56,10 +55,7 @@ namespace ThirdPartyWager.Workers
 
                 if (thisTime < DateTime.Now)
                 {
-                    var timeCast = _dateTimeHelper.GetTimeByMinute(dataRangeMins, TimeZone, "yyyy-MM-dd HH:mm:ss", thisTime);
-                    //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(TimeZone, 0, 0)).ToUnixTimeSeconds();
-                    //if (timeCast.endUnix < cvTime)
-                    //{
+                    var timeCast = _dateTimeHelper.GetTimeByMinute(dataRangeMins, TimeZone, _timeFormat, thisTime);
                     var isSuccess = await _kmBLL.GetWagersAsync(timeCast.startTime, timeCast.endTime);
                     if (isSuccess)
                     {

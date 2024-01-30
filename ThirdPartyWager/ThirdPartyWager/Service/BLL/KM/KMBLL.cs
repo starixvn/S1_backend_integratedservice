@@ -1,26 +1,19 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class KMBLL
     {
         private readonly ILogger<KMBLL> _logger;
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ApiKMBLL _apiKMBLL;
         private readonly WagerKMService _wagerKmService;
-        private const int TpId = (int)Tp.KM;
 
-        public KMBLL(IServiceProvider provider, IConfiguration configuration)
+        public KMBLL(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<KMBLL>>();
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _apiKMBLL = provider.GetRequiredService<ApiKMBLL>();
             _wagerKmService = provider.GetRequiredService<WagerKMService>();
-            var config = _thirdPartyBLL.GetThirdPartySetting(TpId);
-            _apiKMBLL.KmConfig = config;
         }
 
         public async Task<bool> GetWagersAsync(string startTime, string endTime)
