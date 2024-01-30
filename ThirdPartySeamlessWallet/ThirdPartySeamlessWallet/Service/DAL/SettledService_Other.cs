@@ -1,5 +1,4 @@
 ﻿using System.Data;
-
 using Dapper;
 
 using MySql.Data.MySqlClient;
@@ -1662,6 +1661,177 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 throw mySqlEx;
             }
 
+            return result;
+        }
+
+        #endregion
+        
+        #region 93Connect
+        
+        public int PayoutLT_93Connect(TpCustInfo tpCustInfo, NTCSettleBetRequest settleData_NTConnect, out decimal afterAmount)
+        {
+            var bonusId = 0;
+            var tpId = Tp.NTConnect;
+            var tpGameType = GameType.NTConnect_Lottery;
+            var category = TpCategory.Lottery;
+            var InsSpName = "Service_BettransLT_93Connect_Payout_Set";
+            var GetSpName = "Service_BettransLT_93Connect_Get";
+            afterAmount = 0;
+
+            var result = 0;
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var pc = new DynamicParameters();
+                pc.Add("username",settleData_NTConnect.username);
+                pc.Add("bet_id",settleData_NTConnect.bet_id);
+                var checkBet = _mainDbClient.QueryFirst<BettransLT93Connect>(GetSpName,trans,pc);
+                if (string.IsNullOrEmpty(checkBet.bet_id))
+                {
+                    // no bet or cancel data
+                    return -2;
+                }
+                
+                var p = new DynamicParameters(settleData_NTConnect);
+                p.Add("SettleFlag",(int)SettleFlag.EndGame);
+                result = _mainDbClient.Execute(InsSpName, trans, p);
+
+                if (result > 0)
+                {
+                    
+                    if (settleData_NTConnect.win_amt > 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            settleData_NTConnect.win_amt,
+                            (int)tpId,
+                            settleData_NTConnect.bet_id,
+                            (int)tpGameType,
+                            category,
+                            settleData_NTConnect.bet_id,
+                            TransType.Payout,
+                            null,
+                            out afterAmount,
+                            $"Payout",
+                            out bonusId,
+                            conn,
+                            trans,
+                            AllowNegative.Allow
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
+
+        public int CancelBetLT_93Connect(TpCustInfo tpCustInfo, NTCCancelBetRequest cancelData_NTConnect,
+            out decimal afterAmount, out string TransId)
+        {
+            var bonusId = 0;
+            var tpId = Tp.NTConnect;
+            var tpGameType = GameType.NTConnect_Lottery;
+            var category = TpCategory.Lottery;
+            var CancelSpName = "Service_BettransLT_93Connect_CancelBet_Set";
+            var GetSpName = "Service_BettransLT_93Connect_Get";
+            afterAmount = 0;
+            
+            TransId = cancelData_NTConnect.bet_id;
+
+            var result = 0;
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var pc = new DynamicParameters();
+                pc.Add("username",cancelData_NTConnect.username);
+                pc.Add("bet_id",cancelData_NTConnect.bet_id);
+            
+                var checkBet = _mainDbClient.QueryFirst<BettransLT93Connect>(GetSpName,trans,pc);
+                if (string.IsNullOrEmpty(checkBet.bet_id))
+                {
+                    // no bet or cancel data
+                    return -2;
+                }
+            
+                var p = new DynamicParameters(cancelData_NTConnect);
+                p.Add("SettleFlag", (int)SettleFlag.EndGame);
+                
+                p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+                result = _mainDbClient.Execute(CancelSpName, trans, p);
+
+                if (result > 0)
+                {
+                    decimal stake = p.Get<decimal>("out_stake");
+                    if (stake != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            Math.Abs(stake),
+                            (int)tpId,
+                            cancelData_NTConnect.username,
+                            (int)tpGameType,
+                            category,
+                            cancelData_NTConnect.username,
+                            TransType.Refunds,
+                            null,
+                            out afterAmount,
+                            "CancelBet",
+                            out bonusId,
+                            conn,
+                            trans,
+                            AllowNegative.Allow
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+            
             return result;
         }
 

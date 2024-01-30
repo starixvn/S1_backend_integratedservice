@@ -843,5 +843,71 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+        
+        #region 93Connect
+
+        public int PlaceBetLottery_93Connect(TpCustInfo tpCustInfo, NTCPlaceBetRequest bettingDataLottery_NTConnect,
+            out decimal afterAmount)
+        {
+            int bonusId = 0;
+            afterAmount = 0;
+            var result = 0;
+
+            var tpId = Tp.NTConnect;
+            var tpGameType = GameType.NTConnect_Lottery;
+            var tpCategory = TpCategory.Lottery;
+            var InsSpName = "Service_BettransLT_93Connect_Ins";
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                bettingDataLottery_NTConnect.stake *= -1;
+                var p = new DynamicParameters(bettingDataLottery_NTConnect);
+                p.Add("SettleFlag",(int)SettleFlag.Running);
+                result = _mainDbClient.Execute(InsSpName, p, conn, trans);
+                if (result > 0 && bettingDataLottery_NTConnect.stake != 0)
+                {
+                    result = PlaceBetV2(
+                        tpCustInfo,
+                        bettingDataLottery_NTConnect.stake,
+                        (int)tpId,
+                        bettingDataLottery_NTConnect.bet_id,
+                        (int)tpGameType,
+                        bettingDataLottery_NTConnect.bet_id,
+                        null,
+                        tpCategory,
+                        out afterAmount,
+                        ref bonusId,
+                        conn,
+                        trans
+                    );
+                }
+
+                if (result > 0)
+                {
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+                throw;
+            }
+
+            return result;
+        }
+
+        #endregion
     }
 }

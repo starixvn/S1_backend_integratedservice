@@ -62,7 +62,8 @@
         NLC = 59,
         Amigo = 60,
         MaxGame = 61,
-        GA = 63
+        NTConnect = 62,
+        GA = 63,
     }
 
 }

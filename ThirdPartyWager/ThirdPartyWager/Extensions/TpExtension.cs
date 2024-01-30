@@ -59,7 +59,8 @@ namespace ThirdPartyWager.Extensions
                 { Tp.BNG, AddBNG},
                 { Tp.HaoLong, AddHL},
                 { Tp.NLC, AddNLC},
-                { Tp.GA, AddGA}
+                { Tp.NTConnect, AddNTConnect },
+                { Tp.GA, AddGA},
             };
         }
         private IServiceCollection AddSA(IServiceCollection services)
@@ -689,6 +690,22 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<WagerGABLL>();
 
             services.AddHostedService<WagerGA>();
+
+            return services;
+        }
+        
+            
+        private IServiceCollection AddNTConnect(IServiceCollection services)
+        {
+            services.AddSingleton<WagerNTConnectService>();
+
+            services.AddSingleton<ApiNTConnectBLL>();
+            services.AddSingleton<FinanceNTConnectBLL>();
+            services.AddSingleton<WagerNTConnectBLL>();
+
+            //services.AddHostedService<WagerNTConnect>();
+            //services.AddHostedService<FinanceNTConnect>();
+            //services.AddHostedService<WagerTicketUnSettleNTConnect>();
 
             return services;
         }
