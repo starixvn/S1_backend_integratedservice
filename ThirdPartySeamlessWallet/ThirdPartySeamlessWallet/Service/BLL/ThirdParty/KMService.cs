@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
@@ -18,7 +17,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
         private readonly ILogger<KMService> _logger;
-        private Dictionary<string, string> Config;
+        private readonly KMConfig _siteConfig;
 
         public KMService(IServiceProvider provider)
         {
@@ -29,13 +28,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _bettingService = provider.GetService<BettingService>();
             _settledService = provider.GetRequiredService<SettledService>();
             _logger = provider.GetService<ILogger<KMService>>();
-            Config = _thirdPartyBLL.GetThirdPartySetting((int)ThirdParty).TpSetting;
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<KMConfig>(Tp.KM.ToString());
         }
 
         public bool CheckCredentials(string clientId, string clientSecret)
         {
-            return string.Equals(clientId, Config["X-QM-ClientId"]) &&
-                   string.Equals(clientSecret, Config["X-QM-ClientSecret"]);
+            return string.Equals(clientId, _siteConfig.X_QM_ClientId) &&
+                   string.Equals(clientSecret, _siteConfig.X_QM_ClientSecret);
         }
 
         public async Task<KMDebitResponse> Debit(KMDebitRequest request)
