@@ -73,21 +73,7 @@ namespace ThirdPartyWager.Service.BLL
 
                 foreach (var wagerData in allWagerValid)
                 {
-                    Console.WriteLine($"TrandID : {wagerData.BetID} , Status : {wagerData.Status}");
-                    switch (wagerData.Status)
-                    {
-                        // 0:duplicate
-                        // 1:void
-                        // 2:new
-                        case 1:
-                            UpdateWager(wagerData.BetID);
-                            break;
-                        case 2:
-                            InsertNewWager(wagerData);
-                            break;
-                        case 0:
-                            break;
-                    }
+                    
                 }
                 
                 msg = "FINISH";
@@ -225,7 +211,6 @@ namespace ThirdPartyWager.Service.BLL
                     StrikePosition = b.StrikePosition,
                     BetAmount = b.BetAmount,
                     SettleAmount = b.SettleAmount,
-                    Status = 0  // Status 為 0 表示 Duplicate
                 };
 
             // 添加情境 1 的結果
@@ -257,7 +242,6 @@ namespace ThirdPartyWager.Service.BLL
                     StrikePosition = b.StrikePosition,
                     BetAmount = b.BetAmount,
                     SettleAmount = b.SettleAmount,
-                    Status = 2  //Status 為 2 表示 New
                 });
             
             result.AddRange(unmatchedInA);
