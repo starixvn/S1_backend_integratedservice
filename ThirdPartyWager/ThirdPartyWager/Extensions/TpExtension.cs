@@ -59,7 +59,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.BNG, AddBNG},
                 { Tp.HaoLong, AddHL},
                 { Tp.NLC, AddNLC},
-                //{ Tp.GA, AddGA}
+                { Tp.GA, AddGA}
             };
         }
         private IServiceCollection AddSA(IServiceCollection services)
