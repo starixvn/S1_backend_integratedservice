@@ -151,7 +151,7 @@ namespace ThirdPartyWager.Service.BLL
                         try
                         {
                             var result = await _apiHLBLL.GetWinningNumberByDay(days);
-                            if (result.hl_Response.ErrorCode == 3 || result.hl_Response.Desc.ToLower().Contains("data not found"))
+                            if (result.hl_Response.ErrorCode == 3)
                             {
                                 var updateList = new List<HLSettleInsertData>();  
                                 updateList.AddRange(matchedTransWager.Select(loseWager =>
@@ -293,16 +293,16 @@ namespace ThirdPartyWager.Service.BLL
 
         private DateTime ConvertDateTime(DateTime dateTime)
         {
-            if (dateTime.Hour == 16)
+            switch (dateTime.Hour)
             {
-                dateTime = new DateTimeOffset(dateTime, TimeSpan.Zero).ToOffset(new TimeSpan(8, 0, 0)).DateTime;
+                case 16:
+                    dateTime = new DateTimeOffset(dateTime, TimeSpan.Zero).ToOffset(new TimeSpan(8, 0, 0)).DateTime;
+                    break;
+                case 0:
+                    return dateTime;
             }
-            else if (dateTime.Hour == 0)
-            {
-                return dateTime;
-            }
-            return dateTime;
 
+            return dateTime;
         }
     
 
