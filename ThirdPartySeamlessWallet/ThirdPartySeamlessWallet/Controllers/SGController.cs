@@ -1,10 +1,7 @@
 ﻿using System.Text;
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -20,10 +17,11 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly AuthBLL _authBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
-        private readonly IHostEnvironment _environment;
         private readonly BettingBLL _bettingBLL;
         private readonly SettledBLL _settledBLL;
         private readonly Tp _thisTp;
+        private readonly string _tpName = Tp.SG.ToString();
+        private readonly SGConfig _siteConfig;
 
 
         public SGController(IServiceProvider provider)
@@ -34,8 +32,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             _bettingBLL = provider.GetRequiredService<BettingBLL>();
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _thisTp = Tp.SG;
-            _environment = provider.GetRequiredService<IHostEnvironment>();
             _log2File = provider.GetRequiredService<Log2File>();
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SGConfig>(_tpName);
         }
 
         #region Request
@@ -107,15 +105,16 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpPost]
         public async Task<Resp> IndexAsync()
         {
-            Resp resp = new Resp();
+            Resp resp = new();
             Request.Headers.TryGetValue("API", out StringValues vs);
             var api = vs.FirstOrDefault();
-            var logName = $"SG_{api}";
+            var logName = $"{_tpName}_{api}";
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
+
             if (api.Equals("authorize", StringComparison.OrdinalIgnoreCase))
             {
-                AuthorizeResp authorizeResp = new AuthorizeResp
+                AuthorizeResp authorizeResp = new()
                 {
                     code = 1,
                     msg = "System Error"
@@ -149,7 +148,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                         {
                             var gameType = _thirdPartyBLL.GetGameType_SG(authorizeReq.gameCode);
                             _tpCustInfoBLL.SetCustGotoGame(tpCustInfoAuth.CustId, (int)_thisTp, (int)gameType);
-                            var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)_thisTp);
                             var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, tpCustInfoAuth.TpUserName, (int)gameType);
                             authorizeResp.acctInfo = new AcctInfo
                             {
@@ -158,7 +156,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 userName = tpCustInfoAuth.TpUserName,
                                 balance = tpCustBalance.Balance
                             };
-                            authorizeResp.merchantCode = thirdPartySetting.TpSetting["merchantCode"];
+                            authorizeResp.merchantCode = _siteConfig.merchantCode;
                             authorizeResp.serialNo = authorizeReq.serialNo;
                             authorizeResp.code = 0;
                             authorizeResp.msg = "Success";
@@ -184,7 +182,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else if (api.Equals("getBalance", StringComparison.OrdinalIgnoreCase))
             {
-                GetBalanceResp getBalanceResp = new GetBalanceResp
+                GetBalanceResp getBalanceResp = new()
                 {
                     code = 1,
                     msg = "System Error"
@@ -214,7 +212,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, getBalanceReq.acctId);
                     var gameType = _tpCustInfoBLL.GetCustGotoGameType(tpCustInfo.CustId, (int)_thisTp);
-                    var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)_thisTp);
                     var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getBalanceReq.acctId, gameType);
                     getBalanceResp.acctInfo = new AcctInfo
                     {
@@ -224,7 +221,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         balance = tpCustBalance.Balance
                     };
                     getBalanceResp.serialNo = getBalanceReq.serialNo;
-                    getBalanceResp.merchantCode = thirdPartySetting.TpSetting["merchantCode"];
+                    getBalanceResp.merchantCode = _siteConfig.merchantCode;
 
                     getBalanceResp.code = 0;
                     getBalanceResp.msg = "Success";
@@ -235,22 +232,21 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else if (api.Equals("transfer", StringComparison.OrdinalIgnoreCase))
             {
-                TransferResp transferResp = new TransferResp
+                TransferResp transferResp = new()
                 {
                     code = 1,
                     msg = "System Error"
                 };
 
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)_thisTp);
                 var transferReq = JsonConvert.DeserializeObject<TransferReq>(Content);
 
-                logName = $"SG_{api}_{transferReq.type}";
+                logName = $"{_tpName}_{api}_{transferReq.type}";
 
                 transferResp.acctId = transferReq.acctId;
                 transferResp.transferId = transferReq.transferId;
                 transferResp.merchantTxId = transferReq.transferId;
                 transferResp.serialNo = transferReq.serialNo;
-                transferResp.merchantCode = thirdPartySetting.TpSetting["merchantCode"];
+                transferResp.merchantCode = _siteConfig.merchantCode;
 
                 var gameType = _thirdPartyBLL.GetGameType_SG(transferReq.gameCode);
 
