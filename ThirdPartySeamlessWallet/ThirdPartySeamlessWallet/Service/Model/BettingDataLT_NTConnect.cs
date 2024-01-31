@@ -32,8 +32,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string ErrorMessage { get; set; }
-        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public int ErrorCode { get; set; }
+        public int? ErrorCode { get; set; }
     }
 
     #endregion
@@ -77,10 +76,17 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class NTCPlaceBetRequest
     {
         public string game { get; set; }
+        public string game_scn { get; set; }
+        public string drawno { get; set; }
+        public string bet_odd { get; set; }
+        public string bet_typegroup { get; set; }
+        public string bet_type { get; set; }
         public string bet_id { get; set; }
-        public decimal stake { get; set; }
+        public string token { get; set; }
         public string username { get; set; }
         public string ip { get; set; }
+        public decimal stake { get; set; }
+        public string betTime { get; set; }
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
     }
