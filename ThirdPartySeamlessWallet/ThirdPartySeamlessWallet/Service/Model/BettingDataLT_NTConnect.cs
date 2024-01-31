@@ -32,6 +32,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string ErrorMessage { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public int? ErrorCode { get; set; }
     }
 
