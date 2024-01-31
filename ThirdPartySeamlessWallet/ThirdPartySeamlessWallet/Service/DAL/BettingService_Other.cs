@@ -883,6 +883,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 bettingDataLottery_NTConnect.stake *= -1;
                 var p = new DynamicParameters(bettingDataLottery_NTConnect);
+                p.Add("status","R");
                 p.Add("SettleFlag",(int)SettleFlag.Running);
                 result = _mainDbClient.Execute(InsSpName, p, conn, trans);
                 if (result > 0 && bettingDataLottery_NTConnect.stake != 0)

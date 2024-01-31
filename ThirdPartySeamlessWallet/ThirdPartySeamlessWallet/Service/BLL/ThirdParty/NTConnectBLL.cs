@@ -109,7 +109,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
             try
             {
-                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.NTConnect, request.username);
+                if (!_authBLL.AuthenticateByTpToken(request.token, out TpCustInfoAuth tpCustInfoAuth))
+                {
+                    getErrorResponse.data.ErrorCode  = (int)NTConnectErrorCode.PlayerInvalid;
+                    getErrorResponse.data.ErrorMessage = NTConnectErrorCode.PlayerInvalid.GetEnumDescription();
+                    return getErrorResponse;
+                }
+                
+                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.NTConnect, tpCustInfoAuth.TpUserName);
             
                 if (tpCheck == null)
                 {
@@ -125,7 +132,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return getErrorResponse;
                 }
 
-                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, request.username, _gameType);
+                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, tpCustInfoAuth.TpUserName, _gameType);
+                request.betTime = CheckBetTime(request.betTime);
+                request.bet_type = CheckBetType(request.bet_type);
+                request.bet_typegroup = CheckBetTypeGroup(request.bet_typegroup);
                 request.TicketType = (int)BettransType.Bet;
                 request.TicketStatus = (int)TicketStatus.UnSettled;
                 var result = PlaceBetLottery_NTConnect(request, out decimal tpAffterAmount);
@@ -134,7 +144,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     if (tpAffterAmount == 0 || result == -1)
                     {
-                        tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, request.username, _gameType);
+                        tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, tpCustInfoAuth.TpUserName, _gameType);
                         tpAffterAmount = tpCustBalance.Balance;
                     }
                     
@@ -292,7 +302,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return getErrorResponse;
         }
         
-        #region private
+        #region Exchange
 
         private int PlaceBetLottery_NTConnect(NTCPlaceBetRequest bettingData_NTConnect, out decimal afterAmount)
         {
@@ -345,6 +355,30 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return result;
         }
         
+        #endregion
+
+        #region private
+
+        private string CheckBetTime(string betTime)
+        {
+            DateTime dateTime;
+            if (DateTime.TryParse(betTime, out dateTime))
+            {
+                return dateTime.ToString("yyyy-MM-dd hh:MM:ss");
+            }
+            return DateTime.Now.ToString("yyyy-MM-dd hh:MM:ss");
+
+        }
+
+        private string CheckBetType(string BetType)
+        {
+            return string.IsNullOrEmpty(BetType) ? "NA" : BetType;
+        }
+
+        private string CheckBetTypeGroup(string BetTypeGroup)
+        {
+            return string.IsNullOrEmpty(BetTypeGroup) ? "NA" : BetTypeGroup;
+        }
         #endregion
     }
 }
