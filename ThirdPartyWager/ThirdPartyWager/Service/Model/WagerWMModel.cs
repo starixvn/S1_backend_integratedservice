@@ -62,4 +62,16 @@
     {
         public int wagerCount { get; set; }
     }
+
+    public class WMConfig
+    {
+        public string ApiUrl { get; set; }
+        public Dictionary<string, CurrencyDataWM> CurrencyData { get; set; }
+    }
+
+    public class CurrencyDataWM
+    {
+        public string vendorId { get; set; }
+        public string signature { get; set; }
+    }
 }
