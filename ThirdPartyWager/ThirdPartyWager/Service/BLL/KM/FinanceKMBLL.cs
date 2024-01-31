@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -9,7 +8,6 @@ namespace ThirdPartyWager.Service.BLL
     public class FinanceKMBLL : ITpReportBLL
     {
         private readonly ILogger<FinanceKMBLL> _logger;
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly CommonBLL _commonBLL;
         private readonly ApiKMBLL _apiKMBLL;
         private readonly DateTimeHelper _dateTimeHelper;
@@ -20,13 +18,10 @@ namespace ThirdPartyWager.Service.BLL
         public FinanceKMBLL(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceKMBLL>>();
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _apiKMBLL = provider.GetRequiredService<ApiKMBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _tpCurrencyList = _commonBLL.GetTpCurrencyList(_tpId);
-            var config = _thirdPartyBLL.GetThirdPartySetting(_tpId);
-            _apiKMBLL.KmConfig = config;
         }
 
         public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
