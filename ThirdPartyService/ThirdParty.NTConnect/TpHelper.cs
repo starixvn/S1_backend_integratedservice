@@ -98,7 +98,7 @@ namespace ThirdParty.NTConnect
                 }
                 
                 // 新增Token
-                var token = ApplyToken(tpCustInfo);
+                var token = ApplyToken(tpCustInfo,5);
                 var tpToken = playerSessionResponse.session;
                 UpdateTpToken(token, tpToken);
 

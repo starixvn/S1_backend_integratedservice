@@ -737,7 +737,7 @@ namespace ThirdPartyCore
             return Convert.ToBase64String(sign);
         }
 
-        public string ApplyToken<T>(T t)
+        public string ApplyToken<T>(T t,int Expiry = 1)
         {
             if (AuthProvider != null)
             {
@@ -749,7 +749,7 @@ namespace ThirdPartyCore
                 GuidString = GuidString.Replace("_", "");
                 GuidString = GuidString.Replace("@", "");
 
-                if (AuthProvider.ApplyToken(GuidString, ToJson(t), 1))
+                if (AuthProvider.ApplyToken(GuidString, ToJson(t), Expiry))
                 {
                     return GuidString;
                 }
