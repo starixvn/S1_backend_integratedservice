@@ -5,6 +5,7 @@ using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.GA
@@ -57,7 +58,37 @@ namespace ThirdParty.GA
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var tpCurrency = new TpCurrency()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+            var wagerDetail = TpBetRecordProvider.DbQuery("Service_Bettrans_GA_Detail_Get",
+                new { round_id = getBetDetail.TransId }, DataBase.Wager).FirstOrDefault();
+
+            //jackpot沒有wager資料
+            if(wagerDetail == null)
+            {
+                return new CasinoDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    TpCurrency = tpCurrency,
+                    TpUserName = tpCustInfo.TpUserName
+                };
+            }
+
+            var detail = ToJson(wagerDetail);
+            return new CasinoDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                Detail = detail,
+                TpCurrency = tpCurrency,
+                TpUserName = wagerDetail.GetValueOrDefault("member_ref_id")?.ToString(),
+                UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("created_date_time"),
+                UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("settled_date_time"),
+                Stake = (decimal)wagerDetail.GetValueOrDefault("bet_amount") * tpCurrency.ExchangeRate,
+                WinlostAmount = ((decimal)wagerDetail.GetValueOrDefault("ticket_amount") * tpCurrency.ExchangeRate) - ((decimal)wagerDetail.GetValueOrDefault("win_loss_amount") * tpCurrency.ExchangeRate)
+            };
         }
 
         public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
