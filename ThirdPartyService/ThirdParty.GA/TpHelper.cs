@@ -64,7 +64,7 @@ namespace ThirdParty.GA
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
             var wagerDetail = TpBetRecordProvider.DbQuery("Service_Bettrans_GA_Detail_Get",
-                new { round_id = getBetDetail.TransId }, DataBase.Wager).FirstOrDefault();
+                new { sid = getBetDetail.TransId }, DataBase.Wager).FirstOrDefault();
 
             //jackpot沒有wager資料
             if(wagerDetail == null)
