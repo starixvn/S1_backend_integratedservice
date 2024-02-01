@@ -7,33 +7,32 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class WagerRedoWMBLL
     {
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ApiWMBLL _apiWMBLL;
         private readonly WagerWMService _wagerWMService;
         private readonly ILogger<WagerRedoWMBLL> _logger;
         private readonly IEnumerable<TpCurrency> _tpCurrency;
         private readonly IHostEnvironment _environment;
         private readonly TpUnsettleService _tpUnsettleService;
+        private readonly WMConfig _siteConfig;
 
         public WagerRedoWMBLL(IServiceProvider provider)
         {
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _apiWMBLL = provider.GetRequiredService<ApiWMBLL>();
             _wagerWMService = provider.GetRequiredService<WagerWMService>();
             _logger = provider.GetRequiredService<ILogger<WagerRedoWMBLL>>();
             _tpCurrency = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList((int)Tp.WM);
             _environment = provider.GetRequiredService<IHostEnvironment>();
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<WMConfig>(Tp.WM.ToString());
         }
 
-        public async Task<bool> RedoWagersAsync(int tpId, string startTime, string endTime, long startUnix, long endUnix)
+        public async Task<bool> RedoWagersAsync(string startTime, string endTime, long startUnix, long endUnix)
         {
-            var msg = "FATAL_ERROR";
-            var guid = Guid.NewGuid().ToString();
+            string msg;
             try
             {
                 // get api info
-                var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
+                var setting = _siteConfig;
 
                 var reCheck = false;
                 foreach (var currency in _tpCurrency)
@@ -46,7 +45,7 @@ namespace ThirdPartyWager.Service.BLL
                     var getWagerCount = _wagerWMService.GetWagerTotal(startUnix, endUnix, currency.TpCurrencyId);
                     var wagerCount = getWagerCount.wagerCount;
 
-                    var dataWager = await _apiWMBLL.GetBetListByTime(setting["ApiUrl"], setting[$"vendorId_{currency.TpCurrencyId}"], setting[$"signature_{currency.TpCurrencyId}"], startTime, endTime, guid);
+                    var dataWager = await _apiWMBLL.GetBetListByTime(setting, currency.TpCurrencyId, startTime, endTime);
 
                     // error condition
                     var errorCode = dataWager.errorCode;
@@ -107,6 +106,5 @@ namespace ThirdPartyWager.Service.BLL
                 return false;
             }
         }
-
     }
 }

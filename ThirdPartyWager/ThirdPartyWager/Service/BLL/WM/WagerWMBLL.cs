@@ -14,6 +14,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly IEnumerable<TpCurrency> _tpCurrency;
         private readonly IHostEnvironment _environment;
         private readonly TpUnsettleService _tpUnsettleService;
+        private readonly WMConfig _siteConfig;
 
         public WagerWMBLL(IServiceProvider provider, IHostEnvironment environment)
         {
@@ -24,16 +25,16 @@ namespace ThirdPartyWager.Service.BLL
             _tpCurrency = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList((int)Tp.WM);
             _environment = environment;
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<WMConfig>(Tp.WM.ToString());
         }
 
-        public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime)
+        public async Task<bool> GetWagersAsync(string startTime, string endTime)
         {
-            var msg = "FATAL_ERROR";
-            var guid = Guid.NewGuid().ToString();
+            string msg;
             try
             {
                 // get api info
-                var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
+                var setting = _siteConfig;
 
                 foreach (var currency in _tpCurrency)
                 {
@@ -41,9 +42,8 @@ namespace ThirdPartyWager.Service.BLL
                     {
                         continue;
                     }
-
                     // get wager
-                    var dataWager = await _apiWMBLL.GetBetListByTime(setting["ApiUrl"], setting[$"vendorId_{currency.TpCurrencyId}"], setting[$"signature_{currency.TpCurrencyId}"], startTime, endTime, guid);
+                    var dataWager = await _apiWMBLL.GetBetListByTime(setting, currency.TpCurrencyId, startTime, endTime);
 
                     // error condition
                     var errorCode = dataWager.errorCode;
