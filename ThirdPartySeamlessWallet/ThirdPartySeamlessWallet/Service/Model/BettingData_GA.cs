@@ -67,4 +67,52 @@
         Success = 0,
         Fail = 1
     }
+    public class GAWager
+    {
+        public decimal bet_amount { get; set; }
+        public decimal ticket_amount { get; set; }
+        public decimal ante_amount { get; set; }
+        public decimal win_loss_amount { get; set; }
+        public string member_ref_id { get; set; }
+        public string result { get; set; }
+        public decimal odds { get; set; }
+        public GAStatus status { get; set; }
+        public string currency_code { get; set; }
+    }
+    public class SettleDataGA : BettingData_GA
+    {
+        public long unix_settled_date_time { get; set; }
+        public long unix_created_date_time { get; set; }
+    }
+    public enum GAStatus
+    {
+        TicketIsConfirmed = 0,
+        SettlementIsInProgress = 1,
+        SettledButSsWaitingForPayout = 2,
+        SettledButPayoutIsInProgress = 3,
+        TicketIsSettled = 4,
+        CanceledButIsWaitingForPayout = 5,
+        CanceledButPayoutIsInProgress = 6,
+        TicketIsCanceled = 7,
+        VoidIsInProgress = 8,
+        TicketIsVoided = 9,
+        UnsettledButWaitingForPayout = 10,
+        UnsettledButPayoutIsInProgress = 11,
+        UncancelledWaitingForPayout = 12,
+        UncancelledButPayoutIsInProgress = 13
+    }
+    public enum GAType
+    {
+        Bet = 0,
+        TicketWinnings = 1,
+        TicketLoss = 2,
+        TicketDraw = 3,
+        TicketCancelation = 4,
+        TicketRollback = 6,
+        Void = 9,
+        Adjustment = 10,
+        Unsettle = 11,
+        Uncancel = 12,
+        Jackpot = 13
+    }
 }
