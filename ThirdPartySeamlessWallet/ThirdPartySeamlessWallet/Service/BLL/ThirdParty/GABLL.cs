@@ -1,12 +1,8 @@
-﻿using Newtonsoft.Json;
-using System.Diagnostics;
-using System.Net.Sockets;
-using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
+﻿using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-using static ThirdPartySeamlessWallet.Controllers.EBetController;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
@@ -18,7 +14,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly SettledService _settledService;
         private readonly TpUnsettleService _tpUnsettleService;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly TpCustInfoBLL _tpCustInfoBLL;
+
         public GABLL(IServiceProvider provider)
         {
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
@@ -27,7 +23,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _settledService = provider.GetRequiredService<SettledService>();
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
         }
 
         public int Bet(TpCustInfo tpCustInfo, GATransferReq reqData)
@@ -270,7 +265,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             
             if (tempResult > 0)
             {
-                _ = _tpUnsettleService.InsertTpUnsettle(Tp.GA, GameType.GA_CockFighting, bettingData.sid, trans);
+                if(reqData.type == (int)GAType.Void)
+                {
+                    _ = _tpUnsettleService.InsertTpUnsettle(Tp.GA, GameType.GA_CockFighting, bettingData.sid, trans);
+                }
                 _mainDbClient.CommitAndDisposeConnection(conn, trans);
             }
             else
@@ -358,7 +356,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             
             if (tempResult > 0)
             {
-                _ = _tpUnsettleService.InsertTpUnsettle(Tp.GA, GameType.GA_CockFighting, bettingData.sid, trans);
                 _mainDbClient.CommitAndDisposeConnection(conn, trans);
             }
             else
