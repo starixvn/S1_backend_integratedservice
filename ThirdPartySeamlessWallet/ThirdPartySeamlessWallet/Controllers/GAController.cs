@@ -10,8 +10,6 @@ namespace ThirdPartySeamlessWallet.Controllers
     [ApiController]
     public class GAController : ControllerBase
     {
-        private readonly AuthBLL _authBLL;
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly Tp _thisTp;
         private readonly Log2File _log2File;
@@ -19,8 +17,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly IGABLL _gABLL;
         public GAController(IServiceProvider provider)
         {
-            _authBLL = provider.GetRequiredService<AuthBLL>();
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _log2File = provider.GetRequiredService<Log2File>();
             _thisTp = Tp.GA;
@@ -67,20 +63,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return BadRequest();
             }
         }
-        public enum Type
-        {
-            Bet = 0,
-            TicketWinnings = 1,
-            TicketLoss = 2,
-            TicketDraw = 3,
-            TicketCancelation = 4,
-            TicketRollback = 6,
-            Void = 9,
-            Adjustment = 10,
-            Unsettle = 11,
-            Uncancel = 12,
-            Jackpot = 13
-        }
 
         [HttpPost]
         [Route("[controller]/transfer")]
@@ -103,15 +85,16 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 var result = req.type switch
                 {
-                    (int)Type.Bet => _gABLL.Bet(tpCustInfo, req),
-                    (int)Type.TicketWinnings => _gABLL.Payout(tpCustInfo, req),
-                    (int)Type.TicketLoss => _gABLL.Payout(tpCustInfo, req),
-                    (int)Type.TicketDraw => _gABLL.Payout(tpCustInfo, req),
-                    (int)Type.Uncancel => _gABLL.Bet(tpCustInfo, req),
-                    (int)Type.Void => _gABLL.RollBack(tpCustInfo, req),
-                    (int)Type.TicketRollback => _gABLL.RollBack(tpCustInfo, req),
-                    (int)Type.TicketCancelation => _gABLL.RollBack(tpCustInfo, req),
-                    (int)Type.Jackpot => _gABLL.Jackpot(tpCustInfo, req),
+                    (int)GAType.Bet => _gABLL.Bet(tpCustInfo, req),
+                    (int)GAType.TicketWinnings => _gABLL.Payout(tpCustInfo, req),
+                    (int)GAType.TicketLoss => _gABLL.Payout(tpCustInfo, req),
+                    (int)GAType.TicketDraw => _gABLL.Payout(tpCustInfo, req),
+                    (int)GAType.Uncancel => _gABLL.Bet(tpCustInfo, req),
+                    (int)GAType.Void => _gABLL.RollBack(tpCustInfo, req),
+                    (int)GAType.TicketRollback => _gABLL.RollBack(tpCustInfo, req),
+                    (int)GAType.TicketCancelation => _gABLL.RollBack(tpCustInfo, req),
+                    (int)GAType.Jackpot => _gABLL.Jackpot(tpCustInfo, req),
+                    (int)GAType.Unsettle => _gABLL.Unsettle(tpCustInfo, req),
                     _ => (int)GATransactionStatus.Fail
                 };
 
