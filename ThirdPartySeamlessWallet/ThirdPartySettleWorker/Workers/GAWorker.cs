@@ -82,7 +82,7 @@ namespace ThirdPartySettleWorker.Workers
                             betRecordInfo.TpId = (int)Tp;
                             betRecordInfo.Stake = 0;
                             betRecordInfo.ValidBet = 0;
-                            betRecordInfo.WinlostAmount = jackpotData.amount;
+                            betRecordInfo.WinlostAmount = 0;
                             betRecordInfo.TransId = tpUnsettle.TransId;
                             betRecordInfo.GameType = GameType.GA_CockFighting;
                             betRecordInfo.TpUserName = tpUserName;
@@ -90,6 +90,7 @@ namespace ThirdPartySettleWorker.Workers
                             betRecordInfo.TransTime = jackpotData.unix_created_date_time;
                             betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
                             betRecordInfo.TicketStatus = TicketStatus.FreeBetWin;
+                            betRecordInfo.ProgressiveWin = jackpotData.amount;
                         }
                         else
                         {

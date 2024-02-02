@@ -2,6 +2,7 @@ using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Workers;
+using ThirdPartyWager.Workers.GA;
 
 namespace ThirdPartyWager.Extensions
 {
@@ -688,8 +689,11 @@ namespace ThirdPartyWager.Extensions
 
             services.AddSingleton<ApiGABLL>();
             services.AddSingleton<WagerGABLL>();
+            services.AddSingleton<FinanceGABLL>();
 
             services.AddHostedService<WagerGA>();
+            services.AddHostedService<FinanceGA>();
+            services.AddHostedService<WagerRedoGA>();
 
             return services;
         }
