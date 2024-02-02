@@ -87,7 +87,7 @@ namespace ThirdParty.GA
                 UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("created_date_time"),
                 UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("settled_date_time"),
                 Stake = (decimal)wagerDetail.GetValueOrDefault("bet_amount") * tpCurrency.ExchangeRate,
-                WinlostAmount = ((decimal)wagerDetail.GetValueOrDefault("ticket_amount") * tpCurrency.ExchangeRate) - ((decimal)wagerDetail.GetValueOrDefault("win_loss_amount") * tpCurrency.ExchangeRate)
+                WinlostAmount = ((decimal)wagerDetail.GetValueOrDefault("win_loss_amount") * tpCurrency.ExchangeRate) - ((decimal)wagerDetail.GetValueOrDefault("ante_amount") * tpCurrency.ExchangeRate)
             };
         }
 
