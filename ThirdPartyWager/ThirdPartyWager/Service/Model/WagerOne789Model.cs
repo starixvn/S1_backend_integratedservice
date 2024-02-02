@@ -77,4 +77,11 @@
         public decimal Amount { get; set; }
         public decimal Balance { get; set; }
     }
+
+    public class One789Config
+    {
+        public string ApiUrl { get; set; }
+        public string GameUrl { get; set; }
+        public string ApiKey { get; set; }
+    }
 }

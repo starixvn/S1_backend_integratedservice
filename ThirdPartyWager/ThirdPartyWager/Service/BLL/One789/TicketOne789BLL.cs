@@ -1,7 +1,5 @@
 ﻿using Newtonsoft.Json;
-
 using Serilog.Context;
-
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;
@@ -13,12 +11,14 @@ namespace ThirdPartyWager.Service
         private readonly ApiOne789BLL _apiOne789BLL;
         private readonly WagerOne789Service _wagerOne789Service;
         private readonly ILogger<TicketOne789BLL> _logger;
+        private readonly One789Config _siteConfig;
 
         public TicketOne789BLL(IServiceProvider provider)
         {
             _apiOne789BLL = provider.GetRequiredService<ApiOne789BLL>();
             _wagerOne789Service = provider.GetRequiredService<WagerOne789Service>();
             _logger = provider.GetRequiredService<ILogger<TicketOne789BLL>>();
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<One789Config>(Tp.One789.ToString());
         }
 
         // TpRefundWorker
@@ -28,7 +28,7 @@ namespace ThirdPartyWager.Service
         }
 
         // TpRefundWorker
-        public async Task<bool> CheckTicketStatusAsync(dynamic setting, dynamic pending, int gameType)
+        public async Task<bool> CheckTicketStatusAsync(dynamic pending, int gameType)
         {
             LogContext.PushProperty("SystemJob", $"Auto-Dispatch");
             var func = "CheckTicketStatusAsync";
@@ -45,7 +45,7 @@ namespace ThirdPartyWager.Service
             // check one789 status
             var param = new List<string> { pending.Tx };
 
-            var data = await _apiOne789BLL.CheckTicketStatus(setting, param);
+            var data = await _apiOne789BLL.CheckTicketStatus(_siteConfig, param);
             TicketDataOne789 ticketData = JsonConvert.DeserializeObject<TicketDataOne789>(data);
 
             if (ticketData.ErrorCode != null)
