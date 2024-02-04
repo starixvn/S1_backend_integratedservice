@@ -50,9 +50,9 @@ namespace ThirdPartyWager.Service.BLL
                     .OrderBy(wager => wager.DrawDate)
                     .ToList();
                 
-                var lastWagerDate = unSettleDate.LastOrDefault().dateTime;
+                var lastWagerDate = unSettleDate.MaxBy(x => x.dateTime).dateTime;
                 var allWagerValid =  distinctWagerData
-                    .Where(wager => wager.DateTime.ToUniversalTime() > lastWagerDate)
+                    .Where(wager => ConvertTimeToUTCTime(wager.DateTime) > lastWagerDate)
                     .OrderBy(wager => wager.DrawDate)
                     .ToList();
                 
@@ -83,7 +83,7 @@ namespace ThirdPartyWager.Service.BLL
                 var tryGetWinNumber  = await _apiHLBLL.GetWinningNumberByDay(nowDate);
                 if (tryGetWinNumber.hl_Response.ErrorCode == 998)
                 {
-                    msg = "THIRD_PARTY_ERROR_BUSY_TIME";
+                    msg = "THIRD_PARTY_ERROR_BUSY_TIME_BY_SETTLED";
                     _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(tryGetWinNumber)}");
                     return false;
                 }
@@ -110,33 +110,35 @@ namespace ThirdPartyWager.Service.BLL
                 
                 var uniqueDrawDates = unSettleDate
                     .Where(wager => wager.SettleFlag == 0)
-                    .Select(wager => ConvertTimeToPlusEight(wager.drawDate).Date)
-                    .Distinct()
+                    .Select(wager => ConvertDateTime(wager.drawDate).Date)
+                    .Distinct() 
                     .ToList();
-
-                foreach (var days in uniqueDrawDates)
-                {
-                    var getDrawResult = await _apiHLBLL.GetDrawResult(days);
-                    if (getDrawResult.hl_Response.ErrorCode == 3)
-                    {
-                        msg = $"HL Settled Prize : {ConvertTimeToPlusEight(DateTime.Now).Date:yyyy-MM-dd} , The lottery results have not yet been released.";
-                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(getDrawResult)}");
-                        break;
-                    }
-                    
-                    var uniqueDraw = getDrawResult.hl_Response.DrawResult.Distinct().ToList();
-
-                    var updatedDrawDateList = unSettleDate.Select(trans => new HLWagerTrans
+                
+                var updatedDrawDateList = unSettleDate
+                    .Where(x => x.SettleFlag == 0)
+                    .Select(trans => new HLWagerTrans
                     {
                         TicketKey = trans.TicketKey,
                         SiteId = trans.SiteId,
                         TransId = trans.TransId,
                         TpUserName = trans.TpUserName,
                         drawType = trans.drawType,
-                        drawDate = ConvertTimeToPlusEight(trans.drawDate),
+                        drawDate = ConvertDateTime(trans.drawDate),
                         SettleFlag = trans.SettleFlag
                     });
-                
+
+                foreach (var days in uniqueDrawDates)
+                {
+                    var getDrawResult = await _apiHLBLL.GetDrawResult(days);
+                    if (getDrawResult.hl_Response.ErrorCode == 3)
+                    {
+                        msg = $"HL Settled Prize : {days:yyyy-MM-dd} +8, The lottery results have not yet been released.";
+                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(getDrawResult)}");
+                        break;
+                    }
+                    
+                    var uniqueDraw = getDrawResult.hl_Response.DrawResult.Distinct().ToList();
+                    
                     var matchedTransWager = uniqueDraw
                         .Join(updatedDrawDateList,
                             extracted => new { extracted.drawType, extracted.drawDate },
@@ -149,7 +151,7 @@ namespace ThirdPartyWager.Service.BLL
                         try
                         {
                             var result = await _apiHLBLL.GetWinningNumberByDay(days);
-                            if (result.hl_Response.ErrorCode == 3 || result.hl_Response.Desc.ToLower().Contains("data not found"))
+                            if (result.hl_Response.ErrorCode == 3)
                             {
                                 var updateList = new List<HLSettleInsertData>();  
                                 updateList.AddRange(matchedTransWager.Select(loseWager =>
@@ -199,7 +201,7 @@ namespace ThirdPartyWager.Service.BLL
             var tryNowDay = dayList.FirstOrDefault().ToString("yyyy-MM-dd");
             var tryGetWager = await _apiHLBLL.GetBetListByTime(tryNowDay, tryNowDay,guid);
             if (tryGetWager.hl_Response.ErrorCode != 998) return true;
-            var msg = "THIRD_PARTY_ERROR_BUSY_TIME";
+            var msg = "THIRD_PARTY_ERROR_BUSY_TIME_BY_GET_WAGER";
             _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(tryGetWager)}");
             return false;
         }
@@ -284,8 +286,30 @@ namespace ThirdPartyWager.Service.BLL
 
         private DateTime ConvertTimeToPlusEight(DateTime dateTime)
         {
-            var gmtPlus8 = TimeZoneInfo.FindSystemTimeZoneById("Singapore Standard Time");
-            return TimeZoneInfo.ConvertTimeFromUtc(dateTime, gmtPlus8);
+
+            var result = new DateTimeOffset(dateTime, TimeSpan.Zero).ToOffset(new TimeSpan(8, 0, 0)).DateTime;
+            return result;
+        }
+
+        private DateTime ConvertDateTime(DateTime dateTime)
+        {
+            switch (dateTime.Hour)
+            {
+                case 16:
+                    dateTime = new DateTimeOffset(dateTime, TimeSpan.Zero).ToOffset(new TimeSpan(8, 0, 0)).DateTime;
+                    break;
+                case 0:
+                    return dateTime;
+            }
+
+            return dateTime;
+        }
+    
+
+        private DateTime ConvertTimeToUTCTime(DateTime dateTime)
+        {
+            var result = new DateTimeOffset(dateTime, new TimeSpan(8, 0, 0)).UtcDateTime;
+            return result;
         }
         
         #endregion
