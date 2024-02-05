@@ -76,6 +76,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 bettingData.ticket_amount *= tpCurrency.ExchangeRate;
                 bettingData.ante_amount *= tpCurrency.ExchangeRate;
                 bettingData.win_loss_amount *= tpCurrency.ExchangeRate;
+                bettingData.amount *= tpCurrency.ExchangeRate;
             }
 
             tempResult = _partitionService.Execute(partitionTime, "Service_Bettrans_GA_Ins", bettingData, trans);
