@@ -863,6 +863,33 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         
         #region 93Connect
 
+        public BettransLT93Connect CheckBetLottery_93Connect(NTCCheckBetRequest request)
+        {
+            var GetSpName = "Service_BettransLT_93Connect_Get";
+            
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var pc = new DynamicParameters();
+                pc.Add("username", request.username);
+                pc.Add("bet_id", request.ref_no);
+
+                var checkBet = _mainDbClient.QueryFirst<BettransLT93Connect>(GetSpName, trans, pc);
+                return string.IsNullOrEmpty(checkBet.bet_id) ? null : checkBet;
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return null;
+                }
+                throw;
+            }
+        }
+
         public int PlaceBetLottery_93Connect(TpCustInfo tpCustInfo, NTCPlaceBetRequest bettingDataLottery_NTConnect,
             out decimal afterAmount)
         {

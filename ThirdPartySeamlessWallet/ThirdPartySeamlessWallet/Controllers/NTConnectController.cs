@@ -53,26 +53,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             var baseResult = BaseResult();
             try
             {
-                var checkBet = new NTCCheckBetResponse()
-                {
-                    stake = 100,
-                    win_amt = 195,
-                    status = "A",
-                    bet_date = DateTime.Now
-                };
-
-                var result = new NTCResponse<NTCCheckBetResponse>()
-                {
-                    status = "success",
-                    data = checkBet
-                };
-                return JsonConvert.SerializeObject(result);
+                var placeBetResult = _NTConnectBLL.CheckBet(request);
+                return JsonConvert.SerializeObject(placeBetResult);
             }
-            
             catch (Exception ex)
             {
                 _log2File.Error($"{ex.Message}", logName, ex);
             }
+            
             return JsonConvert.SerializeObject(baseResult);
         }
         

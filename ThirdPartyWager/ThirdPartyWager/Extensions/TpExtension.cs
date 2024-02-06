@@ -693,8 +693,8 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<FinanceNTConnectBLL>();
             services.AddSingleton<WagerNTConnectBLL>();
 
-            //services.AddHostedService<WagerNTConnect>();
-            //services.AddHostedService<FinanceNTConnect>();
+            services.AddHostedService<WagerNTConnect>();
+            services.AddHostedService<FinanceNTConnect>();
             //services.AddHostedService<WagerTicketUnSettleNTConnect>();
 
             return services;

@@ -27,61 +27,76 @@ public class ApiNTConnectBLL
         _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<NTConnectConfig>(Tp.NTConnect.ToString());
     }
 
-    public async Task<HLResponse> GetBetListByTime(string startTime, string endTime, string guid, int page = 0)
+    public async Task<Wager93ConnectModel> GetBetListByTime(string startTime, string endTime, string guid,(string apiUrl, string clientKey, string secretKey) apiParams, int? page = 0)
     {
-        return null;
-    }
-
-    public async Task<HLDrawResultResponse> GetDrawResult(DateTime drawTime)
-    {
-        return null;
-    }
-
-    public async Task<HLResponse> GetWinningNumberByPlayer(string tpAccountName,DateTime drawTime)
-    {
-        return null;
-    }
-    
-    public async Task<HLResponse> GetWinningNumberByDay(DateTime drawTime)
-    {
-        return null;
-    }
-
-    private async Task<string> DoHttpClientAsync(string url, string param, string tagName)
-    {
-        _log2File.InsertRequestLog(_tpName, url, param, "1");
-
-        var request = new HttpRequestMessage(HttpMethod.Post, url);
-        request.Content = new StringContent(param, Encoding.UTF8, "application/x-www-form-urlencoded");
-
-        var response = await _httpHelper.GetClient().SendAsync(request);
-        var result = response.Content.ReadAsStringAsync().Result;
-
-        if (!response.IsSuccessStatusCode)
+        var token = await GetToken(apiParams.apiUrl, apiParams.clientKey, apiParams.secretKey);
+        var param = new Dictionary<string, object>()
         {
-            _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
-            _log2File.InsertResponseLog(_tpName, url, param.ToString(), result);
-            return null;
-        }
+            { "token", token.token },
+            { "date_from", startTime},
+            { "date_to", endTime},
+            { "page", page}
+        };
 
-        // xml to json
-        var xmlDoc = new XmlDocument();
-        xmlDoc.LoadXml(result); ;
+        var sParam = JsonConvert.SerializeObject(param);
         
-        
-        // single data force to array
-        var eleTag = xmlDoc.GetElementsByTagName(tagName);
-        if (eleTag.Count == 1)
-        {
-            var attribute = xmlDoc.CreateAttribute("json", "Array", "http://james.newtonking.com/projects/json");
-            attribute.InnerText = "true";
-            var node = eleTag.Item(0) as XmlElement;
-            node.Attributes.Append(attribute);
-        }
-        return JsonConvert.SerializeXmlNode(xmlDoc);
+        var r = await DoHttpClientAsync(apiParams.apiUrl + "player/?a=hourly", sParam);
+        var result = JsonConvert.DeserializeObject<Wager93ConnectModel>(r);
+        return result;
     }
 
-    private GetTokenResponse GetToken(string apiUrl ,string ClientKey, string SecretKey)
+    public async Task<Wager93ConnectModel> GetBetListByDay(string startTime, string guid,(string apiUrl, string clientKey, string secretKey) apiParams, int? page = 0)
+    {
+        var token = await GetToken(apiParams.apiUrl, apiParams.clientKey, apiParams.secretKey);
+        var param = new Dictionary<string, object>()
+        {
+            { "token", token.token },
+            { "date", startTime},
+            { "page", page}
+        };
+
+        var sParam = JsonConvert.SerializeObject(param);
+        
+        var r = await DoHttpClientAsync(apiParams.apiUrl + "player/?a=daily", sParam);
+        var result = JsonConvert.DeserializeObject<Wager93ConnectModel>(r);
+        return result;
+    }
+
+    private async Task<string> DoHttpClientAsync(string url, string json,int timeOutTime = 0)
+    {
+        try
+        {
+            //會http status code回傳非200，
+            //但同時又會回傳error message的response，可使用。
+            using (var client = new HttpClient())
+            {
+                if (timeOutTime > 0)
+                {
+                    client.Timeout = TimeSpan.FromSeconds(timeOutTime);
+                }
+                    
+                using (var content = new StringContent(json, Encoding.UTF8, "application/json"))
+                {
+                    using (var request = new HttpRequestMessage(HttpMethod.Post, url))
+                    {
+                        request.Content = content;
+                        using (var response = client.Send(request))
+                        {
+                            var responseContent = response.Content.ReadAsStringAsync().Result;
+                            return responseContent;
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _log2File.InsertResponseLog(_tpName, url, json, ex.Message);
+            return ex.Message;
+        }
+    }
+
+    private async Task<GetTokenResponse> GetToken(string apiUrl ,string ClientKey, string SecretKey)
     {
         var getTokenUrl = apiUrl + "token/";
         var request = new Dictionary<string, string>
@@ -92,9 +107,9 @@ public class ApiNTConnectBLL
 
         var sParam = JsonConvert.SerializeObject(request);
 
-        // var json = HttpClientPost(getTokenUrl, sParam, ContentType);
-        // var result = FromJson<GetTokenResponse>(json);
+        var json = await DoHttpClientAsync(getTokenUrl, sParam);
+        var result = JsonConvert.DeserializeObject<GetTokenResponse>(json);
 
-        return null;
+        return result;
     }
 }   

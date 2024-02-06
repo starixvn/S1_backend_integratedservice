@@ -9,11 +9,11 @@ namespace ThirdPartyWager.Workers;
 public class FinanceNTConnect : BackgroundService
 {
     private readonly ILogger<FinanceNTConnect> _logger;
-    private readonly FinanceHLBLL _financeHLBLL;
+    private readonly FinanceNTConnectBLL _financeNTConnectBLL;
     private readonly ThirdPartyBLL _thirdPartyBLL;
     private readonly FincanceService _fincanceService;
-    private readonly int _tpId = (int)Tp.HaoLong;
-    private readonly string _tpName = Tp.HaoLong.ToString();
+    private readonly int _tpId = (int)Tp.NTConnect;
+    private readonly string _tpName = Tp.NTConnect.ToString();
     private readonly int _tpType = (int)WagerTimerType.Finance;
     private readonly int _beyond = 2;
     private Timer timer;
@@ -21,7 +21,7 @@ public class FinanceNTConnect : BackgroundService
     public FinanceNTConnect(IServiceProvider provider)
     {
         _logger = provider.GetRequiredService<ILogger<FinanceNTConnect>>();
-        _financeHLBLL = provider.GetRequiredService<FinanceHLBLL>();
+        _financeNTConnectBLL = provider.GetRequiredService<FinanceNTConnectBLL>();
         _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         _fincanceService = provider.GetRequiredService<FincanceService>();
     }
@@ -84,16 +84,16 @@ public class FinanceNTConnect : BackgroundService
 
                 // get time 
                 var day = 0;
-                var reportTime = _financeHLBLL.GetReportTime(execTime.StartTime, day);
+                var reportTime = _financeNTConnectBLL.GetReportTime(execTime.StartTime, day);
 
                 // report
                 DateTime reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);
-                var reportData = await _financeHLBLL.GetReport(_tpId, null, reportTime);
+                var reportData = await _financeNTConnectBLL.GetReport(_tpId, null, reportTime);
                 int result;
                 if (reportData.Count > 0)
                 {
                     // process
-                    var dailyData = _financeHLBLL.DealReport(_tpId, reportDate, reportData);
+                    var dailyData = _financeNTConnectBLL.DealReport(_tpId, reportDate, reportData);
 
                     // write
                     result = _fincanceService.SetFinanceTpDailySummary(dailyData);

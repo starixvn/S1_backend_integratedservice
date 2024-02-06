@@ -88,7 +88,8 @@ builder.Services
     .AddHostedService<N2LiveSmartWorker>()
     .AddHostedService<PegasusWorker>()
     .AddHostedService<BNGWorker>()
-    .AddHostedService<HLWorker>();
+    .AddHostedService<HLWorker>()
+    .AddHostedService<NTConnectWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
