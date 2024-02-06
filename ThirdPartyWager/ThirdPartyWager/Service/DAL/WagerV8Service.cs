@@ -27,9 +27,9 @@ namespace ThirdPartyWager.Service.DAL
         {
             return _wagerDbClient.QueryFirst<WagerV8Total>("Service_TpWagerPK_V8_Total_Get", new { BeginTime = beginTime, EndTime = endTime });
         }
-        public WagerV8Total GetWagerTotalV2(long beginTime, long endTime, string tpCurrencyId)
+        public WagerV8Total GetWagerTotalV2(long beginTime, long endTime, int agent)
         {
-            return _wagerDbClient.QueryFirst<WagerV8Total>("Service_TpWagerPK_V8_Total_Get_V2", new { BeginTime = beginTime, EndTime = endTime, ChannelID = Convert.ToInt32(tpCurrencyId) });
+            return _wagerDbClient.QueryFirst<WagerV8Total>("Service_TpWagerPK_V8_Total_Get_V2", new { BeginTime = beginTime, EndTime = endTime, ChannelID = agent });
         }
     }
 }

@@ -59,6 +59,8 @@ namespace ThirdPartyWager.Workers
                 if (timerTime < nowTime)
                 {
                      var time = _dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
+                     //依照HaoLong三天兩頭都在維護 直接讓時間往前走 不然會導致其餘排程問題出現
+                     _thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
                      
                      //測試發現，下注時間跟開彩時間有差異，抓3天的開彩日期即可，太多反而不好搞。
                      var currentDate = DateTime.Parse(time.startTime);
@@ -72,13 +74,14 @@ namespace ThirdPartyWager.Workers
                      
                      result =  await _wagerHLBLL.GetWagersAsync(unSettledWagerHLList,nextSevenDays);
                      
-                     if (result)
+                     if (result) 
                      {
-                         _ = await _wagerHLBLL.SetSettledWager();
+                         var tryResult = await _wagerHLBLL.TryGetSettledResult();
+                         if (tryResult)
+                         {
+                             _ = await _wagerHLBLL.SetSettledWager(unSettledWagerHLList);
+                         }
                      }
-
-                     //有無單都要往前走 要不然會導致其餘排程問題出現
-                     _thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
                 }
             }
             catch (Exception ex)

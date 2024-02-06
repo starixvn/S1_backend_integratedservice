@@ -44,7 +44,6 @@ namespace ThirdPartyWager.Service.Model
         [JsonProperty("strike")]
         public string SettleAmount { get; set; }
         public int SettleFlag { get; set; }
-        public int Status { get; set; }
     }
 
     public class HLSettleInsertData

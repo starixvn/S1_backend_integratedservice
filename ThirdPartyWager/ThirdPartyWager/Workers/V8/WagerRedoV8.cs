@@ -1,5 +1,4 @@
 ﻿using Serilog.Context;
-
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -7,10 +6,10 @@ namespace ThirdPartyWager.Workers
 {
     public class WagerRedoV8 : BackgroundService
     {
+        private Timer timer;
         private readonly ILogger<WagerRedoV8> _logger;
         private readonly WagerV8BLL _wagerV8BLL;
         private readonly CommonBLL _commonBLL;
-        private Timer timer;
         private readonly int tpType = (int)WagerTimerType.RedoWager;
         private readonly int timeRange = 60; //in minutes
         private readonly int quickTime = 75; // in seconds
@@ -41,6 +40,7 @@ namespace ThirdPartyWager.Workers
                 var TpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
                 foreach (var item in TpCurrencyList)
                 {
+                    _logger.LogWarning(item.TpCurrencyId);
                     quick = await _wagerV8BLL.ExecWagerRedoWorker(tpType, timeRange, item.TpCurrencyId);
                     if (!isFast && quick) isFast = true;
                 }
@@ -51,7 +51,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                var dueTimeSpan = quick ? TimeSpan.FromSeconds(quickTime) : TimeSpan.FromHours(runTime);
+                var dueTimeSpan = isFast ? TimeSpan.FromSeconds(quickTime) : TimeSpan.FromHours(runTime);
                 timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }

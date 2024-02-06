@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using Newtonsoft.Json;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -21,12 +20,15 @@ namespace ThirdPartyWager.Service.DAL
 
         public bool InsertHLWager(HLWagerData wager)
         {
+            var dateTime = new DateTimeOffset(wager.DateTime, new TimeSpan(8, 0, 0)).UtcDateTime;
+            var drawDate = new DateTimeOffset(wager.DrawDate, new TimeSpan(8, 0, 0)).UtcDateTime;
+            
             var p = new DynamicParameters();
             p.Add("betID", wager.BetID);
             p.Add("loginID", wager.UserName);
-            p.Add("dateTime", wager.DateTime.ToUniversalTime());
+            p.Add("dateTime", dateTime);
             p.Add("drawType", wager.DrawType);
-            p.Add("drawDate", wager.DateTime.ToUniversalTime());
+            p.Add("drawDate", drawDate);
             p.Add("betNumber", wager.BetNumber);
             p.Add("betPosition", wager.BetPosition);
             p.Add("bet", wager.BetAmount);
