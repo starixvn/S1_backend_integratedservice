@@ -19,7 +19,6 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {
-                throw new NotImplementedException();
                 var starttDate = DateTime.Parse(startTime).ToString("yyyy-MM-ddTHH:mm:ssZ");
                 var endDate = DateTime.Parse(endTime).ToString("yyyy-MM-ddTHH:mm:ssZ");
                 var url = $"{setting.ApiUrl}/api/v1/tickets/?from_modified_date_time={starttDate}&to_modified_date_time={endDate}";
