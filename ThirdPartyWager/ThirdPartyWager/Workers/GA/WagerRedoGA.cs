@@ -20,7 +20,7 @@ namespace ThirdPartyWager.Workers
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ILogger<WagerRedoBNG> _logger;
         private readonly int timeZone = 0;
-        private readonly int iRangMins = 60;
+        private readonly int iRangMins = 30;
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
         private readonly int intervalMins = 5;
 
@@ -61,7 +61,7 @@ namespace ThirdPartyWager.Workers
                     dataTpTimer.StartTime = dataTpTimer.StartTime.AddSeconds(1);
                 }
 
-                if (dataTpTimer.StartTime <= nowDateTime.AddHours(-2))
+                if (dataTpTimer.StartTime <= nowDateTime.AddMinutes(-30))
                 {
                     var time = _dateTimeHelper.GetTimeByMinute(iRangMins - 1, timeZone, _timeFormat, dataTpTimer.StartTime);
 
