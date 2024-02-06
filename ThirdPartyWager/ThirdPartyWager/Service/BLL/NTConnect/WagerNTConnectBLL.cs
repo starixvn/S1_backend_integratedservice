@@ -77,7 +77,6 @@ namespace ThirdPartyWager.Service.BLL
                 return false;
             }
         }
-                _logger.LogInformation($"HaoLong SetSettledWager Job Time : +0 = {nowDate:yyyy-MM-ddTHH:mm:ss}");
         
         private void InsertNew93Wager(Wager93Data wagerData)
         {
