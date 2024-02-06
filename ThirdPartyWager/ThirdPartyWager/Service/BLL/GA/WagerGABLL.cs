@@ -21,7 +21,7 @@ namespace ThirdPartyWager.Service.BLL
             string msg;
             var wagerList = await _apiGABLL.GetRecordListAsync(setting, startTime, endTime);
 
-            if (wagerList.Count > 0)
+            if (wagerList.Any())
             {
                 foreach (var item in wagerList)
                 {
