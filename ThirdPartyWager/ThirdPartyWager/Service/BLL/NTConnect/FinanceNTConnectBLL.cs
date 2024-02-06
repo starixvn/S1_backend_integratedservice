@@ -7,23 +7,23 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class FinanceNTConnectBLL :ITpReportBLL
     {
-        private readonly ILogger<FinanceHLBLL> _logger;
+        private readonly ILogger<FinanceNTConnectBLL> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly CommonBLL _commonBLL;
-        private readonly ApiHLBLL _apiHLBLL;
+        private readonly ApiNTConnectBLL _apiNTConnectBLL;
         private readonly DateTimeHelper _dateTimeHelper;
-        private readonly string _tpName = Tp.HaoLong.ToString();
-        private readonly HLConfig _siteHLConfig;
+        private readonly string _tpName = Tp.NTConnect.ToString();
+        private readonly NTConnectConfig _siteNTConnectConfig;
         private readonly int _timeZone = -4;
 
         public FinanceNTConnectBLL(IServiceProvider provider)
         {
-            _logger = provider.GetRequiredService<ILogger<FinanceHLBLL>>();
+            _logger = provider.GetRequiredService<ILogger<FinanceNTConnectBLL>>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
-            _apiHLBLL = provider.GetRequiredService<ApiHLBLL>();
+            _apiNTConnectBLL = provider.GetRequiredService<ApiNTConnectBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
-            _siteHLConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<HLConfig>(_tpName);
+            _siteNTConnectConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<NTConnectConfig>(_tpName);
         }
 
         public TimeCast GetReportTime(DateTime startTime, int day)
@@ -43,7 +43,7 @@ namespace ThirdPartyWager.Service.BLL
             
             var tasks = new List<Task<IEnumerable<FincanceDailySummary>>>
             {
-                _commonBLL.GetWagerSummary("Finance_TpWager_HL_Summary_Get", reportTime.startUnix, reportTime.endUnix),
+                _commonBLL.GetWagerSummary("Finance_BettransLT_93Connect_Summary_Get", reportTime.startUnix, reportTime.endUnix),
             };
 
             await Task.WhenAll(tasks);

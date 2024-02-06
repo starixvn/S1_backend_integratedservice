@@ -92,7 +92,50 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         
         public NTCResponse<NTCCheckBetResponse> CheckBet(NTCCheckBetRequest request)
         {
-            throw new NotImplementedException();
+            var logName = $"{_gameType.ToString()}_CheckBet";
+            DateTime dateTime = default;
+            var getErrorResponse = new NTCResponse<NTCCheckBetResponse>()
+            {
+                status = "error",
+                data = new NTCCheckBetResponse()
+                {
+                    ErrorCode = (int)NTConnectErrorCode.InternalError,
+                    ErrorMessage = NTConnectErrorCode.InternalError.GetEnumDescription()
+                }
+            };
+
+            var checkBet = _bettingService.CheckBetLottery_93Connect(request);
+            if (checkBet == null)
+            {
+                getErrorResponse.data.ErrorCode = (int)NTConnectErrorCode.CantFoundBetId;
+                getErrorResponse.data.ErrorMessage = NTConnectErrorCode.CantFoundBetId.GetEnumDescription();
+                return getErrorResponse;
+            }
+
+            if (checkBet.status == "R")
+            {
+                checkBet.win_amt = 0.00m;
+            }
+
+            if (string.IsNullOrEmpty(checkBet.betTime))
+            {
+                if (checkBet.betTime != null) 
+                    dateTime = DateTime.Parse(checkBet.betTime);
+            }
+
+            return new NTCResponse<NTCCheckBetResponse>()
+            {
+                status = "success",
+                data = new NTCCheckBetResponse()
+                {
+                    stake = checkBet.stake,
+                    win_amt = checkBet.win_amt,
+                    status = checkBet.status,
+                    bet_date = dateTime
+                }
+
+            };
+
         }
 
         public NTCResponse<NTCPlaceBetResponse> PlaceBet(NTCPlaceBetRequest request)
@@ -138,6 +181,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 request.bet_typegroup = CheckBetTypeGroup(request.bet_typegroup);
                 request.TicketType = (int)BettransType.Bet;
                 request.TicketStatus = (int)TicketStatus.UnSettled;
+                request.LocalBetTime = ConvertBetTime(request.betTime);
                 var result = PlaceBetLottery_NTConnect(request, out decimal tpAffterAmount);
                 
                 if (result > 0 || result == -1)
@@ -378,6 +422,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private string CheckBetTypeGroup(string BetTypeGroup)
         {
             return string.IsNullOrEmpty(BetTypeGroup) ? "NA" : BetTypeGroup;
+        }
+
+        private DateTime ConvertBetTime(string betTime)
+        {
+            DateTime dateTime;
+            var convert = DateTime.TryParse(betTime, out dateTime);
+            return convert ? new DateTimeOffset(dateTime, new TimeSpan(-4, 0, 0)).UtcDateTime : dateTime;
         }
         #endregion
     }

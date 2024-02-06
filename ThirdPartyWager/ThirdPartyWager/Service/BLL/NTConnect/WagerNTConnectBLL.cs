@@ -8,76 +8,66 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class WagerNTConnectBLL
     {
-        private readonly ApiNTConnectBLL _apiHLBLL;
-        private readonly WagerNTConnectService _wagerHLService;
+        private readonly ApiNTConnectBLL _apiNTConnectBLL;
+        private readonly WagerNTConnectService _wagerNTConnectService;
         private readonly ILogger<WagerNTConnectBLL> _logger;
-        private readonly int _tpId = (int)Tp.HaoLong;
+        private readonly int _tpId = (int)Tp.NTConnect;
         private readonly TpUnsettleService _tpUnsettleService;
         private readonly WorkerType workerType = WorkerType.MainWager;
         private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly Dictionary<int, NTConnectConfig> _siteConfigDic;
 
 
         public WagerNTConnectBLL(IServiceProvider provider)
         {
-            _apiHLBLL = provider.GetRequiredService<ApiNTConnectBLL>();
-            _wagerHLService = provider.GetRequiredService<WagerNTConnectService>();
+            _apiNTConnectBLL = provider.GetRequiredService<ApiNTConnectBLL>();
+            _wagerNTConnectService = provider.GetRequiredService<WagerNTConnectService>();
             _logger = provider.GetRequiredService<ILogger<WagerNTConnectBLL>>();
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<NTConnectConfig>(Tp.NTConnect.ToString());
         }
 
-        public async Task<bool> GetWagersAsync(IEnumerable<HLWagerTrans> unSettleDate,List<DateTime> dayList)
+        public async Task<bool> GetWagersAsync(string startTime, string endTime)
         {
             var msg = "FATAL_ERROR";
             var guid = Guid.NewGuid().ToString();
             try
             {
-                //先保留page
-                //var page = 1;
-
-                var allWagerList = new List<HLWagerData>();
-                
-                foreach(var day in dayList)
+                foreach (var siteConfig in _siteConfigDic.Keys.Select(site => _siteConfigDic[site]))
                 {
-                    var nowDay = day.ToString("yyyy-MM-dd");
-                    var nextDay = day.AddDays(1).ToString("yyyy-MM-dd");
+                    var apiUrl = siteConfig.ApiUrl;
+                    foreach (var currencyKey in siteConfig.CurrencyList)
+                    {
+                        var clientKey = currencyKey.ClientKey;
+                        var secretKey = currencyKey.SecretKey;
+                        int? page = 1;
+                        int? totalPage = 1;
+                        while (page <= totalPage)
+                        {
+                            var apiParams = (apiUrl, clientKey, secretKey);
+                            var wager93data = await _apiNTConnectBLL.GetBetListByTime(startTime, endTime,guid,apiParams,page);
+                            if (wager93data.totalpage == null || wager93data.page == null)
+                            {
+                                msg = "NO_DATA";
+                                _logger.LogInformation($"93Connect:{msg}\r\nSiteCurrency:{clientKey}\r\n{JsonConvert.SerializeObject(wager93data)}");
+                                break;
+                            }
+                            totalPage = wager93data.totalpage;
 
-                    var wagerData = await _apiHLBLL.GetBetListByTime(nowDay, nextDay,guid);
-                    
-                    var dataWager = wagerData.hl_Response;
-                    
-                    if (dataWager.ErrorCode != 0 && dataWager.ErrorCode != 998)
-                    {
-                        msg = "THIRD_PARTY_ERROR";
-                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)} , Date:{nowDay} ~ {nextDay}");
-                        continue;
+                            foreach (var wager in wager93data.data)
+                            {
+                                InsertNew93Wager(wager);
+                            }
+                            page++;
+                        }
                     }
-                
-                    if (dataWager.ErrorCode == 3 && dataWager.Desc == "Data NOT Found")
-                    {
-                        msg = "NO_DATA";
-                        _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)} , Date:{nowDay} ~ {nextDay}");
-                        continue;
-                    }
-                    
-                    allWagerList.AddRange(dataWager.WagerData);
                 }
                 
-                var distinctWagerData = allWagerList
-                    .GroupBy(wager => wager.BetID)
-                    .Select(group => group.First())
-                    .OrderBy(wager => wager.DrawDate)
-                    .ToList();
-
-                var allWagerValid = AllWagerValid(unSettleDate, distinctWagerData);
-
-                foreach (var wagerData in allWagerValid)
-                {
-                    
-                }
+                //var wagerData = await _apiNTConnectBLL.GetBetListByTime(startTime, endTime,guid);
                 
                 msg = "FINISH";
-                _logger.LogInformation($"GetWagersAsync {msg}\r\n{dayList.First():yyyy-MM-dd} ~ {dayList.Last():yyyy-MM-dd}");
+                _logger.LogInformation($"GetWagersAsync {msg}\r\n{DateTime.Now:yyyy-MM-dd} ~ {DateTime.Now:yyyy-MM-dd}");
                 return true;
             }
             catch (Exception ex)
@@ -87,185 +77,15 @@ namespace ThirdPartyWager.Service.BLL
                 return false;
             }
         }
-
-
-        public async Task<bool> SetSettledWager()
-        {
-            var msg = "FATAL_ERROR";
-            var guid = Guid.NewGuid().ToString();
-            try
-            {
-                var nowDate = DateTime.Now;
                 _logger.LogInformation($"HaoLong SetSettledWager Job Time : +0 = {nowDate:yyyy-MM-ddTHH:mm:ss}");
-                var getDrawResult = await _apiHLBLL.GetDrawResult(nowDate);
-                var ticketKeyHowLong = _thirdPartyBLL.GetAllSiteTicketKey(workerType, _tpId);
-                var getHLUnSettledWager = _wagerHLService.GetHLBetUnSettledList(ticketKeyHowLong);
-
-                var uniqueDraw = getDrawResult.hl_Response.DrawResult.Distinct().ToList();
-
-                var updatedDrawDateList = getHLUnSettledWager.Select(trans => new HLWagerTrans
-                {
-                    TicketKey = trans.TicketKey,
-                    SiteId = trans.SiteId,
-                    TransId = trans.TransId,
-                    TpUserName = trans.TpUserName,
-                    drawType = trans.drawType,
-                    drawDate = ConvertTimeToPlusEight(trans.drawDate),
-                    SettleFlag = trans.SettleFlag
-                });
-                
-                var matchedTransWager = uniqueDraw
-                    .Join(updatedDrawDateList,
-                        extracted => new { extracted.drawType, extracted.drawDate },
-                        hlBet => new { hlBet.drawType, hlBet.drawDate },
-                        (extracted, hlBet) => hlBet)
-                    .ToList();
-                
-                
-                if (matchedTransWager.Any())
-                {
-                    try 
-                    {
-                        var result = await _apiHLBLL.GetWinningNumberByDay(nowDate);
-                        var hlWagerData = result.hl_Response.WagerData;
-                        
-                        var winMatchedData = from trans in matchedTransWager
-                            join data in hlWagerData on trans.TransId equals data.BetID
-                            select data; 
-                        
-                        var insertList = winMatchedData.Select
-                            (winWager => CreateHLWagerData(winWager.BetID, winWager.StrikePosition, winWager.SettleAmount)).ToList();
-
-                        var unmatchedTrans = matchedTransWager.Where
-                            (trans => !hlWagerData.Any(m => m.BetID == trans.TransId));
-
-                        insertList.AddRange(unmatchedTrans.Select
-                            (loseWager => CreateHLWagerData(loseWager.TransId, "NA", "0")));
-
-                        foreach (var item in insertList)
-                        {
-
-                            var insertResult = _wagerHLService.UpdateHLWager(item);
-                            
-                            if (!insertResult)
-                            {
-                                msg = $"UPDATE_WAGER(WAGERID: {item.TransId} )";
-                                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(item)}");
-                            }
-                            else
-                            {
-                                _ = _tpUnsettleService.InsertTpUnsettle(Tp.HaoLong, GameType.HaoLong_4D, item.TransId);
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        msg = $"INSERT_WAGER(WAGERID: {matchedTransWager.Count()} )";
-                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(matchedTransWager)}\r\n{ex.Message}");
-                        return false;
-                    }
-                }
-                return true;
-            }
-            catch (Exception ex)
-            {
-                msg = "FATAL_ERROR";
-                _logger.LogError(ex, $"SetSettledWager {msg}\r\n{ex.Message}");
-                return false;
-            }
-        }
         
-        private HLSettleInsertData CreateHLWagerData(string betId, string strikePosition, string settleAmount)
+        private void InsertNew93Wager(Wager93Data wagerData)
         {
-            return new HLSettleInsertData()
+            var result = _wagerNTConnectService.InsertNTConnectWager(wagerData);
+            if (result == 1)
             {
-                TransId = betId,
-                StrikePosition = strikePosition,
-                SettleAmount = settleAmount,
-                SettleFlag = 2
-            };
-        }
-        
-        private IEnumerable<HLWagerData> AllWagerValid(IEnumerable<HLWagerTrans> allUnSettleHLWager, IEnumerable<HLWagerData> wagerData)
-        {
-            var result = new List<HLWagerData>();
-            var filteredAndSortedWagers = allUnSettleHLWager
-                .Where(wager => wager.SettleFlag != 1)
-                //.Where(wager => wager.StrikePosition == "0")
-                .OrderBy(wager => wager.drawDate)
-                .ToList();
-            
-            // 情境 1: A 和 B 有符合的項，Status 為 0
-            var matched = from a in filteredAndSortedWagers
-                join b in wagerData
-                    on a.TransId equals b.BetID
-                select new HLWagerData
-                {
-                    BetID = b.BetID,
-                    UserName = b.UserName,
-                    DateTime = b.DateTime,
-                    DrawType = b.DrawType,
-                    DrawDate = b.DrawDate,
-                    BetNumber = b.BetNumber,
-                    BetPosition = b.BetPosition,
-                    StrikePosition = b.StrikePosition,
-                    BetAmount = b.BetAmount,
-                    SettleAmount = b.SettleAmount,
-                };
-
-            // 添加情境 1 的結果
-            result.AddRange(matched);
-
-            // 情境 2: B 沒有 A 有的項，標記為取消（Status 設置為 1）
-            // var unmatchedInB = filteredAndSortedWagers
-            //     .Where(a => !wagerData.Any(b => b.BetID == a.TransId))
-            //     .Select(a => new HLWagerData
-            //     {
-            //         BetID = a.TransId,
-            //         Status = 1  // Status 為 1 表示情境 Void
-            //     });
-            //
-            // result.AddRange(unmatchedInB);
-
-            // 情境 3: A 沒有 B 有的項，標記為新注單（Status 設置為 2）
-            var unmatchedInA = wagerData
-                .Where(b => !filteredAndSortedWagers.Any(a => a.TransId == b.BetID))
-                .Select(b => new HLWagerData
-                {
-                    BetID = b.BetID,
-                    UserName = b.UserName,
-                    DateTime = b.DateTime,
-                    DrawType = b.DrawType,
-                    DrawDate = b.DrawDate,
-                    BetNumber = b.BetNumber,
-                    BetPosition = b.BetPosition,
-                    StrikePosition = b.StrikePosition,
-                    BetAmount = b.BetAmount,
-                    SettleAmount = b.SettleAmount,
-                });
-            
-            result.AddRange(unmatchedInA);
-
-            return result;
-        }
-
-        private void InsertNewWager(HLWagerData wagerData)
-        {
-            _ = _wagerHLService.InsertHLWager(wagerData);
-            _ = _tpUnsettleService.InsertTpUnsettle(Tp.HaoLong, GameType.HaoLong_4D, wagerData.BetID);
-        }
-
-        private void UpdateWager(string TransId)
-        {
-            var insert = CreateHLWagerData(TransId, "Void", "0");
-            _ = _wagerHLService.UpdateHLWager(insert);
-            _ = _tpUnsettleService.InsertTpUnsettle(Tp.HaoLong, GameType.HaoLong_4D, TransId);
-        }
-
-        private DateTime ConvertTimeToPlusEight(DateTime dateTime)
-        {
-            var gmtPlus8 = TimeZoneInfo.FindSystemTimeZoneById("Singapore Standard Time");
-            return TimeZoneInfo.ConvertTimeFromUtc(dateTime, gmtPlus8);
+                _ = _tpUnsettleService.InsertTpUnsettle(Tp.NTConnect, GameType.NTConnect_Lottery, wagerData.ticket);
+            }
         }
     }
 }

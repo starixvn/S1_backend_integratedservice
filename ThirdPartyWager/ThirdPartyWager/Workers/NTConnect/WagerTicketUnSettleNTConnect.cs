@@ -9,17 +9,17 @@ public class WagerTicketUnSettleNTConnect : BackgroundService
 {
     private readonly ILogger<WagerTicketUnSettleNTConnect> _logger;
     private readonly ThirdPartyBLL _thirdPartyBLL;
-    private readonly WagerHLService _wagerHLService;
+    private readonly WagerNTConnectService _wagerNTConnectService;
     private readonly WorkerType workerType = WorkerType.MainWager;
     private readonly Tp _tp = Tp.HaoLong;
     private Timer _timer;
-    private readonly string _tpName = "HaoLong";
+    private readonly string _tpName = "NTConnect";
     
     public WagerTicketUnSettleNTConnect(IServiceProvider provider)
     {
         _logger = provider.GetRequiredService<ILogger<WagerTicketUnSettleNTConnect>>();
         _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-        _wagerHLService = provider.GetRequiredService<WagerHLService>();
+        _wagerNTConnectService = provider.GetRequiredService<WagerNTConnectService>();
     }
     
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -39,11 +39,11 @@ public class WagerTicketUnSettleNTConnect : BackgroundService
             var ticketKey = _thirdPartyBLL.GetAllSiteTicketKey(workerType, (int)_tp);
             _logger.LogInformation($"Start: {taskProperty} | SQ is :{ticketKey} | {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm.ss.fff}");
                 
-            var unSettleList = _wagerHLService.GetHLBetUnSettledList(ticketKey);    
+            var unSettleList = _wagerNTConnectService.GetNTCConnectBetUnSettledList(ticketKey);    
                 
             if (!unSettleList.Any())
             {
-                ticketKey = _wagerHLService.GetHaoLongTicketKey(ticketKey);
+                ticketKey = _wagerNTConnectService.GetNTCConnectTicketKey(ticketKey);
             }
             else
             {
