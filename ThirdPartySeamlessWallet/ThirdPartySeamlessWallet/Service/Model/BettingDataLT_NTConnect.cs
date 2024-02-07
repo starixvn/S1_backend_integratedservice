@@ -91,6 +91,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
         public DateTime LocalBetTime { get; set; }
+        public DateTime LocalSettleTime { get; set; }
     }
 
     public class NTCPlaceBetResponse : NTCErrorResponse
@@ -112,6 +113,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string username { get; set; }
         public string status { get; set; }
         public string settleBetTime { get; set; }
+        public DateTime LocalSettleTime { get; set; }
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
     }

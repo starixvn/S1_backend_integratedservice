@@ -176,12 +176,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 }
 
                 var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, tpCustInfoAuth.TpUserName, _gameType);
-                request.betTime = CheckBetTime(request.betTime);
+                request.betTime = CheckBetOrSettleTime(request.betTime);
                 request.bet_type = CheckBetType(request.bet_type);
                 request.bet_typegroup = CheckBetTypeGroup(request.bet_typegroup);
                 request.TicketType = (int)BettransType.Bet;
                 request.TicketStatus = (int)TicketStatus.UnSettled;
-                request.LocalBetTime = ConvertBetTime(request.betTime);
+                request.LocalBetTime = ConvertDateTime(request.betTime);
                 var result = PlaceBetLottery_NTConnect(request, out decimal tpAffterAmount);
                 
                 if (result > 0 || result == -1)
@@ -242,6 +242,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 request.TicketType = (int)BettransType.Payout;
                 request.status = request.win_amt > 0 ? "W" : "L";
                 request.TicketStatus = request.win_amt > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
+                request.settleBetTime = CheckBetOrSettleTime(request.settleBetTime);
+                request.LocalSettleTime = ConvertDateTime(request.settleBetTime);
                 var result = SettleLottery_NTConnect(request, out decimal tpAffterAmount);
                 if (result > 0 || result == -1)
                 {
@@ -403,15 +405,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         #region private
 
-        private string CheckBetTime(string betTime)
+        private string CheckBetOrSettleTime(string betTime)
         {
             DateTime dateTime;
             if (DateTime.TryParse(betTime, out dateTime))
             {
-                return dateTime.ToString("yyyy-MM-dd hh:MM:ss");
+                return dateTime.ToString("yyyy-MM-dd HH:mm:ss");
             }
-            return DateTime.Now.ToString("yyyy-MM-dd hh:MM:ss");
-
+            return DateTime.UtcNow.AddHours(-4).ToString("yyyy-MM-dd HH:mm:ss");
         }
 
         private string CheckBetType(string BetType)
@@ -424,11 +425,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return string.IsNullOrEmpty(BetTypeGroup) ? "NA" : BetTypeGroup;
         }
 
-        private DateTime ConvertBetTime(string betTime)
+        private DateTime ConvertDateTime(string time)
         {
             DateTime dateTime;
-            var convert = DateTime.TryParse(betTime, out dateTime);
-            return convert ? new DateTimeOffset(dateTime, new TimeSpan(-4, 0, 0)).UtcDateTime : dateTime;
+            if (DateTime.TryParse(time, out dateTime))
+            {
+                return new DateTimeOffset(dateTime, new TimeSpan(-4, 0, 0)).UtcDateTime;
+            }
+            return DateTime.UtcNow;
         }
         #endregion
     }
