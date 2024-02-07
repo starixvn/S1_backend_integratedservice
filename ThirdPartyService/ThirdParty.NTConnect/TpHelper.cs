@@ -33,12 +33,14 @@ namespace ThirdParty.NTConnect
                 return ProcessErrorResponse(tokenResponse);
             }
             
+            //93Connect Password Rule : password required at least 1 alphabet, 1 numeric and 1 symbol.
+            //因前面產的TpPwd有機會全英文，故這邊直接強制特殊符號及數字確保不會錯誤
             var request = new Dictionary<string, string>()
             {
                 { "token", tokenResponse.token },
                 { "username", tpCustInfo.TpUserName },
-                { "password", tpCustInfo.TpPwd + "$"},
-                { "confirm_password", tpCustInfo.TpPwd + "$" },
+                { "password", tpCustInfo.TpPwd + "$7"},
+                { "confirm_password", tpCustInfo.TpPwd + "$7" },
                 { "test_account", tpCustInfo.IsTest ? "1" : "0" }
             };
             
@@ -196,11 +198,13 @@ namespace ThirdParty.NTConnect
         private GetPlayerSessionResponse GetPlayerSession(string apiUrl, string accountName, string accountPWD,string clientIP, string token)
         {
             var getPlayerSessionUrl = apiUrl + "player/?a=login";
+            //93Connect Password Rule : password required at least 1 alphabet, 1 numeric and 1 symbol.
+            //因前面產的TpPwd有機會全英文，故這邊直接強制特殊符號及數字確保不會錯誤
             var request = new Dictionary<string, string>
             {
                 {"token",token},
                 {"username", accountName},
-                {"password", accountPWD + "$"},
+                {"password", accountPWD + "$7"},
                 {"ip", clientIP}
             };
             var sParam = JsonConvert.SerializeObject(request);
