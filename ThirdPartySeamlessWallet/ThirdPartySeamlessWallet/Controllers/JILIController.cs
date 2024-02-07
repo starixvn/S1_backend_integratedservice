@@ -1,9 +1,6 @@
 ﻿using System.Text;
-
 using Microsoft.AspNetCore.Mvc;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -21,7 +18,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly SettledBLL _settledBLL;
         private readonly Log2File _log2File;
         private readonly Tp _thisTp;
+        private readonly string _tpName = Tp.JILI.ToString();
         private readonly IHostEnvironment _environment;
+        private readonly Dictionary<int, JILIConfig> _siteConfigDic;
 
         public JILIController(IServiceProvider provider)
         {
@@ -33,6 +32,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             _bettingBLL = provider.GetRequiredService<BettingBLL>();
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _thisTp = Tp.JILI;
+            // 取共用，設定依機器分為(nova、aiking)
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<JILIConfig>(_tpName);
         }
 
         public class TokenInfo
@@ -119,7 +120,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             #endregion
 
-            var check = CheckAuthorization(tpCustInfoAuth?.MemberType == 3, sAuthorization);
+            var check = CheckAuthorization(tpCustInfoAuth?.MemberType == 3, tpCustInfoAuth.SiteId, sAuthorization);
             if (check.errorCode != 0)
             {
                 _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(check)}", logName);
@@ -204,7 +205,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getErrorResponse;
             }
 
-            var check = CheckAuthorization(custInfo.MemberType == 3, sAuthorization);
+            var check = CheckAuthorization(custInfo.MemberType == 3, custInfo.SiteId, sAuthorization);
             if (check.errorCode != 0)
             {
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(check)}", logName);
@@ -346,7 +347,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getErrorResponse;
             }
 
-            var check = CheckAuthorization(custInfo.MemberType == 3, sAuthorization);
+            var check = CheckAuthorization(custInfo.MemberType == 3, custInfo.SiteId, sAuthorization);
             if (check.errorCode != 0)
             {
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(check)}", logName);
@@ -434,7 +435,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getErrorResponse;
             }
 
-            var check = CheckAuthorization(custInfo.MemberType == 3, sAuthorization);
+            var check = CheckAuthorization(custInfo.MemberType == 3, custInfo.SiteId, sAuthorization);
             if (check.errorCode != 0)
             {
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(check)}", logName);
@@ -534,11 +535,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             return getErrorResponse;
         }
 
-        private ErrorResp CheckAuthorization(bool isLiveStreaming, string authorization = null)
+        private ErrorResp CheckAuthorization(bool isLiveStreaming, int siteId, string authorization = null)
         {
             ErrorResp getErrorResponse = new ErrorResp();
-            byte[] authTmp = null;
-
             if (string.IsNullOrEmpty(authorization))
             {
                 getErrorResponse.errorCode = 5;
@@ -546,12 +545,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getErrorResponse;
             }
             // all site use same username and password
-            var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)_thisTp);
+            var config = _siteConfigDic[siteId];
 
+            byte[] authTmp;
             if (isLiveStreaming)
-                authTmp = Encoding.ASCII.GetBytes($"{thirdPartySetting.TpSetting["Username_Stream"]}:{thirdPartySetting.TpSetting["Password_Stream"]}");
+                authTmp = Encoding.ASCII.GetBytes($"{config.Username_Stream}:{config.Password_Stream}");
             else
-                authTmp = Encoding.ASCII.GetBytes($"{thirdPartySetting.TpSetting["Username"]}:{thirdPartySetting.TpSetting["Password"]}");
+                authTmp = Encoding.ASCII.GetBytes($"{config.Username}:{config.Password}");
 
             string authToken = Convert.ToBase64String(authTmp);
             string[] aAuthorization = authorization.Split(' ');
