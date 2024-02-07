@@ -53,14 +53,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return getErrorResponse;
             }
             
-            if (!_authBLL.AuthenticateByTpToken(request.token, out TpCustInfoAuth tpCustInfoAuth))
-            {
-                getErrorResponse.data.ErrorCode  = (int)NTConnectErrorCode.PlayerInvalid;
-                getErrorResponse.data.ErrorMessage = NTConnectErrorCode.PlayerInvalid.GetEnumDescription();
-                return getErrorResponse;
-            }
-            
-            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, tpCustInfoAuth.TpUserName);
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, request.username);
             
             if (tpCheck == null)
             {
@@ -76,13 +69,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return getErrorResponse;
             }
             
-            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, tpCustInfoAuth.TpUserName, _gameType);
+            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, request.username, _gameType);
             var response = new NTCResponse<NTCGetBalanceResponse>()
             {
                 status = "success",
                 data = new NTCGetBalanceResponse()
                 {
-                    username = tpCustInfoAuth.TpUserName,
+                    username = request.username,
                     balance = tpCustBalance.Balance
                 }
             };

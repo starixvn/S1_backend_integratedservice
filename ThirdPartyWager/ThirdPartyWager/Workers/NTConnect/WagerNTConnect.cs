@@ -47,7 +47,7 @@ namespace ThirdPartyWager.Workers
             try
             {
                 var nowTime = DateTime.Now;
-                _logger.LogInformation($"HaoLong Start DoNTConnectReportTask Job Time : : +0 {nowTime:yyyy-MM-ddTHH:mm:ss}");
+                _logger.LogInformation($"DoNTConnect Start DoNTConnectReportTask Job Time : : +0 {nowTime:yyyy-MM-ddTHH:mm:ss}");
 
                 var result = false;
                 quick = 0;
