@@ -695,8 +695,7 @@ namespace ThirdPartyWager.Extensions
 
             services.AddHostedService<WagerNTConnect>();
             services.AddHostedService<FinanceNTConnect>();
-            //services.AddHostedService<WagerTicketUnSettleNTConnect>();
-
+            
             return services;
         }
     }

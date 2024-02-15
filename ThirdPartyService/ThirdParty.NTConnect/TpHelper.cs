@@ -198,7 +198,7 @@ namespace ThirdParty.NTConnect
                     WinlostAmount = ((decimal)wagerDetail.GetValueOrDefault("win_amt") - 
                                      (decimal)wagerDetail.GetValueOrDefault("bet_amt")) * 
                                     tpCurrency.ExchangeRate,
-                    DetailUrl = Get93ConnectBetDetailUrl(getBetDetail.TransId,apiUrl,currencyConfig.ClientKey,currencyConfig.SecretKey,tpCustInfo.TpUserName,tpCustInfo.TpPwd) ?? ""
+                    DetailUrl = Get93ConnectBetDetailUrl(getBetDetail.TransId,apiUrl,currencyConfig.ClientKey,currencyConfig.SecretKey,tpCustInfo.TpUserName)
                 };
                 return resultData;
             }
@@ -208,7 +208,7 @@ namespace ThirdParty.NTConnect
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo,
             Dictionary<string, string> inputs)
         {
-            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerTFG_Get", new { id = betRecordInfo.TransId }, DataBase.Wager);
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_93Connect_Get", new { id = betRecordInfo.TransId }, DataBase.Wager);
             if (detail == null)
             {
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
@@ -284,7 +284,7 @@ namespace ThirdParty.NTConnect
             return result;
         }
 
-        private Get93ConnectBetDetailResponse Get93ConnectBetDetail(string apiUrl,string session,string transId,string username,string token)
+        private Get93ConnectBetDetailResponse Get93ConnectBetDetail(string apiUrl,string transId,string username,string token)
         {
             var getBetDetailUrl = apiUrl + "player/?a=getbetbyid";
             var request = new Dictionary<string, string>
@@ -303,23 +303,15 @@ namespace ThirdParty.NTConnect
         }
         
 
-        private string Get93ConnectBetDetailUrl(string transId ,string apiUrl, string clientKey, string SecretKey, string tpUserName, string tpPwd)
+        private string Get93ConnectBetDetailUrl(string transId ,string apiUrl, string clientKey, string SecretKey, string tpUserName)
         {
-            string playerSession;
             var getToken = GetToken(apiUrl, clientKey, SecretKey);
-            var getPlayerCheck = GetPlayerCheck(apiUrl, tpUserName, getToken.token);
-            if (!string.IsNullOrEmpty(getPlayerCheck.session))
+            if (getToken.status != "success")
             {
-                playerSession = getPlayerCheck.session;
-            }
-            else
-            {
-                // 如果 getPlayerCheck 為 null 或其 session 為空，則嘗試獲取新的 session。
-                var getPlayerSession = GetPlayerSession(apiUrl, tpUserName, tpPwd, "0.0.0.0" , getToken.token);
-                playerSession = getPlayerSession.session;
+                return "";
             }
             
-            var result = Get93ConnectBetDetail(apiUrl, playerSession,transId,tpUserName, getToken.token);
+            var result = Get93ConnectBetDetail(apiUrl,transId,tpUserName, getToken.token);
             return result != null ? result.mybeturl : "";
         }
 

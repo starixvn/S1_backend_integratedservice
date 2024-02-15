@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using System.Xml;
 using Newtonsoft.Json;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
