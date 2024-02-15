@@ -9,14 +9,20 @@
 
     public class FPSChecksRequest
     {
-        public int account { get; set; }
-        public string action { get; set; }
-        public string actionResult { get; set; }
-        public string ip { get; set; }
-        public string url { get; set; }
-        public string platform { get; set; }
-        public string userAgent { get; set; }
-        public string screen { get; set; }
-        public string di { get; set; }
+        public int Account { get; set; }
+        //__di
+        public string DI { get; set; }
+        //__bi
+        public string BI { get; set; }
+        public string IP { get; set; }
+        public string UserAgent { get; set; }
+        //detecas-analysis
+        public string DetecasAnalysis { get; set; }
+        public string AcceptsTypes { get; set; }
+        //__fdi
+        public string SessionKey { get; set; }
+        //tk
+        public string Token { get; set; }
+        public string Url { get; set; }
     }
 }
