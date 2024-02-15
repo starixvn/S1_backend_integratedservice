@@ -22,28 +22,28 @@ namespace CommonService.Service.BLL
             var apiResult = new ApiResult();
             var config = _fpsServicesConfig[custInfo.SiteId];
             var url = config.ResourceURL;
-
+            
             var sendIovationChecks = new Dictionary<string, string>
             {
                 { "Account", custInfo.TpUserName },
-                { "Action", fpsChecksRequest.action },
-                { "ActionResult", fpsChecksRequest.actionResult },
                 { "Subscriber",config.Subscriber},
-                //{ "SubscriberDate",new DateTimeOffset(DateTime.Now).ToOffset(TimeSpan.FromHours(8)).ToString()},
                 { "SubscriberDate",new DateTimeOffset(DateTime.Now).ToOffset(TimeSpan.FromHours(-4)).ToString()},
-                { "Ip",fpsChecksRequest.ip},
-                { "Url",fpsChecksRequest.url},
-                { "AcceptTypes","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*; q = 0.8,application / signed - exchange; v = b3; q = 0.9"},
-                { "Platform",fpsChecksRequest.platform},
-                { "UserAgent",fpsChecksRequest.userAgent},
-                { "Screen",fpsChecksRequest.screen},
-                { "__di",fpsChecksRequest.di}
+                { "DI",fpsChecksRequest.DI},
+                { "BI",fpsChecksRequest.BI},
+                { "Ip",fpsChecksRequest.IP},
+                { "UserAgent",fpsChecksRequest.UserAgent},
+                { "DetecasAnalysis", fpsChecksRequest.DetecasAnalysis },
+                { "Action", "login"},
+                { "ActionResult", "Successfully" },
+                { "AcceptsTypes", fpsChecksRequest.AcceptsTypes },
+                { "SessionKey", fpsChecksRequest.SessionKey },
+                { "Token", fpsChecksRequest.Token },
+                { "Url",fpsChecksRequest.Url}
 
             };
-
-            using var result = await _httpHelper.HttpFromPostAsync(url, null, sendIovationChecks, "application/x-www-form-urlencoded");
-            //var resultResp = JsonConvert.DeserializeObject<FPSResult>(result.Content.ReadAsStringAsync().Result);
-
+            
+            using var result = await _httpHelper.HttpFromPostAsync(url, null, sendIovationChecks, "application/json");
+            
             if (result.StatusCode == HttpStatusCode.OK)
             {
                 apiResult.ErrorCode = ErrorCode.Success;
