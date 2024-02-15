@@ -57,6 +57,7 @@ namespace ThirdPartySettleWorker.Workers
             var logName = $"Settle_NTConnect";
             var getSP = $"Service_BettransLT_93Connect_Settle_Get";
             var setSP = $"Service_BettransLT_93Connect_Settle_Set";
+            var checkSP = $"Service_TpWager_93Connect_Get";
             var dueTimeSpan = TimeSpan.FromMinutes(15);
             
             try
@@ -75,7 +76,11 @@ namespace ThirdPartySettleWorker.Workers
                     var getUnsettledList = _tpUnSettledBLL.GetTpUnsettleData<SettleData93Connect>(getSP, new { wager.TransId }, DataBase.Main);
                     if(getUnsettledList == null || !getUnsettledList.Any())
                     {
-                        throw new UnsettleNotFoundException($"{_tpName} - NTConnect Can fount TransId : {wager.TransId}.");
+                        if (!Check93ConnectTpWagerStatus(wager.TransId, checkSP))
+                            throw new UnsettleNotFoundException(
+                                $"{_tpName} - NTConnect Can fount TransId : {wager.TransId}.");
+                        _ = _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, wager.TransId, isSuccess: true);
+                        continue;
                     }
                     try
                     {
@@ -179,11 +184,39 @@ namespace ThirdPartySettleWorker.Workers
             }
         }
         
+        #region private
+
+        private bool Check93ConnectTpWagerStatus(string TransId,string checkSP)
+        {
+            var get93ConnectCheckWager = _tpUnSettledBLL.GetTpUnsettleData<NTConnectWager>(checkSP, new { TransId }, DataBase.Wager);
+            return get93ConnectCheckWager.FirstOrDefault()?.status == "Cancel";
+        }
+        
+        #endregion
+        
         #region Model
         
         private class SettleData93Connect : SettleData
         {
             public string Status { get; set; }
+        }
+        
+        public class NTConnectWager
+        {
+            public string ticket { get; set; }
+            public string player { get; set; }
+            public DateTime bet_date { get; set; }
+            public string gamecode { get; set; }
+            public string game { get; set; }
+            public string drawno { get; set; }
+            public decimal bet_amount { get; set; }
+            public decimal bet_odd { get; set; }
+            public string bet_typegroup { get; set; }
+            public string bet_type { get; set; }
+            public decimal winlosso { get; set; }
+            public string status { get; set; }
+            public DateTime LocalBetTime { get; set; }
+            public DateTime CreateTime { get; set; }
         }
         
         #endregion

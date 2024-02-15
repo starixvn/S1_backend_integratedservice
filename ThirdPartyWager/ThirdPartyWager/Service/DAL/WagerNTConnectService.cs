@@ -1,6 +1,5 @@
 ﻿using Dapper;
 using MySql.Data.MySqlClient;
-using Newtonsoft.Json;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -50,22 +49,6 @@ namespace ThirdPartyWager.Service.DAL
                 }
                 throw;
             }
-        }
-        
-        public IEnumerable<HLWagerTrans> GetNTCConnectBetUnSettledList(long TicketKey, int LimitCount = 1000)
-        {
-            return _wagerDbClient.Query<HLWagerTrans>("Service_BettransLT_93Connect_UnSettle_Get",
-                new
-                {
-                    TicketKey,
-                    LimitCount,
-                });
-        }
-        
-        public long GetNTCConnectTicketKey(long TicketKey)
-        {
-            var parameters = new { TicketKey };
-            return _reportDbClient.QueryFirst<long>("Service_BettransLT_93Connect_TicketKey_Get", parameters);
         }
 
         private DateTime ConvertUTCTime(string date)

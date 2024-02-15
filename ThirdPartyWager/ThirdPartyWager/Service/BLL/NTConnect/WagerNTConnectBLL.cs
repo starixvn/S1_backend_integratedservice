@@ -34,8 +34,10 @@ namespace ThirdPartyWager.Service.BLL
             var guid = Guid.NewGuid().ToString();
             try
             {
-                foreach (var siteConfig in _siteConfigDic.Keys.Select(site => _siteConfigDic[site]))
+                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+                foreach (var site in siteList)
                 {
+                    var siteConfig = _siteConfigDic[site.SiteId];
                     var apiUrl = siteConfig.ApiUrl;
                     foreach (var currencyKey in siteConfig.CurrencyList)
                     {
@@ -50,8 +52,8 @@ namespace ThirdPartyWager.Service.BLL
                             if (wager93data.totalpage == null || wager93data.page == null)
                             {
                                 msg = "NO_DATA";
-                                _logger.LogInformation($"93Connect:{msg}\r\nSiteCurrency:{clientKey}\r\n{JsonConvert.SerializeObject(wager93data)}");
-                                break;
+                                    _logger.LogInformation($"93Connect:{msg}\r\nSiteCurrency:{clientKey}\r\n{JsonConvert.SerializeObject(wager93data)}");
+                                    break;
                             }
                             totalPage = wager93data.totalpage;
 
@@ -59,12 +61,10 @@ namespace ThirdPartyWager.Service.BLL
                             {
                                 InsertNew93Wager(wager);
                             }
-                            page++;
+                            page++; 
                         }
                     }
                 }
-                
-                //var wagerData = await _apiNTConnectBLL.GetBetListByTime(startTime, endTime,guid);
                 
                 msg = "FINISH";
                 _logger.LogInformation($"GetWagersAsync {msg}\r\n{DateTime.Now:yyyy-MM-dd} ~ {DateTime.Now:yyyy-MM-dd}");
