@@ -79,8 +79,12 @@ namespace ThirdParty.NTConnect
     #endregion
         
     #region GetBetDetail
-        
-        
+     
+    public class Get93ConnectBetDetailResponse : NTConnectResponse
+    {
+        public string? mybeturl { get; set; } 
+        public string username { get; set; }
+    }
         
     #endregion
     

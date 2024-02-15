@@ -75,7 +75,7 @@ namespace ThirdPartySettleWorker.Workers
                     var getUnsettledList = _tpUnSettledBLL.GetTpUnsettleData<SettleData93Connect>(getSP, new { wager.TransId }, DataBase.Main);
                     if(getUnsettledList == null || !getUnsettledList.Any())
                     {
-                        throw new UnsettleNotFoundException($"{_tpName} - HaoLong Can fount TransId : {wager.TransId}.");
+                        throw new UnsettleNotFoundException($"{_tpName} - NTConnect Can fount TransId : {wager.TransId}.");
                     }
                     try
                     {

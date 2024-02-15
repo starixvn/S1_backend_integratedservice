@@ -167,13 +167,66 @@ namespace ThirdParty.NTConnect
         
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var spName = "Service_BettransLT_93Connect_Detail_Get";
+            var db = DataBase.Report;
+            var siteConfig = _siteConfigDic[tpCustInfo.SiteId];
+            var apiUrl = siteConfig.ApiUrl;
+            var currencyConfig = siteConfig.CurrencyList.FirstOrDefault(x => x.CurrencyCode == tpCustInfo.TpCurrencyId);
+            
+            
+            TpCurrency tpCurrency = new()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+            
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst(spName, new { getBetDetail.TransId }, db);
+            if (wagerDetail != null && wagerDetail.Count > 0)
+            {
+                //wagerDetail.GetValueOrDefault("")?.ToString(),
+                var detail = ToJson(wagerDetail);
+                var resultData = new LotteryDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    Detail = detail,
+                    TpCurrency = tpCurrency,
+                    RefTransId = getBetDetail.TransId,
+                    TpUserName = wagerDetail.GetValueOrDefault("username")?.ToString(),
+                    UTCBetTime = DateTime.Parse(wagerDetail.GetValueOrDefault("LocalBetTime")?.ToString()),
+                    UTCSettledTime = DateTime.Parse(wagerDetail.GetValueOrDefault("LocalSettleTime")?.ToString()),
+                    Stake = (decimal)wagerDetail.GetValueOrDefault("bet_amt") * tpCurrency.ExchangeRate,
+                    WinlostAmount = ((decimal)wagerDetail.GetValueOrDefault("win_amt") - 
+                                     (decimal)wagerDetail.GetValueOrDefault("bet_amt")) * 
+                                    tpCurrency.ExchangeRate,
+                    DetailUrl = Get93ConnectBetDetailUrl(getBetDetail.TransId,apiUrl,currencyConfig.ClientKey,currencyConfig.SecretKey,tpCustInfo.TpUserName,tpCustInfo.TpPwd) ?? ""
+                };
+                return resultData;
+            }
+            return null;
         }
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo,
             Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerTFG_Get", new { id = betRecordInfo.TransId }, DataBase.Wager);
+            if (detail == null)
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = detail.GetStringValue("gamecode"),
+                Game = tpGameType.TypeName,
+                RefNo = detail.GetStringValue("drawno"),
+                Title = tpGameType.TypeName,
+                MatchID = betRecordInfo.TransId,
+                BetType = detail.GetStringValue("bet_typegroup"),
+                BetChoice = detail.GetStringValue("bet_type"),
+                Result = detail.GetStringValue("status"),
+                IP = string.Empty,
+                Odds = decimal.TryParse(detail.GetStringValue("bet_odd"), out var odds) ? odds : 0,
+            };
         }
         
         #region private
@@ -229,6 +282,45 @@ namespace ThirdParty.NTConnect
             var result = FromJson<GetPlayerCheckResponse>(json);
 
             return result;
+        }
+
+        private Get93ConnectBetDetailResponse Get93ConnectBetDetail(string apiUrl,string session,string transId,string username,string token)
+        {
+            var getBetDetailUrl = apiUrl + "player/?a=getbetbyid";
+            var request = new Dictionary<string, string>
+            {
+                {"token",token},
+                {"username", username},
+                {"ticket",transId},
+                {"lang_id","0"}
+            };
+            var sParam = JsonConvert.SerializeObject(request);
+
+            var json = HttpClientPost(getBetDetailUrl, sParam, ContentType);
+            var result = FromJson<Get93ConnectBetDetailResponse>(json);
+
+            return result;
+        }
+        
+
+        private string Get93ConnectBetDetailUrl(string transId ,string apiUrl, string clientKey, string SecretKey, string tpUserName, string tpPwd)
+        {
+            string playerSession;
+            var getToken = GetToken(apiUrl, clientKey, SecretKey);
+            var getPlayerCheck = GetPlayerCheck(apiUrl, tpUserName, getToken.token);
+            if (!string.IsNullOrEmpty(getPlayerCheck.session))
+            {
+                playerSession = getPlayerCheck.session;
+            }
+            else
+            {
+                // 如果 getPlayerCheck 為 null 或其 session 為空，則嘗試獲取新的 session。
+                var getPlayerSession = GetPlayerSession(apiUrl, tpUserName, tpPwd, "0.0.0.0" , getToken.token);
+                playerSession = getPlayerSession.session;
+            }
+            
+            var result = Get93ConnectBetDetail(apiUrl, playerSession,transId,tpUserName, getToken.token);
+            return result != null ? result.mybeturl : "";
         }
 
         private static string GetErrorString(string errorMessage,IEnumerable<Error> errors)
