@@ -167,7 +167,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         TransType.Payout,
                         null,
                         out afterAmount,
-                        $"Payout",
+                        ((GAType)reqData.type).ToString(),
                         out bonusId,
                         conn,
                         trans);
@@ -247,6 +247,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (tempResult > 0)
             {
+                string memo = reqData.type == (int)GAType.TicketWinnings ? "Winnings Payout" : "Draw Payout";
+
                 tempResult = _settledService.PayoutV2(
                         tpCustInfo,
                         bettingData.amount,
@@ -258,7 +260,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         TransType.Refunds,
                         null,
                         out afterAmount,
-                        $"Payout",
+                        ((GAType)reqData.type).ToString(),
                         out bonusId,
                         conn,
                         trans);
@@ -349,7 +351,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         TransType.Undo,
                         null,
                         out afterAmount,
-                        $"Payout",
+                        ((GAType)reqData.type).ToString(),
                         out bonusId,
                         conn,
                         trans);
@@ -416,7 +418,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         TransType.Prize,
                         null,
                         out afterAmount,
-                        $"Payout",
+                        ((GAType)reqData.type).ToString(),
                         out bonusId,
                         conn,
                         trans);
