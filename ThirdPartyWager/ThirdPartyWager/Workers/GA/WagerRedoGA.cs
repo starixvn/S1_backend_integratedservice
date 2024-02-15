@@ -18,7 +18,7 @@ namespace ThirdPartyWager.Workers
         private readonly WagerGABLL _wagerGABLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly ILogger<WagerRedoBNG> _logger;
+        private readonly ILogger<WagerRedoGA> _logger;
         private readonly int timeZone = 0;
         private readonly int iRangMins = 30;
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
@@ -30,7 +30,7 @@ namespace ThirdPartyWager.Workers
             _wagerGABLL = provider.GetRequiredService<WagerGABLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _logger = provider.GetRequiredService<ILogger<WagerRedoBNG>>();
+            _logger = provider.GetRequiredService<ILogger<WagerRedoGA>>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)

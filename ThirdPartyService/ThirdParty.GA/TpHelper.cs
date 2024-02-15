@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
@@ -69,7 +70,7 @@ namespace ThirdParty.GA
             //jackpot沒有wager資料
             if(wagerDetail == null)
             {
-                return new CasinoDetail(getBetDetail.TpGameTypeOption)
+                return new CockFightingDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
                     TpCurrency = tpCurrency,
@@ -78,7 +79,7 @@ namespace ThirdParty.GA
             }
 
             var detail = ToJson(wagerDetail);
-            return new CasinoDetail(getBetDetail.TpGameTypeOption)
+            return new CockFightingDetail(getBetDetail.TpGameTypeOption)
             {
                 TransId = getBetDetail.TransId,
                 Detail = detail,
@@ -98,7 +99,25 @@ namespace ThirdParty.GA
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_GA_Get", new { sid = betRecordInfo.TransId }, DataBase.Wager);
+            if (detail == null)
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = tpGameType.TypeName,
+                Game = tpGameType.TypeName,
+                RefNo = string.Empty,
+                Title = tpGameType.TypeName,
+                MatchID = betRecordInfo.TransId,
+                BetType = detail.GetStringValue("selection"),
+                BetChoice = string.Empty,
+                Result = detail.GetStringValue("result"),
+                DeviceType = DeviceType.None,
+                IP = string.Empty,
+            };
         }
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
