@@ -497,7 +497,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.uuid = getReq.uuid;
                 }
 
-
                 _log2File.Error($"{JsonConvert.SerializeObject(getQuery)}\r\n{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }

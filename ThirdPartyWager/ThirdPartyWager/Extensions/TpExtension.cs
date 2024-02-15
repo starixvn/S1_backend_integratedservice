@@ -334,7 +334,6 @@ namespace ThirdPartyWager.Extensions
 
             services.AddSingleton<WagerV8BLL>();
             services.AddSingleton<ApiV8BLL>();
-            services.AddSingleton<WagerRedoV8BLL>();
             services.AddSingleton<FinanceV8BLL>();
 
             services.AddHostedService<WagerV8>();
@@ -608,6 +607,19 @@ namespace ThirdPartyWager.Extensions
             return services;
         }
 
+        private IServiceCollection AddPegasus(IServiceCollection services)
+        {
+            services.AddSingleton<WagerPegasusService>();
+
+            services.AddSingleton<ApiPegasusBLL>();
+            services.AddSingleton<FinancePegasusBLL>();
+            services.AddSingleton<WagerPegasusBLL>();
+
+            services.AddHostedService<WagerPegasus>();
+            services.AddHostedService<FinancePegasus>();
+            return services;
+        }
+
         private IServiceCollection AddFaChai(IServiceCollection services)
         {
             services.AddSingleton<WagerFaChaiService>();
@@ -622,22 +634,7 @@ namespace ThirdPartyWager.Extensions
 
             return services;
         }
-
-        private IServiceCollection AddPegasus(IServiceCollection services)
-        {
-            services.AddSingleton<WagerPegasusService>();
-
-            services.AddSingleton<ApiPegasusBLL>();
-            services.AddSingleton<FinancePegasusBLL>();
-            services.AddSingleton<WagerPegasusBLL>();
-
-            services.AddHostedService<WagerPegasus>();
-            services.AddHostedService<FinancePegasus>();
-
-
-            return services;
-        }
-
+        
         private IServiceCollection AddBNG(IServiceCollection services)
         {
             services.AddSingleton<WagerBNGService>();
@@ -649,6 +646,21 @@ namespace ThirdPartyWager.Extensions
             services.AddHostedService<WagerBNG>();
             services.AddHostedService<WagerRedoBNG>();
             services.AddHostedService<FinanceBNG>();
+
+            return services;
+        }
+
+        private IServiceCollection AddHL(IServiceCollection services)
+        {
+            services.AddSingleton<WagerHLService>();
+
+            services.AddSingleton<ApiHLBLL>();
+            services.AddSingleton<FinanceHLBLL>();
+            services.AddSingleton<WagerHLBLL>();
+
+            services.AddHostedService<WagerHL>();
+            services.AddHostedService<FinanceHL>();
+            services.AddHostedService<WagerTicketUnSettleHL>();
 
             return services;
         }

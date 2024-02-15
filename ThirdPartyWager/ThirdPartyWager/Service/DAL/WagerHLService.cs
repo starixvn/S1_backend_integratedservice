@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using Newtonsoft.Json;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -21,12 +20,15 @@ namespace ThirdPartyWager.Service.DAL
 
         public bool InsertHLWager(HLWagerData wager)
         {
+            var dateTime = new DateTimeOffset(wager.DateTime, new TimeSpan(8, 0, 0)).UtcDateTime;
+            var drawDate = new DateTimeOffset(wager.DrawDate, new TimeSpan(8, 0, 0)).UtcDateTime;
+            
             var p = new DynamicParameters();
             p.Add("betID", wager.BetID);
             p.Add("loginID", wager.UserName);
-            p.Add("dateTime", ConvertToUtcTime(wager.DateTime));
+            p.Add("dateTime", dateTime);
             p.Add("drawType", wager.DrawType);
-            p.Add("drawDate", ConvertToUtcTime(wager.DrawDate));
+            p.Add("drawDate", drawDate);
             p.Add("betNumber", wager.BetNumber);
             p.Add("betPosition", wager.BetPosition);
             p.Add("bet", wager.BetAmount);
@@ -56,13 +58,7 @@ namespace ThirdPartyWager.Service.DAL
         public long GetHaoLongTicketKey(long TicketKey)
         {
             var parameters = new { TicketKey };
-            return _reportDbClient.QueryFirst<long>("Service_TpWager_HL_TicketKey_Get", parameters);
-        }
-
-        private DateTime ConvertToUtcTime(DateTime dateTime)
-        {
-            var localDateTimeOffset = new DateTimeOffset(dateTime, TimeZoneInfo.Local.GetUtcOffset(dateTime));
-            return localDateTimeOffset.ToUniversalTime().DateTime;
+            return _wagerDbClient.QueryFirst<long>("Service_TpWager_HL_TicketKey_Get", parameters);
         }
     }
 }

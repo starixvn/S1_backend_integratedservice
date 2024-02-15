@@ -1,6 +1,7 @@
 using Serilog;
+using Serilog.Events;
 using Serilog.Exceptions;
-
+using Serilog.Formatting.Json;
 using ThirdPartyBetHistory;
 using ThirdPartyBetHistory.Extensions;
 using ThirdPartyBetHistory.Service.Worker;
@@ -23,7 +24,27 @@ builder.Host.UseSerilog((context, Configuration) =>
                 excludesApiEndpoints.Any(item => p.Value.ToString().Contains(item))
                 || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item))))
         .Enrich.WithExceptionDetails();
+
+    OverrideLoggerWriteToLFile(Configuration);
 });
+
+void OverrideLoggerWriteToLFile(LoggerConfiguration configuration)
+{
+    const string cashSiteBrand = "Nova";
+
+    var brand = Environment.GetEnvironmentVariable("Brand") ?? string.Empty;
+    if (brand != cashSiteBrand) return;
+
+    var logFilePath = $"/bethistory/bethistory-{DateTime.Now:yyyyMMddHHmmssfff}.log";
+    configuration
+        .WriteTo.File(new JsonFormatter(),
+            logFilePath,
+            rollingInterval: RollingInterval.Day,
+            retainedFileCountLimit: 60,
+            fileSizeLimitBytes: 10485760,
+            rollOnFileSizeLimit: true,
+            restrictedToMinimumLevel: LogEventLevel.Information);
+}
 
 var startup = new Startup(builder.Configuration);
 startup.ConfigureServices(builder.Services);
@@ -36,6 +57,10 @@ builder.Services
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
+
+var minWorkers = Environment.ProcessorCount * 4;
+var minIOCPs = Environment.ProcessorCount * 4;
+ThreadPool.SetMinThreads(minWorkers, minIOCPs);
 
 app.Run();
 

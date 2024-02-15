@@ -286,7 +286,8 @@ namespace ThirdParty.Sexy
                 var apiUrl = config.ApiUrl;
                 var cert = config.Cert;
                 var agentId = config.AgentId;
-                var platform = inputs.GetValueOrDefault("Platform") ?? throw new Exception();
+                //var platform = inputs.GetValueOrDefault("Platform") ?? throw new Exception();
+                var platform = _siteConfig.GetValueOrDefault("Platform") ?? throw new Exception("Platform");
 
                 var url = $"{apiUrl}/wallet/getTransactionHistoryResult";
                 var sParam = $"cert={cert}&agentId={agentId}&userId={tpCustInfo.TpUserName}&platformTxId={getBetDetail.TransId}&platform={platform}";

@@ -90,7 +90,7 @@ namespace ThirdPartyWager.Service.BLL
                 var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
 
                 // get wager
-                var dataWager = await _apiEVOBLL.GetBetListByTime(setting["ApiUrl"], setting["CasinoKey"], setting["gameHistoryApiToken"], setting["GameProvider"], startTime, endTime, guid);
+                var dataWager = await _apiEVOBLL.GetBetListByTime(setting["ApiUrl_Backup"], setting["CasinoKey"], setting["gameHistoryApiToken"], setting["GameProvider"], startTime, endTime, guid);
 
                 // error condition
                 var error = dataWager.Select(x => x.error).FirstOrDefault();
@@ -261,7 +261,7 @@ namespace ThirdPartyWager.Service.BLL
 
                     // get wager
                     var settleTime = DateTimeOffset.FromUnixTimeSeconds(unsettled.SettleTime).DateTime.AddMinutes(-5).ToString(_timeFormat);
-                    var dataWager = await _apiEVOBLL.GetBetListByTransId(setting["ApiUrl"], setting["CasinoKey"], setting["gameHistoryApiToken"], setting["GameProvider"], unsettled.TransId, settleTime);
+                    var dataWager = await _apiEVOBLL.GetBetListByTransId(setting["ApiUrl_Backup"], setting["CasinoKey"], setting["gameHistoryApiToken"], setting["GameProvider"], unsettled.TransId, settleTime);
 
                     // error condition
                     var error = dataWager.Select(x => x.error).FirstOrDefault();

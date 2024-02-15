@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -52,7 +51,7 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> ExecWagerRedoWorker(int type, int timeRange, string tpCurrencyId)
         {
-            var wokerTime = GetWorkerTime(type, 1);
+            var wokerTime = GetRedoWorkerTime(type, 1, tpCurrencyId);
             var quick = CheckQuick(wokerTime, 120);
             var time = _dateTimeHelper.GetTimeByHour(timeRange, _timeZone, _timeFormat, wokerTime);
 
@@ -62,8 +61,10 @@ namespace ThirdPartyWager.Service.BLL
                 var result = await GetWagersAsync(time, tpCurrencyId, true);
                 if (result)
                 {
-                    _thirdPartyBLL.SetThirdPartyTimer(_tpId, type, time.endUnix);
+                    _thirdPartyBLL.SetThirdPartyTimerByCurrency(_tpId, type, time.endUnix, tpCurrencyId);
                 }
+                // 拉单过于频繁(两次拉单时间间隔必须大于 60 秒)
+                Thread.Sleep(67000);
             }
 
             return quick;
@@ -75,7 +76,7 @@ namespace ThirdPartyWager.Service.BLL
             var workerName = compare ? "GetRedoWagersAsync" : "GetWagersAsync";
             try
             {
-
+                var agent = Convert.ToInt32(_config.CurrencyData[tpCurrencyId].Agent);
                 // get wager
                 var dataWager = await _apiV8BLL.GetBetListByTimeV2(_config, wagerTime.startUnix, wagerTime.endUnix, tpCurrencyId);
 
@@ -96,10 +97,9 @@ namespace ThirdPartyWager.Service.BLL
                     _logger.LogInformation($"{workerName} {msg} {tpCurrencyId}\r\n{JsonConvert.SerializeObject(dataWager)}");
                     return true;
                 }
-
                 if (compare)
                 {
-                    bool check = CompareSummary(wagerTime, dataWager, tpCurrencyId);
+                    bool check = CompareSummary(wagerTime, dataWager, agent);
                     if (check)
                     {
                         msg = "MATCH";
@@ -136,7 +136,6 @@ namespace ThirdPartyWager.Service.BLL
 
                 foreach (var item in field)
                 {
-
                     var bet = JsonConvert.DeserializeObject<BetV8>(item);
                     try
                     {
@@ -161,17 +160,16 @@ namespace ThirdPartyWager.Service.BLL
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                _logger.LogError(ex, $"{workerName} {msg}\r\n{ex.Message}");
+                _logger.LogError(ex, $"{workerName} {msg} {tpCurrencyId}\r\n{ex.Message}");
                 return false;
             }
         }
 
-        private bool CompareSummary(TimeCast wagerTime, WagerV8Model betDetail, string tpCurrencyId)
+        private bool CompareSummary(TimeCast wagerTime, WagerV8Model betDetail, int agent)
         {
             // table summary
-            var getWagerCount = _wagerV8Service.GetWagerTotalV2(wagerTime.startUnix, wagerTime.endUnix, tpCurrencyId);
+            var getWagerCount = _wagerV8Service.GetWagerTotalV2(wagerTime.startUnix, wagerTime.endUnix, agent);
             var wagerCnt = getWagerCount.wagerCount;
-
             // api summary
             int apiCnt = betDetail.d.count;
 
@@ -182,6 +180,12 @@ namespace ThirdPartyWager.Service.BLL
         {
             var lastTime = _thirdPartyBLL.GetThirdPartyTimer(_tpId, type);
             return (lastTime == null) ? DateTime.Now.AddHours(-7) : lastTime.StartTime.AddSeconds(vary);
+        }
+
+        private DateTime GetRedoWorkerTime(int type, int vary, string tpCurrencyId)
+        {
+            var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(_tpId, type, tpCurrencyId);
+            return (lastTime == null) ? DateTime.Now.AddHours(-3) : lastTime.StartTime.AddSeconds(vary);
         }
 
         private bool CheckQuick(DateTime workTime, int excess)

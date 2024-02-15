@@ -44,7 +44,6 @@ namespace ThirdPartyWager.Service.Model
         [JsonProperty("strike")]
         public string SettleAmount { get; set; }
         public int SettleFlag { get; set; }
-        public int Status { get; set; }
     }
 
     public class HLSettleInsertData
@@ -134,6 +133,7 @@ namespace ThirdPartyWager.Service.Model
 	    public string TpUserName { get; set; }
 	    public string StrikePosition { get; set; }
 	    public int drawType { get; set; }
+	    public DateTime dateTime { get; set; }
 	    public DateTime drawDate { get; set; }
 	    public int SettleFlag { get; set; }
     }

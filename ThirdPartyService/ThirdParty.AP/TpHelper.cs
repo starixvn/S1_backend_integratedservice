@@ -62,7 +62,17 @@ namespace ThirdParty.AP
             public string ErrorDescription { get; set; }
             public string LaunchURL { get; set; }
         }
-
+        
+        public class GetAddPrizeToPlayerResp
+        {
+            public string Timestamp { get; set; }
+            public string Seq { get; set; }
+            public int ErrorCode { get; set; }
+            public string ErrorDescription { get; set; }
+            public string CampaignId { get; set; }
+            public List<string> PlayerList { get; set; }
+        }
+        
         #endregion
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -299,6 +309,54 @@ namespace ThirdParty.AP
                 DeviceType = DeviceType.None,
                 IP = detail.GetFirstStringValue("ip")
             };
+        }
+
+        public override ApiResult AddPrizeToPlayer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var Config = _siteConfigDic[tpCustInfo.SiteId];
+            var ApiUrl = Config.ApiUrl;
+            var SiteCode = Config.SiteCode;
+            var campaignId = inputs.ContainsKey("CampaignId") && !string.IsNullOrEmpty(inputs["CampaignId"]) ? inputs["CampaignId"] : throw new Exception();
+            var operatorUser = inputs.ContainsKey("operatorUser") && !string.IsNullOrEmpty(inputs["operatorUser"]) ? inputs["operatorUser"] : throw new Exception();
+            var oApiResult = new ApiResult();
+            
+            var uuid = Guid.NewGuid().ToString();
+            var sParam = new
+            {
+                Timestamp = DateTime.Now.ToString(_formatOfSlot),
+                Seq = uuid,
+                SiteCode = SiteCode,
+                CampaignId = campaignId,
+                PlayerList = new List<string> { tpCustInfo.TpUserName},
+                Operator = operatorUser,
+            };
+            var param = ToJson(sParam);
+            var result = HttpPost($"{ApiUrl}CPAddPlayer", param, "application/json");
+            
+            if (!IsJSON(result))
+            {
+                oApiResult.RawMessage = "No Result";
+                oApiResult.RawErrorCode = "1";
+                oApiResult.ErrorCode = ErrorCode.Fail;
+                return oApiResult;
+            }
+            
+            var response = JsonConvert.DeserializeObject<GetAddPrizeToPlayerResp>(result);
+            if (response.ErrorCode == 0)
+            {
+                oApiResult.ErrorCode = ErrorCode.Success;
+                oApiResult.RawErrorCode = response.ErrorCode.ToString();
+                oApiResult.RawMessage = string.Join(",",response.PlayerList);
+                oApiResult.Message = "Success";
+            }
+            else
+            {
+                oApiResult.ErrorCode = ErrorCode.Fail;
+                oApiResult.RawMessage = response.ErrorDescription;
+                oApiResult.RawErrorCode = response.ErrorCode.ToString();
+            }
+
+            return oApiResult;
         }
 
         private string GetGameName(string gameCode)

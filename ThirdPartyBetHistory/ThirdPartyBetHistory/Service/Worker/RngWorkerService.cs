@@ -52,7 +52,7 @@ namespace ThirdPartyBetHistory.Service.Worker
             {
                 var nextTicketKey = tpBetHelp.AddTpBetRecordDetail(workerType, lastTicketKey).Result;
                 LogContext.PushProperty("NextTicketKey", nextTicketKey);
-                
+
                 if (nextTicketKey > lastTicketKey)
                 {
                     _thirdPartyBLL.SetSiteTicketKey(workerType, tpBetHelp, nextTicketKey);

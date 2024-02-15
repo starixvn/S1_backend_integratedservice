@@ -82,11 +82,11 @@
         SG_Fish = 31,
         SBO_Sports = 77,
         SBO_VirtualSports = 81,
+        YGG_RNG = 14,
         V8_Poker = 42,
         PT_RNG = 46,
         V8_Poker_None = 47, // without revenue games
         PT_LiveCasino = 48,
-        YGG_RNG = 14,
         AMB_RNG = 76,
         Skywind_RNG = 82,
         Skywind_LiveCasino = 84,

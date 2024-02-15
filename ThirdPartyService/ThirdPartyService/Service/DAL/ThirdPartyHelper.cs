@@ -1,7 +1,9 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Data;
 using System.Reflection;
-
+using System.Text.Json;
+using MongoDB.Bson.IO;
 using Serilog.Context;
 
 using ThirdPartyCore;
@@ -36,7 +38,6 @@ namespace ThirdPartyService.Service.DAL
                 if (thirdPartyModel != null)
                     ThirdPartyModelContainer.TryAdd(sKet, thirdPartyModel);
             }
-
             return ThirdPartyModelContainer.ContainsKey(sKet) ? ThirdPartyModelContainer[sKet] : null;
         }
 

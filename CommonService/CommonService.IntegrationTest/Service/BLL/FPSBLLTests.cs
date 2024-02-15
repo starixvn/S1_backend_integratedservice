@@ -61,9 +61,9 @@ namespace CommonService.Service.BLL.Tests
         }
 
         [TestCase("Nova88", ExpectedResult = ErrorCode.Success)]
-        [TestCase("Goal123", ExpectedResult = ErrorCode.Success)]
-        [TestCase("Bwing", ExpectedResult = ErrorCode.Success)]
-        [Ignore("要測試再註解掉，")]
+        // [TestCase("Goal123", ExpectedResult = ErrorCode.Success)]
+        // [TestCase("Bwing", ExpectedResult = ErrorCode.Success)]
+        // [Ignore("要測試再註解掉，")]
         public async Task<ErrorCode> FPSChecksAsyncTest(string siteName)
         {
             //沒在正式找到相關參數
@@ -74,22 +74,25 @@ namespace CommonService.Service.BLL.Tests
                 UserName = "Test",
                 SiteName = siteName,
                 UserLang = "en",
-                AreaCode = "886"
+                AreaCode = "886",
+                SiteId = 1,
+                TpUserName = "Test"
             };
 
             var fpsChecksRequest = new FPSChecksRequest
             {
-                account = 12,
-                action = "login",
-                actionResult = "",
-                ip = "127.0.0.1",
-                url = "http://www.n88dev.com/cs",
-                platform = "nova88",
-                userAgent = "123",
-                screen = "",
-                di = "123"
+                Account = 12,
+                DI = "123",
+                BI = "123",
+                IP = "127.0.0.1",
+                UserAgent = "123",
+                DetecasAnalysis = "{\"startTime\":1700560192636,\"version\":\"2.0.17\",\"exceptions\":[],\"executions\":[],\"storages\":[],\"devices\":[],\"enable\":true}",
+                AcceptsTypes = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                SessionKey = "123",
+                Token = "123",
+                Url = "http://www.n88dev.com/cs",
             };
-
+            
             var actual = await _FPSBLL.FPSChecksAsync(custInfoProfile, fpsChecksRequest);
             return actual.ErrorCode;
         }
