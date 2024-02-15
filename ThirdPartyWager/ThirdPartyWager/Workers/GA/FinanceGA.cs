@@ -8,7 +8,7 @@ namespace ThirdPartyWager.Workers.GA
 {
     public class FinanceGA : BackgroundService
     {
-        private readonly ILogger<FinanceBNG> _logger;
+        private readonly ILogger<FinanceGA> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly FinanceGABLL _financeGABLL;
         private readonly FincanceService _financeService;
@@ -20,7 +20,7 @@ namespace ThirdPartyWager.Workers.GA
 
         public FinanceGA(IServiceProvider provider)
         {
-            _logger = provider.GetRequiredService<ILogger<FinanceBNG>>();
+            _logger = provider.GetRequiredService<ILogger<FinanceGA>>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _financeGABLL = provider.GetRequiredService<FinanceGABLL>();
             _financeService = provider.GetRequiredService<FincanceService>();
