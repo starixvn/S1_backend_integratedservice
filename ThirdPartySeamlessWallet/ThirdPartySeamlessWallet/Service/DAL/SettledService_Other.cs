@@ -1693,6 +1693,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     // no bet or cancel data
                     return -2;
                 }
+
+                if (checkBet.status != "R")
+                {
+                    // bet is cancel or settle.
+                    return -3;
+                }
                 
                 var p = new DynamicParameters(settleData_NTConnect);
                 p.Add("SettleFlag",(int)SettleFlag.EndGame);
@@ -1778,10 +1784,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     // no bet or cancel data
                     return -2;
                 }
+
+                if (checkBet.status is "C")
+                {
+                    return -3;
+                }
             
                 var p = new DynamicParameters(cancelData_NTConnect);
                 p.Add("SettleFlag", (int)SettleFlag.EndGame);
-                
                 p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
                 result = _mainDbClient.Execute(CancelSpName, trans, p);
 
