@@ -145,14 +145,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
             try
             {
-                if (!_authBLL.AuthenticateByTpToken(request.token, out TpCustInfoAuth tpCustInfoAuth))
-                {
-                    getErrorResponse.data.ErrorCode  = (int)NTConnectErrorCode.PlayerInvalid;
-                    getErrorResponse.data.ErrorMessage = NTConnectErrorCode.PlayerInvalid.GetEnumDescription();
-                    return getErrorResponse;
-                }
-                
-                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.NTConnect, tpCustInfoAuth.TpUserName);
+                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.NTConnect, request.username);
             
                 if (tpCheck == null)
                 {
@@ -168,7 +161,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return getErrorResponse;
                 }
 
-                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, tpCustInfoAuth.TpUserName, _gameType);
+                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, request.username, _gameType);
                 request.betTime = CheckBetOrSettleTime(request.betTime);
                 request.bet_type = CheckBetType(request.bet_type);
                 request.bet_typegroup = CheckBetTypeGroup(request.bet_typegroup);
@@ -181,7 +174,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     if (tpAffterAmount == 0 || result == -1)
                     {
-                        tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, tpCustInfoAuth.TpUserName, _gameType);
+                        tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, request.username, _gameType);
                         tpAffterAmount = tpCustBalance.Balance;
                     }
                     
@@ -257,6 +250,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     };
                 }
 
+                if (result == -3)
+                {
+                    return new NTCResponse<NTCSettleBetResponse>()
+                    {
+                        status = "error",
+                        data = new NTCSettleBetResponse()
+                        {
+                            ErrorCode = (int)NTConnectErrorCode.BetOrderStatusError,
+                            ErrorMessage = NTConnectErrorCode.BetOrderStatusError.GetEnumDescription()
+                        }
+                    };
+                }
             }
             catch (Exception ex)
             {
@@ -328,6 +333,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             }
                         };
                     }
+                    case -3:
+                        return new NTCResponse<NTCCancelBetResponse>()
+                        {
+                            status = "error",
+                            data = new NTCCancelBetResponse()
+                            {
+                                ErrorCode = (int)NTConnectErrorCode.OrderAlreadyCancel,
+                                ErrorMessage = NTConnectErrorCode.OrderAlreadyCancel.GetEnumDescription()
+                            }
+                        };
                 }
             }
             catch (Exception ex)
