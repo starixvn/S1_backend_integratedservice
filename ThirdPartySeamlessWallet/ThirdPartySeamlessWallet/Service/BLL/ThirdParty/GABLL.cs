@@ -354,7 +354,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         ((GAType)reqData.type).ToString(),
                         out bonusId,
                         conn,
-                        trans);
+                        trans,
+                        AllowNegative.Allow);
             }
             
             if (tempResult > 0)

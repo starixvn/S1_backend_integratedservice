@@ -17,7 +17,7 @@ namespace ThirdPartyWager.Workers
         private readonly ILogger<WagerGA> _logger;
         private readonly Dictionary<int, GAConfig> _siteConfigDic;
         private readonly int timeZone = 0;
-        private readonly int iRangMins = 5;
+        private readonly int iRangMins = 15;
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
         public WagerGA(IServiceProvider provider)
         {

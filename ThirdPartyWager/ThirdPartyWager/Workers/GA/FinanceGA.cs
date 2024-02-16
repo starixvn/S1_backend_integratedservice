@@ -4,7 +4,7 @@ using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Workers.GA
+namespace ThirdPartyWager.Workers
 {
     public class FinanceGA : BackgroundService
     {
