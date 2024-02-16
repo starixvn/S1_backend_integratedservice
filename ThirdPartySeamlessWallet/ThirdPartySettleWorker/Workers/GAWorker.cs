@@ -122,6 +122,7 @@ namespace ThirdPartySettleWorker.Workers
                             bool TicketIsSettled()
                             {
                                 betDataBet = betData.Find(x => x.type == (int)GAType.Bet).bet_amount;
+                                decimal anteAmount = betData.Find(x => x.type == (int)GAType.Bet).ante_amount;
                                 var payoutData = betData.Where(x => (x.type == (int)GAType.TicketWinnings) || (x.type == (int)GAType.TicketLoss) || (x.type == (int)GAType.TicketDraw)).OrderBy(x => x.unix_settled_date_time).FirstOrDefault();
                                 betDataWin = payoutData.amount;
 
@@ -138,7 +139,7 @@ namespace ThirdPartySettleWorker.Workers
                                 {
                                     betRecordInfo.TpId = (int)Tp;
                                     betRecordInfo.Stake = betDataBet;
-                                    betRecordInfo.ValidBet = betDataBet;
+                                    betRecordInfo.ValidBet = betDataBet - anteAmount;
                                     betRecordInfo.WinlostAmount = betDataWin - betDataBet;
                                     betRecordInfo.TransId = tpUnsettle.TransId;
                                     betRecordInfo.GameType = GameType.GA_CockFighting;
@@ -147,6 +148,7 @@ namespace ThirdPartySettleWorker.Workers
                                     betRecordInfo.TransTime = payoutData.unix_created_date_time;
                                     betRecordInfo.SettlementType = SettlementType.SettledForValid;
                                     betRecordInfo.TicketStatus = payoutData.type == (int)GAType.TicketWinnings ? TicketStatus.Win : payoutData.type == (int)GAType.TicketDraw ? TicketStatus.Draw : TicketStatus.Lost;
+                                    betRecordInfo.ProgressiveBet = anteAmount;
                                     return true;
                                 }
                             }
