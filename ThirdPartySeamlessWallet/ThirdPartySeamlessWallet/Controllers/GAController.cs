@@ -98,6 +98,16 @@ namespace ThirdPartySeamlessWallet.Controllers
                     _ => (int)GATransactionStatus.Fail
                 };
 
+                if(result == (int)GATransactionStatus.Success)
+                {
+                    _log2File.Info($"Transfer Success", logName);
+                }
+                else
+                {
+                    _log2File.Error($"Transfer Fail", logName);
+                }
+
+
                 return result == (int)GATransactionStatus.Success ? Ok() : BadRequest();
             }
             catch (Exception ex)
