@@ -65,7 +65,9 @@
     public enum GATransactionStatus
     {
         Success = 0,
-        Fail = 1
+        Fail = 1,
+        NoBet = 2,
+        DuplicatePay = 3
     }
     public class GAWager
     {
