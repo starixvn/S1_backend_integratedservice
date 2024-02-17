@@ -109,12 +109,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             decimal afterAmount = 0;
             var partitionTime = reqData.ticket.created_date_time;
 
+            var betCheck = _partitionService.Query<BettingData_GA>(partitionTime, "Service_Bettrans_GA_CheckBySid", new { sid = reqData.ticket.sid }).ToList().Find(x=> x.type == (int)GAType.Bet);
+
+            //檢查是否有這筆注單
+            if (betCheck == null)
+            {
+                return (int)GATransactionStatus.NoBet;
+            }
+
             var check = _partitionService.Query<BettingData_GA>(partitionTime, "Service_Bettrans_GA_Check", new { id = reqData.id });
 
             //檢查是否重複payout
             if (check.Any())
             {
-                return (int)GATransactionStatus.Fail;
+                return (int)GATransactionStatus.DuplicatePay;
             }
 
             var bettingData = new BettingData_GA()
@@ -170,7 +178,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         ((GAType)reqData.type).ToString(),
                         out bonusId,
                         conn,
-                        trans);
+                        trans,
+                        AllowNegative.Allow);
+
             }
 
             if (tempResult > 0)
@@ -200,10 +210,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             decimal afterAmount = 0;
             var partitionTime = reqData.ticket.created_date_time;
 
-            var check = _partitionService.Query<BettingData_GA>(partitionTime, "Service_Bettrans_GA_CheckBySid", new { sid = reqData.ticket.sid });
+            var betCheck = _partitionService.Query<BettingData_GA>(partitionTime, "Service_Bettrans_GA_CheckBySid", new { sid = reqData.ticket.sid }).ToList().Find(x => x.type == (int)GAType.Bet);
 
             //檢查是否有這筆注單
-            if (!check.Any())
+            if (betCheck == null)
             {
                 return (int)GATransactionStatus.Success;
             }
@@ -263,9 +273,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         ((GAType)reqData.type).ToString(),
                         out bonusId,
                         conn,
-                        trans);
+                        trans,
+                        AllowNegative.Allow);
+                        
             }
-            
+
             if (tempResult > 0)
             {
                 if(reqData.type == (int)GAType.Void)
@@ -422,7 +434,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         ((GAType)reqData.type).ToString(),
                         out bonusId,
                         conn,
-                        trans);
+                        trans,
+                        AllowNegative.Allow);
             }
 
             if (tempResult > 0)

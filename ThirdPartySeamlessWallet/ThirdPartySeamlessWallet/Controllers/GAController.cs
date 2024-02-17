@@ -104,7 +104,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else
                 {
-                    _log2File.Error($"Transfer Fail", logName);
+                    _log2File.Error(((GATransactionStatus)result).ToString(), logName);
                 }
 
 
