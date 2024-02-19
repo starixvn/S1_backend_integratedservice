@@ -67,7 +67,9 @@
         Success = 0,
         Fail = 1,
         NoBet = 2,
-        DuplicatePay = 3
+        DuplicatePay = 3,
+        DuplicateBet = 4,
+        InsufficientBalance = 5
     }
     public class GAWager
     {
