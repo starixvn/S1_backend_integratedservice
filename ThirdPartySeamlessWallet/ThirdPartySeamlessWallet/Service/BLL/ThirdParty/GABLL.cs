@@ -41,7 +41,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             //檢查是否重複下注
             if (check.Any())
             {
-                return (int)GATransactionStatus.Fail;
+                return (int)GATransactionStatus.DuplicateBet;
             }
 
             var bettingData = new BettingData_GA()
@@ -95,7 +95,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 _mainDbClient.RollbackAndDisposeConnection(conn, trans);
             }
 
-            return tempResult > 0 ? (int)GATransactionStatus.Success : (int)GATransactionStatus.Fail;
+            return tempResult > 0 ? (int)GATransactionStatus.Success : (int)GATransactionStatus.InsufficientBalance;
         }
 
         public int Payout(TpCustInfo tpCustInfo, GATransferReq reqData)
