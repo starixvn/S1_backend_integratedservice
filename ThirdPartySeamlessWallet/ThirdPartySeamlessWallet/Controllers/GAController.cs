@@ -98,9 +98,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                     _ => (int)GATransactionStatus.Fail
                 };
 
-                if(result == (int)GATransactionStatus.Success)
+                if (result == (int)GATransactionStatus.Success)
                 {
                     _log2File.Info($"Transfer Success", logName);
+                }
+                else if (result == (int)GATransactionStatus.InsufficientBalance)
+                {
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, req.member_ref_id, (int)GameType.GA_CockFighting);
+
+                    _log2File.Error($"{((GATransactionStatus)result).ToString()}, Balance:{tpCustBalance.Balance}", logName);
                 }
                 else
                 {
