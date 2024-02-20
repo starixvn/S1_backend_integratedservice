@@ -64,7 +64,7 @@ namespace ThirdParty.GA
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var wagerDetail = TpBetRecordProvider.DbQuery("Service_Bettrans_GA_Detail_Get",
+            var wagerDetail = TpBetRecordProvider.DbQuery("Service_TpWager_GA_Get",
                 new { sid = getBetDetail.TransId }, DataBase.Wager).FirstOrDefault();
 
             //jackpot沒有wager資料
@@ -88,7 +88,8 @@ namespace ThirdParty.GA
                 UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("created_date_time"),
                 UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("settled_date_time"),
                 Stake = (decimal)wagerDetail.GetValueOrDefault("bet_amount") * tpCurrency.ExchangeRate,
-                WinlostAmount = ((decimal)wagerDetail.GetValueOrDefault("win_loss_amount") * tpCurrency.ExchangeRate) - ((decimal)wagerDetail.GetValueOrDefault("ante_amount") * tpCurrency.ExchangeRate)
+                WinlostAmount = ((decimal)wagerDetail.GetValueOrDefault("win_loss_amount") * tpCurrency.ExchangeRate) - ((decimal)wagerDetail.GetValueOrDefault("ante_amount") * tpCurrency.ExchangeRate),
+                RefTransId = getBetDetail.TransId
             };
         }
 
@@ -111,12 +112,13 @@ namespace ThirdParty.GA
                 Game = tpGameType.TypeName,
                 RefNo = string.Empty,
                 Title = tpGameType.TypeName,
-                MatchID = betRecordInfo.TransId,
+                MatchID = detail.GetStringValue("match_day_code"),
                 BetType = detail.GetStringValue("selection"),
                 BetChoice = string.Empty,
                 Result = detail.GetStringValue("result"),
                 DeviceType = DeviceType.None,
                 IP = string.Empty,
+                Odds = (decimal)detail.GetValueOrDefault("odds"),
             };
         }
 

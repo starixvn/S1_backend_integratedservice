@@ -69,7 +69,8 @@
         NoBet = 2,
         DuplicatePay = 3,
         DuplicateBet = 4,
-        InsufficientBalance = 5
+        InsufficientBalance = 5,
+        NoCancel = 6
     }
     public class GAWager
     {
