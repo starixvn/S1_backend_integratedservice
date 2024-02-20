@@ -94,7 +94,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (tempResult > 0)
             {
-                tempResult = _bettingService.PlaceBetV2(tpCustInfo, Math.Abs(bettingData.amount) * -1, (int)Tp.GA, bettingData.sid, (int)GameType.GA_CockFighting, bettingData.sid, null, TpCategory.Cockfighting, out afterAmount, ref bonusId, conn, trans);
+                var allowNegative = reqData.type == (int)GAType.Uncancel ? AllowNegative.Allow : AllowNegative.NotAllow;
+                tempResult = _bettingService.PlaceBetV2(tpCustInfo, Math.Abs(bettingData.amount) * -1, (int)Tp.GA, bettingData.sid, (int)GameType.GA_CockFighting, bettingData.sid, null, TpCategory.Cockfighting, out afterAmount, ref bonusId, conn, trans, string.Empty, allowNegative);
             }
 
             if (tempResult > 0)
@@ -120,7 +121,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             decimal afterAmount = 0;
             var partitionTime = reqData.ticket.created_date_time;
 
-            var betCheck = _partitionService.Query<BettingData_GA>(partitionTime, "Service_Bettrans_GA_CheckBySid", new { sid = reqData.ticket.sid }).ToList().Find(x=> x.type == (int)GAType.Bet);
+            var bettransData = _partitionService.Query<BettingData_GA_Detail>(partitionTime, "Service_Bettrans_GA_CheckBySid", new { sid = reqData.ticket.sid }).ToList();
+            var betCheck = bettransData.Find(x => x.type == (int)GAType.Bet);
+            var previousTran = bettransData.OrderByDescending(x => x.CreateTime).FirstOrDefault();
 
             //檢查是否有這筆注單
             if (betCheck == null)
@@ -134,6 +137,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             if (check.Any())
             {
                 return (int)GATransactionStatus.DuplicatePay;
+            }
+
+            //檢查目前住單的狀態是不是cancel(如果是的話要先uncancel才能payout)
+            if(previousTran.type == (int)GAType.TicketCancelation)
+            {
+                return (int)GATransactionStatus.BetIsCancel;
             }
 
             var bettingData = new BettingData_GA()
