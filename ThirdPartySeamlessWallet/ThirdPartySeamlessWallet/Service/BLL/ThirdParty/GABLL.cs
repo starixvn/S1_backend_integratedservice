@@ -44,6 +44,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return (int)GATransactionStatus.DuplicateBet;
             }
 
+            if (reqData.type == (int)GAType.Uncancel)
+            {
+                var cancelCheck = _partitionService.Query<BettingData_GA>(partitionTime, "Service_Bettrans_GA_CheckBySid", new { sid = reqData.ticket.sid }).ToList().Find(x => x.type == (int)GAType.TicketCancelation);
+
+                //檢查是否有這筆注單
+                if (cancelCheck == null)
+                {
+                    return (int)GATransactionStatus.NoCancel;
+                }
+            }
+
             var bettingData = new BettingData_GA()
             {
                 id = reqData.id,
