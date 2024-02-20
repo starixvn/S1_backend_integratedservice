@@ -59,4 +59,11 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string referenceId { get; set; }
         public string ticketId { get; set; }
     }
+
+    internal class SGConfig : TpSiteConfig
+    {
+        public string FunGameUrl { get; set; }
+
+        public string merchantCode { get; set; }
+    }
 }

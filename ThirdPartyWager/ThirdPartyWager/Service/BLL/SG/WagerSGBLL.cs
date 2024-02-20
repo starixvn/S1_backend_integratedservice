@@ -1,25 +1,25 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class WagerSGBLL
     {
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ApiSGBLL _apiSGBLL;
         private readonly WagerSGService _wagerSGService;
         private readonly ILogger<WagerSGBLL> _logger;
         private readonly TpUnsettleService _tpUnsettleService;
+        private readonly SGConfig _siteConfig;
 
         public WagerSGBLL(IServiceProvider provider)
         {
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _apiSGBLL = provider.GetRequiredService<ApiSGBLL>();
             _wagerSGService = provider.GetRequiredService<WagerSGService>();
             _logger = provider.GetRequiredService<ILogger<WagerSGBLL>>();
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SGConfig>(Tp.SG.ToString());
         }
 
         public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime)
@@ -29,7 +29,7 @@ namespace ThirdPartyWager.Service.BLL
             try
             {
                 // get api info
-                var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
+                var setting = _siteConfig;
 
                 // pagination
                 var page = 1;
@@ -37,7 +37,7 @@ namespace ThirdPartyWager.Service.BLL
                 while (page <= totalPage)
                 {
                     // get wager
-                    var dataWager = await _apiSGBLL.GetBetListByTime(setting["ApiUrl"], setting["merchantCode"], startTime, endTime, page, guid);
+                    var dataWager = await _apiSGBLL.GetBetListByTime(_siteConfig, startTime, endTime, page, guid);
 
                     // error condition
                     var errorCode = dataWager.code;

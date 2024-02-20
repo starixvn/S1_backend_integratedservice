@@ -1,9 +1,9 @@
 ﻿using System.Text;
 using System.Web;
-
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -14,11 +14,13 @@ namespace ThirdParty.SG
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly IReadOnlyDictionary<string, string> GameNameList;
+        private readonly IReadOnlyDictionary<string, string> _GameNameList;
+        private readonly SGConfig _siteConfig;
 
-        public TpHelper()
+        public TpHelper(IServiceProvider provider)
         {
-            GameNameList = TpBetRecordProvider.GetGameCasinoList(10).ToDictionary(d => d.GameId, d => d.Name);
+            _GameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.SG).ToDictionary(d => d.GameId, d => d.Name);
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SGConfig>(TpEnum.SG.ToString());
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -46,13 +48,12 @@ namespace ThirdParty.SG
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            //throw new NotImplementedException();
-            string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception();
-            string merchantCode = inputs.ContainsKey("merchantCode") && !string.IsNullOrEmpty(inputs["merchantCode"]) ? inputs["merchantCode"] : throw new Exception();
-            string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
+            var config = _siteConfig;
+            string GameUrl = config.GameUrl;
+            string FunGameUrl = config.FunGameUrl;
+
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
-            string FunGameUrl = inputs.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(inputs["FunGameUrl"]) ? inputs["FunGameUrl"] : throw new Exception("FunGameUrl");
 
             ApiResult oApiResult = new ApiResult();
             string mobile = (appType == AppType.Mobile) ? "true" : "false";
@@ -89,7 +90,7 @@ namespace ThirdParty.SG
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var spName = getBetDetail.TpGameTypeOption.Type is (int)TpGameType.SG_RNG or (int) TpGameType.SG_Table ?
+            var spName = getBetDetail.TpGameTypeOption.Type is (int)TpGameType.SG_RNG or (int)TpGameType.SG_Table ?
                 "Service_TpWagerRng_SG_Detail_Get" : "Service_TpWagerSG_Detail_Get";
             var wagerDetail = TpBetRecordProvider.DbQueryFirst(spName, new { getBetDetail.TransId }, DataBase.Wager);
             var detail = ToJson(wagerDetail);
@@ -146,7 +147,7 @@ namespace ThirdParty.SG
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var spName = tpGameType.Type == 15 ? "Service_TpWagerRng_SG_Detail_Get" : "Service_TpWagerSG_Detail_Get";
+            var spName = tpGameType.Type == (int)TpGameType.SG_RNG ? "Service_TpWagerRng_SG_Detail_Get" : "Service_TpWagerSG_Detail_Get";
             var detail = TpBetRecordProvider.DbQueryFirst(spName, new { betRecordInfo.TransId }, DataBase.Wager);
             var gameCode = detail.GetStringValue("gameCode");
             return tpGameType.CategoryId switch
@@ -181,7 +182,7 @@ namespace ThirdParty.SG
             };
         }
 
-        private DeviceType GetDeviceType(string device)
+        private static DeviceType GetDeviceType(string device)
         {
             return device switch
             {
@@ -196,7 +197,7 @@ namespace ThirdParty.SG
 
         private string GetGameName(string gameCode)
         {
-            if (!GameNameList.TryGetValue(gameCode, out var name))
+            if (!_GameNameList.TryGetValue(gameCode, out var name))
             {
                 return string.Empty;
             }
@@ -204,18 +205,16 @@ namespace ThirdParty.SG
             return dic.TryGetValue("en", out var result) ? result : string.Empty;
         }
 
-        private string GetFishGameName(string gameCode)
+        private static string GetFishGameName(string gameCode)
         {
             return gameCode switch
             {
                 "F-SF01" => "Fishing God",
                 "F-SF02" => "Fishing War",
+                "F-ZP01" => "Zombie Party",
+                "F-AH01" => "Alien Hunter",
                 _ => gameCode,
             };
         }
-
-
-
-
     }
 }
