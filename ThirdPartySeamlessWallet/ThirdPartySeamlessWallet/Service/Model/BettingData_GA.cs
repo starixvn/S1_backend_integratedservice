@@ -70,7 +70,8 @@
         DuplicatePay = 3,
         DuplicateBet = 4,
         InsufficientBalance = 5,
-        NoCancel = 6
+        NoCancel = 6,
+        BetIsCancel = 7
     }
     public class GAWager
     {
@@ -119,5 +120,9 @@
         Unsettle = 11,
         Uncancel = 12,
         Jackpot = 13
+    }
+    public class BettingData_GA_Detail : BettingData_GA
+    {
+        public DateTime CreateTime { get; set; }
     }
 }
