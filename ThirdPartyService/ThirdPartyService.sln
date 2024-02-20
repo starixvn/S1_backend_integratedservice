@@ -130,6 +130,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.HL", "ThirdParty
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.Amigo", "ThirdParty.Amigo\ThirdParty.Amigo.csproj", "{D527C40B-15EB-498C-9DC4-AEBC22197214}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.MaxGame", "ThirdParty.MaxGame\ThirdParty.MaxGame.csproj", "{F5076B11-A856-4EAB-A7A1-4EAE81E70714}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -376,6 +378,10 @@ Global
 		{D527C40B-15EB-498C-9DC4-AEBC22197214}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D527C40B-15EB-498C-9DC4-AEBC22197214}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D527C40B-15EB-498C-9DC4-AEBC22197214}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F5076B11-A856-4EAB-A7A1-4EAE81E70714}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5076B11-A856-4EAB-A7A1-4EAE81E70714}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5076B11-A856-4EAB-A7A1-4EAE81E70714}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5076B11-A856-4EAB-A7A1-4EAE81E70714}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -438,6 +444,7 @@ Global
 		{AF725081-FEAC-4E30-A9A0-87FA9F26FAE8} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{031184BE-A6CD-4476-9247-EBC915AEAE90} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{D527C40B-15EB-498C-9DC4-AEBC22197214} = {54887B85-B528-486C-A102-3E5FF55C1282}
+		{F5076B11-A856-4EAB-A7A1-4EAE81E70714} = {54887B85-B528-486C-A102-3E5FF55C1282}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {88130080-DA6F-45D5-BA4E-3A91181A0592}

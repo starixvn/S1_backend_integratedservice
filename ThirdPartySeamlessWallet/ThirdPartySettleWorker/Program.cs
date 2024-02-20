@@ -109,7 +109,8 @@ builder.Services
     .AddHostedService<N2LiveWorker>()
     .AddHostedService<N2LiveSmartWorker>()
     .AddHostedService<BNGWorker>()
-    .AddHostedService<HLWorker>();
+    .AddHostedService<HLWorker>()
+    .AddHostedService<MaxGameWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
