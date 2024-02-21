@@ -254,4 +254,15 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int err { get; set; } = 0;
         public string errdesc { get; set; } = "";
     }
+
+    public class KMConfig : TpSiteConfig
+    {
+        [JsonProperty("X-QM-ClientId")]
+        public string X_QM_ClientId { get; set; }
+
+        [JsonProperty("X-QM-ClientSecret")]
+        public string X_QM_ClientSecret { get; set; }
+
+        public string GameUrl_RMB { get; set; }
+    }
 }
