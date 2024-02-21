@@ -94,8 +94,29 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (tempResult > 0)
             {
-                var allowNegative = reqData.type == (int)GAType.Uncancel ? AllowNegative.Allow : AllowNegative.NotAllow;
-                tempResult = _bettingService.PlaceBetV2(tpCustInfo, Math.Abs(bettingData.amount) * -1, (int)Tp.GA, bettingData.sid, (int)GameType.GA_CockFighting, bettingData.sid, null, TpCategory.Cockfighting, out afterAmount, ref bonusId, conn, trans, string.Empty, allowNegative);
+                if(reqData.type == (int)GAType.Uncancel)
+                {
+                    tempResult = _settledService.PayoutV2(
+                            tpCustInfo,
+                            Math.Abs(bettingData.amount) * -1,
+                            (int)Tp.GA,
+                            bettingData.sid,
+                            (int)GameType.GA_CockFighting,
+                            TpCategory.Cockfighting,
+                            bettingData.sid,
+                            TransType.Wagers,
+                            null,
+                            out afterAmount,
+                            ((GAType)reqData.type).ToString(),
+                            out bonusId,
+                            conn,
+                            trans,
+                            AllowNegative.Allow);
+                }
+                else
+                {
+                    tempResult = _bettingService.PlaceBetV2(tpCustInfo, Math.Abs(bettingData.amount) * -1, (int)Tp.GA, bettingData.sid, (int)GameType.GA_CockFighting, bettingData.sid, null, TpCategory.Cockfighting, out afterAmount, ref bonusId, conn, trans, string.Empty);
+                }
             }
 
             if (tempResult > 0)
