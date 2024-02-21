@@ -52,11 +52,11 @@ namespace ThirdPartySettleWorker.Workers
 
             var forContinue = false;
             var isError = false;
-            var gameType = GameType.NTConnect_Lottery;
+            var gameType = GameType.NTConnect_Games;
             var tpCategory = TpCategory.Lottery;
             var logName = $"Settle_NTConnect";
-            var getSP = $"Service_BettransLT_93Connect_Settle_Get";
-            var setSP = $"Service_BettransLT_93Connect_Settle_Set";
+            var getSP = $"Service_Bettrans_93Connect_Settle_Get";
+            var setSP = $"Service_Bettrans_93Connect_Settle_Set";
             var checkSP = $"Service_TpWager_93Connect_Get";
             var dueTimeSpan = TimeSpan.FromMinutes(15);
             

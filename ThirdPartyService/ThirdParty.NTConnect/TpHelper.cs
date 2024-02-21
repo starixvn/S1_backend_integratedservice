@@ -167,12 +167,12 @@ namespace ThirdParty.NTConnect
         
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var spName = "Service_BettransLT_93Connect_Detail_Get";
-            var db = DataBase.Report;
+            var spName = "Service_Bettrans_93Connect_Detail_Get";
+            var db = DataBase.Main;
             var siteConfig = _siteConfigDic[tpCustInfo.SiteId];
             var apiUrl = siteConfig.ApiUrl;
+            var YYYYMM = getBetDetail.SettledTime.GetPartitionKey();
             var currencyConfig = siteConfig.CurrencyList.FirstOrDefault(x => x.CurrencyCode == tpCustInfo.TpCurrencyId);
-            
             
             TpCurrency tpCurrency = new()
             {
@@ -180,7 +180,7 @@ namespace ThirdParty.NTConnect
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
             
-            var wagerDetail = TpBetRecordProvider.DbQueryFirst(spName, new { getBetDetail.TransId }, db);
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst(spName, new { YYYYMM, getBetDetail.TransId }, db);
             if (wagerDetail != null && wagerDetail.Count > 0)
             {
                 //wagerDetail.GetValueOrDefault("")?.ToString(),
@@ -198,7 +198,7 @@ namespace ThirdParty.NTConnect
                     WinlostAmount = ((decimal)wagerDetail.GetValueOrDefault("win_amt") - 
                                      (decimal)wagerDetail.GetValueOrDefault("bet_amt")) * 
                                     tpCurrency.ExchangeRate,
-                    DetailUrl = Get93ConnectBetDetailUrl(getBetDetail.TransId,apiUrl,currencyConfig.ClientKey,currencyConfig.SecretKey,tpCustInfo.TpUserName)
+                    DetailUrl = Get93ConnectBetDetailUrl(getBetDetail.TransId,apiUrl,currencyConfig.ClientKey,currencyConfig.SecretKey,tpCustInfo.TpUserName,tpCurrency.TpCurrencyId)
                 };
                 return resultData;
             }
@@ -284,7 +284,7 @@ namespace ThirdParty.NTConnect
             return result;
         }
 
-        private Get93ConnectBetDetailResponse Get93ConnectBetDetail(string apiUrl,string transId,string username,string token)
+        private Get93ConnectBetDetailResponse Get93ConnectBetDetail(string apiUrl,string transId,string username, string tpCurrency,string token)
         {
             var getBetDetailUrl = apiUrl + "player/?a=getbetbyid";
             var request = new Dictionary<string, string>
@@ -292,7 +292,7 @@ namespace ThirdParty.NTConnect
                 {"token",token},
                 {"username", username},
                 {"ticket",transId},
-                {"lang_id","0"}
+                {"lang_id",ConvertTpCurrency(tpCurrency)}
             };
             var sParam = JsonConvert.SerializeObject(request);
 
@@ -303,7 +303,7 @@ namespace ThirdParty.NTConnect
         }
         
 
-        private string Get93ConnectBetDetailUrl(string transId ,string apiUrl, string clientKey, string SecretKey, string tpUserName)
+        private string Get93ConnectBetDetailUrl(string transId ,string apiUrl, string clientKey, string SecretKey, string tpUserName, string tpCurrency)
         {
             var getToken = GetToken(apiUrl, clientKey, SecretKey);
             if (getToken.status != "success")
@@ -311,7 +311,7 @@ namespace ThirdParty.NTConnect
                 return "";
             }
             
-            var result = Get93ConnectBetDetail(apiUrl,transId,tpUserName, getToken.token);
+            var result = Get93ConnectBetDetail(apiUrl,transId,tpUserName, tpCurrency,getToken.token);
             return result != null ? result.mybeturl : "";
         }
 
@@ -343,14 +343,14 @@ namespace ThirdParty.NTConnect
             };
         }
 
-        private static string ConvertLangId(string tpLangId)
+        private static string ConvertTpCurrency(string tpCurrency)
         {
-            return tpLangId switch
+            return tpCurrency switch
             {
-                "en" => "0",
-                "cs" => "1",
-                "vn" => "3",
-                "th" => "4",
+                "CNY" => "1",
+                "IDR" => "2",
+                "VND" => "3",
+                "THB" => "4",
                 _ => "0"
             };
         }
