@@ -62,7 +62,7 @@ public class WagerTicketUnSettleHL : BackgroundService
         }
         finally
         {
-            _timer.Change(TimeSpan.FromMinutes(10), TimeSpan.Zero);
+            _timer.Change(TimeSpan.FromMinutes(90), TimeSpan.Zero);
         }
     }
 }
