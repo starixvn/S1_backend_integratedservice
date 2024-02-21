@@ -1668,14 +1668,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         
         #region 93Connect
         
-        public int PayoutLT_93Connect(TpCustInfo tpCustInfo, NTCSettleBetRequest settleData_NTConnect, out decimal afterAmount)
+        public int PayoutGames_93Connect(TpCustInfo tpCustInfo, NTCSettleBetRequest settleData_NTConnect, out decimal afterAmount)
         {
             var bonusId = 0;
             var tpId = Tp.NTConnect;
-            var tpGameType = GameType.NTConnect_Lottery;
-            var category = TpCategory.Lottery;
-            var InsSpName = "Service_BettransLT_93Connect_Payout_Set";
-            var GetSpName = "Service_BettransLT_93Connect_Get";
+            var tpGameType = GameType.NTConnect_Games;
+            var category = TpCategory.Games;
+            var InsSpName = "Service_Bettrans_93Connect_Payout_Set";
+            var GetSpName = "Service_Bettrans_93Connect_Get";
             afterAmount = 0;
 
             var result = 0;
@@ -1684,25 +1684,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var trans = conn.BeginTransaction();
             try
             {
-                var pc = new DynamicParameters();
-                pc.Add("username",settleData_NTConnect.username);
-                pc.Add("bet_id",settleData_NTConnect.bet_id);
-                var checkBet = _mainDbClient.QueryFirst<BettransLT93Connect>(GetSpName,trans,pc);
-                if (string.IsNullOrEmpty(checkBet.bet_id))
+                var partitionTime = DateTime.Now;
+                var bettrans = _partitionService.Query<BettransLT93Connect>(partitionTime, GetSpName, 
+                    new { bet_id = settleData_NTConnect.bet_id , username = settleData_NTConnect.username });
+                if (!bettrans.Any(i => i.bet_id == settleData_NTConnect.bet_id))
                 {
-                    // no bet or cancel data
                     return -2;
                 }
-
-                if (checkBet.status != "R")
+                
+                if (bettrans.Any(i => i.status != "R"))
                 {
-                    // bet is cancel or settle.
                     return -3;
                 }
                 
+                
                 var p = new DynamicParameters(settleData_NTConnect);
                 p.Add("SettleFlag",(int)SettleFlag.EndGame);
-                result = _mainDbClient.Execute(InsSpName, trans, p);
+                result = _partitionService.Execute(partitionTime,InsSpName, p, trans);
 
                 if (result > 0)
                 {
@@ -1755,15 +1753,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
 
-        public int CancelBetLT_93Connect(TpCustInfo tpCustInfo, NTCCancelBetRequest cancelData_NTConnect,
+        public int CancelBetGames_93Connect(TpCustInfo tpCustInfo, NTCCancelBetRequest cancelData_NTConnect,
             out decimal afterAmount, out string TransId)
         {
             var bonusId = 0;
             var tpId = Tp.NTConnect;
-            var tpGameType = GameType.NTConnect_Lottery;
-            var category = TpCategory.Lottery;
-            var CancelSpName = "Service_BettransLT_93Connect_CancelBet_Set";
-            var GetSpName = "Service_BettransLT_93Connect_Get";
+            var tpGameType = GameType.NTConnect_Games;
+            var category = TpCategory.Games;
+            var CancelSpName = "Service_Bettrans_93Connect_CancelBet_Set";
+            var GetSpName = "Service_Bettrans_93Connect_Get";
             afterAmount = 0;
             
             TransId = cancelData_NTConnect.bet_id;
@@ -1778,23 +1776,26 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 pc.Add("username",cancelData_NTConnect.username);
                 pc.Add("bet_id",cancelData_NTConnect.bet_id);
             
-                var checkBet = _mainDbClient.QueryFirst<BettransLT93Connect>(GetSpName,trans,pc);
-                if (string.IsNullOrEmpty(checkBet.bet_id))
+                
+                var partitionTime = DateTime.Now;
+                var bettrans = _partitionService.Query<BettransLT93Connect>(partitionTime, GetSpName, 
+                    new { bet_id = cancelData_NTConnect.bet_id , username = cancelData_NTConnect.username });
+                if (!bettrans.Any(i => i.bet_id == cancelData_NTConnect.bet_id))
                 {
-                    // no bet or cancel data
+                    // no bet data
                     return -2;
                 }
-
-                if (checkBet.status is "C")
+                
+                if (bettrans.Any(i => i.status == "C"))
                 {
                     return -3;
                 }
-            
+                
                 var p = new DynamicParameters(cancelData_NTConnect);
                 p.Add("SettleFlag", (int)SettleFlag.EndGame);
                 p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-                result = _mainDbClient.Execute(CancelSpName, trans, p);
-
+                result = _partitionService.Execute(partitionTime,CancelSpName, p, trans);
+    
                 if (result > 0)
                 {
                     decimal stake = p.Get<decimal>("out_stake");

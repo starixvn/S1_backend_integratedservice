@@ -23,7 +23,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public NTConnectBLL(IServiceProvider provider)
         {
             _thisTp = Tp.NTConnect;
-            _gameType = (int)GameType.NTConnect_Lottery;
+            _gameType = (int)GameType.NTConnect_Games;
             _tools = provider.GetRequiredService<Tools>();
             _authBLL = provider.GetRequiredService<AuthBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
@@ -97,7 +97,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 }
             };
 
-            var checkBet = _bettingService.CheckBetLottery_93Connect(request);
+            var checkBet = _bettingService.CheckBetGames_93Connect(request);
             if (checkBet == null)
             {
                 getErrorResponse.data.ErrorCode = (int)NTConnectErrorCode.CantFoundBetId;
@@ -109,13 +109,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 checkBet.win_amt = 0.00m;
             }
-
-            if (string.IsNullOrEmpty(checkBet.betTime))
-            {
-                if (checkBet.betTime != null) 
-                    dateTime = DateTime.Parse(checkBet.betTime);
-            }
-
+            
+            dateTime = !string.IsNullOrEmpty(checkBet.betTime) ? DateTime.Parse(checkBet.betTime) : checkBet.LocalBetTime;
+            
             return new NTCResponse<NTCCheckBetResponse>()
             {
                 status = "success",
@@ -168,7 +164,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 request.TicketType = (int)BettransType.Bet;
                 request.TicketStatus = (int)TicketStatus.UnSettled;
                 request.LocalBetTime = ConvertDateTime(request.betTime);
-                var result = PlaceBetLottery_NTConnect(request, out decimal tpAffterAmount);
+                var result = PlaceBetGames_NTConnect(request, out decimal tpAffterAmount);
                 
                 if (result > 0 || result == -1)
                 {
@@ -230,7 +226,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 request.TicketStatus = request.win_amt > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
                 request.settleBetTime = CheckBetOrSettleTime(request.settleBetTime);
                 request.LocalSettleTime = ConvertDateTime(request.settleBetTime);
-                var result = SettleLottery_NTConnect(request, out decimal tpAffterAmount);
+                var result = SettleGames_NTConnect(request, out decimal tpAffterAmount);
                 if (result > 0 || result == -1)
                 {
                     if (tpAffterAmount == 0 || result == -1)
@@ -248,6 +244,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                             balance = tpAffterAmount
                         }
                     };
+                }
+
+                if (result == -2)
+                {
+                    return new NTCResponse<NTCSettleBetResponse>()
+                    {
+                        status = "error",
+                        data = new NTCSettleBetResponse()
+                        {
+                            ErrorCode = (int)NTConnectErrorCode.CantFoundBetId,
+                            ErrorMessage = NTConnectErrorCode.CantFoundBetId.GetEnumDescription()
+                        }
+                    };
+                    
                 }
 
                 if (result == -3)
@@ -276,7 +286,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public NTCResponse<NTCCancelBetResponse> CancelBet(NTCCancelBetRequest request)
         {
-            var logName = $"{_gameType.ToString()}_PlaceBet";
+            var logName = $"{_gameType.ToString()}_CancelBet";
             var getErrorResponse = new NTCResponse<NTCCancelBetResponse>()
             {
                 status = "error",
@@ -293,7 +303,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 request.TicketType = (int)BettransType.CancelBet;
                 request.TicketStatus = (int)TicketStatus.Refund;
                 request.status = "C";
-                var result = CancelLottery_NTConnect(request, out decimal tpAffterAmount , out string TransId);
+                var result = CancelGames_NTConnect(request, out decimal tpAffterAmount , out string TransId);
 
                 switch (result)
                 {
@@ -358,17 +368,32 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         
         #region Exchange
 
-        private int PlaceBetLottery_NTConnect(NTCPlaceBetRequest bettingData_NTConnect, out decimal afterAmount)
+        private int PlaceBetGames_NTConnect(NTCPlaceBetRequest bettingData_NTConnect, out decimal afterAmount)
         {
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, bettingData_NTConnect.username);
             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)_thisTp, tpCustInfo.CurrencyId);
-
+            var custBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, bettingData_NTConnect.username, _gameType);
+            
             if (tpCurrency.ExchangeRate != 0)
             {
                 bettingData_NTConnect.stake *= tpCurrency.ExchangeRate;
             }
+            
+            if (custBalance.Balance < 0)
+            {
+                afterAmount = custBalance.Balance / tpCurrency.ExchangeRate;
+                return 0;
+            }
 
-            var result = _bettingService.PlaceBetLottery_93Connect(tpCustInfo, bettingData_NTConnect, out afterAmount);
+            var checkBalance = custBalance.Balance - Math.Abs(bettingData_NTConnect.stake);
+            if (checkBalance < 0)
+            {
+                afterAmount = checkBalance / tpCurrency.ExchangeRate;
+                return 0;
+            }
+            
+
+            var result = _bettingService.PlaceBetGames_93Connect(tpCustInfo, bettingData_NTConnect, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
@@ -376,7 +401,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return result;
         }
         
-        private int SettleLottery_NTConnect(NTCSettleBetRequest settleData_NTConnect, out decimal afterAmount)
+        private int SettleGames_NTConnect(NTCSettleBetRequest settleData_NTConnect, out decimal afterAmount)
         {
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, settleData_NTConnect.username);
             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)_thisTp, tpCustInfo.CurrencyId);
@@ -387,7 +412,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 settleData_NTConnect.win_amt *= tpCurrency.ExchangeRate;
             }
 
-            var result = _settledService.PayoutLT_93Connect(tpCustInfo, settleData_NTConnect, out afterAmount);
+            var result = _settledService.PayoutGames_93Connect(tpCustInfo, settleData_NTConnect, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
@@ -395,12 +420,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return result;
         }
 
-        private int CancelLottery_NTConnect(NTCCancelBetRequest cancelData_NTConnect, out decimal afterAmount, out string TransId)
+        private int CancelGames_NTConnect(NTCCancelBetRequest cancelData_NTConnect, out decimal afterAmount, out string TransId)
         {
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.NTConnect, cancelData_NTConnect.username);
             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp.NTConnect, tpCustInfo.CurrencyId);
-
-            var result = _settledService.CancelBetLT_93Connect(tpCustInfo, cancelData_NTConnect, out afterAmount, out TransId);
+            
+            var result = _settledService.CancelBetGames_93Connect(tpCustInfo, cancelData_NTConnect, out afterAmount, out TransId);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;

@@ -846,21 +846,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         
         #region 93Connect
 
-        public BettransLT93Connect CheckBetLottery_93Connect(NTCCheckBetRequest request)
+        public BettransLT93Connect CheckBetGames_93Connect(NTCCheckBetRequest request)
         {
-            var GetSpName = "Service_BettransLT_93Connect_Get";
+            var GetSpName = "Service_Bettrans_93Connect_Get";
             
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
             try
             {
-                var pc = new DynamicParameters();
-                pc.Add("username", request.username);
-                pc.Add("bet_id", request.ref_no);
+                var partitionTime = DateTime.Now;
+                var bettrans = _partitionService.Query<BettransLT93Connect>(partitionTime, GetSpName, 
+                    new { bet_id = request.ref_no , username = request.username });
 
-                var checkBet = _mainDbClient.QueryFirst<BettransLT93Connect>(GetSpName, trans, pc);
-                return string.IsNullOrEmpty(checkBet.bet_id) ? null : checkBet;
+                return !bettrans.Any() ? null : bettrans.FirstOrDefault();
             }
             catch (MySqlException mySqlEx)
             {
@@ -873,7 +872,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
         }
 
-        public int PlaceBetLottery_93Connect(TpCustInfo tpCustInfo, NTCPlaceBetRequest bettingDataLottery_NTConnect,
+        public int PlaceBetGames_93Connect(TpCustInfo tpCustInfo, NTCPlaceBetRequest bettingDataGames_NTConnect,
             out decimal afterAmount)
         {
             int bonusId = 0;
@@ -881,9 +880,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = 0;
 
             var tpId = Tp.NTConnect;
-            var tpGameType = GameType.NTConnect_Lottery;
-            var tpCategory = TpCategory.Lottery;
-            var InsSpName = "Service_BettransLT_93Connect_Ins";
+            var tpGameType = GameType.NTConnect_Games;
+            var tpCategory = TpCategory.Games;
+            var InsSpName = "Service_Bettrans_93Connect_Ins";
+            var CheckSpName = "Service_Bettrans_93Connect_Get";
 
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
@@ -891,20 +891,30 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                bettingDataLottery_NTConnect.stake *= -1;
-                var p = new DynamicParameters(bettingDataLottery_NTConnect);
+                _ = DateTime.TryParse(bettingDataGames_NTConnect.betTime, out var partitionTime);
+                // 檢查是否重複
+                var bettrans = _partitionService.Query<BettransLT93Connect>(partitionTime, CheckSpName, 
+                    new { bet_id = bettingDataGames_NTConnect.bet_id , username = bettingDataGames_NTConnect.username });
+                if (bettrans.Any(i => i.status == "R" && i.bet_id == bettingDataGames_NTConnect.bet_id))
+                {
+                    return -1;
+                }
+                
+                bettingDataGames_NTConnect.stake *= -1;
+                var p = new DynamicParameters(bettingDataGames_NTConnect);
                 p.Add("status","R");
                 p.Add("SettleFlag",(int)SettleFlag.Running);
-                result = _mainDbClient.Execute(InsSpName, p, conn, trans);
-                if (result > 0 && bettingDataLottery_NTConnect.stake != 0)
+                p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
+                result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
+                if (result > 0 && bettingDataGames_NTConnect.stake != 0)
                 {
                     result = PlaceBetV2(
                         tpCustInfo,
-                        bettingDataLottery_NTConnect.stake,
+                        bettingDataGames_NTConnect.stake,
                         (int)tpId,
-                        bettingDataLottery_NTConnect.bet_id,
+                        bettingDataGames_NTConnect.bet_id,
                         (int)tpGameType,
-                        bettingDataLottery_NTConnect.bet_id,
+                        bettingDataGames_NTConnect.bet_id,
                         null,
                         tpCategory,
                         out afterAmount,

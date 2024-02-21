@@ -2,7 +2,7 @@
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
-    #region Cofig
+    #region Config
     
     public class NTConnectConfig : TpSiteConfig
     {
