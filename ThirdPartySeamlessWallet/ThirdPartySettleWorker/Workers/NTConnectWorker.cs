@@ -61,7 +61,7 @@ namespace ThirdPartySettleWorker.Workers
             var getSP = $"Service_Bettrans_93Connect_Settle_Get";
             var setSP = $"Service_Bettrans_93Connect_Settle_Set";
             var checkSP = $"Service_TpWager_93Connect_Get";
-            var dueTimeSpan = TimeSpan.FromMinutes(15);
+            var dueTimeSpan = TimeSpan.FromMinutes(1);
             
             try
             {
