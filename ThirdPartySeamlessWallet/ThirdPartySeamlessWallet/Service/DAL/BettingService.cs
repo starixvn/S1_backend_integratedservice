@@ -60,7 +60,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return AddTpSeamlessBonus(tpSeamlessBonus, trans);
         }
 
-        public int PlaceBetV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, string refId, string betData, TpCategory tpCategory, out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans, string memo = "", AllowNegative allowNegative = AllowNegative.NotAllow)
+        public int PlaceBetV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, string refId, string betData, TpCategory tpCategory, out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans, string memo = "")
         {
             afterAmount = 0;
             int result = 0;
@@ -98,7 +98,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (afterAmount < 0)
                     {
                         amount = afterAmount;
-                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount):#,##0.##}", refId, out afterAmount, conn, trans, allowNegative);
+                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount):#,##0.##}", refId, out afterAmount, conn, trans);
                     }
                     else
                     {
@@ -107,7 +107,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
-                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount):#,##0.##}", refId, out afterAmount, conn, trans, allowNegative);
+                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount):#,##0.##}", refId, out afterAmount, conn, trans);
                 }
             }
             catch (Exception ex)
