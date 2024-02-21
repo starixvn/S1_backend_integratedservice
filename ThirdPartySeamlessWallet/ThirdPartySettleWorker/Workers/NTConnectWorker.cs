@@ -1,5 +1,6 @@
 ﻿using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySettleWorker.Model.Exceptions;
@@ -17,6 +18,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly PartitionService _partitionService;
         private readonly ILogger<NTConnectWorker> _logger;
         private readonly string _tpName;
         private readonly int tpId = (int)Tp.NTConnect;
@@ -29,6 +31,7 @@ namespace ThirdPartySettleWorker.Workers
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _partitionService = provider.GetRequiredService<PartitionService>();
             _logger = provider.GetRequiredService<ILogger<NTConnectWorker>>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
         }
@@ -73,7 +76,7 @@ namespace ThirdPartySettleWorker.Workers
 
                 foreach (var wager in tpUnsettleList)
                 {
-                    var getUnsettledList = _tpUnSettledBLL.GetTpUnsettleData<SettleData93Connect>(getSP, new { wager.TransId }, DataBase.Main);
+                    var getUnsettledList = _partitionService.GetUnsettleDataList<SettleData93Connect>(getSP, wager);
                     if(getUnsettledList == null || !getUnsettledList.Any())
                     {
                         if (!Check93ConnectTpWagerStatus(wager.TransId, checkSP))
@@ -146,7 +149,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             if (transType != SettlementType.UnSettled)
                             {
-                                _tpUnSettledBLL.SetSettleFlag(setSP, Tp, gameType, wager.TransId, true, DataBase.Main);
+                                _ = _settledBLL.SetSettleFlagOfMonthlyBettrans(setSP, betRecordInfo);
                             }
                             Task.Run(() =>
                             {
