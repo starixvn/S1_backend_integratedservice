@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Xml;
 using Newtonsoft.Json;
 using ThirdPartyWager.Service.Library;
@@ -27,13 +27,13 @@ public class ApiHLBLL
         _siteHLConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<HLConfig>(Tp.HaoLong.ToString());
     }
 
-    public async Task<HLResponse> GetBetListByTime(string startTime, string endTime, string guid, int page = 0)
+    public async Task<HLResponse> GetBetListByTime(string startDay, string guid, int page = 1)
     {
         var param = $"apiUser={_siteHLConfig.ApiUser}&apiPass={_siteHLConfig.ApiPass}&" +
                     $"user={_siteHLConfig.AgentUser}&pass={_siteHLConfig.AgentPass}&" +
-                    $"dateFrom={DateTimeFormat(startTime)}&dateTo={DateTimeFormat(endTime)}";
-                    //保留$"&page={page}";
-
+                    $"dateFrom={DateTimeFormat(startDay)}&dateTo={DateTimeFormat(startDay)}" +
+                    $"&page={page}";
+        
         var r = await DoHttpClientAsync($"{_siteHLConfig.ApiUrl}betlistPage.aspx?", param, "betData");
         var result = JsonConvert.DeserializeObject<HLResponse>(r);
         
