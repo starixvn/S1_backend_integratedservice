@@ -39,4 +39,15 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public decimal RealBetAmount { get; set; }
     }
+
+    public class WMConfig : TpSiteConfig
+    {
+        public Dictionary<string, CurrencyDataWM> CurrencyData { get; set; }
+    }
+
+    public class CurrencyDataWM
+    {
+        public string vendorId { get; set; }
+        public string signature { get; set; }
+    }
 }

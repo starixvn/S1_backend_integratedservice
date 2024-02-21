@@ -1,5 +1,4 @@
 ﻿using Serilog.Context;
-
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -8,33 +7,30 @@ namespace ThirdPartyWager.Workers
 {
     public class WagerRedoWM : BackgroundService
     {
-        private readonly ILogger<WagerRedoWM> logger;
-        private readonly WagerRedoWMBLL wagerRedoWMBLL;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly DateTimeHelper dateTimeHelper;
-        private Timer timer;
-        private readonly int intervalMins = 60;
-        private readonly int tpId = (int)Tp.WM;
+        private Timer _timer;
+        private readonly ILogger<WagerRedoWM> _logger;
+        private readonly WagerRedoWMBLL _wagerRedoWMBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly DateTimeHelper _dateTimeHelper;
+        private readonly int _intervalMins = 60;
+        private readonly int _tpId = (int)Tp.WM;
         private readonly string _tpName = Tp.WM.ToString();
-        private readonly int tpType = (int)WagerTimerType.RedoWager;
-        private int quick = 0;
-        private readonly int timeZone = 8;
+        private readonly int _tpType = (int)WagerTimerType.RedoWager;
+        private int _quick = 0;
+        private readonly int _timeZone = 8;
+        private readonly string _timeFormat = "yyyyMMddHHmmss";
 
-        public WagerRedoWM(
-            ILogger<WagerRedoWM> logger,
-            WagerRedoWMBLL wagerRedoWMBLL,
-            ThirdPartyBLL thirdPartyBLL,
-            DateTimeHelper dateTimeHelper
-        )
+        public WagerRedoWM(IServiceProvider provider)
         {
-            this.logger = logger;
-            this.wagerRedoWMBLL = wagerRedoWMBLL;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.dateTimeHelper = dateTimeHelper;
+            _logger = provider.GetRequiredService<ILogger<WagerRedoWM>>();
+            _wagerRedoWMBLL = provider.GetRequiredService<WagerRedoWMBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         }
+
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
+            _timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -42,63 +38,45 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
+
             try
             {
-                quick = 0;
-                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimer(tpId, tpType);
-                DateTime timerTime;
-                int last;
-                if (dataTpTimer == null)
-                {
-                    timerTime = DateTime.Now.AddMinutes(-2 * intervalMins);
-                    last = intervalMins;
-                }
-                else
-                {
-                    timerTime = dataTpTimer.StartTime.AddSeconds(1);
-                    last = intervalMins;
-                }
+                var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
+                int last = _intervalMins;
+                DateTime timerTime = (dataTpTimer == null) ? DateTime.Now.AddMinutes(-2 * _intervalMins) : dataTpTimer.StartTime.AddSeconds(1);
 
-                var time = dateTimeHelper.GetTimeByHour(last, timeZone, "yyyyMMddHHmmss", timerTime);
-                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
+                var time = _dateTimeHelper.GetTimeByHour(last, _timeZone, _timeFormat, timerTime);
+                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
                 if (time.endUnix < cvTime)
                 {
-                    var result = await wagerRedoWMBLL.RedoWagersAsync(tpId, time.startTime, time.endTime, time.startUnix, time.endUnix);
+                    var result = await _wagerRedoWMBLL.RedoWagersAsync(time.startTime, time.endTime, time.startUnix, time.endUnix);
                     if (result)
                     {
-                        thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
+                        _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, time.endUnix);
                     }
                 }
+
                 var ts = DateTime.Now - timerTime;
                 var diffMin = (int)ts.TotalMinutes;
                 if (diffMin >= 120)
                 {
-                    quick = 1;
+                    _quick = 1;
                 }
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
             }
             finally
             {
-                if (quick == 1)
-                {
-                    var dueTimeSpan = TimeSpan.FromSeconds(120);
-                    timer.Change(dueTimeSpan, TimeSpan.Zero);
-                }
-                else
-                {
-                    var dueTimeSpan = TimeSpan.FromMinutes(28);
-                    timer.Change(dueTimeSpan, TimeSpan.Zero);
-                }
+                var dueTimeSpan = (_quick == 1) ? TimeSpan.FromSeconds(120) : TimeSpan.FromMinutes(28);
+                _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            //WriteToFile("WriteToFileHostedService: Process Stopped");
-            timer?.Change(Timeout.Infinite, 0);
+            _timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

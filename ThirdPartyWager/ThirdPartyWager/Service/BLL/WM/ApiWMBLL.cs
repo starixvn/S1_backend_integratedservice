@@ -1,7 +1,5 @@
 ﻿using System.Text;
-
 using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -13,7 +11,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly HttpHelper _httpHelper;
         private readonly Common _common;
         private readonly Log2File _log2File;
-        private readonly ILogger<ApiWMBLL> _logger;
         private readonly string _tpName = Tp.WM.ToString();
 
         public ApiWMBLL(IServiceProvider provider)
@@ -21,18 +18,17 @@ namespace ThirdPartyWager.Service.BLL
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
-            _logger = provider.GetRequiredService<ILogger<ApiWMBLL>>();
         }
 
-        public async Task<WagerWMModel> GetBetListByTime(string apiUrl, string vendorId, string signature, string startTime, string endTime, string guid)
+        public async Task<WagerWMModel> GetBetListByTime(WMConfig setting, string currency, string startTime, string endTime)
         {
             // param
-            var url = $"{apiUrl}";
+            var url = setting.ApiUrl;
             var param = new
             {
                 cmd = "GetDateTimeReport",
-                vendorId = vendorId,
-                signature = signature,
+                vendorId = setting.CurrencyData[currency].vendorId,
+                signature = setting.CurrencyData[currency].signature,
                 startTime = startTime,
                 endTime = endTime,
                 timetype = 1,
