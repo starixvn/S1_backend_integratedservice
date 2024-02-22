@@ -17,7 +17,7 @@ namespace ThirdPartyWager.Workers
         private readonly WorkerType workerType = WorkerType.MainWager;
         private Timer timer;
         private readonly int intervalMins = 60;
-        private readonly int iRangMins = 10;
+        private readonly int iRangMins = 60;
         private readonly int tpId = (int)Tp.HaoLong;
         private readonly string _tpName = Tp.HaoLong.ToString();
         private readonly int tpType = (int)WagerTimerType.Wager;
