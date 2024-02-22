@@ -59,13 +59,10 @@ namespace ThirdPartyWager.Service.BLL
                     return false;
                 }
 
-                // get setting
-                var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
-
                 // process
                 foreach (var pending in pendingList)
                 {
-                    var check = _bll.CheckTicketStatusAsync(setting, pending, gameType).Result;
+                    var check = _bll.CheckTicketStatusAsync(pending, gameType).Result;
                     if (!check)
                     {
                         result = false;
