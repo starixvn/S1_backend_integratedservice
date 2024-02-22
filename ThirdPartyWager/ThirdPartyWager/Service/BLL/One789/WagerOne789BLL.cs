@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -11,6 +10,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiOne789BLL _apiOne789BLL;
         private readonly WagerOne789Service _wagerOne789Service;
         private readonly ILogger<WagerOne789BLL> _logger;
+        private readonly One789Config _siteConfig;
 
         public WagerOne789BLL(IServiceProvider provider)
         {
@@ -18,16 +18,16 @@ namespace ThirdPartyWager.Service.BLL
             _apiOne789BLL = provider.GetRequiredService<ApiOne789BLL>();
             _wagerOne789Service = provider.GetRequiredService<WagerOne789Service>();
             _logger = provider.GetRequiredService<ILogger<WagerOne789BLL>>();
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<One789Config>(Tp.One789.ToString());
         }
 
-        public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime, int gameType)
+        public async Task<bool> GetWagersAsync(string startTime, string endTime, int gameType)
         {
-            var msg = "FATAL_ERROR";
-            var guid = Guid.NewGuid().ToString();
+            string msg;
             try
             {
                 // get api info
-                var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
+                var setting = _siteConfig;
 
                 var page = 1;
                 var totalPage = 1;
@@ -35,7 +35,7 @@ namespace ThirdPartyWager.Service.BLL
                 while (page <= totalPage)
                 {
                     // get wager
-                    var dataWager = await _apiOne789BLL.GetBetListByTime(setting, startTime, endTime, page, perPage, gameType, guid);
+                    var dataWager = await _apiOne789BLL.GetBetListByTime(setting, startTime, endTime, page, perPage, gameType);
 
                     if (dataWager.Count > 0 && dataWager[0]["ErrorCode"] != null)
                     {

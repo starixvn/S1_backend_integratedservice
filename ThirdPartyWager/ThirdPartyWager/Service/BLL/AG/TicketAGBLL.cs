@@ -1,7 +1,5 @@
 ﻿using Newtonsoft.Json;
-
 using Serilog.Context;
-
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -33,15 +31,15 @@ namespace ThirdPartyWager.Service.BLL
         }
 
         // TpRefundWorker
-        public async Task<bool> CheckTicketStatusAsync(dynamic setting, dynamic pending, int gameType)
+        public async Task<bool> CheckTicketStatusAsync(dynamic pending, int gameType)
         {
             LogContext.PushProperty("SystemJob", $"Auto-Dispatch");
             var func = "CheckTicketStatusAsync";
-            var msg = "";
             var task = true;
 
             var data = await _apiAGBLL.CheckTicketStatus(_siteAgConfig.CommonUrl, pending.transactionID);
 
+            string msg;
             if (data == null)
             {
                 msg = $"{func} NO_DATA";

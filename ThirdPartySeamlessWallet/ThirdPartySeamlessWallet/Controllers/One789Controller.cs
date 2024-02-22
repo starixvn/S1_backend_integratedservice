@@ -1,10 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json.Serialization;
-
 using Microsoft.AspNetCore.Mvc;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -16,35 +13,23 @@ namespace ThirdPartySeamlessWallet.Controllers
     [Route("[controller]/[action]")]
     public class One789Controller : ControllerBase
     {
-        private readonly Log2File log2File;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly Tp thisTp;
-        private readonly AuthBLL authBLL;
-        private readonly TpCustInfoBLL tpCustInfoBLL;
-        private readonly IHostEnvironment environment;
-        private readonly BettingBLL bettingBLL;
-        private readonly SettledBLL settledBLL;
-        //private readonly int gameType = 0;
+        private readonly Log2File _log2File;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly BettingBLL _bettingBLL;
+        private readonly SettledBLL _settledBLL;
+        private readonly Tp _thisTp;
 
-        public One789Controller(
-            IHostEnvironment environment,
-            Log2File log2File,
-            ThirdPartyBLL thirdPartyBLL,
-            AuthBLL authBLL,
-            TpCustInfoBLL tpCustInfoBLL,
-            BettingBLL bettingBLL,
-            SettledBLL settledBLL
-        )
+        public One789Controller(IServiceProvider provider)
         {
-            this.log2File = log2File;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.authBLL = authBLL;
-            this.tpCustInfoBLL = tpCustInfoBLL;
-            this.environment = environment;
-            this.bettingBLL = bettingBLL;
-            this.settledBLL = settledBLL;
-            thisTp = Tp.One789;
+            _log2File = provider.GetRequiredService<Log2File>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _bettingBLL = provider.GetRequiredService<BettingBLL>();
+            _settledBLL = provider.GetRequiredService<SettledBLL>();
+            _thisTp = Tp.One789;
         }
+
         public enum Error
         {
             OK = 200,
@@ -87,17 +72,17 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpGet]
         public dynamic balance(string username, string production)
         {
-            string logName = $"{thisTp}_balance";
+            string logName = $"{_thisTp}_balance";
             Response.StatusCode = (int)Error.INVALID_DATA;
             ApiResponse getApiResponse = new ApiResponse();
             GetBalanceResp getBalanceResp = new GetBalanceResp();
 
-            var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, username);
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, username);
             if (tpCheck == null)
             {
                 getApiResponse.ErrorCode = "ValidationException";
                 getApiResponse.ErrorMessage = "Invalid user Id";
-                log2File.Error($"account={username}&production={production}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                _log2File.Error($"account={username}&production={production}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
@@ -105,51 +90,53 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getApiResponse.ErrorCode = "ValidationException";
                 getApiResponse.ErrorMessage = "Account is Lock";
-                log2File.Error($"account={username}&production={production}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                _log2File.Error($"account={username}&production={production}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
 
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, username);
-            var gameType = thirdPartyBLL.GetGameType((int)thisTp, $"{production}_");
-            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, username, (int)gameType);
+            var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, $"{production}_");
+            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, username, (int)gameType);
             if (tpCustBalance != null)
             {
                 Response.StatusCode = (int)Error.OK;
                 getBalanceResp.Balance = tpCustBalance.Balance;
             }
 
-            log2File.Info($"account={username}&production={production}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
+            _log2File.Info($"account={username}&production={production}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
             return getBalanceResp;
         }
 
         [HttpPost]
         public async Task<dynamic> balance_transactionsAsync()
         {
-            string logName = $"{thisTp}_balance_transactions";
+            string logName = $"{_thisTp}_balance_transactions";
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
             BettingDataLT_One789 getReq = JsonConvert.DeserializeObject<BettingDataLT_One789>(Content);
-            log2File.Info(Content, logName);
+            _log2File.Info(Content, logName);
+
             Response.StatusCode = (int)Error.INVALID_DATA;
-            ApiResponse getApiResponse = new ApiResponse();
-            getApiResponse.ErrorCode = "ApiException";
-            getApiResponse.ErrorMessage = "General exception";
-            GetBalanceTransactionsResp getBalanceTransactionsResp = new GetBalanceTransactionsResp();
+            ApiResponse getApiResponse = new()
+            {
+                ErrorCode = "ApiException",
+                ErrorMessage = "General exception"
+            };
+            GetBalanceTransactionsResp getBalanceTransactionsResp = new();
 
             GameType gameType = 0;
             var result = 0;
-            logName = $"{thisTp}_balance_transactions_{getReq.Type}";
+            logName = $"{_thisTp}_balance_transactions_{getReq.Type}";
             switch (getReq.Type)
             {
                 case "payout":
-                    gameType = thirdPartyBLL.GetGameType((int)thisTp, getReq.Source);
+                    gameType = _thirdPartyBLL.GetGameType((int)_thisTp, getReq.Source);
                     if (gameType == 0)
                     {
                         getApiResponse.ErrorMessage = "General exception (gameType error)";
-                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                        _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                         return getApiResponse;
                     }
-                    result = settledBLL.PayoutLT_One789(getReq, (int)gameType, out decimal tpAffterAmount);
+                    result = _settledBLL.PayoutLT_One789(getReq, (int)gameType, out decimal tpAffterAmount);
                     if (result > 0)
                     {
                         Response.StatusCode = (int)Error.OK;
@@ -160,39 +147,38 @@ namespace ThirdPartySeamlessWallet.Controllers
                     else if (result == -1)
                     {
                         Response.StatusCode = (int)Error.OK;
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.Username, (int)gameType);
+                        var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getReq.Username, (int)gameType);
                         getBalanceTransactionsResp.Tx = getReq.Tx;
                         getBalanceTransactionsResp.Amount = getReq.Amount;
                         getBalanceTransactionsResp.Balance = tpCustBalance.Balance;
                     }
-
                     break;
                 case "bet":
-                    gameType = thirdPartyBLL.GetGameType((int)thisTp, getReq.Source);
+                    gameType = _thirdPartyBLL.GetGameType((int)_thisTp, getReq.Source);
                     if (gameType == 0)
                     {
                         getApiResponse.ErrorMessage = "General exception (gameType error)";
-                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                        _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                         return getApiResponse;
                     }
-                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getReq.Username);
+                    var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, getReq.Username);
                     if (tpCheck == null)
                     {
                         getApiResponse.ErrorCode = "ValidationException";
                         getApiResponse.ErrorMessage = "Invalid user Id";
-                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                        _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                         return getApiResponse;
                     }
                     if (tpCheck.Locked)
                     {
                         getApiResponse.ErrorCode = "ValidationException";
                         getApiResponse.ErrorMessage = "Account is Lock";
-                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                        _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                         return getApiResponse;
                     }
                     try
                     {
-                        result = bettingBLL.PlaceBetLT_One789(getReq, (int)gameType, out tpAffterAmount);
+                        result = _bettingBLL.PlaceBetLT_One789(getReq, (int)gameType, out tpAffterAmount);
                         if (result > 0)
                         {
                             Response.StatusCode = (int)Error.OK;
@@ -203,7 +189,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         else if (result == -1)
                         {
                             Response.StatusCode = (int)Error.OK;
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.Username, (int)gameType);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getReq.Username, (int)gameType);
                             getBalanceTransactionsResp.Tx = getReq.Tx;
                             getBalanceTransactionsResp.Amount = getReq.Amount;
                             getBalanceTransactionsResp.Balance = tpCustBalance.Balance;
@@ -217,26 +203,26 @@ namespace ThirdPartySeamlessWallet.Controllers
                     catch (Exception ex)
                     {
                         Response.StatusCode = (int)Error.ERROR;
-                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName, ex);
+                        _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}\r\n{ex}", logName, ex);
                         return getApiResponse;
                     }
                     break;
                 case "payout_cancel":
-                    var payoutBettrans = settledBLL.GetRecordLT_One789(getReq.Source);
+                    var payoutBettrans = _settledBLL.GetRecordLT_One789(getReq.Source);
                     if (payoutBettrans.Source == null)
                     {
-                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                        _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                         return getApiResponse;
                     }
-                    gameType = thirdPartyBLL.GetGameType((int)thisTp, payoutBettrans.Source);
+                    gameType = _thirdPartyBLL.GetGameType((int)_thisTp, payoutBettrans.Source);
                     if (gameType == 0)
                     {
                         getApiResponse.ErrorMessage = "General exception (gameType error)";
-                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                        _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                         return getApiResponse;
                     }
                     getReq.RefSource = payoutBettrans.Source;
-                    result = settledBLL.ResettleLT_One789(getReq, (int)gameType, out tpAffterAmount);
+                    result = _settledBLL.ResettleLT_One789(getReq, (int)gameType, out tpAffterAmount);
                     if (result > 0)
                     {
                         Response.StatusCode = (int)Error.OK;
@@ -247,28 +233,28 @@ namespace ThirdPartySeamlessWallet.Controllers
                     else if (result == -1)
                     {
                         Response.StatusCode = (int)Error.OK;
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.Username, (int)gameType);
+                        var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getReq.Username, (int)gameType);
                         getBalanceTransactionsResp.Tx = getReq.Tx;
                         getBalanceTransactionsResp.Amount = getReq.Amount;
                         getBalanceTransactionsResp.Balance = tpCustBalance.Balance;
                     }
                     break;
                 case "refund":
-                    var refundBettrans = settledBLL.GetRecordLT_One789(getReq.Source);
+                    var refundBettrans = _settledBLL.GetRecordLT_One789(getReq.Source);
                     if (refundBettrans.Source == null)
                     {
-                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                        _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                         return getApiResponse;
                     }
-                    gameType = thirdPartyBLL.GetGameType((int)thisTp, refundBettrans.Source);
+                    gameType = _thirdPartyBLL.GetGameType((int)_thisTp, refundBettrans.Source);
                     if (gameType == 0)
                     {
                         getApiResponse.ErrorMessage = "General exception (gameType error)";
-                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                        _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                         return getApiResponse;
                     }
                     getReq.RefSource = refundBettrans.Source;
-                    result = settledBLL.RefundLT_One789(getReq, (int)gameType, out tpAffterAmount);
+                    result = _settledBLL.RefundLT_One789(getReq, (int)gameType, out tpAffterAmount);
                     if (result > 0)
                     {
                         Response.StatusCode = (int)Error.OK;
@@ -279,7 +265,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     else if (result == -1)
                     {
                         Response.StatusCode = (int)Error.OK;
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.Username, (int)gameType);
+                        var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getReq.Username, (int)gameType);
                         getBalanceTransactionsResp.Tx = getReq.Tx;
                         getBalanceTransactionsResp.Amount = getReq.Amount;
                         getBalanceTransactionsResp.Balance = tpCustBalance.Balance;
@@ -291,12 +277,12 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             if (Response.StatusCode == (int)Error.OK)
             {
-                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getBalanceTransactionsResp)}", logName);
+                _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getBalanceTransactionsResp)}", logName);
                 return getBalanceTransactionsResp;
             }
             else
             {
-                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
                 return getApiResponse;
             }
         }
