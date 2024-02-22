@@ -33,9 +33,6 @@ namespace ThirdPartyWager.Service.BLL
             
             try
             {
-                //先保留page
-                //var page = 1;
-                
                 //抓單前先試打，若是卡維護就直接false，免得進exception卡時間。
                 if (!await TryGetWagersForFirstDay(dayList, guid)) return false;
 
@@ -45,12 +42,12 @@ namespace ThirdPartyWager.Service.BLL
                 if (!allWagerList.Any()) 
                     return true;
 
-                if (!unSettleData.Any())
+                if (unSettleData.Any())
                 {
                     allWagerList = HLCheckWager(unSettleData,allWagerList);
                 }
-
-                var lastWagerDate = !unSettleData.Any() ? DateTime.Now.AddMonths(-1) : unSettleData.MaxBy(x => x.dateTime).dateTime;
+                
+                var lastWagerDate = !unSettleData.Any() ? DateTime.Now.AddMonths(-1) : unSettleData.MinBy(x => x.dateTime).dateTime;
                 
                 var allWagerValid =  allWagerList
                     .Where(wager => ConvertTimeToUTCTime(wager.DateTime) > lastWagerDate)
@@ -231,18 +228,18 @@ namespace ThirdPartyWager.Service.BLL
                     
                     var dataWager = wagerData.hl_Response;
                     
+                    if (dataWager.ErrorCode == 3 && dataWager.Desc == "Data NOT Found")
+                    {
+                        msg = "NO_DATA";
+                        _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)} ,Page {page} ,Date:{getDay}");
+                        isDone = true;
+                        continue;
+                    }
+                    
                     if (dataWager.ErrorCode != 0)
                     {
                         msg = "THIRD_PARTY_ERROR";
                         _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)} , Date:{getDay}");
-                        isDone = true;
-                        continue;
-                    }
-                
-                    if (dataWager.ErrorCode == 3 && dataWager.Desc == "Data NOT Found")
-                    {
-                        msg = "NO_DATA";
-                        _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)} , Date:{getDay}");
                         isDone = true;
                         continue;
                     }
@@ -340,12 +337,11 @@ namespace ThirdPartyWager.Service.BLL
         private IEnumerable<HLWagerData> HLCheckWager(IEnumerable<HLWagerTrans> unSettleData,
             IEnumerable<HLWagerData> wagerData)
         {
-            var notInWagerData = unSettleData.Where(uns => wagerData.All(wd => wd.BetID != uns.TransId)).ToList();
-            
-            var result = notInWagerData.Select(uns => new HLWagerData { BetID = uns.TransId }).ToList();
-            return result;
+            var unSettleDataIds = new HashSet<string>(unSettleData.Select(uns => uns.TransId));
+            var newWagerData = wagerData.Where(wd => !unSettleDataIds.Contains(wd.BetID)).ToList();
+
+            return newWagerData;
         }
-        
         
         #endregion
     }
