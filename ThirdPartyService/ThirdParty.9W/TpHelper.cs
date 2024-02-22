@@ -1,9 +1,9 @@
 ﻿using System.Web;
-
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -14,11 +14,17 @@ namespace ThirdParty.NineW
 {
     public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular, IThirdPartyGetBalanceParticular
     {
+        private readonly NineWConfig _siteConfig;
         private const string ContentType = "application/x-www-form-urlencoded";
+
+        public TpHelper(IServiceProvider provider)
+        {
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<NineWConfig>(TpEnum.NineW.ToString());
+        }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
-            var config = new NineWConfig(inputs, tpCustInfo.TpCurrencyId);
+            var config = _siteConfig;
 
             var tsCodesObj = new
             {
@@ -60,7 +66,7 @@ namespace ThirdParty.NineW
             };
         }
 
-        private NineWResult GetCheckTransferRecordResult(string TransID, string json)
+        private static NineWResult GetCheckTransferRecordResult(string TransID, string json)
         {
             #region 註解
 
@@ -102,7 +108,7 @@ namespace ThirdParty.NineW
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var config = new NineWConfig(inputs, tpCustInfo.TpCurrencyId);
+            var config = _siteConfig;
             tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x").ToLower();
             _ = GetKey(tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId, config);
             // 暫時加上，9w 限制 1 time pre sec(userid)
@@ -115,7 +121,7 @@ namespace ThirdParty.NineW
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var config = new NineWConfig(inputs, tpCustInfo.TpCurrencyId);
+            var config = _siteConfig;
             var apiUrl = $"{config.ApiUrl}/{config.WebSite}/getBalance";
             var sParam = $"cert={config.Cert}&alluser=0&userIds={tpCustInfo.TpUserName}";
 
@@ -163,7 +169,7 @@ namespace ThirdParty.NineW
                 };
             }
 
-            var config = new NineWConfig(inputs, tpCustInfo.TpCurrencyId);
+            var config = _siteConfig;
 
             return new ApiResult()
             {
@@ -179,7 +185,7 @@ namespace ThirdParty.NineW
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
-            var config = new NineWConfig(inputs, tpCustInfo.TpCurrencyId);
+            var config = _siteConfig;
             var apiUrl = $"{config.ApiUrl}/{config.WebSite}/deposit";
             var sParam = $"cert={config.Cert}&userId={tpCustInfo.TpUserName}&balance={Amount}&tsCode={TransID}";
 
@@ -280,7 +286,7 @@ namespace ThirdParty.NineW
 
         public ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var config = new NineWConfig(inputs, tpCustInfo.TpCurrencyId);
+            var config = _siteConfig;
             var apiUrl = $"{config.OldApiUrl}/player/{config.WebSite}/logout";
             var sParam = $"cert={config.Cert}&userIds={tpCustInfo.TpUserName}";
 
@@ -305,8 +311,9 @@ namespace ThirdParty.NineW
 
         private string GetKey(string user, string currency, NineWConfig config)
         {
+            var currencyData = config.CurrencyData[currency];
             var apiUrl = $"{config.ApiUrl}/{config.WebSite}/getKey";
-            var sParam = $"&cert={config.Cert}&userId={user}&userName={user}&agent={config.Agent}&currency={currency}";
+            var sParam = $"&cert={config.Cert}&userId={user}&userName={user}&agent={currencyData.Agent}&currency={currency}";
             var json = HttpPost(apiUrl, sParam, ContentType);
             var result = FromJson<NineWResult>(json);
             return result.status == "1"
@@ -322,7 +329,7 @@ namespace ThirdParty.NineW
         /// <returns></returns>
         public ApiResult<List<ReceiveTpUserBalanceModel>> GetBalance(Dictionary<string, string> inputs, string tpUserNameString, string tpCurrencyId)
         {
-            var config = new NineWConfig(inputs, tpCurrencyId);
+            var config = _siteConfig;
             var apiUrl = $"{config.ApiUrl}/{config.WebSite}/getBalance";
             var sParam = $"cert={config.Cert}&alluser=0&userIds={tpUserNameString}";
 
@@ -353,29 +360,6 @@ namespace ThirdParty.NineW
             };
         }
 
-        private class NineWConfig
-        {
-            public string ApiUrl { get; set; }
-            public string OldApiUrl { get; set; }
-            public string WebSite { get; set; }
-            public string Cert { get; set; }
-            public string Agent { get; set; }
-
-            public NineWConfig(Dictionary<string, string> inputs, string tpCurrencyId)
-            {
-                ApiUrl = inputs.ContainsKey($"ApiUrl") && !string.IsNullOrEmpty(inputs[$"ApiUrl"])
-                ? inputs[$"ApiUrl"] : throw new Exception($"ApiHost is empty");
-                WebSite = inputs.ContainsKey($"website") && !string.IsNullOrEmpty(inputs[$"website"])
-                ? inputs[$"website"] : throw new Exception($"website is empty");
-                Cert = inputs.ContainsKey($"cert") && !string.IsNullOrEmpty(inputs[$"cert"])
-                ? inputs[$"cert"] : throw new Exception($"cert is empty");
-                Agent = inputs.ContainsKey($"agent_{tpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"agent_{tpCurrencyId}"])
-                ? inputs[$"agent_{tpCurrencyId}"] : throw new Exception($"agent {tpCurrencyId} is empty");
-                OldApiUrl = inputs.ContainsKey($"OldApiUrl") && !string.IsNullOrEmpty(inputs[$"OldApiUrl"])
-                    ? inputs[$"OldApiUrl"] : throw new Exception($"OldApiHost is empty");
-            }
-        }
-
         private class NineWResult
         {
             public string status { get; set; }
@@ -403,7 +387,7 @@ namespace ThirdParty.NineW
             public string createdate { get; set; }
         }
 
-        private OddsTypeEnum GetOddsType(string oddsType)
+        private static OddsTypeEnum GetOddsType(string oddsType)
         {
             return oddsType switch
             {
