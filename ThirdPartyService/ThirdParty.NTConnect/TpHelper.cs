@@ -32,6 +32,12 @@ namespace ThirdParty.NTConnect
             {
                 return ProcessErrorResponse(tokenResponse);
             }
+
+            if (tpCustInfo.TpCurrencyId == "USD")
+            {
+                tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "");
+            }
+            
             
             //93Connect Password Rule : password required at least 1 alphabet, 1 numeric and 1 symbol.
             //因前面產的TpPwd有機會全英文，故這邊直接強制特殊符號及數字確保不會錯誤
@@ -44,7 +50,7 @@ namespace ThirdParty.NTConnect
                 { "test_account", tpCustInfo.IsTest ? "1" : "0" }
             };
             
-            var json = HttpPost(apiUrl + "player/?a=register", JsonConvert.SerializeObject(request), ContentType);
+            var json = HttpClientPost(apiUrl + "player/?a=register", JsonConvert.SerializeObject(request), ContentType);
             var result = FromJson<GetRegisterOrLogoutResponse>(json);
             
             if (result.status == "success" || result.errors.Any(x => x.code == "103"))
@@ -60,7 +66,7 @@ namespace ThirdParty.NTConnect
                 new ApiResult
                 {
                     ErrorCode = ErrorCode.Fail, 
-                    Message = result.message
+                    Message = result.errors.FirstOrDefault()?.description
                 };
 
         }
@@ -79,12 +85,16 @@ namespace ThirdParty.NTConnect
 
                 if (fun == "1")
                 {
-                    HttpGet(apiUrl + "Demo/", null);
                     return new ApiResult()
                     {
                         ErrorCode = ErrorCode.Success, 
-                        Message = "http://test123.com"
+                        Message = "https://www.93connect.com/newdesktop/gamelobby.html"
                     };
+                }
+
+                if (tpCustInfo.TpCurrencyId == "USD")
+                {
+                    tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "");
                 }
 
                 var tokenResponse = GetToken(apiUrl, currencyConfig.ClientKey, currencyConfig.SecretKey);
