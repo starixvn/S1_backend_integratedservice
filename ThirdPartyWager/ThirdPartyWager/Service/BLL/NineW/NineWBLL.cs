@@ -9,37 +9,33 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class NineWBLL
     {
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ILogger<NineWBLL> _logger;
         private readonly HttpHelper _httpHelper;
         private readonly Common _common;
         private readonly MySqlClient _wagerDbClient;
         private readonly int _tpId = (int)Tp.NineW;
-        private readonly NineWConfig _config;
+        private readonly NineWConfig _siteConfig;
         private readonly FincanceService _fincanceService;
         private readonly IEnumerable<TpCurrency> _currencyList;
-        private readonly Dictionary<string, string> _setting;
         private readonly int TimeZone = 8;
         private readonly List<int> _reportType = new() { 0, 2, 3, 7 };
 
         public NineWBLL(IServiceProvider provider)
         {
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _logger = provider.GetRequiredService<ILogger<NineWBLL>>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
-            _setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
-            _config = new NineWConfig(_setting);
             _fincanceService = provider.GetRequiredService<FincanceService>();
             _currencyList = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(_tpId);
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<NineWConfig>(Tp.NineW.ToString());
         }
 
         public async Task<bool> GetWagersAsync(string startTime, string endTime)
         {
             try
             {
-                var result = await QuerySettleBetHistoryAsync(_config, startTime, endTime);
+                var result = await QuerySettleBetHistoryAsync(_siteConfig, startTime, endTime);
                 var tasks = result.Select(item => Task.Run(() => InsertWager(item))).ToArray();
                 await Task.WhenAll(tasks);
 
@@ -56,7 +52,7 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {
-                var result = await QueryUnSettleSummaryTransactionAsync(_config, startTime);
+                var result = await QueryUnSettleSummaryTransactionAsync(_siteConfig, startTime);
                 var tasks = result.Select(item => Task.Run(() => InsertWager(item))).ToArray();
                 await Task.WhenAll(tasks);
                 return true;
@@ -72,7 +68,7 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {
-                var result = await QueryReSettleSummaryTransactionAsync(_config, startTime, endTime);
+                var result = await QueryReSettleSummaryTransactionAsync(_siteConfig, startTime, endTime);
                 var tasks = result.Select(item => Task.Run(() => InsertWager(item))).ToArray();
                 await Task.WhenAll(tasks);
                 return true;
@@ -88,7 +84,7 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {
-                var dailySummary = await CountSummaryTransactionByHourAsync(_config, date);
+                var dailySummary = await CountSummaryTransactionByHourAsync(_siteConfig, date);
                 if (!dailySummary.Any())
                 {
                     return true;
@@ -107,7 +103,7 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {
-                var summaryTransaction = await QuerySummaryTransactionAsync(_config, date);
+                var summaryTransaction = await QuerySummaryTransactionAsync(_siteConfig, date);
                 var tasks = summaryTransaction.Select(item => Task.Run(() => InsertReport(item))).ToArray();
                 await Task.WhenAll(tasks);
                 return true;
@@ -388,10 +384,9 @@ namespace ThirdPartyWager.Service.BLL
         private List<string> getAgents()
         {
             var data = new List<string>();
-            foreach (var currency in _currencyList)
+            foreach (var rows in _siteConfig.CurrencyData)
             {
-                var Agent = _setting.ContainsKey($"agent_{currency.TpCurrencyId}") && !string.IsNullOrEmpty(_setting[$"agent_{currency.TpCurrencyId}"]) ? _setting[$"agent_{currency.TpCurrencyId}"] : throw new Exception($"agent {currency.TpCurrencyId} is empty");
-                data.Add(Agent);
+                data.Add(rows.Value.Agent);
             }
             return data;
         }
