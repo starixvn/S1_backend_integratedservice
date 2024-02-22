@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -14,6 +13,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiJILIBLL _apiJILIBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = -4;
+        private readonly Dictionary<int, JILIConfig> _siteConfigDic;
 
         public FinanceJILIBLL(IServiceProvider provider)
         {
@@ -22,6 +22,7 @@ namespace ThirdPartyWager.Service.BLL
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _apiJILIBLL = provider.GetRequiredService<ApiJILIBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<JILIConfig>(Tp.JILI.ToString());
         }
 
         public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
@@ -67,8 +68,8 @@ namespace ThirdPartyWager.Service.BLL
             var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
             foreach (var siteData in siteList)
             {
-                // 分Site取得TpList
-                setting = _thirdPartyBLL.GetThirdPartyBySite(tpId, siteData.SiteId);
+                // 分Site取得SiteConfig
+                setting = _siteConfigDic[siteData.SiteId];
 
                 var getWagerSummary = await _apiJILIBLL.GetBetSummaryByTime(setting, reportTime.startTime, reportTime.endTime);
                 if (getWagerSummary.ErrorCode == 101)
