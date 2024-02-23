@@ -1338,8 +1338,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         GameId = betDataSet.GameId,
                         GameRoundId = betDataSet.GameRoundId,
                         TransactionId = string.IsNullOrEmpty(betDataSet.TransactionId) ? "" : betDataSet.TransactionId,
-                        Stake = betDataSet.Stake,
-                        ActualStake = betDataSet.ActualStake,
+                        Stake = 0m,
+                        ActualStake = 0m,
                         NetStake = 0m,
                         Payout = 0m,
                         Odds = 0m,
@@ -1370,7 +1370,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         // VoidGame就是以TicketNo將整局的PlaceBet 注單取消並退款
                         var placeBetActualStake = bettrans.Where(i => i.TicketType == BettransType.Bet).Sum(i => i.ActualStake);
                         result = _partitionService.Execute(partitionTime, "Service_BettransPK_MaxGame_CancelBet_Set", p, trans);
-                        if (result > 0 && betDataSet.ActualStake != 0)
+                        if (result > 0 && placeBetActualStake != 0)
                         {
                             result = walletService.SetBalance(
                                 tpCustInfo.CustId,
