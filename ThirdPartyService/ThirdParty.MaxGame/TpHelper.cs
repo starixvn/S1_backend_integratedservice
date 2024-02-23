@@ -1,13 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using System.Text;
-using System.Web;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.MaxGame
@@ -17,6 +14,7 @@ namespace ThirdParty.MaxGame
         private readonly Dictionary<int, MaxGameConfig> _siteConfigDic;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
+        private const string _testCurrency = "UUS";
 
         public TpHelper(IServiceProvider provider)
         {
@@ -138,7 +136,6 @@ namespace ThirdParty.MaxGame
                     OperatorCustId = tpCustInfo.TpUserName,
                     TicketNo = getBetDetail.TransId,
                     SettleDate = time,
-                    // getBetDetail.SettledTime.ToString("yyyy/MM/dd HH:mm:ss"),
                     Language = "en"
                 }
             };
@@ -234,7 +231,7 @@ namespace ThirdParty.MaxGame
                         OperatorCustomerName = tpCustInfo.TpUserName,
                         Language = TpLangId,
                         Platform = (appType == AppType.Desktop) ? "D" : "M",
-                        CurrencyISO = tpCustInfo.TpCurrencyId,
+                        CurrencyISO = tpCustInfo.IsTest ? _testCurrency : tpCustInfo.TpCurrencyId,
                         IpAddress = inputs["ClientIP"],
                         WalletSideToken = key
                     },
