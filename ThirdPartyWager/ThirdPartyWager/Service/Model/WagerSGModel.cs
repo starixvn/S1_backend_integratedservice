@@ -64,4 +64,13 @@ namespace ThirdPartyWager.Service.Model
         public decimal bonusAmt { get; set; }
         public string currency { get; set; }
     }
+
+    public class SGConfig
+    {
+        public string ApiUrl { get; set; }
+        public string GameUrl { get; set; }
+        public string FunGameUrl { get; set; }
+        public string merchantCode { get; set; }
+
+    }
 }

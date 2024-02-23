@@ -1,7 +1,5 @@
 ﻿using System.Text;
-
 using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -11,30 +9,26 @@ namespace ThirdPartyWager.Service.BLL
     public class ApiSGBLL
     {
         private readonly HttpHelper _httpHelper;
-        private readonly Common _common;
         private readonly Log2File _log2File;
-        private readonly ILogger<ApiSGBLL> _logger;
         private readonly string _tpName = Tp.SG.ToString();
 
         public ApiSGBLL(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
-            _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
-            _logger = provider.GetRequiredService<ILogger<ApiSGBLL>>();
         }
 
-        public async Task<WagerSGModel> GetBetListByTime(string apiUrl, string merchantCode, string startTime, string endTime, int page, string guid)
+        public async Task<WagerSGModel> GetBetListByTime(SGConfig setting, string startTime, string endTime, int page, string guid)
         {
             // param
             var uri = "getBetHistory";
-            var url = $"{apiUrl}";
+            var url = setting.ApiUrl;
             var param = new
             {
                 beginDate = startTime,
                 endDate = endTime,
                 pageIndex = page,
-                merchantCode = merchantCode,
+                merchantCode = setting.merchantCode,
                 serialNo = Guid.NewGuid().ToString(),
             };
 
@@ -44,10 +38,10 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task<CurrencyStats_SG> GetBetSummaryByTime(dynamic setting, string startTime, string endTime)
+        public async Task<CurrencyStats_SG> GetBetSummaryByTime(SGConfig setting, string startTime, string endTime)
         {
-            var apiUrl = setting["ApiUrl"];
-            var merchantCode = setting["merchantCode"];
+            var apiUrl = setting.ApiUrl;
+            var merchantCode = setting.merchantCode;
 
             // param
             var uri = "getTotalPL";

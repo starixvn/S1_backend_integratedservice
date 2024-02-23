@@ -16,8 +16,8 @@ namespace ThirdPartyWager.Workers
         private readonly WagerHLService _wagerHLService;
         private readonly WorkerType workerType = WorkerType.MainWager;
         private Timer timer;
-        private readonly int intervalMins = 15;
-        private readonly int iRangMins = 10;
+        private readonly int intervalMins = 60;
+        private readonly int iRangMins = 60;
         private readonly int tpId = (int)Tp.HaoLong;
         private readonly string _tpName = Tp.HaoLong.ToString();
         private readonly int tpType = (int)WagerTimerType.Wager;
@@ -70,7 +70,7 @@ namespace ThirdPartyWager.Workers
                      
                      //拿UnSettle資料
                      var ticketKeyHowLong = _thirdPartyBLL.GetAllSiteTicketKey(workerType, _tpId);
-                     var unSettledWagerHLList = _wagerHLService.GetHLBetUnSettledList(ticketKeyHowLong);
+                     var unSettledWagerHLList = _wagerHLService.GetHLBetUnSettledList(ticketKeyHowLong,10000);
                      
                      result =  await _wagerHLBLL.GetWagersAsync(unSettledWagerHLList,nextSevenDays);
                      

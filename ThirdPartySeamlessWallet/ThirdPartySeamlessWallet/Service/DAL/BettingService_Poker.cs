@@ -1,12 +1,11 @@
 ﻿using System.Data;
-
 using Dapper;
-
 using MySql.Data.MySqlClient;
-
+using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
+using ThirdPartySeamlessWallet.Service.Model.MaxGame;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -461,6 +460,128 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
 
                 if (result > 0)
+                {
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    return result;
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                result = 0;
+                logger.LogError(mySqlEx.Message);
+                _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+                throw;
+            }
+
+            _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+            return result;
+        }
+
+        #endregion
+
+        #region MaxGame
+
+        public int PlaceBetPK_MaxGame(TpCustInfo tpCustInfo, BettingData_MaxGame bettingData_MaxGame, out decimal afterAmount, out List<BetDataSetList_MaxGame> refData)
+        {
+            afterAmount = 0;
+            var result = 0;
+            var cnt = 0;
+            refData = new List<BetDataSetList_MaxGame>();
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                foreach (var betDataSet in bettingData_MaxGame.Payload.BetDataSet)
+                {
+                    var partitionTime = DateTimeOffset.FromUnixTimeSeconds(bettingData_MaxGame.Payload.TransDateUnix).DateTime;
+                    // 檢查是否重複
+                    var bettrans = _partitionService.Query<BettransData_MaxGame>(partitionTime, "Service_BettransPK_MaxGame_TicketNo_Get", new { TicketNo = betDataSet.TicketNo });
+                    if (bettrans.Any(i => i.TicketType == BettransType.Bet && i.Seq == bettingData_MaxGame.Seq))
+                    {
+                        return -1;
+                    }
+
+                    var p = new DynamicParameters(new
+                    {
+                        Seq = bettingData_MaxGame.Seq,
+                        OperatorCustId = bettingData_MaxGame.Payload.OperatorCustId,
+                        GameType = bettingData_MaxGame.Payload.GameType,
+                        IpAddress = bettingData_MaxGame.Payload.IpAddress,
+                        TransDate = bettingData_MaxGame.Payload.TransDate,
+                        SettleDate = new DateTime(1970, 1, 1),
+                        TicketNo = betDataSet.TicketNo,
+                        GameId = betDataSet.GameId,
+                        GameRoundId = betDataSet.GameRoundId,
+                        TransactionId = string.IsNullOrEmpty(betDataSet.TransactionId) ? "" : betDataSet.TransactionId,
+                        Stake = betDataSet.Stake,
+                        ActualStake = betDataSet.ActualStake,
+                        NetStake = 0m,
+                        Payout = 0m,
+                        Odds = betDataSet.Odds,
+                        BetChoice = string.IsNullOrEmpty(betDataSet.BetChoice) ? "" : betDataSet.BetChoice,
+                        TableCode = string.IsNullOrEmpty(betDataSet.TableCode) ? "" : betDataSet.TableCode,
+                        GameResult = "",
+                        CurrencyISO = "",
+                        BonusId = "",
+                        BonusName = "",
+                        PrizeName = "",
+                        TransDateUnix = bettingData_MaxGame.Payload.TransDateUnix,
+                        SettleDateUnix = 0,
+                        TicketType = (int)BettransType.Bet,
+                        TicketStatus = (int)TicketStatus.UnSettled,
+                        SettleFlag = (int)SettleFlag.Running
+                    });
+                    p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
+                    result = _partitionService.Execute(partitionTime, "Service_BettransPK_MaxGame_Ins", p, trans);
+
+                    if (result > 0 && betDataSet.ActualStake != 0)
+                    {
+                        result = walletService.SetBalance(
+                            tpCustInfo.CustId,
+                            tpCustInfo.SiteId,
+                            tpCustInfo.UserName,
+                            Math.Abs(betDataSet.ActualStake) * -1,
+                            (int)Tp.MaxGame,
+                            TransType.Wagers,
+                            $"Stake: {betDataSet.ActualStake:#,##0.##}",
+                            betDataSet.TicketNo,
+                            out afterAmount,
+                            conn,
+                            trans
+                        );
+                    }
+
+                    if (result > 0)
+                    {
+                        var refNo = p.Get<long>("SQ").ToString();
+                        refData.Add(new BetDataSetList_MaxGame
+                        {
+                            TicketNo = betDataSet.TicketNo,
+                            RefNo = refNo,
+                        });
+
+                        cnt++;
+                    }
+                }
+
+                DateTime.TryParse(bettingData_MaxGame.Timestamp, out DateTime ts);
+                var payload = new DynamicParameters(new
+                {
+                    Timestamp = bettingData_MaxGame.Timestamp,
+                    Seq = bettingData_MaxGame.Seq,
+                    Payload = JsonConvert.SerializeObject(bettingData_MaxGame.Payload)
+                });
+                var req = _partitionService.Execute(ts, "Service_BettransPK_MaxGame_Payload_Ins", payload, trans);
+
+                if (req > 0 && result > 0 && cnt != 0 && cnt == bettingData_MaxGame.Payload.BetDataSet.Count)
                 {
                     _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     return result;

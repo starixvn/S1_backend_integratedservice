@@ -18,7 +18,7 @@ namespace ThirdPartyWager.Workers
         private readonly string _tpName = Tp.WM.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
         private readonly int _beyond = 2;
-        private Timer timer;
+        private Timer _timer;
 
         public FinanceWM(IServiceProvider provider)
         {
@@ -30,7 +30,7 @@ namespace ThirdPartyWager.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            timer = new Timer(DoReport, null, TimeSpan.Zero, TimeSpan.Zero);
+            _timer = new Timer(DoReport, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -53,16 +53,8 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                if (quick == 1)
-                {
-                    var dueTimeSpan = TimeSpan.FromMinutes(10);
-                    timer.Change(dueTimeSpan, TimeSpan.Zero);
-                }
-                else
-                {
-                    var dueTimeSpan = TimeSpan.FromHours(4);
-                    timer.Change(dueTimeSpan, TimeSpan.Zero);
-                }
+                var dueTimeSpan = (quick == 1) ? TimeSpan.FromMinutes(10) : TimeSpan.FromHours(4);
+                _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 
@@ -73,7 +65,7 @@ namespace ThirdPartyWager.Workers
             try
             {
                 // get setting
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+                var setting = string.Empty;
 
                 // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
@@ -134,7 +126,7 @@ namespace ThirdPartyWager.Workers
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            timer?.Change(Timeout.Infinite, 0);
+            _timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

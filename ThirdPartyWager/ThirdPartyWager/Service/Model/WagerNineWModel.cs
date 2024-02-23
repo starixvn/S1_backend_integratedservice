@@ -5,24 +5,28 @@ namespace ThirdPartyWager.Service.Model.NineW
     public class NineWConfig
     {
         public string ApiUrl { get; set; }
+
         public string WagerUrl { get; set; }
+
+        public string OldApiUrl { get; set; }
+
+        [JsonProperty("website")]
+
         public string WebSite { get; set; }
+
+        [JsonProperty("cert")]
         public string Cert { get; set; }
+
+        [JsonProperty("agent")]
         public string Agent { get; set; }
 
-        public NineWConfig(Dictionary<string, string> inputs)
-        {
-            ApiUrl = inputs.ContainsKey($"ApiUrl") && !string.IsNullOrEmpty(inputs[$"ApiUrl"])
-            ? inputs[$"ApiUrl"] : throw new Exception($"ApiUrl is empty");
-            WagerUrl = inputs.ContainsKey($"WagerUrl") && !string.IsNullOrEmpty(inputs[$"WagerUrl"])
-            ? inputs[$"WagerUrl"] : throw new Exception($"WagerUrl is empty");
-            WebSite = inputs.ContainsKey($"website") && !string.IsNullOrEmpty(inputs[$"website"])
-            ? inputs[$"website"] : throw new Exception($"website is empty");
-            Cert = inputs.ContainsKey($"cert") && !string.IsNullOrEmpty(inputs[$"cert"])
-            ? inputs[$"cert"] : throw new Exception($"cert is empty");
-            Agent = inputs.ContainsKey($"agent") && !string.IsNullOrEmpty(inputs[$"agent"])
-            ? inputs[$"agent"] : throw new Exception($"agent is empty");
-        }
+        public Dictionary<string, CurrencyDataNineW> CurrencyData { get; set; }
+    }
+
+    public class CurrencyDataNineW
+    {
+        [JsonProperty("agent")]
+        public string Agent { get; set; }
     }
 
     public class QuerySettleBetHistoryObj<T>

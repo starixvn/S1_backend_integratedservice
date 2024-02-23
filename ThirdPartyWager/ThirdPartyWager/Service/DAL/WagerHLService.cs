@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using MySql.Data.MySqlClient;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -20,19 +21,35 @@ namespace ThirdPartyWager.Service.DAL
 
         public bool InsertHLWager(HLWagerData wager)
         {
-            var dateTime = new DateTimeOffset(wager.DateTime, new TimeSpan(8, 0, 0)).UtcDateTime;
-            var drawDate = new DateTimeOffset(wager.DrawDate, new TimeSpan(8, 0, 0)).UtcDateTime;
+            try
+            {
+                var dateTime = new DateTimeOffset(wager.DateTime, new TimeSpan(8, 0, 0)).UtcDateTime;
+                var drawDate = new DateTimeOffset(wager.DrawDate, new TimeSpan(8, 0, 0)).UtcDateTime;
             
-            var p = new DynamicParameters();
-            p.Add("betID", wager.BetID);
-            p.Add("loginID", wager.UserName);
-            p.Add("dateTime", dateTime);
-            p.Add("drawType", wager.DrawType);
-            p.Add("drawDate", drawDate);
-            p.Add("betNumber", wager.BetNumber);
-            p.Add("betPosition", wager.BetPosition);
-            p.Add("bet", wager.BetAmount);
-            return _wagerDbClient.Execute("Service_TpWager_HL_Ins", p);
+                var p = new DynamicParameters();
+                p.Add("betID", wager.BetID);
+                p.Add("loginID", wager.UserName);
+                p.Add("dateTime", dateTime);
+                p.Add("drawType", wager.DrawType);
+                p.Add("drawDate", drawDate);
+                p.Add("betNumber", wager.BetNumber);
+                p.Add("betPosition", wager.BetPosition);
+                p.Add("bet", wager.BetAmount);
+                
+                return _wagerDbClient.Execute("Service_TpWager_HL_Ins", p);
+            }
+            catch (MySqlException mySqlEx)
+            {
+                /*Duplicate for key 'PRIMARY'*/
+                if (mySqlEx.Number == 1062)
+                {
+                    return false;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
         }
 
         public bool UpdateHLWager(HLSettleInsertData wager)

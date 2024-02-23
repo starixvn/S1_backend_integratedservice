@@ -26,15 +26,13 @@ namespace ThirdPartyWager.Service.BLL
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
 
-        public async Task<bool> GetWagersAsync(IEnumerable<HLWagerTrans> unSettleDate,List<DateTime> dayList)
+        public async Task<bool> GetWagersAsync(IEnumerable<HLWagerTrans> unSettleData,List<DateTime> dayList)
         {
             var msg = "FATAL_ERROR";
             var guid = Guid.NewGuid().ToString();
+            
             try
             {
-                //先保留page
-                //var page = 1;
-                
                 //抓單前先試打，若是卡維護就直接false，免得進exception卡時間。
                 if (!await TryGetWagersForFirstDay(dayList, guid)) return false;
 
@@ -43,15 +41,15 @@ namespace ThirdPartyWager.Service.BLL
                 //沒單就不跑下面的了
                 if (!allWagerList.Any()) 
                     return true;
+
+                if (unSettleData.Any())
+                {
+                    allWagerList = HLCheckWager(unSettleData,allWagerList);
+                }
                 
-                var distinctWagerData = allWagerList
-                    .GroupBy(wager => wager.BetID)
-                    .Select(group => group.First())
-                    .OrderBy(wager => wager.DrawDate)
-                    .ToList();
+                var lastWagerDate = !unSettleData.Any() ? DateTime.Now.AddMonths(-1) : unSettleData.MinBy(x => x.dateTime).dateTime;
                 
-                var lastWagerDate = unSettleDate.MaxBy(x => x.dateTime).dateTime;
-                var allWagerValid =  distinctWagerData
+                var allWagerValid =  allWagerList
                     .Where(wager => ConvertTimeToUTCTime(wager.DateTime) > lastWagerDate)
                     .OrderBy(wager => wager.DrawDate)
                     .ToList();
@@ -99,7 +97,7 @@ namespace ThirdPartyWager.Service.BLL
         }
 
 
-        public async Task<bool> SetSettledWager(IEnumerable<HLWagerTrans> unSettleDate)
+        public async Task<bool> SetSettledWager(IEnumerable<HLWagerTrans> unSettleData)
         {
             var msg = "FATAL_ERROR";
             var guid = Guid.NewGuid().ToString();
@@ -107,14 +105,20 @@ namespace ThirdPartyWager.Service.BLL
             {
                 var nowDate = DateTime.Now;
                 _logger.LogInformation($"HaoLong SetSettledWager Job Time : +0 = {nowDate:yyyy-MM-ddTHH:mm:ss}");
+
+                //沒結算單就不跑
+                if (!unSettleData.Any())
+                {
+                    return true;
+                }
                 
-                var uniqueDrawDates = unSettleDate
+                var uniqueDrawDates = unSettleData
                     .Where(wager => wager.SettleFlag == 0)
                     .Select(wager => ConvertDateTime(wager.drawDate).Date)
                     .Distinct() 
                     .ToList();
                 
-                var updatedDrawDateList = unSettleDate
+                var updatedDrawDateList = unSettleData
                     .Where(x => x.SettleFlag == 0)
                     .Select(trans => new HLWagerTrans
                     {
@@ -199,7 +203,7 @@ namespace ThirdPartyWager.Service.BLL
         private async Task<bool> TryGetWagersForFirstDay(IEnumerable<DateTime> dayList, string guid)
         {
             var tryNowDay = dayList.FirstOrDefault().ToString("yyyy-MM-dd");
-            var tryGetWager = await _apiHLBLL.GetBetListByTime(tryNowDay, tryNowDay,guid);
+            var tryGetWager = await _apiHLBLL.GetBetListByTime(tryNowDay,guid,10);
             if (tryGetWager.hl_Response.ErrorCode != 998) return true;
             var msg = "THIRD_PARTY_ERROR_BUSY_TIME_BY_GET_WAGER";
             _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(tryGetWager)}");
@@ -213,31 +217,46 @@ namespace ThirdPartyWager.Service.BLL
             
             foreach(var day in dayList)
             {
-                var nowDay = day.ToString("yyyy-MM-dd");
-                var nextDay = day.AddDays(1).ToString("yyyy-MM-dd");
+                var getDay = day.ToString("yyyy-MM-dd");
 
-                var wagerData = await _apiHLBLL.GetBetListByTime(nowDay, nextDay,guid);
-                    
-                var dataWager = wagerData.hl_Response;
-                    
-                if (dataWager.ErrorCode != 0)
+                var page = 1;
+                var isDone = false;
+
+                while (!isDone)
                 {
-                    msg = "THIRD_PARTY_ERROR";
-                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)} , Date:{nowDay} ~ {nextDay}");
-                    continue;
-                }
-                
-                if (dataWager.ErrorCode == 3 && dataWager.Desc == "Data NOT Found")
-                {
-                    msg = "NO_DATA";
-                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)} , Date:{nowDay} ~ {nextDay}");
-                    continue;
-                }
+                    var wagerData = await _apiHLBLL.GetBetListByTime(getDay,guid,page);
                     
-                allWagerList.AddRange(dataWager.WagerData);
+                    var dataWager = wagerData.hl_Response;
+                    
+                    if (dataWager.ErrorCode == 3 && dataWager.Desc == "Data NOT Found")
+                    {
+                        msg = "NO_DATA";
+                        _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)} ,Page {page} ,Date:{getDay}");
+                        isDone = true;
+                        continue;
+                    }
+                    
+                    if (dataWager.ErrorCode != 0)
+                    {
+                        msg = "THIRD_PARTY_ERROR";
+                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)} , Date:{getDay}");
+                        isDone = true;
+                        continue;
+                    }
+                    
+                    allWagerList.AddRange(dataWager.WagerData);
+                    
+                    page++;
+                }
             }
+            
+            var distinctWagerData = allWagerList
+                .GroupBy(wager => wager.BetID)
+                .Select(group => group.First())
+                .OrderBy(wager => wager.DrawDate)
+                .ToList();
 
-            return allWagerList;
+            return distinctWagerData;
         }
 
         private bool ProcessUpdateWager(IEnumerable<HLSettleInsertData> wagerList)
@@ -274,8 +293,11 @@ namespace ThirdPartyWager.Service.BLL
 
         private void InsertNewWager(HLWagerData wagerData)
         {
-            _ = _wagerHLService.InsertHLWager(wagerData);
-            _ = _tpUnsettleService.InsertTpUnsettle(Tp.HaoLong, GameType.HaoLong_4D, wagerData.BetID);
+            var result = _wagerHLService.InsertHLWager(wagerData);
+            if (result)
+            {
+                _ = _tpUnsettleService.InsertTpUnsettle(Tp.HaoLong, GameType.HaoLong_4D, wagerData.BetID);
+            }
         }
 
         private void UpdateWager(HLSettleInsertData wager)
@@ -310,6 +332,15 @@ namespace ThirdPartyWager.Service.BLL
         {
             var result = new DateTimeOffset(dateTime, new TimeSpan(8, 0, 0)).UtcDateTime;
             return result;
+        }
+        
+        private IEnumerable<HLWagerData> HLCheckWager(IEnumerable<HLWagerTrans> unSettleData,
+            IEnumerable<HLWagerData> wagerData)
+        {
+            var unSettleDataIds = new HashSet<string>(unSettleData.Select(uns => uns.TransId));
+            var newWagerData = wagerData.Where(wd => !unSettleDataIds.Contains(wd.BetID)).ToList();
+
+            return newWagerData;
         }
         
         #endregion

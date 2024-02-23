@@ -55,6 +55,7 @@
         HaoLong = 58,
         NLC = 59,
         Amigo = 60,
+        MaxGame = 61,
         GA = 63
     }
 
@@ -148,6 +149,7 @@
         HaoLong_4D = 110,
         NLC_RNG = 111,
         Amigo_RNG = 112,
+        MaxGame_Poker = 113,
         GA_CockFighting = 115
     }
 }

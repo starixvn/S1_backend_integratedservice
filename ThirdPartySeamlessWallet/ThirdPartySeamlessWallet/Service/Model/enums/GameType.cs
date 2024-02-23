@@ -99,6 +99,7 @@
         HaoLong_4D = 110,
         NLC_RNG = 111,
         Amigo_RNG = 112,
+        MaxGame_Poker = 113,
         GA_CockFighting = 115
     }
 
