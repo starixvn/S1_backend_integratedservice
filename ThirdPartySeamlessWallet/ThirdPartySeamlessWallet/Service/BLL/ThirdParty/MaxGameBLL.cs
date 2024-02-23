@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -22,6 +21,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly Log2File _log2File;
         private readonly Tp _thisTp;
         private readonly int _gameType = 0;
+        private const string _testCurrency = "UUS";
 
         public MaxGameBLL(IServiceProvider provider)
         {
@@ -75,8 +75,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     OperatorCustId = tpCustInfoAuth.TpUserName,
                     UserName = tpCustInfoAuth.TpUserName,
-                    CurrencyISO = tpCustInfoAuth.TpCurrencyId,
-                    Currency = tpCustInfoAuth.TpCurrencyId,
+                    CurrencyISO = tpCustInfoAuth.IsTest ? _testCurrency : tpCustInfoAuth.TpCurrencyId,
+                    Currency = tpCustInfoAuth.IsTest ? _testCurrency : tpCustInfoAuth.TpCurrencyId,
                     Balance = _tools.Floor(tpCustBalance.Balance, 2),
                     MinBet = limit.Min,
                     MaxBet = limit.Max,
