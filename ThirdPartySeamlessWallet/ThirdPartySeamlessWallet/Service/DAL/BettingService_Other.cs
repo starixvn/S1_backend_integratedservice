@@ -895,7 +895,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 // 檢查是否重複
                 var bettrans = _partitionService.Query<BettransLT93Connect>(partitionTime, CheckSpName, 
                     new { bet_id = bettingDataGames_NTConnect.bet_id , username = bettingDataGames_NTConnect.username });
-                if (bettrans.Any(i => i.status == "R" && i.bet_id == bettingDataGames_NTConnect.bet_id))
+                if (bettrans.Any(i => i.TicketType == (int)BettransType.Bet && i.bet_id == bettingDataGames_NTConnect.bet_id))
                 {
                     return -1;
                 }

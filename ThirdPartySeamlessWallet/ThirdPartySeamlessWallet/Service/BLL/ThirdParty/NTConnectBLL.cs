@@ -10,8 +10,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
     public class NTConnectBLL : INTConnectBLL
     {
-        private readonly Tools _tools;
-        private readonly AuthBLL _authBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly BettingService _bettingService;
@@ -24,8 +22,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             _thisTp = Tp.NTConnect;
             _gameType = (int)GameType.NTConnect_Games;
-            _tools = provider.GetRequiredService<Tools>();
-            _authBLL = provider.GetRequiredService<AuthBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _bettingService = provider.GetRequiredService<BettingService>();
@@ -85,7 +81,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         
         public NTCResponse<NTCCheckBetResponse> CheckBet(NTCCheckBetRequest request)
         {
-            var logName = $"{_gameType.ToString()}_CheckBet";
             DateTime dateTime = default;
             var getErrorResponse = new NTCResponse<NTCCheckBetResponse>()
             {
@@ -207,7 +202,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public NTCResponse<NTCSettleBetResponse> SettleBet(NTCSettleBetRequest request)
         {
-            var logName = $"{_gameType.ToString()}_PlaceBet";
+            var logName = $"{_gameType.ToString()}_SettleBet";
             var getErrorResponse = new NTCResponse<NTCSettleBetResponse>()
             {
                 status = "error",

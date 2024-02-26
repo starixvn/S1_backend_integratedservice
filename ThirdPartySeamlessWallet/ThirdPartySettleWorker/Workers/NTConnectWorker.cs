@@ -87,7 +87,6 @@ namespace ThirdPartySettleWorker.Workers
                     }
                     try
                     {
-                        var betRecordInfo = new BetRecordInfo();
                         
                         var unsettled = getUnsettledList.FirstOrDefault(x => x.TransId == wager.TransId);
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
@@ -106,43 +105,21 @@ namespace ThirdPartySettleWorker.Workers
                             "R" => SettlementType.UnSettled,
                             _ => SettlementType.SettledForValid
                         };
-
-                        //UnSettled先給預設狀態，後續結算後再更新資料
-                        if (transType != SettlementType.UnSettled)
+                        
+                        var betRecordInfo = new BetRecordInfo
                         {
-
-                            betRecordInfo = new BetRecordInfo
-                            {
-                                TpId = (int)Tp,
-                                Stake = unsettled.Stake,
-                                TpUserName = unsettled.Account,
-                                ValidBet = unsettled.ValidBet,
-                                WinlostAmount = unsettled.WinLostAmount,
-                                TransId = unsettled.TransId,
-                                GameType = gameType,
-                                SettledTime = unsettled.SettleTime,
-                                TransTime = unsettled.TransTime,
-                                SettlementType = transType,
-                                GameID = unsettled.GameId,
-                            };
-                        }
-                        else
-                        {
-                            betRecordInfo = new BetRecordInfo
-                            {
-                                TpId = (int)Tp,
-                                Stake = unsettled.Stake,
-                                TpUserName = unsettled.Account,
-                                ValidBet = unsettled.ValidBet,
-                                WinlostAmount = 0,
-                                TransId = unsettled.TransId,
-                                GameType = gameType,
-                                SettledTime = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds(),
-                                TransTime = unsettled.TransTime,
-                                SettlementType = transType,
-                                GameID = unsettled.GameId,
-                            };
-                        }
+                            TpId = (int)Tp,
+                            Stake = unsettled.Stake,
+                            TpUserName = unsettled.Account,
+                            ValidBet = unsettled.ValidBet,
+                            WinlostAmount = unsettled.WinLostAmount,
+                            TransId = unsettled.TransId,
+                            GameType = gameType,
+                            SettledTime = unsettled.SettleTime,
+                            TransTime = unsettled.TransTime,
+                            SettlementType = transType,
+                            GameID = unsettled.GameId,
+                        };
 
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)
