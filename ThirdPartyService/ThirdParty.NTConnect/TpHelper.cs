@@ -32,7 +32,10 @@ namespace ThirdParty.NTConnect
             {
                 return ProcessErrorResponse(tokenResponse);
             }
-
+            
+            //93Connect UserName 最大名稱為15字(三方限制)，
+            //Currency 為 USD 特別前墜 SiteName + _KH_ + CustId，會直接超過15字，故將USD幣別的TpUserName底線replace掉，
+            //以免CreateMember及Login發生錯誤。
             if (tpCustInfo.TpCurrencyId == "USD")
             {
                 tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "");
@@ -52,9 +55,11 @@ namespace ThirdParty.NTConnect
             
             var json = HttpClientPost(apiUrl + "player/?a=register", JsonConvert.SerializeObject(request), ContentType);
             var result = FromJson<GetRegisterOrLogoutResponse>(json);
+            tpCustInfo.TpPwd = $"{tpCustInfo.TpPwd}$7";
             
             if (result.status == "success" || result.errors.Any(x => x.code == "103"))
             {
+                
                 return new ApiResult
                 {
                     ErrorCode = ErrorCode.Success, 
@@ -88,10 +93,13 @@ namespace ThirdParty.NTConnect
                     return new ApiResult()
                     {
                         ErrorCode = ErrorCode.Success, 
-                        Message = "https://www.93connect.com/newdesktop/gamelobby.html"
+                        Message = siteConfig.FunGameUrl
                     };
                 }
-
+                
+                //93Connect UserName 最大名稱為15字(三方限制)，
+                //Currency 為 USD 特別前墜 SiteName + _KH_ + CustId，會直接超過15字，故將USD幣別的TpUserName底線replace掉，
+                //以免CreateMember及Login發生錯誤。
                 if (tpCustInfo.TpCurrencyId == "USD")
                 {
                     tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "");
@@ -193,9 +201,8 @@ namespace ThirdParty.NTConnect
             var wagerDetail = TpBetRecordProvider.DbQueryFirst(spName, new { YYYYMM, getBetDetail.TransId }, db);
             if (wagerDetail != null && wagerDetail.Count > 0)
             {
-                //wagerDetail.GetValueOrDefault("")?.ToString(),
                 var detail = ToJson(wagerDetail);
-                var resultData = new LotteryDetail(getBetDetail.TpGameTypeOption)
+                var resultData = new PokerDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
                     Detail = detail,
@@ -261,13 +268,12 @@ namespace ThirdParty.NTConnect
         private GetPlayerSessionResponse GetPlayerSession(string apiUrl, string accountName, string accountPWD,string clientIP, string token)
         {
             var getPlayerSessionUrl = apiUrl + "player/?a=login";
-            //93Connect Password Rule : password required at least 1 alphabet, 1 numeric and 1 symbol.
-            //因前面產的TpPwd有機會全英文，故這邊直接強制特殊符號及數字確保不會錯誤
+
             var request = new Dictionary<string, string>
             {
                 {"token",token},
                 {"username", accountName},
-                {"password", accountPWD + "$7"},
+                {"password", accountPWD},
                 {"ip", clientIP}
             };
             var sParam = JsonConvert.SerializeObject(request);
@@ -302,7 +308,7 @@ namespace ThirdParty.NTConnect
                 {"token",token},
                 {"username", username},
                 {"ticket",transId},
-                {"lang_id",ConvertTpCurrency(tpCurrency)}
+                {"lang_id","0"} // all language use English : 0
             };
             var sParam = JsonConvert.SerializeObject(request);
 
@@ -352,19 +358,6 @@ namespace ThirdParty.NTConnect
                 Message = errorList
             };
         }
-
-        private static string ConvertTpCurrency(string tpCurrency)
-        {
-            return tpCurrency switch
-            {
-                "CNY" => "1",
-                "IDR" => "2",
-                "VND" => "3",
-                "THB" => "4",
-                _ => "0"
-            };
-        }
-        
         
         #endregion
         

@@ -1692,7 +1692,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     return -2;
                 }
                 
-                if (bettrans.Any(i => i.status != "R"))
+                if (bettrans.Any(i => i.TicketType != (int)BettransType.Bet))
                 {
                     return -3;
                 }
@@ -1786,7 +1786,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     return -2;
                 }
                 
-                if (bettrans.Any(i => i.status == "C"))
+                if (bettrans.Any(i => i.TicketType == (int)BettransType.CancelBet))
                 {
                     return -3;
                 }

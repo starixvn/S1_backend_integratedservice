@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Extensions;
-using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -14,7 +13,6 @@ namespace ThirdPartySeamlessWallet.Controllers
     {
         private readonly INTConnectBLL _NTConnectBLL;
         private readonly Tp _thisTp;
-        private readonly Dictionary<int, NTConnectConfig> _siteConfigDic;
         private readonly Log2File _log2File;
 
         public NTConnectController(IServiceProvider provider)
@@ -22,7 +20,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             _log2File = provider.GetRequiredService<Log2File>();
             _NTConnectBLL = provider.GetRequiredService<INTConnectBLL>();
             _thisTp = Tp.NTConnect; 
-            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<NTConnectConfig>(Tp.NTConnect.ToString());
         }
 
         [HttpPost]
@@ -30,7 +27,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         public string GetBalance(NTCGetBalanceRequest request)
         {
             
-            var logName = $"{_thisTp}_authenticate";
+            var logName = $"{_thisTp}_GetBalance";
             var baseResult = BaseResult();
             
             try
@@ -49,7 +46,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/Bet/CheckBet")]
         public string CheckBet(NTCCheckBetRequest request)
         {
-            var logName = $"{_thisTp}_checkBet";
+            var logName = $"{_thisTp}_CheckBet";
             var baseResult = BaseResult();
             try
             {

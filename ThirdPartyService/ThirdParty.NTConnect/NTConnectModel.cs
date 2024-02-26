@@ -29,6 +29,7 @@ namespace ThirdParty.NTConnect
     {
         public string SiteName { get; set; }
         public int SiteId { get; set; }
+        public string FunGameUrl { get; set; }
         public List<CurrencyList> CurrencyList { get; set; }
     }
     public class CurrencyList
