@@ -1020,6 +1020,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         return -2;
                     }
                 }
+                if (bettrans.Any(i => i.TicketType == BettransType.Payout))
+                {
+                    // 一局游戏结算后是返回一笔S1003的哦
+                    return -3;
+                }
 
                 result = _partitionService.Execute(partitionTime, "Service_BettransPK_V8_Ins", p, trans);
 

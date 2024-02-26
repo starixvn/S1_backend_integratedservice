@@ -276,6 +276,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     };
                     return getPayoutResponse;
                 }
+                else if (result == -2)
+                {
+                    _log2File.Error("no bet", logName);
+                }
+                else if (result == -3)
+                {
+                    _log2File.Error("duplicate payout", logName);
+                }
+
             }
             catch (Exception ex)
             {
