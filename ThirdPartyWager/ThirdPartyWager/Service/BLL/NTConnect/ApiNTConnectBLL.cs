@@ -9,24 +9,20 @@ namespace ThirdPartyWager.Service.BLL;
 
 public class ApiNTConnectBLL
 {
-    private readonly HttpHelper _httpHelper;
     private readonly Common _common;
     private readonly Log2File _log2File;
-    private readonly ILogger<ApiHLBLL> _logger;
     private readonly string _tpName = Tp.NTConnect.ToString();
     private readonly IConfiguration _configuration;
     private readonly Dictionary<int, NTConnectConfig> _siteConfigDic;
     
     public ApiNTConnectBLL(IServiceProvider provider)
     {
-        _httpHelper = provider.GetRequiredService<HttpHelper>();
         _log2File = provider.GetRequiredService<Log2File>();
-        _logger = provider.GetRequiredService<ILogger<ApiHLBLL>>();
         _configuration = provider.GetRequiredService<IConfiguration>();
         _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<NTConnectConfig>(Tp.NTConnect.ToString());
     }
 
-    public async Task<Wager93ConnectModel> GetBetListByTime(string startTime, string endTime, string guid,(string apiUrl, string clientKey, string secretKey) apiParams, int? page = 0)
+    public async Task<Wager93ConnectModel> GetBetListByTime(string startTime, string endTime,(string apiUrl, string clientKey, string secretKey) apiParams, int? page = 0)
     {
         var token = await GetToken(apiParams.apiUrl, apiParams.clientKey, apiParams.secretKey);
         var param = new Dictionary<string, object>()
@@ -44,7 +40,7 @@ public class ApiNTConnectBLL
         return result;
     }
 
-    public async Task<Wager93ConnectModel> GetBetListByDay(string startTime, string guid,(string apiUrl, string clientKey, string secretKey) apiParams, int? page = 0)
+    public async Task<Wager93ConnectModel> GetBetListByDay(string startTime, (string apiUrl, string clientKey, string secretKey) apiParams, int? page = 0)
     {
         var token = await GetToken(apiParams.apiUrl, apiParams.clientKey, apiParams.secretKey);
         var param = new Dictionary<string, object>()

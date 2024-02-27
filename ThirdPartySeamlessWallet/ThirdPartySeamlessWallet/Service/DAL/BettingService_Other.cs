@@ -904,7 +904,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var p = new DynamicParameters(bettingDataGames_NTConnect);
                 p.Add("status","R");
                 p.Add("SettleFlag",(int)SettleFlag.Running);
-                p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
                 result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
                 if (result > 0 && bettingDataGames_NTConnect.stake != 0)
                 {

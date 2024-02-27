@@ -106,7 +106,8 @@
         SG_Table = 109,
         HaoLong_4D = 110,
         NLC_RNG = 111,
-        NTConnect_Lottery = 114,
+        NTConnect_Games = 114,
+        GA_CockFighting = 115,
     }
     public enum SettlementType
     {

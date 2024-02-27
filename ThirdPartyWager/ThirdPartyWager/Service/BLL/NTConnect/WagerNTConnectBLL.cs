@@ -13,7 +13,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<WagerNTConnectBLL> _logger;
         private readonly int _tpId = (int)Tp.NTConnect;
         private readonly TpUnsettleService _tpUnsettleService;
-        private readonly WorkerType workerType = WorkerType.MainWager;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly Dictionary<int, NTConnectConfig> _siteConfigDic;
 
@@ -31,7 +30,6 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<bool> GetWagersAsync(string startTime, string endTime)
         {
             var msg = "FATAL_ERROR";
-            var guid = Guid.NewGuid().ToString();
             try
             {
                 var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
@@ -48,19 +46,38 @@ namespace ThirdPartyWager.Service.BLL
                         while (page <= totalPage)
                         {
                             var apiParams = (apiUrl, clientKey, secretKey);
-                            var wager93data = await _apiNTConnectBLL.GetBetListByTime(startTime, endTime,guid,apiParams,page);
+                            var wager93data = await _apiNTConnectBLL.GetBetListByTime(startTime, endTime,apiParams,page);
+                            
+                            if (wager93data.status == "error")
+                            {
+                                msg = "THIRD_PARTY_ERROR";
+                                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(wager93data)}");
+                                return false;
+                            }
+                            
                             if (wager93data.totalpage == null || wager93data.page == null)
                             {
                                 msg = "NO_DATA";
-                                    _logger.LogInformation($"93Connect:{msg}\r\nSiteCurrency:{clientKey}\r\n{JsonConvert.SerializeObject(wager93data)}");
+                                    _logger.LogInformation($"93Connect:{msg}\r\nSite:{siteConfig.SiteName},Currency:{currencyKey.CurrencyCode}\r\nSiteCurrency:{clientKey}\r\n{JsonConvert.SerializeObject(wager93data)}");
                                     break;
                             }
                             totalPage = wager93data.totalpage;
 
+                            
                             foreach (var wager in wager93data.data)
                             {
-                                InsertNew93Wager(wager);
+                                try
+                                {
+                                    InsertNew93Wager(wager);
+                                }
+                                catch (Exception ex)
+                                {
+                                    msg = $"INSERT_WAGER(WAGERID: {wager.ticket} )";
+                                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(wager)}\r\n{ex.Message}");
+                                    return false;
+                                }
                             }
+                            
                             page++; 
                         }
                     }
@@ -83,7 +100,7 @@ namespace ThirdPartyWager.Service.BLL
             var result = _wagerNTConnectService.InsertNTConnectWager(wagerData);
             if (result == 1)
             {
-                _ = _tpUnsettleService.InsertTpUnsettle(Tp.NTConnect, GameType.NTConnect_Lottery, wagerData.ticket);
+                _ = _tpUnsettleService.InsertTpUnsettle(Tp.NTConnect, GameType.NTConnect_Games, wagerData.ticket);
             }
         }
     }
