@@ -124,7 +124,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public NTCResponse<NTCPlaceBetResponse> PlaceBet(NTCPlaceBetRequest request)
         {
-            var logName = $"{_gameType.ToString()}_PlaceBet";
+            var logName = $"{_thisTp.ToString()}_PlaceBet";
             var getErrorResponse = new NTCResponse<NTCPlaceBetResponse>()
             {
                 status = "error",
@@ -202,7 +202,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public NTCResponse<NTCSettleBetResponse> SettleBet(NTCSettleBetRequest request)
         {
-            var logName = $"{_gameType.ToString()}_SettleBet";
+            var logName = $"{_thisTp.ToString()}_SettleBet";
             var getErrorResponse = new NTCResponse<NTCSettleBetResponse>()
             {
                 status = "error",
@@ -281,7 +281,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public NTCResponse<NTCCancelBetResponse> CancelBet(NTCCancelBetRequest request)
         {
-            var logName = $"{_gameType.ToString()}_CancelBet";
+            var logName = $"{_thisTp.ToString()}_CancelBet";
             var getErrorResponse = new NTCResponse<NTCCancelBetResponse>()
             {
                 status = "error",

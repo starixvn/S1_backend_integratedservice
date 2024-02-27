@@ -13,12 +13,9 @@ namespace ThirdPartyWager.Workers
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _tpId = (int)Tp.NTConnect;
-        private readonly WagerNTConnectService _wagerNTConnectService;
-        private readonly WorkerType workerType = WorkerType.MainWager;
         private Timer timer;
-        private readonly int intervalMins = 15;
+        private readonly int intervalMins = 3;
         private readonly int iRangMins = 15;
-        private readonly int tpId = (int)Tp.NTConnect;
         private readonly string _tpName = Tp.NTConnect.ToString();
         private readonly int tpType = (int)WagerTimerType.Wager;
         private int quick = 0;
@@ -29,7 +26,6 @@ namespace ThirdPartyWager.Workers
             _logger = provider.GetRequiredService<ILogger<WagerNTConnect>>();
             _wagerNTConnectBLL = provider.GetRequiredService<WagerNTConnectBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _wagerNTConnectService = provider.GetRequiredService<WagerNTConnectService>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         }
         
@@ -51,7 +47,7 @@ namespace ThirdPartyWager.Workers
 
                 var result = false;
                 quick = 0;
-                var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(tpId, tpType);
+                var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, tpType);
                 
                 var timerTime = dataTpTimer?.StartTime ?? nowTime.AddMinutes(-(iRangMins - 1));
                 var last = (dataTpTimer == null) ? iRangMins - 1 : iRangMins;
@@ -64,7 +60,7 @@ namespace ThirdPartyWager.Workers
 
                      if (result)
                      {
-                         _thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
+                         _thirdPartyBLL.SetThirdPartyTimer(_tpId, tpType, time.endUnix);
                      }
                 }
             }

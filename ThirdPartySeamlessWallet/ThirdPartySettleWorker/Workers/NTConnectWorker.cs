@@ -22,7 +22,6 @@ namespace ThirdPartySettleWorker.Workers
         private readonly ILogger<NTConnectWorker> _logger;
         private readonly string _tpName;
         private readonly int tpId = (int)Tp.NTConnect;
-        private readonly int workerType = 1;
         
         
         public NTConnectWorker(IServiceProvider provider)
@@ -56,7 +55,7 @@ namespace ThirdPartySettleWorker.Workers
             var forContinue = false;
             var isError = false;
             var gameType = GameType.NTConnect_Games;
-            var tpCategory = TpCategory.Lottery;
+            var tpCategory = TpCategory.Games;
             var logName = $"Settle_NTConnect";
             var getSP = $"Service_Bettrans_93Connect_Settle_Get";
             var setSP = $"Service_Bettrans_93Connect_Settle_Set";
@@ -124,12 +123,10 @@ namespace ThirdPartySettleWorker.Workers
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)
                         {
-                            if (transType != SettlementType.UnSettled)
-                            {
-                                _ = _settledBLL.SetSettleFlagOfMonthlyBettrans(setSP, betRecordInfo);
-                            }
+                                
                             Task.Run(() =>
                             {
+                                _ = _settledBLL.SetSettleFlagOfMonthlyBettrans(setSP, betRecordInfo);
                                 _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, unsettled.TransId, isSuccess: true);
                             });
                         }
@@ -169,7 +166,7 @@ namespace ThirdPartySettleWorker.Workers
         private bool Check93ConnectTpWagerStatus(string TransId,string checkSP)
         {
             var get93ConnectCheckWager = _tpUnSettledBLL.GetTpUnsettleData<NTConnectWager>(checkSP, new { TransId }, DataBase.Wager);
-            return get93ConnectCheckWager.FirstOrDefault()?.status == "Cancel";
+            return get93ConnectCheckWager.Any(i => i.status == "Cancel");
         }
         
         #endregion

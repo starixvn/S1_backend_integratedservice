@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using Dapper;
 
 using MySql.Data.MySqlClient;
@@ -1805,10 +1805,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             tpCustInfo,
                             Math.Abs(stake),
                             (int)tpId,
-                            cancelData_NTConnect.username,
+                            cancelData_NTConnect.bet_id,
                             (int)tpGameType,
                             category,
-                            cancelData_NTConnect.username,
+                            cancelData_NTConnect.bet_id,
                             TransType.Refunds,
                             null,
                             out afterAmount,
