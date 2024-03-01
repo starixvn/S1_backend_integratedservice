@@ -15,7 +15,7 @@ namespace ThirdPartyWager.Workers
         private readonly int _tpId = (int)Tp.NTConnect;
         private Timer timer;
         private readonly int intervalMins = 3;
-        private readonly int iRangMins = 15;
+        private readonly int iRangMins = 5;
         private readonly string _tpName = Tp.NTConnect.ToString();
         private readonly int tpType = (int)WagerTimerType.Wager;
         private int quick = 0;

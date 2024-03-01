@@ -116,6 +116,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public DateTime LocalSettleTime { get; set; }
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
+        public string NtcStatus { get; set; }
     }
 
     public class NTCSettleBetResponse : NTCErrorResponse
