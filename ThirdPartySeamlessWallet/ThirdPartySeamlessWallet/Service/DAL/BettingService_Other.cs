@@ -846,7 +846,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         
         #region 93Connect
 
-        public BettransLT93Connect CheckBetGames_93Connect(NTCCheckBetRequest request,string tpUserName)
+        public Bettrans93Connect CheckBetGames_93Connect(NTCCheckBetRequest request,string tpUserName)
         {
             var GetSpName = "Service_Bettrans_93Connect_Get";
             
@@ -856,7 +856,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 var partitionTime = DateTime.Now;
-                var bettrans = _partitionService.Query<BettransLT93Connect>(partitionTime, GetSpName, 
+                var bettrans = _partitionService.Query<Bettrans93Connect>(partitionTime, GetSpName, 
                     new { bet_id = request.ref_no , username = tpUserName });
 
                 return !bettrans.Any() ? null : bettrans.FirstOrDefault();
@@ -893,7 +893,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 _ = DateTime.TryParse(bettingDataGames_NTConnect.betTime, out var partitionTime);
                 // 檢查是否重複
-                var bettrans = _partitionService.Query<BettransLT93Connect>(partitionTime, CheckSpName, 
+                var bettrans = _partitionService.Query<Bettrans93Connect>(partitionTime, CheckSpName, 
                     new { bet_id = bettingDataGames_NTConnect.bet_id , username = tpCustInfo.TpUserName });
                 if (bettrans.Any(i => i.TicketType == (int)BettransType.Bet && i.bet_id == bettingDataGames_NTConnect.bet_id))
                 {

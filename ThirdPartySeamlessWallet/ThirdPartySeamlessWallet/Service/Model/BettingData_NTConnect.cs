@@ -135,7 +135,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string username { get; set; }
         public string bet_id { get; set; }
         public string status { get; set; }
-        public int TicketType { get; set; }
+        public int TicketType { get; set; } 
         public int TicketStatus { get; set; }
     }
 
@@ -150,11 +150,21 @@ namespace ThirdPartySeamlessWallet.Service.Model
     
     #region DAL
 
-    public class BettransLT93Connect : NTCPlaceBetRequest
+    public class Bettrans93Connect : NTCPlaceBetRequest
     {
         public decimal bet_amt { get; set; }
         public decimal win_amt { get; set; }
         public string status { get; set; }
+    }
+
+    public class Bettrans93ConnectCancelBet
+    {
+        public string bet_id { get; set; }
+        public string username { get; set; }
+        public string status { get; set; }
+        public int TicketType { get; set; } 
+        public int TicketStatus { get; set; }
+        public int SettleFlag { get; set; }
     }
     
     #endregion
