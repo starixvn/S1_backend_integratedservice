@@ -168,6 +168,11 @@ namespace ThirdPartyService.Service.DAL
             return _mainDbClient.QueryFirst<TpCountryCode>("Service_TpCountryCodeByTpCurrencyId_Get", new { TpId = tpId, TpCurrencyId = tpCurrencyId });
         }
 
+        public TpCustInfo GetTpCustInfoByTpCustId(int tpId, string tpCustId)
+        {
+            return _mainDbClient.QueryFirst<TpCustInfo>("Common_TpCustInfoByTpCustId_Get", new { TpId = tpId, TpCustId = tpCustId });
+        }
+
         private bool CheckTpForbidden(int custId, int tpId)
         {
             // priority custid > tpid

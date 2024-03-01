@@ -78,6 +78,8 @@ namespace ThirdPartyWager.Service.BLL
                                 }
                             }
                             
+                            //5秒後在抓下一個currency
+                            Thread.Sleep(5000);
                             page++; 
                         }
                     }

@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
@@ -34,28 +34,29 @@ namespace ThirdParty.NTConnect
             }
             
             //93Connect UserName 最大名稱為15字(三方限制)，
-            //Currency 為 USD 特別前墜 SiteName + _KH_ + CustId，會直接超過15字，故將USD幣別的TpUserName底線replace掉，
-            //以免CreateMember及Login發生錯誤。
-            if (tpCustInfo.TpCurrencyId == "USD")
-            {
-                tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "");
-            }
-            
-            
+            //因特殊幣別部分會造成字元超出限制，改為使用93定義自建帳號。
+            //Rule : SiteId + _ + CustId
+            var new93AccountName = $"{tpCustInfo.SiteId}_{tpCustInfo.CustId}";
             //93Connect Password Rule : password required at least 1 alphabet, 1 numeric and 1 symbol.
             //因前面產的TpPwd有機會全英文，故這邊直接強制特殊符號及數字確保不會錯誤
+            var new93AccountPwd = $"{tpCustInfo.TpPwd}$7";
+            
+            //將更新至DB
+            tpCustInfo.TpCustId = new93AccountName;
+            tpCustInfo.TpPwd = new93AccountPwd;
+            
+            
             var request = new Dictionary<string, string>()
             {
                 { "token", tokenResponse.token },
-                { "username", tpCustInfo.TpUserName },
-                { "password", tpCustInfo.TpPwd + "$7"},
-                { "confirm_password", tpCustInfo.TpPwd + "$7" },
+                { "username", new93AccountName },
+                { "password", new93AccountPwd},
+                { "confirm_password", new93AccountPwd },
                 { "test_account", tpCustInfo.IsTest ? "1" : "0" }
             };
             
             var json = HttpClientPost(apiUrl + "player/?a=register", JsonConvert.SerializeObject(request), ContentType);
             var result = FromJson<GetRegisterOrLogoutResponse>(json);
-            tpCustInfo.TpPwd = $"{tpCustInfo.TpPwd}$7";
             
             if (result.status == "success" || result.errors.Any(x => x.code == "103"))
             {
@@ -97,21 +98,13 @@ namespace ThirdParty.NTConnect
                     };
                 }
                 
-                //93Connect UserName 最大名稱為15字(三方限制)，
-                //Currency 為 USD 特別前墜 SiteName + _KH_ + CustId，會直接超過15字，故將USD幣別的TpUserName底線replace掉，
-                //以免CreateMember及Login發生錯誤。
-                if (tpCustInfo.TpCurrencyId == "USD")
-                {
-                    tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "");
-                }
-
                 var tokenResponse = GetToken(apiUrl, currencyConfig.ClientKey, currencyConfig.SecretKey);
                 if (tokenResponse.status != "success")
                 {
                     return ProcessErrorResponse(tokenResponse);
                 }
                 
-                var playerSessionResponse = GetPlayerSession(apiUrl, tpCustInfo.TpUserName, tpCustInfo.TpPwd, clientIP, tokenResponse.token);
+                var playerSessionResponse = GetPlayerSession(apiUrl, tpCustInfo.TpCustId, tpCustInfo.TpPwd, clientIP, tokenResponse.token);
                 if (playerSessionResponse.status != "success")
                 {
                     return ProcessErrorResponse(playerSessionResponse);
@@ -127,7 +120,7 @@ namespace ThirdParty.NTConnect
                     { "token", tokenResponse.token },
                     { "ip", clientIP },
                     { "session", playerSessionResponse.session },
-                    { "username", tpCustInfo.TpUserName },
+                    { "username", tpCustInfo.TpCustId },
                     { "game", gameId },
                     { "lang_id", TpLangId },
                     { "seamless", "1" }
@@ -157,7 +150,7 @@ namespace ThirdParty.NTConnect
                 return ProcessErrorResponse(tokenResponse);
             }
 
-            var getSessionResponse = GetPlayerCheck(apiUrl, tpCustInfo.TpUserName, tokenResponse.token);
+            var getSessionResponse = GetPlayerCheck(apiUrl, tpCustInfo.TpCustId, tokenResponse.token);
             if (getSessionResponse.status != "success")
             {
                 return ProcessErrorResponse(getSessionResponse);
@@ -166,7 +159,7 @@ namespace ThirdParty.NTConnect
             var request = new Dictionary<string, string>()
             {
                 {"token",tokenResponse.token},
-                {"username",tpCustInfo.TpUserName},
+                {"username",tpCustInfo.TpCustId},
                 {"session",getSessionResponse.session}
             };
             
@@ -208,14 +201,13 @@ namespace ThirdParty.NTConnect
                     Detail = detail,
                     TpCurrency = tpCurrency,
                     RefTransId = getBetDetail.TransId,
-                    TpUserName = wagerDetail.GetValueOrDefault("username")?.ToString(),
+                    TpUserName = tpCustInfo.TpUserName,
                     UTCBetTime = DateTime.Parse(wagerDetail.GetValueOrDefault("LocalBetTime")?.ToString()),
                     UTCSettledTime = DateTime.Parse(wagerDetail.GetValueOrDefault("LocalSettleTime")?.ToString()),
-                    Stake = (decimal)wagerDetail.GetValueOrDefault("bet_amt") * tpCurrency.ExchangeRate,
-                    WinlostAmount = ((decimal)wagerDetail.GetValueOrDefault("win_amt") - 
-                                     (decimal)wagerDetail.GetValueOrDefault("bet_amt")) * 
-                                    tpCurrency.ExchangeRate,
-                    DetailUrl = Get93ConnectBetDetailUrl(getBetDetail.TransId,apiUrl,currencyConfig.ClientKey,currencyConfig.SecretKey,tpCustInfo.TpUserName,tpCurrency.TpCurrencyId)
+                    Stake = (decimal)wagerDetail.GetValueOrDefault("bet_amt"),
+                    WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("win_amt") - 
+                                     (decimal)wagerDetail.GetValueOrDefault("bet_amt"),
+                    DetailUrl = Get93ConnectBetDetailUrl(getBetDetail.TransId,apiUrl,currencyConfig.ClientKey,currencyConfig.SecretKey,tpCustInfo.TpCustId,tpCurrency.TpCurrencyId)
                 };
                 return resultData;
             }
@@ -319,7 +311,7 @@ namespace ThirdParty.NTConnect
         }
         
 
-        private string Get93ConnectBetDetailUrl(string transId ,string apiUrl, string clientKey, string SecretKey, string tpUserName, string tpCurrency)
+        private string Get93ConnectBetDetailUrl(string transId ,string apiUrl, string clientKey, string SecretKey, string tpCustId, string tpCurrency)
         {
             var getToken = GetToken(apiUrl, clientKey, SecretKey);
             if (getToken.status != "success")
@@ -327,7 +319,7 @@ namespace ThirdParty.NTConnect
                 return "";
             }
             
-            var result = Get93ConnectBetDetail(apiUrl,transId,tpUserName, tpCurrency,getToken.token);
+            var result = Get93ConnectBetDetail(apiUrl,transId,tpCustId, tpCurrency,getToken.token);
             return result != null ? result.mybeturl : "";
         }
 

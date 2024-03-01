@@ -1,4 +1,5 @@
 using System.Data;
+using System.Globalization;
 using Dapper;
 
 using MySql.Data.MySqlClient;
@@ -1696,35 +1697,73 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     return -3;
                 }
+
+                var settleData = new NTCSettleBetRequest
+                {
+                    bet_id = settleData_NTConnect.bet_id,
+                    bet_amt = settleData_NTConnect.bet_amt,
+                    win_amt = settleData_NTConnect.win_amt,
+                    username = tpCustInfo.TpUserName,
+                    status = settleData_NTConnect.NtcStatus,
+                    settleBetTime = settleData_NTConnect.settleBetTime,
+                    LocalSettleTime = settleData_NTConnect.LocalSettleTime,
+                    TicketStatus = settleData_NTConnect.TicketStatus,
+                    TicketType = settleData_NTConnect.TicketType,
+                };
                 
-                
-                var p = new DynamicParameters(settleData_NTConnect);
+                var p = new DynamicParameters(settleData);
                 p.Add("SettleFlag",(int)SettleFlag.EndGame);
                 result = _partitionService.Execute(partitionTime,InsSpName, p, trans);
 
                 if (result > 0)
                 {
-                    
-                    if (settleData_NTConnect.win_amt > 0)
+                    switch (settleData_NTConnect.win_amt)
                     {
-                        result = PayoutV2(
-                            tpCustInfo,
-                            settleData_NTConnect.win_amt,
-                            (int)tpId,
-                            settleData_NTConnect.bet_id,
-                            (int)tpGameType,
-                            category,
-                            settleData_NTConnect.bet_id,
-                            TransType.Payout,
-                            null,
-                            out afterAmount,
-                            $"Payout",
-                            out bonusId,
-                            conn,
-                            trans,
-                            AllowNegative.Allow
-                        );
+                        case 0 when 
+                            settleData_NTConnect.status is "cancel" or "refund":
+                        {
+                            var textInfo = new CultureInfo("en-US", false).TextInfo;
+                            result = PayoutV2(
+                                tpCustInfo,
+                                Math.Abs(settleData_NTConnect.bet_amt),
+                                (int)tpId,
+                                settleData_NTConnect.bet_id,
+                                (int)tpGameType,
+                                category,
+                                settleData_NTConnect.bet_id,
+                                TransType.Refunds,
+                                null,
+                                out afterAmount,
+                                textInfo.ToTitleCase(settleData_NTConnect.status),
+                                out bonusId,
+                                conn,
+                                trans,
+                                AllowNegative.Allow
+                            );
+                            break;
+                        }
+                        case > 0 when 
+                            settleData_NTConnect.status is "win" or "loss":
+                            result = PayoutV2(
+                                tpCustInfo,
+                                settleData_NTConnect.win_amt,
+                                (int)tpId,
+                                settleData_NTConnect.bet_id,
+                                (int)tpGameType,
+                                category,
+                                settleData_NTConnect.bet_id,
+                                TransType.Payout,
+                                null,
+                                out afterAmount,
+                                $"Payout",
+                                out bonusId,
+                                conn,
+                                trans,
+                                AllowNegative.Allow
+                            );
+                            break;
                     }
+
 
                     if (result > 0)
                     {
@@ -1791,6 +1830,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     return -3;
                 }
                 
+                if(bettrans.Any(i => i.TicketType == (int)BettransType.Bet))
+                {
+                    return -5;
+                }
+
+                cancelData_NTConnect.username = tpCustInfo.TpUserName;
                 var p = new DynamicParameters(cancelData_NTConnect);
                 p.Add("SettleFlag", (int)SettleFlag.EndGame);
                 p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);

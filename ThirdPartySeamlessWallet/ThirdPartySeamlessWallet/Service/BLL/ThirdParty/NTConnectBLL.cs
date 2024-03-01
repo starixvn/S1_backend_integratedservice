@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
@@ -48,8 +48,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 getErrorResponse.data.ErrorMessage = NTConnectErrorCode.PlayerInvalid.GetEnumDescription();
                 return getErrorResponse;
             }
+
+            if (!GetTpInfoByTpCustId(request.username, out var tpCustInfo))
+            {
+                getErrorResponse.data.ErrorCode = (int)NTConnectErrorCode.PlayerInvalid;
+                getErrorResponse.data.ErrorMessage = NTConnectErrorCode.PlayerInvalid.GetEnumDescription();
+                return getErrorResponse;
+            }
             
-            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, request.username);
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, tpCustInfo.TpUserName);
             
             if (tpCheck == null)
             {
@@ -65,7 +72,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return getErrorResponse;
             }
             
-            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, request.username, _gameType);
+            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, tpCustInfo.TpUserName, _gameType);
             var response = new NTCResponse<NTCGetBalanceResponse>()
             {
                 status = "success",
@@ -91,8 +98,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     ErrorMessage = NTConnectErrorCode.InternalError.GetEnumDescription()
                 }
             };
+            
+            if (!GetTpInfoByTpCustId(request.username, out var tpCustInfo))
+            {
+                getErrorResponse.data.ErrorCode = (int)NTConnectErrorCode.PlayerInvalid;
+                getErrorResponse.data.ErrorMessage = NTConnectErrorCode.PlayerInvalid.GetEnumDescription();
+                return getErrorResponse;
+            }
 
-            var checkBet = _bettingService.CheckBetGames_93Connect(request);
+            var checkBet = _bettingService.CheckBetGames_93Connect(request,tpCustInfo.TpUserName);
             if (checkBet == null)
             {
                 getErrorResponse.data.ErrorCode = (int)NTConnectErrorCode.CantFoundBetId;
@@ -136,7 +150,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
             try
             {
-                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.NTConnect, request.username);
+                if (!GetTpInfoByTpCustId(request.username, out var tpCustInfo))
+                {
+                    getErrorResponse.data.ErrorCode = (int)NTConnectErrorCode.PlayerInvalid;
+                    getErrorResponse.data.ErrorMessage = NTConnectErrorCode.PlayerInvalid.GetEnumDescription();
+                    return getErrorResponse;
+                }
+                
+                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.NTConnect, tpCustInfo.TpUserName);
             
                 if (tpCheck == null)
                 {
@@ -152,20 +173,21 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return getErrorResponse;
                 }
 
-                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, request.username, _gameType);
+                //var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, tpCustInfo.TpUserName, _gameType);
+                request.username = tpCustInfo.TpUserName;
                 request.betTime = CheckBetOrSettleTime(request.betTime);
                 request.bet_type = CheckBetType(request.bet_type);
                 request.bet_typegroup = CheckBetTypeGroup(request.bet_typegroup);
                 request.TicketType = (int)BettransType.Bet;
                 request.TicketStatus = (int)TicketStatus.UnSettled;
                 request.LocalBetTime = ConvertDateTime(request.betTime);
-                var result = PlaceBetGames_NTConnect(request, out decimal tpAffterAmount);
+                var result = PlaceBetGames_NTConnect(tpCustInfo,request, out decimal tpAffterAmount);
                 
                 if (result > 0 || result == -1)
                 {
                     if (tpAffterAmount == 0 || result == -1)
                     {
-                        tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, request.username, _gameType);
+                        var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, request.username, _gameType);
                         tpAffterAmount = tpCustBalance.Balance;
                     }
                     
@@ -215,19 +237,47 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             try
             {
-                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, request.username, _gameType);
-                request.TicketType = (int)BettransType.Payout;
-                request.status = request.win_amt > 0 ? "W" : "L";
-                request.TicketStatus = request.win_amt > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
+                if (!GetTpInfoByTpCustId(request.username, out var tpCustInfo))
+                {
+                    getErrorResponse.data.ErrorCode = (int)NTConnectErrorCode.PlayerInvalid;
+                    getErrorResponse.data.ErrorMessage = NTConnectErrorCode.PlayerInvalid.GetEnumDescription();
+                    return getErrorResponse;
+                }
+                
+                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, tpCustInfo.TpUserName, _gameType);
+
+                if (string.IsNullOrEmpty(request.status))
+                {
+                    getErrorResponse.data.ErrorCode = (int)NTConnectErrorCode.StatusError;
+                    getErrorResponse.data.ErrorMessage = NTConnectErrorCode.StatusError.GetEnumDescription();
+                    return getErrorResponse;
+                }
+
+                switch (request.status)
+                {
+                    case "win":
+                    case "loss":
+                        request.TicketType = (int)BettransType.Payout;
+                        request.NtcStatus = request.win_amt > 0 ? "W" : "L";
+                        request.TicketStatus = request.win_amt > 0 ? (int)TicketStatus.Win : (int)TicketStatus.Lost;
+                        break;
+                    case "cancel":
+                    case "refund":
+                        request.TicketType = (int)BettransType.CancelBet;
+                        request.NtcStatus = "C";
+                        request.TicketStatus = (int)TicketStatus.Refund;
+                        break;
+                }
+                
                 request.settleBetTime = CheckBetOrSettleTime(request.settleBetTime);
                 request.LocalSettleTime = ConvertDateTime(request.settleBetTime);
-                var result = SettleGames_NTConnect(request, out decimal tpAffterAmount);
+                var result = SettleGames_NTConnect(tpCustInfo,request, out var tpAfterAmount);
                 if (result > 0 || result == -1)
                 {
-                    if (tpAffterAmount == 0 || result == -1)
+                    if (tpAfterAmount == 0 || result == -1)
                     {
-                        tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, request.username, _gameType);
-                        tpAffterAmount = tpCustBalance.Balance;
+                        tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, tpCustInfo.TpUserName, _gameType);
+                        tpAfterAmount = tpCustBalance.Balance;
                     }
 
                     return new NTCResponse<NTCSettleBetResponse>()
@@ -236,7 +286,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         data = new NTCSettleBetResponse()
                         {
                             username = request.username,
-                            balance = tpAffterAmount
+                            balance = tpAfterAmount
                         }
                     };
                 }
@@ -294,11 +344,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             try
             {
+                if (!GetTpInfoByTpCustId(request.username, out var tpCustInfo))
+                {
+                    getErrorResponse.data.ErrorCode = (int)NTConnectErrorCode.PlayerInvalid;
+                    getErrorResponse.data.ErrorMessage = NTConnectErrorCode.PlayerInvalid.GetEnumDescription();
+                    return getErrorResponse;
+                }
+                
                 var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, request.username, _gameType);
                 request.TicketType = (int)BettransType.CancelBet;
                 request.TicketStatus = (int)TicketStatus.Refund;
                 request.status = "C";
-                var result = CancelGames_NTConnect(request, out decimal tpAffterAmount , out string TransId);
+                var result = CancelGames_NTConnect(tpCustInfo,request, out decimal tpAffterAmount , out string TransId);
 
                 switch (result)
                 {
@@ -348,6 +405,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                                 ErrorMessage = NTConnectErrorCode.OrderAlreadyCancel.GetEnumDescription()
                             }
                         };
+                    case -5:
+                        return new NTCResponse<NTCCancelBetResponse>()
+                        {
+                            status = "error",
+                            data = new NTCCancelBetResponse()
+                            {
+                                ErrorCode = (int)NTConnectErrorCode.BetOnGoing,
+                                ErrorMessage = NTConnectErrorCode.BetOnGoing.GetEnumDescription()
+                            }
+                        };
                 }
             }
             catch (Exception ex)
@@ -363,9 +430,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         
         #region Exchange
 
-        private int PlaceBetGames_NTConnect(NTCPlaceBetRequest bettingData_NTConnect, out decimal afterAmount)
+        private int PlaceBetGames_NTConnect(TpCustInfo tpCustInfo,NTCPlaceBetRequest bettingData_NTConnect, out decimal afterAmount)
         {
-            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, bettingData_NTConnect.username);
             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)_thisTp, tpCustInfo.CurrencyId);
             var custBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, bettingData_NTConnect.username, _gameType);
             
@@ -396,9 +462,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return result;
         }
         
-        private int SettleGames_NTConnect(NTCSettleBetRequest settleData_NTConnect, out decimal afterAmount)
+        private int SettleGames_NTConnect(TpCustInfo tpCustInfo,NTCSettleBetRequest settleData_NTConnect, out decimal afterAmount)
         {
-            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, settleData_NTConnect.username);
             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)_thisTp, tpCustInfo.CurrencyId);
 
             if (tpCurrency.ExchangeRate != 0)
@@ -415,9 +480,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return result;
         }
 
-        private int CancelGames_NTConnect(NTCCancelBetRequest cancelData_NTConnect, out decimal afterAmount, out string TransId)
+        private int CancelGames_NTConnect(TpCustInfo tpCustInfo,NTCCancelBetRequest cancelData_NTConnect, out decimal afterAmount, out string TransId)
         {
-            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.NTConnect, cancelData_NTConnect.username);
             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp.NTConnect, tpCustInfo.CurrencyId);
             
             var result = _settledService.CancelBetGames_93Connect(tpCustInfo, cancelData_NTConnect, out afterAmount, out TransId);
@@ -432,6 +496,28 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         #endregion
 
         #region private
+        
+        
+        private bool GetTpInfoByTpCustId(string username, out TpCustInfo tpCustInfo)
+        {
+            tpCustInfo = null;
+            try
+            {
+                tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCacheByTpCustId((int)_thisTp, username);
+                if (tpCustInfo == null)
+                {
+                    return false;
+                }
+
+                return !string.IsNullOrWhiteSpace(tpCustInfo.TpUserName);
+            }
+            catch (Exception ex)
+            {
+                _log2File.Error($"GetTpInfoByPlayerID Exception:{ex.Message}","GetTpInfoByTpCustId");
+                return false;
+            }
+        }
+        
 
         private string CheckBetOrSettleTime(string betTime)
         {
@@ -462,6 +548,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             return DateTime.UtcNow;
         }
+        
         #endregion
     }
 }

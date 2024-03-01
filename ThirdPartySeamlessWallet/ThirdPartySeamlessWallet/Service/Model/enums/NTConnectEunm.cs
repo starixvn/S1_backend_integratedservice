@@ -16,8 +16,12 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         OrderAlreadyCancel = 3,
         [Description("Player authentication failed due to invalid, not found or expired token.")]
         PlayerInvalid = 4,
+        [Description("The bet is still ongoing and cannot be canceled.")]
+        BetOnGoing = 5,
         [Description("Player is frozen.")] 
         PlayerFrozen = 6,
+        [Description("Request status is NullOrEmpty")]
+        StatusError = 7,
         [Description("Can't found bet_id.")]
         CantFoundBetId = 50,
         [Description("Internal server error.")]

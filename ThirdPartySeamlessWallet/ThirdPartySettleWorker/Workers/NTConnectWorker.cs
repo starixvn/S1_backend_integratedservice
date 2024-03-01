@@ -59,7 +59,6 @@ namespace ThirdPartySettleWorker.Workers
             var logName = $"Settle_NTConnect";
             var getSP = $"Service_Bettrans_93Connect_Settle_Get";
             var setSP = $"Service_Bettrans_93Connect_Settle_Set";
-            var checkSP = $"Service_TpWager_93Connect_Get";
             var dueTimeSpan = TimeSpan.FromMinutes(1);
             
             try
@@ -78,11 +77,7 @@ namespace ThirdPartySettleWorker.Workers
                     var getUnsettledList = _partitionService.GetUnsettleDataList<SettleData93Connect>(getSP, wager);
                     if(getUnsettledList == null || !getUnsettledList.Any())
                     {
-                        if (!Check93ConnectTpWagerStatus(wager.TransId, checkSP))
-                            throw new UnsettleNotFoundException(
-                                $"{_tpName} - NTConnect Can fount TransId : {wager.TransId}.");
-                        _ = _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, wager.TransId, isSuccess: true);
-                        continue;
+                        throw new UnsettleNotFoundException($"{_tpName} - NTConnect Can fount TransId : {wager.TransId}.");
                     }
                     try
                     {
@@ -119,6 +114,11 @@ namespace ThirdPartySettleWorker.Workers
                             SettlementType = transType,
                             GameID = unsettled.GameId,
                         };
+
+                        if (betRecordInfo.SettlementType == SettlementType.SettledForInvalid)
+                        {
+                            betRecordInfo.TicketStatus = TicketStatus.Refund;
+                        }
 
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)
@@ -160,16 +160,6 @@ namespace ThirdPartySettleWorker.Workers
                 _timer?.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
-        
-        #region private
-
-        private bool Check93ConnectTpWagerStatus(string TransId,string checkSP)
-        {
-            var get93ConnectCheckWager = _tpUnSettledBLL.GetTpUnsettleData<NTConnectWager>(checkSP, new { TransId }, DataBase.Wager);
-            return get93ConnectCheckWager.Any(i => i.status == "Cancel");
-        }
-        
-        #endregion
         
         #region Model
         
