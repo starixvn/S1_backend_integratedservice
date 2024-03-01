@@ -1686,7 +1686,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 var partitionTime = DateTime.Now;
-                var bettrans = _partitionService.Query<BettransLT93Connect>(partitionTime, GetSpName, 
+                var bettrans = _partitionService.Query<Bettrans93Connect>(partitionTime, GetSpName, 
                     new { bet_id = settleData_NTConnect.bet_id , username = tpCustInfo.TpUserName });
                 if (!bettrans.Any(i => i.bet_id == settleData_NTConnect.bet_id))
                 {
@@ -1812,12 +1812,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 var pc = new DynamicParameters();
-                pc.Add("username",cancelData_NTConnect.username);
+                pc.Add("username",tpCustInfo.TpUserName);
                 pc.Add("bet_id",cancelData_NTConnect.bet_id);
             
                 
                 var partitionTime = DateTime.Now;
-                var bettrans = _partitionService.Query<BettransLT93Connect>(partitionTime, GetSpName, 
+                var bettrans = _partitionService.Query<Bettrans93Connect>(partitionTime, GetSpName, 
                     new { bet_id = cancelData_NTConnect.bet_id , username = tpCustInfo.TpUserName });
                 if (!bettrans.Any(i => i.bet_id == cancelData_NTConnect.bet_id))
                 {
@@ -1834,10 +1834,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     return -5;
                 }
-
-                cancelData_NTConnect.username = tpCustInfo.TpUserName;
-                var p = new DynamicParameters(cancelData_NTConnect);
-                p.Add("SettleFlag", (int)SettleFlag.EndGame);
+                
+                var cancelData = new Bettrans93ConnectCancelBet()
+                {
+                    bet_id = cancelData_NTConnect.bet_id,
+                    username = tpCustInfo.TpUserName,
+                    status = cancelData_NTConnect.status,
+                    TicketType = cancelData_NTConnect.TicketType,
+                    TicketStatus = cancelData_NTConnect.TicketStatus,
+                    SettleFlag = (int)SettleFlag.EndGame
+                };
+                
+                var p = new DynamicParameters(cancelData);
                 p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
                 result = _partitionService.Execute(partitionTime,CancelSpName, p, trans);
     
@@ -1867,6 +1875,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
+                        //CancelBet是SettleBet之後才會打，要重新結算注單
+                        _tpUnsettleService.InsertTpUnsettle(Tp.NTConnect, GameType.NTConnect_Games, TransId, trans);
                         _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     }
                     else
