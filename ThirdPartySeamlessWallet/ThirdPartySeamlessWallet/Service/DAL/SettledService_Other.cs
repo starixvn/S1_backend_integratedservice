@@ -1687,7 +1687,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 var partitionTime = DateTime.Now;
                 var bettrans = _partitionService.Query<BettransLT93Connect>(partitionTime, GetSpName, 
-                    new { bet_id = settleData_NTConnect.bet_id , username = settleData_NTConnect.username });
+                    new { bet_id = settleData_NTConnect.bet_id , username = tpCustInfo.TpUserName });
                 if (!bettrans.Any(i => i.bet_id == settleData_NTConnect.bet_id))
                 {
                     return -2;
@@ -1818,7 +1818,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 
                 var partitionTime = DateTime.Now;
                 var bettrans = _partitionService.Query<BettransLT93Connect>(partitionTime, GetSpName, 
-                    new { bet_id = cancelData_NTConnect.bet_id , username = cancelData_NTConnect.username });
+                    new { bet_id = cancelData_NTConnect.bet_id , username = tpCustInfo.TpUserName });
                 if (!bettrans.Any(i => i.bet_id == cancelData_NTConnect.bet_id))
                 {
                     // no bet data
