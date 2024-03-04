@@ -71,19 +71,19 @@ namespace ThirdPartyWager.Service.BLL
             HttpResponseMessage response;
             string result;
 
-            if (!_env.IsProduction())
-            {
+            //if (!_env.IsProduction())
+            //{
                 using var client = _httpHelper.GetClientWithHandler(_httpHelper.CreateProxyConfigHandler(_tokyoProxy));
                 response = await client.GetAsync(url);
                 using var sr = new StreamReader(await response.Content.ReadAsStreamAsync(), Encoding.UTF8);
                 result = await sr.ReadToEndAsync();
-            }
-            else
-            {
-                var request = new HttpRequestMessage(HttpMethod.Get, url);
-                response = await _httpHelper.GetClient().SendAsync(request);
-                result = response.Content.ReadAsStringAsync().Result;
-            }
+            //}
+            //else
+            //{
+            //    var request = new HttpRequestMessage(HttpMethod.Get, url);
+            //    response = await _httpHelper.GetClient().SendAsync(request);
+            //    result = response.Content.ReadAsStringAsync().Result;
+            //}
 
             if (!response.IsSuccessStatusCode)
             {
