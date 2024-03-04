@@ -261,8 +261,8 @@ namespace ThirdParty.AP
                 // DEV & PRD 網址不同，排除DEV使用替換網址
                 if (domainResponse.ErrorCode == 0 && !string.IsNullOrEmpty(domainResponse.LaunchDomain) && !domainResponse.LaunchDomain.Contains(_domainRule["DEV_SLOT"]))
                 {
-                    var CommonConfig = _siteConfigDic[0];
-                    var DetailSiteCode = CommonConfig.DetailSiteCode;
+                    //var CommonConfig = _siteConfigDic[0];
+                    var DetailSiteCode = "nova88";//CommonConfig.DetailSiteCode;
                     GameUrl = $"{domainResponse.LaunchDomain}/web/{DetailSiteCode}/";
                 }
             }
