@@ -33,7 +33,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.One789, AddOne789},
                 { Tp.Iconic, AddIconic},
                 { Tp.V8, AddV8},
-                { Tp.N2Live, AddN2Live},
+                //{ Tp.N2Live, AddN2Live},
                 { Tp.AMB, AddAMB},
                 { Tp.NineW, AddNineW},
                 { Tp.JILI, AddJILI},
