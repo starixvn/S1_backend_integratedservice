@@ -254,6 +254,17 @@ namespace ThirdParty.AP
             string PlayerToken = response.Token;
             #endregion
 
+            var domainResult = HttpGet($"{ApiUrl}GetLaunchDomain", "", "application/json");
+            if (IsJSON(domainResult))
+            {
+                var domainResponse = JsonConvert.DeserializeObject<GetLaunchDomainResp>(domainResult);
+                // DEV & PRD 網址不同，排除DEV使用替換網址
+                if (domainResponse.ErrorCode == 0 && !string.IsNullOrEmpty(domainResponse.LaunchDomain) && !domainResponse.LaunchDomain.Contains(_domainRule["DEV_SLOT"]))
+                {
+                    GameUrl = $"{domainResponse.LaunchDomain}/web/{SiteCode}/";
+                }
+            }
+
             var gamecode = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_AP_Unsettle_Get", new { YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId }, DataBase.Report)
                 .GetValueOrDefault("gamecode").ToString();
             string Params = $"Token={PlayerToken}&SiteCode={SiteCode}&GameCode={gamecode}&GameRoundId={GameRoundId}";
