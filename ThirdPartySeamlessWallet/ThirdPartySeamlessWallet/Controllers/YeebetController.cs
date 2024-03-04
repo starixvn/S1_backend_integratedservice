@@ -59,7 +59,7 @@ public class YeebetController : ControllerBase
     [HttpGet]
     [HttpPost]
     [Route("[controller]/balance")]
-    public async Task<BalanceResponse_Yeebet> BalanceAsync([FromQuery] BalanceRequest_Yeebet request)
+    public async Task<BalanceResponse_Yeebet> BalanceAsync([FromForm] BalanceRequest_Yeebet request)
     {
         return await _yeebetBll.Balance(request.username);
     }
