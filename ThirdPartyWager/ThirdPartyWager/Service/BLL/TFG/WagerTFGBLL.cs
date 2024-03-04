@@ -99,9 +99,12 @@ namespace ThirdPartyWager.Service.BLL
                     try
                     {
                         var bettrans = await _wagerTFGService.GetBettrans(chcek.TransId);
-                        if (bettrans != null && setting.ContainsKey($"PrivateToken_{bettrans.currency}"))
+
+                        //當初config檔的人民幣跟三方取名不同，這邊做轉換
+                        var currency = bettrans.currency == "RMB" ? "CNY" : bettrans.currency;
+                        if (bettrans != null && setting.ContainsKey($"PrivateToken_{currency}"))
                         {
-                            var dataWager = await _apiTFGBLL.GetBetTransactionById(apiUrl, setting[$"PrivateToken_{bettrans.currency}"], chcek.TransId);
+                            var dataWager = await _apiTFGBLL.GetBetTransactionById(apiUrl, setting[$"PrivateToken_{currency}"], chcek.TransId);
                             if (dataWager != null)
                             {
                                 foreach (var wager in dataWager.results)
