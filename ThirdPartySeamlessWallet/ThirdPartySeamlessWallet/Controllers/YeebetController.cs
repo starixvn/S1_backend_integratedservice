@@ -57,6 +57,7 @@ public class YeebetController : ControllerBase
     /// </summary>
     /// <returns></returns>
     [HttpGet]
+    [HttpPost]
     [Route("[controller]/balance")]
     public async Task<BalanceResponse_Yeebet> BalanceAsync([FromQuery] BalanceRequest_Yeebet request)
     {
