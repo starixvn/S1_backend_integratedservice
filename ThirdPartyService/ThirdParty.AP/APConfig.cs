@@ -4,6 +4,7 @@ namespace ThirdParty.AP
 {
     internal class APConfig : TpSiteConfig
     {
+        public string DetailSiteCode { get; set; }
         public string SiteCode { get; set; }
         public string SecretKey { get; set; }
         public string MiniGame_Crash { get; set; }
