@@ -236,6 +236,10 @@ namespace ThirdPartySettleWorker.Workers
                                 });
                             }
                         }
+                        else
+                        {
+                            _logger.LogError($" WinLostAmount || wager {Math.Round(wager.WinLostAmount, 2)}, bettrans {unsettled.WinLostAmount} || TransId : {transId}");
+                        }
                     }
                     catch (Exception ex1)
                     {
@@ -260,7 +264,7 @@ namespace ThirdPartySettleWorker.Workers
                 timerTable?.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
-        
+
         private void DoSettleFish(object state)
         {
             LogContext.PushProperty("TP", _tpName);
