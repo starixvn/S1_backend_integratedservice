@@ -131,6 +131,10 @@ namespace ThirdPartySettleWorker.Workers
                                 });
                             }
                         }
+                        else
+                        {
+                            _logger.LogError($" WinLostAmount || wager {Math.Round(wager.WinLostAmount, 2)}, bettrans {unsettled.WinLostAmount} || TransId : {transId}");
+                        }
                     }
                     catch (Exception ex1)
                     {
