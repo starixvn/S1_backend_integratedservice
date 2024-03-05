@@ -21,6 +21,7 @@ namespace ThirdParty.AP
         private readonly List<string> _gameListOfMini;
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
         private readonly Dictionary<int, APConfig> _siteConfigDic;
+        private readonly APConfig _siteConfigCommon;
         Dictionary<string, string> _domainRule = new Dictionary<string, string>() {
             {"DEV_SLOT","https://sit." },
             {"PRD_SLOT","https://game." },
@@ -32,6 +33,7 @@ namespace ThirdParty.AP
             _gameListOfMini = new List<string> { "Crash", "CardRacing" };
             _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.AP).ToDictionary(d => d.AppId, d => d.Name);
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<APConfig>(TpEnum.AP.ToString());
+            _siteConfigCommon = provider.GetRequiredService<ConfigBLL>().GetConfigValue<APConfig>(TpEnum.AP.ToString());
         }
 
         #region Response
@@ -62,7 +64,7 @@ namespace ThirdParty.AP
             public string ErrorDescription { get; set; }
             public string LaunchURL { get; set; }
         }
-        
+
         public class GetAddPrizeToPlayerResp
         {
             public string Timestamp { get; set; }
@@ -72,7 +74,7 @@ namespace ThirdParty.AP
             public string CampaignId { get; set; }
             public List<string> PlayerList { get; set; }
         }
-        
+
         #endregion
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -261,8 +263,7 @@ namespace ThirdParty.AP
                 // DEV & PRD 網址不同，排除DEV使用替換網址
                 if (domainResponse.ErrorCode == 0 && !string.IsNullOrEmpty(domainResponse.LaunchDomain) && !domainResponse.LaunchDomain.Contains(_domainRule["DEV_SLOT"]))
                 {
-                    //var CommonConfig = _siteConfigDic[0];
-                    var DetailSiteCode = "nova88";//CommonConfig.DetailSiteCode;
+                    var DetailSiteCode = _siteConfigCommon.DetailSiteCode;
                     GameUrl = $"{domainResponse.LaunchDomain}/web/{DetailSiteCode}/";
                 }
             }
@@ -332,7 +333,7 @@ namespace ThirdParty.AP
             var campaignId = inputs.ContainsKey("CampaignId") && !string.IsNullOrEmpty(inputs["CampaignId"]) ? inputs["CampaignId"] : throw new Exception();
             var operatorUser = inputs.ContainsKey("operatorUser") && !string.IsNullOrEmpty(inputs["operatorUser"]) ? inputs["operatorUser"] : throw new Exception();
             var oApiResult = new ApiResult();
-            
+
             var uuid = Guid.NewGuid().ToString();
             var sParam = new
             {
@@ -340,12 +341,12 @@ namespace ThirdParty.AP
                 Seq = uuid,
                 SiteCode = SiteCode,
                 CampaignId = campaignId,
-                PlayerList = new List<string> { tpCustInfo.TpUserName},
+                PlayerList = new List<string> { tpCustInfo.TpUserName },
                 Operator = operatorUser,
             };
             var param = ToJson(sParam);
             var result = HttpPost($"{ApiUrl}CPAddPlayer", param, "application/json");
-            
+
             if (!IsJSON(result))
             {
                 oApiResult.RawMessage = "No Result";
@@ -353,13 +354,13 @@ namespace ThirdParty.AP
                 oApiResult.ErrorCode = ErrorCode.Fail;
                 return oApiResult;
             }
-            
+
             var response = JsonConvert.DeserializeObject<GetAddPrizeToPlayerResp>(result);
             if (response.ErrorCode == 0)
             {
                 oApiResult.ErrorCode = ErrorCode.Success;
                 oApiResult.RawErrorCode = response.ErrorCode.ToString();
-                oApiResult.RawMessage = string.Join(",",response.PlayerList);
+                oApiResult.RawMessage = string.Join(",", response.PlayerList);
                 oApiResult.Message = "Success";
             }
             else
