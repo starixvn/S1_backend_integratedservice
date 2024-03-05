@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using Serilog.Context;
 
 using ThirdPartySeamlessWallet.Service.BLL;
@@ -133,7 +134,7 @@ namespace ThirdPartySettleWorker.Workers
                         }
                         else
                         {
-                            _logger.LogError($" WinLostAmount || wager {Math.Round(wager.WinLostAmount, 2)}, bettrans {unsettled.WinLostAmount} || TransId : {transId}");
+                            _logger.LogError($" WinLostAmount || wager {Math.Round(wager.WinLostAmount, 2)}, bettrans {unsettled.WinLostAmount}\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}");
                         }
                     }
                     catch (Exception ex1)
@@ -242,7 +243,7 @@ namespace ThirdPartySettleWorker.Workers
                         }
                         else
                         {
-                            _logger.LogError($" WinLostAmount || wager {Math.Round(wager.WinLostAmount, 2)}, bettrans {unsettled.WinLostAmount} || TransId : {transId}");
+                            _logger.LogError($" WinLostAmount || wager {Math.Round(wager.WinLostAmount, 2)}, bettrans {unsettled.WinLostAmount} \r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}");
                         }
                     }
                     catch (Exception ex1)
