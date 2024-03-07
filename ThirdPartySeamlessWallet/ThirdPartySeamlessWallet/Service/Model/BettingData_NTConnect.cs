@@ -155,6 +155,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal bet_amt { get; set; }
         public decimal win_amt { get; set; }
         public string status { get; set; }
+        public int SettleFlag { get; set; }
     }
 
     public class Bettrans93ConnectCancelBet
