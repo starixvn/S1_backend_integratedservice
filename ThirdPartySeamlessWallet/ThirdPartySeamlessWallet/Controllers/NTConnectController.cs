@@ -24,7 +24,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/Player/GetBalance")]
-        public string GetBalance(NTCGetBalanceRequest request)
+        public IActionResult GetBalance(NTCGetBalanceRequest request)
         {
             
             var logName = $"{_thisTp}_GetBalance";
@@ -33,13 +33,13 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 var getBalance = _NTConnectBLL.GetBalance(request);
-                return JsonConvert.SerializeObject(getBalance);
+                return Ok(getBalance);
             }
             catch (Exception ex)
             {
                 _log2File.Error($"{ex.Message}", logName, ex);
             }
-            return JsonConvert.SerializeObject(baseResult);
+            return Ok(baseResult);
         }
         
         [HttpPost]
