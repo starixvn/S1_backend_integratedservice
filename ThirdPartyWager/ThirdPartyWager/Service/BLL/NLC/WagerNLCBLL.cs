@@ -111,7 +111,7 @@ namespace ThirdPartyWager.Service.BLL
                     var wager = dataWager.Sum(x => x.wager);
                     var payout = dataWager.Sum(x => x.payout);
 
-                    if (wager == wagerTotal && payout == payoutTotal)
+                    if (wager == wagerTotal && Math.Round(payout, 6) == Math.Round(payoutTotal, 6))
                     {
                         msg = "MATCH";
                         _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");

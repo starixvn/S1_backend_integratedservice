@@ -27,7 +27,10 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     try
                     {
-                        await _wagerGAService.InsertWager(item);
+                        if(item.settled_date_time != null)
+                        {
+                            await _wagerGAService.InsertWager(item);
+                        }
                     }
                     catch (Exception ex)
                     {
