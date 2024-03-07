@@ -21,8 +21,6 @@ namespace ThirdPartySettleWorker.Workers
         private readonly PartitionService _partitionService;
         private readonly ILogger<NTConnectWorker> _logger;
         private readonly string _tpName;
-        private readonly int tpId = (int)Tp.NTConnect;
-        
         
         public NTConnectWorker(IServiceProvider provider)
         {

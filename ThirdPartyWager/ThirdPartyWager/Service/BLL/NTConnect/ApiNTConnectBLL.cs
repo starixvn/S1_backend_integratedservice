@@ -9,17 +9,12 @@ namespace ThirdPartyWager.Service.BLL;
 
 public class ApiNTConnectBLL
 {
-    private readonly Common _common;
     private readonly Log2File _log2File;
     private readonly string _tpName = Tp.NTConnect.ToString();
-    private readonly IConfiguration _configuration;
-    private readonly Dictionary<int, NTConnectConfig> _siteConfigDic;
     
     public ApiNTConnectBLL(IServiceProvider provider)
     {
         _log2File = provider.GetRequiredService<Log2File>();
-        _configuration = provider.GetRequiredService<IConfiguration>();
-        _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<NTConnectConfig>(Tp.NTConnect.ToString());
     }
 
     public async Task<Wager93ConnectModel> GetBetListByTime(string startTime, string endTime,(string apiUrl, string clientKey, string secretKey) apiParams, int? page = 0)

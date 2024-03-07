@@ -44,45 +44,45 @@ namespace ThirdPartySeamlessWallet.Controllers
         
         [HttpPost]
         [Route("[controller]/Bet/CheckBet")]
-        public string CheckBet(NTCCheckBetRequest request)
+        public IActionResult CheckBet(NTCCheckBetRequest request)
         {
             var logName = $"{_thisTp}_CheckBet";
             var baseResult = BaseResult();
             try
             {
                 var placeBetResult = _NTConnectBLL.CheckBet(request);
-                return JsonConvert.SerializeObject(placeBetResult);
+                return Ok(placeBetResult);
             }
             catch (Exception ex)
             {
                 _log2File.Error($"{ex.Message}", logName, ex);
             }
             
-            return JsonConvert.SerializeObject(baseResult);
+            return Ok(baseResult);
         }
         
         [HttpPost]
         [Route("[controller]/Bet/PlaceBet")]
-        public string PlaceBet(NTCPlaceBetRequest request)
+        public IActionResult PlaceBet(NTCPlaceBetRequest request)
         {
             var logName = $"{_thisTp}_PlaceBet";
             var baseResult = BaseResult();
             try
             {
                 var placeBetResult = _NTConnectBLL.PlaceBet(request);
-                return JsonConvert.SerializeObject(placeBetResult);
+                return Ok(placeBetResult);
             }
             catch (Exception ex)
             {
                 _log2File.Error($"{ex.Message}", logName, ex);
             }
             
-            return JsonConvert.SerializeObject(baseResult);
+            return Ok(baseResult);
         }
         
         [HttpPost]
         [Route("[controller]/Bet/SettleBet")]
-        public string SettleBet(NTCSettleBetRequest request)
+        public IActionResult SettleBet(NTCSettleBetRequest request)
         {
             var logName = $"{_thisTp}_SettleBet";
             var baseResult = BaseResult();
@@ -90,18 +90,18 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 var settleBetResult = _NTConnectBLL.SettleBet(request);
-                return JsonConvert.SerializeObject(settleBetResult);
+                return Ok(settleBetResult);
             }
             catch (Exception ex)
             {
                 _log2File.Error($"{ex.Message}", logName, ex);
             }
-            return JsonConvert.SerializeObject(baseResult);
+            return Ok(baseResult);
         }
         
         [HttpPost]
         [Route("[controller]/Bet/CancelBet")]
-        public string CancelBet(NTCCancelBetRequest request)
+        public IActionResult CancelBet(NTCCancelBetRequest request)
         {
             var logName = $"{_thisTp}_CancelBet";
             var baseResult = BaseResult();
@@ -109,13 +109,13 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 var settleBetResult = _NTConnectBLL.CancelBet(request);
-                return JsonConvert.SerializeObject(settleBetResult);
+                return Ok(settleBetResult);
             }
             catch (Exception ex)
             {
                 _log2File.Error($"{ex.Message}", logName, ex);
             }
-            return JsonConvert.SerializeObject(baseResult);
+            return Ok(baseResult);
         }
         
         #region private
