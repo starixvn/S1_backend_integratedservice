@@ -1824,6 +1824,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     // no bet data
                     return -2;
                 }
+
+                if (bettrans.Any(i => i.SettleFlag == (int)SettleFlag.EndGame))
+                {
+                    return -5;
+                }
                 
                 if (bettrans.Any(i => i.TicketType == (int)BettransType.CancelBet))
                 {
@@ -1851,13 +1856,30 @@ namespace ThirdPartySeamlessWallet.Service.DAL
     
                 if (result > 0)
                 {
-                    decimal stake = p.Get<decimal>("out_stake");
-                    if (stake != 0)
+                    var stake = p.Get<decimal>("out_stake");
+
+                    result = bettrans.FirstOrDefault().status switch
                     {
-                        result = PayoutV2(
+                        "W" => PayoutV2
+                        (tpCustInfo,
+                            Math.Abs(bettrans.FirstOrDefault().win_amt),
+                            (int)tpId,
+                            cancelData_NTConnect.bet_id,
+                            (int)tpGameType,
+                            category, 
+                            cancelData_NTConnect.bet_id,
+                            TransType.Undo,
+                            null,
+                            out afterAmount,
+                            "CancelBet",
+                            out bonusId,
+                            conn,
+                            trans, 
+                            AllowNegative.Allow),
+                        "L" => PayoutV2(
                             tpCustInfo,
                             Math.Abs(stake),
-                            (int)tpId,
+                                (int)tpId,
                             cancelData_NTConnect.bet_id,
                             (int)tpGameType,
                             category,
@@ -1869,9 +1891,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             out bonusId,
                             conn,
                             trans,
-                            AllowNegative.Allow
-                        );
-                    }
+                            AllowNegative.Allow),
+                        _ => 0
+                    };
 
                     if (result > 0)
                     {

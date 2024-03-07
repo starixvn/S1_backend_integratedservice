@@ -8,7 +8,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
     {
         [Description("Success")] 
         Success = 0,
-        [Description("The error should be returned in the response on the Bet request.")]
+        [Description("Insufficient balance")]
         InsufficientBalance = 1,
         [Description("The Bet Order is Settle or Cancel.")]
         BetOrderStatusError = 2,
