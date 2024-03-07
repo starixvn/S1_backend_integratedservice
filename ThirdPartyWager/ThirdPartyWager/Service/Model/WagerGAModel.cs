@@ -9,7 +9,7 @@
         public string sid { get; set; }
         public DateTime created_date_time { get; set; }
         public DateTime modified_date_time { get; set; }
-        public DateTime settled_date_time { get; set; }
+        public DateTime? settled_date_time { get; set; }
         public string arena_code { get; set; }
         public string match_day_code { get; set; }
         public int fight_number { get; set; }
