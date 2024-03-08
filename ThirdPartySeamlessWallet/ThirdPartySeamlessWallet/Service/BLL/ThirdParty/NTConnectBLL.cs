@@ -196,7 +196,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         status = "success",
                         data = new NTCPlaceBetResponse()
                         {
-                            username = request.username,
+                            username = tpCustInfo.TpCustId,
                             balance = tpAffterAmount
                         }
                     };
