@@ -774,6 +774,9 @@ namespace ThirdPartyCore
         /// </summary>
         /// <param name="inputs"></param>
         /// <returns></returns>
-        public abstract ApiResult CreateBonusCode(int siteId,Dictionary<string, string> inputs);
+        public virtual ApiResult CreateBonusCode(int siteId, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException($"CreateBonusCode NotImplemented.");
+        }
     }
 }

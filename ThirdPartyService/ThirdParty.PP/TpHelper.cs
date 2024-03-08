@@ -258,12 +258,14 @@ namespace ThirdParty.PP
             var gameId = inputs["GameId"];
             var currency = inputs["Currency"];
             var round = inputs["Round"];
+            var startDate = DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
+            var expirationDate = DateTimeOffset.Now.AddDays(30).ToUnixTimeSeconds().ToString();
             var Uri = "/v3/http/FreeRoundsBonusAPI/v2/bonus/create";
 
             var oApiResult = new ApiResult();
             var betValues = new betValues
             {
-                totalBet = Convert.ToDecimal(round),
+                totalBet = 100,
                 currency = currency
             };
 
@@ -279,13 +281,13 @@ namespace ThirdParty.PP
             newGameList.gameList.Add(gameList);
 
             var totalJson = JsonConvert.SerializeObject(newGameList);
-
+ 
             var parameters = new Dictionary<string, string>()
             {
                 { "secureLogin", secureLogin },
                 { "bonusCode", bonusCode },
-                { "startDate","1704038400"},
-                { "expirationDate","1709308800"},
+                { "startDate",startDate},
+                { "expirationDate",expirationDate},
                 { "rounds",round},
             };
 
