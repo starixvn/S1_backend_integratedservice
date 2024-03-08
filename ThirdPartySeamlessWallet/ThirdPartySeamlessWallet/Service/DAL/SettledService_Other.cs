@@ -1820,11 +1820,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     // no bet data
                     return -2;
                 }
-
-                if (bettrans.Any(i => i.SettleFlag == (int)SettleFlag.EndGame))
-                {
-                    return -5;
-                }
                 
                 if (bettrans.Any(i => i.TicketType == (int)BettransType.CancelBet))
                 {
