@@ -1717,11 +1717,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    switch (settleData_NTConnect.win_amt)
+                    switch (settleData_NTConnect.status)
                     {
-                        case 0 when 
-                            settleData_NTConnect.status is "cancel" or "refund":
-                        {
+                        case "cancel" or "refund":
                             var textInfo = new CultureInfo("en-US", false).TextInfo;
                             result = PayoutV2(
                                 tpCustInfo,
@@ -1741,9 +1739,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 AllowNegative.Allow
                             );
                             break;
-                        }
-                        case > 0 when 
-                            settleData_NTConnect.status is "win" or "loss":
+                        case "win" or "loss":
                             result = PayoutV2(
                                 tpCustInfo,
                                 settleData_NTConnect.win_amt,
