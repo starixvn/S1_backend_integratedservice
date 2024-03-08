@@ -1851,9 +1851,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     result = bettrans.FirstOrDefault().status switch
                     {
-                        "W" => PayoutV2
-                        (tpCustInfo,
-                            Math.Abs(bettrans.FirstOrDefault().win_amt),
+                        "W" => PayoutV2(
+                            tpCustInfo,
+                            Math.Abs(bettrans.FirstOrDefault().win_amt) * -1,
                             (int)tpId,
                             cancelData_NTConnect.bet_id,
                             (int)tpGameType,
@@ -1870,7 +1870,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         "L" => PayoutV2(
                             tpCustInfo,
                             Math.Abs(stake),
-                                (int)tpId,
+                            (int)tpId,
                             cancelData_NTConnect.bet_id,
                             (int)tpGameType,
                             category,
