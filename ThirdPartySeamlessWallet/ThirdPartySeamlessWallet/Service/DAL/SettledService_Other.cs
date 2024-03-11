@@ -1853,7 +1853,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         "W" => PayoutV2(
                             tpCustInfo,
-                            Math.Abs(bettrans.FirstOrDefault().win_amt) * -1,
+                            (Math.Abs(bettrans.FirstOrDefault().win_amt) - Math.Abs(bettrans.FirstOrDefault().stake))* -1,
                             (int)tpId,
                             cancelData_NTConnect.bet_id,
                             (int)tpGameType,

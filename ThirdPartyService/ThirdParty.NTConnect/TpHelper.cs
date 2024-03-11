@@ -42,7 +42,7 @@ namespace ThirdParty.NTConnect
             var new93AccountPwd = $"{tpCustInfo.TpPwd}$7";
             
             //將更新至DB
-            tpCustInfo.TpCustId = new93AccountName;
+            tpCustInfo.TpUserName = new93AccountName;
             tpCustInfo.TpPwd = new93AccountPwd;
             
             
@@ -104,7 +104,7 @@ namespace ThirdParty.NTConnect
                     return ProcessErrorResponse(tokenResponse);
                 }
                 
-                var playerSessionResponse = GetPlayerSession(apiUrl, tpCustInfo.TpCustId, tpCustInfo.TpPwd, clientIP, tokenResponse.token);
+                var playerSessionResponse = GetPlayerSession(apiUrl, tpCustInfo.TpUserName, tpCustInfo.TpPwd, clientIP, tokenResponse.token);
                 if (playerSessionResponse.status != "success")
                 {
                     return ProcessErrorResponse(playerSessionResponse);
@@ -120,7 +120,7 @@ namespace ThirdParty.NTConnect
                     { "token", tokenResponse.token },
                     { "ip", clientIP },
                     { "session", playerSessionResponse.session },
-                    { "username", tpCustInfo.TpCustId },
+                    { "username", tpCustInfo.TpUserName },
                     { "game", gameId },
                     { "lang_id", TpLangId },
                     { "seamless", "1" }
@@ -150,7 +150,7 @@ namespace ThirdParty.NTConnect
                 return ProcessErrorResponse(tokenResponse);
             }
 
-            var getSessionResponse = GetPlayerCheck(apiUrl, tpCustInfo.TpCustId, tokenResponse.token);
+            var getSessionResponse = GetPlayerCheck(apiUrl, tpCustInfo.TpUserName, tokenResponse.token);
             if (getSessionResponse.status != "success")
             {
                 return ProcessErrorResponse(getSessionResponse);
@@ -159,7 +159,7 @@ namespace ThirdParty.NTConnect
             var request = new Dictionary<string, string>()
             {
                 {"token",tokenResponse.token},
-                {"username",tpCustInfo.TpCustId},
+                {"username",tpCustInfo.TpUserName},
                 {"session",getSessionResponse.session}
             };
             
@@ -207,7 +207,7 @@ namespace ThirdParty.NTConnect
                     Stake = (decimal)wagerDetail.GetValueOrDefault("bet_amt"),
                     WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("win_amt") - 
                                      (decimal)wagerDetail.GetValueOrDefault("bet_amt"),
-                    DetailUrl = Get93ConnectBetDetailUrl(getBetDetail.TransId,apiUrl,currencyConfig.ClientKey,currencyConfig.SecretKey,tpCustInfo.TpCustId,tpCurrency.TpCurrencyId)
+                    DetailUrl = Get93ConnectBetDetailUrl(getBetDetail.TransId,apiUrl,currencyConfig.ClientKey,currencyConfig.SecretKey,tpCustInfo.TpUserName,tpCurrency.TpCurrencyId)
                 };
                 return resultData;
             }
