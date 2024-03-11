@@ -302,6 +302,78 @@ namespace ThirdParty.PP
             return oApiResult;
         }
 
+        public override ApiResult CreateBonusCode(int siteId,Dictionary<string, string> inputs)
+        {
+            var config = _siteConfigDic[siteId];
+            string apiUrl = config.ApiUrl;
+            string secureLogin = config.SecureLogin;
+            string secureKey = config.SecureKey;
+            var bonusCode = inputs["BonusCode"];
+            var gameId = inputs["GameId"];
+            var currency = inputs["Currency"];
+            var round = inputs["Round"];
+            var startDate = DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
+            var expirationDate = DateTimeOffset.Now.AddDays(30).ToUnixTimeSeconds().ToString();
+            var Uri = "/v3/http/FreeRoundsBonusAPI/v2/bonus/create";
+
+            var oApiResult = new ApiResult();
+            var betValues = new betValues
+            {
+                totalBet = 100,
+                currency = currency
+            };
+
+            var betValuesList = new List<betValues> { betValues };
+
+            var gameList = new gameList
+            {
+                gameId = gameId,
+                betValues = betValuesList
+            };
+
+            var newGameList = new CreateFRB();
+            newGameList.gameList.Add(gameList);
+
+            var totalJson = JsonConvert.SerializeObject(newGameList);
+ 
+            var parameters = new Dictionary<string, string>()
+            {
+                { "secureLogin", secureLogin },
+                { "bonusCode", bonusCode },
+                { "startDate",startDate},
+                { "expirationDate",expirationDate},
+                { "rounds",round},
+            };
+
+            var sParam = string.Join("&", parameters.OrderBy(kp => kp.Key).Select(kp => $"{kp.Key}={kp.Value}"));
+            sParam += $"&hash={ToMD5($"{sParam}{secureKey}")}";
+
+
+            var result = HttpPost($"{apiUrl}{Uri}?{sParam}", totalJson, "application/json");
+
+            if (!IsJSON(result))
+            {
+                oApiResult.RawMessage = "No Result";
+                oApiResult.RawErrorCode = "1";
+                oApiResult.ErrorCode = ErrorCode.Fail;
+                return oApiResult;
+            }
+
+            var json = JsonConvert.DeserializeObject<CreateBonusCodeResult>(result);
+            if (json.error == 0)
+            {
+                oApiResult.ErrorCode = ErrorCode.Success;
+            }
+            else
+            {
+                oApiResult.ErrorCode = ErrorCode.Fail;
+                oApiResult.RawMessage = json.description;
+                oApiResult.RawErrorCode = json.error.ToString();
+            }
+
+            return oApiResult;
+        }
+
         public class DetailResult
         {
             public string error { get; set; }
