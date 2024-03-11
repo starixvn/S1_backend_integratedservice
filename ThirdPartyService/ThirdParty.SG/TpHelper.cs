@@ -23,10 +23,23 @@ namespace ThirdParty.SG
             _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SGConfig>(TpEnum.SG.ToString());
         }
 
+        #region Response
+
+        public class LoginResponse
+        {
+            public string token { get; set; }
+            public string gameUrl { get; set; }
+            public string msg { get; set; }
+            public int code { get; set; }
+            public string serialNo { get; set; }
+        }
+        #endregion
+
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
         }
+
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             ApiResult oApiResult = new ApiResult();
@@ -49,19 +62,25 @@ namespace ThirdParty.SG
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             var config = _siteConfig;
-            string GameUrl = config.GameUrl;
-            string FunGameUrl = config.FunGameUrl;
 
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
+            var mobile = (appType == AppType.Mobile) ? true : false;
+
+            // Header
+            Dictionary<string, string> headerReq = new()
+            {
+                { "API", "getAuthorize" },
+                { "DataType", "JSON" }
+            };
 
             ApiResult oApiResult = new ApiResult();
-            string mobile = (appType == AppType.Mobile) ? "true" : "false";
 
             if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
             {
+                var demo = GetPlayDemo(headerReq, tpCustInfo.SiteId, TpLangId, gameId, mobile, inputs["ClientIP"]);
                 oApiResult.ErrorCode = ErrorCode.Success;
-                oApiResult.Message = $"{FunGameUrl}?language={TpLangId}&game={gameId}&menumode=off&mobile={mobile}";
+                oApiResult.Message = demo;
                 return oApiResult;
             }
 
@@ -71,9 +90,52 @@ namespace ThirdParty.SG
             byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
             string sessionKey = Convert.ToBase64String(bytes);
 
+            var Login = new
+            {
+                merchantCode = config.merchantCode,
+                acctInfo = new
+                {
+                    acctId = tpCustInfo.TpUserName,
+                    userName = tpCustInfo.TpUserName,
+                    currency = tpCustInfo.TpCurrencyId,
+                    siteId = tpCustInfo.SiteId,
+                },
+                language = TpLangId,
+                token = sessionKey,
+                game = gameId,
+                acctIp = inputs["ClientIP"],
+                fun = false,
+                mobile = mobile,
+                menuMode = false,
+            };
 
-            oApiResult.ErrorCode = ErrorCode.Success;
-            oApiResult.Message = $"{GameUrl}?acctId={tpCustInfo.TpUserName}&language={TpLangId}&token={HttpUtility.UrlEncode(sessionKey)}&game={gameId}&menumode=off&mobile={mobile}";
+            var result = HttpPost(
+                config.ApiUrl,
+                JsonConvert.SerializeObject(Login),
+                "application/json",
+                headerReq
+            );
+
+            if (!IsJSON(result))
+            {
+                oApiResult.ErrorCode = ErrorCode.Fail;
+                oApiResult.RawMessage = result;
+                return oApiResult;
+            }
+
+            var json = JsonConvert.DeserializeObject<LoginResponse>(result);
+            if (json.code == 0)
+            {
+                oApiResult.ErrorCode = ErrorCode.Success;
+                oApiResult.Message = json.gameUrl;
+            }
+            else
+            {
+                oApiResult.RawMessage = json.msg;
+                oApiResult.RawErrorCode = json.code.ToString();
+                oApiResult.Message = $"{json.code}-{json.msg}";
+                oApiResult.ErrorCode = ErrorCode.Fail;
+            }
 
             return oApiResult;
         }
@@ -180,6 +242,50 @@ namespace ThirdParty.SG
                 },
                 _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             };
+        }
+
+        private string GetPlayDemo(Dictionary<string, string> headerReq, int SiteId, string TpLangId, string GameId, bool Mobile, string Ip)
+        {
+            var DefaultTpCurrencyId = ServerInfoProvider.GetDefaultTpCurrencyIdByTpId(SiteId, (int)TpEnum.SG);
+            var currency = (DefaultTpCurrencyId != null) ? DefaultTpCurrencyId.TpCurrencyId : "";
+
+            var config = _siteConfig;
+
+            var Login = new
+            {
+                merchantCode = config.merchantCode,
+                acctInfo = new
+                {
+                    acctId = "guest",
+                    currency = currency,
+                },
+                language = TpLangId,
+                token = Guid.NewGuid().ToString(),
+                game = GameId,
+                acctIp = Ip,
+                fun = true,
+                mobile = Mobile,
+            };
+
+            var result = HttpPost(
+                config.ApiUrl,
+                JsonConvert.SerializeObject(Login),
+                "application/json",
+                headerReq
+            );
+
+            if (!IsJSON(result))
+            {
+                throw new Exception("GetPlayDemo Format Failed");
+            }
+
+            var json = JsonConvert.DeserializeObject<LoginResponse>(result);
+            if (json.code != 0 || json.gameUrl == null)
+            {
+                throw new Exception($"GetPlayDemo gameUrl Failed {json.code}\r\n{json.msg}");
+            }
+
+            return json.gameUrl;
         }
 
         private static DeviceType GetDeviceType(string device)
