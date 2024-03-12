@@ -57,7 +57,7 @@
         Amigo = 60,
         MaxGame = 61,
         NTConnect = 62,
-        GA = 63   
+        GA = 63
     }
 
     public enum TpGameType
