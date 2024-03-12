@@ -62,7 +62,7 @@
         HaoLong = 58,
         NLC = 59,
         NTConnect = 62,
-        GA = 63,
+        GA = 63
     }
     public enum GameType
     {

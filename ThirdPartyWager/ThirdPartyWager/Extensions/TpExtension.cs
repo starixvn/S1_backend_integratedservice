@@ -60,7 +60,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.HaoLong, AddHL},
                 { Tp.NLC, AddNLC},
                 { Tp.NTConnect, AddNTConnect },
-                { Tp.GA, AddGA},
+                { Tp.GA, AddGA}           
             };
         }
         private IServiceCollection AddSA(IServiceCollection services)
@@ -696,8 +696,7 @@ namespace ThirdPartyWager.Extensions
 
             return services;
         }
-        
-            
+                    
         private IServiceCollection AddNTConnect(IServiceCollection services)
         {
             services.AddSingleton<WagerNTConnectService>();
