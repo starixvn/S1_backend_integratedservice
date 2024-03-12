@@ -843,5 +843,110 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+        
+        #region 93Connect
+
+        public Bettrans93Connect CheckBetGames_93Connect(NTCCheckBetRequest request,string tpUserName)
+        {
+            var GetSpName = "Service_Bettrans_93Connect_Get";
+            
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var partitionTime = DateTime.Now;
+                var bettrans = _partitionService.Query<Bettrans93Connect>(partitionTime, GetSpName, 
+                    new { bet_id = request.ref_no , username = tpUserName });
+
+                return !bettrans.Any() ? null : bettrans.FirstOrDefault();
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return null;
+                }
+                throw;
+            }
+        }
+
+        public int PlaceBetGames_93Connect(TpCustInfo tpCustInfo, NTCPlaceBetRequest bettingDataGames_NTConnect,
+            out decimal afterAmount)
+        {
+            int bonusId = 0;
+            afterAmount = 0;
+            var result = 0;
+
+            var tpId = Tp.NTConnect;
+            var tpGameType = GameType.NTConnect_Games;
+            var tpCategory = TpCategory.Games;
+            var InsSpName = "Service_Bettrans_93Connect_Ins";
+            var CheckSpName = "Service_Bettrans_93Connect_Get";
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                _ = DateTime.TryParse(bettingDataGames_NTConnect.betTime, out var partitionTime);
+                // 檢查是否重複
+                var bettrans = _partitionService.Query<Bettrans93Connect>(partitionTime, CheckSpName, 
+                    new { bet_id = bettingDataGames_NTConnect.bet_id , username = tpCustInfo.TpUserName });
+                if (bettrans.Any(i => i.TicketType == (int)BettransType.Bet && i.bet_id == bettingDataGames_NTConnect.bet_id))
+                {
+                    return -1;
+                }
+
+
+                bettingDataGames_NTConnect.username = tpCustInfo.TpUserName;
+                bettingDataGames_NTConnect.stake *= -1;
+                var p = new DynamicParameters(bettingDataGames_NTConnect);
+                p.Add("status","R");
+                p.Add("SettleFlag",(int)SettleFlag.Running);
+                result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
+                if (result > 0 && bettingDataGames_NTConnect.stake != 0)
+                {
+                    result = PlaceBetV2(
+                        tpCustInfo,
+                        bettingDataGames_NTConnect.stake,
+                        (int)tpId,
+                        bettingDataGames_NTConnect.bet_id,
+                        (int)tpGameType,
+                        bettingDataGames_NTConnect.bet_id,
+                        null,
+                        tpCategory,
+                        out afterAmount,
+                        ref bonusId,
+                        conn,
+                        trans
+                    );
+                }
+
+                if (result > 0)
+                {
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+                throw;
+            }
+
+            return result;
+        }
+
+        #endregion
     }
 }

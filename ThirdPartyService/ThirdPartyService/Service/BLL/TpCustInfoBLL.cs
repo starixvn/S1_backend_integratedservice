@@ -59,5 +59,10 @@ namespace ThirdPartyService.Service.BLL
         {
             return  tpCustInfoService.GetTpCurrency(tpId);
         }
+
+        public TpCustInfo GetTpCustInfoByTpCustId(int tpId, string tpCustId)
+        {
+            return tpCustInfoService.GetTpCustInfoByTpCustId(tpId, tpCustId);
+        }
     }
 }

@@ -7,5 +7,6 @@ namespace ThirdPartyCore
         void SetCustGotoGame(int custId, int tpId, int gameType);
 
         TpCountryCode GetTpCurrencyCodeByCurrencyId(int tpId, string tpCurrencyId);
+        TpCustInfo GetTpCustInfoByTpCustId(int tpId, string tpCustId);
     }
 }

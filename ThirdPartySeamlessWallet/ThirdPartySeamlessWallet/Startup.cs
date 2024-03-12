@@ -1,5 +1,5 @@
 ﻿using System.Net;
-
+using System.Text.Json.Serialization;
 using StackExchange.Redis;
 
 using ThirdPartySeamlessWallet.Extensions;
@@ -109,6 +109,7 @@ namespace ThirdPartySeamlessWallet
             services.AddTransient<IFaChaiBLL, FaChaiBLL>();
             services.AddTransient<IBNGBLL, BNGBLL>();
             services.AddTransient<IGABLL, GABLL>();
+            services.AddTransient<INTConnectBLL, NTConnectBLL>();
             services.AddSingleton<TpUnSettledBLL>();
             services.AddSingleton<TpBetRecordExtendBLL>();
             services.AddSingleton<TpRequestFailBLL>();
@@ -116,7 +117,11 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<KMHeaderFilter>();
             services.AddSingleton<MGHeaderFilter>();
             services.AddSingleton<MGExceptionFilter>();
-            services.AddControllers();
+            services.AddControllers()
+                .AddJsonOptions(options =>
+                    {
+                      options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;   
+                    });
 
             services.AddOptionListByDB<SabaSportTypeOption>("Service_SabaSportType_Get");
             //設定SiteConfig

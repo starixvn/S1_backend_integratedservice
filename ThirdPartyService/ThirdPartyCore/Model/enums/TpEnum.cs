@@ -56,6 +56,7 @@
         NLC = 59,
         Amigo = 60,
         MaxGame = 61,
+        NTConnect = 62,
         GA = 63
     }
 
@@ -150,6 +151,7 @@
         NLC_RNG = 111,
         Amigo_RNG = 112,
         MaxGame_Poker = 113,
+        NTConnect_Lottery = 114,
         GA_CockFighting = 115
     }
 }
