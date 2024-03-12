@@ -8,12 +8,10 @@ namespace ThirdPartyWager.Service.DAL
     public class WagerNLCService
     {
         private readonly MySqlClient _wagerDbClient;
-        private readonly MySqlClient _mainDbClient;
 
         public WagerNLCService(IServiceProvider provider)
         {
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
-            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
 
         public Task<int> InsertWager(Wager_EVO bet)
