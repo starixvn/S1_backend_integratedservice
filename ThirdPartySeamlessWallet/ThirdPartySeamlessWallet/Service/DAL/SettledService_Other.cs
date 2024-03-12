@@ -1,5 +1,5 @@
-﻿using System.Data;
-
+using System.Data;
+using System.Globalization;
 using Dapper;
 
 using MySql.Data.MySqlClient;
@@ -1662,6 +1662,255 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 throw mySqlEx;
             }
 
+            return result;
+        }
+
+        #endregion
+        
+        #region 93Connect
+        
+        public int PayoutGames_93Connect(TpCustInfo tpCustInfo, NTCSettleBetRequest settleData_NTConnect, out decimal afterAmount)
+        {
+            var bonusId = 0;
+            var tpId = Tp.NTConnect;
+            var tpGameType = GameType.NTConnect_Games;
+            var category = TpCategory.Games;
+            var InsSpName = "Service_Bettrans_93Connect_Payout_Set";
+            var GetSpName = "Service_Bettrans_93Connect_Get";
+            afterAmount = 0;
+
+            var result = 0;
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var partitionTime = DateTime.Now;
+                var bettrans = _partitionService.Query<Bettrans93Connect>(partitionTime, GetSpName, 
+                    new { bet_id = settleData_NTConnect.bet_id , username = tpCustInfo.TpUserName });
+                if (!bettrans.Any(i => i.bet_id == settleData_NTConnect.bet_id))
+                {
+                    return -2;
+                }
+                
+                if (bettrans.Any(i => i.TicketType != (int)BettransType.Bet))
+                {
+                    return -3;
+                }
+
+                var settleData = new NTCSettleBetRequest
+                {
+                    bet_id = settleData_NTConnect.bet_id,
+                    bet_amt = settleData_NTConnect.bet_amt,
+                    win_amt = settleData_NTConnect.win_amt,
+                    username = tpCustInfo.TpUserName,
+                    status = settleData_NTConnect.NtcStatus,
+                    settleBetTime = settleData_NTConnect.settleBetTime,
+                    LocalSettleTime = settleData_NTConnect.LocalSettleTime,
+                    TicketStatus = settleData_NTConnect.TicketStatus,
+                    TicketType = settleData_NTConnect.TicketType,
+                };
+                
+                var p = new DynamicParameters(settleData);
+                p.Add("SettleFlag",(int)SettleFlag.EndGame);
+                result = _partitionService.Execute(partitionTime,InsSpName, p, trans);
+
+                if (result > 0)
+                {
+                    switch (settleData_NTConnect.status)
+                    {
+                        case "cancel" or "refund":
+                            var textInfo = new CultureInfo("en-US", false).TextInfo;
+                            result = PayoutV2(
+                                tpCustInfo,
+                                Math.Abs(settleData_NTConnect.bet_amt),
+                                (int)tpId,
+                                settleData_NTConnect.bet_id,
+                                (int)tpGameType,
+                                category,
+                                settleData_NTConnect.bet_id,
+                                TransType.Refunds,
+                                null,
+                                out afterAmount,
+                                textInfo.ToTitleCase(settleData_NTConnect.status),
+                                out bonusId,
+                                conn,
+                                trans,
+                                AllowNegative.Allow
+                            );
+                            break;
+                        case "win" or "loss":
+                            result = PayoutV2(
+                                tpCustInfo,
+                                settleData_NTConnect.win_amt,
+                                (int)tpId,
+                                settleData_NTConnect.bet_id,
+                                (int)tpGameType,
+                                category,
+                                settleData_NTConnect.bet_id,
+                                TransType.Payout,
+                                null,
+                                out afterAmount,
+                                $"Payout",
+                                out bonusId,
+                                conn,
+                                trans,
+                                AllowNegative.Allow
+                            );
+                            break;
+                    }
+
+
+                    if (result > 0)
+                    {
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+
+
+        public int CancelBetGames_93Connect(TpCustInfo tpCustInfo, NTCCancelBetRequest cancelData_NTConnect,
+            out decimal afterAmount, out string TransId)
+        {
+            var bonusId = 0;
+            var tpId = Tp.NTConnect;
+            var tpGameType = GameType.NTConnect_Games;
+            var category = TpCategory.Games;
+            var CancelSpName = "Service_Bettrans_93Connect_CancelBet_Set";
+            var GetSpName = "Service_Bettrans_93Connect_Get";
+            afterAmount = 0;
+            
+            TransId = cancelData_NTConnect.bet_id;
+
+            var result = 0;
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var pc = new DynamicParameters();
+                pc.Add("username",tpCustInfo.TpUserName);
+                pc.Add("bet_id",cancelData_NTConnect.bet_id);
+            
+                
+                var partitionTime = DateTime.Now;
+                var bettrans = _partitionService.Query<Bettrans93Connect>(partitionTime, GetSpName, 
+                    new { bet_id = cancelData_NTConnect.bet_id , username = tpCustInfo.TpUserName });
+                if (!bettrans.Any(i => i.bet_id == cancelData_NTConnect.bet_id))
+                {
+                    // no bet data
+                    return -2;
+                }
+                
+                if (bettrans.Any(i => i.TicketType == (int)BettransType.CancelBet))
+                {
+                    return -3;
+                }
+                
+                if(bettrans.Any(i => i.TicketType == (int)BettransType.Bet))
+                {
+                    return -5;
+                }
+                
+                var cancelData = new Bettrans93ConnectCancelBet()
+                {
+                    bet_id = cancelData_NTConnect.bet_id,
+                    username = tpCustInfo.TpUserName,
+                    status = cancelData_NTConnect.status,
+                    TicketType = cancelData_NTConnect.TicketType,
+                    TicketStatus = cancelData_NTConnect.TicketStatus,
+                    SettleFlag = (int)SettleFlag.EndGame
+                };
+                
+                var p = new DynamicParameters(cancelData);
+                p.Add("out_stake", dbType: DbType.Decimal, direction: ParameterDirection.Output);
+                result = _partitionService.Execute(partitionTime,CancelSpName, p, trans);
+    
+                if (result > 0)
+                {
+                    var stake = p.Get<decimal>("out_stake");
+
+                    result = bettrans.FirstOrDefault().status switch
+                    {
+                        "W" => PayoutV2(
+                            tpCustInfo,
+                            (Math.Abs(bettrans.FirstOrDefault().win_amt) - Math.Abs(bettrans.FirstOrDefault().stake))* -1,
+                            (int)tpId,
+                            cancelData_NTConnect.bet_id,
+                            (int)tpGameType,
+                            category, 
+                            cancelData_NTConnect.bet_id,
+                            TransType.Undo,
+                            null,
+                            out afterAmount,
+                            "CancelBet",
+                            out bonusId,
+                            conn,
+                            trans, 
+                            AllowNegative.Allow),
+                        "L" => PayoutV2(
+                            tpCustInfo,
+                            Math.Abs(stake),
+                            (int)tpId,
+                            cancelData_NTConnect.bet_id,
+                            (int)tpGameType,
+                            category,
+                            cancelData_NTConnect.bet_id,
+                            TransType.Refunds,
+                            null,
+                            out afterAmount,
+                            "CancelBet",
+                            out bonusId,
+                            conn,
+                            trans,
+                            AllowNegative.Allow),
+                        _ => 0
+                    };
+
+                    if (result > 0)
+                    {
+                        //CancelBet是SettleBet之後才會打，要重新結算注單
+                        _tpUnsettleService.InsertTpUnsettle(Tp.NTConnect, GameType.NTConnect_Games, TransId, trans);
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+            
             return result;
         }
 

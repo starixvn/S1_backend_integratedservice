@@ -61,6 +61,7 @@
         BNG = 57,
         HaoLong = 58,
         NLC = 59,
+        NTConnect = 62,
         GA = 63
     }
     public enum GameType
@@ -106,7 +107,8 @@
         SG_Table = 109,
         HaoLong_4D = 110,
         NLC_RNG = 111,
-        GA_CockFighting = 115
+        NTConnect_Games = 114,
+        GA_CockFighting = 115,
     }
     public enum SettlementType
     {

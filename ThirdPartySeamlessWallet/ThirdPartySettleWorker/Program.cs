@@ -111,7 +111,8 @@ builder.Services
     .AddHostedService<BNGWorker>()
     .AddHostedService<HLWorker>()
     .AddHostedService<MaxGameWorker>()
-    .AddHostedService<GAWorker>();
+    .AddHostedService<GAWorker>()
+    .AddHostedService<NTConnectWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
