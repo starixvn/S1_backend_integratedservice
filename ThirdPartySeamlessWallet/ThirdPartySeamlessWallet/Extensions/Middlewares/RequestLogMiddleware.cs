@@ -58,14 +58,15 @@ namespace ThirdPartySeamlessWallet.Extensions.Middlewares
                         LogContext.PushProperty("Action", action.ToString());
                     }
 
-                    var header = "";
-                    if (context.Request.Headers != null)
+                    foreach (var header in context.Request.Headers)
                     {
-                        header = JsonConvert.SerializeObject(context.Request.Headers);
+                        LogContext.PushProperty(header.Key, header.Value.ToString());
                     }
 
-                    _logger.LogInformation(
-                        $"REQUEST METHOD: {context.Request.Method}, CodePage: {codePage}, REQUEST BODY: {content}, REQUEST Header: {header}, REQUEST URL: {url}");
+                    var log = new StringBuilder();
+                    log.AppendLine($"REQUEST URL: {url}, Method: {context.Request.Method}, CodePage: {codePage},");
+                    log.AppendLine($"REQUEST BODY: {content}");
+                    _logger.LogInformation(log.ToString());
                 }
 
                 requestBodyStream.Seek(0, SeekOrigin.Begin);
