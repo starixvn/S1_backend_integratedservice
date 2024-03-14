@@ -67,6 +67,18 @@ namespace ThirdParty.SG
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
             var mobile = (appType == AppType.Mobile) ? true : false;
 
+            var tpGameType = (int)TpGameType.SG_RNG;
+            if (gameId.StartsWith("F-", StringComparison.OrdinalIgnoreCase))
+            {
+                tpGameType = (int)TpGameType.SG_Fish;
+            }
+            else if (gameId.StartsWith("C-", StringComparison.OrdinalIgnoreCase))
+            {
+                tpGameType = (int)TpGameType.SG_Table;
+            }
+
+            TpCustInfoProvider.SetCustGotoGame(tpCustInfo.CustId, tpCustInfo.TpId, tpGameType);
+
             // Header
             Dictionary<string, string> headerReq = new()
             {
