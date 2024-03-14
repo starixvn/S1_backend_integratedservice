@@ -6,25 +6,23 @@ namespace ThirdPartyWager.Service.DAL
 {
     public class ThirdPartyHelper
     {
-        private readonly MySqlClient _mainDbClient;
-        private readonly MySqlClient _reportDbClient;
+        private readonly MySqlClient _mainDbClient;        
         private readonly MySqlClient _wagerDbClient;
 
         public ThirdPartyHelper(IServiceProvider provider)
         {
-            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
-            _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);            
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
         }
 
         public ThirdPartyModel GetThirdPartySetting(int tpId)
         {
-            return _reportDbClient.QueryFirst<ThirdPartyModel>("Tp_Get", new { TpId = tpId });
+            return _mainDbClient.QueryFirst<ThirdPartyModel>("Tp_Get", new { TpId = tpId });
         }
 
         public ThirdPartyModel GetThirdPartyBySite(int tpId, int siteId)
         {
-            return _reportDbClient.QueryFirst<ThirdPartyModel>("Common_Tp_Get", new { TpId = tpId, SiteId = siteId });
+            return _mainDbClient.QueryFirst<ThirdPartyModel>("Common_Tp_Get", new { TpId = tpId, SiteId = siteId });
         }
 
         public int SetThirdPartySetting(int tpId, string setting)
@@ -74,12 +72,12 @@ namespace ThirdPartyWager.Service.DAL
 
         public IEnumerable<TpGameCasino> GetGameCasino(int tpId)
         {
-            return _reportDbClient.Query<TpGameCasino>("Service_GameCasino_Get_V2", new { TpId = tpId });
+            return _mainDbClient.Query<TpGameCasino>("Service_GameCasino_Get_V2", new { TpId = tpId });
         }
 
         public IEnumerable<TpListModel> GetTpListByTpId(int tpId)
         {
-            return _reportDbClient.Query<TpListModel>("Service_TpList_ByTpId_Get", new { _TpId = tpId });
+            return _mainDbClient.Query<TpListModel>("Service_TpList_ByTpId_Get", new { _TpId = tpId });
         }
         
         public long GetSiteTicketKey(int SiteId, int TpId, WorkerType workerType)
