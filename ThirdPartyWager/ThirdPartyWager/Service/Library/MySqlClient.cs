@@ -19,11 +19,12 @@ namespace ThirdPartyWager.Service.Library
 
         private readonly ILogger<MySqlClient> _logger;
 
-        public MySqlClient(string connectionString, ILogger<MySqlClient> logger)
+        public MySqlClient(IServiceProvider provider, DataBase dataBase, string connectionString)
         {
-            LogContext.PushProperty("DataBase", DataBase.ToString());
+            LogContext.PushProperty("DataBase", dataBase.ToString());
             _connectionString = connectionString;
-            _logger = logger;
+            _logger = provider.GetRequiredService<ILogger<MySqlClient>>();
+            DataBase = dataBase;
         }
 
         public MySqlConnection GetMySqlConnection()
