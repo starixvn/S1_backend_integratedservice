@@ -14,14 +14,17 @@ namespace CommonService.Service.Library;
 public sealed class MySqlClient
 {
     public DataBase DataBase { get; set; }
+
     private readonly string _connectionString;
 
     private readonly ILogger<MySqlClient> _logger;
 
-    public MySqlClient(string connectionString, ILogger<MySqlClient> logger)
+    public MySqlClient(IServiceProvider provider, DataBase dataBase, string connectionString)
     {
+        LogContext.PushProperty("DataBase", dataBase.ToString());
         _connectionString = connectionString;
-        _logger = logger;
+        _logger = provider.GetRequiredService<ILogger<MySqlClient>>();
+        DataBase = dataBase;
     }
 
     public MySqlConnection GetMySqlConnection()
