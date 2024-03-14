@@ -400,12 +400,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, bettingData_NTConnect.username);
             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)_thisTp, tpCustInfo.CurrencyId);
             var custBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, bettingData_NTConnect.username, _gameType);
-            
+
             if (tpCurrency.ExchangeRate != 0)
             {
                 bettingData_NTConnect.stake *= tpCurrency.ExchangeRate;
+                custBalance.Balance *= tpCurrency.ExchangeRate;
             }
-            
+
             if (custBalance.Balance < 0)
             {
                 afterAmount = custBalance.Balance / tpCurrency.ExchangeRate;
