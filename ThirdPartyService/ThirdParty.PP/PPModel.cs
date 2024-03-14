@@ -80,16 +80,16 @@ namespace ThirdParty.PP
 
     public class CreateFRB
     {
-        public List<gameList> gameList = new();
+        public List<GameList> gameList = new();
     }
 
-    public class gameList
+    public class GameList
     {
         public string gameId { get; set; }
-        public List<betValues> betValues { get; set; }
+        public List<BetValues> betValues { get; set; }
     }
 
-    public class betValues
+    public class BetValues
     {
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public decimal betPerLine { get; set; }

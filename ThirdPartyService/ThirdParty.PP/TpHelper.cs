@@ -1,6 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
@@ -248,7 +249,7 @@ namespace ThirdParty.PP
             return oApiResult;
         }
 
-        public override ApiResult CreateBonusCode(int siteId,Dictionary<string, string> inputs)
+        public override ApiResult CreateBonusCode(int siteId, Dictionary<string, string> inputs)
         {
             var config = _siteConfigDic[siteId];
             string apiUrl = config.ApiUrl;
@@ -263,18 +264,13 @@ namespace ThirdParty.PP
             var Uri = "/v3/http/FreeRoundsBonusAPI/v2/bonus/create";
 
             var oApiResult = new ApiResult();
-            var betValues = new betValues
-            {
-                totalBet = 100,
-                currency = currency
-            };
 
-            var betValuesList = new List<betValues> { betValues };
+            var betValues = getBetScales(config, gameId, currency).gameList.FirstOrDefault(x => x.gameId == gameId);
 
-            var gameList = new gameList
+            var gameList = new GameList
             {
                 gameId = gameId,
-                betValues = betValuesList
+                betValues = betValues.betValues
             };
 
             var newGameList = new CreateFRB();
@@ -336,5 +332,56 @@ namespace ThirdParty.PP
             var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
             return (dic != null) ? dic.TryGetValue("en", out var result) ? result : string.Empty : string.Empty;
         }
-    }
+
+        private CreateFRB getBetScales(PPConfig config, string gameId, string currencyId)
+        {
+            string apiUrl = config.ApiUrl;
+            string secureLogin = config.SecureLogin;
+            string secureKey = config.SecureKey;
+            var Uri = "/v3/http/CasinoGameAPI/getBetScales";
+
+            var parametersTest = new Dictionary<string, string>()
+            {
+                { "secureLogin", secureLogin },
+                { "gameIDs", gameId},
+                {"currencies",currencyId }
+            };
+
+            var sParamTest = string.Join("&", parametersTest.OrderBy(kp => kp.Key).Select(kp => $"{kp.Key}={kp.Value}"));
+            sParamTest += $"&hash={ToMD5($"{sParamTest}{secureKey}")}";
+
+            var result = HttpPost($"{apiUrl}{Uri}?{sParamTest}", "", "application/json");
+
+            var jObject = JObject.Parse(result);
+            var newGameList = new CreateFRB();
+
+            foreach (var game in jObject["gameList"])
+            {
+                string Id = game["gameID"].ToString();
+                var gameItem = new GameList
+                {
+                    gameId = Id,
+                    betValues = new List<BetValues>()
+                };
+
+                // 遍歷每個貨幣
+                foreach (var betScale in game["betScaleList"])
+                {
+                    string currency = betScale["currency"].ToString();
+                    var totalBetScales = betScale["totalBetScales"].ToObject<decimal[]>();
+
+                    // 找到最小值
+                    decimal minTotalBetScale = totalBetScales.Min();
+
+                    // 添加到遊戲物件
+                    gameItem.betValues.Add(new BetValues { currency = currency, totalBet = minTotalBetScale });
+                }
+
+                // 添加到遊戲列表
+                newGameList.gameList.Add(gameItem);
+            }
+            return newGameList;
+        }
+
+    }    
 }
