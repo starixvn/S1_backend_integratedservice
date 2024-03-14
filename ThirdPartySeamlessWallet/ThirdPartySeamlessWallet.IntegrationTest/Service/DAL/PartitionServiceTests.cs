@@ -11,6 +11,7 @@ using ThirdPartySeamlessWallet.Core.Extensions;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
 {
@@ -40,7 +41,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
             services.AddTransient(p => mySqlLog);
 
             var conn = configuration.GetConnectionString("ConnectionString");
-            services.AddSingleton(new MySqlClient(conn, mySqlLog));
+            services.AddSingleton(provider => new MySqlClient(provider, DataBase.Main, conn));
 
 
             var provider = services.BuildServiceProvider();
