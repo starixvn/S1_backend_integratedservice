@@ -77,12 +77,12 @@ namespace ThirdPartyService.Service.DAL
 
         public IEnumerable<ThirdPartyModel> GetThirdPartyByWalletType(int walletType, int siteId)
         {
-            return _mainDbClient.Query<ThirdPartyModel>("Service_TpList_WalletType_Get", new { WalletType = walletType, SiteId = siteId }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Query<ThirdPartyModel>("Service_TpList_WalletType_Get", new { WalletType = walletType, SiteId = siteId });
         }
 
         public IEnumerable<ThirdPartyModel> GetThirdPartyByWalletTypeByCustId(int walletType, int siteId, int custId)
         {
-            return _mainDbClient.Query<ThirdPartyModel>("Service_TpList_WalletType_ByCustId_Get_V2", new { WalletType = walletType, SiteId = siteId, CustId = custId }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Query<ThirdPartyModel>("Service_TpList_WalletType_ByCustId_Get_V2", new { WalletType = walletType, SiteId = siteId, CustId = custId });
         }
 
         public BonusWallet CheckBonusWallet(int custid, int tpId)
@@ -92,7 +92,7 @@ namespace ThirdPartyService.Service.DAL
 
         public IEnumerable<TpMaintain> GetTpMaintainList(int siteId)
         {
-            return _mainDbClient.Query<TpMaintain>("TpMaintain_Get", new { SiteId = siteId }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Query<TpMaintain>("TpMaintain_Get", new { SiteId = siteId });
         }
 
         private bool CheckConstructor(Type type)
