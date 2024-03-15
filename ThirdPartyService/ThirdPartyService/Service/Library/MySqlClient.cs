@@ -7,68 +7,88 @@ using MySql.Data.MySqlClient;
 
 using Serilog.Context;
 
+using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 
 namespace ThirdPartyService.Service.Library
 {
     public sealed class MySqlClient
     {
-        public DataBase DataBase { get; set; }
+        public readonly DataBase DataBase;
+
         private readonly string _connectionString;
+
+        private readonly IEnumerable<string> _backupConnectionStringList;
+
         private readonly ILogger<MySqlClient> _logger;
 
-        public MySqlClient(string connectionString, ILogger<MySqlClient> logger)
+        public MySqlClient(IServiceProvider provider, DataBase dataBase, string connectionString)
         {
+            DataBase = dataBase;
+            _logger = provider.GetRequiredService<ILogger<MySqlClient>>();
             _connectionString = connectionString;
-            _logger = logger;
+            _backupConnectionStringList = null;
+        }
+
+        public MySqlClient(IServiceProvider provider, DataBase dataBase, string connectionString, IEnumerable<string> backupConnectionStringList)
+        {
+            DataBase = dataBase;
+            _logger = provider.GetRequiredService<ILogger<MySqlClient>>();
+            _connectionString = connectionString;
+            _backupConnectionStringList = backupConnectionStringList;
+        }
+
+        private string HealthCheck()
+        {
+            if (_backupConnectionStringList == null)
+            {
+                return _connectionString;
+            }
+
+            foreach (var backupConn in _backupConnectionStringList)
+            {
+                try
+                {
+                    using var connection = new MySqlConnection(backupConn);
+                    var dbSlaveStatus = connection.QueryFirstOrDefault<DBSlaveStatus>("Service_HealthCheck_V2", commandType: CommandType.StoredProcedure);
+
+                    // 拿不到Status或延遲太久都換下一個連線
+                    if (dbSlaveStatus == null || dbSlaveStatus.Seconds_Behind_Master > 180)
+                    {
+                        _logger.LogWarning($"{ReplaceDBString(backupConn)} | DelayTime = {dbSlaveStatus?.Seconds_Behind_Master}");
+                        continue;
+                    }
+
+                    return backupConn;
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, $"{ReplaceDBString(backupConn)} | HealthCheck Exception");
+                }
+            }
+
+            // 前面連線檢查都有問題，用最後一個連線
+            return _backupConnectionStringList.Last();
         }
 
         public MySqlConnection GetMySqlConnection()
         {
-            return new MySqlConnection(_connectionString);
+            var conn = HealthCheck();
+            return new MySqlConnection(conn);
         }
 
-        #region Query
-
-        public IEnumerable<T> Query<T>(string name)
+        public IEnumerable<T> Query<T>(string sql, object parameters = null, int? commandTimeout = null)
         {
             IEnumerable<T> result;
             var sw = Stopwatch.StartNew();
 
             try
             {
-                using var connection = new MySqlConnection(_connectionString);
-
-                var command = new CommandDefinition(name,
-                    parameters: null,
-                    commandTimeout: null,
-                    commandType: CommandType.Text,
-                    flags: CommandFlags.NoCache);
-
-                result = connection.Query<T>(command);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, name);
-                throw;
-            }
-
-            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug(name);
-            return result.ToList();
-        }
-
-        public IEnumerable<T> Query<T>(string sql, object parameters, CommandType commandType = CommandType.StoredProcedure)
-        {
-            IEnumerable<T> result;
-            var sw = Stopwatch.StartNew();
-
-            try
-            {
-                using var connection = new MySqlConnection(_connectionString);
+                var conn = HealthCheck();
+                using var connection = new MySqlConnection(conn);
                 var command = new CommandDefinition(sql,
                     parameters: parameters,
-                    commandTimeout: null,
+                    commandTimeout: commandTimeout,
                     commandType: CommandType.StoredProcedure,
                     flags: CommandFlags.NoCache);
 
@@ -85,14 +105,15 @@ namespace ThirdPartyService.Service.Library
             return result.ToList();
         }
 
-        public IEnumerable<dynamic> Query(string name, object parameters)
+        public IEnumerable<dynamic> Query(string name, object parameters = null)
         {
             dynamic result;
             var sw = Stopwatch.StartNew();
 
             try
             {
-                using var connection = new MySqlConnection(_connectionString);
+                var conn = HealthCheck();
+                using var connection = new MySqlConnection(conn);
                 result = connection.Query(name, parameters, commandType: CommandType.StoredProcedure);
                 // Query 非泛型底層回傳行無不同，不無法使用
             }
@@ -107,15 +128,16 @@ namespace ThirdPartyService.Service.Library
             return result;
         }
 
-        public IEnumerable<T> QueryUseCommandDefinition<T>(string name, SqlMapper.IDynamicParameters parameters, int? commandTimeout = null)
+        public IEnumerable<T> QueryUseCommandDefinition<T>(string name, object parameters = null, int? commandTimeout = null)
         {
             IEnumerable<T> result;
             var sw = Stopwatch.StartNew();
 
             try
             {
-                var connectionString = $"{_connectionString}ProcedureCacheSize=0;";
-                using var connection = new MySqlConnection(connectionString);
+                var conn = HealthCheck();
+                conn += $"{_connectionString}ProcedureCacheSize=0;";
+                using var connection = new MySqlConnection(conn);
 
                 var command = new CommandDefinition(name, parameters,
                     commandTimeout: commandTimeout,
@@ -135,15 +157,15 @@ namespace ThirdPartyService.Service.Library
             return result.ToList();
         }
 
-        public T QueryFirst<T>(string name, object parameters)
+        public T QueryFirst<T>(string name, object parameters = null)
         {
             T result;
             var sw = Stopwatch.StartNew();
 
             try
             {
-                using var connection = new MySqlConnection(_connectionString);
-
+                var conn = HealthCheck();
+                using var connection = new MySqlConnection(conn);
                 var command = new CommandDefinition(name, parameters,
                     commandTimeout: null,
                     commandType: CommandType.StoredProcedure,
@@ -162,14 +184,15 @@ namespace ThirdPartyService.Service.Library
             return result;
         }
 
-        public dynamic QueryFirst(string name, object parameters)
+        public dynamic QueryFirst(string name, object parameters = null)
         {
             dynamic result;
             var sw = Stopwatch.StartNew();
 
             try
             {
-                using var connection = new MySqlConnection(_connectionString);
+                var conn = HealthCheck();
+                using var connection = new MySqlConnection(conn);
                 result = connection.QueryFirstOrDefault(name, parameters, commandType: CommandType.StoredProcedure);
                 // QueryFirstOrDefault 非泛型底層回傳行無不同，不無法使用
             }
@@ -184,11 +207,7 @@ namespace ThirdPartyService.Service.Library
             return result;
         }
 
-        #endregion
-
-        #region Excute
-
-        public int Execute(string name, object parameters)
+        public int Execute(string name, object parameters = null)
         {
             int result;
             var sw = Stopwatch.StartNew();
@@ -237,46 +256,10 @@ namespace ThirdPartyService.Service.Library
             return result;
         }
 
-        public bool Execute(string command)
+        private string ReplaceDBString(string conn)
         {
-            var sw = Stopwatch.StartNew();
-            try
-            {
-                using var connection = new MySqlConnection(_connectionString);
-                connection.Execute(command, CommandType.Text);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, command);
-                throw;
-            }
-
-            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug(command);
-            return true;
+            return conn.Substring(0, 28);
         }
-
-        public async Task<bool> ExecuteAsync(string name, SqlMapper.IDynamicParameters parameters)
-        {
-            var sw = Stopwatch.StartNew();
-            try
-            {
-                await using var connection = new MySqlConnection(_connectionString);
-                await connection.ExecuteAsync(name, parameters, commandType: CommandType.StoredProcedure);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, name);
-                throw;
-            }
-
-            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return true;
-        }
-
-        #endregion
-
     }
 }
 
