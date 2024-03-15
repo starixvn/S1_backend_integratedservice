@@ -344,7 +344,7 @@ namespace ThirdParty.PP
             {
                 { "secureLogin", secureLogin },
                 { "gameIDs", gameId},
-                {"currencies",currencyId }
+                { "currencies", currencyId }
             };
 
             var sParamTest = string.Join("&", parametersTest.OrderBy(kp => kp.Key).Select(kp => $"{kp.Key}={kp.Value}"));
