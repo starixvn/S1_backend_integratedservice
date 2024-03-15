@@ -33,9 +33,9 @@ namespace ThirdPartyService.Service.Worker
             var isError = false;
             try
             {
-                var CreateList = _giftInfoBLL.GetGiftList((int)TpEnum.PP).Where(x => x.GiftType == 2);
+                var createList = _giftInfoBLL.GetGiftList((int)TpEnum.PP).Where(x => x.GiftType == 2);
 
-                foreach (var item in CreateList)
+                foreach (var item in createList)
                 {
                     _logger.LogInformation($"{item.GiftId} in progress");
                     var bonusCode = BonusCodeRule(item);
@@ -69,20 +69,20 @@ namespace ThirdPartyService.Service.Worker
                 DateTime scheduledTime = DateTime.UtcNow.Date.AddHours(0);
 
                 // 計算距離下一次執行的時間間隔
-                TimeSpan delay = scheduledTime - DateTime.Now;
-                if (delay < TimeSpan.Zero)
+                TimeSpan dueTimeSpan = scheduledTime - DateTime.Now;
+                if (dueTimeSpan < TimeSpan.Zero)
                 {
                     scheduledTime = scheduledTime.AddDays(1); // 如果已經超過了今天的指定時間，則推遲到明天的同一時間
-                    delay = scheduledTime - DateTime.Now;
+                    dueTimeSpan = scheduledTime - DateTime.Now;
                 }
 
                 if (isError)
                 {
-                    delay = TimeSpan.FromSeconds(10);
+                    dueTimeSpan = TimeSpan.FromMinutes(10);
                 }
 
                 // 設定定時器
-                _timerCreatePPBonusCode.Change(delay, TimeSpan.FromDays(1));
+                _timerCreatePPBonusCode.Change(dueTimeSpan, TimeSpan.Zero);
                 _logger.LogInformation("Create PP FreeSpin BonusCode End");
             }
 
