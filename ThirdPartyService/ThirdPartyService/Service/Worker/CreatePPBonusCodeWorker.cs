@@ -1,5 +1,6 @@
 ﻿using Serilog.Context;
 using ThirdPartyCore.Model;
+using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.Model;
@@ -29,11 +30,12 @@ namespace ThirdPartyService.Service.Worker
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             _logger.LogInformation("Create PP FreeSpin BonusCode start");
+            var isError = false;
             try
             {
-                var CreateList = _giftInfoBLL.GetGiftList(5).Where(x => x.GiftType == 2);
+                var createList = _giftInfoBLL.GetGiftList((int)TpEnum.PP).Where(x => x.GiftType == 2);
 
-                foreach (var item in CreateList)
+                foreach (var item in createList)
                 {
                     _logger.LogInformation($"{item.GiftId} in progress");
                     var bonusCode = BonusCodeRule(item);
@@ -53,11 +55,12 @@ namespace ThirdPartyService.Service.Worker
                     var result = _thirdPartyBLL.CreateBonusCode(p);
                     _logger.LogInformation(result.ErrorCode == 0
                         ? $"GiftId:{item.GiftId}，BonusCode:{bonusCode} Create Success"
-                        : $"GiftId:{item.GiftId}，BonusCode:{bonusCode} Create Fail");
+                        : $"GiftId:{item.GiftId}，BonusCode:{bonusCode} Create Fail，{result.RawMessage}");
                 }
             }
             catch (Exception ex)
             {
+                isError = true;
                 _logger.LogError(ex, MethodExtension.GetCurrentAsyncMethod());
             }
             finally
@@ -66,15 +69,20 @@ namespace ThirdPartyService.Service.Worker
                 DateTime scheduledTime = DateTime.UtcNow.Date.AddHours(0);
 
                 // 計算距離下一次執行的時間間隔
-                TimeSpan delay = scheduledTime - DateTime.Now;
-                if (delay < TimeSpan.Zero)
+                TimeSpan dueTimeSpan = scheduledTime - DateTime.Now;
+                if (dueTimeSpan < TimeSpan.Zero)
                 {
                     scheduledTime = scheduledTime.AddDays(1); // 如果已經超過了今天的指定時間，則推遲到明天的同一時間
-                    delay = scheduledTime - DateTime.Now;
+                    dueTimeSpan = scheduledTime - DateTime.Now;
+                }
+
+                if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(10);
                 }
 
                 // 設定定時器
-                _timerCreatePPBonusCode.Change(delay, TimeSpan.FromDays(1));
+                _timerCreatePPBonusCode.Change(dueTimeSpan, TimeSpan.Zero);
                 _logger.LogInformation("Create PP FreeSpin BonusCode End");
             }
 
