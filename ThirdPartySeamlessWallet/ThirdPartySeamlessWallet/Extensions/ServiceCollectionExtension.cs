@@ -9,19 +9,11 @@ namespace ThirdPartySeamlessWallet.Extensions
     {
         public static IServiceCollection AddDatabaseConnection(this IServiceCollection services, IConfiguration config)
         {
-            var provider = services.BuildServiceProvider();
-            var logger = provider.GetRequiredService<ILogger<MySqlClient>>();
             var serviceType = Environment.GetEnvironmentVariable("ServiceType") ?? config.GetValue<string>("ServiceType");
 
-            return services
-                .AddSingleton(param => new MySqlClient(config.GetConnectionString($"{serviceType}_MainDB"), logger)
-                {
-                    DataBase = DataBase.Main
-                })
-                .AddSingleton(param => new MySqlClient(config.GetConnectionString($"{serviceType}_WagerDB"), logger)
-                {
-                    DataBase = DataBase.Wager
-                });
+            services.AddSingleton(provider => new MySqlClient(provider, DataBase.Main, config.GetConnectionString($"{serviceType}_MainDB")));
+            services.AddSingleton(provider => new MySqlClient(provider, DataBase.Wager, config.GetConnectionString($"{serviceType}_WagerDB")));
+            return services;
         }
 
         public static IServiceCollection AddOptionListByDB<T>(this IServiceCollection services, string sql, object parameters = null)

@@ -58,7 +58,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             var mySqlLog = Substitute.For<ILogger<MySqlClient>>();
             _serviceCollection.AddTransient(p => mySqlLog);
             var conn = _configuration.GetConnectionString("ConnectionString");
-            _serviceCollection.AddSingleton(new MySqlClient(conn, mySqlLog));
+            _serviceCollection.AddSingleton(provider => new MySqlClient(provider, DataBase.Main, conn));
 
             var startUp = new StubStartUp(_configuration);
             startUp.ConfigureServices(_serviceCollection);

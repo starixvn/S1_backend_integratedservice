@@ -2721,7 +2721,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             p.Add("extTxnId", dbType: DbType.Int64, direction: ParameterDirection.Output);
             try
             {
-                var bettransMg = await _mainDbClient.QueryAsync<BettransRng_MG>("Service_BettransRngByBet_MG_Get_V3", CommandType.StoredProcedure, new { bettingDataRNG_MG.betId });
+                var bettransMg = await _mainDbClient.QueryAsync<BettransRng_MG>("Service_BettransRngByBet_MG_Get_V3", new { bettingDataRNG_MG.betId });
                 var bettrans = bettransMg.ToList();
                 // 已結束局
                 if (bettrans.Any(a => a.Completed))
@@ -2841,7 +2841,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
 
-                var bettransMg = await _mainDbClient.QueryAsync<BettransRng_MG>("Service_BettransRng_MG_txnId_Get", commandType: CommandType.StoredProcedure, new { txnId = cancelDataRng_MG.txnId });
+                var bettransMg = await _mainDbClient.QueryAsync<BettransRng_MG>("Service_BettransRng_MG_txnId_Get", new { txnId = cancelDataRng_MG.txnId });
                 var bettrans = bettransMg.ToList();
 
                 // 不存在有效下注
