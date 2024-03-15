@@ -265,7 +265,15 @@ namespace ThirdParty.PP
 
             var oApiResult = new ApiResult();
 
-            var betValues = getBetScales(config, gameId, currency).gameList.FirstOrDefault(x => x.gameId == gameId);
+            var betValues = GetBetScales(config, gameId, currency).gameList.FirstOrDefault(x => x.gameId == gameId);
+
+            if (betValues == null)
+            {
+                oApiResult.RawMessage = "betValues No result";
+                oApiResult.RawErrorCode = "1";
+                oApiResult.ErrorCode = ErrorCode.Fail; 
+                return oApiResult;
+            }
 
             var gameList = new GameList
             {
@@ -295,7 +303,7 @@ namespace ThirdParty.PP
 
             if (!IsJSON(result))
             {
-                oApiResult.RawMessage = "No Result";
+                oApiResult.RawMessage = "Create No Result";
                 oApiResult.RawErrorCode = "1";
                 oApiResult.ErrorCode = ErrorCode.Fail;
                 return oApiResult;
@@ -333,7 +341,7 @@ namespace ThirdParty.PP
             return (dic != null) ? dic.TryGetValue("en", out var result) ? result : string.Empty : string.Empty;
         }
 
-        private CreateFRB getBetScales(PPConfig config, string gameId, string currencyId)
+        private CreateFRB GetBetScales(PPConfig config, string gameId, string currencyId)
         {
             string apiUrl = config.ApiUrl;
             string secureLogin = config.SecureLogin;
@@ -352,35 +360,46 @@ namespace ThirdParty.PP
 
             var result = HttpPost($"{apiUrl}{Uri}?{sParamTest}", "", "application/json");
 
-            var jObject = JObject.Parse(result);
-            var newGameList = new CreateFRB();
-
-            foreach (var game in jObject["gameList"])
+            if (!IsJSON(result))
             {
-                string Id = game["gameID"].ToString();
-                var gameItem = new GameList
-                {
-                    gameId = Id,
-                    betValues = new List<BetValues>()
-                };
-
-                // 遍歷每個貨幣
-                foreach (var betScale in game["betScaleList"])
-                {
-                    string currency = betScale["currency"].ToString();
-                    var totalBetScales = betScale["totalBetScales"].ToObject<decimal[]>();
-
-                    // 找到最小值
-                    decimal minTotalBetScale = totalBetScales.Min();
-
-                    // 添加到遊戲物件
-                    gameItem.betValues.Add(new BetValues { currency = currency, totalBet = minTotalBetScale });
-                }
-
-                // 添加到遊戲列表
-                newGameList.gameList.Add(gameItem);
+                return null;
             }
-            return newGameList;
+
+            var json = JsonConvert.DeserializeObject<CreateBonusCodeResult>(result);
+            if (json.error == 0)
+            {
+                var jObject = JObject.Parse(result);
+                var newGameList = new CreateFRB();
+
+                foreach (var game in jObject["gameList"])
+                {
+                    string Id = game["gameID"].ToString();
+                    var gameItem = new GameList
+                    {
+                        gameId = Id,
+                        betValues = new List<BetValues>()
+                    };
+
+                    // 遍歷每個貨幣
+                    foreach (var betScale in game["betScaleList"])
+                    {
+                        string currency = betScale["currency"].ToString();
+                        var totalBetScales = betScale["totalBetScales"].ToObject<decimal[]>();
+
+                        // 找到最小值
+                        decimal minTotalBetScale = totalBetScales.Min();
+
+                        // 添加到遊戲物件
+                        gameItem.betValues.Add(new BetValues { currency = currency, totalBet = minTotalBetScale });
+                    }
+
+                    // 添加到遊戲列表
+                    newGameList.gameList.Add(gameItem);
+                }
+                return newGameList;
+            }
+
+            return null;
         }
 
     }    
