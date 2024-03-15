@@ -244,4 +244,11 @@ namespace ThirdPartyCore.Model.enums
         EntPage = 1, 
         GotoGame = 2
     }
+
+    public enum GeneralStatusEnum
+    {
+        Disable = 0,
+        Enable = 1
+    }
+
 }
