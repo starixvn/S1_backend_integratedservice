@@ -1,10 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System.Diagnostics;
+﻿using Serilog.Context;
 using ThirdPartyCore.Model;
-using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.BLL;
-using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Model;
 namespace ThirdPartyService.Service.Worker
 {
@@ -30,6 +27,7 @@ namespace ThirdPartyService.Service.Worker
 
         private void DoCreatePPBonusCodeTaskAsync(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             _logger.LogInformation("Create PP FreeSpin BonusCode start");
             try
             {
