@@ -17,6 +17,7 @@ namespace ThirdPartyService.Extensions
 
             //檢查是否有BackupDB連線字串
             if (!string.IsNullOrEmpty(reportBackupDB1) && !string.IsNullOrEmpty(reportBackupDB2))
+            
             {
                 // 設定ReportDB連線順序
                 services.AddSingleton(provider => new MySqlClient(provider, DataBase.Report, reportDBConn, new List<string>()
@@ -73,7 +74,7 @@ namespace ThirdPartyService.Extensions
 
             return services;
         }
-        
+
         public static IServiceCollection AddSiteLanguage(this IServiceCollection services)
         {
             var provider = services.BuildServiceProvider();
