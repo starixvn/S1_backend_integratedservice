@@ -136,7 +136,6 @@ namespace ThirdPartyService.Service.Library
             try
             {
                 var conn = HealthCheck();
-                conn += $"{_connectionString}ProcedureCacheSize=0;";
                 using var connection = new MySqlConnection(conn);
 
                 var command = new CommandDefinition(name, parameters,
