@@ -62,7 +62,8 @@
         NLC = 59,
         Amigo = 60,
         MaxGame = 61,
-        GA = 63
+        GA = 63,
+        WonCasino = 64,
     }
 
 }
