@@ -63,6 +63,10 @@ namespace ThirdPartyWager.Workers
                          _thirdPartyBLL.SetThirdPartyTimer(_tpId, tpType, time.endUnix);
                      }
                 }
+                if ((int)DateTime.Now.Subtract(timerTime).TotalMinutes > 3)
+                {
+                    quick = 1;
+                }
             }
             catch (Exception ex)
             {
@@ -72,7 +76,7 @@ namespace ThirdPartyWager.Workers
             {
                 if (quick == 1)
                 {
-                    var dueTimeSpan = TimeSpan.FromMinutes(1);
+                    var dueTimeSpan = TimeSpan.FromSeconds(10);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
