@@ -31,7 +31,7 @@ namespace ThirdParty.PG
             public string BetDetailUrl { get; set; }
             public string operator_token { get; set; }
         }
-        
+
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
         private readonly Dictionary<int, PGSiteConfig> _siteConfigs;
 
@@ -72,12 +72,11 @@ namespace ThirdParty.PG
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             var config = _siteConfigs[tpCustInfo.SiteId];
-            
-            var loginGameType = inputs.ContainsKey("loginGameType") && !string.IsNullOrEmpty(inputs["loginGameType"]) ? inputs["loginGameType"] : ((int)LoginGameTypeEnum.EntPage).ToString();
+
             var operatorToken = config.operator_token;
             var gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
             var betType = "1";
-            
+
             var oApiResult = new ApiResult();
 
             #region SessionKey
@@ -89,58 +88,41 @@ namespace ThirdParty.PG
             var sessionKey = Convert.ToBase64String(bytes);
 
             #endregion
-            
-            if (loginGameType == ((int)LoginGameTypeEnum.EntPage).ToString())
+
+            var apiUrl = config.ApiUrl;
+            var uri = "external-game-launcher/api/v1/GetLaunchURLHTML";
+            var clientIp = inputs["ClientIP"];
+            var traceId = Guid.NewGuid();
+
+            var extraArgs = new
             {
-                // return game url
-                var gameUrl = tpCustInfo.TpCurrencyId switch
-                {
-                    "THB" => config.GameUrl_THB,
-                    "CNY" => config.GameUrl_CNY,
-                    _ => config.GameUrl
-                };
-                var url = $"{gameUrl}/{gameId}/index.html?l={TpLangId}&btt={betType}&ot={HttpUtility.UrlEncode(operatorToken)}&ops={HttpUtility.UrlEncode(sessionKey)}";
+                btt = betType,
+                ops = HttpUtility.UrlEncode(sessionKey),
+                l = TpLangId
+            };
+            var dicExtraArgs = FromJson<Dictionary<string, string>>(ToJson(extraArgs));
+            var sParamExtraArgs = string.Join("&", dicExtraArgs.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-                oApiResult.ErrorCode = ErrorCode.Success;
-                oApiResult.Message = url;
-            }
-            else
+            var getLaunchUrl = new
             {
-                var apiUrl = config.ApiUrl;
-                var uri = "external-game-launcher/api/v1/GetLaunchURLHTML";
-                var clientIp = inputs["ClientIP"];
-                var traceId = Guid.NewGuid();
-                
-                var extraArgs = new
-                {
-                    btt = betType,
-                    ops = HttpUtility.UrlEncode(sessionKey),
-                    l = TpLangId
-                };
-                var dicExtraArgs = FromJson<Dictionary<string, string>>(ToJson(extraArgs));
-                var sParamExtraArgs = string.Join("&", dicExtraArgs.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+                operator_token = operatorToken,
+                path = HttpUtility.UrlEncode($"/{gameId}/index.html"),
+                extra_args = HttpUtility.UrlEncode(sParamExtraArgs),
+                url_type = "game-entry",
+                client_ip = clientIp
+            };
+            var dicP = FromJson<Dictionary<string, string>>(ToJson(getLaunchUrl));
+            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-                var getLaunchUrl = new
-                {
-                    operator_token = operatorToken,
-                    path = HttpUtility.UrlEncode($"/{gameId}/index.html"),
-                    extra_args = HttpUtility.UrlEncode(sParamExtraArgs),
-                    url_type = "game-entry",
-                    client_ip = clientIp
-                };
-                var dicP = FromJson<Dictionary<string, string>>(ToJson(getLaunchUrl));
-                var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            var result = HttpPostClientWithGzip(
+                $"{apiUrl}/{uri}?trace_id={traceId}",
+                sParam,
+                "application/x-www-form-urlencoded"
+            );
 
-                var result = HttpPostClientWithGzip(
-                    $"{apiUrl}/{uri}?trace_id={traceId}",
-                    sParam,
-                    "application/x-www-form-urlencoded"
-                );
-                
-                oApiResult.ErrorCode = ErrorCode.Success;
-                oApiResult.Message = result;
-            }
-            
+            oApiResult.ErrorCode = ErrorCode.Success;
+            oApiResult.Message = result;
+
             return oApiResult;
         }
 
@@ -158,7 +140,7 @@ namespace ThirdParty.PG
             var secretKey = config.secret_key;
             var uri = $"external/Login/v1/LoginProxy";
 
-            var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_PG_Detail_Get", new { getBetDetail.TransId }, DataBase.Report) 
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_PG_Detail_Get", new { getBetDetail.TransId }, DataBase.Report)
                 ?? throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found.");
 
             var traceId = detail.GetValueOrDefault("TraceId")?.ToString();
