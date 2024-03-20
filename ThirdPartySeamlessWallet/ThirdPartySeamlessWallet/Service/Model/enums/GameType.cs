@@ -100,7 +100,9 @@
         NLC_RNG = 111,
         Amigo_RNG = 112,
         MaxGame_Poker = 113,
-        GA_CockFighting = 115
+        NTConnect_Games = 114,
+        GA_CockFighting = 115,
+        WonCasino_LiveCasino = 116,
     }
 
 }

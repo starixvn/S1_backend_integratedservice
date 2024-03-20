@@ -11,21 +11,23 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string sign { get; set; }
         public string token { get; set; }
     }
-    public class WonCasinoDeduct : WonCasinoBaseRequest
+    public class WonCasinoDeductRequest : WonCasinoBaseRequest
     {
         public decimal amount { get; set; }
         public string serialnumber { get; set; }
         public int type { get; set; }
-        public List<WonCasinoBetsData> bets { get; set; }
+        public string currency { get; set; }
+        public WonCasinoBetsData bets { get; set; }
     }
-    public class WonCasinoDeposit : WonCasinoBaseRequest
+    
+    public class WonCasinoDepositRequest : WonCasinoBaseRequest
     {
         public decimal amount { get; set; }
         public string serialnumber { get; set; }
         public int type { get; set; }
-        public List<WonCasinoBetsData> bets { get; set; }
+        public WonCasinoBetsData bets { get; set; }
     }
-    public class WonCasinoRollBack : WonCasinoBaseRequest
+    public class WonCasinoRollBackRequest : WonCasinoBaseRequest
     {
         public string appid { get; set; } // appid
         public int type { get; set; } // type
@@ -39,21 +41,29 @@ namespace ThirdPartySeamlessWallet.Service.Model
     }
     public class WonCasinoBetsData
     {
-        public decimal id { get; set; } // 注单 ID
-        public string serialnumber { get; set; } // 注单编号
-        public decimal userid { get; set; } // 用户 ID
-        public string username { get; set; } // 用户名称
-        public string gametype { get; set; } // 游戏类型
-        public decimal gameid { get; set; } // 游戏 id
-        public decimal gamerounno { get; set; } // 游戏局编号
-        public string choosebankpoint { get; set; } // 三公选庄
-        public decimal betpoint { get; set; } // 投注点
-        public decimal betamount { get; set; } // 投注金额
-        public decimal winlost { get; set; } // 输赢
-        public decimal commamount { get; set; } // 洗码量
-        public string commratio { get; set; } // 占成字段（主播 id可根据这个传如 ID10001_0.5
-        public DateTime createtime { get; set; } // 创建时间
-        public string state { get; set; } // 订单状态
+        public int gameid { get; set; }
+        public long createtime { get; set; }
+        public int serialnumber { get; set; }
+        public int userstatus { get; set; }
+        public string betpoint { get; set; }
+        public decimal betodds { get; set; }
+        public int userid { get; set; }
+        public decimal commamount { get; set; }
+        public int gameroundid { get; set; }
+        public long settletime { get; set; }
+        public string gameresult { get; set; }
+        public decimal winlost { get; set; }
+        public int gametype { get; set; }
+        public int gamestyle { get; set; }
+        public string currency { get; set; }
+        public int id { get; set; }
+        public long gameroundno { get; set; }
+        public int state { get; set; }
+        public long gameno { get; set; }
+        public int bettype { get; set; }
+        public int cid { get; set; }
+        public decimal betamount { get; set; }
+        public decimal foregift { get; set; }
     }
     #endregion
     #region Response
@@ -88,4 +98,47 @@ namespace ThirdPartySeamlessWallet.Service.Model
     }
     
     #endregion
+    
+    // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse);
+    public class Bets
+    {
+        public int gameid { get; set; }
+        public int createtime { get; set; }
+        public int serialnumber { get; set; }
+        public int userstatus { get; set; }
+        public string betpoint { get; set; }
+        public double betodds { get; set; }
+        public int userid { get; set; }
+        public double commamount { get; set; }
+        public int gameroundid { get; set; }
+        public int settletime { get; set; }
+        public string gameresult { get; set; }
+        public double winlost { get; set; }
+        public int gametype { get; set; }
+        public int gamestyle { get; set; }
+        public string currency { get; set; }
+        public int id { get; set; }
+        public long gameroundno { get; set; }
+        public int state { get; set; }
+        public long gameno { get; set; }
+        public int bettype { get; set; }
+        public int cid { get; set; }
+        public double betamount { get; set; }
+        public double foregift { get; set; }
+    }
+
+    public class Root
+    {
+        public string appid { get; set; }
+        public string username { get; set; }
+        public string notifyid { get; set; }
+        public string amount { get; set; }
+        public string type { get; set; }
+        public string serialnumber { get; set; }
+        public string currency { get; set; }
+        public string sign { get; set; }
+        public Bets bets { get; set; }
+    }
+
+
 }
