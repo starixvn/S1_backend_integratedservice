@@ -64,6 +64,10 @@ namespace ThirdPartyWager.Workers
                     var resultModel = JsonSerializer.Deserialize<GetLiveStreaming>(result.Content.ReadAsStringAsync().Result);
                     await _liveStreamingBll.SetLiveStreaming(resultModel.Match);
                 }
+                else
+                {
+                    _logger.LogError($"{newurl}\r\n{result.StatusCode}\r\n{result.ReasonPhrase}");
+                }
             }
             catch (Exception ex)
             {
