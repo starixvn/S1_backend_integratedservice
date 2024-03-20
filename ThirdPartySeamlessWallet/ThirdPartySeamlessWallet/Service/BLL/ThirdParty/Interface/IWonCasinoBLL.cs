@@ -5,7 +5,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 public interface IWonCasinoBLL
 {
     WonCasinoGetBalanceResponse GetBalance(WonCasinoBaseRequest request);
-    WonCasinoDeductResponse Deduct(WonCasinoDeduct request);
-    WonCasinoDepositResponse Deposit(WonCasinoDeposit request);
-    WonCasinoRollBackResponse RollBack(WonCasinoRollBack request);
+    WonCasinoDeductResponse Deduct(WonCasinoDeductRequest request);
+    WonCasinoDepositResponse Deposit(WonCasinoDepositRequest request);
+    WonCasinoRollBackResponse RollBack(WonCasinoRollBackRequest request);
 }

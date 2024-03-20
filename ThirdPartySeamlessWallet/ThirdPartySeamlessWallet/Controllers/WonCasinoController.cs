@@ -44,7 +44,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         
         [HttpPost]
         [Route("[controller]/api/deduct")]
-        public IActionResult Deduct(WonCasinoDeduct request)
+        public IActionResult Deduct(WonCasinoDeductRequest request)
         {
             var logName = $"{_thisTp}_Deduct";
             var baseResult = BaseResult();
@@ -63,9 +63,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         
         [HttpPost]
         [Route("[controller]/api/deposit")]
-        public IActionResult Deposit(WonCasinoDeposit request)
+        public IActionResult Deposit(WonCasinoDepositRequest request)
         {
-            //Deposit = Settle.
+            //Deposit = Settle
             var logName = $"{_thisTp}_Deposit";
             var baseResult = BaseResult();
             
@@ -83,7 +83,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         
         [HttpPost]
         [Route("[controller]/api/rollback")]
-        public IActionResult RollBack(WonCasinoRollBack request)
+        public IActionResult RollBack(WonCasinoRollBackRequest request)
         {
             var logName = $"{_thisTp}_RollBack";
             var baseResult = BaseResult();

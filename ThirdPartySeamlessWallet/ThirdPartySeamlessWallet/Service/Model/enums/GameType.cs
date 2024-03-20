@@ -102,6 +102,7 @@
         MaxGame_Poker = 113,
         NTConnect_Games = 114,
         GA_CockFighting = 115,
+        WonCasino_LiveCasino = 116,
     }
 
 }

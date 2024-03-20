@@ -1,4 +1,6 @@
-﻿namespace ThirdPartySeamlessWallet.Service.Model.enums;
+﻿using System.ComponentModel;
+
+namespace ThirdPartySeamlessWallet.Service.Model.enums;
 
 public enum WonCasinoTypeEnum
 {
@@ -11,5 +13,18 @@ public enum WonCasinoTypeEnum
 
 public enum WonCasinoErrorCodeEnum
 {
-    Insufficient = -1030,
+    [Description("OK")]
+    Success = 0,
+    [Description("The system is error, please contact")]
+    SystemError = -1000,
+    [Description("Insufficient deduce amount")]
+    InsufficientBalance = -1030,
+    [Description("User does not exist")] 
+    PlayerInvalid = -1012,
+    [Description("User is prohibited")] 
+    PlayerFrozen = -1014,
+    [Description("Sign error")] 
+    SignError = -1007,
 }
+
+
