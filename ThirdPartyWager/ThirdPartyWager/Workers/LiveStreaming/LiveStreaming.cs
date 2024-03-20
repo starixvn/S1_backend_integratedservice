@@ -50,7 +50,7 @@ namespace ThirdPartyWager.Workers
                 var query = HttpUtility.ParseQueryString(builder.Query);
                 query["action"] = "getmatch";
                 query["apiuser"] = "nvc";
-                query["key"] = "lnQzpXfTvn";
+                query["key"] = "c912hnBgf";
                 query["format"] = "JSON";
                 builder.Query = query.ToString();
                 var newurl = builder.ToString();
