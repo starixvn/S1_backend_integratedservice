@@ -61,7 +61,8 @@
         BNG = 57,
         HaoLong = 58,
         NLC = 59,
-        GA = 63
+        GA = 63,
+        WonCasino = 64
     }
     public enum GameType
     {
