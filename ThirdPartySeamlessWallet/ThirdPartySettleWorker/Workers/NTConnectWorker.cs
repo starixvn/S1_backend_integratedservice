@@ -82,14 +82,16 @@ namespace ThirdPartySettleWorker.Workers
                         
                         var unsettled = getUnsettledList.FirstOrDefault(x => x.TransId == wager.TransId);
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
-                        var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
                         
-                        if (tpCurrency.ExchangeRate > 1)
-                        {
-                            unsettled.Stake /= tpCurrency.ExchangeRate;
-                            unsettled.ValidBet /= tpCurrency.ExchangeRate;
-                            unsettled.WinLostAmount /= tpCurrency.ExchangeRate;
-                        }
+                        // 因為93Connect Wager API抓回來的VND跟IDR抓回來的金額已經是加成過的
+                        // 就不用特意在處理 若後續有變更在把註解拿掉。
+                        // var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
+                        // if (tpCurrency.ExchangeRate > 1)
+                        // {
+                        //     unsettled.Stake *= tpCurrency.ExchangeRate;
+                        //     unsettled.ValidBet *= tpCurrency.ExchangeRate;
+                        //     unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
+                        // }
 
                         var transType = unsettled.Status switch
                         {
