@@ -86,9 +86,9 @@ namespace ThirdPartySettleWorker.Workers
                         
                         if (tpCurrency.ExchangeRate > 1)
                         {
-                            unsettled.Stake *= tpCurrency.ExchangeRate;
-                            unsettled.ValidBet *= tpCurrency.ExchangeRate;
-                            unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
+                            unsettled.Stake /= tpCurrency.ExchangeRate;
+                            unsettled.ValidBet /= tpCurrency.ExchangeRate;
+                            unsettled.WinLostAmount /= tpCurrency.ExchangeRate;
                         }
 
                         var transType = unsettled.Status switch
