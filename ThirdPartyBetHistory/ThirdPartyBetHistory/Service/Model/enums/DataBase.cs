@@ -2,7 +2,8 @@
 {
     public enum DataBase
     {
-        Main, //MainDB
-        Report,//ReportDB
+        Main, 
+        Report,
+        ReportBackupDB,
     }
 }

@@ -9,13 +9,13 @@ namespace ThirdPartyWager.Service.DAL
     public class CommonService
     {
         private readonly IEnumerable<ServerInfo> _serverInfos;
-        private readonly MySqlClient _reportDbClient;
+        private readonly MySqlClient _mainDbClient;
         private readonly MySqlClient _wagerDbClient;
 
         public CommonService(IServiceProvider provider)
         {
             _serverInfos = provider.GetRequiredService<IEnumerable<ServerInfo>>();
-            _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
         }
 
@@ -26,11 +26,11 @@ namespace ThirdPartyWager.Service.DAL
 
         public IEnumerable<TpCurrency> GetTpCurrencyList(int tpId)
         {
-            return _reportDbClient.Query<TpCurrency>("Service_TpCurrency_Get", new { TpId = tpId });
+            return _mainDbClient.Query<TpCurrency>("Service_TpCurrency_Get", new { TpId = tpId });
         }
         public IEnumerable<int> GetSiteByTpGameType(int gameType)
         {
-            return _reportDbClient.Query<int>("Service_SiteByTpGameType_Get", new { TpGameType = gameType });
+            return _mainDbClient.Query<int>("Service_SiteByTpGameType_Get", new { TpGameType = gameType });
         }
         public Task<IEnumerable<FincanceDailySummary>> GetWagerSummary(string spName, long beginTime, long endTime)
         {
