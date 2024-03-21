@@ -45,13 +45,6 @@ public class WonCasinoBLL : IWonCasinoBLL
             return getErrorResponse;
         }
         
-        // if (string.IsNullOrEmpty(request.token))
-        // {
-        //     getErrorResponse.result = (int)WonCasinoErrorCodeEnum.PlayerInvalid;
-        //     getErrorResponse.desc = WonCasinoErrorCodeEnum.PlayerInvalid.GetEnumDescription();
-        //     return getErrorResponse;
-        // }
-        
         var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, request.username);
             
         if (tpCheck == null)
@@ -81,13 +74,16 @@ public class WonCasinoBLL : IWonCasinoBLL
     public WonCasinoDeductResponse Deduct(WonCasinoDeductRequest request)
     {
         var logName = $"{_thisTp.ToString()}_Deduct";
+        //OrderNo 由接入方自行生產 隨機8位數字
+        var orderNo = GenerateRandomString(0);
         var getErrorResponse = new WonCasinoDeductResponse()
         {
             result = (int)WonCasinoErrorCodeEnum.SystemError,
             desc = WonCasinoErrorCodeEnum.SystemError.GetEnumDescription(),
             balance = 0.00m,
-            orderno = GenerateRandomString(0)
+            orderno = orderNo
         };
+        
         try
         {
             var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.WonCasino, request.username);
@@ -106,6 +102,16 @@ public class WonCasinoBLL : IWonCasinoBLL
                 return getErrorResponse;
             }
 
+            if (request.type != (int)WonCasinoTypeEnum.Bet)
+            {
+                getErrorResponse.result = (int)WonCasinoErrorCodeEnum.TypeError;
+                getErrorResponse.desc = WonCasinoErrorCodeEnum.TypeError.GetEnumDescription();
+                return getErrorResponse;
+            }
+
+            request.orderno = orderNo;
+            request.TicketType = (int)BettransType.Bet;
+            request.TicketStatus = (int)TicketStatus.UnSettled;
             var result = Deduct_WonCasino(request, out decimal tpAffterAmount);
 
             if (result > 0 || result == -1)
@@ -121,7 +127,7 @@ public class WonCasinoBLL : IWonCasinoBLL
                     result = (int)WonCasinoErrorCodeEnum.Success,
                     desc = WonCasinoErrorCodeEnum.Success.GetEnumDescription(),
                     balance = tpAffterAmount,
-                    orderno = GenerateRandomString(0)
+                    orderno = orderNo
                 };
             }
 
@@ -148,23 +154,45 @@ public class WonCasinoBLL : IWonCasinoBLL
     public WonCasinoDepositResponse Deposit(WonCasinoDepositRequest request)
     {
         var logName = $"{_thisTp.ToString()}_Deposit";
+        var orderNo = GenerateRandomString(0);
         var getErrorResponse = new WonCasinoDepositResponse()
         {
             result = (int)WonCasinoErrorCodeEnum.SystemError,
             desc = WonCasinoErrorCodeEnum.SystemError.GetEnumDescription(),
             balance = 0.00m,
-            orderno = GenerateRandomString(0)
+            orderno = orderNo
         };
-        
-        var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, request.username, _gameType);
-        
-        return new WonCasinoDepositResponse()
+        try
         {
-            result = 0,
-            desc = "OK",
-            balance = tpCustBalance.Balance - Math.Abs(request.bets.betamount),
-            orderno = GenerateRandomString(0)
-        };
+            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, request.username, _gameType);
+
+            request.orderno = orderNo;
+            var result = Deposit_WonCasino(request, out var tpAfterAmount);
+            if (result > 0 || result == -1)
+            {
+                if (tpAfterAmount == 0 || result == -1)
+                { 
+                    tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, request.username, _gameType);
+                    tpAfterAmount = tpCustBalance.Balance;
+                }
+
+                return new WonCasinoDepositResponse()
+                { 
+                    result = 0,
+                    desc = "OK",
+                    balance = tpAfterAmount,
+                    orderno = orderNo
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            _log2File.Error($"{request}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName, ex);
+            return getErrorResponse;
+        }
+        
+        _log2File.Error($"result={getErrorResponse}", logName);
+        return getErrorResponse;
     }
 
     public WonCasinoRollBackResponse RollBack(WonCasinoRollBackRequest request)
@@ -204,9 +232,44 @@ public class WonCasinoBLL : IWonCasinoBLL
             return 0;
         }
         
-        //var result = _bettingService.DeductLC_WonCasino(tpCustInfo, bettingData_WonCasino, out afterAmount);
-        var result = 1;
-        afterAmount = checkBalance;
+        var result = _bettingService.DeductLC_WonCasino(tpCustInfo, bettingData_WonCasino, out afterAmount);
+        if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+        {
+            afterAmount /= tpCurrency.ExchangeRate;
+        }
+        return result;
+    }
+    
+    private int Deposit_WonCasino(WonCasinoDepositRequest settleData_WonCasino, out decimal afterAmount)
+    {
+        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, settleData_WonCasino.username);
+        var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)_thisTp, tpCustInfo.CurrencyId);
+
+        if (tpCurrency.ExchangeRate != 0)
+        {
+            settleData_WonCasino.amount *= tpCurrency.ExchangeRate;
+        }
+        
+        switch (settleData_WonCasino.type)
+        {
+            case (int)WonCasinoTypeEnum.Cancel:
+                settleData_WonCasino.TicketType = (int)BettransType.CancelBet;
+                settleData_WonCasino.TicketStatus = (int)TicketStatus.Refund;
+                break;
+            case (int)WonCasinoTypeEnum.Settle:
+                if (settleData_WonCasino.amount > 0)
+                {
+                    settleData_WonCasino.TicketStatus = (int)TicketStatus.Win;
+                }
+                else
+                {
+                    settleData_WonCasino.TicketStatus = (int)TicketStatus.Lost;
+                }
+                settleData_WonCasino.TicketType = (int)BettransType.Payout;
+                break;
+        }
+        
+        var result = _settledService.Deposit_WonCasino(tpCustInfo, settleData_WonCasino, out afterAmount);
         if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
         {
             afterAmount /= tpCurrency.ExchangeRate;

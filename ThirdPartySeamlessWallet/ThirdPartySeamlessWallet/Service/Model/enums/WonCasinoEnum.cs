@@ -16,7 +16,7 @@ public enum WonCasinoErrorCodeEnum
     [Description("OK")]
     Success = 0,
     [Description("The system is error, please contact")]
-    SystemError = -1000,
+    SystemError = -1001,
     [Description("Insufficient deduce amount")]
     InsufficientBalance = -1030,
     [Description("User does not exist")] 
@@ -25,6 +25,8 @@ public enum WonCasinoErrorCodeEnum
     PlayerFrozen = -1014,
     [Description("Sign error")] 
     SignError = -1007,
+    [Description("Deduct Type is in an illegal state, Please Check.")]
+    TypeError = -1000,
 }
 
 

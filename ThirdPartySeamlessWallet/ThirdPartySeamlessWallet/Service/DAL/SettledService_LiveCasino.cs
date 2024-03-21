@@ -3623,5 +3623,151 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
 
         #endregion
+        
+        #region WonCasino
+        
+        public int Deposit_WonCasino(TpCustInfo tpCustInfo, WonCasinoDepositRequest settleDataLC_WonCasino, out decimal afterAmount)
+        {
+            var bonusId = 0;
+            var tpId = Tp.WonCasino;
+            var tpGameType = GameType.WonCasino_LiveCasino;
+            var category = TpCategory.LiveCasino;
+            var InsSpName = "Service_Bettrans_WonCasino_Ins";
+            var GetSpName = "Service_Bettrans_WonCasino_Get";
+            afterAmount = 0;
+
+            var result = 0;
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var partitionTime = DateTime.Now;
+                var bettrans = _partitionService.Query<BettransWonCasino>(partitionTime, GetSpName, 
+                    new { serialnumber = settleDataLC_WonCasino.serialnumber , username = tpCustInfo.TpUserName });
+                if (!bettrans.Any(i => i.serialnumber == settleDataLC_WonCasino.serialnumber))
+                {
+                    return -2;
+                }
+                
+                if (bettrans.Any(i => i.TicketType != (int)BettransType.Bet))
+                {
+                    return -3;
+                }
+                
+                settleDataLC_WonCasino.username = tpCustInfo.TpUserName;
+                var p = new DynamicParameters(new
+                {
+                    serialnumber = settleDataLC_WonCasino.serialnumber,
+                    username = settleDataLC_WonCasino.username,
+                    notifyid = settleDataLC_WonCasino.notifyid,
+                    amount = settleDataLC_WonCasino.amount,
+                    type = settleDataLC_WonCasino.type,
+                    currency = settleDataLC_WonCasino.currency,
+                    orderno = settleDataLC_WonCasino.orderno,
+                    appid = settleDataLC_WonCasino.appid,
+                    sign = settleDataLC_WonCasino.sign,
+                    gameid = settleDataLC_WonCasino.bets.gameid,
+                    userid = settleDataLC_WonCasino.bets.userid,
+                    userstatus = settleDataLC_WonCasino.bets.userstatus,
+                    betpoint = settleDataLC_WonCasino.bets.betpoint,
+                    betodds = settleDataLC_WonCasino.bets.betodds,
+                    betamount = settleDataLC_WonCasino.bets.betamount,
+                    commamount = settleDataLC_WonCasino.bets.commamount,
+                    winlost = settleDataLC_WonCasino.bets.winlost,
+                    foregift = settleDataLC_WonCasino.bets.foregift,
+                    gamerroundid = settleDataLC_WonCasino.bets.gameroundid,
+                    gameresult = settleDataLC_WonCasino.bets.gameresult,
+                    gametype = settleDataLC_WonCasino.bets.gametype,
+                    gamestyle = settleDataLC_WonCasino.bets.gamestyle,
+                    id = settleDataLC_WonCasino.bets.id,
+                    gameroundno = settleDataLC_WonCasino.bets.gameroundno,
+                    gameno = settleDataLC_WonCasino.bets.gameno,
+                    bettype = settleDataLC_WonCasino.bets.bettype,
+                    cid = settleDataLC_WonCasino.bets.cid,
+                    state = settleDataLC_WonCasino.bets.state,
+                    createtime =  settleDataLC_WonCasino.bets.createtime,
+                    settletime = settleDataLC_WonCasino.bets.settletime,
+                    UTCBetTime = DateTimeOffset.FromUnixTimeSeconds(settleDataLC_WonCasino.bets.createtime).UtcDateTime,
+                    UTCSettleTime = DateTimeOffset.FromUnixTimeSeconds(settleDataLC_WonCasino.bets.settletime).UtcDateTime,
+                    TicketType = settleDataLC_WonCasino.TicketType,
+                    TicketStatus = settleDataLC_WonCasino.TicketType,
+                    SettleFlag = (int)SettleFlag.EndGame
+                });
+                
+                result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
+
+                if (result > 0)
+                {
+                    switch (settleDataLC_WonCasino.type)
+                    {
+                        case (int)WonCasinoTypeEnum.Cancel:
+                            result = PayoutV2(
+                                tpCustInfo,
+                                Math.Abs(settleDataLC_WonCasino.amount),
+                                (int)tpId,
+                                settleDataLC_WonCasino.serialnumber,
+                                (int)tpGameType,
+                                category,
+                                settleDataLC_WonCasino.serialnumber,
+                                TransType.Refunds,
+                                null,
+                                out afterAmount,
+                                "Void",
+                                out bonusId,
+                                conn,
+                                trans,
+                                AllowNegative.Allow
+                            );
+                            break;
+                        case (int)WonCasinoTypeEnum.Settle:
+                            result = PayoutV2(
+                                tpCustInfo,
+                                Math.Abs(settleDataLC_WonCasino.amount),
+                                (int)tpId,
+                                settleDataLC_WonCasino.serialnumber,
+                                (int)tpGameType,
+                                category,
+                                settleDataLC_WonCasino.serialnumber,
+                                TransType.Payout,
+                                null,
+                                out afterAmount,
+                                $"Payout",
+                                out bonusId,
+                                conn,
+                                trans,
+                                AllowNegative.Allow
+                            );
+                            break;
+                    }
+
+
+                    if (result > 0)
+                    {
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+        
+        #endregion
     }
 }

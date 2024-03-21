@@ -9,7 +9,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string username { get; set; }
         public string notifyid { get; set; }
         public string sign { get; set; }
-        public string token { get; set; }
+        public int TicketType { get; set; }
+        public int TicketStatus { get; set; }
+        public int SettleFlag { get; set; }
     }
     public class WonCasinoDeductRequest : WonCasinoBaseRequest
     {
@@ -17,6 +19,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string serialnumber { get; set; }
         public int type { get; set; }
         public string currency { get; set; }
+        public string orderno { get; set; }
         public WonCasinoBetsData bets { get; set; }
     }
     
@@ -25,6 +28,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal amount { get; set; }
         public string serialnumber { get; set; }
         public int type { get; set; }
+        public string currency { get; set; }
+        public string orderno { get; set; }
         public WonCasinoBetsData bets { get; set; }
     }
     public class WonCasinoRollBackRequest : WonCasinoBaseRequest
@@ -66,6 +71,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal foregift { get; set; }
     }
     #endregion
+    
     #region Response
 
     public class WonCasinoBaseResponse
@@ -98,47 +104,22 @@ namespace ThirdPartySeamlessWallet.Service.Model
     }
     
     #endregion
-    
-    // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse);
-    public class Bets
-    {
-        public int gameid { get; set; }
-        public int createtime { get; set; }
-        public int serialnumber { get; set; }
-        public int userstatus { get; set; }
-        public string betpoint { get; set; }
-        public double betodds { get; set; }
-        public int userid { get; set; }
-        public double commamount { get; set; }
-        public int gameroundid { get; set; }
-        public int settletime { get; set; }
-        public string gameresult { get; set; }
-        public double winlost { get; set; }
-        public int gametype { get; set; }
-        public int gamestyle { get; set; }
-        public string currency { get; set; }
-        public int id { get; set; }
-        public long gameroundno { get; set; }
-        public int state { get; set; }
-        public long gameno { get; set; }
-        public int bettype { get; set; }
-        public int cid { get; set; }
-        public double betamount { get; set; }
-        public double foregift { get; set; }
-    }
 
-    public class Root
+    #region DAL
+
+    public class BettransWonCasino : WonCasinoBaseRequest
     {
-        public string appid { get; set; }
-        public string username { get; set; }
-        public string notifyid { get; set; }
-        public string amount { get; set; }
-        public string type { get; set; }
-        public string serialnumber { get; set; }
-        public string currency { get; set; }
-        public string sign { get; set; }
-        public Bets bets { get; set; }
+        public string serialnumber { get; set; } // serialnumber
+        public int type { get; set; }
+        public decimal amount { get; set; }
+        public decimal betamount { get; set; }
+        public decimal winlost { get; set; }
+        public int state { get; set; }
+        public long createtime { get; set; }
+        public long settletime { get; set; }
     }
+    
+    #endregion
 
 
 }
