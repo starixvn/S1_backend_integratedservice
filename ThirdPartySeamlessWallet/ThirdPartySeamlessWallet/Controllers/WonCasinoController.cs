@@ -102,9 +102,13 @@ namespace ThirdPartySeamlessWallet.Controllers
         
         #region private
 
-        private dynamic BaseResult()
+        private WonCasinoBaseResponse BaseResult()
         {
-            return null;
+            return new WonCasinoBaseResponse()
+            {
+                result = (int)WonCasinoErrorCodeEnum.SystemError,
+                desc = WonCasinoErrorCodeEnum.SystemError.GetEnumDescription()
+            };
         }
         
         #endregion
