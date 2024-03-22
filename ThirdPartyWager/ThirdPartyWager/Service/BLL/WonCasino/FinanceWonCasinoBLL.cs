@@ -35,10 +35,8 @@ namespace ThirdPartyWager.Service.BLL
                     CurrencyId = item.CurrencyId,
                     Stake = item.Stake,
                     ValidBet = item.ValidBet,
-                    Payout = item.Stake + item.WinlostAmount,
+                    Payout = item.Payout,
                     WinlostAmount = item.WinlostAmount,
-                    ProgressiveBet = item.ProgressiveBet,
-                    ProgressiveWin = item.ProgressiveWin
                 });
             }
             return dailyData;
