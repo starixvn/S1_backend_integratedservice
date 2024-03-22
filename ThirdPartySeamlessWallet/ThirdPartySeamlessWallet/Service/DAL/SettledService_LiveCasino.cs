@@ -3644,8 +3644,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 var partitionTime = DateTime.Now;
                 var bettrans = _partitionService.Query<BettransWonCasino>(partitionTime, GetSpName, 
-                    new { serialnumber = settleDataLC_WonCasino.serialnumber , username = tpCustInfo.TpUserName });
-                if (!bettrans.Any(i => i.serialnumber == settleDataLC_WonCasino.serialnumber))
+                    new { id = settleDataLC_WonCasino.bets.id , username = tpCustInfo.TpUserName });
+                if (!bettrans.Any(i => i.id == settleDataLC_WonCasino.bets.id))
                 {
                     return -2;
                 }
@@ -3658,7 +3658,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 settleDataLC_WonCasino.username = tpCustInfo.TpUserName;
                 var p = new DynamicParameters(new
                 {
-                    serialnumber = settleDataLC_WonCasino.serialnumber,
+                    id = settleDataLC_WonCasino.bets.id,
                     username = settleDataLC_WonCasino.username,
                     notifyid = settleDataLC_WonCasino.notifyid,
                     amount = settleDataLC_WonCasino.amount,
@@ -3680,7 +3680,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     gameresult = settleDataLC_WonCasino.bets.gameresult,
                     gametype = settleDataLC_WonCasino.bets.gametype,
                     gamestyle = settleDataLC_WonCasino.bets.gamestyle,
-                    id = settleDataLC_WonCasino.bets.id,
+                    serialnumber = settleDataLC_WonCasino.serialnumber,
                     gameroundno = settleDataLC_WonCasino.bets.gameroundno,
                     gameno = settleDataLC_WonCasino.bets.gameno,
                     bettype = settleDataLC_WonCasino.bets.bettype,
