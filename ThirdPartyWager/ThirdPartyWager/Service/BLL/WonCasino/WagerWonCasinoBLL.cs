@@ -22,25 +22,39 @@ namespace ThirdPartyWager.Service.BLL
 
             foreach (var item in setting.CurrencyList)
             {
-                var wagerList = await _apiWonCasinoBLL.GetWagerAsync(item, setting.ApiUrl, startTime, endTime);
+                var page = 1;
+                var totalPage = 1;
 
-                if (wagerList.result == 0)
+                while (page <= totalPage)
                 {
-                    foreach(var wager in wagerList.array)
-                    {
-                        try
-                        {
-                            await _wagerWonCasinoService.InsertWager(wager);
-                        }
-                        catch(Exception ex)
-                        {
-                            msg = $"INSERT_WAGER(serialnumber: {wager.serialnumber}, id: {wager.id}, state: {wager.state} )";
-                            _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(wager)}\r\n{ex.Message}");
-                        }
-                    }
-                }
-            }
+                    //page index從0開始所以-1
+                    var wagerList = await _apiWonCasinoBLL.GetWagerAsync(item, setting.ApiUrl, startTime, endTime, page - 1);
 
+                    if (wagerList.result == 0)
+                    {
+                        foreach (var wager in wagerList.array)
+                        {
+                            try
+                            {
+                                await _wagerWonCasinoService.InsertWager(wager);
+                            }
+                            catch (Exception ex)
+                            {
+                                msg = $"INSERT_WAGER(serialnumber: {wager.serialnumber}, id: {wager.id}, state: {wager.state} )";
+                                _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(wager)}\r\n{ex.Message}");
+                            }
+                        }
+
+                        //1個page取2000筆注單資料
+                        totalPage = (wagerList.total / 2000) + 1;
+                        page++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }                   
+            }
         }
     }
 }

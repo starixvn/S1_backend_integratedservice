@@ -1,6 +1,5 @@
 ﻿using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.BLL.WonCasino;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -71,17 +70,23 @@ namespace ThirdPartyWager.Workers
                 // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
 
-                // default time
-                var execTime = new ThirdPartyTimerModel
+                if (dataTpTimer == null)
                 {
-                    TpId = _tpId,
-                    Type = _tpType,
-                    StartTime = (dataTpTimer == null) ? DateTime.Now.AddDays(-5) : dataTpTimer.StartTime.AddSeconds(1),
-                };
+                    dataTpTimer = new ThirdPartyTimerModel()
+                    {
+                        TpId = _tpId,
+                        Type = _tpType,
+                        StartTime = DateTime.Now.AddDays(-5),
+                    };
+                }
+                else
+                {
+                    dataTpTimer.StartTime = dataTpTimer.StartTime.AddSeconds(1);
+                }
 
                 // get time 
                 var day = 0;
-                var reportTime = _financeWonCasinoBLL.GetReportTime(execTime.StartTime, day);
+                var reportTime = _financeWonCasinoBLL.GetReportTime(dataTpTimer.StartTime, day);
 
                 // report
                 var reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);

@@ -37,14 +37,13 @@ namespace ThirdPartyWager.Workers
         }
 
         private async void DoTask(object state)
-        {
+         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
 
             try
             {
                 var time = _dateTimeHelper.GetTimeByMinuteRevert(iRangMins, timeZone, _timeFormat, DateTime.UtcNow);
-
                 var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
                 foreach (var site in siteList)
                 {

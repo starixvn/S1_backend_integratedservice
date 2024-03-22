@@ -20,14 +20,12 @@ namespace ThirdPartyWager.Service.BLL
             _log2File = provider.GetRequiredService<Log2File>();
         }
 
-        public async Task<WagerWonCasinoModel> GetWagerAsync(WonCasinoCurrency currencySetting, string apiUrl, long startTime, long endTime)
+        public async Task<WagerWonCasinoModel> GetWagerAsync(WonCasinoCurrency currencySetting, string apiUrl, long startTime, long endTime, int index)
         {
             var tmpUrl = $"{apiUrl}/api/record/bets/detail";
-            //var startDate = DateTime.Parse(startTime).ToString("yyyy-MM-dd HH:mm:ss");
-            //var endDate = DateTime.Parse(endTime).ToString("yyyy-MM-dd HH:mm:ss");
             SortedDictionary<string, string> paraDic = new SortedDictionary<string, string>();
             paraDic.Add("appid", currencySetting.AppId);
-            paraDic.Add("index", "0");
+            paraDic.Add("index", index.ToString());
             paraDic.Add("size", "2000");
             paraDic.Add("begintime", startTime.ToString());
             paraDic.Add("endtime", endTime.ToString());
