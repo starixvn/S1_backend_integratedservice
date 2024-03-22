@@ -114,6 +114,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal amount { get; set; }
         public decimal betamount { get; set; }
         public decimal winlost { get; set; }
+        public string serialnumber { get; set; }
         public int state { get; set; }
         public long createtime { get; set; }
         public long settletime { get; set; }
