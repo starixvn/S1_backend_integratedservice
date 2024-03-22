@@ -3691,7 +3691,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     UTCBetTime = DateTimeOffset.FromUnixTimeSeconds(settleDataLC_WonCasino.bets.createtime).UtcDateTime,
                     UTCSettleTime = DateTimeOffset.FromUnixTimeSeconds(settleDataLC_WonCasino.bets.settletime).UtcDateTime,
                     TicketType = settleDataLC_WonCasino.TicketType,
-                    TicketStatus = settleDataLC_WonCasino.TicketType,
+                    TicketStatus = settleDataLC_WonCasino.TicketStatus,
                     SettleFlag = (int)SettleFlag.EndGame
                 });
                 
