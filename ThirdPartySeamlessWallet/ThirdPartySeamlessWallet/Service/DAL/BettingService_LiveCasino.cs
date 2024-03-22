@@ -1048,8 +1048,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var partitionTime = DateTimeOffset.FromUnixTimeSeconds(bettingDataLC_WonCasino.bets.createtime).DateTime;
                 // 檢查是否重複
                 var bettrans = _partitionService.Query<BettransWonCasino>(partitionTime, CheckSpName, 
-                    new { serialnumber = bettingDataLC_WonCasino.serialnumber , username = tpCustInfo.TpUserName });
-                if (bettrans.Any(i => i.TicketType == (int)BettransType.Bet && i.serialnumber == bettingDataLC_WonCasino.serialnumber))
+                    new { id = bettingDataLC_WonCasino.bets.id , username = tpCustInfo.TpUserName });
+                if (bettrans.Any(i => i.TicketType == (int)BettransType.Bet && i.id == bettingDataLC_WonCasino.bets.id))
                 {
                     return -1;
                 }
@@ -1057,7 +1057,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 bettingDataLC_WonCasino.username = tpCustInfo.TpUserName;
                 var p = new DynamicParameters(new
                 {
-                    serialnumber = bettingDataLC_WonCasino.serialnumber,
+                    id = bettingDataLC_WonCasino.bets.id,
                     username = bettingDataLC_WonCasino.username,
                     notifyid = bettingDataLC_WonCasino.notifyid,
                     amount = bettingDataLC_WonCasino.amount,
@@ -1079,7 +1079,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     gameresult = bettingDataLC_WonCasino.bets.gameresult,
                     gametype = bettingDataLC_WonCasino.bets.gametype,
                     gamestyle = bettingDataLC_WonCasino.bets.gamestyle,
-                    id = bettingDataLC_WonCasino.bets.id,
+                    serialnumber = bettingDataLC_WonCasino.serialnumber,
                     gameroundno = bettingDataLC_WonCasino.bets.gameroundno,
                     gameno = bettingDataLC_WonCasino.bets.gameno,
                     bettype = bettingDataLC_WonCasino.bets.bettype,
