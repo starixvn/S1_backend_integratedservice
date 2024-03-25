@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace ThirdPartyWager.Service.Model
+﻿namespace ThirdPartyWager.Service.Model
 {
     public class GetSabaOddsJson
     {
@@ -77,5 +75,11 @@ namespace ThirdPartyWager.Service.Model
         public string h { get; set; }
         public string o { get; set; }
         public string u { get; set; }
+    }
+
+    public class HotEventInfo
+    {
+        public int MatchId { get; set; }
+        public int GameId { get; set; }
     }
 }

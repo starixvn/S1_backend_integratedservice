@@ -1,12 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -18,6 +14,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<WagerSABLL> _logger;
         private readonly MySqlClient _wagerDbClient;
         private readonly TpUnsettleService _tpUnsettleService;
+        private readonly SAConfig _siteConfig;
 
         public WagerSABLL(IServiceProvider provider)
         {
@@ -27,19 +24,19 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<WagerSABLL>>();
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SAConfig>(Tp.SA.ToString());
         }
 
         public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime)
         {
             var msg = "FATAL_ERROR";
-            var guid = Guid.NewGuid().ToString();
+
             try
             {
-                // get api info
-                var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
+                var setting = _siteConfig;
 
                 // get wager
-                var dataWager = await _apiSABLL.GetBetListByTime(setting["WagerUrl"], setting["EncrypKey"], setting["MD5Key"], setting["SecretKey"], startTime, endTime, guid);
+                var dataWager = await _apiSABLL.GetBetListByTime(setting, startTime, endTime);
 
                 // error condition
                 var errorCode = dataWager.GetAllBetDetailsForTimeIntervalResponse?.ErrorMsgId ?? dataWager.APIResponse.ErrorMsgId;
@@ -88,6 +85,9 @@ namespace ThirdPartyWager.Service.BLL
                         _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(group)}\r\n{ex.Message}");
                         return false;
                     }
+
+                    await conn.CloseAsync();
+                    await conn.DisposeAsync();
                 }
 
                 msg = "FINISH";

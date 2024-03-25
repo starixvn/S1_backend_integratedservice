@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Service.BLL.MG
+namespace ThirdPartyWager.Service.BLL
 {
     public class MGBLL : IMGBLL
     {
@@ -54,6 +48,7 @@ namespace ThirdPartyWager.Service.BLL.MG
                             currency = currency.TpCurrencyId,
                             txnId = transaction.txnId,
                             creationTime = DateTime.UtcNow.Ticks,
+                            creationTimeMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                             contentCode = transaction.contentCode,
                             betId = transaction.betId,
                             completed = transaction.completed,

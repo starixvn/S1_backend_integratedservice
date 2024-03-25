@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using ThirdPartyWager.Service.Library;
+﻿using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -21,7 +14,7 @@ namespace ThirdPartyWager.Service.DAL
         }
         public async Task<int> SetLiveStreaming(IEnumerable<LiveStreamingJson> liveStreaming)
         {
-            return await _mySqlClient.ExecuteAsync("Service_LiveStreaming_Set_V2", liveStreaming );
+            return await _mySqlClient.ExecuteAsync("Service_LiveStreaming_Set_V2", liveStreaming);
         }
         public int TruncateLiveStreaming()
         {

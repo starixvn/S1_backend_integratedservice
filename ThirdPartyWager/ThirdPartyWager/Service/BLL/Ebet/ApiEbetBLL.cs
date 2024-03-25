@@ -1,10 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿using System.Text;
+
 using Newtonsoft.Json;
-using System;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -18,6 +15,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Log2File _log2File;
         private readonly ILogger<ApiEbetBLL> _logger;
         private readonly string _tpName = Tp.EBet.ToString();
+        private readonly EBetConfig _siteEBetConfig;
 
         public ApiEbetBLL(IServiceProvider provider)
         {
@@ -25,15 +23,17 @@ namespace ThirdPartyWager.Service.BLL
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<ApiEbetBLL>>();
+            _siteEBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<EBetConfig>(_tpName);
         }
 
-        public async Task<CurrencyStats_Ebet> GetBetSummaryByTime(dynamic setting, string currency, string startTime, string endTime)
+        public async Task<CurrencyStats_Ebet> GetBetSummaryByTime(string currency, string startTime, string endTime)
         {
-            var apiUrl = setting[$"ApiUrl_{currency}"];
-            var channelId = setting[$"ChannelId_{currency}"];
-            var privateKey = setting[$"PrivateKey_{currency}"];
+            var currencyConfig = _siteEBetConfig.Currency.FirstOrDefault(x => x.CurrencyId == currency);
+            var apiUrl = _siteEBetConfig.ApiUrl;
+            var channelId = currencyConfig.ChannelId;
+            var privateKey = currencyConfig.PrivateKey;
             var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
-            
+
             // param
             var url = $"{apiUrl}/api/userbetsummary";
             var param = new
@@ -74,5 +74,24 @@ namespace ThirdPartyWager.Service.BLL
 
             return result;
         }
+
+        #region Model
+        
+        public class EBetConfig
+        {
+            public string ApiUrl { get; set; }
+            public List<Currency> Currency { get; set; }
+        }
+        
+        public class Currency
+        {
+            public string CurrencyId { get; set; }
+            public string GameUrl { get; set; }
+            public int ChannelId { get; set; }
+            public string PublicKey { get; set; }
+            public string PrivateKey { get; set; }
+        }
+
+        #endregion 
     }
 }

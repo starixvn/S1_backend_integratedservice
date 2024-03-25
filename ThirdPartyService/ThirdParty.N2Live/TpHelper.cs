@@ -1,11 +1,8 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
+﻿using Microsoft.Extensions.DependencyInjection;
 using System.Text;
 using System.Web;
-using System.Xml;
-using System.Xml.Serialization;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -16,46 +13,11 @@ namespace ThirdParty.N2Live
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly Dictionary<int, Dictionary<string, string>> _siteConfigDic;
 
-        public class LoginRequest
+        public TpHelper(IServiceProvider provider)
         {
-            public LoginReq request { get; set; }
-        }
-
-        public class LoginReq
-        {
-            public string action { get; set; }
-            public string id { get; set; }
-            public string userid { get; set; }
-            public int vendorid { get; set; }
-            public string sessiontoken { get; set; }
-            public string clientip { get; set; }
-            public string timestamp { get; set; }
-
-        }
-
-        public class LoginResult
-        {
-            public string source { get; set; }
-            public int status { get; set; }
-            public LoginRes result { get; set; }
-
-        }
-
-        public class LoginRes
-        {
-            public string action { get; set; }
-            public string id { get; set; }
-            public string userid { get; set; }
-            public string username { get; set; }
-            public string acode { get; set; }
-            public int currencyid { get; set; }
-            public decimal balance { get; set; }
-            public int vendorid { get; set; }
-            public string merchantpasscode { get; set; }
-            public string sessiontoken { get; set; }
-            public string clientip { get; set; }
-
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(TpEnum.N2Live.ToString());
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -86,10 +48,10 @@ namespace ThirdParty.N2Live
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception("GameUrl");
-            string MobileUrl = inputs.ContainsKey("MobileUrl") && !string.IsNullOrEmpty(inputs["MobileUrl"]) ? inputs["MobileUrl"] : throw new Exception("MobileUrl");
-            string MerchantCode = inputs.ContainsKey("MerchantCode") && !string.IsNullOrEmpty(inputs["MerchantCode"]) ? inputs["MerchantCode"] : throw new Exception("MerchantCode");
-            //string errorUrl = inputs.ContainsKey("errorUrl") && !string.IsNullOrEmpty(inputs["errorUrl"]) ? inputs["errorUrl"] : "errorUrl";
+            var siteConfig = _siteConfigDic[tpCustInfo.SiteId];
+            string GameUrl = siteConfig.ContainsKey("GameUrl") && !string.IsNullOrEmpty(siteConfig["GameUrl"]) ? siteConfig["GameUrl"] : throw new Exception("GameUrl");
+            string MobileUrl = siteConfig.ContainsKey("MobileUrl") && !string.IsNullOrEmpty(siteConfig["MobileUrl"]) ? siteConfig["MobileUrl"] : throw new Exception("MobileUrl");
+            string MerchantCode = siteConfig.ContainsKey("MerchantCode") && !string.IsNullOrEmpty(siteConfig["MerchantCode"]) ? siteConfig["MerchantCode"] : throw new Exception("MerchantCode");
 
             var key = ApplyToken(tpCustInfo);
             inputs.TryGetValue("Token", out string token);
@@ -105,7 +67,6 @@ namespace ThirdParty.N2Live
 
             ApiResult oApiResult = new ApiResult();
             oApiResult.ErrorCode = ErrorCode.Success;
-            //oApiResult.Message = $"{LoginUrl}/SingleLogin?merchantcode={MerchantCode}&lang={TpLangId}&userId={tpCustInfo.TpUserName}&uuId={HttpUtility.UrlEncode(sessionKey)}&redirectURL={errorUrl}";
             oApiResult.Message = $"{LoginUrl}/SingleLogin?merchantcode={MerchantCode}&lang={TpLangId}&userId={tpCustInfo.TpUserName}&uuId={HttpUtility.UrlEncode(sessionKey)}";
             return oApiResult;
         }
@@ -175,7 +136,7 @@ namespace ThirdParty.N2Live
             };
         }
 
-        private DeviceType GetDeviceType(string device)
+        private static DeviceType GetDeviceType(string device)
         {
             switch (device)
             {
@@ -195,7 +156,7 @@ namespace ThirdParty.N2Live
             }
         }
 
-        private string GetGameName(string gameCode)
+        private static string GetGameName(string gameCode)
         {
             return gameCode switch
             {
@@ -225,6 +186,8 @@ namespace ThirdParty.N2Live
                 "400002" => "Free Pick San Gong Non-Commission",
                 "400004" => "Fortune Koi Non-Commission",
                 "500002" => "Andar Bahar Non-Commission",
+                "500101" => "Teen Patti",
+                "510101" => "RNG Patti",
                 "990000" => "Slot Game",
                 _ => gameCode,
             };

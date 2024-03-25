@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace ThirdPartyWager.Service.Model
+﻿namespace ThirdPartyWager.Service.Model
 {
     public class CurrencyStats_JILI
     {
@@ -19,6 +17,19 @@ namespace ThirdPartyWager.Service.Model
         public string Currency { get; set; }
 
     }
-    
-}
 
+    public class JILIConfig
+    {
+        public string ApiUrl { get; set; }
+        public string GameUrl { get; set; }
+        public string AgentId { get; set; }
+        public string AgentKey { get; set; }
+        public string Password { get; set; }
+        public string Username { get; set; }
+        public string FunGameUrl { get; set; }
+        public string AgentId_Stream { get; set; }
+        public string Password_Stream { get; set; }
+        public string Username_Stream { get; set; }
+    }
+
+}

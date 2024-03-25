@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -40,6 +41,11 @@ namespace ThirdPartyWager.Service.BLL
 
             foreach (var item in getReportData)
             {
+                if (!_isoCodeList.ContainsKey(item.currency))
+                {
+                    continue;
+                }
+
                 dailyData.Add(new FincanceDailySummary()
                 {
                     SummaryType = SummaryType.TpBetRecord,

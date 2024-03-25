@@ -1,9 +1,12 @@
 ﻿using Newtonsoft.Json;
+
 using Serilog.Context;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -96,15 +99,15 @@ namespace ThirdPartySettleWorker.Workers
                         if (wager.Stake != bettrans.Sum(x => x.Stake) || wager.WinLostAmount != bettrans.Sum(x => x.WinLostAmount))
                         {
                             LogContext.PushProperty("TP", _tpName);
-                            _logger.LogError($"amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}\r\n", logName);
+                            _logger.LogWarning($"amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}");
                             continue;
                         }
 
-                        decimal stake = wager.Stake;
-                        decimal validBet = wager.ValidBet;
-                        decimal winLostAmount = wager.WinLostAmount;
-
-                        BetRecordInfo betRecordInfo = new BetRecordInfo
+                        var stake = wager.Stake;
+                        var validBet = wager.ValidBet;
+                        var winLostAmount = wager.WinLostAmount;
+                        var gameId = wager.GameCode.ToString();
+                        var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
                             Stake = stake,
@@ -115,9 +118,10 @@ namespace ThirdPartySettleWorker.Workers
                             TpUserName = tpUserName,
                             SettledTime = wager.SettleTime,
                             TransTime = wager.TransTime,
-                            SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, wager.GameCode.ToString()),
+                            SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, gameId),
                             ProgressiveBet = wager.ProgressiveBet,
                             ProgressiveWin = wager.ProgressiveWin,
+                            GameID = gameId,
                         };
 
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);

@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 using System.Web;
 using System.Xml.Linq;
+
+using Microsoft.Extensions.DependencyInjection;
+
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -15,6 +16,13 @@ namespace ThirdParty.BTI
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly Dictionary<int, TpSiteConfig> tpSiteConfigs;
+
+        public TpHelper(IServiceProvider provider)
+        {
+            tpSiteConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<TpSiteConfig>(TpEnum.BTI.ToString());
+        }
+
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -42,15 +50,14 @@ namespace ThirdParty.BTI
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var GameUrl = inputs.ContainsKey($"GameUrl") && !string.IsNullOrEmpty(inputs[$"GameUrl"])
-                ? inputs[$"GameUrl"] : throw new Exception($"GameUrl is empty");
+            var gameUrl = tpSiteConfigs[tpCustInfo.SiteId].GameUrl;
             var fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
             if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
             {
                 return new ApiResult()
                 {
                     ErrorCode = ErrorCode.Success,
-                    Message = $"{GameUrl}/{TpLangId}/"
+                    Message = $"{gameUrl}/{TpLangId}/"
                 };
             }
 
@@ -64,10 +71,13 @@ namespace ThirdParty.BTI
             var homeUrl = inputs.ContainsKey($"homeUrl") && !string.IsNullOrEmpty(inputs[$"homeUrl"])
                ? inputs[$"homeUrl"] : "";
             var api = HttpUtility.UrlEncode($"{host}/btisport.js");
+            //桌機亞洲版 後面加/vi/asian-view/ 桌機歐洲版 後面加/vi/sports
+            var view = (appType == AppType.Desktop) ? "/asian-view" : "";
+
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Success,
-                Message = $"{GameUrl}/{TpLangId}/?operatorToken={sessionKey}&api={api}&home_url={homeUrl}",
+                Message = $"{gameUrl}/{TpLangId}{view}?operatorToken={sessionKey}&api={api}&home_url={homeUrl}",
                 RawMessage = sessionKey
             };
         }
@@ -145,7 +155,7 @@ namespace ThirdParty.BTI
                 DeviceType = DeviceType.None,
                 IP = string.Empty,
                 Odds = decimal.TryParse(selection.Attribute("OddsInUserStyle").Value, out var odds) ? odds : 0,
-                OddsTypeEnum = GetOddsType(selection.Attribute("UserOddStyle").Value),  
+                OddsTypeEnum = GetOddsType(selection.Attribute("UserOddStyle").Value),
                 Live = selection.Attribute("IsLive").Value,
             };
         }

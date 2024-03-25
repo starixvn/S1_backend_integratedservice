@@ -1,38 +1,48 @@
-﻿using Dapper;
-using Microsoft.Extensions.Configuration;
-using MySql.Data.MySqlClient;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Data;
+
+using Dapper;
+
+using ThirdPartyCore.Model.enums;
+
+using ThirdPartyService.Service.Library;
 
 namespace ThirdPartyService.Service.DAL
 {
     public class AuthService
     {
-        private readonly IConfiguration configuration;
-        public AuthService(IConfiguration configuration)
+        private readonly MySqlClient _mainDbClient;
+
+        public AuthService(IServiceProvider provider)
         {
-            this.configuration = configuration;
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
-        public int ApplyToken(string Key, string Value, int Expiry)
+
+        public int ApplyToken(string key, string value, int expiry)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Execute("Common_AuthToken_Ins", new { Token = Key, PermissionData = Value, Expiry = Expiry }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Execute("Common_AuthToken_Ins", new { Token = key, PermissionData = value, Expiry = expiry });
         }
-        public string Authenticate(string Key)
+
+        public string Authenticate(string key)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            var p = new DynamicParameters(new { Token = Key });
-            p.Add("PermissionData", dbType: DbType.String, direction: ParameterDirection.Output);
-            int result = 0;
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
-            result = conn.Execute("Common_AuthToken_Sel", p, trans, commandType: CommandType.StoredProcedure);
+
+            var p = new DynamicParameters(new { Token = key });
+            p.Add("PermissionData", dbType: DbType.String, direction: ParameterDirection.Output);
+            _mainDbClient.Execute("Common_AuthToken_Sel", trans, p);
+
             trans.Commit();
-            string permissionData = p.Get<string>("PermissionData");
+            conn.Close();
+            conn.Dispose();
+
+            var permissionData = p.Get<string>("PermissionData");
             return permissionData;
+        }
+
+        public int UpdateTpToken(string token, string tpToken)
+        {
+            return _mainDbClient.Execute("Common_AuthToken_TpToken_Set", new { Token = token, TpToken = tpToken });
         }
     }
 }

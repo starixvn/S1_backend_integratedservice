@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using ThirdPartySeamlessWallet.Service.Model;
+﻿using ThirdPartySeamlessWallet.Service.Model;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface
 {
@@ -9,5 +8,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface
         Task<AMBSlotBetResponse> SlotBet(AMBSlotBetRequest request);
         Task<AMBSlotPayoutResponse> SlotPayout(AMBSlotPayoutRequest request);
         Task<AMBSlotCancelResponse> SlotCancel(AMBSlotCancelRequest request);
+        Task<AMBSlotSettleResponse> SlotSettle(AMBSlotSettleRequest request);
     }
 }

@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 using System.Web;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ThirdPartySeamlessWallet.Service.BLL;
@@ -20,40 +13,28 @@ namespace ThirdPartySeamlessWallet.Controllers
     [ApiController]
     public class CQ9Controller : ControllerBase
     {
-        private readonly AuthBLL authBLL;
-        private readonly ILogger<CQ9Controller> logger;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly TpCustInfoBLL tpCustInfoBLL;
-        private readonly BettingBLL bettingBLL;
-        private readonly SettledBLL settledBLL;
-        private readonly Log2File log2File;
-        private readonly Tp thisTp;
-        private readonly string tpGameName;
-        private readonly int gameType = 0;
-        private readonly IHostEnvironment environment;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly BettingBLL _bettingBLL;
+        private readonly SettledBLL _settledBLL;
+        private readonly Log2File _log2File;
+        private readonly Tp _thisTp;
+        private readonly string _tpGameName;
+        private readonly IHostEnvironment _environment;
+        private readonly Dictionary<string, string> _siteConfig;
 
-        public CQ9Controller(
-            IHostEnvironment environment,
-            ILogger<CQ9Controller> logger,
-            AuthBLL authBLL,
-            ThirdPartyBLL thirdPartyBLL,
-            TpCustInfoBLL tpCustInfoBLL,
-            BettingBLL bettingBLL,
-            SettledBLL settledBLL,
-            Log2File log2File
-        )
+        public CQ9Controller(IServiceProvider provider)
         {
-            this.authBLL = authBLL;
-            this.logger = logger;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.tpCustInfoBLL = tpCustInfoBLL;
-            this.bettingBLL = bettingBLL;
-            this.settledBLL = settledBLL;
-            this.log2File = log2File;
-            this.thisTp = Tp.CQ9;
-            //gameType = (int)GameType.CQ9_RNG;
-            tpGameName = "CQ9";
-            this.environment = environment;
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _bettingBLL = provider.GetRequiredService<BettingBLL>();
+            _settledBLL = provider.GetRequiredService<SettledBLL>();
+            _log2File = provider.GetRequiredService<Log2File>();
+            _environment = provider.GetRequiredService<IHostEnvironment>();
+            _thisTp = Tp.CQ9;
+            _tpGameName = "CQ9";
+            // 取共用，設定依機器分為(nova、aiking)
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(_thisTp.ToString());
         }
 
         public class Payload
@@ -228,53 +209,53 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/player/check/{account}")]
         public CheckPlayerResp CheckPlayer(string account, [FromQuery] GetHeader getHeader)
         {
-            string logName = $"{tpGameName}_CheckPlayer";
-            log2File.Info($"account={account}\r\n{JsonConvert.SerializeObject(getHeader)}", logName);
-            CheckPlayerResp checkPlayerResp = new CheckPlayerResp();
-            checkPlayerResp.status = new GameResponse();
+            string logName = $"{_tpGameName}_CheckPlayer";
+            CheckPlayerResp checkPlayerResp = new()
+            {
+                status = new GameResponse()
+            };
 
             // check param
             if (getHeader.wtoken == null)
             {
                 checkPlayerResp.status.code = "1003";
                 checkPlayerResp.status.message = "Error : param invalid";
-                checkPlayerResp.status.datetime = getCurrentGameTime();
+                checkPlayerResp.status.datetime = GetCurrentGameTime();
                 checkPlayerResp.data = false;
-                log2File.Error($"account={account}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
+                _log2File.Error($"account={account}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
                 return checkPlayerResp;
             }
 
             // check key
-            var tokenCurrency = getTokenCurrency(HttpUtility.UrlDecode(getHeader.wtoken));
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            if (thirdPartySetting.TpSetting[$"API_Token_{tokenCurrency}"] != HttpUtility.UrlDecode(getHeader.wtoken))
+            var tokenCurrency = GetTokenCurrency(HttpUtility.UrlDecode(getHeader.wtoken));
+            if (!CheckToken(HttpUtility.UrlDecode(getHeader.wtoken), tokenCurrency))
             {
                 checkPlayerResp.status.code = "1100";
                 checkPlayerResp.status.message = "Error : wtoken";
-                checkPlayerResp.status.datetime = getCurrentGameTime();
+                checkPlayerResp.status.datetime = GetCurrentGameTime();
                 checkPlayerResp.data = false;
-                log2File.Error($"account={account}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
+                _log2File.Error($"account={account}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
                 return checkPlayerResp;
             }
 
             // check user (exist status online)
-            var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, account);
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, account);
             if (tpCheck == null || tpCheck.Locked)
             {
                 checkPlayerResp.status.code = "0";
                 checkPlayerResp.status.message = "Success";
-                checkPlayerResp.status.datetime = getCurrentGameTime();
+                checkPlayerResp.status.datetime = GetCurrentGameTime();
                 checkPlayerResp.data = false;
-                log2File.Error($"account={account}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
+                _log2File.Error($"account={account}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
                 return checkPlayerResp;
             }
 
             checkPlayerResp.status.code = "0";
             checkPlayerResp.status.message = "Success";
-            checkPlayerResp.status.datetime = getCurrentGameTime();
+            checkPlayerResp.status.datetime = GetCurrentGameTime();
             checkPlayerResp.data = true;
 
-            log2File.Info($"account={account}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
+            _log2File.Info($"account={account}\r\n{JsonConvert.SerializeObject(checkPlayerResp)}", logName);
             return checkPlayerResp;
         }
 
@@ -282,13 +263,11 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/transaction/balance/{account}")]
         public GetApiResp Balance(string account, string gamecode, [FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getBalanceReq)
         {
-            string logName = $"{tpGameName}_Balance";
-            var json = JsonConvert.SerializeObject(getBalanceReq);
-            log2File.Info($"account={account}\r\nwtoken={wtoken}\r\n{gamecode}\r\n{json}", logName);
-            var balanceReq = JsonConvert.DeserializeObject<GetBalanceReq>(json);
+            string logName = $"{_tpGameName}_Balance";
+            _log2File.Info($"account={account}\r\nwtoken={wtoken}\r\n{gamecode}", logName);
 
-            GetApiResp getBalanceResp = new GetApiResp();
-            getBalanceResp.status.datetime = getCurrentGameTime();
+            GetApiResp getBalanceResp = new();
+            getBalanceResp.status.datetime = GetCurrentGameTime();
             getBalanceResp.data = null;
 
             // check param
@@ -296,47 +275,36 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getBalanceResp.status.code = "1003";
                 getBalanceResp.status.message = "Error : param invalid";
-                log2File.Error($"account={account}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
+                _log2File.Error($"account={account}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
                 return getBalanceResp;
             }
 
-            //// check key
-            //var tokenCurrency = getTokenCurrency(wtoken);
-            //var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            //if (thirdPartySetting.TpSetting[$"API_Token_{tokenCurrency}"] != wtoken)
-            //{
-            //    getBalanceResp.status.code = "1100";
-            //    getBalanceResp.status.message = "Error : wtoken";
-            //    log2File.Error($"account={account}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
-            //    return getBalanceResp;
-            //}
-
             // check user (exist status online)
-            var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, account);
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, account);
             if (tpCheck == null)
             {
                 // check player account exist
-                var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, account);
+                var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, account);
                 if (tpCustInfo == null)
                 {
                     getBalanceResp.status.code = "1006";
                     getBalanceResp.status.message = "Error : account not found";
-                    log2File.Error($"account={account}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
+                    _log2File.Error($"account={account}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
                     return getBalanceResp;
                 }
             }
 
             // player offline return balance 0 others return cache balance
-            var gameType = thirdPartyBLL.GetGameType((int)thisTp, gamecode);
-            var tpCustBalance = (environment.IsDevelopment()) ? tpCustInfoBLL.GetBalance((int)thisTp, account, (int)gameType) : tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, account, (int)gameType);
+            var gameType = string.IsNullOrEmpty(gamecode) ? 0 : _thirdPartyBLL.GetGameType((int)_thisTp, gamecode);
+            var tpCustBalance = (_environment.IsDevelopment()) ? _tpCustInfoBLL.GetBalance((int)_thisTp, account, (int)gameType) : _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, account, (int)gameType);
             getBalanceResp.data = new BalanceData();
             getBalanceResp.status.code = "0";
             getBalanceResp.status.message = "Success";
-            getBalanceResp.status.datetime = getCurrentGameTime();
+            getBalanceResp.status.datetime = GetCurrentGameTime();
             getBalanceResp.data.balance = (tpCheck == null) ? 0 : tpCustBalance.Balance;
             getBalanceResp.data.currency = tpCustBalance.TpCurrencyId;
 
-            log2File.Info($"account={account}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
+            _log2File.Info($"account={account}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
             return getBalanceResp;
         }
 
@@ -344,9 +312,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/transaction/game/bet")]
         public GetApiResp Bet([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getBetReq)
         {
-            string logName = $"{tpGameName}_Bet";
+            string logName = $"{_tpGameName}_Bet";
             var json = JsonConvert.SerializeObject(getBetReq);
-            log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
+            _log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
             var betReq = JsonConvert.DeserializeObject<BettingDataRNG_CQ9>(json);
 
             /*** TEST ***/
@@ -360,10 +328,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             //}
             /*** TEST ***/
 
-            GetApiResp getBetResp = new GetApiResp();
+            GetApiResp getBetResp = new();
             getBetResp.status.code = "1100";
             getBetResp.status.message = "Error";
-            getBetResp.status.datetime = getCurrentGameTime();
+            getBetResp.status.datetime = GetCurrentGameTime();
             getBetResp.data = null;
 
             if (betReq.amount <= 0)
@@ -371,7 +339,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 // 當amount不得為負值為負值時則反回錯誤編碼1003
                 getBetResp.status.code = "1003";
                 getBetResp.status.message = "Error : insufficient amount";
-                log2File.Error($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                 return getBetResp;
             }
 
@@ -380,55 +348,54 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getBetResp.status.code = "1003";
                 getBetResp.status.message = "Error : param invalid";
-                log2File.Error($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                 return getBetResp;
             }
 
-            long chkEventTimeParse = checkTimeParse(betReq.eventTime);
+            long chkEventTimeParse = CheckTimeParse(betReq.eventTime);
             if (chkEventTimeParse == 0)
             {
                 // 當eventTime格式錯誤時回傳 1004
                 getBetResp.status.code = "1004";
                 getBetResp.status.message = "Error : invalid eventTime";
-                log2File.Error($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                 return getBetResp;
             }
             betReq.eventUnix = chkEventTimeParse;
 
             // check key
-            var tokenCurrency = getTokenCurrency(wtoken);
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            if (thirdPartySetting.TpSetting[$"API_Token_{tokenCurrency}"] != wtoken)
+            var tokenCurrency = GetTokenCurrency(wtoken);
+            if (!CheckToken(wtoken, tokenCurrency))
             {
                 getBetResp.status.code = "1100";
                 getBetResp.status.message = "Error : wtoken";
-                log2File.Error($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                 return getBetResp;
             }
 
             // check session
-            var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, betReq.account);
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, betReq.account);
             if (tpCheck == null || tpCheck.Locked || tpCheck.Token != HttpUtility.UrlDecode(betReq.session))
             {
                 getBetResp.status.code = "1006";
                 getBetResp.status.message = "Error : account not found";
-                log2File.Error($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                 return getBetResp;
             }
 
             // check gametype
-            var gameType = thirdPartyBLL.GetGameType((int)thisTp, betReq.gamecode);
+            var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, betReq.gamecode);
             if (gameType != GameType.CQ9_RNG)
             {
                 getBetResp.status.code = "1100";
                 getBetResp.status.message = "Error : gamecode is not slot";
-                log2File.Error($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
                 return getBetResp;
             }
 
             try
             {
-                int result = bettingBLL.PlaceBetRNG_CQ9(betReq, out decimal tpAffterAmount);
+                int result = _bettingBLL.PlaceBetRNG_CQ9(betReq, out decimal tpAffterAmount);
                 if (result > 0)
                 {
                     getBetResp.data = new BalanceData();
@@ -436,7 +403,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getBetResp.data.currency = tokenCurrency;
                     getBetResp.status.code = "0";
                     getBetResp.status.message = "Success";
-                    getBetResp.status.datetime = getCurrentGameTime();
+                    getBetResp.status.datetime = GetCurrentGameTime();
+                    _log2File.Info($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                    return getBetResp;
                 }
                 else if (result == -1)
                 {
@@ -453,11 +422,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                log2File.Error($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}\r\n{ex}", logName, ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}\r\n{ex.Message}", logName, ex);
                 return getBetResp;
             }
 
-            log2File.Info($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+            _log2File.Error($"{JsonConvert.SerializeObject(betReq)}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
             return getBetResp;
         }
 
@@ -466,9 +435,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         public GetApiResp EndRound([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getEndRoundReq)
         {
             var result = 0;
-            string logName = $"{tpGameName}_EndRound";
+            string logName = $"{_tpGameName}_EndRound";
             var json = JsonConvert.SerializeObject(getEndRoundReq);
-            log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
+            _log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
             var endRoundReq = JsonConvert.DeserializeObject<EndRoundDataRNG_CQ9>(json);
 
             /*** TEST ***/
@@ -485,7 +454,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             GetApiResp getEndRoundResp = new GetApiResp();
             getEndRoundResp.status.code = "1100";
             getEndRoundResp.status.message = "Error";
-            getEndRoundResp.status.datetime = getCurrentGameTime();
+            getEndRoundResp.status.datetime = GetCurrentGameTime();
             getEndRoundResp.data = null;
 
             // check param
@@ -493,29 +462,28 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getEndRoundResp.status.code = "1003";
                 getEndRoundResp.status.message = "Error : param invalid";
-                log2File.Error($"{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
                 return getEndRoundResp;
             }
             try
             {
                 // check key
-                var tokenCurrency = getTokenCurrency(wtoken);
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                if (thirdPartySetting.TpSetting[$"API_Token_{tokenCurrency}"] != wtoken)
+                var tokenCurrency = GetTokenCurrency(wtoken);
+                if (!CheckToken(wtoken, tokenCurrency))
                 {
                     getEndRoundResp.status.code = "1100";
                     getEndRoundResp.status.message = "Error : wtoken";
-                    log2File.Error($"{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
+                    _log2File.Error($"{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
                     return getEndRoundResp;
                 }
 
                 // check gametype
-                var gameType = thirdPartyBLL.GetGameType((int)thisTp, endRoundReq.gamecode);
+                var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, endRoundReq.gamecode);
                 if (gameType != GameType.CQ9_RNG)
                 {
                     getEndRoundResp.status.code = "1100";
                     getEndRoundResp.status.message = "Error : gamecode is not slot";
-                    log2File.Error($"{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
+                    _log2File.Error($"{JsonConvert.SerializeObject(endRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
                     return getEndRoundResp;
                 }
 
@@ -527,27 +495,27 @@ namespace ThirdPartySeamlessWallet.Controllers
                         // amount不得為負值為負值時則反回錯誤編碼1003
                         getEndRoundResp.status.code = "1003";
                         getEndRoundResp.status.message = "Error : insufficient amount";
-                        log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
+                        _log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
                         return getEndRoundResp;
                     }
 
-                    long chkEventTimeParse = checkTimeParse(item.eventtime);
+                    long chkEventTimeParse = CheckTimeParse(item.eventtime);
                     if (chkEventTimeParse == 0)
                     {
                         // 當eventTime格式錯誤時回傳 1004
                         getEndRoundResp.status.code = "1004";
                         getEndRoundResp.status.message = "Error : invalid eventTime";
-                        log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
+                        _log2File.Error($"{JsonConvert.SerializeObject(item)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
                         return getEndRoundResp;
                     }
                     item.eventUnix = chkEventTimeParse;
                 }
 
 
-                long chkCreateTimeParse = checkTimeParse(endRoundReq.createTime);
+                long chkCreateTimeParse = CheckTimeParse(endRoundReq.createTime);
                 endRoundReq.createUnix = chkCreateTimeParse;
 
-                result = settledBLL.PayoutRNG_CQ9(endRoundReq, (int)gameType, out decimal tpAffterAmount);
+                result = _settledBLL.PayoutRNG_CQ9(endRoundReq, (int)gameType, out decimal tpAffterAmount);
 
                 if (result > 0)
                 {
@@ -556,7 +524,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getEndRoundResp.data.currency = tokenCurrency;
                     getEndRoundResp.status.code = "0";
                     getEndRoundResp.status.message = "Success";
-                    getEndRoundResp.status.datetime = getCurrentGameTime();
+                    getEndRoundResp.status.datetime = GetCurrentGameTime();
+                    _log2File.Info($"{JsonConvert.SerializeObject(getEndRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
+                    return getEndRoundResp;
                 }
                 else if (result == -1)
                 {
@@ -577,11 +547,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                log2File.Error($"{JsonConvert.SerializeObject(getEndRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}\r\n{ex}", logName, ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(getEndRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}\r\n{ex.Message}", logName, ex);
                 return getEndRoundResp;
             }
 
-            log2File.Info($"{JsonConvert.SerializeObject(getEndRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
+            _log2File.Error($"{JsonConvert.SerializeObject(getEndRoundReq)}\r\n{JsonConvert.SerializeObject(getEndRoundResp)}", logName);
             return getEndRoundResp;
         }
 
@@ -589,15 +559,15 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/transaction/game/refund")]
         public GetApiResp Refund([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getRefundReq)
         {
-            string logName = $"{tpGameName}_Refund";
+            string logName = $"{_tpGameName}_Refund";
             var json = JsonConvert.SerializeObject(getRefundReq);
-            log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
+            _log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
             var refundReq = JsonConvert.DeserializeObject<RefundDataRNG_CQ9>(json);
 
             GetApiResp getRefundResp = new GetApiResp();
             getRefundResp.status.code = "1100";
             getRefundResp.status.message = "Error";
-            getRefundResp.status.datetime = getCurrentGameTime();
+            getRefundResp.status.datetime = GetCurrentGameTime();
             getRefundResp.data = null;
 
             // check param
@@ -605,30 +575,29 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getRefundResp.status.code = "1003";
                 getRefundResp.status.message = "Error : param invalid";
-                log2File.Error($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}", logName);
                 return getRefundResp;
             }
 
             // check key
-            var tokenCurrency = getTokenCurrency(wtoken);
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            if (thirdPartySetting.TpSetting[$"API_Token_{tokenCurrency}"] != wtoken)
+            var tokenCurrency = GetTokenCurrency(wtoken);
+            if (!CheckToken(wtoken, tokenCurrency))
             {
                 getRefundResp.status.code = "1100";
                 getRefundResp.status.message = "Error : wtoken";
-                log2File.Error($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}", logName);
                 return getRefundResp;
             }
 
             try
             {
-                var record = settledBLL.GetRecordRNG_CQ9(refundReq.mtcode);
+                var record = _settledBLL.GetRecordRNG_CQ9(refundReq.mtcode);
                 if (record == null || record.Count() == 0)
                 {
                     // 當refund未查詢到紀錄時回傳該錯誤編碼1014
                     getRefundResp.status.code = "1014";
                     getRefundResp.status.message = "Error : record not found";
-                    log2File.Error($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}", logName);
+                    _log2File.Error($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}", logName);
                     return getRefundResp;
                 }
                 else if (record.FirstOrDefault()?.TicketStatus == (int)TicketStatus.Refund)
@@ -636,7 +605,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     // 當該mtcode已經被refund時回傳該錯誤編碼 1015
                     getRefundResp.status.code = "1015";
                     getRefundResp.status.message = "Error : refunded";
-                    log2File.Error($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}", logName);
+                    _log2File.Error($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}", logName);
                     return getRefundResp;
                 }
                 refundReq.account = record.First().account;
@@ -644,24 +613,27 @@ namespace ThirdPartySeamlessWallet.Controllers
                 refundReq.roundid = record.First().roundid;
 
                 var gameType = record.First().TableType;
-                var result = settledBLL.RefundRNG_CQ9(refundReq, (int)gameType, out decimal tpAffterAmount);
+                var result = _settledBLL.RefundRNG_CQ9(refundReq, (int)gameType, out decimal tpAffterAmount);
                 if (result > 0)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, refundReq.account, (int)gameType);
+                    var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, refundReq.account, (int)gameType);
                     getRefundResp.status.code = "0";
                     getRefundResp.status.message = "Success";
-                    getRefundResp.status.datetime = getCurrentGameTime();
+                    getRefundResp.status.datetime = GetCurrentGameTime();
                     getRefundResp.data = new BalanceData();
                     getRefundResp.data.balance = tpCustBalance.Balance;
                     getRefundResp.data.currency = tpCustBalance.TpCurrencyId;
+                    _log2File.Info($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}", logName);
+                    return getRefundResp;
                 }
             }
             catch (Exception ex)
             {
-                log2File.Error($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}\r\n{ex}", logName, ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}\r\n{ex.Message}", logName, ex);
                 return getRefundResp;
             }
-            log2File.Info($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}", logName);
+
+            _log2File.Error($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}", logName);
             return getRefundResp;
         }
 
@@ -669,31 +641,30 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/transaction/record/{mtcode}")]
         public GetRecordResp Record(string mtcode, [FromHeader(Name = "wtoken")] string wtoken)
         {
-            string logName = $"{tpGameName}_Record";
-            log2File.Info($"mtcode={mtcode}\r\nwtoken={wtoken}", logName);
+            string logName = $"{_tpGameName}_Record";
+            _log2File.Info($"mtcode={mtcode}\r\nwtoken={wtoken}", logName);
 
             GetRecordResp getRecordResp = new GetRecordResp();
             getRecordResp.status.code = "1100";
             getRecordResp.status.message = "Error";
-            getRecordResp.status.datetime = getCurrentGameTime();
+            getRecordResp.status.datetime = GetCurrentGameTime();
             getRecordResp.data = null;
 
             if (wtoken == null)
             {
                 getRecordResp.status.code = "1003";
                 getRecordResp.status.message = "Error : param invalid";
-                log2File.Error($"mtcode={mtcode}\r\nwtoken={wtoken}\r\n{JsonConvert.SerializeObject(getRecordResp)}", logName);
+                _log2File.Error($"mtcode={mtcode}\r\nwtoken={wtoken}\r\n{JsonConvert.SerializeObject(getRecordResp)}", logName);
                 return getRecordResp;
             }
 
             // check key
-            var tokenCurrency = getTokenCurrency(wtoken);
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            if (thirdPartySetting.TpSetting[$"API_Token_{tokenCurrency}"] != wtoken)
+            var tokenCurrency = GetTokenCurrency(wtoken);
+            if (!CheckToken(wtoken, tokenCurrency))
             {
                 getRecordResp.status.code = "1100";
                 getRecordResp.status.message = "Error : wtoken";
-                log2File.Error($"mtcode={mtcode}\r\nwtoken={wtoken}\r\n{JsonConvert.SerializeObject(getRecordResp)}", logName);
+                _log2File.Error($"mtcode={mtcode}\r\nwtoken={wtoken}\r\n{JsonConvert.SerializeObject(getRecordResp)}", logName);
                 return getRecordResp;
             }
             string[] sType = mtcode.Split("-");
@@ -701,17 +672,17 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 getRecordResp.status.code = "1014";
                 getRecordResp.status.message = "Error : mtcode format invalid";
-                log2File.Error($"mtcode={mtcode}\r\nwtoken={wtoken}\r\n{JsonConvert.SerializeObject(getRecordResp)}", logName);
+                _log2File.Error($"mtcode={mtcode}\r\nwtoken={wtoken}\r\n{JsonConvert.SerializeObject(getRecordResp)}", logName);
                 return getRecordResp;
             }
 
-            var data = settledBLL.GetRecordRNG_CQ9(mtcode);
+            var data = _settledBLL.GetRecordRNG_CQ9(mtcode);
             if (data.Count() == 0)
             {
                 // 當未查詢到紀錄時回傳該錯誤編碼1014
                 getRecordResp.status.code = "1014";
                 getRecordResp.status.message = "Error : record not found";
-                getRecordResp.status.datetime = getCurrentGameTime();
+                getRecordResp.status.datetime = GetCurrentGameTime();
             }
             else
             {
@@ -739,10 +710,10 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 getRecordResp.status.code = "0";
                 getRecordResp.status.message = "Success";
-                getRecordResp.status.datetime = getCurrentGameTime();
+                getRecordResp.status.datetime = GetCurrentGameTime();
             }
 
-            log2File.Info($"mtcode={mtcode}\r\n{JsonConvert.SerializeObject(getRecordResp)}", logName);
+            _log2File.Info($"mtcode={mtcode}\r\n{JsonConvert.SerializeObject(getRecordResp)}", logName);
             return getRecordResp;
         }
 
@@ -750,15 +721,15 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/transaction/game/debit")]
         public GetApiResp Debit([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getDebitReq)
         {
-            string logName = $"{tpGameName}_Debit";
+            string logName = $"{_tpGameName}_Debit";
             var json = JsonConvert.SerializeObject(getDebitReq);
-            log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
+            _log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
             var debitReq = JsonConvert.DeserializeObject<BettingDataRNG_CQ9>(json);
 
             GetApiResp apiResponse = new GetApiResp();
             apiResponse.status.code = "1100";
             apiResponse.status.message = "Error";
-            apiResponse.status.datetime = getCurrentGameTime();
+            apiResponse.status.datetime = GetCurrentGameTime();
             apiResponse.data = null;
 
             // 當為負值時則反回錯誤編碼1003
@@ -766,7 +737,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 apiResponse.status.code = "1003";
                 apiResponse.status.message = "Error : insufficient amount";
-                log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
@@ -775,45 +746,46 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 apiResponse.status.code = "1003";
                 apiResponse.status.message = "Error : param invalid";
-                log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
-            long chkEventTimeParse = checkTimeParse(debitReq.eventTime);
+            long chkEventTimeParse = CheckTimeParse(debitReq.eventTime);
             if (chkEventTimeParse == 0)
             {
                 // 當eventTime格式錯誤時回傳 1004
                 apiResponse.status.code = "1004";
                 apiResponse.status.message = "Error : invalid eventTime";
-                log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
             debitReq.eventUnix = chkEventTimeParse;
 
             // check key
-            var tokenCurrency = getTokenCurrency(wtoken);
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            if (thirdPartySetting.TpSetting[$"API_Token_{tokenCurrency}"] != wtoken)
+            var tokenCurrency = GetTokenCurrency(wtoken);
+            if (!CheckToken(wtoken, tokenCurrency))
             {
                 apiResponse.status.code = "1100";
                 apiResponse.status.message = "Error : wtoken";
-                log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
             try
             {
-                var gameType = thirdPartyBLL.GetGameType((int)thisTp, debitReq.gamecode);
-                int result = settledBLL.DebitRNG_CQ9(debitReq, (int)gameType, out decimal tpAffterAmount);
+                var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, debitReq.gamecode);
+                int result = _settledBLL.DebitRNG_CQ9(debitReq, (int)gameType, out decimal tpAffterAmount);
                 if (result > 0)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, debitReq.account, (int)gameType);
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, debitReq.account, (int)gameType);
                     apiResponse.data = new BalanceData();
                     apiResponse.data.balance = tpAffterAmount;
                     apiResponse.data.currency = tpCustBalance.TpCurrencyId;
                     apiResponse.status.code = "0";
                     apiResponse.status.message = "Success";
-                    apiResponse.status.datetime = getCurrentGameTime();
+                    apiResponse.status.datetime = GetCurrentGameTime();
+                    _log2File.Info($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                    return apiResponse;
                 }
                 else if (result == -1)
                 {
@@ -836,10 +808,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}\r\n{ex}", logName, ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}\r\n{ex.Message}", logName, ex);
                 return apiResponse;
             }
-            log2File.Info($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+
+            _log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
             return apiResponse;
         }
 
@@ -847,15 +820,15 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/transaction/game/credit")]
         public GetApiResp Credit([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getCreditReq)
         {
-            string logName = $"{tpGameName}_Credit";
+            string logName = $"{_tpGameName}_Credit";
             var json = JsonConvert.SerializeObject(getCreditReq);
-            log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
+            _log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
             var creditReq = JsonConvert.DeserializeObject<BettingDataRNG_CQ9>(json);
 
             GetApiResp apiResponse = new GetApiResp();
             apiResponse.status.code = "1100";
             apiResponse.status.message = "Error";
-            apiResponse.status.datetime = getCurrentGameTime();
+            apiResponse.status.datetime = GetCurrentGameTime();
             apiResponse.data = null;
 
             // 當為負值時則反回錯誤編碼1003
@@ -863,7 +836,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 apiResponse.status.code = "1003";
                 apiResponse.status.message = "Error : insufficient amount";
-                log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
@@ -872,45 +845,46 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 apiResponse.status.code = "1003";
                 apiResponse.status.message = "Error : param invalid";
-                log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
-            long chkEventTimeParse = checkTimeParse(creditReq.eventTime);
+            long chkEventTimeParse = CheckTimeParse(creditReq.eventTime);
             if (chkEventTimeParse == 0)
             {
                 // 當eventTime格式錯誤時回傳 1004
                 apiResponse.status.code = "1004";
                 apiResponse.status.message = "Error : invalid eventTime";
-                log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
             creditReq.eventUnix = chkEventTimeParse;
 
             // check key
-            var tokenCurrency = getTokenCurrency(wtoken);
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            if (thirdPartySetting.TpSetting[$"API_Token_{tokenCurrency}"] != wtoken)
+            var tokenCurrency = GetTokenCurrency(wtoken);
+            if (!CheckToken(wtoken, tokenCurrency))
             {
                 apiResponse.status.code = "1100";
                 apiResponse.status.message = "Error : wtoken";
-                log2File.Error($"{JsonConvert.SerializeObject(getCreditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(getCreditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
             try
             {
-                var gameType = thirdPartyBLL.GetGameType((int)thisTp, creditReq.gamecode);
-                var result = settledBLL.CreditRNG_CQ9(creditReq, (int)gameType, out decimal tpAffterAmount);
+                var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, creditReq.gamecode);
+                var result = _settledBLL.CreditRNG_CQ9(creditReq, (int)gameType, out decimal tpAffterAmount);
                 if (result > 0)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, creditReq.account, (int)gameType);
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, creditReq.account, (int)gameType);
                     apiResponse.data = new BalanceData();
                     apiResponse.data.balance = tpAffterAmount;
                     apiResponse.data.currency = tpCustBalance.TpCurrencyId;
                     apiResponse.status.code = "0";
                     apiResponse.status.message = "Success";
-                    apiResponse.status.datetime = getCurrentGameTime();
+                    apiResponse.status.datetime = GetCurrentGameTime();
+                    _log2File.Info($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                    return apiResponse;
                 }
                 else if (result == -1)
                 {
@@ -927,10 +901,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}\r\n{ex}", logName, ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}\r\n{ex.Message}", logName, ex);
                 return apiResponse;
             }
-            log2File.Info($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+
+            _log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
             return apiResponse;
         }
 
@@ -938,15 +913,15 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/transaction/user/payoff")]
         public GetApiResp Payoff([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getPayoffReq)
         {
-            string logName = $"{tpGameName}_Payoff";
+            string logName = $"{_tpGameName}_Payoff";
             var json = JsonConvert.SerializeObject(getPayoffReq);
-            log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
+            _log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
             var payoffReq = JsonConvert.DeserializeObject<PayoffDataRNG_CQ9>(json);
 
             GetApiResp apiResponse = new GetApiResp();
             apiResponse.status.code = "1100";
             apiResponse.status.message = "Error";
-            apiResponse.status.datetime = getCurrentGameTime();
+            apiResponse.status.datetime = GetCurrentGameTime();
             apiResponse.data = null;
 
             // 當為負值時則反回錯誤編碼1003
@@ -954,7 +929,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 apiResponse.status.code = "1003";
                 apiResponse.status.message = "Error : insufficient amount";
-                log2File.Error($"{JsonConvert.SerializeObject(payoffReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(payoffReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
@@ -963,44 +938,45 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 apiResponse.status.code = "1003";
                 apiResponse.status.message = "Error : param invalid";
-                log2File.Error($"{JsonConvert.SerializeObject(payoffReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(payoffReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
-            long chkEventTimeParse = checkTimeParse(payoffReq.eventTime);
+            long chkEventTimeParse = CheckTimeParse(payoffReq.eventTime);
             if (chkEventTimeParse == 0)
             {
                 // 當eventTime格式錯誤時回傳 1004
                 apiResponse.status.code = "1004";
                 apiResponse.status.message = "Error : invalid eventTime";
-                log2File.Error($"{JsonConvert.SerializeObject(payoffReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(payoffReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
             payoffReq.eventUnix = chkEventTimeParse;
 
             // check key
-            var tokenCurrency = getTokenCurrency(wtoken);
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            if (thirdPartySetting.TpSetting[$"API_Token_{tokenCurrency}"] != wtoken)
+            var tokenCurrency = GetTokenCurrency(wtoken);
+            if (!CheckToken(wtoken, tokenCurrency))
             {
                 apiResponse.status.code = "1100";
                 apiResponse.status.message = "Error : wtoken";
-                log2File.Error($"{JsonConvert.SerializeObject(payoffReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(payoffReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
             try
             {
-                var result = settledBLL.RewardRNG_CQ9(payoffReq, out decimal tpAffterAmount);
+                var result = _settledBLL.RewardRNG_CQ9(payoffReq, out decimal tpAffterAmount);
                 if (result > 0)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, payoffReq.account);/*Just for TpCurrencyId*/
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, payoffReq.account);/*Just for TpCurrencyId*/
                     apiResponse.data = new BalanceData();
                     apiResponse.data.balance = tpAffterAmount;
                     apiResponse.data.currency = tpCustBalance.TpCurrencyId;
                     apiResponse.status.code = "0";
                     apiResponse.status.message = "Success";
-                    apiResponse.status.datetime = getCurrentGameTime();
+                    apiResponse.status.datetime = GetCurrentGameTime();
+                    _log2File.Info($"{JsonConvert.SerializeObject(payoffReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                    return apiResponse;
                 }
                 else if (result == -1)
                 {
@@ -1017,10 +993,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                log2File.Error($"{JsonConvert.SerializeObject(payoffReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}\r\n{ex}", logName, ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(payoffReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}\r\n{ex.Message}", logName, ex);
                 return apiResponse;
             }
-            log2File.Info($"{JsonConvert.SerializeObject(payoffReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+
+            _log2File.Error($"{JsonConvert.SerializeObject(payoffReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
             return apiResponse;
         }
 
@@ -1028,9 +1005,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/transaction/game/rollout")]
         public GetApiResp Rollout([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getRolloutReq)
         {
-            string logName = $"{tpGameName}_Rollout";
+            string logName = $"{_tpGameName}_Rollout";
             var json = JsonConvert.SerializeObject(getRolloutReq);
-            log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
+            _log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
             var rolloutReq = JsonConvert.DeserializeObject<BettingDataRNG_CQ9>(json);
 
             /*** TEST ***/
@@ -1044,19 +1021,18 @@ namespace ThirdPartySeamlessWallet.Controllers
             //}
             /*** TEST ***/
 
-
             GetApiResp apiResponse = new GetApiResp();
             apiResponse.status.code = "1100";
             apiResponse.status.message = "Error";
-            apiResponse.status.datetime = getCurrentGameTime();
+            apiResponse.status.datetime = GetCurrentGameTime();
             apiResponse.data = null;
 
             // 當為負值時則反回錯誤編碼1003
-            if (rolloutReq.amount <= 0)
+            if (rolloutReq.amount < 0 || !getRolloutReq.ContainsKey("amount"))
             {
                 apiResponse.status.code = "1003";
                 apiResponse.status.message = "Error : insufficient amount";
-                log2File.Error($"{JsonConvert.SerializeObject(rolloutReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(rolloutReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
@@ -1065,64 +1041,65 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 apiResponse.status.code = "1003";
                 apiResponse.status.message = "Error : param invalid";
-                log2File.Error($"{JsonConvert.SerializeObject(rolloutReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(rolloutReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
-            long chkEventTimeParse = checkTimeParse(rolloutReq.eventTime);
+            long chkEventTimeParse = CheckTimeParse(rolloutReq.eventTime);
             if (chkEventTimeParse == 0)
             {
                 // 當eventTime格式錯誤時回傳 1004
                 apiResponse.status.code = "1004";
                 apiResponse.status.message = "Error : invalid eventTime";
-                log2File.Error($"{JsonConvert.SerializeObject(rolloutReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(rolloutReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
             rolloutReq.eventUnix = chkEventTimeParse;
 
             // check key
-            var tokenCurrency = getTokenCurrency(wtoken);
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            if (thirdPartySetting.TpSetting[$"API_Token_{tokenCurrency}"] != wtoken)
+            var tokenCurrency = GetTokenCurrency(wtoken);
+            if (!CheckToken(wtoken, tokenCurrency))
             {
                 apiResponse.status.code = "1100";
                 apiResponse.status.message = "Error : wtoken";
-                log2File.Error($"{JsonConvert.SerializeObject(rolloutReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(rolloutReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
             // check session
-            var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, rolloutReq.account);
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, rolloutReq.account);
             if (tpCheck == null || tpCheck.Locked || tpCheck.Token != HttpUtility.UrlDecode(rolloutReq.session))
             {
                 apiResponse.status.code = "1006";
                 apiResponse.status.message = "Error : account not found";
-                log2File.Error($"{JsonConvert.SerializeObject(rolloutReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(rolloutReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
             // check gametype
-            var gameType = thirdPartyBLL.GetGameType((int)thisTp, rolloutReq.gamecode);
+            var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, rolloutReq.gamecode);
             if (gameType != GameType.CQ9_Fish)
             {
                 apiResponse.status.code = "1100";
                 apiResponse.status.message = "Error : gamecode is not fish";
-                log2File.Error($"{JsonConvert.SerializeObject(rolloutReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(rolloutReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
             try
             {
-                int result = bettingBLL.RolloutFish_CQ9(rolloutReq, (int)gameType, out decimal tpAffterAmount);
+                int result = _bettingBLL.RolloutFish_CQ9(rolloutReq, (int)gameType, out decimal tpAffterAmount);
                 if (result > 0)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, rolloutReq.account, (int)gameType);
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, rolloutReq.account, (int)gameType);
                     apiResponse.data = new BalanceData();
                     apiResponse.data.balance = tpAffterAmount;
                     apiResponse.data.currency = tpCustBalance.TpCurrencyId;
                     apiResponse.status.code = "0";
                     apiResponse.status.message = "Success";
-                    apiResponse.status.datetime = getCurrentGameTime();
+                    apiResponse.status.datetime = GetCurrentGameTime();
+                    _log2File.Info($"{JsonConvert.SerializeObject(rolloutReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                    return apiResponse;
                 }
                 else if (result == -1)
                 {
@@ -1139,10 +1116,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                log2File.Error($"{JsonConvert.SerializeObject(rolloutReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}\r\n{ex}", logName, ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(rolloutReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}\r\n{ex.Message}", logName, ex);
                 return apiResponse;
             }
-            log2File.Info($"{JsonConvert.SerializeObject(rolloutReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+
+            _log2File.Error($"{JsonConvert.SerializeObject(rolloutReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
             return apiResponse;
         }
 
@@ -1150,15 +1128,15 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/transaction/game/takeall")]
         public GetTakeAllResp TakeAll([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getTakeAllReq)
         {
-            string logName = $"{tpGameName}_TakeAll";
+            string logName = $"{_tpGameName}_TakeAll";
             var json = JsonConvert.SerializeObject(getTakeAllReq);
-            log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
+            _log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
             var takeAllReq = JsonConvert.DeserializeObject<BettingDataRNG_CQ9>(json);
 
             GetTakeAllResp apiResponse = new GetTakeAllResp();
             apiResponse.status.code = "1100";
             apiResponse.status.message = "Error";
-            apiResponse.status.datetime = getCurrentGameTime();
+            apiResponse.status.datetime = GetCurrentGameTime();
             apiResponse.data = null;
 
             // check param
@@ -1166,59 +1144,58 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 apiResponse.status.code = "1003";
                 apiResponse.status.message = "Error : param invalid";
-                log2File.Error($"{JsonConvert.SerializeObject(takeAllReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(takeAllReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
-            long chkEventTimeParse = checkTimeParse(takeAllReq.eventTime);
+            long chkEventTimeParse = CheckTimeParse(takeAllReq.eventTime);
             if (chkEventTimeParse == 0)
             {
                 // 當eventTime格式錯誤時回傳 1004
                 apiResponse.status.code = "1004";
                 apiResponse.status.message = "Error : invalid eventTime";
-                log2File.Error($"{JsonConvert.SerializeObject(takeAllReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(takeAllReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
             takeAllReq.eventUnix = chkEventTimeParse;
 
             // check key
-            var tokenCurrency = getTokenCurrency(wtoken);
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            if (thirdPartySetting.TpSetting[$"API_Token_{tokenCurrency}"] != wtoken)
+            var tokenCurrency = GetTokenCurrency(wtoken);
+            if (!CheckToken(wtoken, tokenCurrency))
             {
                 apiResponse.status.code = "1100";
                 apiResponse.status.message = "Error : wtoken";
-                log2File.Error($"{JsonConvert.SerializeObject(takeAllReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(takeAllReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
             // check session
-            var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, takeAllReq.account);
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, takeAllReq.account);
             if (tpCheck == null || tpCheck.Locked || tpCheck.Token != HttpUtility.UrlDecode(takeAllReq.session))
             {
                 apiResponse.status.code = "1006";
                 apiResponse.status.message = "Error : account not found";
-                log2File.Error($"{JsonConvert.SerializeObject(takeAllReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(takeAllReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
             // check gametype
-            var gameType = thirdPartyBLL.GetGameType((int)thisTp, takeAllReq.gamecode);
+            var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, takeAllReq.gamecode);
             if (gameType != GameType.CQ9_Fish)
             {
                 apiResponse.status.code = "1100";
                 apiResponse.status.message = "Error : gamecode is not fish";
-                log2File.Error($"{JsonConvert.SerializeObject(takeAllReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(takeAllReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
             try
             {
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, takeAllReq.account, (int)gameType);
+                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, takeAllReq.account, (int)gameType);
                 takeAllReq.amount = tpCustBalance.Balance;
-                if (takeAllReq.amount <= 0)
+                if (takeAllReq.amount < 0 || !getTakeAllReq.ContainsKey("amount"))
                 {
-                    var record = settledBLL.GetRecordRNG_CQ9(takeAllReq.mtcode);
+                    var record = _settledBLL.GetRecordRNG_CQ9(takeAllReq.mtcode);
                     if (record != null && record.Count() > 0)
                     {
                         // 當mtcode重複時則反回錯誤編碼 2009
@@ -1231,11 +1208,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                         apiResponse.status.code = "1005";
                         apiResponse.status.message = "Error : insufficient amount";
                     }
-                    log2File.Error($"{JsonConvert.SerializeObject(takeAllReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                    _log2File.Error($"{JsonConvert.SerializeObject(takeAllReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                     return apiResponse;
                 }
 
-                int result = bettingBLL.TakeAllFish_CQ9(takeAllReq, (int)gameType, out decimal tpAffterAmount);
+                int result = _bettingBLL.TakeAllFish_CQ9(takeAllReq, (int)gameType, out decimal tpAffterAmount);
                 if (result > 0)
                 {
                     apiResponse.data = new TakeAllData();
@@ -1244,7 +1221,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                     apiResponse.data.currency = tpCustBalance.TpCurrencyId;
                     apiResponse.status.code = "0";
                     apiResponse.status.message = "Success";
-                    apiResponse.status.datetime = getCurrentGameTime();
+                    apiResponse.status.datetime = GetCurrentGameTime();
+                    _log2File.Info($"{JsonConvert.SerializeObject(takeAllReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                    return apiResponse;
                 }
                 else if (result == -1)
                 {
@@ -1261,10 +1240,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                log2File.Error($"{JsonConvert.SerializeObject(takeAllReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}\r\n{ex}", logName, ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(takeAllReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}\r\n{ex.Message}", logName, ex);
                 return apiResponse;
             }
-            log2File.Info($"{JsonConvert.SerializeObject(takeAllReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+
+            _log2File.Error($"{JsonConvert.SerializeObject(takeAllReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
             return apiResponse;
         }
 
@@ -1272,9 +1252,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/transaction/game/rollin")]
         public GetApiResp Rollin([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getRollinReq)
         {
-            string logName = $"{tpGameName}_Rollin";
+            string logName = $"{_tpGameName}_Rollin";
             var json = JsonConvert.SerializeObject(getRollinReq);
-            log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
+            _log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
             var rollinReq = JsonConvert.DeserializeObject<RollinDataFish_CQ9>(json);
 
             /*** TEST ***/
@@ -1288,11 +1268,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             //}
             /*** TEST ***/
 
-
             GetApiResp apiResponse = new GetApiResp();
             apiResponse.status.code = "1100";
             apiResponse.status.message = "Error";
-            apiResponse.status.datetime = getCurrentGameTime();
+            apiResponse.status.datetime = GetCurrentGameTime();
             apiResponse.data = null;
 
             // 當為負值時則反回錯誤編碼1003
@@ -1300,7 +1279,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 apiResponse.status.code = "1003";
                 apiResponse.status.message = "Error : insufficient amount";
-                log2File.Error($"{JsonConvert.SerializeObject(rollinReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(rollinReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
@@ -1309,65 +1288,66 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 apiResponse.status.code = "1003";
                 apiResponse.status.message = "Error : param invalid";
-                log2File.Error($"{JsonConvert.SerializeObject(rollinReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(rollinReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
-            long chkEventTimeParse = checkTimeParse(rollinReq.eventTime);
+            long chkEventTimeParse = CheckTimeParse(rollinReq.eventTime);
             if (chkEventTimeParse == 0)
             {
                 // 當eventTime格式錯誤時回傳 1004
                 apiResponse.status.code = "1004";
                 apiResponse.status.message = "Error : invalid eventTime";
-                log2File.Error($"{JsonConvert.SerializeObject(rollinReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(rollinReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
             rollinReq.eventUnix = chkEventTimeParse;
 
-            long chkCreateTimeParse = checkTimeParse(rollinReq.createTime);
+            long chkCreateTimeParse = CheckTimeParse(rollinReq.createTime);
             if (chkCreateTimeParse == 0)
             {
                 // 當createTime格式錯誤時回傳 1004
                 apiResponse.status.code = "1004";
                 apiResponse.status.message = "Error : invalid createTime";
-                log2File.Error($"{JsonConvert.SerializeObject(rollinReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(rollinReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
             rollinReq.createUnix = chkCreateTimeParse;
 
             // check key
-            var tokenCurrency = getTokenCurrency(wtoken);
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            if (thirdPartySetting.TpSetting[$"API_Token_{tokenCurrency}"] != wtoken)
+            var tokenCurrency = GetTokenCurrency(wtoken);
+            if (!CheckToken(wtoken, tokenCurrency))
             {
                 apiResponse.status.code = "1100";
                 apiResponse.status.message = "Error : wtoken";
-                log2File.Error($"{JsonConvert.SerializeObject(rollinReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(rollinReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
             // check gametype
-            var gameType = thirdPartyBLL.GetGameType((int)thisTp, rollinReq.gamecode);
+            var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, rollinReq.gamecode);
             if (gameType != GameType.CQ9_Fish)
             {
                 apiResponse.status.code = "1100";
                 apiResponse.status.message = "Error : gamecode is not fish";
-                log2File.Error($"{JsonConvert.SerializeObject(rollinReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                _log2File.Error($"{JsonConvert.SerializeObject(rollinReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
             try
             {
-                var result = settledBLL.RollinFish_CQ9(rollinReq, (int)gameType, out decimal tpAffterAmount);
+                var result = _settledBLL.RollinFish_CQ9(rollinReq, (int)gameType, out decimal tpAffterAmount);
                 if (result > 0)
                 {
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, rollinReq.account, (int)gameType);
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, rollinReq.account, (int)gameType);
                     apiResponse.data = new BalanceData();
                     apiResponse.data.balance = tpAffterAmount;
                     apiResponse.data.currency = tpCustBalance.TpCurrencyId;
                     apiResponse.status.code = "0";
                     apiResponse.status.message = "Success";
-                    apiResponse.status.datetime = getCurrentGameTime();
+                    apiResponse.status.datetime = GetCurrentGameTime();
+                    _log2File.Info($"{JsonConvert.SerializeObject(rollinReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                    return apiResponse;
                 }
                 else if (result == -1)
                 {
@@ -1384,10 +1364,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
-                log2File.Error($"{JsonConvert.SerializeObject(rollinReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}\r\n{ex}", logName, ex);
+                _log2File.Error($"{JsonConvert.SerializeObject(rollinReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}\r\n{ex.Message}", logName, ex);
                 return apiResponse;
             }
-            log2File.Info($"{JsonConvert.SerializeObject(rollinReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+
+            _log2File.Error($"{JsonConvert.SerializeObject(rollinReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
             return apiResponse;
         }
 
@@ -1396,18 +1377,18 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/{path1?}/{path2?}/{path3?}/{path4?}")]
         public GetApiResp NotFound([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getReq)
         {
-            string logName = $"{tpGameName}_NotFound";
+            string logName = $"{_tpGameName}_NotFound";
             var json = JsonConvert.SerializeObject(getReq);
             GetApiResp apiResponse = new GetApiResp();
             apiResponse.status.code = "1002";
             apiResponse.status.message = "Error: 404";
-            apiResponse.status.datetime = getCurrentGameTime();
+            apiResponse.status.datetime = GetCurrentGameTime();
             apiResponse.data = null;
-            log2File.Error($"wtoken={wtoken}\r\n{json}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+            _log2File.Error($"wtoken={wtoken}\r\n{json}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
             return apiResponse;
         }
 
-        private long checkTimeParse(string time)
+        private long CheckTimeParse(string time)
         {
             DateTime dtFormat;
             if (!DateTime.TryParse(time, out dtFormat))
@@ -1426,13 +1407,13 @@ namespace ThirdPartySeamlessWallet.Controllers
             return new DateTimeOffset(dtFormat).ToUnixTimeSeconds();
         }
 
-        private string getCurrentGameTime()
+        private string GetCurrentGameTime()
         {
             var currentAt = new DateTimeOffset(DateTime.Now);
             return currentAt.ToOffset(new TimeSpan(-4, 0, 0)).ToString("yyyy-MM-dd'T'HH:mm:ss.fffffffK");
         }
 
-        private string getTokenCurrency(string token)
+        private string GetTokenCurrency(string token)
         {
             var parts = token.Split('.');
             var header = parts[0];
@@ -1462,6 +1443,16 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             var converted = Convert.FromBase64String(output); // Standard base64 decoder
             return converted;
+        }
+
+        private bool CheckToken(string wtoken, string tokenCurrency)
+        {
+            var token = _siteConfig[$"API_Token_{tokenCurrency}"];
+            if (token == wtoken)
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

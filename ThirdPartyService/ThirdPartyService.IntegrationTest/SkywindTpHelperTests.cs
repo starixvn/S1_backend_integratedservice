@@ -1,27 +1,28 @@
-﻿using NUnit.Framework;
-using System.Collections.Generic;
-using ThirdPartyCore.Model;
-using FluentAssertions;
-using ThirdPartyCore.Model.enums;
-using Newtonsoft.Json;
-using System.Web;
-using System.Diagnostics;
-using System;
-using ThirdParty.Skywind;
-using Microsoft.Extensions.DependencyInjection;
+﻿using FluentAssertions;
+
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+using Newtonsoft.Json;
+
+using NSubstitute;
+
+using NUnit.Framework;
+
+using ThirdPartyCore;
+using ThirdPartyCore.Model;
+using ThirdPartyCore.Model.enums;
+
 using ThirdPartyService.Extensions;
 using ThirdPartyService.IntegrationTest.Models;
-using Microsoft.Extensions.Hosting;
-using ThirdPartyCore;
-using Microsoft.AspNetCore.Hosting;
-using NSubstitute;
 using ThirdPartyService.IntegrationTest.Stubs;
-using Microsoft.Extensions.Logging;
-using ThirdPartyService.Service.Library;
-using Microsoft.Extensions.Configuration;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
+using ThirdPartyService.Service.Library;
 
 namespace ThirdParty.Skywind.Tests
 {
@@ -41,7 +42,11 @@ namespace ThirdParty.Skywind.Tests
             {
                 EnvironmentName = "Local",
             });
-            builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
+
+            var remoteUrls = builder.Configuration.GetSection("ConfigService").Get<string[]>();
+            remoteUrls = builder.Configuration.CheckLocalConfig(builder.Environment, new[] { "Nova" }, remoteUrls);
+            builder.Configuration.AddRemoteJsonConfig(remoteUrls);
+
             var app = builder.Build();
             _configuration = app.Configuration;
             services.AddSingleton(_configuration);
@@ -52,7 +57,7 @@ namespace ThirdParty.Skywind.Tests
                 ContentRootPath = AppDomain.CurrentDomain.BaseDirectory,
             };
             ThirdPartyHelperBase.IsDevelopment = env.IsDevelopment();
-          
+
 
             services.AddSingleton<IWebHostEnvironment>(env);
             services.AddSingleton<IHostEnvironment>(env);
@@ -60,7 +65,6 @@ namespace ThirdParty.Skywind.Tests
             services.AddTransient(p => Substitute.For<ILogger<MySqlClient>>());
             services.AddTransient(p => Substitute.For<ILogger<ThirdPartyBLL>>());
             services.AddTransient(p => Substitute.For<ILogger<ThirdPartyHelper>>());
-            services.AddTransient(p => Substitute.For<ILogger<Log2File>>());
 
             var startup = new StubStartUp(_configuration);
 

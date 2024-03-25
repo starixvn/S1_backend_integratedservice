@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using ThirdPartyCore.Model.enums;
 
 namespace ThirdPartyCore.Model
 {
@@ -17,5 +15,6 @@ namespace ThirdPartyCore.Model
         public int UserLevel { get; set; }
         public bool IsTest { get; set; }
         public int Status { get; set; }
+        public CustomerMemberTypeEnum MemberType { get; set; }
     }
 }

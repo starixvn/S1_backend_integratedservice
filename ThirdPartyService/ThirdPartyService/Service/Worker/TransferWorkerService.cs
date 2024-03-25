@@ -1,0 +1,167 @@
+﻿using Newtonsoft.Json;
+
+using Serilog.Context;
+
+using ThirdPartyCore.Model;
+using ThirdPartyCore.Model.enums;
+
+using ThirdPartyService.Extensions;
+using ThirdPartyService.Service.BLL;
+using ThirdPartyService.Service.DAL;
+
+namespace ThirdPartyService.Service.Worker
+{
+    public class TransferWorkerService : BackgroundService
+    {
+        private Timer _transferTimer;
+        private Timer _bonusTimer;
+        private Timer _remainingBonusTimer;
+        private readonly ILogger<TransferWorkerService> _logger;
+        private readonly TpTransferInfo _tpTransferInfo;
+        private readonly ThirdPartyBLL _thirdPartyBll;
+        private readonly Random _random;
+
+        public TransferWorkerService(IServiceProvider provider)
+        {
+            _logger = provider.GetRequiredService<ILogger<TransferWorkerService>>();
+            _tpTransferInfo = provider.GetRequiredService<TpTransferInfo>();
+            _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
+            _random = new Random();
+        }
+
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            _transferTimer = new Timer(TpTransferCheck, null, TimeSpan.Zero, TimeSpan.Zero);
+            _bonusTimer = new Timer(BonusTransfer, null, TimeSpan.Zero, TimeSpan.Zero);
+            _remainingBonusTimer = new Timer(RemainingBonusAmountTransfer, null, TimeSpan.Zero, TimeSpan.Zero);
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// TpTransfer check worker
+        /// </summary>
+        /// <param name="state"></param>
+        private void TpTransferCheck(object state)
+        {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            try
+            {
+                var tpTransferList = _tpTransferInfo.TpTransferPendingGet(_random.Next(950, 1000));// 避免 ORM 或 db execution plan cache
+                _logger.LogInformation($"TpTransferInfo Pending Data Count：{tpTransferList?.Count()}");
+
+                if (tpTransferList != null)
+                {
+                    foreach (var tpTransfer in tpTransferList)
+                    {
+                        try
+                        {
+                            _thirdPartyBll.CheckTransfer(tpTransfer);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, MethodExtension.GetCurrentMethod());
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, MethodExtension.GetCurrentMethod());
+            }
+            finally
+            {
+                var dueTimeSpan = TimeSpan.FromMinutes(2);
+                _transferTimer.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
+
+        /// <summary>
+        /// pending bonus transfer check worker
+        /// </summary>
+        /// <param name="state"></param>
+        private void BonusTransfer(object state)
+        {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            try
+            {
+                var tpTransferList = _tpTransferInfo.TpBonusTransferPendingGet(_random.Next(950, 1000));
+                _logger.LogInformation($"PendingBonusList Pending Data Count：{tpTransferList?.Count()}");
+
+                var statusList = new List<int> { (int)TransferStatus.Pending, (int)TransferStatus.PendingD };
+
+                if (tpTransferList != null)
+                {
+                    foreach (var tpTransfer in tpTransferList)
+                    {
+                        var pendingTpBonusTransfer =
+                            _tpTransferInfo.TpBonusTransferInfoPendingGet(tpTransfer.CustId,
+                                JsonConvert.SerializeObject(statusList));
+                        try
+                        {
+                            if (pendingTpBonusTransfer != null)
+                            {
+                                _thirdPartyBll.BonusCheckTransfer(pendingTpBonusTransfer);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, MethodExtension.GetCurrentMethod());
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, MethodExtension.GetCurrentMethod());
+            }
+            finally
+            {
+                var dueTimeSpan = TimeSpan.FromMinutes(10);
+                _bonusTimer.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
+
+        /// <summary>
+        /// Lose out , Remaining bonus transfer worker
+        /// </summary>
+        /// <param name="state"></param>
+        private void RemainingBonusAmountTransfer(object state)
+        {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            try
+            {
+                var tpTransferList = _tpTransferInfo.TpRemainingTransferBonusGet(_random.Next(950, 1000));
+                _logger.LogInformation($"RemainingTransferBonusPending Pending Data Count：{tpTransferList?.Count()}");
+
+                foreach (var tpTransfer in tpTransferList)
+                {
+                    Task.Run(() =>
+                    {
+                        var tpBonusCancelTransfer = new TpBonusCancelTransfer
+                        {
+                            TpId = tpTransfer.TpId,
+                            CustId = tpTransfer.CustId,
+                            UserName = tpTransfer.UserName,
+                            SiteId = tpTransfer.SiteId,
+                            PromoCategoryId = tpTransfer.PromoCategoryId,
+                            BonusId = tpTransfer.BonusId,
+                            RemainingBonus = tpTransfer.RemainingAmount,
+                            RefundAmount = 0,
+                            UpdateBonusTransferStatus = true
+                        };
+                        _thirdPartyBll.BonusCancelTransfer(tpBonusCancelTransfer);
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, MethodExtension.GetCurrentMethod());
+            }
+            finally
+            {
+                var dueTimeSpan = TimeSpan.FromMinutes(1);
+                _remainingBonusTimer.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
+    }
+}

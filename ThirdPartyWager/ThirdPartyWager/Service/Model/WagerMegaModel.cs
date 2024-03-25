@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace ThirdPartyWager.Service.Model
+﻿namespace ThirdPartyWager.Service.Model
 {
     public class ReportDataMega
     {
@@ -34,13 +31,6 @@ namespace ThirdPartyWager.Service.Model
         public string result { get; set; }
         public string jsonrpc { get; set; }
     }
-
-    //public class SettleDataMega : ReportListMega
-    //{
-    //    public long TransId { get; set; }
-    //    public long StartAt { get; set; }
-    //    public int AddSecond { get; set; }
-    //}
 
     public class SettleDataMega
     {
@@ -92,7 +82,6 @@ namespace ThirdPartyWager.Service.Model
             }
         }
     }
-
 
     public class SummaryMega
     {

@@ -47,8 +47,8 @@ namespace ThirdPartyWager.Service.BLL
                     CurrencyId = _currencyId[item.currency],
                     Stake = item.betAmt,
                     ValidBet = item.betAmt,
-                    Payout = item.betAmt + item.winLoss,
-                    WinlostAmount = item.winLoss,
+                    Payout = item.betAmt + item.winLoss - item.bonusAmt,
+                    WinlostAmount = item.winLoss - item.bonusAmt,
                     ProgressiveBet = item.jackpotAmount,
                     ProgressiveWin = item.jpWin
                 });

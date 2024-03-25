@@ -1,8 +1,8 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
+using System.Web;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -13,6 +13,12 @@ namespace ThirdParty.V8
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly V8Config _config;
+        public TpHelper(IServiceProvider provider)
+        {
+            _config = provider.GetRequiredService<ConfigBLL>().GetConfigValue<V8Config>((TpEnum.V8).ToString());
+        }
+
         Dictionary<int, string> ErrorMassage = new Dictionary<int, string>()
         {   {1,"TOKEN 丢失"},
             {2,"渠道不存在"},
@@ -86,81 +92,95 @@ namespace ThirdParty.V8
             public decimal totalMoney { get; set; }
             public decimal freeMoney { get; set; }
             public int status { get; set; }
+            public string extraParam { get; set; }
+            public string lang { get; set; }
         }
-
+        public class CurrencyData
+        {
+            public string Deskey { get; set; }
+            public string Agent { get; set; }
+            public string Md5key { get; set; }
+        }
+        public class V8Config
+        {
+            public string WagerUrl { get; set; }
+            public string ApiUrl { get; set; }
+            public Dictionary<string, CurrencyData> CurrencyData { get; set; }
+        }
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string Agent = inputs.ContainsKey("Agent") && !string.IsNullOrEmpty(inputs["Agent"]) ? inputs["Agent"] : throw new Exception("Agent");
-            string Deskey = inputs.ContainsKey("Deskey") && !string.IsNullOrEmpty(inputs["Deskey"]) ? inputs["Deskey"] : throw new Exception("Deskey");
-            string Md5key = inputs.ContainsKey("Md5key") && !string.IsNullOrEmpty(inputs["Md5key"]) ? inputs["Md5key"] : throw new Exception("Md5key");
+            throw new NotImplementedException();
+            //string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
+            //string Agent = inputs.ContainsKey("Agent") && !string.IsNullOrEmpty(inputs["Agent"]) ? inputs["Agent"] : throw new Exception("Agent");
+            //string Deskey = inputs.ContainsKey("Deskey") && !string.IsNullOrEmpty(inputs["Deskey"]) ? inputs["Deskey"] : throw new Exception("Deskey");
+            //string Md5key = inputs.ContainsKey("Md5key") && !string.IsNullOrEmpty(inputs["Md5key"]) ? inputs["Md5key"] : throw new Exception("Md5key");
 
-            var current = new DateTimeOffset(DateTime.UtcNow);
-            var timestamp = current.ToUnixTimeMilliseconds();
+            //var current = new DateTimeOffset(DateTime.UtcNow);
+            //var timestamp = current.ToUnixTimeMilliseconds();
 
-            var Param = new
-            {
-                s = 4,
-                orderid = $"{Agent}{TransID}"
-            };
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(Param));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            //var Param = new
+            //{
+            //    s = 4,
+            //    orderid = $"{Agent}{TransID}"
+            //};
+            //var dicP = FromJson<Dictionary<string, string>>(ToJson(Param));
+            //var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-            var CheckTransfer = new
-            {
-                agent = Agent,
-                timestamp = timestamp,
-                param = AesEncrypt(sParam, Deskey),
-                key = ToMD5($"{Agent}{timestamp}{Md5key}").ToLower()
-            };
-            dicP = FromJson<Dictionary<string, string>>(ToJson(CheckTransfer));
-            var sCheckTransfer = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            //var CheckTransfer = new
+            //{
+            //    agent = Agent,
+            //    timestamp = timestamp,
+            //    param = AesEncrypt(sParam, Deskey),
+            //    key = ToMD5($"{Agent}{timestamp}{Md5key}").ToLower()
+            //};
+            //dicP = FromJson<Dictionary<string, string>>(ToJson(CheckTransfer));
+            //var sCheckTransfer = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-            var result = HttpGet(ApiUrl, sCheckTransfer);
+            //var result = HttpGet(ApiUrl, sCheckTransfer);
 
-            ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
-            if (IsJSON(result))
-            {
-                var json = JsonConvert.DeserializeObject<ApiResponse>(result);
-                if (json.d.code != 0)
-                {
-                    apiResult.RawMessage = ErrorMassage.ContainsKey(json.d.code) ? ErrorMassage[json.d.code] : json.d.code.ToString();
-                    apiResult.RawErrorCode = json.d.code.ToString();
-                    apiResult.ErrorCode = ErrorCode.TransferPending;
-                    apiResult.Data.Status = TransferStatus.Pending;
-                }
-                else
-                {
-                    if (json.d.status == 0)
-                    {
-                        apiResult.ErrorCode = ErrorCode.Success;
-                        apiResult.Data.Status = TransferStatus.Success;
-                        apiResult.Data.ThirdId = TransID;
-                    }
-                    else if (json.d.status == 3)
-                    {
-                        apiResult.ErrorCode = ErrorCode.TransferPending;
-                        apiResult.Data.Status = TransferStatus.Pending;
-                        apiResult.Data.ThirdId = TransID;
-                    }
-                    else
-                    {
-                        apiResult.RawMessage = ErrorMassage.ContainsKey(json.d.code) ? ErrorMassage[json.d.code] : json.d.code.ToString();
-                        apiResult.RawErrorCode = json.d.code.ToString();
-                        apiResult.ErrorCode = ErrorCode.Fail;
-                        apiResult.Data.Status = TransferStatus.Fail;
-                    }
-                }
-            }
-            else
-            {
-                apiResult.RawMessage = "No Result";
-                apiResult.RawErrorCode = "1";
-                apiResult.ErrorCode = ErrorCode.TransferPending;
-                apiResult.Data.Status = TransferStatus.Pending;
-            }
+            //ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
+            //if (IsJSON(result))
+            //{
+            //    var json = JsonConvert.DeserializeObject<ApiResponse>(result);
+            //    if (json.d.code != 0)
+            //    {
+            //        apiResult.RawMessage = ErrorMassage.ContainsKey(json.d.code) ? ErrorMassage[json.d.code] : json.d.code.ToString();
+            //        apiResult.RawErrorCode = json.d.code.ToString();
+            //        apiResult.ErrorCode = ErrorCode.TransferPending;
+            //        apiResult.Data.Status = TransferStatus.Pending;
+            //    }
+            //    else
+            //    {
+            //        if (json.d.status == 0)
+            //        {
+            //            apiResult.ErrorCode = ErrorCode.Success;
+            //            apiResult.Data.Status = TransferStatus.Success;
+            //            apiResult.Data.ThirdId = TransID;
+            //        }
+            //        else if (json.d.status == 3)
+            //        {
+            //            apiResult.ErrorCode = ErrorCode.TransferPending;
+            //            apiResult.Data.Status = TransferStatus.Pending;
+            //            apiResult.Data.ThirdId = TransID;
+            //        }
+            //        else
+            //        {
+            //            apiResult.RawMessage = ErrorMassage.ContainsKey(json.d.code) ? ErrorMassage[json.d.code] : json.d.code.ToString();
+            //            apiResult.RawErrorCode = json.d.code.ToString();
+            //            apiResult.ErrorCode = ErrorCode.Fail;
+            //            apiResult.Data.Status = TransferStatus.Fail;
+            //        }
+            //    }
+            //}
+            //else
+            //{
+            //    apiResult.RawMessage = "No Result";
+            //    apiResult.RawErrorCode = "1";
+            //    apiResult.ErrorCode = ErrorCode.TransferPending;
+            //    apiResult.Data.Status = TransferStatus.Pending;
+            //}
 
-            return apiResult;
+            //return apiResult;
         }
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -174,72 +194,76 @@ namespace ThirdParty.V8
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string Agent = inputs.ContainsKey("Agent") && !string.IsNullOrEmpty(inputs["Agent"]) ? inputs["Agent"] : throw new Exception("Agent");
-            string Deskey = inputs.ContainsKey("Deskey") && !string.IsNullOrEmpty(inputs["Deskey"]) ? inputs["Deskey"] : throw new Exception("Deskey");
-            string Md5key = inputs.ContainsKey("Md5key") && !string.IsNullOrEmpty(inputs["Md5key"]) ? inputs["Md5key"] : throw new Exception("Md5key");
-
-            var current = new DateTimeOffset(DateTime.UtcNow);
-            var timestamp = current.ToUnixTimeMilliseconds();
-
-            var Param = new
-            {
-                s = 7,
-                account = tpCustInfo.TpUserName,
-            };
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(Param));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-
-            var Balance = new
-            {
-                agent = Agent,
-                timestamp = timestamp,
-                param = AesEncrypt(sParam, Deskey),
-                key = ToMD5($"{Agent}{timestamp}{Md5key}").ToLower()
-            };
-            dicP = FromJson<Dictionary<string, string>>(ToJson(Balance));
-            var sBalance = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
-
-            var result = HttpGet(ApiUrl, sBalance);
-
             ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
-            if (IsJSON(result))
-            {
-                var json = JsonConvert.DeserializeObject<ApiResponse>(result);
-                if (json.d.code == 0)
-                {
-                    oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Data.balance = json.d.freeMoney; // 可下分余额
-                }
-                else
-                {
-                    oApiResult.ErrorCode = ErrorCode.Fail;
-                    oApiResult.RawMessage = ErrorMassage.ContainsKey(json.d.code) ? ErrorMassage[json.d.code] : json.d.code.ToString();
-                    oApiResult.RawErrorCode = json.d.code.ToString();
-                }
-            }
-            else
-            {
-                oApiResult.RawMessage = "No Result";
-                oApiResult.RawErrorCode = "1";
-                oApiResult.ErrorCode = ErrorCode.Fail;
-            }
+            oApiResult.ErrorCode = ErrorCode.Fail;
             return oApiResult;
+            //string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
+            //string Agent = inputs.ContainsKey("Agent") && !string.IsNullOrEmpty(inputs["Agent"]) ? inputs["Agent"] : throw new Exception("Agent");
+            //string Deskey = inputs.ContainsKey("Deskey") && !string.IsNullOrEmpty(inputs["Deskey"]) ? inputs["Deskey"] : throw new Exception("Deskey");
+            //string Md5key = inputs.ContainsKey("Md5key") && !string.IsNullOrEmpty(inputs["Md5key"]) ? inputs["Md5key"] : throw new Exception("Md5key");
+
+            //var current = new DateTimeOffset(DateTime.UtcNow);
+            //var timestamp = current.ToUnixTimeMilliseconds();
+
+            //var Param = new
+            //{
+            //    s = 7,
+            //    account = tpCustInfo.TpUserName,
+            //};
+            //var dicP = FromJson<Dictionary<string, string>>(ToJson(Param));
+            //var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+            //var Balance = new
+            //{
+            //    agent = Agent,
+            //    timestamp = timestamp,
+            //    param = AesEncrypt(sParam, Deskey),
+            //    key = ToMD5($"{Agent}{timestamp}{Md5key}").ToLower()
+            //};
+            //dicP = FromJson<Dictionary<string, string>>(ToJson(Balance));
+            //var sBalance = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+            //var result = HttpGet(ApiUrl, sBalance);
+
+            //ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
+            //if (IsJSON(result))
+            //{
+            //    var json = JsonConvert.DeserializeObject<ApiResponse>(result);
+            //    if (json.d.code == 0)
+            //    {
+            //        oApiResult.ErrorCode = ErrorCode.Success;
+            //        oApiResult.Data.balance = json.d.freeMoney; // 可下分余额
+            //    }
+            //    else
+            //    {
+            //        oApiResult.ErrorCode = ErrorCode.Fail;
+            //        oApiResult.RawMessage = ErrorMassage.ContainsKey(json.d.code) ? ErrorMassage[json.d.code] : json.d.code.ToString();
+            //        oApiResult.RawErrorCode = json.d.code.ToString();
+            //    }
+            //}
+            //else
+            //{
+            //    oApiResult.RawMessage = "No Result";
+            //    oApiResult.RawErrorCode = "1";
+            //    oApiResult.ErrorCode = ErrorCode.Fail;
+            //}
+            //return oApiResult;
         }
 
         public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            TransIdModel transIdModel = new TransIdModel();
-            transIdModel.Implemented = true;
-            return transIdModel;
+            throw new NotImplementedException();
+            //TransIdModel transIdModel = new TransIdModel();
+            //transIdModel.Implemented = true;
+            //return transIdModel;
         }
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string Agent = inputs.ContainsKey("Agent") && !string.IsNullOrEmpty(inputs["Agent"]) ? inputs["Agent"] : throw new Exception("Agent");
-            string Deskey = inputs.ContainsKey("Deskey") && !string.IsNullOrEmpty(inputs["Deskey"]) ? inputs["Deskey"] : throw new Exception("Deskey");
-            string Md5key = inputs.ContainsKey("Md5key") && !string.IsNullOrEmpty(inputs["Md5key"]) ? inputs["Md5key"] : throw new Exception("Md5key");
+            string ApiUrl = _config.ApiUrl;
+            string Agent = _config.CurrencyData[tpCustInfo.TpCurrencyId].Agent;
+            string Deskey = _config.CurrencyData[tpCustInfo.TpCurrencyId].Deskey;
+            string Md5key = _config.CurrencyData[tpCustInfo.TpCurrencyId].Md5key;
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
 
             var current = new DateTimeOffset(DateTime.UtcNow);
@@ -278,8 +302,16 @@ namespace ThirdParty.V8
                 var json = JsonConvert.DeserializeObject<ApiResponse>(result);
                 if (json.d.code == 0)
                 {
+                    var uri = new Uri(json.d.url);
+                    var forward = json.d.url;
+                    string pLang = HttpUtility.ParseQueryString(uri.Query).Get("lang");
+                    if (pLang != TpLangId)
+                    {
+                        forward = forward.Replace($"lang={pLang}", $"lang={TpLangId}");
+                    }
+
                     oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Message = json.d.url;
+                    oApiResult.Message = forward;
                 }
                 else
                 {
@@ -299,73 +331,74 @@ namespace ThirdParty.V8
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string Agent = inputs.ContainsKey("Agent") && !string.IsNullOrEmpty(inputs["Agent"]) ? inputs["Agent"] : throw new Exception("Agent");
-            string Deskey = inputs.ContainsKey("Deskey") && !string.IsNullOrEmpty(inputs["Deskey"]) ? inputs["Deskey"] : throw new Exception("Deskey");
-            string Md5key = inputs.ContainsKey("Md5key") && !string.IsNullOrEmpty(inputs["Md5key"]) ? inputs["Md5key"] : throw new Exception("Md5key");
+            throw new NotImplementedException();
+            //string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
+            //string Agent = inputs.ContainsKey("Agent") && !string.IsNullOrEmpty(inputs["Agent"]) ? inputs["Agent"] : throw new Exception("Agent");
+            //string Deskey = inputs.ContainsKey("Deskey") && !string.IsNullOrEmpty(inputs["Deskey"]) ? inputs["Deskey"] : throw new Exception("Deskey");
+            //string Md5key = inputs.ContainsKey("Md5key") && !string.IsNullOrEmpty(inputs["Md5key"]) ? inputs["Md5key"] : throw new Exception("Md5key");
 
-            var current = new DateTimeOffset(DateTime.UtcNow);
-            var timestamp = current.ToUnixTimeMilliseconds();
-            var timecnv = current.ToString("yyyyMMddHHmmssfff");
-            int transType = (direction == Direction.ToMain) ? 3 : 2;
+            //var current = new DateTimeOffset(DateTime.UtcNow);
+            //var timestamp = current.ToUnixTimeMilliseconds();
+            //var timecnv = current.ToString("yyyyMMddHHmmssfff");
+            //int transType = (direction == Direction.ToMain) ? 3 : 2;
 
-            var Param = new
-            {
-                s = transType,
-                account = tpCustInfo.TpUserName,
-                money = Amount,
-                orderid = $"{Agent}{TransID}"
-            };
-            var dicP = FromJson<Dictionary<string, string>>(ToJson(Param));
-            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            //var Param = new
+            //{
+            //    s = transType,
+            //    account = tpCustInfo.TpUserName,
+            //    money = Amount,
+            //    orderid = $"{Agent}{TransID}"
+            //};
+            //var dicP = FromJson<Dictionary<string, string>>(ToJson(Param));
+            //var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-            var Transfer = new
-            {
-                agent = Agent,
-                timestamp = timestamp,
-                param = AesEncrypt(sParam, Deskey),
-                key = ToMD5($"{Agent}{timestamp}{Md5key}").ToLower()
-            };
-            dicP = FromJson<Dictionary<string, string>>(ToJson(Transfer));
-            var sTransfer = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+            //var Transfer = new
+            //{
+            //    agent = Agent,
+            //    timestamp = timestamp,
+            //    param = AesEncrypt(sParam, Deskey),
+            //    key = ToMD5($"{Agent}{timestamp}{Md5key}").ToLower()
+            //};
+            //dicP = FromJson<Dictionary<string, string>>(ToJson(Transfer));
+            //var sTransfer = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-            var result = HttpGet(ApiUrl, sTransfer);
+            //var result = HttpGet(ApiUrl, sTransfer);
 
-            ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
-            apiResult.RawMessage = "No Result";
-            apiResult.RawErrorCode = "1";
-            apiResult.ErrorCode = ErrorCode.TransferPending;
-            apiResult.Data.Status = TransferStatus.Pending;
-            apiResult.Data.ThirdId = Param.orderid;
+            //ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
+            //apiResult.RawMessage = "No Result";
+            //apiResult.RawErrorCode = "1";
+            //apiResult.ErrorCode = ErrorCode.TransferPending;
+            //apiResult.Data.Status = TransferStatus.Pending;
+            //apiResult.Data.ThirdId = Param.orderid;
 
-            if (IsJSON(result))
-            {
-                var json = JsonConvert.DeserializeObject<ApiResponse>(result);
-                if (json.d.code != 0)
-                {
-                    apiResult.RawMessage = ErrorMassage.ContainsKey(json.d.code) ? ErrorMassage[json.d.code] : json.d.code.ToString();
-                    apiResult.RawErrorCode = json.d.code.ToString() ?? "";
-                    if (json.d.code == 27)
-                    {
-                        // 数据库异常
-                        apiResult.ErrorCode = ErrorCode.TransferPending;
-                        apiResult.Data.Status = TransferStatus.Pending;
-                    }
-                    else
-                    {
-                        apiResult.ErrorCode = ErrorCode.Fail;
-                        apiResult.Data.Status = TransferStatus.Fail;
-                    }
-                }
-                else
-                {
-                    apiResult.ErrorCode = ErrorCode.Success;
-                    apiResult.Data.Status = TransferStatus.Success;
-                    apiResult.RawMessage = "";
-                    apiResult.RawErrorCode = "";
-                }
-            }
-            return apiResult;
+            //if (IsJSON(result))
+            //{
+            //    var json = JsonConvert.DeserializeObject<ApiResponse>(result);
+            //    if (json.d.code != 0)
+            //    {
+            //        apiResult.RawMessage = ErrorMassage.ContainsKey(json.d.code) ? ErrorMassage[json.d.code] : json.d.code.ToString();
+            //        apiResult.RawErrorCode = json.d.code.ToString() ?? "";
+            //        if (json.d.code == 27)
+            //        {
+            //            // 数据库异常
+            //            apiResult.ErrorCode = ErrorCode.TransferPending;
+            //            apiResult.Data.Status = TransferStatus.Pending;
+            //        }
+            //        else
+            //        {
+            //            apiResult.ErrorCode = ErrorCode.Fail;
+            //            apiResult.Data.Status = TransferStatus.Fail;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        apiResult.ErrorCode = ErrorCode.Success;
+            //        apiResult.Data.Status = TransferStatus.Success;
+            //        apiResult.RawMessage = "";
+            //        apiResult.RawErrorCode = "";
+            //    }
+            //}
+            //return apiResult;
         }
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -379,7 +412,7 @@ namespace ThirdParty.V8
             var detail = ToJson(wagerDetail);
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
-                TpCategory.Poker => new PokerDetail(getBetDetail.TpGameTypeOption)
+                TpCategory.P2P => new PokerDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
                     Detail = detail,
@@ -443,6 +476,15 @@ namespace ThirdParty.V8
                 "8600" => "Cat Te",
                 "930" => "Hundreds People Of Bull",
                 "8100" => "See Cards Bull",
+                "510" => "Fishing Wars",
+                "680" => "Fight the Landlord",
+                "920" => "Forest Dance",
+                "3101" => "See Cards Bull",
+                "3890" => "Four Cards Bull",
+                "8210" => "Tai Xiu",
+                "8910" => "Cai Shen Dao",
+                "1101" => "Ta La-Phom",
+                "1102" => "Whot",
                 _ => string.Empty,
             };
         }

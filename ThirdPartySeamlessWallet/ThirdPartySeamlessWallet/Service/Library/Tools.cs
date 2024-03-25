@@ -1,13 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
-using System;
-using System.IO;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
 using System.Xml;
 using System.Xml.Serialization;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -67,8 +65,8 @@ namespace ThirdPartySeamlessWallet.Service.Library
 
             var serializer = new XmlSerializer(typeof(T));
             using var memoryStream = new MemoryStream();
-            using var xmlWriter = XmlWriter.Create(memoryStream, new XmlWriterSettings() {Indent = true, Encoding = Encoding.UTF8});
-            xmlWriter.WriteStartDocument();  
+            using var xmlWriter = XmlWriter.Create(memoryStream, new XmlWriterSettings() { Indent = true, Encoding = Encoding.UTF8 });
+            xmlWriter.WriteStartDocument();
             var xmlSerializerNamespaces = new XmlSerializerNamespaces();
             xmlSerializerNamespaces.Add("", "");
             serializer.Serialize(xmlWriter, obj, xmlSerializerNamespaces);
@@ -106,7 +104,40 @@ namespace ThirdPartySeamlessWallet.Service.Library
 
             return Encoding.UTF8.GetString(resultArray);
         }
+        public string AesDecryptV2(string str, string secretKey)
+        {
+            string plaintext = null;
+            byte[] toEncryptArray = Convert.FromBase64String(str);
+            byte[] keyBytes = new byte[16];
+            byte[] secretKeyBytes = Encoding.UTF8.GetBytes(secretKey);
+            Array.Copy(secretKeyBytes, keyBytes, Math.Min(keyBytes.Length, secretKeyBytes.Length));
 
+            using (Aes aesAlg = Aes.Create())
+            {
+                aesAlg.Mode = CipherMode.CBC;
+                aesAlg.Padding = PaddingMode.PKCS7;
+                aesAlg.KeySize = 128;
+                aesAlg.BlockSize = 128;
+                aesAlg.Key = keyBytes;
+                aesAlg.IV = keyBytes;
+
+                ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
+
+                using (MemoryStream msDecrypt = new MemoryStream(toEncryptArray))
+                {
+                    using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                    {
+                        using (StreamReader srDecrypt = new StreamReader(csDecrypt))
+                        {
+
+                            plaintext = srDecrypt.ReadToEnd();
+                        }
+                    }
+                }
+            }
+
+            return plaintext;
+        }
         public string AesEncrypt(string str, string key, bool isEncodeUrl = true)
         {
             if (string.IsNullOrEmpty(str)) return null;

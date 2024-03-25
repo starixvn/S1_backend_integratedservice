@@ -1,27 +1,22 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Concurrent;
 using System.Reflection;
 using System.Resources;
-using System.Threading.Tasks;
 
 namespace CommonService.Service.BLL
 {
     public class SelLangBLL
     {
         private ConcurrentDictionary<string, ResourceManager> rm = new ConcurrentDictionary<string, ResourceManager>();
-        public SelLangBLL()
-        { }
+
         public string GetResourceValue(string key, string langId)
         {
             return GetResourceValue(key, "CommonService_lan", langId);
         }
+
         private string GetResourceValue(string key, string categoryId, string langId)
         {
-            //
-            string labelString = string.Empty;
-            string sKey = $"{Assembly.GetExecutingAssembly().GetName().Name}.App_GlobalResources.{categoryId}_{langId}";
+            var labelString = string.Empty;
+            var sKey = $"{Assembly.GetExecutingAssembly().GetName().Name}.App_GlobalResources.{categoryId}_{langId}";
             if (!rm.ContainsKey(sKey))
             {
                 rm.TryAdd(sKey, new ResourceManager(sKey, Assembly.GetExecutingAssembly()));
@@ -31,7 +26,7 @@ namespace CommonService.Service.BLL
             {
                 labelString = rm[sKey].GetString(key);
             }
-            catch (MissingManifestResourceException mme)
+            catch (MissingManifestResourceException)
             {
 
             }

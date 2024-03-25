@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace ThirdPartyWager.Service
+﻿namespace ThirdPartyWager.Service
 {
     public class WagerOne789Model
     {
@@ -61,6 +58,7 @@ namespace ThirdPartyWager.Service
         public string Source { get; set; }
         public string Type { get; set; }
         public string RefSource { get; set; }
+        public int TicketStatus { get; set; }
     }
 
     public class TicketDataOne789
@@ -78,5 +76,12 @@ namespace ThirdPartyWager.Service
         public string Tx { get; set; }
         public decimal Amount { get; set; }
         public decimal Balance { get; set; }
+    }
+
+    public class One789Config
+    {
+        public string ApiUrl { get; set; }
+        public string GameUrl { get; set; }
+        public string ApiKey { get; set; }
     }
 }

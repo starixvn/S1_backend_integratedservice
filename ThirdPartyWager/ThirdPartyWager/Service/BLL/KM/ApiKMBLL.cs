@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
+﻿using System.Net;
 using System.Web;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -17,11 +10,12 @@ namespace ThirdPartyWager.Service.BLL
     public class ApiKMBLL
     {
         private readonly IConfiguration _configuration;
-        public Dictionary<string, string> KmConfig { get; set; }
         private readonly HttpHelper _httpHelper;
         private readonly ILogger<ApiKMBLL> _logger;
         private readonly string _tpName = Tp.KM.ToString();
         private readonly Log2File _log2File;
+        private readonly KMConfig _siteConfig;
+
 
         public ApiKMBLL(IServiceProvider provider, IConfiguration configuration)
         {
@@ -29,15 +23,16 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<ApiKMBLL>>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _log2File = provider.GetRequiredService<Log2File>();
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<KMConfig>(Tp.KM.ToString());
         }
         public async Task<List<WagerKMModel>> QueryBetHistoryAsync(string startTime, string endTime)
         {
             var historyBet = string.Empty;
             try
             {
-                var apiUrl = GetInputValue(KmConfig, "ApiUrl");
-                var clientId = GetInputValue(KmConfig, "X-QM-ClientId");
-                var clientSecret = GetInputValue(KmConfig, "X-QM-ClientSecret");
+                var apiUrl = _siteConfig.ApiUrl;
+                var clientId = _siteConfig.X_QM_ClientId;
+                var clientSecret = _siteConfig.X_QM_ClientSecret;
 
                 startTime = $"{DateTime.Parse(startTime).ToString("s")}+08:00";
                 endTime = $"{DateTime.Parse(endTime).ToString("s")}+08:00";
@@ -76,9 +71,9 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {
-                var apiUrl = GetInputValue(KmConfig, "ApiUrl");
-                var clientId = GetInputValue(KmConfig, "X-QM-ClientId");
-                var clientSecret = GetInputValue(KmConfig, "X-QM-ClientSecret");
+                var apiUrl = _siteConfig.ApiUrl;
+                var clientId = _siteConfig.X_QM_ClientId;
+                var clientSecret = _siteConfig.X_QM_ClientSecret;
 
                 startTime = $"{DateTime.Parse(startTime).ToString("s")}+00:00";
                 endTime = $"{DateTime.Parse(endTime).ToString("s")}+00:00";
@@ -114,15 +109,6 @@ namespace ThirdPartyWager.Service.BLL
                 _logger.LogError(e, $"query history bets total failed:{e.Message}");
                 return null;
             }
-        }
-
-        private string GetInputValue(Dictionary<string, string> inputs, string key)
-        {
-            if (inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))
-            {
-                return inputs[key];
-            }
-            throw new Exception();
         }
 
         private HttpClientHandler CreateHandler()

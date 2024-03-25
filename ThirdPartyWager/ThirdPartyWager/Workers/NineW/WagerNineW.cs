@@ -1,14 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Serilog.Context;
+﻿using Serilog.Context;
+
+using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
-using ThirdPartyWager.Extensions;
 
 namespace ThirdPartyWager.Workers
 {
@@ -40,7 +35,7 @@ namespace ThirdPartyWager.Workers
         {
             _settleTimer = new Timer(DoSettle, null, TimeSpan.FromSeconds(1), TimeSpan.Zero);
             _settleTimerByDate = new Timer(DoSettleByDate, null, TimeSpan.FromSeconds(3), TimeSpan.Zero);
-            _reSttleTimer = new Timer(DoReSettle, null, TimeSpan.FromSeconds(5), TimeSpan.Zero);
+            _reSttleTimer = new Timer(DoReSettle, null, TimeSpan.FromMinutes(2), TimeSpan.Zero);
             _reportTimer = new Timer(GetReportByDate, null, TimeSpan.FromSeconds(7), TimeSpan.Zero);
             _financeTimer = new Timer(DoTpDailySummary, null, TimeSpan.FromSeconds(7), TimeSpan.Zero);
 
@@ -62,6 +57,7 @@ namespace ThirdPartyWager.Workers
                 {
                     var timeCast = _dateTimeHelper.GetTimeByMinute(dataRangeMins, TimeZone, "yyyy-MM-dd HH:mm", thisTime);
                     var isSuccess = await _nineWService.GetWagersAsync(timeCast.startTime, timeCast.endTime);
+                    isSuccess = await _nineWService.GetUnsettleWagersAsync(timeCast.startUnix * 1000);
                     if (isSuccess)
                     {
                         _logger.LogInformation($"NineW Get Wagers: {timeCast.startTime} ~ {timeCast.endTime}");
@@ -170,7 +166,7 @@ namespace ThirdPartyWager.Workers
         private async void GetReportByDate(object state)
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-            LogContext.PushProperty("Tp", _tpName);         
+            LogContext.PushProperty("Tp", _tpName);
             var timerType = (int)WagerTimerType.UserReport;
             var intervalDays = 1;
             var nextTimeSpan = TimeSpan.FromHours(4);
@@ -180,8 +176,8 @@ namespace ThirdPartyWager.Workers
                 var date = lastTime?.StartTime ?? DateTime.UtcNow.BeginningOfTheDay();
                 var endTime = date.AddDays(1).AddMilliseconds(-1);
                 if (endTime < DateTime.UtcNow)
-                {         
-                    var summaryTransaction =  _nineWService.GetSummaryTransactionReportAsync(date);//querySummaryTransaction
+                {
+                    var summaryTransaction = _nineWService.GetSummaryTransactionReportAsync(date);//querySummaryTransaction
                     if (await summaryTransaction)
                     {
                         _logger.LogInformation($"NineW Get {date:yyyy-MM-dd} Report");
@@ -200,7 +196,7 @@ namespace ThirdPartyWager.Workers
                 nextTimeSpan = TimeSpan.FromHours(1);
             }
             finally
-            {     
+            {
                 _reportTimer.Change(nextTimeSpan, TimeSpan.Zero);
             }
         }

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace ThirdPartySeamlessWallet.Service.Model
+﻿namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class BettingDataRNG_YGG
     {
@@ -29,9 +24,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public decimal bonusprize { get; set; }
         public int tickets { get; set; }
+        public string org { get; set; }
     }
 
-    public class SettleData_YGG 
+    public class SettleData_YGG
     {
         /// <summary>
         /// 注單號碼
@@ -47,5 +43,13 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// 輸贏值，如果 NULL 表示 Wager 還沒拉到結算的注單
         /// </summary>
         public decimal? WinLostAmount { get; set; }
+    }
+
+    public class YGGConfig : TpSiteConfig
+    {
+        public string key { get; set; }
+        public string org { get; set; }
+        public string topOrg { get; set; }
+        public string FunGameUrl { get; set; }
     }
 }

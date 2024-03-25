@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Newtonsoft.Json;
 
 namespace ThirdPartyWager.Service.Model
 {
@@ -45,5 +45,20 @@ namespace ThirdPartyWager.Service.Model
         public string cur { get; set; }
         public int playertype { get; set; }
         public decimal jackpotwinamt { get; set; }
+    }
+
+    public class KMConfig
+    {
+        public string ApiUrl { get; set; }
+        public string GameUrl { get; set; }
+
+        [JsonProperty("X-QM-ClientId")]
+        public string X_QM_ClientId { get; set; }
+
+        [JsonProperty("X-QM-ClientSecret")]
+        public string X_QM_ClientSecret { get; set; }
+
+        public string GameUrl_RMB { get; set; }
+
     }
 }

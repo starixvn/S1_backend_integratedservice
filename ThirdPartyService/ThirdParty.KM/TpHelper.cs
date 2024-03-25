@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -13,6 +12,13 @@ namespace ThirdParty.KM
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly KMConfig _siteConfig;
+
+        public TpHelper(IServiceProvider provider)
+        {
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<KMConfig>(TpEnum.KM.ToString());
+        }
+
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             return new ApiResult()
@@ -23,10 +29,12 @@ namespace ThirdParty.KM
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var apiUrl = GetInputValue(inputs, "ApiUrl");
-            var gameUrl = (tpCustInfo.TpCurrencyId == "RMB") ? GetInputValue(inputs, $"GameUrl_{tpCustInfo.TpCurrencyId}") : GetInputValue(inputs, "GameUrl");
-            var clientId = GetInputValue(inputs, "X-QM-ClientId");
-            var clientSecret = GetInputValue(inputs, "X-QM-ClientSecret");
+            var config = _siteConfig;
+
+            var apiUrl = config.ApiUrl;
+            var gameUrl = (tpCustInfo.TpCurrencyId == "RMB") ? config.GameUrl_RMB : config.GameUrl;
+            var clientId = config.X_QM_ClientId;
+            var clientSecret = config.X_QM_ClientSecret;
 
             var obj = new
             {
@@ -104,7 +112,7 @@ namespace ThirdParty.KM
             var detail = ToJson(wagerDetail);
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
-                TpCategory.Poker => new PokerDetail(getBetDetail.TpGameTypeOption)
+                TpCategory.P2P => new PokerDetail(getBetDetail.TpGameTypeOption)
                 {
                     TransId = getBetDetail.TransId,
                     Detail = detail,
@@ -127,15 +135,6 @@ namespace ThirdParty.KM
             };
         }
 
-        private string GetInputValue(Dictionary<string, string> inputs, string key)
-        {
-            if (inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))
-            {
-                return inputs[key];
-            }
-            throw new Exception();
-        }
-
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_KM_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
@@ -155,7 +154,7 @@ namespace ThirdParty.KM
             };
         }
 
-        private DeviceType GetDeviceType(string device)
+        private static DeviceType GetDeviceType(string device)
         {
             return device switch
             {

@@ -1,8 +1,9 @@
 ﻿using CommonService.Service.BLL;
+using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
+
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 
 namespace CommonService.Controllers
 {
@@ -10,19 +11,21 @@ namespace CommonService.Controllers
     [ApiController]
     public class LiveStreamingController : ControllerBase
     {
-        private readonly LiveStreamingBLL liveStreamingBLL;
-        public LiveStreamingController(LiveStreamingBLL liveStreamingBLL)
+        private readonly LiveStreamingBLL _liveStreamingBLL;
+
+        public LiveStreamingController(IServiceProvider provider)
         {
-            this.liveStreamingBLL = liveStreamingBLL;
+            _liveStreamingBLL = provider.GetRequiredService<LiveStreamingBLL>();
         }
+
         [HttpPost]
-        public async Task<ApiResult> GetLiveStreamingLinkAsync(LiveStreamingLinkReq liveStreamingLinkReq )
+        public async Task<ApiResult> GetLiveStreamingLinkAsync(LiveStreamingLinkReq liveStreamingLinkReq)
         {
-            ApiResult apiResult = new ApiResult();
+            var apiResult = new ApiResult();
 
             if (liveStreamingLinkReq.Ch != 0 && !string.IsNullOrEmpty(liveStreamingLinkReq.SiteName.Trim()) && !string.IsNullOrEmpty(liveStreamingLinkReq.Uid.Trim()) && !string.IsNullOrEmpty(liveStreamingLinkReq.Ip.Trim()))
             {
-                var resultResp = await liveStreamingBLL.GetLiveStreamingLink(liveStreamingLinkReq);
+                var resultResp = await _liveStreamingBLL.GetLiveStreamingLink(liveStreamingLinkReq);
                 apiResult.ErrorCode = resultResp.ErrorCode;
                 apiResult.Message = resultResp.Message;
             }

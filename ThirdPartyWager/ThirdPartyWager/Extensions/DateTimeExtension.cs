@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace ThirdPartyWager.Extensions
+﻿namespace ThirdPartyWager.Extensions
 {
     public static class DateTimeExtension
     {
@@ -10,12 +7,12 @@ namespace ThirdPartyWager.Extensions
             return new DateTime(date.Year, date.Month, date.Day);
         }
 
-        public static List<(DateTimeOffset begin , DateTimeOffset end)> DateToTimeRange(this DateTime date, int timeZone, int rangeHour)
+        public static List<(DateTimeOffset begin, DateTimeOffset end)> DateToTimeRange(this DateTime date, int timeZone, int rangeHour)
         {
             var result = new List<(DateTimeOffset begin, DateTimeOffset end)>();
-            var baseDate =  new DateTimeOffset(date).ToOffset(new TimeSpan(timeZone, 0, 0));
+            var baseDate = new DateTimeOffset(date).ToOffset(new TimeSpan(timeZone, 0, 0));
             for (int i = 0; i < 24; i += rangeHour)
-            {               
+            {
                 var range = (baseDate.AddHours(i), baseDate.AddHours(i + rangeHour));
                 result.Add(range);
             }
@@ -26,6 +23,12 @@ namespace ThirdPartyWager.Extensions
         {
             var baseDate = new DateTimeOffset(date).ToOffset(new TimeSpan(timeZone, 0, 0));
             return (baseDate, baseDate.AddDays(1).AddMilliseconds(-1));
+        }
+
+        public static bool Is15Minute(this DateTimeOffset time)
+        {
+            var minute = time.Minute;
+            return minute == 0 || minute == 15 || minute == 30 || minute == 45;
         }
     }
 }

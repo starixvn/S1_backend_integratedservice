@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -13,6 +11,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string TpUserName { get; set; }
         public string TpPwd { set; get; }
         public int SiteId { set; get; }
+        public string TpCustId { get; set; }
+        public string TpCurrencyId { get; set; }
+        public int MemberType { get; set; }
     }
     public class TpCustInfoAuth
     {
@@ -30,6 +31,8 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string TpUserName { get; set; }
         public decimal ExchangeRate { get; set; }
         public string TpCurrencyId { get; set; }
+        public int MemberType { get; set; }
+        public string GameId { get; set; }
     }
     public class TpCustBalance
     {
@@ -46,13 +49,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string Token { get; set; }
         public bool Locked => CustStatus != 1 || TpStatus != 1 || TpCustStatus != 1;
     }
-    public class BonusFulfill
-    {
-        public int BonusId { get; set; }
-        public int CustId { get; set; }
-        public int SiteId { get; set; }
-        public string UserName { get; set; }
-    }
+    
     public class Customer
     {
         public int CustId { get; set; }
@@ -72,5 +69,52 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public bool IsResetPwd { get; set; }
         public string Aff { get; set; }
         public string AffCode { get; set; }
+    }
+
+    public class CustBonus
+    {
+        public int BonusId { get; set; }
+        public decimal Bonus { get; set; }
+        public int PromoCategoryId { get; set; }
+    }
+
+    public class CustProfile 
+    { 
+        public int CustId { get; set; }
+        public string Birth_d { get; set; }
+        public string Birth_m { get; set; }
+        public string Birth_y { get; set; }
+        //public string CurrentAddress { get; set; }
+        public Occupation Occupation { get; set; }
+        public SourceOfIncome SourceOfIncome { get; set; }
+        public string Email { get; set; }
+        public string AccountName { get; set; }
+        public string UserName { get; set; }
+        public CustStatus Status { get; set; }
+        public DateTime RegTime { get; set; }
+        public string AreaCode { get; set; }
+        public string PhoneNo { get; set; }
+        public string SignupIp { get; set; }
+        public int CurrencyId { get; set; }
+        public string Nationality { get; set; }
+        public string Country { get; set; }
+        public string City { get; set; }
+        public string PostCode { get; set; }
+        public string LineFirst { get; set; }
+    }
+    public class CustInfo
+    {
+        public int IBCCustID { get; set; }
+        public string RegisteredName { get; set; }
+        public string Email { get; set; }
+        public string Mobile { get; set; }
+        public bool Active { get; set; }
+        public bool Locked { get; set; }
+        public DateTime DateOfRegistration { get; set; }
+        public string RegistrationIP { get; set; }
+        public string DateOfBirth { get; set; }
+        public string CurrentAddress { get; set; }
+        public string Nationality { get; set; }
+        public string Occupation { get; set; }
     }
 }

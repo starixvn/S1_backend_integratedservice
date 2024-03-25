@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ThirdPartySeamlessWallet.Service.Model.enums;
+﻿using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -42,5 +38,17 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public new long TransId { get; set; }
         public string gameId { get; set; }
+    }
+
+    public class PPConfig : TpSiteConfig
+    {
+        public string SecureKey { get; set; }
+        public string FunGameUrl { get; set; }
+        public string ProviderId { get; set; }
+        public string SecureLogin { get; set; }
+        public string ApiUrl_Stream { get; set; }
+        public string SecurePassword { get; set; }
+        public string SecureKey_Stream { get; set; }
+        public string SecureLogin_Stream { get; set; }
     }
 }

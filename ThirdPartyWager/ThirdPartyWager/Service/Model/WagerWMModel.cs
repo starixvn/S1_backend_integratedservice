@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace ThirdPartyWager.Service.Model
+﻿namespace ThirdPartyWager.Service.Model
 {
     public class WagerWMModel
     {
@@ -64,5 +61,17 @@ namespace ThirdPartyWager.Service.Model
     public class WagerWMTotal
     {
         public int wagerCount { get; set; }
+    }
+
+    public class WMConfig
+    {
+        public string ApiUrl { get; set; }
+        public Dictionary<string, CurrencyDataWM> CurrencyData { get; set; }
+    }
+
+    public class CurrencyDataWM
+    {
+        public string vendorId { get; set; }
+        public string signature { get; set; }
     }
 }

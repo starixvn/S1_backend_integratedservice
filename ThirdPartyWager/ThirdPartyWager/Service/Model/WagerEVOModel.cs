@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace ThirdPartyWager.Service.Model
+﻿namespace ThirdPartyWager.Service.Model
 {
     public class WagerEVOModel
     {
@@ -121,5 +118,17 @@ namespace ThirdPartyWager.Service.Model
         public double wager { get; set; }
         public double payout { get; set; }
         public string gameSubType { get; set; }
+    }
+
+    public class NLCConfig
+    {
+        public string ApiUrl_Backup { get; set; }
+        public string EcId { get; set; }
+        public string ApiUrl { get; set; }
+        public string Ua2Token { get; set; }
+        public string AuthToken { get; set; }
+        public string CasinoKey { get; set; }
+        public string GameProvider { get; set; }
+        public string GameHistoryApiToken { get; set; }
     }
 }

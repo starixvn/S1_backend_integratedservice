@@ -1,5 +1,7 @@
-﻿using Newtonsoft.Json;
-using System.Text;
+﻿using System.Text;
+
+using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -24,7 +26,7 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<List<WagerEVOModel>> GetBetListByTime(dynamic setting, string startTime, string endTime)
         {
-            var wagerUrl = setting["ApiUrl"];
+            var wagerUrl = setting["ApiUrl_Backup"];
             var casinoKey = setting["CasinoKey"];
             var gameHistoryApiToken = setting["gameHistoryApiToken"];
             var gameProvider = setting["GameProvider"];
@@ -72,19 +74,15 @@ namespace ThirdPartyWager.Service.BLL
             }
             else
             {
-                var word = "error";
-                if (!result.Contains(word))
+                var word = "}\n{";
+                if (result.Contains(word))
                 {
-                    word = "}\n{";
-                    if (result.Contains(word))
-                    {
-                        var tmp = result.Replace(word, "},{");
-                        result = $"[{tmp}]";
-                    }
-                    else
-                    {
-                        result = $"[{result}]";
-                    }
+                    var tmp = result.Replace(word, "},{");
+                    result = $"[{tmp}]";
+                }
+                else
+                {
+                    result = $"[{result}]";
                 }
             }
             return result;

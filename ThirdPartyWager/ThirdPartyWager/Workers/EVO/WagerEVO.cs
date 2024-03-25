@@ -1,10 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Serilog.Context;
+﻿using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -17,7 +12,7 @@ namespace ThirdPartyWager.Workers
 
         private Timer timer;
         private readonly int tpType = (int)WagerTimerType.Wager;
-        private readonly int timeRange = 20; //in minutes 
+        private readonly int timeRange = 25; //in minutes
         private readonly int quickTime = 45; // in seconds
         private readonly int runTime = 180; // in seconds
         private readonly string _tpName = Tp.EVO.ToString();

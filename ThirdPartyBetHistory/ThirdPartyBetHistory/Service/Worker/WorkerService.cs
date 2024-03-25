@@ -1,17 +1,7 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
-using Serilog.Context;
+﻿using Serilog.Context;
+
 using ThirdPartyBetHistory.Service.BLL;
-using ThirdPartyBetHistory.Service.Model;
 using ThirdPartyBetHistory.Service.Model.enums;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace ThirdPartyBetHistory.Service.Worker
 {
@@ -20,7 +10,7 @@ namespace ThirdPartyBetHistory.Service.Worker
         private readonly ILogger<WorkerService> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly IEnumerable<IThirdPartyBetHelper> _sabaSiteList;
-        private readonly Dictionary<SiteId, Timer> timerWorkerList;
+        private readonly Dictionary<int, Timer> timerWorkerList;
         private readonly WorkerType workerType = WorkerType.MainWager;
 
         public WorkerService(IServiceProvider provider)
@@ -28,7 +18,7 @@ namespace ThirdPartyBetHistory.Service.Worker
             _logger = provider.GetRequiredService<ILogger<WorkerService>>();
             _sabaSiteList = provider.GetServices<IThirdPartyBetHelper>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            timerWorkerList = new Dictionary<SiteId, Timer>();
+            timerWorkerList = new Dictionary<int, Timer>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -54,17 +44,25 @@ namespace ThirdPartyBetHistory.Service.Worker
         {
             var tpBetHelp = (IThirdPartyBetHelper)state;
             LogContext.PushProperty("RequestId", Guid.NewGuid());
-            LogContext.PushProperty("TpName", tpBetHelp.thirdPartyModel.TpName);
+            LogContext.PushProperty("TpName", tpBetHelp.TpName);
             LogContext.PushProperty("WorkerType", workerType);
             LogContext.PushProperty("SiteId", tpBetHelp.SiteId);
 
             var lastTicketKey = _thirdPartyBLL.GetSiteTicketKey(workerType, tpBetHelp);
-            var taskProperty = $"{tpBetHelp.thirdPartyModel.TpName}:{workerType} | SiteId:{tpBetHelp.SiteId} | siteTicketKey:{lastTicketKey}";
+            LogContext.PushProperty("LastTicketKey", lastTicketKey);
+
+            var taskProperty = $"{tpBetHelp.TpName}:{workerType} | SiteId:{tpBetHelp.SiteId} | siteTicketKey:{lastTicketKey}";
             try
             {
-                var nextTicketKey = tpBetHelp.AddBetRecord(workerType,lastTicketKey).Result;
-                _thirdPartyBLL.SetSiteTicketKey(workerType, tpBetHelp, nextTicketKey);
-                _logger.LogInformation($"Success: {taskProperty} at: {DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm.ss.fff}");
+                var nextTicketKey = tpBetHelp.AddTpBetRecordDetail(workerType, lastTicketKey).Result;
+                LogContext.PushProperty("NextTicketKey", nextTicketKey);
+
+                if (nextTicketKey > lastTicketKey)
+                {
+                    _thirdPartyBLL.SetSiteTicketKey(workerType, tpBetHelp, nextTicketKey);
+                }
+
+                _logger.LogInformation($"Success: {taskProperty} | TicketKey range: {lastTicketKey} ~ {nextTicketKey}");
 
             }
             catch (Exception ex)
@@ -73,7 +71,7 @@ namespace ThirdPartyBetHistory.Service.Worker
             }
             finally
             {
-                timerWorkerList[tpBetHelp.SiteId].Change(TimeSpan.FromSeconds(1), TimeSpan.Zero);
+                timerWorkerList[tpBetHelp.SiteId].Change(TimeSpan.FromSeconds(6), TimeSpan.Zero);
             }
         }
     }

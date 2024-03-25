@@ -1,22 +1,17 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Serilog.Context;
+﻿using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
-
 
 namespace ThirdPartyWager.Workers
 {
     public class WagerSkywind : BackgroundService
     {
-        private readonly ILogger<WagerSkywind> logger;
-        private readonly WagerSkywindBLL wagerSkywindBLL;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly DateTimeHelper dateTimeHelper;
+        private readonly ILogger<WagerSkywind> _logger;
+        private readonly DateTimeHelper _dateTimeHelper;
+        private readonly WagerSkywindBLL _wagerSkywindBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
         private Timer timer;
         private readonly int intervalMins = 1;
         private readonly int iRangMins = 10;
@@ -26,18 +21,14 @@ namespace ThirdPartyWager.Workers
         private int quick = 0;
         private readonly int timeZone = 0;
 
-        public WagerSkywind(
-            ILogger<WagerSkywind> logger,
-            WagerSkywindBLL wagerSkywindBLL,
-            ThirdPartyBLL thirdPartyBLL,
-            DateTimeHelper dateTimeHelper
-        )
+        public WagerSkywind(IServiceProvider provider)
         {
-            this.logger = logger;
-            this.wagerSkywindBLL = wagerSkywindBLL;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.dateTimeHelper = dateTimeHelper;
+            _logger = provider.GetRequiredService<ILogger<WagerSkywind>>();
+            _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _wagerSkywindBLL = provider.GetRequiredService<WagerSkywindBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
+
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -51,10 +42,8 @@ namespace ThirdPartyWager.Workers
             LogContext.PushProperty("Tp", _tpName);
             try
             {
-                List<int> siteIdList = new List<int> { 1, 2, 3 };
                 var SetTimer = true;
-
-                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimer(tpId, tpType);
+                var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(tpId, tpType);
                 DateTime timerTime;
                 int last;
                 if (dataTpTimer == null)
@@ -67,13 +56,15 @@ namespace ThirdPartyWager.Workers
                     timerTime = dataTpTimer.StartTime.AddSeconds(-1);
                     last = iRangMins - 1;
                 }
+
                 if (timerTime < DateTime.Now)
                 {
-                    var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-ddTHH:mm:ss.fffZ", timerTime);
-                    foreach (var siteId in siteIdList)
+                    var time = _dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-ddTHH:mm:ss.fffZ", timerTime);
+                    var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+                    foreach (var siteData in siteList)
                     {
-                        var setting = thirdPartyBLL.GetThirdPartyBySite(tpId, siteId);
-                        var result = await wagerSkywindBLL.GetWagersAsync(tpId, setting["ApiUrl"], setting["SecretKey"], setting["Username"], setting["Password"], time.startTime, time.endTime);
+                        var setting = _thirdPartyBLL.GetThirdPartyBySite(tpId, siteData.SiteId);
+                        var result = await _wagerSkywindBLL.GetWagersAsync(tpId, setting["ApiUrl"], setting["SecretKey"], setting["Username"], setting["Password"], time.startTime, time.endTime);
                         if (!result)
                         {
                             SetTimer = false;
@@ -81,7 +72,7 @@ namespace ThirdPartyWager.Workers
                     }
                     if (SetTimer)
                     {
-                        thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
+                        _thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
                     }
                 }
                 var ts = DateTime.Now - timerTime;
@@ -93,7 +84,7 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
             }
             finally
             {

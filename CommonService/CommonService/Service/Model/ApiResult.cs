@@ -1,8 +1,4 @@
 ﻿using CommonService.Service.Model.enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CommonService.Service.Model
 {
@@ -17,7 +13,7 @@ namespace CommonService.Service.Model
         public ApiResult(int ErrorCode, string Message) : this(ErrorCode, Message, "", "") { }
         public ApiResult(int _ErrorCode, string Message, string RawErrorCode, string RawMessage)
         {
-            this.ErrorCode = (ErrorCode)Enum.ToObject(typeof(ErrorCode), _ErrorCode);
+            ErrorCode = (ErrorCode)Enum.ToObject(typeof(ErrorCode), _ErrorCode);
             this.Message = Message;
             this.RawErrorCode = RawErrorCode;
             this.RawMessage = RawMessage;
@@ -30,8 +26,8 @@ namespace CommonService.Service.Model
         public ApiResult(TData data) : this(0, "", data) { }
         public ApiResult(int ErrorCode, string Message) : base(ErrorCode, Message) { }
         public ApiResult(ErrorCode ErrorCode, string Message) : base(ErrorCode, Message) { }
-        public ApiResult(int ErrorCode, string Message, TData data) : base(ErrorCode, Message) { this.Data = data; }
-        public ApiResult(ErrorCode ErrorCode, string Message, TData data) : base(ErrorCode, Message) { this.Data = data; }
+        public ApiResult(int ErrorCode, string Message, TData data) : base(ErrorCode, Message) { Data = data; }
+        public ApiResult(ErrorCode ErrorCode, string Message, TData data) : base(ErrorCode, Message) { Data = data; }
         public TData Data { get; set; }
     }
 }

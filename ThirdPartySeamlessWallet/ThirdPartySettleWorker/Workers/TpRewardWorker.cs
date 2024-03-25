@@ -3,6 +3,7 @@ using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 
 namespace ThirdPartySettleWorker.Workers
@@ -13,7 +14,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly TpUnRewardBLL _tpUnRewardBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly ILogger<TpRewardWorker> _logger;
-        private readonly Dictionary<GameType, Timer> _timerList = new Dictionary<GameType, Timer>();
+        private readonly Dictionary<GameType, Timer> _timerList = new();
         private readonly IEnumerable<TaskParam> _taskList;
 
         public TpRewardWorker(IServiceProvider provider)
@@ -25,6 +26,9 @@ namespace ThirdPartySettleWorker.Workers
             _taskList = new List<TaskParam>()
             {
                 new TaskParam { Tp = Tp.AP, GameType = GameType.AP_RNG, TpCategory = TpCategory.Slots, GetSpName = "Service_RewardRNG_AP_Settle_Get", SetSpName = "Service_RewardRNG_AP_Settle_Set" },
+                new TaskParam { Tp = Tp.KM, GameType = GameType.KM_Poker, TpCategory = TpCategory.Games, GetSpName = "Service_RewardPK_KM_Settle_Get", SetSpName = "Service_RewardPK_KM_Settle_Set", CheckBonus = false },
+                new TaskParam { Tp = Tp.SG, GameType = GameType.SG_RNG, TpCategory = TpCategory.Slots, GetSpName = "Service_Reward_SG_Settle_Get", SetSpName = "Service_Reward_SG_Settle_Set", CheckBonus = false },
+                new TaskParam { Tp = Tp.Pegasus, GameType = GameType.Pegasus_RNG, TpCategory = TpCategory.Slots, GetSpName = "Service_Reward_Pegasus_Settle_Get", SetSpName = "Service_Reward_Pegasus_Settle_Set", CheckBonus = false },
             };
         }
 
@@ -53,6 +57,7 @@ namespace ThirdPartySettleWorker.Workers
             public TpCategory TpCategory { get; set; }
             public string GetSpName { get; set; }
             public string SetSpName { get; set; }
+            public bool CheckBonus { get; set; } = true;
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
@@ -74,6 +79,7 @@ namespace ThirdPartySettleWorker.Workers
             var tpName = tp.ToString();
             var getSpName = param.GetSpName;
             var setSpName = param.SetSpName;
+            var checkBonus = param.CheckBonus;
             var forContinue = false;
             var isError = false;
             var database = DataBase.Main;
@@ -94,7 +100,7 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var data = _tpUnRewardBLL.GetTpUnRewardData<SettleRewardData>(getSpName, new { TransId = tpUnReward.TransId, TpUserName = tpUnReward.TpUserName }, database).First();
+                        var data = _tpUnRewardBLL.GetTpUnRewardData<SettleRewardData>(getSpName, new { TransId = tpUnReward.TransId, TpUserName = tpUnReward.TpUserName }, database).FirstOrDefault();
                         if (data == null)
                         {
                             throw new UnRewardNotFoundException($"{tpUnReward.TransId} TransId not found.");
@@ -118,7 +124,7 @@ namespace ThirdPartySettleWorker.Workers
                             SettlementType = SettlementType.SettledForValid,
                         };
 
-                        var result = _settledBLL.DoTpRewardTicket(tpCustInfo, tpRewardRecordInfo, tpCategory);
+                        var result = _settledBLL.DoTpRewardTicket(tpCustInfo, tpRewardRecordInfo, tpCategory, checkBonus);
                         if (result == 1)
                         {
                             Task.Run(() =>

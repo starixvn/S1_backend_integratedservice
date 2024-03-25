@@ -1,25 +1,27 @@
-﻿using CommonService.Service.Model;
-using Dapper;
-using Microsoft.Extensions.Configuration;
-using MySql.Data.MySqlClient;
+﻿using CommonService.Service.Library;
+using CommonService.Service.Model;
+using CommonService.Service.Model.enums;
+
 using Newtonsoft.Json;
-using System.Data;
 
 namespace CommonService.Service.DAL
 {
     public class IovationService
     {
-        private readonly IConfiguration configuration;
-        public IovationService(IConfiguration configuration)
+        private readonly MySqlClient _logbClient;
+
+        public IovationService(IServiceProvider provider)
         {
-            this.configuration = configuration;
+            _logbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Log);
         }
+
         public int IovationResultIns(IovationResult iovationResult)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringLog"));
+            var deviceId = iovationResult?.details?.device?.alias;
             var p = new
             {
                 AccountCode = iovationResult.accountCode,
+                DeviceId = string.IsNullOrEmpty(deviceId) ? "" : deviceId,
                 Details = JsonConvert.SerializeObject(iovationResult.details),
                 UUId = iovationResult.id,
                 Reason = iovationResult.reason,
@@ -27,7 +29,7 @@ namespace CommonService.Service.DAL
                 StatedIp = iovationResult.statedIp,
                 TrackingNumber = iovationResult.trackingNumber
             };
-            return conn.Execute("Common_IovationLog_Ins", p, commandType: CommandType.StoredProcedure);
+            return _logbClient.Execute("Common_IovationLog_Ins_V2", p);
         }
     }
 }

@@ -1,8 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
+
+using Newtonsoft.Json;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -65,7 +64,7 @@ namespace ThirdParty.Netent
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
+            string ApiUrl = inputs.ContainsKey("ApiUrl_Backup") && !string.IsNullOrEmpty(inputs["ApiUrl_Backup"]) ? inputs["ApiUrl_Backup"] : throw new Exception("ApiUrl_Backup");
             string Ua2Token = inputs.ContainsKey("Ua2Token") && !string.IsNullOrEmpty(inputs["Ua2Token"]) ? inputs["Ua2Token"] : throw new Exception("Ua2Token");
             string CasinoKey = inputs.ContainsKey("CasinoKey") && !string.IsNullOrEmpty(inputs["CasinoKey"]) ? inputs["CasinoKey"] : throw new Exception("CasinoKey");
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
@@ -78,7 +77,7 @@ namespace ThirdParty.Netent
             string countryCode = !string.IsNullOrEmpty(tpCountryCode.CountryCode) ? tpCountryCode.CountryCode : throw new Exception("CountryCode");
 
             bool mobile = appType != AppType.Desktop;
-            var siteName = ServerInfoProvider.getSiteName(tpCustInfo.SiteId);
+            var siteName = ServerInfoProvider.GetSiteName(tpCustInfo.SiteId);
 
             ApiResult oApiResult = new ApiResult();
 
@@ -112,11 +111,6 @@ namespace ThirdParty.Netent
                         id = sessionKey,
                         ip = inputs["ClientIP"]
                     },
-                    group = new
-                    {
-                        id = siteName.ToString(),
-                        action = "assign"
-                    }
                 },
                 config = new
                 {
@@ -175,7 +169,7 @@ namespace ThirdParty.Netent
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
+            string ApiUrl = inputs.ContainsKey("ApiUrl_Backup") && !string.IsNullOrEmpty(inputs["ApiUrl_Backup"]) ? inputs["ApiUrl_Backup"] : throw new Exception("ApiUrl_Backup");
             string GameProvider = inputs.ContainsKey("GameProvider") && !String.IsNullOrEmpty(inputs["GameProvider"]) ? inputs["GameProvider"] : throw new Exception($"GameProvider is empty");
             string gameHistoryApiToken = inputs.ContainsKey("gameHistoryApiToken") && !string.IsNullOrEmpty(inputs["gameHistoryApiToken"]) ? inputs["gameHistoryApiToken"] : throw new Exception("gameHistoryApiToken");
             string CasinoKey = inputs.ContainsKey("CasinoKey") && !string.IsNullOrEmpty(inputs["CasinoKey"]) ? inputs["CasinoKey"] : throw new Exception("CasinoKey");

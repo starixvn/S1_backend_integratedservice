@@ -25,7 +25,7 @@ namespace ThirdPartyWager.Service.Model
         public decimal betAmount { get; set; }
         public decimal winLoss { get; set; }
         public decimal jackpotAmount { get; set; }
-        public string result { get; set; }
+        public string result { get; set; } = "";
         public bool completed { get; set; }
         public long luckyDrawId { get; set; }
         public int roundId { get; set; }
@@ -63,5 +63,14 @@ namespace ThirdPartyWager.Service.Model
         public decimal jackpotAmount { get; set; }
         public decimal bonusAmt { get; set; }
         public string currency { get; set; }
+    }
+
+    public class SGConfig
+    {
+        public string ApiUrl { get; set; }
+        public string GameUrl { get; set; }
+        public string FunGameUrl { get; set; }
+        public string merchantCode { get; set; }
+
     }
 }

@@ -1,15 +1,13 @@
-﻿using Dapper;
-using Microsoft.Extensions.Configuration;
-using MySql.Data.MySqlClient;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
+﻿using System.Data;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.DependencyInjection;
+
+using Dapper;
+
 using Newtonsoft.Json;
+
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+
 using ThirdPartyService.Service.Library;
 using ThirdPartyService.Service.Model;
 
@@ -17,17 +15,15 @@ namespace ThirdPartyService.Service.DAL
 {
     public class TpTransferInfo
     {
-        private readonly IConfiguration configuration;
-        private readonly Common common;
-        private readonly WalletService walletService;
+        private readonly Common _common;
+        private readonly WalletService _walletService;
         private readonly MySqlClient _mainDbClient;
         private readonly MySqlClient _reportDbClient;
 
-        public TpTransferInfo(IServiceProvider provider, IConfiguration configuration, Common common, WalletService walletService)
+        public TpTransferInfo(IServiceProvider provider)
         {
-            this.configuration = configuration;
-            this.common = common;
-            this.walletService = walletService;
+            _common = provider.GetRequiredService<Common>();
+            _walletService = provider.GetRequiredService<WalletService>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
         }
@@ -35,101 +31,97 @@ namespace ThirdPartyService.Service.DAL
         public ApiResult<TransferResult> TpTransferReqV2(TpTransfer tpTransfer, TpCustInfo tpCustInfo, string thirdId, string prefix, object extensionInfo, out string transId)
         {
             var apiResult = new ApiResult<TransferResult>();
-            var transferId = 0;
-            var prefixName = $"{prefix}{common.GetEnv()}";
-            using (var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
-            {
-                transId = conn.QueryFirstOrDefault<string>("Service_TpTransferInfo_Ins",
-                    new
-                    {
-                        tpTransfer.TpId,
-                        tpCustInfo.CustId,
-                        tpCustInfo.UserName,
-                        tpCustInfo.SiteId,
-                        Direction = (int)tpTransfer.direction,
-                        tpTransfer.Amount,
-                        Memo = (string)null,
-                        ThirdId = thirdId,
-                        Prefix = prefixName,
-                        ExtensionInfo = extensionInfo != null ? JsonConvert.SerializeObject(extensionInfo) : null,
-                        BonusId = tpTransfer.BonusId
-                    }, commandType: CommandType.StoredProcedure);
-                conn.Open();
+            var prefixName = $"{prefix}{_common.GetEnv()}";
 
-                var m = Regex.Match(transId, @"\d+");
-                int.TryParse(m.Value, out transferId);
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
 
-                if (tpTransfer.direction == Direction.ToTp)
+            transId = _mainDbClient.QueryFirst<string>("Service_TpTransferInfo_Ins",
+                new
                 {
-                    using (var trans = conn.BeginTransaction())
-                    {
-                        decimal afterAmount = -1;
-                        var rwalletServiceResult = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, tpTransfer.Amount * -1, tpTransfer.TpId, null, transId, out afterAmount, conn, trans);
+                    tpTransfer.TpId,
+                    tpCustInfo.CustId,
+                    tpCustInfo.UserName,
+                    tpCustInfo.SiteId,
+                    Direction = (int)tpTransfer.direction,
+                    tpTransfer.Amount,
+                    Memo = (string)null,
+                    ThirdId = thirdId,
+                    Prefix = prefixName,
+                    ExtensionInfo = extensionInfo != null ? JsonConvert.SerializeObject(extensionInfo) : null,
+                    BonusId = tpTransfer.BonusId
+                });
 
-                        if (rwalletServiceResult != 0)
-                        {
-                            apiResult.ErrorCode = ErrorCode.MoneyNotEnough;
-                            apiResult.Data.Difference = afterAmount;
-                            apiResult.Message = "Amount isn't enough";
+            var m = Regex.Match(transId, @"\d+");
+            int.TryParse(m.Value, out var transferId);
 
-                            conn.Execute("TpTransferInfo_Set", new { TransferId = transferId, ThirdId = thirdId, Memo = $"amount isn't not enough: {Math.Abs(afterAmount)}", ForStatus = (int)TransferStatus.Pending, Status = (int)TransferStatus.Fail }, trans, commandType: CommandType.StoredProcedure);
-                            trans.Commit();
-                            return apiResult;
-                        }
-                        else
-                        {
-                            conn.Execute("TpTransferInfo_Set", new { TransferId = transferId, ThirdId = thirdId, Memo = (string)null, ForStatus = (int)TransferStatus.Pending, Status = (int)TransferStatus.PendingD }, trans, commandType: CommandType.StoredProcedure);
-                            trans.Commit();
-                        }
-                    }
+            if (tpTransfer.direction == Direction.ToTp)
+            {
+                var rwalletServiceResult = _walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, tpTransfer.Amount * -1, tpTransfer.TpId, null, transId, out var afterAmount, trans);
+
+                if (rwalletServiceResult != 0)
+                {
+                    apiResult.ErrorCode = ErrorCode.MoneyNotEnough;
+                    apiResult.Data.Difference = afterAmount;
+                    apiResult.Message = "Amount isn't enough";
+
+                    _mainDbClient.Execute("TpTransferInfo_Set", trans, new { TransferId = transferId, ThirdId = thirdId, Memo = $"amount isn't not enough: {Math.Abs(afterAmount)}", ForStatus = (int)TransferStatus.Pending, Status = (int)TransferStatus.Fail });
+                    trans.Commit();
+                    conn.Close();
+                    conn.Dispose();
+                    return apiResult;
+                }
+                else
+                {
+                    _mainDbClient.Execute("TpTransferInfo_Set", trans, new { TransferId = transferId, ThirdId = thirdId, Memo = (string)null, ForStatus = (int)TransferStatus.Pending, Status = (int)TransferStatus.PendingD });
+                    trans.Commit();
                 }
             }
 
+            conn.Close();
+            conn.Dispose();
             apiResult.ErrorCode = ErrorCode.Success;
             return apiResult;
         }
 
         public bool Service_TpTransferInfo_Bonus_Get(int bonusId)
         {
-            return _reportDbClient.QueryFirst<bool>("Service_TpTransferInfo_Bonus_Get",
-                new DynamicParameters(new { BonusId = bonusId }));
+            return _reportDbClient.QueryFirst<bool>("Service_TpTransferInfo_Bonus_Get", new DynamicParameters(new { BonusId = bonusId }));
         }
 
         public void TpTransferCommit(ApiResult<TransferResult> transferResult, TpCustInfo tpCustInfo, TpTransfer tpTransfer, string transId)
         {
-            decimal afterAmount = 0;
-            var transferId = 0;
             var m = Regex.Match(transId, @"\d+");
-            int.TryParse(m.Value, out transferId);
+            int.TryParse(m.Value, out var transferId);
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
 
             if (transferResult.Data.Status == TransferStatus.Success && transferResult.ErrorCode == ErrorCode.Success)
             {
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-                conn.Open();
-                using var trans = conn.BeginTransaction();
-                var forStatus = 0;
-                forStatus = tpTransfer.direction == Direction.ToTp ? (int)TransferStatus.PendingD : (int)TransferStatus.Pending;
+                var forStatus = tpTransfer.direction == Direction.ToTp ? (int)TransferStatus.PendingD : (int)TransferStatus.Pending;
 
-                var isSuccess = conn.Execute("TpTransferInfo_Set",
+                var isSuccess = _mainDbClient.Execute("TpTransferInfo_Set", trans,
                     new
                     {
-                        TransferId = transferId, 
-                        transferResult.Data.ThirdId, 
+                        TransferId = transferId,
+                        transferResult.Data.ThirdId,
                         Memo = transferResult.RawMessage,
-                        ForStatus = forStatus, 
+                        ForStatus = forStatus,
                         Status = (int)TransferStatus.Success
-                    }, trans, commandType: CommandType.StoredProcedure) > 0;
+                    }) > 0;
                 var rwalletServiceResult = 0;
                 if (tpTransfer.direction == Direction.ToMain && isSuccess)
                 {
-                    rwalletServiceResult = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, tpTransfer.Amount, tpTransfer.TpId, null, transId, out afterAmount, conn, trans);
+                    rwalletServiceResult = _walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, tpTransfer.Amount, tpTransfer.TpId, null, transId, out _, trans);
                 }
                 else if (tpTransfer.direction == Direction.ToTp)
                 {
-                    var custBonus = conn.QueryFirstOrDefault<BonusWallet>("Service_CustBonus_Check", new { tpCustInfo.CustId, tpTransfer.TpId }, trans, commandType: CommandType.StoredProcedure);
+                    var custBonus = _mainDbClient.QueryFirst<BonusWallet>("Service_CustBonus_Check", new { tpCustInfo.CustId, tpTransfer.TpId });
                     if (custBonus != null)
                     {
-                        var bonusId = custBonus.BonusId;
                         string memo = null;
                         var withdrawalLimit = tpTransfer.Amount * -1;
                         var p = new DynamicParameters(new
@@ -138,89 +130,82 @@ namespace ThirdPartyService.Service.DAL
                             tpCustInfo.UserName,
                             tpCustInfo.SiteId,
                             Memo = memo,
-                            RefTransId = transId
+                            ReasonId = 0,
+                            RefTransId = transId,
+                            CreateFrom = (int)WithdrawalLimitLogCreateFromEnum.Bonus,
+                            Creator = "System"
                         });
 
                         p.Add("AfterWithdrawalLimit", dbType: DbType.Decimal, direction: ParameterDirection.Output);
                         p.Add("WithdrawalLimit", withdrawalLimit, dbType: DbType.Decimal, direction: ParameterDirection.InputOutput);
-                        var res = conn.Execute("Service_WithdrawalLimit_Set", p, trans, commandType: CommandType.StoredProcedure);
-                        // if (res > 0)
-                        // {
-                        //     var rollover = p.Get<decimal>("WithdrawalLimit");
-                        //     conn.Execute("Service_BonusAmount_Set", new { BonusId = bonusId, LockedAmount = tpTransfer.Amount, Rollover = Math.Abs(rollover) }, trans, commandType: CommandType.StoredProcedure);
-                        // }
+                        var res = _mainDbClient.Execute("Service_WithdrawalLimit_Set_V2", trans, p);
                     }
+                }
+
+                if (rwalletServiceResult is 0 or -1)
+                    trans.Commit();
+            }
+            else if (transferResult.Data.Status == TransferStatus.Fail)
+            {
+                var forStatus = tpTransfer.direction == Direction.ToTp ? (int)TransferStatus.PendingD : (int)TransferStatus.Pending;
+                string memo = null;
+                if (transferResult.ErrorCode == ErrorCode.MoneyNotEnough)
+                {
+                    memo = "3RD wallet amount isn't enough";
+                }
+                else if (!string.IsNullOrEmpty(transferResult.RawMessage))
+                {
+                    memo = transferResult.RawMessage;
+                }
+
+                var p = new DynamicParameters(new { TransferId = transferId, transferResult.Data.ThirdId, ForStatus = forStatus, Status = (int)TransferStatus.Fail });
+                p.Add("Memo", memo, dbType: DbType.String, direction: ParameterDirection.Input, size: 100);
+                var isSuccess = _mainDbClient.Execute("TpTransferInfo_Set", trans, p) > 0;
+                var rwalletServiceResult = 0;
+                if (tpTransfer.direction == Direction.ToTp && isSuccess)
+                {
+                    memo = $"\r\nreturn amount. Cause: {transferResult.RawMessage}";
+                    rwalletServiceResult = _walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, tpTransfer.Amount, tpTransfer.TpId, memo, transId, out _, trans);
                 }
 
                 if (rwalletServiceResult == 0)
                     trans.Commit();
             }
-            else if (transferResult.Data.Status == TransferStatus.Fail)
-            {
-                using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-                conn.Open();
-                using var trans = conn.BeginTransaction();
-                var forStatus = 0;
-                forStatus = tpTransfer.direction == Direction.ToTp ? (int)TransferStatus.PendingD : (int)TransferStatus.Pending;
-                string Memo = null;
-                if (transferResult.ErrorCode == ErrorCode.MoneyNotEnough)
-                {
-                    Memo = "3RD wallet amount isn't enough";
-                }
-                else if (!string.IsNullOrEmpty(transferResult.RawMessage))
-                {
-                    Memo = transferResult.RawMessage;
-                }
 
-                var p = new DynamicParameters(new { TransferId = transferId, transferResult.Data.ThirdId, ForStatus = forStatus, Status = (int)TransferStatus.Fail });
-                p.Add("Memo", Memo, dbType: DbType.String, direction: ParameterDirection.Input, size: 100);
-                var isSuccess = conn.Execute("TpTransferInfo_Set", p, trans, commandType: CommandType.StoredProcedure) > 0;
-                var rwalletServiceResult = 0;
-                if (tpTransfer.direction == Direction.ToTp && isSuccess)
-                {
-                    Memo = $"\r\nreturn amount. Cause: {transferResult.RawMessage}";
-                    rwalletServiceResult = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, tpTransfer.Amount, tpTransfer.TpId, Memo, transId, out afterAmount, conn, trans);
-                }
-
-                trans.Commit();
-            }
+            conn.Close();
+            conn.Dispose();
         }
 
         public IEnumerable<TpTransferInfoModel> TpTransferPendingGet(int limit)
         {
-            return _mainDbClient.Query<TpTransferInfoModel>("TpTransferInfo_Pending_Get_V2",new DynamicParameters(new { _Limit = limit}));
+            return _mainDbClient.QueryUseCommandDefinition<TpTransferInfoModel>("TpTransferInfo_Pending_Get_V2", new DynamicParameters(new { _Limit = limit }));
         }
         public IEnumerable<TpPendingBonusTransferModel> TpBonusTransferPendingGet(int limit)
         {
-            return _mainDbClient.Query<TpPendingBonusTransferModel>("Service_PendingBonusList_Get",new DynamicParameters(new { _Limit = limit}));
+            return _mainDbClient.QueryUseCommandDefinition<TpPendingBonusTransferModel>("Service_PendingBonusList_Get", new DynamicParameters(new { _Limit = limit }));
         }
-        public TpPendingBonusTransferInfoModel TpBonusTransferInfoPendingGet(int custId , string status)
+        public TpPendingBonusTransferInfoModel TpBonusTransferInfoPendingGet(int custId, string status)
         {
-            return _mainDbClient.QueryFirst<TpPendingBonusTransferInfoModel>("Service_TpTransferBonusInfoPendingByCustId_Get_V2",new DynamicParameters(new {_CustId = custId , _Status = status}));
+            return _mainDbClient.QueryFirst<TpPendingBonusTransferInfoModel>("Service_TpTransferBonusInfoPendingByCustId_Get_V2", new DynamicParameters(new { _CustId = custId, _Status = status }));
         }
         public IEnumerable<TpRemainingTransferBonusModel> TpRemainingTransferBonusGet(int limit)
         {
-            return _mainDbClient.Query<TpRemainingTransferBonusModel>("Service_RemainingTransferBonusPending_Get_V2",new DynamicParameters(new { _Limit = limit}));
+            return _mainDbClient.QueryUseCommandDefinition<TpRemainingTransferBonusModel>("Service_RemainingTransferBonusPending_Get_V2", new DynamicParameters(new { _Limit = limit }));
         }
-        
+
         public bool SetTransferFail(string transId)
         {
-            var transferId = 0;
             var m = Regex.Match(transId, @"\d+");
-            int.TryParse(m.Value, out transferId);
+            int.TryParse(m.Value, out var transferId);
 
-            using (var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
-            {
-                return conn.Execute("TpTransferInfo_Set", new { TransferId = transferId, ThirdId = (string)null, Memo = (string)null, ForStatus = (int)TransferStatus.Pending, Status = (int)TransferStatus.Fail }, commandType: CommandType.StoredProcedure) > 0;
-            }
+            return _mainDbClient.Execute("TpTransferInfo_Set", new { TransferId = transferId, ThirdId = (string)null, Memo = (string)null, ForStatus = (int)TransferStatus.Pending, Status = (int)TransferStatus.Fail }) > 0;
         }
 
         public void InsAdjustWalletLog(TpCustInfo tpCustInfo, AdminTpTransfer adminTpTransfer, out string transId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
             var p = new DynamicParameters(new
             {
-                Prefix = $"T{common.GetEnv()}",
+                Prefix = $"T{_common.GetEnv()}",
                 adminTpTransfer.TpId,
                 tpCustInfo.SiteId,
                 tpCustInfo.CustId,
@@ -231,35 +216,32 @@ namespace ThirdPartyService.Service.DAL
                 adminTpTransfer.Remarks,
                 adminTpTransfer.Category
             });
-            
-            transId = conn.QueryFirstOrDefault<string>("Log_AdminAdjustWallet_Ins_V2", p, commandType: CommandType.StoredProcedure);
+
+            transId = _mainDbClient.QueryFirst<string>("Log_AdminAdjustWallet_Ins_V2", p);
         }
-        
+
         public void SetAdjustWalletLog(ApiResult<TransferResult> transferResult, string transId)
         {
-            using (var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
+            string memo = null;
+            if (transferResult.ErrorCode == ErrorCode.MoneyNotEnough)
             {
-                string Memo = null;
-                if (transferResult.ErrorCode == ErrorCode.MoneyNotEnough)
-                {
-                    Memo = "3RD wallet amount isn't enough";
-                }
-                else if (!string.IsNullOrEmpty(transferResult.RawMessage))
-                {
-                    Memo = transferResult.RawMessage;
-                }
-
-                var p = new DynamicParameters(new { TransId = transId, transferResult.Data.ThirdId, Memo, transferResult.Data.Status });
-                conn.QueryFirstOrDefault<string>("Log_AdminAdjustWallet_Set", p, commandType: CommandType.StoredProcedure);
+                memo = "3RD wallet amount isn't enough";
             }
+            else if (!string.IsNullOrEmpty(transferResult.RawMessage))
+            {
+                memo = transferResult.RawMessage;
+            }
+
+            var p = new DynamicParameters(new { TransId = transId, transferResult.Data.ThirdId, Memo = memo, transferResult.Data.Status });
+            _mainDbClient.QueryFirst<string>("Log_AdminAdjustWallet_Set", p);
         }
-        
+
         public int SetAdjustmentActualDeposit(string transId, int depositId, decimal adjustAmount)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
+            using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
-            
+
             var props = new DynamicParameters();
             props.Add("_DepositId", depositId);
             props.Add("_AdjustAmount", adjustAmount);
@@ -267,8 +249,8 @@ namespace ThirdPartyService.Service.DAL
             props.Add("_AfterAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
             props.Add("_Result", dbType: DbType.Int32, direction: ParameterDirection.Output);
 
-            _ = conn.Execute("Admin_AdjustmentActualDeposit_Set", props, trans, commandType: CommandType.StoredProcedure);
-            
+            _ = _mainDbClient.Execute("Admin_AdjustmentActualDeposit_Set", trans, props);
+
             var beforeAmount = props.Get<decimal>("_BeforeAmount");
             var afterAmount = props.Get<decimal>("_AfterAmount");
             var resultCode = props.Get<int>("_Result");
@@ -276,23 +258,29 @@ namespace ThirdPartyService.Service.DAL
             if (resultCode != 0)
             {
                 trans.Rollback();
+                conn.Close();
+                conn.Dispose();
                 return resultCode;
             }
-            
+
             props = new DynamicParameters();
             props.Add("_TransId", transId);
             props.Add("_DepositId", depositId);
-            props.Add("_AdjustType", (int) AdjustWalletTypeEnum.ThirdParty);
+            props.Add("_AdjustType", (int)AdjustWalletTypeEnum.ThirdParty);
             props.Add("_BeforeAmount", beforeAmount);
             props.Add("_AfterAmount", afterAmount);
-            
-            if (conn.Execute("Admin_AdjustmentDepositLog_Ins", props, trans, commandType: CommandType.StoredProcedure) < 1)
+
+            if (_mainDbClient.Execute("Admin_AdjustmentDepositLog_Ins", trans, props) < 1)
             {
                 trans.Rollback();
+                conn.Close();
+                conn.Dispose();
                 return resultCode;
             }
 
             trans.Commit();
+            conn.Close();
+            conn.Dispose();
             return 0;
         }
     }

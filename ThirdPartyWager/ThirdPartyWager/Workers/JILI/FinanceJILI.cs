@@ -1,10 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Serilog.Context;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
@@ -25,9 +19,7 @@ namespace ThirdPartyWager.Workers
         private readonly int _beyond = 2;
         private Timer timer;
 
-        public FinanceJILI(
-            IServiceProvider provider
-        )
+        public FinanceJILI(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceJILI>>();
             _financeJILIBLL = provider.GetRequiredService<FinanceJILIBLL>();
@@ -80,7 +72,7 @@ namespace ThirdPartyWager.Workers
             try
             {
                 // get setting
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+                var setting = string.Empty;
 
                 // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);

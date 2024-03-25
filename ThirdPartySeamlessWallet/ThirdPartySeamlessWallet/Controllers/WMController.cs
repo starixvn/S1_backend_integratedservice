@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -18,35 +10,27 @@ namespace ThirdPartySeamlessWallet.Controllers
     [ApiController]
     public class WMController : ControllerBase
     {
-        private readonly Log2File log2File;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly Tp thisTp;
-        private readonly AuthBLL authBLL;
-        private readonly TpCustInfoBLL tpCustInfoBLL;
-        private readonly IHostEnvironment environment;
-        private readonly BettingBLL bettingBLL;
-        private readonly SettledBLL settledBLL;
-        private readonly int gameType = 0;
+        private readonly Log2File _log2File;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly IHostEnvironment _environment;
+        private readonly BettingBLL _bettingBLL;
+        private readonly SettledBLL _settledBLL;
+        private readonly Tp _thisTp;
+        private readonly int _gameType = 0;
+        private readonly WMConfig _siteConfig;
 
-        public WMController(
-            IHostEnvironment environment,
-            Log2File log2File,
-            ThirdPartyBLL thirdPartyBLL,
-            AuthBLL authBLL,
-            TpCustInfoBLL tpCustInfoBLL,
-            BettingBLL bettingBLL,
-            SettledBLL settledBLL
-        )
+        public WMController(IServiceProvider provider)
         {
-            this.log2File = log2File;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.authBLL = authBLL;
-            this.tpCustInfoBLL = tpCustInfoBLL;
-            this.environment = environment;
-            this.bettingBLL = bettingBLL;
-            this.settledBLL = settledBLL;
-            thisTp = Tp.WM;
-            gameType = (int)GameType.WM_LiveCasino;
+            _log2File = provider.GetRequiredService<Log2File>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _bettingBLL = provider.GetRequiredService<BettingBLL>();
+            _settledBLL = provider.GetRequiredService<SettledBLL>();
+            _environment = provider.GetRequiredService<IHostEnvironment>();
+            _thisTp = Tp.WM;
+            _gameType = (int)GameType.WM_LiveCasino;
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<WMConfig>(_thisTp.ToString());
         }
 
         #region Request
@@ -102,27 +86,26 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             var Content = JsonConvert.SerializeObject(req);
             Req getReq = JsonConvert.DeserializeObject<Req>(Content);
-            string logName = $"{thisTp}_{getReq.cmd}";
+            string logName = $"{_thisTp}_{getReq.cmd}";
 
             GetSeamlessWalletResp resp = new GetSeamlessWalletResp();
             resp.errorCode = 1;
 
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
             if (getReq.signature == null)
             {
                 resp.errorCode = 10304;
                 resp.errorMessage = "signature empty";
-                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_signature");
+                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", $"{_thisTp}_signature");
                 return resp;
             }
 
-            var getTpCurrency = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.user, gameType);
+            var getTpCurrency = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getReq.user, _gameType);
             string currency = getTpCurrency.TpCurrencyId;
-            if (getReq.signature != thirdPartySetting.TpSetting[$"signature_{currency}"])
+            if (getReq.signature != _siteConfig.CurrencyData[currency].signature)
             {
                 resp.errorCode = 10303;
                 resp.errorMessage = "signature error";
-                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", $"{thisTp}_signature");
+                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", $"{_thisTp}_signature");
                 return resp;
             }
 
@@ -135,16 +118,16 @@ namespace ThirdPartySeamlessWallet.Controllers
                     result = new BalanceInfo
                     {
                         user = getReq.user,
-                        responseDate = getCurrentGameTime()
+                        responseDate = GetCurrentGameTime()
                     }
                 };
 
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getReq.user);
+                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, getReq.user);
                 if (tpCheck == null)
                 {
                     callBalanceResp.errorCode = 10501;
                     callBalanceResp.errorMessage = "Invalid user Id";
-                    log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(callBalanceResp)}", logName);
+                    _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(callBalanceResp)}", logName);
                     return callBalanceResp;
                 }
 
@@ -152,21 +135,21 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     callBalanceResp.errorCode = 10505;
                     callBalanceResp.errorMessage = "Account is Lock";
-                    log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(callBalanceResp)}", logName);
+                    _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(callBalanceResp)}", logName);
                     return callBalanceResp;
                 }
 
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getReq.user, gameType);
+                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getReq.user, _gameType);
                 if (tpCustBalance != null)
                 {
                     callBalanceResp.errorCode = 0;
                     callBalanceResp.errorMessage = "";
                     callBalanceResp.result.money = tpCustBalance.Balance;
-                    log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(callBalanceResp)}", logName);
+                    _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(callBalanceResp)}", logName);
                     return callBalanceResp;
                 }
 
-                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(callBalanceResp)}", logName);
+                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(callBalanceResp)}", logName);
                 return callBalanceResp;
             }
             else if (string.Equals(getReq.cmd, "PointInout", StringComparison.OrdinalIgnoreCase))
@@ -180,7 +163,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         money = getPointInoutReq.money,
                         dealid = getPointInoutReq.dealid,
-                        responseDate = getCurrentGameTime(),
+                        responseDate = GetCurrentGameTime(),
                     }
                 };
 
@@ -189,57 +172,57 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     case "1":
                         // 加點
-                        if (environment.IsDevelopment() && getPointInoutReq.money >= 30m)
+                        if (_environment.IsDevelopment() && getPointInoutReq.money >= 30m)
                         {
-                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                            _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                             return pointInoutResp;
                         }
                         try
                         {
-                            result = settledBLL.PayoutLC_WM(getPointInoutReq, out decimal tpAffterAmount);
+                            result = _settledBLL.PayoutLC_WM(getPointInoutReq, out decimal tpAffterAmount);
                             if (result > 0)
                             {
                                 //var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getPointInoutReq.user, gameType);
                                 pointInoutResp.errorCode = 0;
                                 pointInoutResp.errorMessage = "";
                                 pointInoutResp.result.cash = tpAffterAmount;
-                                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                                _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                                 return pointInoutResp;
                             }
                             else if (result == -1)
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getPointInoutReq.user, gameType);
+                                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getPointInoutReq.user, _gameType);
                                 pointInoutResp.errorCode = 0;
                                 pointInoutResp.errorMessage = "";
                                 pointInoutResp.result.cash = tpCustBalance.Balance;
-                                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                                _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                                 return pointInoutResp;
                             }
                         }
                         catch (Exception ex)
                         {
-                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}\r\n{ex.Message}", logName, ex);
+                            _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}\r\n{ex.Message}", logName, ex);
                             return pointInoutResp;
                         }
                         break;
                     case "2":
                         // 扣點
-                        var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getPointInoutReq.user);
+                        var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, getPointInoutReq.user);
                         if (tpCheck == null)
                         {
                             pointInoutResp.errorCode = 10501;
                             pointInoutResp.errorMessage = "Invalid user Id";
-                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                            _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                             return pointInoutResp;
                         }
                         if (tpCheck.Locked)
                         {
                             pointInoutResp.errorCode = 10505;
                             pointInoutResp.errorMessage = "Account is Lock";
-                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                            _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                             return pointInoutResp;
                         }
-                        if (environment.IsDevelopment() && getPointInoutReq.money == -40m)
+                        if (_environment.IsDevelopment() && getPointInoutReq.money == -40m)
                         {
                             System.Threading.Thread.Sleep(60000);
                             //log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
@@ -247,36 +230,36 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         try
                         {
-                            result = bettingBLL.PlaceBetLC_WM(getPointInoutReq, out decimal tpAffterAmount);
+                            result = _bettingBLL.PlaceBetLC_WM(getPointInoutReq, out decimal tpAffterAmount);
 
                             if (result > 0)
                             {
                                 pointInoutResp.errorCode = 0;
                                 pointInoutResp.errorMessage = "";
                                 pointInoutResp.result.cash = tpAffterAmount;
-                                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                                _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                                 return pointInoutResp;
                             }
                             else if (result == -1)
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getPointInoutReq.user);
+                                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getPointInoutReq.user);
                                 pointInoutResp.errorCode = 0;
                                 pointInoutResp.errorMessage = "";
                                 pointInoutResp.result.cash = tpCustBalance.Balance;
-                                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                                _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                                 return pointInoutResp;
                             }
                             else if (tpAffterAmount < 0)
                             {
                                 pointInoutResp.errorCode = 10805;
                                 pointInoutResp.errorMessage = "Not Enough Balance";
-                                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                                 return pointInoutResp;
                             }
                         }
                         catch (Exception ex)
                         {
-                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}\r\n{ex.Message}", logName, ex);
+                            _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}\r\n{ex.Message}", logName, ex);
                             return pointInoutResp;
                         }
                         break;
@@ -286,28 +269,28 @@ namespace ThirdPartySeamlessWallet.Controllers
                         try
                         {
                             //  3:重對加點 4:重對扣點 5:重新派彩
-                            result = settledBLL.ResettleLC_WM(getPointInoutReq, out decimal tpAffterAmount);
+                            result = _settledBLL.ResettleLC_WM(getPointInoutReq, out decimal tpAffterAmount);
                             if (result > 0)
                             {
                                 pointInoutResp.errorCode = 0;
                                 pointInoutResp.errorMessage = "";
                                 pointInoutResp.result.cash = tpAffterAmount;
-                                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                                _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                                 return pointInoutResp;
                             }
                             else if (result == -1)
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getPointInoutReq.user);
+                                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getPointInoutReq.user);
                                 pointInoutResp.errorCode = 0;
                                 pointInoutResp.errorMessage = "";
                                 pointInoutResp.result.cash = tpCustBalance.Balance;
-                                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                                _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                                 return pointInoutResp;
                             }
                         }
                         catch (Exception ex)
                         {
-                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}\r\n{ex.Message}", logName, ex);
+                            _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}\r\n{ex.Message}", logName, ex);
                             return pointInoutResp;
                         }
                         break;
@@ -315,7 +298,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         break;
                 }
 
-                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                 return pointInoutResp;
             }
             else if (string.Equals(getReq.cmd, "TimeoutBetReturn", StringComparison.OrdinalIgnoreCase))
@@ -329,43 +312,43 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         money = getTimeoutBetReturnReq.money,
                         dealid = getTimeoutBetReturnReq.dealid,
-                        responseDate = getCurrentGameTime(),
+                        responseDate = GetCurrentGameTime(),
                     }
                 };
                 int result = 0;
                 switch (getTimeoutBetReturnReq.code)
                 {
                     case "1":
-                        if (environment.IsDevelopment() && getTimeoutBetReturnReq.money >= 100m)
+                        if (_environment.IsDevelopment() && getTimeoutBetReturnReq.money >= 100m)
                         {
-                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                            _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                             return pointInoutResp;
                         }
                         try
                         {
                             // 加點
-                            result = settledBLL.PayoutLC_WM(getTimeoutBetReturnReq, out decimal tpAffterAmount);
+                            result = _settledBLL.PayoutLC_WM(getTimeoutBetReturnReq, out decimal tpAffterAmount);
                             if (result > 0)
                             {
                                 pointInoutResp.errorCode = 0;
                                 pointInoutResp.errorMessage = "";
                                 pointInoutResp.result.cash = tpAffterAmount;
-                                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                                _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                                 return pointInoutResp;
                             }
                             else if (result == -1)
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getTimeoutBetReturnReq.user, gameType);
+                                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getTimeoutBetReturnReq.user, _gameType);
                                 pointInoutResp.errorCode = 0;
                                 pointInoutResp.errorMessage = "";
                                 pointInoutResp.result.cash = tpCustBalance.Balance;
-                                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                                _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                                 return pointInoutResp;
                             }
                         }
                         catch (Exception ex)
                         {
-                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}\r\n{ex.Message}", logName, ex);
+                            _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}\r\n{ex.Message}", logName, ex);
                             return pointInoutResp;
                         }
                         break;
@@ -373,29 +356,29 @@ namespace ThirdPartySeamlessWallet.Controllers
                         try
                         {
                             // 扣點
-                            result = settledBLL.CancelBetLC_WM(getTimeoutBetReturnReq, out decimal tpAffterAmount);
+                            result = _settledBLL.CancelBetLC_WM(getTimeoutBetReturnReq, out decimal tpAffterAmount);
                             if (result > 0)
                             {
                                 //var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, getTimeoutBetReturnReq.user, gameType);
                                 pointInoutResp.errorCode = 0;
                                 pointInoutResp.errorMessage = "";
                                 pointInoutResp.result.cash = tpAffterAmount;
-                                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                                _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                                 return pointInoutResp;
                             }
                             else if (result == -1)
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getTimeoutBetReturnReq.user, gameType);
+                                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getTimeoutBetReturnReq.user, _gameType);
                                 pointInoutResp.errorCode = 0;
                                 pointInoutResp.errorMessage = "";
                                 pointInoutResp.result.cash = tpCustBalance.Balance;
-                                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                                _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                                 return pointInoutResp;
                             }
                         }
                         catch (Exception ex)
                         {
-                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}\r\n{ex.Message}", logName, ex);
+                            _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}\r\n{ex.Message}", logName, ex);
                             return pointInoutResp;
                         }
                         break;
@@ -403,15 +386,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                         break;
                 }
 
-                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
+                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(pointInoutResp)}", logName);
                 return pointInoutResp;
             }
 
-            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+            _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", logName);
             return resp;
         }
 
-        private string getCurrentGameTime()
+        private static string GetCurrentGameTime()
         {
             return new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd HH:mm:ss");
         }

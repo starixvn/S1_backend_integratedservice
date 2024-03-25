@@ -1,15 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿using System.Data;
+using Newtonsoft.Json;
 using ThirdPartyWager.Service.Library;
-using ThirdPartyWager.Service.Model.enums;
-using System.Data;
 using ThirdPartyWager.Service.Model;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using System.Net.Http;
-using System.Collections.Generic;
-using System.Linq;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -30,10 +23,10 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<ApiJILIBLL>>();
         }
 
-        public async Task<CurrencyStats_JILI> GetBetSummaryByTime(dynamic setting, string startTime, string endTime)
+        public async Task<CurrencyStats_JILI> GetBetSummaryByTime(JILIConfig setting, string startTime, string endTime)
         {
-            var apiUrl = setting["ApiUrl"];
-            var agentId = setting["AgentId"];
+            var apiUrl = setting.ApiUrl;
+            var agentId = setting.AgentId;
 
             // param
             var url = $"{apiUrl}/GetBetRecordSummary";
@@ -61,10 +54,10 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        private string DoEncrypt(dynamic setting, object param)
+        private string DoEncrypt(JILIConfig setting, object param)
         {
-            var agentId = setting["AgentId"];
-            var agentKey = setting["AgentKey"];
+            var agentId = setting.AgentId;
+            var agentKey = setting.AgentKey;
 
             var now = new DateTimeOffset(DateTime.UtcNow);
             var current = now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToString("yyMMd");

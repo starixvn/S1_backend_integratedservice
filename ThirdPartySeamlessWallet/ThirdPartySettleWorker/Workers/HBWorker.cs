@@ -1,15 +1,10 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Serilog.Context;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -100,6 +95,7 @@ namespace ThirdPartySettleWorker.Workers
                             TransTime = UnsettleData.TransTime,
                             SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, UnsettleData.GameId),
                             TicketStatus = UnsettleData.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
+                            GameID = UnsettleData.GameId,
                         };
 
                         if (betRecordInfo.WinlostAmount == 0)

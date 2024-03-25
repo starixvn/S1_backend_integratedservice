@@ -1,11 +1,18 @@
-﻿using FluentAssertions;
+﻿using System.Data;
+
+using FluentAssertions;
+
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using NSubstitute;
-using System.Data;
+
 using ThirdPartySeamlessWallet.Core.Extensions;
 using ThirdPartySeamlessWallet.IntegrationTest.Models;
 using ThirdPartySeamlessWallet.IntegrationTest.Stubs;
@@ -13,6 +20,9 @@ using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySeamlessWallet.Service.Model.enums;
+
+using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
 {
@@ -47,27 +57,37 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             _inputs = inputs;
             _merchantCode = inputs["MerchantCode"];
             _tpUserName = inputs["TpUserName"];
+
             _serviceCollection = new ServiceCollection();
             var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
             {
                 EnvironmentName = "Local",
             });
-            builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
+
+            var remoteUrls = builder.Configuration.GetSection("ConfigService").Get<string[]>();
+            remoteUrls = builder.Configuration.CheckLocalConfig(builder.Environment, new[] { "Nova" }, remoteUrls);
+            builder.Configuration.AddRemoteJsonConfig(remoteUrls);
+
             var app = builder.Build();
             _serviceCollection.AddSingleton(_configuration);
             _configuration = app.Configuration;
 
+            var env = new WebHostingEnvironment
+            {
+                EnvironmentName = Environments.Development,
+                ContentRootPath = AppDomain.CurrentDomain.BaseDirectory,
+            };
+            _serviceCollection.AddSingleton<IWebHostEnvironment>(env);
+            _serviceCollection.AddSingleton<IHostEnvironment>(env);
+
             _serviceCollection.AddTransient(p => Substitute.For<ILogger<SettledService>>());
             _serviceCollection.AddTransient(p => Substitute.For<ILogger<BettingService>>());
-            var mySqlLog = Substitute.For<ILogger<MySqlClient>>();
-            _serviceCollection.AddTransient(p => mySqlLog);
-            var conn = _configuration.GetConnectionString("ConnectionString");
-            _serviceCollection.AddSingleton(new MySqlClient(conn, mySqlLog));
 
             var startUp = new StubStartUp(_configuration);
             startUp.ConfigureServices(_serviceCollection);
             _serviceProvider = _serviceCollection.BuildServiceProvider();
-            _mySqlClient = _serviceProvider.GetRequiredService<MySqlClient>();
+            _mySqlClient = _serviceProvider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+
             _target = new TCGBLL(_serviceProvider);
 
             _exceptSqlMapping = new Dictionary<TCGTransType, Lazy<string>>
@@ -88,7 +108,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         }
 
         public TCGBLLSandbox GetBalance()
-        {        
+        {
             var sParam = new
             {
                 method = "sgb",
@@ -106,11 +126,11 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
 
         public TCGBLLSandbox Debit(Dictionary<string, string> inputs, decimal amount)
         {
-            SeamlessWallet(TCGApiMethod.Debit, inputs, amount,inputs["DebitID"]);
+            SeamlessWallet(TCGApiMethod.Debit, inputs, amount, inputs["DebitID"]);
             return this;
         }
 
-        
+
         public TCGBLLSandbox Credit(Dictionary<string, string> inputs, decimal amount)
         {
             SeamlessWallet(TCGApiMethod.Credit, inputs, amount, inputs["CreditID"]);
@@ -236,7 +256,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         public TCGBLLSandbox ResultShouldBe(int expected)
         {
             Result.status.Should().Be(expected.ToString());
-            return this; 
+            return this;
         }
 
         public TCGBLLSandbox ShouldBeHaveRecord(TCGTransType transType, Dictionary<string, string> inputs, decimal amount)
@@ -262,7 +282,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             return this;
         }
 
-        private TCGRecord CreateTCGRecord(TCGTransType transType, Dictionary<string, string> inputs, decimal amount) 
+        private TCGRecord CreateTCGRecord(TCGTransType transType, Dictionary<string, string> inputs, decimal amount)
         {
             var ref_no = string.Empty;
             switch (transType)

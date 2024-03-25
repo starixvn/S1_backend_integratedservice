@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -82,14 +83,14 @@ namespace ThirdPartyWager.Service.BLL
             var guid = Guid.NewGuid().ToString();
             var reportData = new List<dynamic>();
 
-            List<WagerEVOModel> getWagerSummary = await _apiEVOBLL.GetBetListByTime(setting["ApiUrl"], setting["CasinoKey"], setting["gameHistoryApiToken"], setting["GameProvider"], reportTime.startTime, reportTime.endTime, guid);
+            List<WagerEVOModel> getWagerSummary = await _apiEVOBLL.GetBetListByTime(setting["ApiUrl_Backup"], setting["CasinoKey"], setting["gameHistoryApiToken"], setting["GameProvider"], reportTime.startTime, reportTime.endTime, guid);
 
             var error = getWagerSummary.Select(x => x.error).FirstOrDefault();
 
             if (error != null && error != "nodata")
             {
                 var msg = "THIRD_PARTY_ERROR";
-                _logger.LogError($"{msg}\r\nSiteId=\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
                 SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
                 throw systemException;
             }

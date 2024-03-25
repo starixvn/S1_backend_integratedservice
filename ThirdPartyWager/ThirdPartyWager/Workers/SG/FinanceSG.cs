@@ -9,29 +9,29 @@ namespace ThirdPartyWager.Workers
 {
     public class FinanceSG : BackgroundService
     {
+        private Timer _timer;
         private readonly ILogger<FinanceSG> _logger;
         private readonly FinanceSGBLL _financeSGBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly FincanceService _fincanceService;
+        private readonly SGConfig _siteConfig;
         private readonly int _tpId = (int)Tp.SG;
         private readonly string _tpName = Tp.SG.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
         private readonly int _beyond = 2;
-        private Timer timer;
 
-        public FinanceSG(
-            IServiceProvider provider
-        )
+        public FinanceSG(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceSG>>();
             _financeSGBLL = provider.GetRequiredService<FinanceSGBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _fincanceService = provider.GetRequiredService<FincanceService>();
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SGConfig>(Tp.SG.ToString());
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            timer = new Timer(DoReport, null, TimeSpan.Zero, TimeSpan.Zero);
+            _timer = new Timer(DoReport, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -54,20 +54,11 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                if (quick == 1)
-                {
-                    // 盈亏总结只可每 30 分钟提取一次
-                    var dueTimeSpan = TimeSpan.FromMinutes(35);
-                    timer.Change(dueTimeSpan, TimeSpan.Zero);
-                }
-                else
-                {
-                    var dueTimeSpan = TimeSpan.FromHours(4);
-                    timer.Change(dueTimeSpan, TimeSpan.Zero);
-                }
+                // 盈亏总结只可每 30 分钟提取一次
+                var dueTimeSpan = (quick == 1) ? TimeSpan.FromMinutes(35) : TimeSpan.FromHours(4);
+                _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
-
 
         private async Task<bool> ExecReportAsync()
         {
@@ -75,7 +66,7 @@ namespace ThirdPartyWager.Workers
             try
             {
                 // get setting
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+                var setting = _siteConfig;
 
                 // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
@@ -136,7 +127,7 @@ namespace ThirdPartyWager.Workers
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            timer?.Change(Timeout.Infinite, 0);
+            _timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

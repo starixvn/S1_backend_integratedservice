@@ -1,9 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
+﻿using System.Data;
+
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -12,15 +8,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 {
     public class TpUnRewardService
     {
-        private readonly ILogger<TpUnRewardService> _logger;
-
         private readonly MySqlClient _mainDbClient;
 
         private readonly MySqlClient _wagerDbClient;
 
         public TpUnRewardService(IServiceProvider provider)
         {
-            _logger = provider.GetRequiredService<ILogger<TpUnRewardService>>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
         }

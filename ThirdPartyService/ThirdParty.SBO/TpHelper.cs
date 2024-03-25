@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -12,7 +10,7 @@ using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.SBO
 {
-    public class TpHelper : ThirdPartyHelperBase
+    public class TpHelper : ThirdPartyHelperBase, IThirdPartyBetLimitParticular
     {
         private const string ContentType = "application/json";
 
@@ -126,7 +124,7 @@ namespace ThirdParty.SBO
             else
             {
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
-            }      
+            }
         }
 
         #region 單一錢包不實作
@@ -191,6 +189,13 @@ namespace ThirdParty.SBO
 
                 TpGameTypeId = config.ContainsKey("tpGameType") ? config["tpGameType"] : string.Empty;
             }
+        }
+
+        private class BetLimit
+        {
+            public int Min { get; set; }
+            public int Max { get; set; }
+            public int MaxPerMatch { get; set; }
         }
 
         private class ResponseError
@@ -392,8 +397,8 @@ namespace ThirdParty.SBO
         #endregion
 
         private class subBet
-        {         
-            public string match { get; set; }       
+        {
+            public string match { get; set; }
             public string betOption { get; set; }
             public string marketType { get; set; }
         }
@@ -410,5 +415,30 @@ namespace ThirdParty.SBO
             };
         }
 
+        public ApiResult SetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, string betSetting)
+        {
+            var config = new SboConfig(inputs);
+            var apiUrl = $"{config.ApiUrl}/web-root/restricted/player/update-player-bet-settings.aspx";
+            var betLimit = JsonConvert.DeserializeObject<BetLimit>(betSetting);
+            var betSettings = new
+            {
+                Username = tpCustInfo.TpUserName,
+                Min = betLimit.Min,
+                Max = betLimit.Max,
+                MaxPerMatch = betLimit.MaxPerMatch,
+                CasinoTableLimit = 1,
+                CompanyKey = config.CompanyKey,
+                ServerId = config.ServerId,
+            };
+
+            var responseJson = HttpPostClient(apiUrl,
+                JsonConvert.SerializeObject(betSettings),
+                ContentType);
+
+            var responseResult = FromJson<RegisterPlayerResponse>(responseJson);
+            if (responseResult.Error.Id == 0)
+                return new ApiResult() { ErrorCode = ErrorCode.Success };
+            return new ApiResult((int)ErrorCode.Fail, "update bet limit failed", responseResult.Error.Id.ToString(), responseResult.Error.Msg);
+        }
     }
 }

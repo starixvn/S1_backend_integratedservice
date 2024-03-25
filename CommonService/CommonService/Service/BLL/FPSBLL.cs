@@ -1,51 +1,51 @@
-﻿using CommonService.Service.Library;
+﻿using System.Net;
+
+using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace CommonService.Service.BLL
 {
     public class FPSBLL
     {
-        private readonly IOptions<Dictionary<string, FPSServicesConfig>> fpsServicesConfig;
-        private readonly HttpHelper httpHelper;
+        private readonly Dictionary<int, FPSServicesConfig> _fpsServicesConfig;
+        private readonly HttpHelper _httpHelper;
 
-        public FPSBLL(IOptions<Dictionary<string, FPSServicesConfig>> fpsServicesConfig, HttpHelper httpHelper)
+        public FPSBLL(IServiceProvider provider)
         {
-            this.fpsServicesConfig = fpsServicesConfig;
-            this.httpHelper = httpHelper;
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _fpsServicesConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<FPSServicesConfig>("FPS");
         }
+
         public async Task<ApiResult> FPSChecksAsync(CustInfoProfile custInfo, FPSChecksRequest fpsChecksRequest)
         {
             var apiResult = new ApiResult();
-            var config = fpsServicesConfig.Value[custInfo.SiteName];
-            string url = config.ResourceURL;
-
-            Dictionary<string, string> sendIovationChecks = new Dictionary<string, string>
+            var config = _fpsServicesConfig[custInfo.SiteId];
+            var url = config.ResourceURL;
+            
+            var sendIovationChecks = new Dictionary<string, string>
             {
                 { "Account", custInfo.TpUserName },
-                { "Action", fpsChecksRequest.action },
-                { "ActionResult", fpsChecksRequest.actionResult },
                 { "Subscriber",config.Subscriber},
-                //{ "SubscriberDate",new DateTimeOffset(DateTime.Now).ToOffset(TimeSpan.FromHours(8)).ToString()},
                 { "SubscriberDate",new DateTimeOffset(DateTime.Now).ToOffset(TimeSpan.FromHours(-4)).ToString()},
-                { "Ip",fpsChecksRequest.ip},
-                { "Url",fpsChecksRequest.url},
-                { "AcceptTypes","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*; q = 0.8,application / signed - exchange; v = b3; q = 0.9"},
-                { "Platform",fpsChecksRequest.platform},
-                { "UserAgent",fpsChecksRequest.userAgent},
-                { "Screen",fpsChecksRequest.screen},
-                { "__di",fpsChecksRequest.di}
+                { "DI",fpsChecksRequest.DI},
+                { "BI",fpsChecksRequest.BI},
+                { "Ip",fpsChecksRequest.IP},
+                { "UserAgent",fpsChecksRequest.UserAgent},
+                { "DetecasAnalysis", fpsChecksRequest.DetecasAnalysis },
+                { "Action", "login"},
+                { "ActionResult", "Successfully" },
+                { "AcceptsTypes", fpsChecksRequest.AcceptsTypes },
+                { "SessionKey", fpsChecksRequest.SessionKey },
+                { "Token", fpsChecksRequest.Token },
+                { "Url",fpsChecksRequest.Url}
 
             };
-
-            using var result = await httpHelper.HttpFromPostAsync(url, null, sendIovationChecks, "application/x-www-form-urlencoded");
-            //var resultResp = JsonConvert.DeserializeObject<FPSResult>(result.Content.ReadAsStringAsync().Result);
-
-            if (result.StatusCode == System.Net.HttpStatusCode.OK)
+            
+            using var result = await _httpHelper.HttpPost1Async(url, null, JsonConvert.SerializeObject(sendIovationChecks), "application/json");
+            
+            if (result.StatusCode == HttpStatusCode.OK)
             {
                 apiResult.ErrorCode = ErrorCode.Success;
                 apiResult.Message = result.Content.ReadAsStringAsync().Result;

@@ -1,16 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 using System.Web;
+
+using Microsoft.AspNetCore.Mvc;
+
+using Newtonsoft.Json;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -111,7 +105,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string merch_pwd { get; set; }
             public string ip { get; set; }
         }
-        public class GetBalanceReq 
+        public class GetBalanceReq
         {
             public string merch_id { get; set; }
             public string merch_pwd { get; set; }
@@ -130,7 +124,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string currency_code { get; set; } = "";
             public string game_code { get; set; } = "";
             public string trx_id { get; set; } = "";
-            public long game_id   { get; set; }
+            public long game_id { get; set; }
             public string event_type { get; set; } = "";
             public int event_id { get; set; }
             public long timestamp { get; set; }
@@ -232,7 +226,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return result;
                 }
                 var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, tpUserName);
-                if(tpCheck == null || tpCheck.Token != sessionToken)
+                if (tpCheck == null || tpCheck.Token != sessionToken)
                     return result;
                 var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Skywind, tpUserName);
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
@@ -243,7 +237,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 result.cust_id = tpUserName;
                 result.country = tpCountryCode.CountryCode;
                 result.currency_code = tpCurrency.TpCurrencyId;
-                if(environment.IsDevelopment() || tpCustInfoAuth.IsTest)
+                if (environment.IsDevelopment() || tpCustInfoAuth.IsTest)
                 {
                     result.test_cust = true;
                 }
@@ -321,7 +315,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, req.cust_id, gameType);
 
             result.error_code = (int)SkywindErrorCode.NoErrors;
-            result.balance = tpCustBalance.Balance;
+            result.balance = Math.Truncate(tpCustBalance.Balance);
             result.currency_code = tpCurrency.TpCurrencyId;
 
             return result;
@@ -360,7 +354,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             else if (req.amount < 0)
             {
                 var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, req.cust_id, gameType);
-                result.balance = tpCustBalance.Balance;
+                result.balance = Math.Truncate(tpCustBalance.Balance);
                 result.error_code = (int)SkywindErrorCode.InsufficientBalance;
                 result.error_msg = SkywindErrorCode.InsufficientBalance.ToString();
                 logger.LogError($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(result)}\r\n Stake < 0");
@@ -386,7 +380,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     game_type = req.game_type,
                     platform = req.platform,
                     promo_id = req.promo_id,
-                    promo_pid =req.promo_pid,
+                    promo_pid = req.promo_pid,
                     jp_contribution = req.jp_contribution,
                     operation_ts = req.operation_ts,
                     distribution_type = req.distribution_type,
@@ -394,13 +388,13 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 if (bettingBLL.PlaceBet_Skywind(tpCustInfo, betReq, gameType, out decimal tpAffterAmount) > 0)
                 {
-                    result.balance = tpAffterAmount;
+                    result.balance = Math.Truncate(tpAffterAmount);
                     result.error_code = (int)SkywindErrorCode.NoErrors;
                     result.trx_id = req.trx_id;
                 }
                 else
                 {
-                    result.balance = tpAffterAmount;
+                    result.balance = Math.Truncate(tpAffterAmount);
                     result.error_code = (int)SkywindErrorCode.MerchantInternalError;
                     result.trx_id = req.trx_id;
                 }
@@ -458,21 +452,21 @@ namespace ThirdPartySeamlessWallet.Controllers
                 if (SettleResult > 0)
                 {
                     result.error_code = (int)SkywindErrorCode.NoErrors;
-                    result.balance = tpAffterAmount;
+                    result.balance = Math.Truncate(tpAffterAmount);
                     result.trx_id = req.trx_id;
                     logger.LogInformation($"{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}");
                 }
                 else if (SettleResult == -1)
                 {
                     result.error_code = (int)SkywindErrorCode.DuplicateTransaction;
-                    result.balance = tpAffterAmount;
+                    result.balance = Math.Truncate(tpAffterAmount);
                     result.trx_id = req.trx_id;
                     logger.LogInformation($"{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}");
                 }
                 else
                 {
                     result.error_code = (int)SkywindErrorCode.MerchantInternalError;
-                    result.balance = tpAffterAmount;
+                    result.balance = Math.Truncate(tpAffterAmount);
                     result.trx_id = req.trx_id;
                     logger.LogError($"{JsonConvert.SerializeObject(result)}\r\nSettleResult:{SettleResult}");
                 }
@@ -527,7 +521,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 if (cancelresult > 0)
                 {
                     result.error_code = (int)SkywindErrorCode.NoErrors;
-                    result.balance = tpAffterAmount;
+                    result.balance = Math.Truncate(tpAffterAmount);
                     result.trx_id = req.trx_id;
                     logger.LogInformation($"{JsonConvert.SerializeObject(result)}\r\n cancelresult:{cancelresult}");
                     return result;
@@ -535,7 +529,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else if (cancelresult == -1)
                 {
                     result.error_code = (int)SkywindErrorCode.DuplicateTransaction;
-                    result.balance = tpAffterAmount;
+                    result.balance = Math.Truncate(tpAffterAmount);
                     result.trx_id = req.trx_id;
                     logger.LogInformation($"{JsonConvert.SerializeObject(result)}\r\n cancelresult:{cancelresult}");
                     return result;
@@ -543,7 +537,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else if (cancelresult == -2)
                 {
                     result.error_code = (int)SkywindErrorCode.TransactionNotFound;
-                    result.balance = tpAffterAmount;
+                    result.balance = Math.Truncate(tpAffterAmount);
                     result.trx_id = req.trx_id;
                     logger.LogError($"{JsonConvert.SerializeObject(result)}\r\n cancelresult:{cancelresult}");
                     return result;

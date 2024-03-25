@@ -1,10 +1,9 @@
-﻿using System;
-using System.Linq;
-using Dapper;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Dapper;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+
 using ThirdPartyService.Service.Library;
 
 namespace ThirdPartyService.Service.DAL

@@ -1,10 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Serilog.Context;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
@@ -25,9 +20,7 @@ namespace ThirdPartyWager.Workers
         private readonly int _beyond = 2;
         private Timer timer;
 
-        public FinanceEbet(
-            IServiceProvider provider
-        )
+        public FinanceEbet(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceEbet>>();
             _financeEbetBLL = provider.GetRequiredService<FinanceEbetBLL>();
@@ -79,9 +72,6 @@ namespace ThirdPartyWager.Workers
             var quick = false;
             try
             {
-                // get setting
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
-
                 // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
 
@@ -99,7 +89,7 @@ namespace ThirdPartyWager.Workers
 
                 // report
                 DateTime reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);
-                var reportData = await _financeEbetBLL.GetReport(_tpId, setting, reportTime);
+                var reportData = await _financeEbetBLL.GetReport(_tpId, null , reportTime);
                 int result;
                 if (reportData.Count > 0)
                 {

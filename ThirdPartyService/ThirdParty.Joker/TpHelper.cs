@@ -1,10 +1,9 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 using System.Web;
+using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -15,11 +14,13 @@ namespace ThirdParty.Joker
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly JokerConfig _siteConfig;
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
 
-        public TpHelper()
+        public TpHelper(IServiceProvider provider)
         {
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList(9).ToDictionary(d => d.AppId, d => d.Name);
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<JokerConfig>(TpEnum.Joker.ToString());
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.Joker).ToDictionary(d => d.AppId, d => d.Name);
         }
 
         #region Model
@@ -75,32 +76,17 @@ namespace ThirdParty.Joker
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string gameUrl = string.Empty;
-            string appId = string.Empty;
-            string secret = string.Empty;
+            var config = _siteConfig;
+            var currencyData = _siteConfig.CurrencyData[tpCustInfo.TpCurrencyId];
 
-            gameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"])
-                     ? inputs["GameUrl"]
-                     : throw new Exception("GameUrl is empty");
+            string gameUrl = _siteConfig.GameUrl;
+            string appId = currencyData.AppID;
+            string secret = currencyData.Secret;
 
             if (tpCustInfo.IsTest)
             {
-                appId = inputs.ContainsKey($"AppID_{tpCustInfo.TpCurrencyId}_Test") && !string.IsNullOrEmpty(inputs[$"AppID_{tpCustInfo.TpCurrencyId}_Test"])
-                      ? inputs[$"AppID_{tpCustInfo.TpCurrencyId}_Test"]
-                      : throw new Exception($"AppID_{tpCustInfo.TpCurrencyId}_Test is empty");
-                secret = inputs.ContainsKey($"Secret_{tpCustInfo.TpCurrencyId}_Test") && !string.IsNullOrEmpty(inputs[$"Secret_{tpCustInfo.TpCurrencyId}_Test"])
-                      ? inputs[$"Secret_{tpCustInfo.TpCurrencyId}_Test"]
-                      : throw new Exception($"Secret_{tpCustInfo.TpCurrencyId}_Test is empty");
-            }
-            else
-            {
-                appId = inputs.ContainsKey($"AppID_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"AppID_{tpCustInfo.TpCurrencyId}"])
-                      ? inputs[$"AppID_{tpCustInfo.TpCurrencyId}"]
-                      : throw new Exception($"AppID_{tpCustInfo.TpCurrencyId} is empty");
-
-                secret = inputs.ContainsKey($"Secret_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"Secret_{tpCustInfo.TpCurrencyId}"])
-                       ? inputs[$"Secret_{tpCustInfo.TpCurrencyId}"]
-                       : throw new Exception($"Secret_{tpCustInfo.TpCurrencyId} is empty");
+                appId = currencyData.AppID_Test;
+                secret = currencyData.Secret_Test;
             }
 
             var gameCode = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
@@ -138,22 +124,27 @@ namespace ThirdParty.Joker
         {
             try
             {
-                var apiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception();
-                var appID = inputs.GetValueOrDefault($"AppID_{tpCustInfo.TpCurrencyId}") ?? throw new Exception();
-                var secret = inputs.GetValueOrDefault($"Secret_{tpCustInfo.TpCurrencyId}") ?? throw new Exception();
+                var config = _siteConfig;
+                var currencyData = _siteConfig.CurrencyData[tpCustInfo.TpCurrencyId];
+
+                string apiUrl = _siteConfig.ApiUrl;
+                string appId = currencyData.AppID;
+                string secret = currencyData.Secret;
+
                 if (tpCustInfo.IsTest)
                 {
-                    appID = inputs.GetValueOrDefault($"AppID_{tpCustInfo.TpCurrencyId}_Test") ?? throw new Exception();
-                    secret = inputs.GetValueOrDefault($"Secret_{tpCustInfo.TpCurrencyId}_Test") ?? throw new Exception();
+                    appId = currencyData.AppID_Test;
+                    secret = currencyData.Secret_Test;
                 }
-                var data = getBetDetail.TpGameTypeOption.Type == 13 ?
+
+                var data = getBetDetail.TpGameTypeOption.Type == (int)TpGameType.Joker_RNG ?
                     TpBetRecordProvider.DbQueryFirst("Service_Bettrans_Joker_GameCode_Get", new { getBetDetail.TransId }, DataBase.Report) :
                     TpBetRecordProvider.DbQueryFirst("Service_BettransFish_Joker_Unsettle_Get", new { YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId }, DataBase.Report);
 
                 var url = $"{apiUrl}/game-history-url";
                 var parameters = new Dictionary<string, string>()
                 {
-                    { "AppID", appID },
+                    { "AppID", appId },
                     { "Username", tpCustInfo.TpUserName },
                     { "GameCode", data.GetValueOrDefault("gamecode")?.ToString()},
                     { "RoundID", getBetDetail.TransId},
@@ -192,7 +183,7 @@ namespace ThirdParty.Joker
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
-            var detail = tpGameType.Type == 13 ?
+            var detail = tpGameType.Type == (int)TpGameType.Joker_RNG ?
                     TpBetRecordProvider.DbQuery("Service_Bettrans_Joker_Detail_Get", new { betRecordInfo.TransId }, DataBase.Main) :
                     TpBetRecordProvider.DbQuery("Service_BettransFish_Joker_Unsettle_Get", new { YYYYMM, betRecordInfo.TransId }, DataBase.Main);
 
@@ -222,6 +213,5 @@ namespace ThirdParty.Joker
             var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
             return dic.TryGetValue("en", out var result) ? result : string.Empty;
         }
-
     }
 }

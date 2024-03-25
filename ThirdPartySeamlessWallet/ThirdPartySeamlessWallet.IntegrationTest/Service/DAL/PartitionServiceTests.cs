@@ -2,12 +2,16 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using NSubstitute;
+
 using NUnit.Framework;
+
 using ThirdPartySeamlessWallet.Core.Extensions;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
 {
@@ -23,7 +27,11 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
             {
                 EnvironmentName = "Local",
             });
-            builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
+
+            var remoteUrls = builder.Configuration.GetSection("ConfigService").Get<string[]>();
+            remoteUrls = builder.Configuration.CheckLocalConfig(builder.Environment, new[] { "Nova" }, remoteUrls);
+            builder.Configuration.AddRemoteJsonConfig(remoteUrls);
+
             var app = builder.Build();
             var configuration = app.Configuration;
 
@@ -33,7 +41,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
             services.AddTransient(p => mySqlLog);
 
             var conn = configuration.GetConnectionString("ConnectionString");
-            services.AddSingleton(new MySqlClient(conn, mySqlLog));
+            services.AddSingleton(provider => new MySqlClient(provider, DataBase.Main, conn));
 
 
             var provider = services.BuildServiceProvider();
@@ -46,10 +54,10 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
         [SetUp]
         public void Setup()
         {
-            var id= Guid.NewGuid().ToString();
+            var id = Guid.NewGuid().ToString();
             _data = new BettingDataFish_Joker()
-            { 
-                appid="test",
+            {
+                appid = "test",
                 hash = id,
                 id = id,
                 amount = 10,
@@ -68,9 +76,9 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
             _data.description = $"{_data.id}-{partitionTime:yyyyMM}";
             using var conn = _mySqlClient.GetMySqlConnection();
             conn.Open();
-            var trans = conn.BeginTransaction();
+            using var trans = conn.BeginTransaction();
             var result = _partitionService.Execute(partitionTime, "Service_BettransFish_Joker_Ins", _data, trans);
-            if (result > 0 )
+            if (result > 0)
             {
                 trans.Commit();
             }
@@ -85,7 +93,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
             _data.description = $"{_data.id}-{partitionTime:yyyyMM}";
             using var conn = _mySqlClient.GetMySqlConnection();
             conn.Open();
-            var trans = conn.BeginTransaction();
+            using var trans = conn.BeginTransaction();
             var result = _partitionService.Execute(partitionTime, "Service_BettransFish_Joker_Ins", _data, trans);
             if (result > 0)
             {
@@ -104,12 +112,12 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
             _data.description = $"{_data.id}-{insertTime:yyyyMM}-{checkTime:yyyyMM}";
             using var conn = _mySqlClient.GetMySqlConnection();
             conn.Open();
-            var trans = conn.BeginTransaction();
-            
-            _partitionService.Execute(insertTime, "Service_BettransFish_Joker_Ins", _data, trans);
-            trans.Commit();       
+            using var trans = conn.BeginTransaction();
 
-            var check = _partitionService.Query<string>(checkTime, "Service_BettransFish_Joker_Check", _data );
+            _partitionService.Execute(insertTime, "Service_BettransFish_Joker_Ins", _data, trans);
+            trans.Commit();
+
+            var check = _partitionService.Query<string>(checkTime, "Service_BettransFish_Joker_Check", _data);
             return check.Any();
         }
 
@@ -121,11 +129,11 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
             _data.description = $"{_data.id}-{partitionTime:yyyyMM}";
             using var conn = _mySqlClient.GetMySqlConnection();
             conn.Open();
-            var trans = conn.BeginTransaction();
+            using var trans = conn.BeginTransaction();
 
             _partitionService.Execute(partitionTime, "Service_BettransFish_Joker_Ins", _data, trans);
             trans.Commit();
-            
+
 
             var tpUnsettle = new TpUnsettle
             {
@@ -144,12 +152,12 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
             _data.description = $"{_data.id}-{partitionTime:yyyyMM}";
             using var conn = _mySqlClient.GetMySqlConnection();
             conn.Open();
-            var trans = conn.BeginTransaction();
-            
+            using var trans = conn.BeginTransaction();
+
             _partitionService.Execute(partitionTime, "Service_BettransFish_Joker_Ins", _data, trans);
             _partitionService.Execute(partitionTime.AddSeconds(1), "Service_BettransFish_Joker_Ins", _data, trans);
             trans.Commit();
-            
+
             var tpUnsettle = new TpUnsettle
             {
                 TransId = _data.roundid,

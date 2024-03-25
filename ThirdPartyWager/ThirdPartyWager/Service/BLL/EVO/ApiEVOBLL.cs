@@ -1,12 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿using System.Text;
+
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -48,6 +43,25 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
+        public async Task<List<WagerEVOModel>> GetBetListByTransId(string wagerUrl, string casinoKey, string gameHistoryApiToken, string gameProvider, string TransId, string startTime)
+        {
+            // param
+            var url = $"{wagerUrl}/api/gamehistory/v1/casino/games/stream";
+            var param = new
+            {
+                startDate = startTime,
+                transactionId = TransId,
+                gameProvider = gameProvider
+            };
+            var dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(param));
+            var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
+
+            // request
+            var r = await DoHttpClientAsync(url, sParam, casinoKey, gameHistoryApiToken);
+            var result = JsonConvert.DeserializeObject<List<WagerEVOModel>>(r);
+            return result;
+        }
+
         private async Task<string> DoHttpClientAsync(string url, string param, string casinoKey, string ua2Token)
         {
             var tmpUrl = url;
@@ -74,19 +88,15 @@ namespace ThirdPartyWager.Service.BLL
             }
             else
             {
-                var word = "error";
-                if (!result.Contains(word))
+                var word = "}\n{";
+                if (result.Contains(word))
                 {
-                    word = "}\n{";
-                    if (result.Contains(word))
-                    {
-                        var tmp = result.Replace(word, "},{");
-                        result = $"[{tmp}]";
-                    }
-                    else
-                    {
-                        result = $"[{result}]";
-                    }
+                    var tmp = result.Replace(word, "},{");
+                    result = $"[{tmp}]";
+                }
+                else
+                {
+                    result = $"[{result}]";
                 }
             }
             return result;

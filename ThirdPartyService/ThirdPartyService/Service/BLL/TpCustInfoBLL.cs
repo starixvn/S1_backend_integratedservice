@@ -1,6 +1,8 @@
 ﻿using System.Collections.Concurrent;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
+
 using ThirdPartyService.Service.DAL;
 
 namespace ThirdPartyService.Service.BLL
@@ -41,6 +43,26 @@ namespace ThirdPartyService.Service.BLL
                 tpCountryCodeCache.TryAdd(key, tpCountryCode);
                 return tpCountryCode;
             }
+        }
+
+        public IEnumerable<int> GetCustIdWithoutSabaId(int tpId)
+        {
+            return tpCustInfoService.GetCustIdWithoutSabaId(tpId);
+        }
+        
+        public IEnumerable<int> GetCustCurrencySiteIdWithoutSabaId(int tpId, int siteId, int currencyId)
+        {
+            return tpCustInfoService.GetCustCurrencySiteIdWithoutSabaId(tpId, siteId, currencyId);
+        }
+        
+        public IEnumerable<TpCurrency> GetTpCurrency(int tpId)
+        {
+            return  tpCustInfoService.GetTpCurrency(tpId);
+        }
+
+        public TpCustInfo GetTpCustInfoByTpCustId(int tpId, string tpCustId)
+        {
+            return tpCustInfoService.GetTpCustInfoByTpCustId(tpId, tpCustId);
         }
     }
 }

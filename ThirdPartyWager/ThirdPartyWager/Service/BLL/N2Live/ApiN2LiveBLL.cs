@@ -1,13 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.IO;
-using System.IO.Compression;
-using System.Net.Http;
+﻿using System.IO.Compression;
 using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
+
+using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;

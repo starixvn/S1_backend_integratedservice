@@ -1,10 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -19,7 +13,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiJILIBLL _apiJILIBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = -4;
-        private readonly List<int> _siteList = new List<int>() {1, 2, 3 };
+        private readonly Dictionary<int, JILIConfig> _siteConfigDic;
 
         public FinanceJILIBLL(IServiceProvider provider)
         {
@@ -28,6 +22,7 @@ namespace ThirdPartyWager.Service.BLL
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _apiJILIBLL = provider.GetRequiredService<ApiJILIBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<JILIConfig>(Tp.JILI.ToString());
         }
 
         public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
@@ -70,23 +65,24 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
         {
             var reportData = new List<dynamic>();
-            foreach (var siteId in _siteList)
+            var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+            foreach (var siteData in siteList)
             {
-                // 分Site取得TpList
-                setting = _thirdPartyBLL.GetThirdPartyBySite(tpId, siteId);
+                // 分Site取得SiteConfig
+                setting = _siteConfigDic[siteData.SiteId];
 
                 var getWagerSummary = await _apiJILIBLL.GetBetSummaryByTime(setting, reportTime.startTime, reportTime.endTime);
                 if (getWagerSummary.ErrorCode == 101)
                 {
                     var msg = "NO_DATA";
-                    _logger.LogInformation($"{msg}\r\nSiteId={siteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                    _logger.LogInformation($"{msg}\r\nSiteId={siteData.SiteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
                     continue;
                 }
 
                 if (getWagerSummary.ErrorCode != 0)
                 {
                     var msg = "THIRD_PARTY_ERROR";
-                    _logger.LogError($"{msg}\r\nSiteId={siteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                    _logger.LogError($"{msg}\r\nSiteId={siteData.SiteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
                     SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
                     throw systemException;
                 }

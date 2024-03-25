@@ -1,9 +1,5 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
+
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
@@ -133,5 +129,21 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public long CreateTime { get; set; }
         public TicketStatus TicketStatus { get; set; }
         public BettransType TicketType { get; set; }
+    }
+
+    public class SettleData_NLC : SettleData
+    {
+        public string status { get; set; }
+    }
+
+    public class NLCConfig : TpSiteConfig
+    {
+        public string ApiUrl_Backup { get; set; }
+        public string EcId { get; set; }
+        public string Ua2Token { get; set; }
+        public string AuthToken { get; set; }
+        public string CasinoKey { get; set; }
+        public string GameProvider { get; set; }
+        public string GameHistoryApiToken { get; set; }
     }
 }

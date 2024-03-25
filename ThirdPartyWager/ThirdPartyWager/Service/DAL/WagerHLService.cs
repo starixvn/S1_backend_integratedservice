@@ -1,0 +1,79 @@
+﻿using Dapper;
+using MySql.Data.MySqlClient;
+using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
+
+namespace ThirdPartyWager.Service.DAL
+{
+    public class WagerHLService
+    {
+        private readonly MySqlClient _wagerDbClient;
+        private readonly MySqlClient _mainDbClient;
+
+        public WagerHLService(IServiceProvider provider)
+        {
+            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);         
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+        }
+
+        public bool InsertHLWager(HLWagerData wager)
+        {
+            try
+            {
+                var dateTime = new DateTimeOffset(wager.DateTime, new TimeSpan(8, 0, 0)).UtcDateTime;
+                var drawDate = new DateTimeOffset(wager.DrawDate, new TimeSpan(8, 0, 0)).UtcDateTime;
+            
+                var p = new DynamicParameters();
+                p.Add("betID", wager.BetID);
+                p.Add("loginID", wager.UserName);
+                p.Add("dateTime", dateTime);
+                p.Add("drawType", wager.DrawType);
+                p.Add("drawDate", drawDate);
+                p.Add("betNumber", wager.BetNumber);
+                p.Add("betPosition", wager.BetPosition);
+                p.Add("bet", wager.BetAmount);
+                
+                return _wagerDbClient.Execute("Service_TpWager_HL_Ins", p);
+            }
+            catch (MySqlException mySqlEx)
+            {
+                /*Duplicate for key 'PRIMARY'*/
+                if (mySqlEx.Number == 1062)
+                {
+                    return false;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+        }
+
+        public bool UpdateHLWager(HLSettleInsertData wager)
+        {
+            var p = new DynamicParameters();
+            p.Add("betID", wager.TransId);
+            p.Add("strikePosition", wager.StrikePosition);
+            p.Add("strike", decimal.Parse(wager.SettleAmount));
+            p.Add("SettleFlag", wager.SettleFlag);
+            return _wagerDbClient.Execute("Service_TpWager_HL_Set", p);
+        }
+        
+        public IEnumerable<HLWagerTrans> GetHLBetUnSettledList(long TicketKey, int LimitCount = 1000)
+        {
+            return _wagerDbClient.Query<HLWagerTrans>("Service_TpWager_HL_UnSettle_Get",
+                new
+                {
+                    TicketKey,
+                    LimitCount,
+                });
+        }
+        
+        public long GetHaoLongTicketKey(long TicketKey)
+        {
+            var parameters = new { TicketKey };
+            return _wagerDbClient.QueryFirst<long>("Service_TpWager_HL_TicketKey_Get", parameters);
+        }
+    }
+}

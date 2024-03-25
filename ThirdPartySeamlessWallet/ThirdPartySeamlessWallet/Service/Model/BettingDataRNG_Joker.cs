@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using ThirdPartySeamlessWallet.Service.Model.enums;
-
-namespace ThirdPartySeamlessWallet.Service.Model
+﻿namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class BettingDataRNG_Joker
     {
@@ -55,5 +48,18 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal startbalance { get; set; }
         public decimal endbalance { get; set; }
         public int TicketType { get; set; }
+    }
+
+    internal class JokerConfig : TpSiteConfig
+    {
+        public Dictionary<string, CurrencyDataJoker> CurrencyData { get; set; }
+    }
+
+    public class CurrencyDataJoker
+    {
+        public string AppID { get; set; }
+        public string Secret { get; set; }
+        public string AppID_Test { get; set; }
+        public string Secret_Test { get; set; }
     }
 }

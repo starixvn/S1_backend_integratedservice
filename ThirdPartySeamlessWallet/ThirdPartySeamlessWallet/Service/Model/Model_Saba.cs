@@ -1,4 +1,5 @@
 ﻿using System.Xml.Serialization;
+
 using Newtonsoft.Json;
 
 namespace ThirdPartySeamlessWallet.Service.Model
@@ -12,7 +13,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         [JsonProperty("op")]
         public string Op { get; set; }
     }
-    
+
     public class CheckOnlineMemberOutput
     {
         public CheckOnlineMember CheckOnlineMember { get; set; }
@@ -28,5 +29,28 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int StatusCode { get; set; }
         [XmlElement(ElementName = "message")]
         public string Message { get; set; }
+    }
+
+    public class GetDataInput
+    {
+        public string SiteId { get; set; }
+
+        public string UserName { get; set; }
+        public string SabaId { get; set; }
+    }
+
+    public class GetFinancialLogSpInput
+    {
+        public int CustId { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public string RefTransId { get; set; } = null;
+
+        public GetFinancialLogSpInput(int custId) 
+        {
+            CustId = custId;
+            StartDate = DateTime.UtcNow.AddDays(-60);
+            EndDate = DateTime.UtcNow;
+        }
     }
 }

@@ -13,20 +13,20 @@ namespace ThirdPartyWager.Workers
         private readonly FinanceCQ9BLL _financeCQ9BLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly FincanceService _fincanceService;
+        private readonly Dictionary<string, string> _siteConfig;
         private readonly int _tpId = (int)Tp.CQ9;
         private readonly string _tpName = Tp.CQ9.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
         private readonly int _beyond = 2;
         private Timer timer;
 
-        public FinanceCQ9(
-            IServiceProvider provider
-        )
+        public FinanceCQ9(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceCQ9>>();
             _financeCQ9BLL = provider.GetRequiredService<FinanceCQ9BLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _fincanceService = provider.GetRequiredService<FincanceService>();
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(Tp.CQ9.ToString());
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -74,7 +74,7 @@ namespace ThirdPartyWager.Workers
             try
             {
                 // get setting
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+                var setting = _siteConfig;
 
                 // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);

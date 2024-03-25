@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using CommonService.Service.DAL;
+﻿using CommonService.Service.DAL;
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
@@ -14,37 +13,36 @@ namespace CommonService.Service.BLL
         private readonly Tools _tools;
         private readonly AuthBLL _authBLL;
 
-        public OTPEmailBLL(SendGridBLL sendGridBll, OTPSMSService otpService, Tools tools, CustInfoService custInfoService, AuthBLL authBll)
+        public OTPEmailBLL(IServiceProvider provider)
         {
-            
-            _sendGridBll = sendGridBll;
-            _otpService = otpService;
-            _tools = tools;
-            _custInfoService = custInfoService;
-            _authBLL = authBll;
+            _sendGridBll = provider.GetRequiredService<SendGridBLL>();
+            _otpService = provider.GetRequiredService<OTPSMSService>();
+            _tools = provider.GetRequiredService<Tools>();
+            _custInfoService = provider.GetRequiredService<CustInfoService>();
+            _authBLL = provider.GetRequiredService<AuthBLL>();
         }
-        
+
         public async Task<ApiResult<SendOTPEmailResult>> SendOtpEmailAsync(int custId, string url)
         {
             var apiResult = new ApiResult<SendOTPEmailResult>();
             var custInfo = _custInfoService.GetCustInfoProfile(custId);
             if (custInfo != null && !string.IsNullOrEmpty(custInfo.Email))
-            { 
+            {
                 var otpResult = _otpService.GetOTPVerifyinfo(custId, (int)OtpType.Email);
                 if (otpResult.Status != 1)
                 {
                     // 產生6位數驗證碼
                     var code = _tools.GetRandomNumString(6);
                     var key = _authBLL.ApplyToken(custInfo);
-                    var verificationUrl = $"{url}?key={key}&code={code}";
-                    
-                    var sendMailResult = await _sendGridBll.SendMailAsync(custInfo, new {verifyemailurl=verificationUrl}, TemplateType.VerificationMail);
-                    
+                    var verificationUrl = $"{url}?key={key}&emailcode={code}";
+
+                    var sendMailResult = await _sendGridBll.SendMailAsync(custInfo, new { verifyemailurl = verificationUrl }, TemplateType.VerificationMail);
+
                     if (sendMailResult.ErrorCode == ErrorCode.Success)
                     {
                         var insertOtpResult = _otpService.OTPVerifyinfoIns(custId, code, (int)OtpType.Email);
                         apiResult.ErrorCode = (ErrorCode)insertOtpResult.Status;
-                        apiResult.Data = new SendOTPEmailResult()
+                        apiResult.Data = new SendOTPEmailResult
                         {
                             Status = insertOtpResult.Status,
                             StartUnixTime = insertOtpResult.StartUnixTime,
@@ -60,7 +58,7 @@ namespace CommonService.Service.BLL
                 else
                 {
                     apiResult.ErrorCode = (ErrorCode)(otpResult.Status == 1 ? 0 : 1000);
-                    apiResult.Data = new SendOTPEmailResult()
+                    apiResult.Data = new SendOTPEmailResult
                     {
                         Status = otpResult.Status,
                         StartUnixTime = otpResult.StartUnixTime,
@@ -77,10 +75,10 @@ namespace CommonService.Service.BLL
 
         public ApiResult VerifyOtp(int custId, string inputOtp)
         {
-            var result = _otpService.VerifyOPT(new VerifyOTPReq() {CustId = custId, InputOTP = inputOtp}, (int)OtpType.Email);
+            var result = _otpService.VerifyOTP(new VerifyOTPReq { CustId = custId, InputOTP = inputOtp }, (int)OtpType.Email);
             var apiResult = new ApiResult
             {
-                ErrorCode = (ErrorCode) (result)
+                ErrorCode = (ErrorCode)(result)
             };
             return apiResult;
         }

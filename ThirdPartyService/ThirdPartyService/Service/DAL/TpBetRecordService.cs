@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Dapper;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Dapper;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+
 using ThirdPartyService.Service.Library;
 
 namespace ThirdPartyService.Service.DAL
@@ -16,27 +13,27 @@ namespace ThirdPartyService.Service.DAL
         private readonly MySqlClient _reportDbClient;
         private readonly MySqlClient _wagerDbClient;
         private readonly MySqlClient _mainDbClient;
-        private readonly IReadOnlyDictionary<int, List<GameCasinoOption>> _GameCasinoList;
-        private readonly IReadOnlyDictionary<int, TpListOption> _TpList;
+        private readonly IReadOnlyDictionary<int, List<GameCasinoOption>> _gameCasinoList;
+        private readonly IReadOnlyDictionary<int, TpListOption> _tpList;
 
         public TpBetRecordService(IServiceProvider provider)
         {
             _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
-            _GameCasinoList = provider.GetRequiredService<IEnumerable<GameCasinoOption>>().GroupBy(i => i.TpId)
+            _gameCasinoList = provider.GetRequiredService<IEnumerable<GameCasinoOption>>().GroupBy(i => i.TpId)
                 .ToDictionary(d => d.Key, d => d.ToList());
-            _TpList = provider.GetRequiredService<IEnumerable<TpListOption>>().ToDictionary(d => d.Id, d => d);
+            _tpList = provider.GetRequiredService<IEnumerable<TpListOption>>().ToDictionary(d => d.Id, d => d);
         }
 
         public List<GameCasinoOption> GetGameCasinoList(int tpId)
         {
-            return _GameCasinoList.TryGetValue(tpId, out var result) ? result : new List<GameCasinoOption>();
+            return _gameCasinoList.TryGetValue(tpId, out var result) ? result : new List<GameCasinoOption>();
         }
 
         public string GetTpName(int tpId)
         {
-            return _TpList.TryGetValue(tpId, out var result) ? result.TpName : string.Empty;
+            return _tpList.TryGetValue(tpId, out var result) ? result.TpName : string.Empty;
         }
 
         public TpBetRecordDetailModel GetTpBetRecordDetail(int TpId, int GameType, string TransId, DateTime SettledTime)
@@ -68,7 +65,7 @@ namespace ThirdPartyService.Service.DAL
                     DataBase.Wager => (IReadOnlyDictionary<string, object>)_wagerDbClient.QueryFirst(spName, parameters),
                     DataBase.Report => (IReadOnlyDictionary<string, object>)_reportDbClient.QueryFirst(spName, parameters),
                     DataBase.Main => (IReadOnlyDictionary<string, object>)_mainDbClient.QueryFirst(spName, parameters),
-                };            
+                };
             }
             catch (Exception)
             {

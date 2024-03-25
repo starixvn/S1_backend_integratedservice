@@ -1,16 +1,13 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
+﻿using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
+
+using Newtonsoft.Json;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.Skywind
@@ -63,11 +60,11 @@ namespace ThirdParty.Skywind
 
             #region SetCustGotoGame
             var tpGameType = (int)TpGameType.Skywind_RNG;
-            if(gameId == "0")
+            if (gameId == "0")
             {
                 tpGameType = (int)TpGameType.Skywind_LiveCasino;
             }
-            else if(gameId == "sw_or" || gameId == "sw_fj" || gameId == "sw_cashdaha")
+            else if (gameId == "sw_or" || gameId == "sw_fj" || gameId == "sw_cashdaha")
             {
                 tpGameType = (int)TpGameType.Skywind_Fish;
             }
@@ -118,7 +115,7 @@ namespace ThirdParty.Skywind
                     }
                 }
                 return oApiResult;
-            }  
+            }
         }
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
@@ -128,31 +125,76 @@ namespace ThirdParty.Skywind
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
+            Dictionary<string, string> itgGame = new Dictionary<string, string>();
+            itgGame.Add("itg_moneytreesofspring", "itg_moneytreesofspring");
+            itgGame.Add("itg_goldenroad", "itg_goldenroad");
+            itgGame.Add("itg_megatrail", "itg_megatrail");
+            itgGame.Add("itg_megamonkeys", "itg_megamonkeys");
+            itgGame.Add("itg_bigirishbucks", "itg_bigirishbucks");
+            itgGame.Add("itg_bigmoneyvegas", "itg_bigmoneyvegas");
+            itgGame.Add("itg_monkeyhero", "itg_monkeyhero");
+            itgGame.Add("itg_moneytreesofspring_9606", "itg_moneytreesofspring_9606");
+            itgGame.Add("itg_goldenroad_9599", "itg_goldenroad_9599");
+            itgGame.Add("itg_goldenroad_9401", "itg_goldenroad_9401");
+            itgGame.Add("itg_megatrail_9601", "itg_megatrail_9601");
+            itgGame.Add("itg_megatrail_9400", "itg_megatrail_9400");
+            itgGame.Add("itg_megamonkeys_9605", "itg_megamonkeys_9605");
+            itgGame.Add("itg_megamonkeys_9402", "itg_megamonkeys_9402");
+            itgGame.Add("itg_bigirishbucks_9599", "itg_bigirishbucks_9599");
+            itgGame.Add("itg_bigirishbucks_9404", "itg_bigirishbucks_9404");
+            itgGame.Add("itg_bigmoneyvegas_9600", "itg_bigmoneyvegas_9600");
+
             string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
             string SecretKey = inputs.ContainsKey("SecretKey") && !string.IsNullOrEmpty(inputs["SecretKey"]) ? inputs["SecretKey"] : throw new Exception();
             string Username = inputs.ContainsKey("Username") && !string.IsNullOrEmpty(inputs["Username"]) ? inputs["Username"] : throw new Exception();
             string Password = inputs.ContainsKey("Password") && !string.IsNullOrEmpty(inputs["Password"]) ? inputs["Password"] : throw new Exception();
-            
+            string HistoryUrl = inputs.ContainsKey("HistoryUrl") && !string.IsNullOrEmpty(inputs["HistoryUrl"]) ? inputs["HistoryUrl"] : throw new Exception();
+
             string[] sArray = Regex.Split(getBetDetail.TransId, "-", RegexOptions.IgnoreCase);
             var roundId = sArray[0];
 
-            var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
-            var detailUrl = $"{ApiUrl}/history/game/{roundId}/image";
-            Dictionary<string, string> header = new Dictionary<string, string>();
-            header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
-            string json = HttpGet(detailUrl, "", "application/json", header);
-            var result = FromJson<DetailUrl>(json);
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_Skywind_Detail_Get", new { TransId = roundId }, DataBase.Wager);
+            var GameID = detail.GetStringValue("gameCode");
 
-            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            if (itgGame.ContainsKey(GameID))
             {
-                TransId = getBetDetail.TransId,
-                DetailUrl = result.imageUrl,
-                TpCurrency = new TpCurrency()
+                var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
+                var detailUrl = $"{ApiUrl}/history/game";
+                string getParams = $"roundId={roundId}";
+                Dictionary<string, string> header = new Dictionary<string, string>();
+                header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
+                string json = HttpGet(detailUrl, getParams, "application/json", header);
+                return new BaseDetail(getBetDetail.TpGameTypeOption)
                 {
-                    ExchangeRate = tpCustInfo.ExchangeRate,
-                    TpCurrencyId = tpCustInfo.TpCurrencyId,
-                },
-            };
+                    TransId = getBetDetail.TransId,
+                    Detail = json,
+                    TpCurrency = new TpCurrency()
+                    {
+                        ExchangeRate = tpCustInfo.ExchangeRate,
+                        TpCurrencyId = tpCustInfo.TpCurrencyId,
+                    },
+                };
+            }
+            else
+            {
+                var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
+                var detailUrl = $"{ApiUrl}/history/game/{roundId}/image";
+                Dictionary<string, string> header = new Dictionary<string, string>();
+                header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
+                string json = HttpGet(detailUrl, "", "application/json", header);
+                var result = FromJson<DetailUrl>(json);
+
+                return new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    DetailUrl = result.imageUrl,
+                    TpCurrency = new TpCurrency()
+                    {
+                        ExchangeRate = tpCustInfo.ExchangeRate,
+                        TpCurrencyId = tpCustInfo.TpCurrencyId,
+                    },
+                };
+            }
         }
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -195,7 +237,7 @@ namespace ThirdParty.Skywind
         {
             if (device == "web")
                 return DeviceType.Desktop;
-            else if(device == "mobile")
+            else if (device == "mobile")
                 return DeviceType.Mobile;
             else
                 return DeviceType.None;

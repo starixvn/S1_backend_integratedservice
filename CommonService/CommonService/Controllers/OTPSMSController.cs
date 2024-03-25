@@ -1,9 +1,9 @@
 ﻿using CommonService.Service.BLL;
+using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
+
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using PaymentService.Service.Library;
 
 namespace CommonService.Controllers
 {
@@ -11,85 +11,95 @@ namespace CommonService.Controllers
     [ApiController]
     public class OTPSMSController
     {
-        private readonly OTPSMSBLL sOTPSMSBLL;
-        private readonly NxCloudSMSBLL nxCloudSMSBLL;
-        private readonly Log2File log2File;
-        private readonly CustInfoBLL custInfoBLL;
-        private readonly SelLangBLL selLangBLL;
-        private readonly IOptions<Dictionary<string, Dictionary<string, string>>> supportOTPConfig;
+        private readonly ILogger<OTPSMSController> _logger;
+        private readonly CustInfoBLL _custInfoBLL;
+        private readonly Dictionary<int, SMSSupportConfig> _supportOTPConfig;
+        private readonly OTPSMSBLL _oTPSMSBLL;
+        private readonly Tools _tools;
+        private readonly ICacheHelper _redisHelper;
 
-        public OTPSMSController(OTPSMSBLL sOTPSMSBLL, CustInfoBLL custInfoBLL, Log2File log2File, SelLangBLL selLangBLL, NxCloudSMSBLL nxCloudSMSBLL, IOptions<Dictionary<string, Dictionary<string, string>>> supportOTPConfig)
+        private readonly SkyLineBLL _skyLineBLL;
+        private readonly Dictionary<OTPProvider, Func<OTPRequestObject, Task<ApiResult>>> _requestHandler;
+
+        public OTPSMSController(IServiceProvider provider)
         {
-            this.sOTPSMSBLL = sOTPSMSBLL;
-            this.nxCloudSMSBLL = nxCloudSMSBLL;
-            this.custInfoBLL = custInfoBLL;
-            this.log2File = log2File;
-            this.selLangBLL = selLangBLL;
-            this.supportOTPConfig = supportOTPConfig;
+            _logger = provider.GetRequiredService<ILogger<OTPSMSController>>();
+            _custInfoBLL = provider.GetRequiredService<CustInfoBLL>();
+            _supportOTPConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SMSSupportConfig>("SMSAutoSupport");
+            _oTPSMSBLL = provider.GetRequiredService<OTPSMSBLL>();
+            _tools = provider.GetRequiredService<Tools>();
+            _redisHelper = provider.GetRequiredService<ICacheHelper>();
+
+            _skyLineBLL = provider.GetRequiredService<SkyLineBLL>();
+            _requestHandler = new Dictionary<OTPProvider, Func<OTPRequestObject, Task<ApiResult>>>()
+            {
+                { OTPProvider.SkyLine, _skyLineBLL.SendOTP},
+                { OTPProvider.NxCloud, provider.GetRequiredService<NxCloudSMSBLL>().SendOTP},
+                { OTPProvider.YC, provider.GetRequiredService<YCBLL>().SendOTP},
+                { OTPProvider.AWS, provider.GetRequiredService<AWSBLL>().SendOTP},
+                { OTPProvider.SmsCloud, provider.GetRequiredService<SmsCloudBLL>().SendOTP},
+            };
         }
-        private string GetSupportOTP(CustInfoProfile custInfo)
-        {
-            var otpConfig = supportOTPConfig.Value[custInfo.SiteName];
-            var supportOtp = otpConfig["Default"]; 
-            if(otpConfig.ContainsKey(custInfo.AreaCode))
-                otpConfig.TryGetValue(custInfo.AreaCode, out supportOtp);
-            return supportOtp;
-        }
-        public class Req
-        {
-            public int CustId { get; set; }
-        }
+
         [HttpPost]
-        public async Task<ApiResult<SendOTPSMSResult>> SendOTPSMSAsync(Req req)
+        public async Task<ApiResult<SendOTPSMSResult>> SendOTPSMSAsync(RequestObject req)
         {
-            var apiResult = new ApiResult<SendOTPSMSResult>();
-            var custInfo = custInfoBLL.GetCustInfoProfile(req.CustId);
+            var custInfo = _custInfoBLL.GetCustInfoProfile(req.CustId);
 
-            if (custInfo != null && !string.IsNullOrEmpty(custInfo.PhoneNo))
+            // check User
+            if (custInfo == null)
             {
-                var phoneNo = custInfo.PhoneNo.StartsWith("0") ? custInfo.PhoneNo.Substring(1) : custInfo.PhoneNo;
-                var areaCode = custInfo.AreaCode.StartsWith("+") ? custInfo.AreaCode.Substring(1) : custInfo.AreaCode;
-                var phone = $"{areaCode}{phoneNo}";
-                apiResult = sOTPSMSBLL.GetOTPVerifyInfo(req.CustId);
-                if (apiResult.ErrorCode != 0)//OTP not Exist   send SMS
+                return new ApiResult<SendOTPSMSResult>()
                 {
-                    var supportOTP = GetSupportOTP(custInfo);
-                    apiResult.Message = supportOTP;
-                    if (supportOTP.Equals("SkyLine", StringComparison.OrdinalIgnoreCase))
-                    {
-                        apiResult = await sOTPSMSBLL.SendSkyLineOTPSMSAsync(phone, custInfo, req.CustId, custInfo.UserLang);
-                    } else if (supportOTP.Equals("YC", StringComparison.OrdinalIgnoreCase))
-                    {
-                        apiResult = await sOTPSMSBLL.SendYcOTPMSAsync(phoneNo, custInfo, req.CustId, custInfo.UserLang); // CNY OTP
-                    }
-                    else //default NxCloud
-                    {
-                        apiResult = await nxCloudSMSBLL.SendOTPSMSAsync(phone, custInfo, req.CustId, custInfo.UserLang);
-                    }
-                }
-            }
-            else if (custInfo != null && string.IsNullOrEmpty(custInfo.PhoneNo))
-            {
-                apiResult.ErrorCode = ErrorCode.InvalidParameter;
-            }
-            else
-            {
-                apiResult.ErrorCode = ErrorCode.UserNotExist;
+                    ErrorCode = ErrorCode.UserNotExist
+                };
             }
 
+            // check PhoneNo
+            if (string.IsNullOrEmpty(custInfo.PhoneNo))
+            {
+                return new ApiResult<SendOTPSMSResult>()
+                {
+                    ErrorCode = ErrorCode.InvalidParameter
+                };
+            }
 
-            return apiResult;
+            // check OTP        
+            var apiResult = _oTPSMSBLL.GetOTPVerifyInfo(req.CustId);
+            if (apiResult.ErrorCode == 0)
+            {
+                return apiResult;
+            }
+
+            var request = new OTPRequestObject
+            {
+                CustInfoProfile = custInfo,
+                OTPNum = _tools.GetRandomNumString(6)
+            };
+            var otpProvider = GetSupportOTP(custInfo);
+            var otpProviderResult = await _requestHandler[otpProvider].Invoke(request);
+            if (otpProviderResult.ErrorCode != ErrorCode.Success)
+            {
+                return new ApiResult<SendOTPSMSResult>()
+                {
+                    ErrorCode = otpProviderResult.ErrorCode,
+                    Message = otpProviderResult.Message
+                };
+            }
+
+            return _oTPSMSBLL.OTPVerifyinfoInsAsync(req.CustId, request.OTPNum);
         }
+
         [HttpPost]
         public ApiResult VerifyOTP(VerifyOTPReq verifyOTPReq)
         {
-            ApiResult apiResult = new ApiResult();
+            var apiResult = new ApiResult();
 
             try
             {
-                var custInfo = custInfoBLL.GetCustInfoProfile(verifyOTPReq.CustId);
-                
-                log2File.Info($"UserName: {custInfo.UserName}\r\nPhoneNo: {custInfo.PhoneNo}\r\nInput: {verifyOTPReq.InputOTP}", $"{custInfo.SiteName}_Verify");
+                var custInfo = _custInfoBLL.GetCustInfoProfile(verifyOTPReq.CustId);
+
+                _logger.LogInformation($"UserName: {custInfo.UserName}\r\nPhoneNo: {custInfo.PhoneNo}\r\nInput: {verifyOTPReq.InputOTP}", $"{custInfo.SiteName}_Verify");
 
                 if (verifyOTPReq.InputOTP.Length >= 10)
                 {
@@ -97,18 +107,11 @@ namespace CommonService.Controllers
                     return apiResult;
                 }
 
-                var GetOTPVerifyResult = sOTPSMSBLL.GetOTPVerifyInfo(verifyOTPReq.CustId);
+                var GetOTPVerifyResult = _oTPSMSBLL.GetOTPVerifyInfo(verifyOTPReq.CustId);
 
                 if (GetOTPVerifyResult.ErrorCode == 0)
                 {
-                    var supportOTP = GetSupportOTP(custInfo);
-                    if (supportOTP.Equals("NxCloud", StringComparison.OrdinalIgnoreCase))
-                    {
-                        apiResult = nxCloudSMSBLL.VerifyOPT(verifyOTPReq);
-                    }else
-                    {
-                        apiResult = sOTPSMSBLL.VerifyOPT(verifyOTPReq);
-                    }
+                    apiResult = _oTPSMSBLL.VerifyOPT(verifyOTPReq);
                 }
                 else
                 {
@@ -117,23 +120,25 @@ namespace CommonService.Controllers
             }
             catch (Exception ex)
             {
-                apiResult.RawMessage = ex.ToString();
-                log2File.Error(ex.ToString(), "VerifyOTP", ex);
+                var msg = $"VerifyOTP || {ex.Message}";
+                apiResult.RawMessage = msg;
+                _logger.LogError(ex, msg);
             }
 
             return apiResult;
         }
+
         [HttpPost]
-        public ApiResult<SendOTPSMSResult> GetOTPVerifyInfo(Req req)
+        public ApiResult<SendOTPSMSResult> GetOTPVerifyInfo(RequestObject req)
         {
             var apiResult = new ApiResult<SendOTPSMSResult>();
             try
             {
-                var custInfo = custInfoBLL.GetCustInfoProfile(req.CustId);
+                var custInfo = _custInfoBLL.GetCustInfoProfile(req.CustId);
 
                 if (custInfo != null && !string.IsNullOrEmpty(custInfo.PhoneNo))
                 {
-                    apiResult = sOTPSMSBLL.GetOTPVerifyInfo(req.CustId);
+                    apiResult = _oTPSMSBLL.GetOTPVerifyInfo(req.CustId);
                     apiResult.ErrorCode = ErrorCode.Success;
                 }
                 else if (custInfo != null && string.IsNullOrEmpty(custInfo.PhoneNo))
@@ -147,24 +152,26 @@ namespace CommonService.Controllers
             }
             catch (Exception ex)
             {
-                apiResult.RawMessage = ex.ToString();
-                log2File.Error(ex.ToString(), "GetOTPVerifyInfo", ex);
+                var msg = $"GetOTPVerifyInfo || {ex.Message}";
+                apiResult.RawMessage = msg;
+                _logger.LogError(ex, msg);
             }
             return apiResult;
         }
+
         [HttpPost]
-        public async Task<ApiResult> SendSMSAsync(Req req)
+        public async Task<ApiResult> SendSMSAsync(RequestObject req)
         {
             var apiResult = new ApiResult();
 
-            var custInfo = custInfoBLL.GetCustInfoProfile(req.CustId);
+            var custInfo = _custInfoBLL.GetCustInfoProfile(req.CustId);
 
             if (custInfo != null && !string.IsNullOrEmpty(custInfo.PhoneNo) && custInfo.PhoneVerified)
             {
                 var phoneNo = custInfo.PhoneNo.StartsWith("0") ? custInfo.PhoneNo.Substring(1) : custInfo.PhoneNo;
                 var areacode = custInfo.AreaCode.StartsWith("+") ? custInfo.AreaCode.Substring(1) : custInfo.AreaCode;
                 var phone = $"{areacode}{phoneNo}";
-                apiResult = await sOTPSMSBLL.SendSkyLineSMSAsync(phone, custInfo, custInfo.UserLang);
+                apiResult = await _skyLineBLL.SendSMS(phone, custInfo, custInfo.UserLang, req.CustId);
             }
             else if (custInfo != null && string.IsNullOrEmpty(custInfo.PhoneNo))
             {
@@ -176,6 +183,51 @@ namespace CommonService.Controllers
             }
             return apiResult;
         }
-        
+
+        private OTPProvider GetSupportOTP(CustInfoProfile custInfo)
+        {
+            try
+            {
+                // 依Site取得簡訊設定
+                var sMSSupport = _supportOTPConfig[custInfo.SiteId].SMSSupport;
+                // 使用電話國碼取得簡訊供應商支援列表
+                var otpProviderList = sMSSupport.TryGetValue(custInfo.AreaCode, out var areaSupportOTP) ? areaSupportOTP : sMSSupport["Default"];
+                
+                // 先使用第一個當預設值
+                var result = otpProviderList[0];
+
+                // 檢查玩家之前發送紀錄
+                var key = $"UserGetSupportOTP:{custInfo.CustId}";
+                var alreadyTryProviderList = _redisHelper.GetListByRange<string>(key, 0, -1);
+
+                // 比對發送紀錄與簡訊供應商支援列表，發送過就換下一間
+                if (otpProviderList.Count != alreadyTryProviderList.Count)
+                {
+                    foreach (var otpProvider in otpProviderList)
+                    {
+                        if (!alreadyTryProviderList.Contains(otpProvider.ToString()))
+                        {
+                            result = otpProvider;
+                            break;
+                        }
+                    }
+                }
+                else
+                {   
+                    // 全部試過一輪，清掉重來
+                    _redisHelper.KeyDelete(key);
+                }
+                
+
+                //記錄這一次選擇的結果
+                _redisHelper.InsertList(key, TimeSpan.FromDays(1), new List<string> { result.ToString() });
+
+                return result;
+            }
+            catch
+            {
+                return OTPProvider.NxCloud;
+            }
+        }
     }
 }

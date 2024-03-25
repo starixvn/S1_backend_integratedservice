@@ -1,52 +1,50 @@
-﻿using System;
-using System.Collections.Generic;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace ThirdPartyWager.Service.Model
 {
-    public class YggConfig
-    {
-        /// <summary>
-        /// 獲取注單位置
-        /// </summary>
-        public string WagerUrl { get; set; }
+    //public class YggConfig
+    //{
+    //    /// <summary>
+    //    /// 獲取注單位置
+    //    /// </summary>
+    //    public string WagerUrl { get; set; }
 
-        /// <summary>
-        /// 玩家所属的商户品牌名称
-        /// </summary>
-        public string Org { get; set; }
+    //    /// <summary>
+    //    /// 玩家所属的商户品牌名称
+    //    /// </summary>
+    //    public string Org { get; set; }
 
-        /// <summary>
-        /// 玩家所属的商户集团名称
-        /// </summary>
-        public string TopOrg { get;set; }
+    //    /// <summary>
+    //    /// 玩家所属的商户集团名称
+    //    /// </summary>
+    //    public string TopOrg { get; set; }
 
-        /// <summary>
-        /// 商戶加密Key，新的值，以前沒有，升級 Api 後第三方需要提供
-        /// </summary>
-        public string Key {get; set; }
+    //    /// <summary>
+    //    /// 商戶加密Key，新的值，以前沒有，升級 Api 後第三方需要提供
+    //    /// </summary>
+    //    public string Key { get; set; }
 
-        public string ContentType => "application/x-www-form-urlencoded";
+    //    public string ContentType => "application/x-www-form-urlencoded";
 
-        public YggConfig(Dictionary<string, string> inputs)
-        {
-            WagerUrl = inputs.ContainsKey("WagerUrl") && !string.IsNullOrEmpty(inputs["WagerUrl"])
-                ? inputs["WagerUrl"]
-                : throw new Exception();
+    //    public YggConfig(Dictionary<string, string> inputs)
+    //    {
+    //        WagerUrl = inputs.ContainsKey("WagerUrl") && !string.IsNullOrEmpty(inputs["WagerUrl"])
+    //            ? inputs["WagerUrl"]
+    //            : throw new Exception();
 
-            Org = inputs.ContainsKey("org") && !string.IsNullOrEmpty(inputs["org"])
-                ? inputs["org"]
-                : string.Empty;
+    //        Org = inputs.ContainsKey("org") && !string.IsNullOrEmpty(inputs["org"])
+    //            ? inputs["org"]
+    //            : string.Empty;
 
-            TopOrg = inputs.ContainsKey("topOrg") && !string.IsNullOrEmpty(inputs["topOrg"])
-                ? inputs["topOrg"]
-                : string.Empty;
+    //        TopOrg = inputs.ContainsKey("topOrg") && !string.IsNullOrEmpty(inputs["topOrg"])
+    //            ? inputs["topOrg"]
+    //            : string.Empty;
 
-            Key = inputs.ContainsKey("key") && !string.IsNullOrEmpty(inputs["key"])
-                ? inputs["key"]
-                : string.Empty;
-        }
-    }
+    //        Key = inputs.ContainsKey("key") && !string.IsNullOrEmpty(inputs["key"])
+    //            ? inputs["key"]
+    //            : string.Empty;
+    //    }
+    //}
 
     #region Model
 

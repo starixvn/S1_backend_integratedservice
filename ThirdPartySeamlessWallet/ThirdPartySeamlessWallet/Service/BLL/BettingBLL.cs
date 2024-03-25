@@ -1,7 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Linq;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -58,7 +56,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     .DeserializeObject<BettingDataLC_SA_BetDetail>(bettingDataLC_SA.Betdetails).details
                     .Sum(i => i.amount);
             }
-            
+
             if (tpCurrency.ExchangeRate > 0)
             {
                 bettingDataLC_SA.amount *= tpCurrency.ExchangeRate; /*bettingDataLC_SA.Betdetails has not fixed*/
@@ -89,6 +87,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return result;
         }
+
         public int PlaceBetRNG_GPI(BettingDataRNG_GPI bettingDataRNG_GPI, out decimal afterAmount, out string TransId)
         {
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.GPI, bettingDataRNG_GPI.cust_id);
@@ -128,16 +127,23 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
-        public int PlaceBetRNG_YGG(BettingDataRNG_YGG bettingDataRNG_YGG, out decimal afterAmount)
+        public int PlaceBetRNG_YGG(BettingDataRNG_YGG bettingDataRNG_YGG, out decimal afterAmount, out string countryCode)
         {
             var result = 0;
             afterAmount = 0;
+            countryCode = string.Empty;
 
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.YGG, bettingDataRNG_YGG.playerid);
 
             if (tpCustInfo != null)
             {
                 var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.YGG, tpCustInfo.CurrencyId);
+                var tpCountry = tpCustInfoBLL.GetTpCurrencyCodeByCurrencyId((int)Tp.YGG, tpCustInfo.TpCurrencyId);
+
+                if (tpCountry != null)
+                {
+                    countryCode = tpCountry.CountryCode;
+                }
 
                 var insertData = new BettingDataRNG_YGG()
                 {
@@ -561,6 +567,28 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #endregion
 
+        #region NLC
+
+        public int PlaceBetRNG_NLC(BettingData_EVO bettingData_EVO, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.NLC, bettingData_EVO.userId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.NLC, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingData_EVO.transaction.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = bettingService.PlaceBetRNG_NLC(tpCustInfo, bettingData_EVO, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        #endregion
+
         #region Joker Fish
 
         public int WithdrawFish_Joker(BettingDataFish_Joker bettingDataFish_Joker, out decimal afterAmount)
@@ -601,6 +629,33 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 afterAmount /= tpCurrency.ExchangeRate;
             }
             return result;
+        }
+
+        public int PlaceBet_AdvantPlayMini(BettingData_AdvantPlayMini bettingData_AdvantPlayMini, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AP, bettingData_AdvantPlayMini.UserReferenceId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                bettingData_AdvantPlayMini.Amount *= tpCurrency.ExchangeRate;
+            }
+            var result = bettingService.PlaceBet_AdvantPlayMini(tpCustInfo, bettingData_AdvantPlayMini, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        public IEnumerable<BettransData_AdvantPlayMini_Bet> GetAdvantPlayMiniBet(string TransId, long SettlementTime, string MiniGameCode, out string TransactionReferenceId)
+        {
+            return bettingService.GetAdvantPlayMiniBet(TransId, SettlementTime, MiniGameCode, out TransactionReferenceId);
+        }
+
+        public IEnumerable<BettransData_AdvantPlayMini_Bet> GetAdvantPlayMiniBySession(string GameId, long SessionId, long SettlementTime, string MiniGameCode, out string TransactionReferenceId)
+        {
+            return bettingService.GetAdvantPlayMiniBySession(GameId, SessionId, SettlementTime, MiniGameCode, out TransactionReferenceId);
         }
         #endregion
 
@@ -650,7 +705,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         #endregion
 
-
         #region Skywind
         public int PlaceBet_Skywind(TpCustInfo tpCustInfo, BettingData_Skywind bettingData_Skywind, int gameType, out decimal afterAmount)
         {
@@ -667,6 +721,79 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
             return result;
         }
+        #endregion
+
+        #region PlayTech
+
+        public int PlaceBet_PlayTech(BettingData_PlayTech bettingData_PlayTech, GameType gameType, int partitionCheckDay, out decimal afterAmount)
+        {
+            var tpId = (int)Tp.PlayTech;
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(tpId, bettingData_PlayTech.playerId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
+            var custBalance = tpCustInfoBLL.GetBalance(tpId, bettingData_PlayTech.playerId, (int)gameType);
+
+            decimal totalBet = 0;
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                foreach (var data in bettingData_PlayTech.trans)
+                {
+                    data.amount *= tpCurrency.ExchangeRate;
+                    data.jpc *= tpCurrency.ExchangeRate;
+                    if (string.Equals(data.transType, "bet", StringComparison.OrdinalIgnoreCase))
+                    {
+                        totalBet += data.amount;
+                    }
+                }
+            }
+
+            if (custBalance.Balance < 0)
+            {
+                afterAmount = custBalance.Balance / tpCurrency.ExchangeRate;
+                var TpCheckRecordParam = bettingService.GetTpBetFailureParam_PlayTech(tpCustInfo, custBalance, tpCurrency, bettingData_PlayTech, (int)gameType, TpCheckRecordCode.InsufficientBalance, afterAmount);
+                thirdPartyBLL.AddTpBetFailureRecord(TpCheckRecordParam);
+                return 0;
+            }
+
+            var checkBalance = custBalance.Balance - totalBet;
+            if (checkBalance < 0)
+            {
+                afterAmount = checkBalance / tpCurrency.ExchangeRate;
+                var TpCheckRecordParam = bettingService.GetTpBetFailureParam_PlayTech(tpCustInfo, custBalance, tpCurrency, bettingData_PlayTech, (int)gameType, TpCheckRecordCode.InsufficientBalance, afterAmount);
+                thirdPartyBLL.AddTpBetFailureRecord(TpCheckRecordParam);
+                return 0;
+            }
+
+            var result = bettingService.PlaceBet_PlayTech(tpCustInfo, bettingData_PlayTech, gameType, partitionCheckDay, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        #endregion
+
+        #region Endorphina
+
+        public int PlaceBetRNG_Endorphina(BettingData_Endorphina bettingData_Endorphina, int gameType, out decimal afterAmount)
+        {
+            var tpId = (int)Tp.Endorphina;
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache(tpId, bettingData_Endorphina.player);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                bettingData_Endorphina.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = bettingService.PlaceBetRNG_Endorphina(tpCustInfo, bettingData_Endorphina, gameType, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
         #endregion
     }
 }

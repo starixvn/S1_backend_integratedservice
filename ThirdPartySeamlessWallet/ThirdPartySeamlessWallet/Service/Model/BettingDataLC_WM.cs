@@ -1,8 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -42,5 +38,16 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class SettleData_WM : SettleData
     {
         public decimal RealBetAmount { get; set; }
+    }
+
+    public class WMConfig : TpSiteConfig
+    {
+        public Dictionary<string, CurrencyDataWM> CurrencyData { get; set; }
+    }
+
+    public class CurrencyDataWM
+    {
+        public string vendorId { get; set; }
+        public string signature { get; set; }
     }
 }

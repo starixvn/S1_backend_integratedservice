@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
+
 using Newtonsoft.Json;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 using ThirdPartyCore.Model.TpMerchantBalance.Response;
+
 using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Library;
@@ -27,20 +23,19 @@ namespace ThirdPartyService.Service.BLL
         private readonly IWebHostEnvironment env;
         private readonly IConfiguration configuration;
         private readonly ILogger<ThirdPartyBLL> _logger;
-        private readonly Log2File log2File;
 
         private readonly ThirdPartyHelper thirdPartyHelper;
         private readonly TpTransferInfo tpTransferInfo;
 
         private readonly TpCustInfoService tpCustInfoService;
         private readonly TpTransferBonusInfoService tpTransferBonusInfoService;
-        private readonly ServerInfoService _serverInfoService;
         private readonly TpCustBalanceService _tpCustBalanceService;
         private readonly TpTransferInfo _tpTransferInfo;
         private readonly CacheHelper _cacheHelper;
         private readonly IReadOnlyDictionary<int, TpListOption> _TpList;
         private readonly Dictionary<int, TpGameTypeOption> _tpGameTypeConfig;
         private readonly IReadOnlyDictionary<int, CurrencyOption> _currencyList;
+        private readonly MySqlClient _mainDbClient;
 
 #if DEBUG
         /// <summary>
@@ -65,14 +60,12 @@ namespace ThirdPartyService.Service.BLL
             env = provider.GetRequiredService<IWebHostEnvironment>();
             configuration = provider.GetRequiredService<IConfiguration>();
             _logger = provider.GetRequiredService<ILogger<ThirdPartyBLL>>();
-            log2File = provider.GetRequiredService<Log2File>();
 
             thirdPartyHelper = provider.GetRequiredService<ThirdPartyHelper>();
             tpTransferInfo = provider.GetRequiredService<TpTransferInfo>();
 
             tpCustInfoService = provider.GetRequiredService<TpCustInfoService>();
             tpTransferBonusInfoService = provider.GetRequiredService<TpTransferBonusInfoService>();
-            _serverInfoService = provider.GetRequiredService<ServerInfoService>();
             _tpCustBalanceService = provider.GetRequiredService<TpCustBalanceService>();
             _tpTransferInfo = provider.GetRequiredService<TpTransferInfo>();
             _cacheHelper = provider.GetRequiredService<CacheHelper>();
@@ -88,6 +81,7 @@ namespace ThirdPartyService.Service.BLL
             _tpGameTypeConfig = tpGameTypeOptions.ToDictionary(i => i.Type, i => i);
             _TpList = provider.GetRequiredService<IEnumerable<TpListOption>>().ToDictionary(d => d.Id, d => d);
             _currencyList = provider.GetRequiredService<IEnumerable<CurrencyOption>>().ToDictionary(d => d.CurrencyId, d => d);
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
 
         #endregion
@@ -122,11 +116,14 @@ namespace ThirdPartyService.Service.BLL
                 }
 
                 TpCustInfo freeCustInfo = new TpCustInfo();
+                freeCustInfo.SiteId = tpInfo.SiteId;
+                freeCustInfo.CustId = tpInfo.CustId;
                 apiResult = tpHelper.Login(freeCustInfo, (AppType)tpInfo.AppType, tpLangId, inputs);
+
                 return apiResult;
             }
 
-            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
+            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId, tpInfo.LangId);
             if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
             {
                 var tpCustInfo = tpCustInfoResult.Data;
@@ -144,8 +141,9 @@ namespace ThirdPartyService.Service.BLL
                 var configEnv = configuration.GetValue<string>("Environment");
 
                 // Test account only allow login for saba
+                // 先讓HL過 後續確定有一家轉帳制 到時候一起處理
                 if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production" && configEnv == null &&
-                    tpInfo.TpId != 1)
+                    tpInfo.TpId != 1 && tpInfo.TpId != 58)
                 {
                     apiResult.ErrorCode = ErrorCode.NoAuthority;
                     apiResult.RawMessage = apiResult.Message = "This Account not allow for access";
@@ -156,7 +154,12 @@ namespace ThirdPartyService.Service.BLL
                 }
 
                 /*Use Async to Record Log*/
-                Task.Run(() => { tpCustInfoService.SetTpLastLoginTime(tpInfo.CustId, tpInfo.TpId); });
+                Task.Run(() =>
+                {
+                    tpCustInfoService.SetTpLastLoginTime(tpInfo.CustId, tpInfo.TpId);
+                    SetRecentlyPlayed(tpInfo);
+                    SetRecentlyViewed(tpInfo);
+                });
             }
             else
             {
@@ -180,10 +183,11 @@ namespace ThirdPartyService.Service.BLL
                     return result;
                 }
 
-                var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpTransfer.CustId, tpTransfer.TpId);
+                var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpTransfer.CustId, tpTransfer.TpId ,tpTransfer.LangId);
 
                 // Test account create 3rd party only for saba
-                if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production" && tpTransfer.TpId != 1)
+                // 先讓HL過 後續確定有一家轉帳制 到時候一起處理
+                if (tpCustInfoResult.Data.IsTest && env.EnvironmentName == "Production" && tpTransfer.TpId != 1 && tpTransfer.TpId != 58)
                 {
                     apiResult.ErrorCode = ErrorCode.NoAuthority;
                     apiResult.RawMessage = "This Account is for Testing.";
@@ -192,12 +196,13 @@ namespace ThirdPartyService.Service.BLL
                 else if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
                 {
                     apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
+                    apiResult.Message = tpCustInfoResult.Message;
                     apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode; /*3RD Error Code*/
                     apiResult.RawMessage = tpCustInfoResult.RawMessage; /*3RD Error Message*/
                     return apiResult;
                 }
 
-                if (ThirdPartyIsMaintain(tpCustInfoResult.Data.SiteId, tpTransfer.TpId))
+                if (tpCustInfoResult.Data.IsTest == false && ThirdPartyIsMaintain(tpCustInfoResult.Data.SiteId, tpTransfer.TpId))
                 {
                     apiResult.ErrorCode = ErrorCode.ThirdPartyUnderMaintenance;
                     apiResult.Message = "Third party under maintenance.";
@@ -210,10 +215,16 @@ namespace ThirdPartyService.Service.BLL
                     thirdPartyHelper.GetThirdPartyBySite(tpTransfer.TpId, tpCustInfoResult.Data.SiteId);
                 var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
 
+                if (!string.IsNullOrEmpty(tpTransfer.LangId))
+                {
+                    inputs.Add("langId", tpTransfer.LangId);
+                }
+
                 var balanceApiResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
                 if (balanceApiResult.ErrorCode != ErrorCode.Success)
                 {
                     apiResult.ErrorCode = ErrorCode.ServerIsBusy;
+                    apiResult.Message = balanceApiResult.Message;
                     apiResult.RawErrorCode = balanceApiResult.RawErrorCode; /*3RD Error Code*/
                     apiResult.RawMessage = balanceApiResult.RawMessage; /*3RD Error Message*/
                     return apiResult;
@@ -331,14 +342,27 @@ namespace ThirdPartyService.Service.BLL
 
             try
             {
-                var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId);
+                var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpInfo.CustId, tpInfo.TpId, tpInfo.LangId);
                 if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
                 {
+                    if (tpCustInfoResult.Data.IsTest == false && ThirdPartyIsMaintain(tpCustInfoResult.Data.SiteId, tpInfo.TpId))
+                    {
+                        apiResult.ErrorCode = ErrorCode.ThirdPartyUnderMaintenance;
+                        apiResult.Message = "Third party under maintenance.";
+                        return apiResult;
+                    }
+
                     IThirdPartyHelper tpHelper =
                         thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
+
                     var oThirdPartyModel =
                         thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
                     var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
+                    
+                    if (!string.IsNullOrEmpty(tpInfo.LangId))
+                    {
+                        inputs.Add("langId",tpInfo.LangId);
+                    }
 
                     apiResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
 
@@ -769,7 +793,7 @@ namespace ThirdPartyService.Service.BLL
             {
                 amount = adminTpTransfer.Amount / tpCustInfoResult.Data.ExchangeRate;
             }
-            
+
             tpTransferInfo.InsAdjustWalletLog(tpCustInfoResult.Data, adminTpTransfer, out transId);
 
             if (string.IsNullOrEmpty(transId))
@@ -777,16 +801,16 @@ namespace ThirdPartyService.Service.BLL
                 _logger.LogError($"InsAdjustWalletLog failed.");
                 apiResult.ErrorCode = ErrorCode.ServerIsBusy;
                 apiResult.Message = "AdjustWallet Failed.";
-                
+
                 return apiResult;
             }
-            
+
             var transferResult = tpHelper.Transfer(tpCustInfoResult.Data, inputs, amount, adminTpTransfer.direction, transId,
                 thirdId);
-            
+
             tpTransferInfo.SetAdjustWalletLog(transferResult, transId);
             if (transferResult.ErrorCode == ErrorCode.Success
-                && adminTpTransfer.Category == 9 && adminTpTransfer.DepositId > 0) // Category 9: Deposit
+                && adminTpTransfer.IsDepositId && adminTpTransfer.DepositId > 0) // IsDepositId = true
             {
                 var adjustAmount = adminTpTransfer.Amount * (adminTpTransfer.direction == Direction.ToTp ? 1 : -1);
                 var reslutCode = tpTransferInfo.SetAdjustmentActualDeposit(transId, adminTpTransfer.DepositId, adjustAmount);
@@ -803,7 +827,7 @@ namespace ThirdPartyService.Service.BLL
             apiResult.RawErrorCode = transferResult.RawErrorCode;
             apiResult.RawMessage = transferResult.RawMessage;
             apiResult.Data = new AdjustWalletResult(transferResult.Data, transId);
-            
+
             return apiResult;
         }
 
@@ -956,7 +980,7 @@ namespace ThirdPartyService.Service.BLL
                     apiResult.ErrorCode = ErrorCode.AutoTransferIsSeamless;
                     apiResult.Message = "Go To Seamless Game Is No Need To Transfer";
                 }
-                log2File.Info(msg, "AutoTransfer");
+                _logger.LogInformation($"AutoTransfer:{msg}");
             }
             else
             {
@@ -983,10 +1007,6 @@ namespace ThirdPartyService.Service.BLL
             _logger.LogInformation($"GetBalanceWorker-GetBalance-Start_"
                                    + $"TpId={tpId} SiteId={siteId} "
                                    + $"StartTime={DateTime.UtcNow.AddHours(8)}");
-
-            //log2File.Info($"GetBalanceWorker-GetBalance-Start_"
-            //                       + $"TpId={tpId} SiteId={siteId} "
-            //                       + $"EndTime={DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
 
             var custInfoList = GetTpCustInfoList(firstrRun, tpId, siteId);
             var tpCurrencyId = "";
@@ -1026,17 +1046,12 @@ namespace ThirdPartyService.Service.BLL
             _logger.LogInformation($"GetBalanceWorker-GetBalance-End_"
                                    + $"TpId={tpId} SiteId={siteId} "
                                    + $"EndTime={DateTime.UtcNow.AddHours(8)}");
-
-            //log2File.Info($"GetBalanceWorker-GetBalance-End_"
-            //                       + $"TpId={tpId} SiteId={siteId} "
-            //                       + $"EndTime={DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
-
             return true;
         }
 
         public ApiResult SetBetLimit(SetBetLimit setBetLimit)
         {
-            var apiResult = new ApiResult<TransferResult>();
+            var apiResult = new ApiResult();
             var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(setBetLimit.CustId, setBetLimit.TpId);
             if (tpCustInfoResult.Data == null)
             {
@@ -1058,29 +1073,6 @@ namespace ThirdPartyService.Service.BLL
             return tpHelper.SetBetLimit(tpCustInfoResult.Data, inputs, setBetLimit.BetSetting);
 
         }
-        public ApiResult<List<BetSetting>> GetBetLimit(GetBetLimit getBetLimit)
-        {
-            var apiResult = new ApiResult<List<BetSetting>>();
-            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(getBetLimit.CustId, getBetLimit.TpId);
-            if (tpCustInfoResult.Data == null)
-            {
-                apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
-                apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode; /*3RD Error Code*/
-                apiResult.Message = string.IsNullOrEmpty(tpCustInfoResult.Message)
-                    ? tpCustInfoResult.RawMessage
-                    : tpCustInfoResult.Message;
-                apiResult.RawMessage = tpCustInfoResult.RawMessage; /*3RD Error Message*/
-                return apiResult;
-            }
-
-            var tpHelper = (IThirdPartyBetLimitParticular)thirdPartyHelper.GetThirdPartyHelper(getBetLimit.TpId,
-                tpCustInfoResult.Data.SiteId);
-            var oThirdPartyModel =
-                thirdPartyHelper.GetThirdPartyBySite(getBetLimit.TpId, tpCustInfoResult.Data.SiteId);
-            var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
-
-            return tpHelper.GetBetLimit(tpCustInfoResult.Data, inputs);
-        }
 
         /// <summary>
         /// 新增餘額資料
@@ -1094,9 +1086,6 @@ namespace ThirdPartyService.Service.BLL
             _logger.LogInformation($"GetBalanceWorker-InsertBalance-Start_"
                                    + $"StartTime={DateTime.UtcNow.AddHours(8)}");
 
-            //log2File.Info($"GetBalanceWorker-InsertBalance-Start_"
-            //                           + $"StartTime={DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
-
             foreach (var data in datas.OrderBy(x => x.TpId).ThenBy(x => x.CustId).ThenBy(x => x.RequestTime))
             {
                 var result = InsertBalance(timeString, data);
@@ -1107,19 +1096,11 @@ namespace ThirdPartyService.Service.BLL
                                        + $"TimeString={timeString}"
                                        + $"BalanceData={JsonConvert.SerializeObject(data)}"
                                        + "Insert balance data fail.");
-
-                    //log2File.Error($"GetBalanceWorker-InsertBalance-Warning_"
-                    //                   + $"TableDate={tableDate} TimeString={timeString}"
-                    //                   + $"BalanceData={JsonConvert.SerializeObject(data)}"
-                    //                   + "Insert balance data fail.", "GetBalanceWorker");
                 }
             }
 
             _logger.LogInformation($"GetBalanceWorker-InsertBalance-End_"
                                    + $"EndTime={DateTime.UtcNow.AddHours(8)}");
-
-            //log2File.Info($"GetBalanceWorker-InsertBalance-End_"
-            //                       + $"EndTime={DateTime.UtcNow.AddHours(8)}", "GetBalanceWorker");
         }
 
         /// <summary>
@@ -1148,18 +1129,18 @@ namespace ThirdPartyService.Service.BLL
                 return new ApiResult<object>()
                 {
                     ErrorCode = ErrorCode.InvalidParameter,
-                    RawMessage = "GameType not found."
+                    Message = "GameType not found."
                 };
             }
             gameTypeOption.TpName = GetTpName(gameTypeOption.TpId);
 
             var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(request.CustId, gameTypeOption.TpId);
-            if (tpCustInfoResult.ErrorCode != ErrorCode.Success)
+            if (tpCustInfoResult.Data == null)
             {
                 return new ApiResult<object>()
                 {
                     ErrorCode = tpCustInfoResult.ErrorCode,
-                    RawMessage = tpCustInfoResult.RawMessage
+                    Message = tpCustInfoResult.RawMessage
                 };
             }
 
@@ -1167,9 +1148,7 @@ namespace ThirdPartyService.Service.BLL
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper.GetThirdPartyBySite(gameTypeOption.TpId, tpCustInfoResult.Data.SiteId).Setting);
             var getBetDetail = new GetBetDetail(request, gameTypeOption);
             var result = tpHelper.GetBetDetail(getBetDetail, tpCustInfoResult.Data, inputs);
-            var resultCode = string.IsNullOrEmpty(result.DetailUrl) ? ErrorCode.Success : ErrorCode.BetDetailIsUrl;
-            return new ApiResult<object>(resultCode, "success", result);
-
+            return new ApiResult<object>(ErrorCode.Success, "success", result);
         }
 
         /// <summary>
@@ -1185,8 +1164,8 @@ namespace ThirdPartyService.Service.BLL
             var merchantBalanceResponse = tpHelper.GetMerchantBalance(tpMerchantInfo, inputs);
             return merchantBalanceResponse;
         }
-		
-		public ApiResult<TpBetRecordExtend> GetTpBetRecordExtend(GetTpBetRecordExtendRequest request)
+
+        public ApiResult<TpBetRecordExtend> GetTpBetRecordExtend(GetTpBetRecordExtendRequest request)
         {
             var tpId = request.BetRecordInfo.TpId;
 
@@ -1214,7 +1193,7 @@ namespace ThirdPartyService.Service.BLL
 
             var tpHelper = (IThirdPartyTpBetRecordDetail)thirdPartyHelper.GetThirdPartyHelper(tpId, tpCustInfoResult.Data.SiteId);
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper.GetThirdPartyBySite(tpId, tpCustInfoResult.Data.SiteId).Setting);
-            
+
             try
             {
                 var result = tpHelper.GetTpBetRecordExtend(request.BetRecordInfo, gameTypeOption, tpCustInfoResult.Data, inputs);
@@ -1228,13 +1207,51 @@ namespace ThirdPartyService.Service.BLL
             {
                 _logger.LogError(ex, $"{ex.Message} ||  {JsonConvert.SerializeObject(request.BetRecordInfo)}");
                 return new ApiResult<TpBetRecordExtend>(new TpBetRecordExtend(request.BetRecordInfo, gameTypeOption, tpCustInfoResult.Data));
-            }      
+            }
         }
 
         public string GetTpName(int tpId)
         {
             return _TpList.TryGetValue(tpId, out var result) ? result.TpName : string.Empty;
         }
+
+        public ApiResult<TpCustInfo> CreateMember(int custId, int tpId, bool isNeedSendRequest)
+        {
+            return tpCustInfoService.CreateMember(custId, tpId, isNeedSendRequest);
+        }
+        
+        public ApiResult AddPrizeToPlayer(AddFreeSpin addFreeSpin)
+        {
+            var apiResult = new ApiResult();
+
+            var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(addFreeSpin.CustId, addFreeSpin.TpId);
+            if (tpCustInfoResult.ErrorCode == ErrorCode.Success)
+            {
+                var tpCustInfo = tpCustInfoResult.Data;
+                var tpHelper = (IThirdPartyEventParticular)thirdPartyHelper.GetThirdPartyHelper(addFreeSpin.TpId, tpCustInfo.SiteId);
+                var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper
+                    .GetThirdPartyBySite(addFreeSpin.TpId, tpCustInfo.SiteId).Setting);
+                if (addFreeSpin.inputs != null)
+                {
+                    foreach (var infoI in addFreeSpin.inputs)
+                    {
+                        inputs.Add(infoI.Key, infoI.Value);
+                    }
+                }
+                
+                apiResult = tpHelper.AddPrizeToPlayer(tpCustInfoResult.Data, inputs);
+            }
+            else
+            {
+                apiResult.ErrorCode = tpCustInfoResult.ErrorCode;
+                apiResult.Message = tpCustInfoResult.Message;
+                apiResult.RawErrorCode = tpCustInfoResult.RawErrorCode; /*3RD Error Code*/
+                apiResult.RawMessage = tpCustInfoResult.RawMessage; /*3RD Error Message*/
+            }
+
+            return apiResult;
+        }
+        
 
         #region Private Methods
 
@@ -1301,10 +1318,6 @@ namespace ThirdPartyService.Service.BLL
                     _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
                                        + $"TpId={tpId} SiteId={siteId}" +
                                        " Not Success when get this condiction datas.");
-
-                    //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
-                    //                       + $"TpId={tpId} SiteId={siteId}" +
-                    //                       " Not Success when get this condiction datas.", "GetBalanceWorker");
                 }
 
                 foreach (var cust in custInfoList)
@@ -1317,10 +1330,6 @@ namespace ThirdPartyService.Service.BLL
                         _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
                                            + $"TpId={tpId} SiteId={siteId}" +
                                            $" CustId={cust.CustId}.Can't get this cust data.");
-
-                        //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
-                        //                       + $"TpId={tpId} SiteId={siteId}" +
-                        //                       $" CustId={cust.CustId}.Can't get this cust data.", "GetBalanceWorker");
                         continue;
                     }
                     else if (data.ErrorCode != 0)
@@ -1328,10 +1337,6 @@ namespace ThirdPartyService.Service.BLL
                         _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
                                            + $" TpId={tpId} SiteId={siteId}" +
                                            $" CustId={cust.CustId}.Not Success when get this cust data.");
-
-                        //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
-                        //                       + $" TpId={tpId} SiteId={siteId}" +
-                        //                       $" CustId={cust.CustId}.Not Success when get this cust data.", "GetBalanceWorker");
                         continue;
                     }
 
@@ -1354,11 +1359,6 @@ namespace ThirdPartyService.Service.BLL
             catch (Exception ex)
             {
                 _logger.LogError(ex, MethodExtension.GetCurrentMethod());
-
-                //log2File.Error($"GetBalanceWorker-GetBalance-Exception_"
-                //                       + $"TpId={tpId} SiteId={siteId} "
-                //                       + $"ex={ex}", "GetBalanceWorker");
-
                 return false;
             }
         }
@@ -1405,10 +1405,6 @@ namespace ThirdPartyService.Service.BLL
                         _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
                                            + $" TpId={cust.TpId} SiteId={cust.SiteId}" +
                                            $" CustId={cust.CustId}.Get Data Fail.");
-
-                        //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
-                        //                       + $" TpId={tpId} SiteId={siteId}" +
-                        //                       $" CustId={cust.CustId}.Get Data Fail.", "GetBalanceWorker");
                         continue;
                     }
                     else if (balanceResult.ErrorCode != ErrorCode.Success)
@@ -1416,10 +1412,6 @@ namespace ThirdPartyService.Service.BLL
                         _logger.LogWarning($"GetBalanceWorker-GetBalance-Warning_"
                                            + $" TpId={cust.TpId} SiteId={cust.SiteId}" +
                                            $" CustId={cust.CustId}.Not success when get this cust data.");
-
-                        //log2File.Error($"GetBalanceWorker-GetBalance-Warning_"
-                        //                       + $" TpId={tpId} SiteId={siteId}" +
-                        //                       $" CustId={cust.CustId}.Not success when get this cust data.", "GetBalanceWorker");
                         continue;
                     }
 
@@ -1440,11 +1432,6 @@ namespace ThirdPartyService.Service.BLL
             catch (Exception ex)
             {
                 _logger.LogError(ex, MethodExtension.GetCurrentMethod());
-
-                //log2File.Error($"GetBalanceWorker-GetBalance-Exception_"
-                //                       + $"TpId={tpId} SiteId={siteId} "
-                //                       + $"ex={ex}", "GetBalanceWorker");
-
                 return false;
             }
         }
@@ -1517,6 +1504,93 @@ namespace ThirdPartyService.Service.BLL
         private string GetCurrencyIsoCode(int currencyId)
         {
             return _currencyList.GetValueOrDefault(currencyId).IsoCode;
+        }
+
+        private void SetRecentlyPlayed(TpInfo tpInfo)
+        {
+            try
+            {
+                if (!int.TryParse(tpInfo.inputs.GetValueOrDefault("tpGameType"), out var tpGameType))
+                {
+                    _logger.LogError($"SetRecentlyPlayed tpGameType Error. tpInfo:{JsonConvert.SerializeObject(tpInfo)}");
+                    return;
+                }
+
+                if (!_tpGameTypeConfig.TryGetValue(tpGameType, out var gameTypeOption))
+                {
+                    _logger.LogError($"SetRecentlyPlayed _tpGameTypeConfig Error. tpInfo:{JsonConvert.SerializeObject(tpInfo)}");
+                    return;
+                }
+
+                if (gameTypeOption.CategoryId == TpCategory.Casino)
+                {
+                    _mainDbClient.Execute("Member_RecentlyPlayed_Set", new
+                    {
+                        tpInfo.CustId,
+                        GameInfo = $"{tpInfo.TpId}_{tpInfo.inputs.GetValueOrDefault("gameId")}"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
+        }
+
+        private void SetRecentlyViewed(TpInfo tpInfo)
+        {
+            try
+            {
+                if (!int.TryParse(tpInfo.inputs.GetValueOrDefault("tpGameType"), out var tpGameType))
+                {
+                    _logger.LogWarning($"SetRecentlyViewed tpGameType Error. tpInfo:{JsonConvert.SerializeObject(tpInfo)}");
+                    return;
+                }
+
+                if (!_tpGameTypeConfig.TryGetValue(tpGameType, out var gameTypeOption))
+                {
+                    _logger.LogWarning($"SetRecentlyViewed _tpGameTypeConfig Error. tpInfo:{JsonConvert.SerializeObject(tpInfo)}");
+                    return;
+                }
+                else
+                {
+                    var gameId = tpInfo.inputs.ContainsKey("gameId") ? tpInfo.inputs["gameId"] : "0";
+                    gameId = (gameId == "undefined" || gameId == "null") ? "" : gameId;
+                    var betType = tpInfo.inputs.ContainsKey("bettype") ? tpInfo.inputs["bettype"] : "0";
+
+                    // 顯示遊戲大廳名 (Dream Gaming)
+                    var type = (int)RecentlyViewedTypeEnum.LobbyName;
+                    // 類型_TP_TpGameType_CategoryId_GameId_BetType
+                    var gameInfo = $"{type}:{tpInfo.TpId}:{tpGameType}:{(int)gameTypeOption.CategoryId}:{gameId}:0";
+
+                    // Slot 顯示遊戲名稱
+                    if (gameTypeOption.CategoryId == TpCategory.Casino)
+                    {
+                        if (tpInfo.TpId != (int)TpEnum.SBSW)
+                        {
+                            // 顯示遊戲名稱 (Golden Grimoire)
+                            type = (int)RecentlyViewedTypeEnum.GameName;
+                            gameInfo = $"{type}:{tpInfo.TpId}:{tpGameType}:{(int)gameTypeOption.CategoryId}:{gameId}:0";
+                        }
+                    }
+                    else if (tpInfo.TpId == (int)TpEnum.SBSW)
+                    {
+                        // esport games 多塞bettype判斷
+                        type = (int)RecentlyViewedTypeEnum.LobbyName;
+                        gameInfo = $"{type}:{tpInfo.TpId}:{tpGameType}:{(int)gameTypeOption.CategoryId}:{gameId}:{betType}";
+                    }
+
+                    _mainDbClient.Execute("Member_CustRecentlyViewed_Set", new
+                    {
+                        _CustId = tpInfo.CustId,
+                        _RecentlyViewed = gameInfo
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
         }
 
         #endregion

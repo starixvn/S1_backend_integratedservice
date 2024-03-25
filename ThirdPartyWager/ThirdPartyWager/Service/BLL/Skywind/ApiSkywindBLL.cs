@@ -1,15 +1,7 @@
-﻿using Dapper;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿using System.Text;
+
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
-using ThirdPartyWager.Service.DAL;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -75,6 +67,42 @@ namespace ThirdPartyWager.Service.BLL
             }
 
             var result = JsonConvert.DeserializeObject<List<WagerSkywindModel>>(r).FirstOrDefault();
+
+            return result;
+        }
+
+        public async Task<List<WagerSkywindThridPartyModel>> GetThirdPartyBetListByTime(string apiUrl, string secretKey, string username, string password, string startTime, string endTime)
+        {
+            var jwtToken = await GetJwtTokenAsync(apiUrl, username, password, secretKey);
+            string url = $"{apiUrl}/history/external?insertedAt__gt={startTime}&insertedAt__lt={endTime}&sortBy=finished&limit=100";
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
+            var response = await _httpHelper.GetClient().SendAsync(request);
+            string r = null;
+            using (var sr = new StreamReader(response.Content.ReadAsStreamAsync().Result, Encoding.GetEncoding("utf-8")))
+            {
+                r = sr.ReadToEnd();
+            }
+
+            var result = JsonConvert.DeserializeObject<List<WagerSkywindThridPartyModel>>(r);
+
+            return result;
+        }
+
+        public async Task<List<WagerSkywindThridPartyModel>> GetThirdPartyBetByTransId(string apiUrl, string secretKey, string username, string password, string transId)
+        {
+            var jwtToken = await GetJwtTokenAsync(apiUrl, username, password, secretKey);
+            string url = $"{apiUrl}/history/external?roundId={transId}&sortBy=finished&limit=100";
+            var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
+            var response = await _httpHelper.GetClient().SendAsync(request);
+            string r = null;
+            using (var sr = new StreamReader(response.Content.ReadAsStreamAsync().Result, Encoding.GetEncoding("utf-8")))
+            {
+                r = sr.ReadToEnd();
+            }
+
+            var result = JsonConvert.DeserializeObject<List<WagerSkywindThridPartyModel>>(r);
 
             return result;
         }

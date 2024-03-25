@@ -1,12 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Serilog.Context;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service
 {
@@ -15,12 +11,14 @@ namespace ThirdPartyWager.Service
         private readonly ApiOne789BLL _apiOne789BLL;
         private readonly WagerOne789Service _wagerOne789Service;
         private readonly ILogger<TicketOne789BLL> _logger;
+        private readonly One789Config _siteConfig;
 
         public TicketOne789BLL(IServiceProvider provider)
         {
             _apiOne789BLL = provider.GetRequiredService<ApiOne789BLL>();
             _wagerOne789Service = provider.GetRequiredService<WagerOne789Service>();
             _logger = provider.GetRequiredService<ILogger<TicketOne789BLL>>();
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<One789Config>(Tp.One789.ToString());
         }
 
         // TpRefundWorker
@@ -30,15 +28,24 @@ namespace ThirdPartyWager.Service
         }
 
         // TpRefundWorker
-        public async Task<bool> CheckTicketStatusAsync(dynamic setting, dynamic pending)
+        public async Task<bool> CheckTicketStatusAsync(dynamic pending, int gameType)
         {
             LogContext.PushProperty("SystemJob", $"Auto-Dispatch");
             var func = "CheckTicketStatusAsync";
             var msg = "";
 
+            // check bettrans status
+            BettransDataOne789 bettrans = _wagerOne789Service.GetBettransData(gameType, pending.Tx);
+            if (bettrans.TicketStatus == (int)TicketStatus.Refund)
+            {
+                _logger.LogWarning($"Refunded : {pending.Tx}");
+                return true;
+            }
+
+            // check one789 status
             var param = new List<string> { pending.Tx };
 
-            var data = await _apiOne789BLL.CheckTicketStatus(setting, param);
+            var data = await _apiOne789BLL.CheckTicketStatus(_siteConfig, param);
             TicketDataOne789 ticketData = JsonConvert.DeserializeObject<TicketDataOne789>(data);
 
             if (ticketData.ErrorCode != null)

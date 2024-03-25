@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Threading.Tasks;
+﻿using CommonService.Service.BLL;
 using CommonService.Service.Library;
+using CommonService.Service.Model;
+
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
 
 namespace CommonService.Controllers
@@ -17,12 +14,12 @@ namespace CommonService.Controllers
     {
         private readonly HttpHelper _httpHelper;
         private readonly ILogger<TelegramController> _logger;
-        private static Dictionary<string, Dictionary<string, string>> _telegram;
+        private readonly TelegramConfig _telegramConfig;
 
-        public TelegramController(IServiceProvider provider, IConfiguration configuration)
+        public TelegramController(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
-            _telegram = configuration.GetSection("Telegram").Get<Dictionary<string, Dictionary<string, string>>>();
+            _telegramConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<TelegramConfig>("Telegram");
             _logger = provider.GetService<ILogger<TelegramController>>();
         }
 
@@ -37,12 +34,15 @@ namespace CommonService.Controllers
         {
             try
             {
-                var group = _telegram.ContainsKey(req.GroupName) ? _telegram[req.GroupName] : throw new Exception("GroupName");
-                var url = $"{_telegram["Common"]["Url"]}/bot{group["Token"]}/sendMessage";
+
+                var notificationGroup = _telegramConfig.TelegramNotification
+                    .FirstOrDefault(n => n.GroupName == req.GroupName) ?? throw new Exception("GroupName");
+
+                var url = $"{_telegramConfig.TelegramCommon.Url}/bot{notificationGroup.Token}/sendMessage";
 
                 var param = new
                 {
-                    chat_id = group["ChatId"],
+                    chat_id = notificationGroup.ChatId,
                     text = req.Messge
                 };
 
@@ -61,8 +61,10 @@ namespace CommonService.Controllers
         {
             try
             {
-                var group = _telegram.ContainsKey(req.GroupName) ? _telegram[req.GroupName] : throw new Exception("GroupName");
-                var url = $"{_telegram["Common"]["Url"]}/bot{group["Token"]}/getUpdates";
+                var notificationGroup = _telegramConfig.TelegramNotification
+                    .FirstOrDefault(n => n.GroupName == req.GroupName) ?? throw new Exception("GroupName");
+
+                var url = $"{_telegramConfig.TelegramCommon.Url}/bot{notificationGroup.Token}/getUpdates";
 
                 return await HttpPostAsync(url, "");
             }
@@ -80,7 +82,7 @@ namespace CommonService.Controllers
                 var result = await _httpHelper.HttpPost1Async(url, null, parameters, "application/json");
                 if (!result.IsSuccessStatusCode)
                 {
-                    _logger.LogError($"StatusCode={result.StatusCode}, ReasonPhrase={result.ReasonPhrase}");
+                    _logger.LogInformation($"StatusCode={result.StatusCode}, ReasonPhrase={result.ReasonPhrase}");
                 }
                 return await result.Content.ReadAsStringAsync();
             }

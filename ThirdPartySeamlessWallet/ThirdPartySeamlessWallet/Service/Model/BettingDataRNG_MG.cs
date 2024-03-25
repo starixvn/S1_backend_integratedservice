@@ -1,6 +1,4 @@
-﻿using ThirdPartySeamlessWallet.Service.Model.enums;
-
-namespace ThirdPartySeamlessWallet.Service.Model
+﻿namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class BettingDataRNG_MG
     {
@@ -11,6 +9,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string currency { get; set; }
         public string txnId { get; set; }
         public long creationTime { get; set; }
+        public long creationTimeMs { get; set; }
         public string contentCode { get; set; }
         public string betId { get; set; }
         public string roundId { get; set; }
@@ -32,6 +31,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string txnId { get; set; }
         public string betId { get; set; }
         public long creationTime { get; set; }
+        public long creationTimeMs { get; set; }
     }
 
     public class MGLoginRequest
@@ -49,7 +49,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public string playerId { get; set; }
     }
-    
+
     public class MGGetBalanceResponse
     {
         public string currency { get; set; }
@@ -65,6 +65,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string currency { get; set; }
         public string txnId { get; set; }
         public long creationTime { get; set; }
+        public long creationTimeMs { get; set; }
         public string contentCode { get; set; }
         public string betId { get; set; }
         public string roundId { get; set; }
@@ -81,7 +82,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal balance { get; set; }
         public string currency { get; set; }
     }
-    
+
     public class MGRollbackeRequest
     {
         public string playerId { get; set; }
@@ -93,6 +94,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string contentCode { get; set; }
         public string channel { get; set; }
         public long creationTime { get; set; }
+        public long creationTimeMs { get; set; }
     }
 
     public class MGRollbackResponse
@@ -109,20 +111,16 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal Amount { get; set; }
         public string RoundId { get; set; }
         public string TxnId { get; set; }
+        public string BetId { get; set; }
         public bool Completed { get; set; }
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
         public int SettleFlag { get; set; }
     }
-    
-    public class BettransLC_MG
+
+    public class BettransLC_MG : BettransRng_MG
     {
-        public long ExtTxnId { get; set; }
-        public string PlayerId { get; set; }
-        public decimal Amount { get; set; }
-        public string RoundId { get; set; }
-        public int TicketType { get; set; }
-        public int TicketStatus { get; set; }
+        public long trx_id { get; set; }
     }
 
     public class MGPlaceBetResult
@@ -133,7 +131,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         public decimal AfterAmount { get; set; }
     }
-    
+
     public class MGPayoutResult
     {
         public int Result { get; set; }
@@ -142,7 +140,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         public decimal AfterAmount { get; set; }
     }
-    
+
     public class MGCancelResult
     {
         public int Result { get; set; }
@@ -150,5 +148,21 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public long ExtTxnId { get; set; }
 
         public decimal AfterAmount { get; set; }
+    }
+
+    public class SettleData_MG : SettleData
+    {
+        public long SettleTimeNew { get; set; }
+        public long TransTimeNew { get; set; }
+    }
+
+    public class MonitorData_MG
+    {
+        public string ping { get; set; }
+    }
+
+    public class MonitorResponse_MG
+    {
+        public string pong { get; set; }
     }
 }

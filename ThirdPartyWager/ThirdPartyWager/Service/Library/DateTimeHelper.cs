@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ThirdPartyWager.Service.Library
+﻿namespace ThirdPartyWager.Service.Library
 {
 
     public class TimeCast
@@ -59,6 +57,7 @@ namespace ThirdPartyWager.Service.Library
 
             return timeCast;
         }
+
         public TimeCast GetTimeByHour(int period, int utc, string format, DateTime timerTime, int addEndSecond = -1)
         {
             var current = timerTime;
@@ -89,6 +88,7 @@ namespace ThirdPartyWager.Service.Library
 
             return timeCast;
         }
+
         public TimeCast GetTimeByDay(int period, int utc, string format, DateTime timerTime, int utcMinute = 0, int addEndSecond = -1)
         {
             var current = timerTime;
@@ -119,7 +119,7 @@ namespace ThirdPartyWager.Service.Library
 
             return timeCast;
         }
-        
+
         public TimeCast GetTimeByMinuteRevert(int period, int timezone, string format, DateTime timerTime, int utcMinute = 0)
         {
             var current = timerTime;
@@ -135,8 +135,8 @@ namespace ThirdPartyWager.Service.Library
 
             var dStartTime = timeBase.AddMinutes(-1 * period);
 
-            var beginAt = new DateTimeOffset(dStartTime);
-            var endAt = new DateTimeOffset(timeBase);
+            var beginAt = new DateTimeOffset(dStartTime, TimeSpan.Zero);
+            var endAt = new DateTimeOffset(timeBase, TimeSpan.Zero);
             var startTime = beginAt.ToOffset(new TimeSpan(timezone, utcMinute, 0)).ToString(format);
             var endTime = endAt.ToOffset(new TimeSpan(timezone, utcMinute, 0)).ToString(format);
             var startUnix = beginAt.ToUnixTimeSeconds();

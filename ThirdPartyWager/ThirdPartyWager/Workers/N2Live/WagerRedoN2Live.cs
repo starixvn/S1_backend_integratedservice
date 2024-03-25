@@ -1,9 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Serilog.Context;
+﻿using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -12,10 +8,11 @@ namespace ThirdPartyWager.Workers
 {
     public class WagerRedoN2Live : BackgroundService
     {
-        private readonly ILogger<WagerRedoN2Live> logger;
-        private readonly WagerN2LiveBLL wagerN2LiveBLL;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly DateTimeHelper dateTimeHelper;
+        private readonly ILogger<WagerRedoN2Live> _logger;
+        private readonly DateTimeHelper _dateTimeHelper;
+        private readonly WagerN2LiveBLL _wagerN2LiveBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly Dictionary<int, Dictionary<string, string>> _siteConfigDic;
         private Timer timer;
         private readonly int intervalDays = 1;
         private readonly int iRangMins = 1440;
@@ -26,18 +23,15 @@ namespace ThirdPartyWager.Workers
         private readonly int iDays = 2;
         private readonly int timeZone = 0;
 
-        public WagerRedoN2Live(
-            ILogger<WagerRedoN2Live> logger,
-            WagerN2LiveBLL wagerN2LiveBLL,
-            ThirdPartyBLL thirdPartyBLL,
-            DateTimeHelper dateTimeHelper
-        )
+        public WagerRedoN2Live(IServiceProvider provider)
         {
-            this.logger = logger;
-            this.wagerN2LiveBLL = wagerN2LiveBLL;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.dateTimeHelper = dateTimeHelper;
+            _logger = provider.GetRequiredService<ILogger<WagerRedoN2Live>>();
+            _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _wagerN2LiveBLL = provider.GetRequiredService<WagerN2LiveBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(Tp.N2Live.ToString());
         }
+
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
@@ -51,14 +45,13 @@ namespace ThirdPartyWager.Workers
             try
             {
                 quick = 0;
-                var siteIds = "1,2,3";
-                var site = siteIds.Split(",");
-                foreach (var siteId in site)
+                var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+                foreach (var siteData in siteList)
                 {
-                    var setting = thirdPartyBLL.GetThirdPartyBySite(tpId, Convert.ToInt32(siteId));
-                    var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, tpType, Convert.ToInt32(siteId));
+                    var setting = _siteConfigDic[siteData.SiteId];
+                    var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, tpType, siteData.SiteId);
                     DateTime timerTime;
-                    
+
                     if (dataTpTimer == null)
                     {
                         timerTime = DateTime.Now.AddDays(-7);
@@ -68,14 +61,14 @@ namespace ThirdPartyWager.Workers
                         timerTime = dataTpTimer.StartTime.AddSeconds(1);
                     }
 
-                    var time = dateTimeHelper.GetTimeByDay(iRangMins, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
+                    var time = _dateTimeHelper.GetTimeByDay(iRangMins, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
                     var cvTime = DateTimeOffset.Now.AddDays(iDays * -1).ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
                     if (time.endUnix < cvTime)
                     {
-                        var result = await wagerN2LiveBLL.GetWagersAsync(tpId, setting["ApiUrl"], setting["VendorId"], setting["MerchantPassCode"], time.startTime, time.endTime);
+                        var result = await _wagerN2LiveBLL.GetWagersAsync(tpId, setting["ApiUrl"], setting["VendorId"], setting["MerchantPassCode"], time.startTime, time.endTime);
                         if (result)
                         {
-                            thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, tpType, time.endUnix, Convert.ToInt32(siteId));
+                            _thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, tpType, time.endUnix, siteData.SiteId);
                         }
                     }
                     var diffDay = (int)(DateTime.Now.Date - timerTime.Date).TotalDays;
@@ -87,7 +80,7 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
             }
             finally
             {

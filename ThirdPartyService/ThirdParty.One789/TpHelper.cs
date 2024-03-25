@@ -1,9 +1,8 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
+﻿using System.Web;
+using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -14,12 +13,23 @@ namespace ThirdParty.One789
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly One789Config _siteConfig;
+
+        public TpHelper(IServiceProvider provider)
+        {
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<One789Config>(TpEnum.One789.ToString());
+        }
+
+        #region Response
+
         private class ApiResponse
         {
             public string ErrorCode { get; set; }
             public string ErrorMessage { get; set; }
             public string Token { get; set; }
         }
+
+        #endregion
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -48,20 +58,24 @@ namespace ThirdParty.One789
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string ApiKey = inputs.ContainsKey("ApiKey") && !string.IsNullOrEmpty(inputs["ApiKey"]) ? inputs["ApiKey"] : throw new Exception("ApiKey");
-            string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception("GameUrl");
-            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
-            ApiUrl = $"{ApiUrl}/auth/sign-in";
+            var config = _siteConfig;
 
+            string ApiUrl = config.ApiUrl;
+            string ApiKey = config.ApiKey;
+            string GameUrl = config.GameUrl;
+            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
+
+            ApiUrl = $"{ApiUrl}/auth/sign-in";
             var Login = new
             {
                 Username = tpCustInfo.TpUserName
             };
             string InputJson = JsonConvert.SerializeObject(Login);
 
-            Dictionary<string, string> headerReq = new Dictionary<string, string>();
-            headerReq.Add("x-one-api-key", HttpUtility.UrlEncode(ApiKey));
+            Dictionary<string, string> headerReq = new()
+            {
+                { "x-one-api-key", HttpUtility.UrlEncode(ApiKey) }
+            };
 
             var result = HttpPost(
                 ApiUrl,
@@ -109,10 +123,19 @@ namespace ThirdParty.One789
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_One789_Detail_Get", 
-                new { getBetDetail.TransId , GameType = getBetDetail.TpGameTypeOption.Type }, DataBase.Wager);
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_One789_Detail_Get",
+                new { getBetDetail.TransId, GameType = getBetDetail.TpGameTypeOption.Type }, DataBase.Wager);
+            if (wagerDetail == null)
+            {
+                return new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    TpCurrency = tpCurrency,
+                };
+            }
+
             var detail = ToJson(wagerDetail);
-            
+
             return getBetDetail.TpGameTypeOption.CategoryId switch
             {
                 TpCategory.Lottery => new LotteryDetail(getBetDetail.TpGameTypeOption)
@@ -153,7 +176,7 @@ namespace ThirdParty.One789
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_One789_Detail_Get", new { betRecordInfo.TransId, GameType = tpGameType.Type }, DataBase.Wager);
-            
+
             return tpGameType.CategoryId switch
             {
                 TpCategory.Lottery => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)

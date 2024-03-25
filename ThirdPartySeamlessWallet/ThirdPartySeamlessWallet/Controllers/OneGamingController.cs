@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
-using System.Web;
-using Microsoft.AspNetCore.Http;
+
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -27,8 +22,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly BettingBLL bettingBLL;
         private readonly SettledBLL settledBLL;
         private readonly Log2File log2File;
-        private readonly Tools tools;
         private readonly Tp thisTp;
+        private readonly string _tpName;
         private readonly IHostEnvironment environment;
 
         public OneGamingController(
@@ -39,8 +34,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             TpCustInfoBLL tpCustInfoBLL,
             BettingBLL bettingBLL,
             SettledBLL settledBLL,
-            Log2File log2File,
-            Tools tools
+            Log2File log2File
         )
         {
             this.authBLL = authBLL;
@@ -50,8 +44,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             this.bettingBLL = bettingBLL;
             this.settledBLL = settledBLL;
             this.log2File = log2File;
-            this.tools = tools;
             this.thisTp = Tp.OneGaming;
+            _tpName = Enum.GetName(typeof(Tp), thisTp);
             this.environment = environment;
         }
 
@@ -127,60 +121,63 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/igPokerValidation")]
         public dynamic igPokerValidation([FromQuery] Dictionary<string, string> getReq)
         {
+
             string logName = $"{thisTp}_igPokerValidation";
             var json = JsonConvert.SerializeObject(getReq);
             var verifyReq = JsonConvert.DeserializeObject<VerifyReq>(json);
 
             VerifyResp getApiResponse = new VerifyResp();
             getApiResponse.status_code = "1";
-            getApiResponse.message = "Error";
+            getApiResponse.message = "No Support";
             getApiResponse.datetime = getCurrentGameTime();
-
-            if (string.IsNullOrEmpty(verifyReq.l_token))
-            {
-                getApiResponse.status_code = "1";
-                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                return getApiResponse;
-            }
-
-            var tokenInfo = getTokenInfo(verifyReq.l_token);
-
-            if (authBLL.Authenticate(tokenInfo.shortTimeToken, out TpCustInfoAuth tpCustInfoAuth))
-            {
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
-                if (tpCheck == null)
-                {
-                    getApiResponse.status_code = "1";
-                    getApiResponse.message = "Invalid user Id";
-                    log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                    return getApiResponse;
-                }
-                else if (tpCheck.Token != tokenInfo.longTimeToken)
-                {
-                    getApiResponse.status_code = "1";
-                    getApiResponse.error_code = "320";
-                    getApiResponse.message = $"Validation not verify";
-                    log2File.Error($"{JsonConvert.SerializeObject(tokenInfo)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                    return getApiResponse;
-                }
-                else if (tpCheck.Locked)
-                {
-                    getApiResponse.status_code = "1";
-                    getApiResponse.message = "Account is Locked";
-                    log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                    return getApiResponse;
-                }
-
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-
-                getApiResponse.status_code = "0";
-                getApiResponse.message = "";
-                getApiResponse.user_name = tpCustInfoAuth.TpUserName;
-                getApiResponse.agent_code = thirdPartySetting.TpSetting[$"agent_code_{tpCustInfoAuth.TpCurrencyId}"];
-            }
-
-            log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+            log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
             return getApiResponse;
+
+            //    if (string.IsNullOrEmpty(verifyReq.l_token))
+            //    {
+            //        getApiResponse.status_code = "1";
+            //        log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+            //        return getApiResponse;
+            //    }
+
+            //    var tokenInfo = getTokenInfo(verifyReq.l_token);
+
+            //    if (authBLL.Authenticate(tokenInfo.shortTimeToken, out TpCustInfoAuth tpCustInfoAuth))
+            //    {
+            //        var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
+            //        if (tpCheck == null)
+            //        {
+            //            getApiResponse.status_code = "1";
+            //            getApiResponse.message = "Invalid user Id";
+            //            log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+            //            return getApiResponse;
+            //        }
+            //        else if (tpCheck.Token != tokenInfo.longTimeToken)
+            //        {
+            //            getApiResponse.status_code = "1";
+            //            getApiResponse.error_code = "320";
+            //            getApiResponse.message = $"Validation not verify";
+            //            log2File.Error($"{JsonConvert.SerializeObject(tokenInfo)}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+            //            return getApiResponse;
+            //        }
+            //        else if (tpCheck.Locked)
+            //        {
+            //            getApiResponse.status_code = "1";
+            //            getApiResponse.message = "Account is Locked";
+            //            log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+            //            return getApiResponse;
+            //        }
+
+            //        var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+
+            //        getApiResponse.status_code = "0";
+            //        getApiResponse.message = "";
+            //        getApiResponse.user_name = tpCustInfoAuth.TpUserName;
+            //        getApiResponse.agent_code = thirdPartySetting.TpSetting[$"agent_code_{tpCustInfoAuth.TpCurrencyId}"];
+            //    }
+
+            //    log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+            //    return getApiResponse;
         }
 
         [HttpGet]
@@ -510,72 +507,73 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             string logName = $"{thisTp}_IG_mobileAccess";
             var json = JsonConvert.SerializeObject(getReq);
-            log2File.Info(json, logName);
             var mobileReq = JsonConvert.DeserializeObject<MobileReq>(json);
 
             MobileResp getApiResponse = new MobileResp();
             getApiResponse.status_code = "1";
-            getApiResponse.message = "Error";
+            getApiResponse.message = "No Support";
             getApiResponse.datetime = getCurrentGameTime();
-            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)thisTp, mobileReq.username);
-
-            // temporally block inr app login
-            if (tpCustInfo.CurrencyId == 61)
-            {
-                getApiResponse.status_code = "1";
-                getApiResponse.error_code = "321";
-                getApiResponse.message = "Invalid User Info from Validation verified";
-                log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                return getApiResponse;
-            }
-
-            if (!string.IsNullOrEmpty(mobileReq.password) && tpCustInfo?.TpPwd == mobileReq.password)
-            {
-                string token = null;
-                var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, mobileReq.username);
-
-                if (tpCheck == null)
-                {
-                    string clientIp = "";
-                    tpCustInfoBLL.AddLoginRecord(tpCustInfo.CustId, tpCustInfo.SiteId, clientIp, out token);
-                    tpCustInfoBLL.AddUserLoginLog(tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, clientIp, "App", "App");
-                    tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, mobileReq.username);
-                }
-                else
-                {
-                    token = tpCheck.Token;
-                }
-
-                if (tpCheck.Locked)
-                {
-                    getApiResponse.status_code = "1";
-                    getApiResponse.message = "Account is Locked";
-                    log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
-                    return getApiResponse;
-                }
-
-                var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, mobileReq.username);
-                getApiResponse.status_code = "0";
-                getApiResponse.message = "";
-                getApiResponse.player_id = mobileReq.username;
-                getApiResponse.balance = tpCustBalance.Balance;
-                getApiResponse.agent_code = mobileReq.agent_code;
-
-                var key = authBLL.ApplyToken(tpCustInfo);
-                var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName, tpCustBalance.TpCurrencyId };
-                byte[] bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(sessionKeyArr));
-                string sessionKey = Convert.ToBase64String(bytes);
-
-                getApiResponse.l_token = HttpUtility.UrlEncode(sessionKey);
-            }
-            else
-            {
-                getApiResponse.status_code = "1";
-                getApiResponse.error_code = "309";
-                getApiResponse.message = "Invalid password";
-            }
-            log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+            log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
             return getApiResponse;
+
+            //var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)thisTp, mobileReq.username);
+            //// temporally block inr app login
+            //if (tpCustInfo.CurrencyId == 61)
+            //{
+            //    getApiResponse.status_code = "1";
+            //    getApiResponse.error_code = "321";
+            //    getApiResponse.message = "Invalid User Info from Validation verified";
+            //    log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+            //    return getApiResponse;
+            //}
+
+            //if (!string.IsNullOrEmpty(mobileReq.password) && tpCustInfo?.TpPwd == mobileReq.password)
+            //{
+            //    string token = null;
+            //    var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, mobileReq.username);
+
+            //    if (tpCheck == null)
+            //    {
+            //        string clientIp = "";
+            //        tpCustInfoBLL.AddLoginRecord(tpCustInfo.CustId, tpCustInfo.SiteId, clientIp, out token);
+            //        tpCustInfoBLL.AddUserLoginLog(tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, clientIp, $"App - {_tpName}", $"App - {_tpName}");
+            //        tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, mobileReq.username);
+            //    }
+            //    else
+            //    {
+            //        token = tpCheck.Token;
+            //    }
+
+            //    if (tpCheck.Locked)
+            //    {
+            //        getApiResponse.status_code = "1";
+            //        getApiResponse.message = "Account is Locked";
+            //        log2File.Error($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+            //        return getApiResponse;
+            //    }
+
+            //    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, mobileReq.username);
+            //    getApiResponse.status_code = "0";
+            //    getApiResponse.message = "";
+            //    getApiResponse.player_id = mobileReq.username;
+            //    getApiResponse.balance = tpCustBalance.Balance;
+            //    getApiResponse.agent_code = mobileReq.agent_code;
+
+            //    var key = authBLL.ApplyToken(tpCustInfo);
+            //    var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName, tpCustBalance.TpCurrencyId };
+            //    byte[] bytes = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(sessionKeyArr));
+            //    string sessionKey = Convert.ToBase64String(bytes);
+
+            //    getApiResponse.l_token = HttpUtility.UrlEncode(sessionKey);
+            //}
+            //else
+            //{
+            //    getApiResponse.status_code = "1";
+            //    getApiResponse.error_code = "309";
+            //    getApiResponse.message = "Invalid password";
+            //}
+            //log2File.Info($"{json}\r\n{JsonConvert.SerializeObject(getApiResponse)}", logName);
+            //return getApiResponse;
         }
 
         private string getCurrentGameTime()

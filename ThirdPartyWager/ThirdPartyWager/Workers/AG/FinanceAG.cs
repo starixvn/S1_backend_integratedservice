@@ -1,4 +1,5 @@
 ﻿using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
@@ -20,9 +21,7 @@ namespace ThirdPartyWager.Workers
         private readonly int _beyond = 2;
         private Timer timer;
 
-        public FinanceAG(
-            IServiceProvider provider
-        )
+        public FinanceAG(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceAG>>();
             _financeAGBLL = provider.GetRequiredService<FinanceAGBLL>();

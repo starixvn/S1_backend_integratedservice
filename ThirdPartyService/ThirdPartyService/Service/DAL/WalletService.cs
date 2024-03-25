@@ -1,13 +1,9 @@
-﻿using Dapper;
-using Microsoft.Extensions.Configuration;
-using MySql.Data.MySqlClient;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
+﻿using System.Data;
+
+using Dapper;
+
 using ThirdPartyCore.Model.enums;
+
 using ThirdPartyService.Service.Library;
 
 namespace ThirdPartyService.Service.DAL
@@ -16,35 +12,35 @@ namespace ThirdPartyService.Service.DAL
     {
         private const int TypePosition = 2000;
         private readonly MySqlClient _mainDbClient;
-        
+
         public WalletService(IServiceProvider provider)
         {
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
 
         public int SetBalance(int custId, int siteId, string userName, decimal amount, int tpId, string memo,
-            string refTransId, out decimal afterAmount, MySqlConnection conn, MySqlTransaction trans)
+            string refTransId, out decimal afterAmount, IDbTransaction trans)
         {
             var type = TypePosition + tpId;
             var p = new DynamicParameters(new
             {
-                CustId = custId, 
-                SiteId = siteId, 
-                UserName = userName, 
-                Amount = amount, 
-                Type = type, 
+                CustId = custId,
+                SiteId = siteId,
+                UserName = userName,
+                Amount = amount,
+                Type = type,
                 Memo = memo,
                 RefTransId = refTransId
             });
             p.Add("Is1stDepoist", dbType: DbType.Boolean, direction: ParameterDirection.Output);
             p.Add("AfterAmount", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            _mainDbClient.Execute("Wallet_Set_V2", p, conn, trans);
+            _mainDbClient.Execute("Wallet_Set_V2", trans, p);
             afterAmount = p.Get<decimal>("AfterAmount");
             return afterAmount >= 0 ? 0 : -1;
         }
 
-        public int SetWithdrawalLimit(int custId, string userName, int siteId, decimal withdrawalLimit, string memo,
-            string refTransId, out decimal afterWithdrawalLimit, MySqlConnection conn, MySqlTransaction trans)
+        public int SetWithdrawalLimit(int custId, string userName, int siteId, decimal withdrawalLimit, int reasonId, string memo,
+            string refTransId, int createFrom, string creator, out decimal afterWithdrawalLimit, IDbTransaction trans)
         {
             var p = new DynamicParameters(new
             {
@@ -53,10 +49,13 @@ namespace ThirdPartyService.Service.DAL
                 SiteId = siteId,
                 WithdrawalLimit = withdrawalLimit,
                 Memo = memo,
-                RefTransId = refTransId
+                ReasonId = reasonId,
+                RefTransId = refTransId,
+                CreateFrom = createFrom,
+                Creator = creator
             });
             p.Add("AfterWithdrawalLimit", dbType: DbType.Decimal, direction: ParameterDirection.Output);
-            var result = _mainDbClient.Execute("Common_WithdrawalLimit_Set", p, conn, trans);
+            var result = _mainDbClient.Execute("Common_WithdrawalLimit_Set_V2", trans, p);
             afterWithdrawalLimit = p.Get<decimal?>("AfterWithdrawalLimit") ?? 0;
             return result;
         }

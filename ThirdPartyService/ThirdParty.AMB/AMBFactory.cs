@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
-using Newtonsoft.Json;
 using ThirdPartyCore.Model.enums;
 
 namespace ThirdParty.AMB
 {
     public static class AMBFactory
-    {
-        public static AMB Create(TpGameType gameType, Dictionary<string, string> inputs, string tpCurrency)
+    { 
+        public static AMB Create(TpGameType gameType, AMBConfig inputs, string tpCurrency)
         {
             return gameType switch
             {
@@ -22,13 +19,7 @@ namespace ThirdParty.AMB
 
     public abstract class AMB
     {
-        protected class AMBSetting
-        {
-            public string ApiUrl { get; set; }
-            public string Agent { get; set; }
-            public string SecretKey { get; set; }
-        }
-        protected AMBSetting Setting;
+        protected AMBConfig Config;
 
         public abstract GameListResponse GetGameList(Func<string, string, string, Dictionary<string, string>, int, string> callback);
         public abstract CommonResponse CreateMember(string tpUserName, Func<string, string, string, Dictionary<string, string>, int, string> callback);
@@ -44,11 +35,15 @@ namespace ThirdParty.AMB
             var salt = Encoding.UTF8.GetBytes(key);
             var HASH_SIZE = 64;
             var ITERATIONS = 1000;
-            
+
             // Generate the hash
             var pbkdf2 = new Rfc2898DeriveBytes(input, salt, ITERATIONS, HashAlgorithmName.SHA512);
             var data = pbkdf2.GetBytes(HASH_SIZE);
             return Convert.ToBase64String(data);
+        }
+        protected SlotCurrencyAgent GetSlotCurrencyConfig(string currencyId)
+        {
+            return Config.SlotCurrencyAgent.FirstOrDefault(x => x.CurrencyId == currencyId);
         }
     }
 }

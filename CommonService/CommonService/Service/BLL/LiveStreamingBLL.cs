@@ -1,29 +1,30 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Net;
+
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-using Microsoft.Extensions.Options;
+
 using Newtonsoft.Json;
 
 namespace CommonService.Service.BLL
 {
     public class LiveStreamingBLL
     {
-        private readonly IOptions<Dictionary<string, LiveStreamingConfig>> liveStreamingConfig;
-        private readonly HttpHelper httpHelper;
+        private readonly Dictionary<string, LiveStreamingConfig> _liveStreamingConfig;
+        private readonly HttpHelper _httpHelper;
 
-        public LiveStreamingBLL(IOptions<Dictionary<string, LiveStreamingConfig>> liveStreamingConfig, HttpHelper httpHelper)
+        public LiveStreamingBLL(IServiceProvider provider)
         {
-            this.liveStreamingConfig = liveStreamingConfig;
-            this.httpHelper = httpHelper;
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _liveStreamingConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<LiveStreamingConfig>("LiveStreaming");
         }
+
         public async Task<ApiResult> GetLiveStreamingLink(LiveStreamingLinkReq liveStreamingLinkReq)
         {
             var apiResult = new ApiResult();
-            var config = liveStreamingConfig.Value[liveStreamingLinkReq.SiteName.Trim()];
-            string url = config.ApiURL;
-            Dictionary<string, string> liveStreaming = new Dictionary<string, string>
+            var config = _liveStreamingConfig[liveStreamingLinkReq.SiteName.Trim()];
+            var url = config.ApiURL;
+            var liveStreaming = new Dictionary<string, string>
             {
                 { "action", config.Action },
                 { "apiuser", config.Apiuser},
@@ -34,10 +35,10 @@ namespace CommonService.Service.BLL
 
             };
 
-            using var result = await httpHelper.HttpGetAsync(url, null, liveStreaming, null);
+            using var result = await _httpHelper.HttpGetAsync(url, null, liveStreaming, null ,null);
             var resultResp = JsonConvert.DeserializeObject<LiveStreamingLinkResult>(result.Content.ReadAsStringAsync().Result); ;
 
-            if (result.StatusCode == System.Net.HttpStatusCode.OK && resultResp.Status == "OK")
+            if (result.StatusCode == HttpStatusCode.OK && resultResp.Status == "OK")
             {
                 apiResult.ErrorCode = 0;
                 apiResult.Message = resultResp.H5LINKROW;

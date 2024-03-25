@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ThirdPartySeamlessWallet.Service.DAL;
+﻿using ThirdPartySeamlessWallet.Service.DAL;
 
 namespace ThirdPartySeamlessWallet.Service.BLL
 {
@@ -34,6 +30,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             string sPermissionData = "";
             t = default;
             sPermissionData = authService.Authenticate(sToken);
+
+            if (!string.IsNullOrEmpty(sPermissionData))
+            {
+                t = Newtonsoft.Json.JsonConvert.DeserializeObject<T>(sPermissionData);
+                return true;
+            }
+
+            return false;
+        }
+        public bool AuthenticateByTpToken<T>(string sTpToken, out T t)
+        {
+            string sPermissionData = "";
+            t = default;
+            sPermissionData = authService.AuthenticateByTpToken(sTpToken);
 
             if (!string.IsNullOrEmpty(sPermissionData))
             {

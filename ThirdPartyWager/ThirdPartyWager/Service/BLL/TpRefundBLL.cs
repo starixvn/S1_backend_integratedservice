@@ -1,7 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System;
-using ThirdPartyWager.Service.Model.enums;
+﻿using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -49,25 +46,28 @@ namespace ThirdPartyWager.Service.BLL
                 }
 
                 // get list
+                var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+                // check tp status and only get first site to run
+                if (!siteList.Any(x => x.Status == 1))
+                {
+                    return false;
+                }
+
                 var pendingList = _bll.GetPendingList(gameType);
                 if (pendingList == null)
                 {
                     return false;
                 }
 
-                // get setting
-                var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
-
                 // process
                 foreach (var pending in pendingList)
                 {
-                    var check = _bll.CheckTicketStatusAsync(setting, pending).Result;
+                    var check = _bll.CheckTicketStatusAsync(pending, gameType).Result;
                     if (!check)
                     {
                         result = false;
                     }
                 }
-
             }
             catch (Exception ex)
             {

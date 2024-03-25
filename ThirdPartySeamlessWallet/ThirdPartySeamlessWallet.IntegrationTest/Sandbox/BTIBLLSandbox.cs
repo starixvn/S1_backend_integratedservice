@@ -1,10 +1,16 @@
-﻿using FluentAssertions;
+﻿using System.Data;
+
+using FluentAssertions;
+
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+
 using NSubstitute;
-using System.Data;
+
 using ThirdPartySeamlessWallet.Core.Extensions;
 using ThirdPartySeamlessWallet.IntegrationTest.Models;
 using ThirdPartySeamlessWallet.IntegrationTest.Stubs;
@@ -12,6 +18,7 @@ using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
 {
@@ -37,27 +44,37 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         public BTIBLLSandbox(string reserveId)
         {
             _reserveId = reserveId;
+
             _serviceCollection = new ServiceCollection();
             var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
             {
                 EnvironmentName = "Local",
             });
-            builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
+
+            var remoteUrls = builder.Configuration.GetSection("ConfigService").Get<string[]>();
+            remoteUrls = builder.Configuration.CheckLocalConfig(builder.Environment, new[] { "Nova" }, remoteUrls);
+            builder.Configuration.AddRemoteJsonConfig(remoteUrls);
+
             var app = builder.Build();
-            _serviceCollection.AddSingleton(_configuration);
             _configuration = app.Configuration;
+            _serviceCollection.AddSingleton(_configuration);
+
+            var env = new WebHostingEnvironment
+            {
+                EnvironmentName = Environments.Development,
+                ContentRootPath = AppDomain.CurrentDomain.BaseDirectory,
+            };
+            _serviceCollection.AddSingleton<IWebHostEnvironment>(env);
+            _serviceCollection.AddSingleton<IHostEnvironment>(env);
 
             _serviceCollection.AddTransient(p => Substitute.For<ILogger<SettledService>>());
             _serviceCollection.AddTransient(p => Substitute.For<ILogger<BettingService>>());
-            var mySqlLog = Substitute.For<ILogger<MySqlClient>>();
-            _serviceCollection.AddTransient(p => mySqlLog);
-            var conn = _configuration.GetConnectionString("ConnectionString");
-            _serviceCollection.AddSingleton(new MySqlClient(conn, mySqlLog));
 
             var startUp = new StubStartUp(_configuration);
             startUp.ConfigureServices(_serviceCollection);
             _serviceProvider = _serviceCollection.BuildServiceProvider();
-            _mySqlClient = _serviceProvider.GetRequiredService<MySqlClient>();
+            _mySqlClient = _serviceProvider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+
             _target = new BTIBLL(_serviceProvider);
 
             _exceptSqlMapping = new Dictionary<Type, Lazy<string>>

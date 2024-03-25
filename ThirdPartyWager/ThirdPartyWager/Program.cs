@@ -1,10 +1,14 @@
 using Serilog;
 using Serilog.Exceptions;
+using Serilog.Formatting.Json;
 using ThirdPartyWager;
 using ThirdPartyWager.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
+
+var remoteUrls = builder.Configuration.GetSection("ConfigService").Get<string[]>();
+remoteUrls = builder.Configuration.CheckLocalConfig(builder.Environment, args, remoteUrls);
+builder.Configuration.AddRemoteJsonConfig(remoteUrls);
 
 var excludesMessage = builder.Configuration.GetSection("ExcludesMessage").Get<string[]>();
 var excludesApiEndpoints = builder.Configuration.GetSection("ExcludesApiEndpoint").Get<string[]>();
@@ -18,7 +22,26 @@ builder.Host.UseSerilog((context, Configuration) =>
                 excludesApiEndpoints.Any(item => p.Value.ToString().Contains(item))
                 || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item))))
         .Enrich.WithExceptionDetails();
+
+    OverrideLoggerWriteToLFile(Configuration);
 });
+
+void OverrideLoggerWriteToLFile(LoggerConfiguration configuration)
+{
+    const string cashSiteBrand = "Nova";
+
+    var brand = Environment.GetEnvironmentVariable("Brand") ?? string.Empty;
+    if (brand != cashSiteBrand) return;
+
+    var logFilePath = $"/tpwager/tpwager-{DateTime.Now:yyyyMMddHHmmssfff}.log";
+    configuration
+        .WriteTo.File(new JsonFormatter(),
+            logFilePath,
+            rollingInterval: RollingInterval.Day,
+            retainedFileCountLimit: 60,
+            fileSizeLimitBytes: 10485760,
+            rollOnFileSizeLimit: true);
+}
 
 var startup = new Startup(builder.Configuration);
 startup.ConfigureServices(builder.Services);

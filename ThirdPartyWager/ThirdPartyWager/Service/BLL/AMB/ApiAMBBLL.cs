@@ -1,8 +1,11 @@
-﻿using Newtonsoft.Json;
-using System.Text;
+﻿using System.Text;
+
+using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -13,7 +16,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Log2File _log2File;
         private readonly ILogger<ApiAMBBLL> _logger;
         private readonly string _tpName = Tp.AMB.ToString();
-        private readonly int _timeZone = 8;
+        private readonly AMBConfig _siteAMBConfig;
 
         public ApiAMBBLL(IServiceProvider provider)
         {
@@ -21,11 +24,12 @@ namespace ThirdPartyWager.Service.BLL
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<ApiAMBBLL>>();
+            _siteAMBConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AMBConfig>(_tpName);
         }
 
-        public async Task<CurrencyStats_AMB> GetBetSummaryByTime(dynamic setting, string currency, int gameType, string startTime, string endTime)
+        public async Task<CurrencyStats_AMB> GetBetSummaryByTime(string currency, int gameType, string startTime, string endTime)
         {
-            var settingByGameType = GetTpListByGameType(setting, currency, gameType);
+            var settingByGameType = GetTpListByGameType(currency, gameType);
             var apiUrl = settingByGameType["ApiUrl"];
             var agent = settingByGameType["Agent"];
             var secretKey = settingByGameType["SecretKey"];
@@ -48,28 +52,33 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        private Dictionary<string, string> GetTpListByGameType(dynamic setting, string currency, int gameType)
+        private Dictionary<string, string> GetTpListByGameType(string currency, int gameType)
         {
-            var apiUrl = setting["ApiUrl"];
-            var agentId = setting["Agent"];
-            var secretKey = setting["SecretKey"];
-            var headerKey = "x-amb-signature";
-
-            if (gameType == (int)GameType.AMB_RNG)
+            var result = new Dictionary<string, string>();
+            
+            switch (gameType)
             {
-                apiUrl = setting[$"SlotApiUrl{currency}"];
-                agentId = setting[$"SlotAgent{currency}"];
-                secretKey = setting[$"SlotSecretKey{currency}"];
-                headerKey = "x-ambslot-signature";
+                case (int)GameType.AMB_Poker:
+                    result = new Dictionary<string, string>
+                    {
+                        { "ApiUrl", _siteAMBConfig.PokerApiUrl },
+                        { "Agent", _siteAMBConfig.PokerAgent },
+                        { "SecretKey", _siteAMBConfig.PokerSecretKey },
+                        { "HeaderKey", "x-amb-signature" }
+                    };
+                    break;
+                case (int)GameType.AMB_RNG:
+                    var slotCurrencyConfig = _siteAMBConfig.SlotCurrencyAgent.FirstOrDefault(x => x.CurrencyId == currency);
+                    result = new Dictionary<string, string>
+                    {
+                        { "ApiUrl", slotCurrencyConfig.SlotApiUrl },
+                        { "Agent", slotCurrencyConfig.Agent },
+                        { "SecretKey", slotCurrencyConfig.SecretKey },
+                        { "HeaderKey", "x-amb-signature" } 
+                    };
+                    break;
             }
-
-            return new Dictionary<string, string>
-            {
-                { "ApiUrl", apiUrl },
-                { "Agent", agentId },
-                { "SecretKey", secretKey },
-                { "HeaderKey", headerKey }
-            };
+            return result;
         }
 
         private async Task<string> DoHttpClientAsync(string url, string param, string secretKey, string headerKey, HttpMethod method)

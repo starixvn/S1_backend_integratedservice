@@ -19,9 +19,7 @@ namespace ThirdPartyWager.Workers
         private readonly int _beyond = 2;
         private Timer timer;
 
-        public FinanceAP(
-            IServiceProvider provider
-        )
+        public FinanceAP(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceAP>>();
             _financeAPBLL = provider.GetRequiredService<FinanceAPBLL>();
@@ -54,16 +52,8 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                if (quick == 1)
-                {
-                    var dueTimeSpan = TimeSpan.FromHours(1);
-                    timer.Change(dueTimeSpan, TimeSpan.Zero);
-                }
-                else
-                {
-                    var dueTimeSpan = TimeSpan.FromHours(4);
-                    timer.Change(dueTimeSpan, TimeSpan.Zero);
-                }
+                var dueTimeSpan = (quick == 1) ? TimeSpan.FromHours(1) : TimeSpan.FromHours(4);
+                timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 
@@ -74,7 +64,7 @@ namespace ThirdPartyWager.Workers
             try
             {
                 // get setting
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+                var setting = string.Empty;
 
                 // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);

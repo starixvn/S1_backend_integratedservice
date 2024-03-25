@@ -1,12 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Serilog.Context;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -87,7 +80,7 @@ namespace ThirdPartyWager.Workers
             {
                 if (quick == 1)
                 {
-                    var dueTimeSpan = TimeSpan.FromSeconds(100);
+                    var dueTimeSpan = TimeSpan.FromMinutes(15);
                     timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else

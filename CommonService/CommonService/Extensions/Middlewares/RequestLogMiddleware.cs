@@ -1,11 +1,9 @@
-﻿using System;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using System.Text;
+
 using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using Serilog.Context;
 
 namespace CommonService.Extensions.Middlewares
@@ -30,7 +28,7 @@ namespace CommonService.Extensions.Middlewares
                 await _next(context);
             }
             else
-            {               
+            {
                 var originalRequestBody = context.Request.Body;
                 var content = string.Empty;
                 if (context.Request.ContentType?.StartsWith("application/x-www-form-urlencoded") ?? false)
@@ -45,8 +43,8 @@ namespace CommonService.Extensions.Middlewares
                 using (var requestBody = new StreamReader(requestBodyStream, Encoding.UTF8, true, 1024, true))
                 {
                     var codePage = requestBody.CurrentEncoding.CodePage;
-                
-                    content = !context.Request.Method.Equals("GET",StringComparison.OrdinalIgnoreCase)
+
+                    content = !context.Request.Method.Equals("GET", StringComparison.OrdinalIgnoreCase)
                               && string.IsNullOrEmpty(content)
                         ? await requestBody.ReadToEndAsync()
                         : content;
@@ -60,8 +58,10 @@ namespace CommonService.Extensions.Middlewares
                         LogContext.PushProperty("Action", action.ToString());
                     }
 
-                    _logger.LogInformation(
-                        $"REQUEST METHOD: {context.Request.Method}, CodePage: {codePage}, REQUEST BODY: {content}, REQUEST URL: {url}");
+                    var log = new StringBuilder();
+                    log.AppendLine($"REQUEST URL: {url}, Method: {context.Request.Method}, CodePage: {codePage},");
+                    log.AppendLine($"REQUEST BODY: {content}");
+                    _logger.LogInformation(log.ToString());
                 }
 
                 requestBodyStream.Seek(0, SeekOrigin.Begin);

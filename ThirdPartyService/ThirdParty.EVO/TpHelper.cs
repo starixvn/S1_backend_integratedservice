@@ -1,7 +1,5 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
+using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -46,7 +44,7 @@ namespace ThirdParty.EVO
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
+            string ApiUrl = inputs.ContainsKey("ApiUrl_Backup") && !string.IsNullOrEmpty(inputs["ApiUrl_Backup"]) ? inputs["ApiUrl_Backup"] : throw new Exception("ApiUrl_Backup");
             string Ua2Token = inputs.ContainsKey("Ua2Token") && !string.IsNullOrEmpty(inputs["Ua2Token"]) ? inputs["Ua2Token"] : throw new Exception("Ua2Token");
             string CasinoKey = inputs.ContainsKey("CasinoKey") && !string.IsNullOrEmpty(inputs["CasinoKey"]) ? inputs["CasinoKey"] : throw new Exception("CasinoKey");
             string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
@@ -58,7 +56,7 @@ namespace ThirdParty.EVO
             string countryCode = !string.IsNullOrEmpty(tpCountryCode.CountryCode) ? tpCountryCode.CountryCode : throw new Exception("CountryCode");
 
             bool mobile = appType != AppType.Desktop;
-            var siteName = ServerInfoProvider.getSiteName(tpCustInfo.SiteId);
+            var siteName = ServerInfoProvider.GetSiteName(tpCustInfo.SiteId);
 
             ApiResult oApiResult = new ApiResult();
 
@@ -92,11 +90,6 @@ namespace ThirdParty.EVO
                         id = sessionKey,
                         ip = inputs["ClientIP"]
                     },
-                    group = new
-                    {
-                        id = siteName.ToString(),
-                        action = "assign"
-                    }
                 },
                 config = new
                 {
@@ -159,7 +152,7 @@ namespace ThirdParty.EVO
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
-            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerLC_EVO_Detail_Get", new { getBetDetail.TransId },DataBase.Wager);
+            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerLC_EVO_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
             if (wagerDetail != null)
             {
                 //general data
@@ -227,6 +220,7 @@ namespace ThirdParty.EVO
             var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerLC_EVO_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
             if (detail != null)
             {
+                string roundId = detail.GetStringValue("RoundId").Length <= 40 ? detail.GetStringValue("RoundId") : detail.GetStringValue("RoundId")[..40];
                 return tpGameType.CategoryId switch
                 {
                     TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
@@ -235,11 +229,11 @@ namespace ThirdParty.EVO
                         Game = detail.GetStringValue("gameType"),
                         RefNo = detail.GetStringValue("transactionId"),
                         Title = detail.GetStringValue("description"),
-                        MatchID = detail.GetStringValue("RoundId"),
+                        MatchID = roundId,
                         BetType = string.Empty,
                         BetChoice = string.Empty,
                         Result = detail.GetStringValue("result"),
-                        DeviceType = GetDeviceType( detail.GetStringValue("channel")),                
+                        DeviceType = GetDeviceType(detail.GetStringValue("channel")),
                         IP = string.Empty,
                     },
                     _ => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)

@@ -1,14 +1,8 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Serilog.Context;
+﻿using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace ThirdPartyWager.Workers
 {
@@ -45,7 +39,7 @@ namespace ThirdPartyWager.Workers
             return Task.CompletedTask;
         }
 
-        private async void DoTask(object state)
+        private void DoTask(object state)
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
@@ -84,7 +78,7 @@ namespace ThirdPartyWager.Workers
                 }
                 var t = Task.WhenAll(tasks);
                 t.Wait();
-                
+
             }
             catch (Exception ex)
             {

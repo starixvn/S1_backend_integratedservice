@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace CommonService.Service.Model
+﻿namespace CommonService.Service.Model
 {
     public class SendGridResetPassword
     {
@@ -17,7 +15,6 @@ namespace CommonService.Service.Model
         public class DynamicTemplateData
         {
             public string resetpwdurl { get; set; }
-
         }
     }
 }

@@ -1,6 +1,8 @@
-﻿using Newtonsoft.Json;
-using System.Text;
+﻿using System.Text;
 using System.Web;
+
+using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -44,7 +46,7 @@ namespace ThirdPartyWager.Service.BLL
                 platform = platform,
                 gameType = gameType
             };
-            
+
             // request
             var r = await DoHttpClientAsync(url, param);
             var result = JsonConvert.DeserializeObject<CurrencyStats_Sexy>(r);

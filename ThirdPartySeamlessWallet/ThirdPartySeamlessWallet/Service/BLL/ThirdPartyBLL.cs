@@ -1,9 +1,7 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
+using Microsoft.Extensions.Caching.Memory;
+
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -15,14 +13,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         private readonly ThirdPartyService thirdPartyService;
         private readonly IMemoryCache cache;
         private ConcurrentDictionary<string, TpCurrency> TpCurrencyList;
+        private ConcurrentDictionary<string, ServerInfo> ServerInfoData;
         private static ConcurrentDictionary<int, ThirdPartySetting> ThirdPartySettingContainer = new ConcurrentDictionary<int, ThirdPartySetting>();
         private static ConcurrentDictionary<string, ThirdPartySetting> ThirdPartyModelContainer = new ConcurrentDictionary<string, ThirdPartySetting>();
-        public ThirdPartyBLL(IMemoryCache cache, ThirdPartyService thirdPartyService)
+
+        public ThirdPartyBLL(IServiceProvider provider)
         {
-            this.thirdPartyService = thirdPartyService;
-            this.cache = cache;
+            thirdPartyService = provider.GetRequiredService<ThirdPartyService>();
+            cache = provider.GetRequiredService<IMemoryCache>();
             TpCurrencyList = new ConcurrentDictionary<string, TpCurrency>();
+            ServerInfoData = new ConcurrentDictionary<string, ServerInfo>();
         }
+
         public ThirdPartySetting GetThirdPartySetting(int tpId)
         {
             if (!ThirdPartySettingContainer.ContainsKey(tpId))
@@ -47,6 +49,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return ThirdPartyModelContainer.ContainsKey(sKet) ? ThirdPartyModelContainer[sKet] : null;
         }
+
         public TpCheck ThirdPartyCheckWithCache(int tpId, string tpUserName)
         {
             string key = $"TpCheck_{tpId}_{tpUserName}";
@@ -60,6 +63,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return tpCheck;
         }
+
         public TpCheck ThirdPartyCheck(int tpId, string tpUserName)
         {
             var tpCheck = thirdPartyService.ThirdPartyCheck(tpId, tpUserName);
@@ -77,51 +81,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             var tpCurrency = TpCurrencyList[key];
             return tpCurrency;
         }
-        private Dictionary<int, int> GetBonusCategoryList()
-        {
-            string key = $"GetBonusCategoryList";
-            var dBonusCategoryList = cache.Get<Dictionary<int, int>>(key);
-            if (dBonusCategoryList == null)
-            {
-                dBonusCategoryList = new Dictionary<int, int>();
 
-                var bonusCategoryList = thirdPartyService.GetBonusCategoryList();
-                foreach (var bonusCategory in bonusCategoryList.Where(x => x.WalletType == (int)WalletType.SeamlessWallet))
-                {
-                    dBonusCategoryList.Add(bonusCategory.Type, bonusCategory.Id);
-                }
-
-                cache.Set(key, dBonusCategoryList, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
-            }
-
-            return dBonusCategoryList;
-        }
-
-        public BonusMinBet GetBonusMinBet(int gameType, int currencyId)
-        {
-            string key = $"BonusMinBetList";
-            var dBonusMinBetList = cache.Get<IEnumerable<BonusMinBet>>(key);
-            if (dBonusMinBetList == null)
-            {
-                dBonusMinBetList = thirdPartyService.GetBonusMinBetList();
-                cache.Set(key, dBonusMinBetList, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
-            }
-
-            return dBonusMinBetList.FirstOrDefault(x => x.GameType == gameType && x.CurrencyId == currencyId);
-        }
-
-        public int GetBonusCategoryId(int gameType)
-        {
-            if (gameType == 0)
-                return 0;
-
-            var bonusCategoryList = GetBonusCategoryList();
-
-            if (bonusCategoryList.ContainsKey(gameType))
-                return bonusCategoryList[gameType];
-            else
-                return 0;
-        }
         public GameType GetGameType_PP(string gameId)
         {
             GameType gameType = GameType.PP_RNG;
@@ -135,21 +95,35 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 {
                     gameType = GameType.PP_RNG;
                 }
+                return gameType;
+            }
+
+            var casino = GetGameCasinoWithCache((int)Tp.PP);
+            var check = casino.FirstOrDefault(x => x.GameId == gameId);
+            if (check == null)
+            {
+                gameType = GameType.PP_LiveCasino;
             }
 
             return gameType;
         }
+
         public GameType GetGameType_SG(string gameId)
         {
-            GameType gameType = GameType.SG_RNG;
+            var gameType = GameType.SG_RNG;
 
             if (gameId.StartsWith("F-", StringComparison.OrdinalIgnoreCase))
             {
                 gameType = GameType.SG_Fish;
             }
+            else if (gameId.StartsWith("C-", StringComparison.OrdinalIgnoreCase))
+            {
+                gameType = GameType.SG_Table;
+            }
 
             return gameType;
         }
+
         public GameType GetGameType(int tpId, string gameId)
         {
             GameType gameType = 0;
@@ -204,6 +178,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     if (int.TryParse(gameId, out int tempGameId))
                     {
                         gameType = GameType.PP_LiveCasino;
+
+                        // Spaceman 
+                        if (tempGameId == 1302)
+                        {
+                            gameType = GameType.PP_RNG;
+                        }
+                        return gameType;
+                    }
+
+                    var pp = GetGameCasinoWithCache(tpId);
+                    var checkPP = pp.FirstOrDefault(x => x.GameId == gameId);
+                    if (checkPP == null)
+                    {
+                        gameType = GameType.PP_LiveCasino;
                     }
                     break;
                 case (int)Tp.SG:
@@ -251,16 +239,51 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.RedTiger_RNG;
                         return gameType;
                     }
+                    var nlc = GetGameCasinoWithCache((int)Tp.NLC);
+                    var chkNLC = nlc.FirstOrDefault(x => x.GameId == gameId);
+                    if (chkNLC != null && chkNLC.GameId == gameId)
+                    {
+                        gameType = GameType.NLC_RNG;
+                        return gameType;
+                    }
                     break;
                 case (int)Tp.Skywind:
                     gameType = GameType.Skywind_RNG;
-                    if(gameId == "0")
+                    if (gameId == "0")
                     {
                         gameType = GameType.Skywind_LiveCasino;
                     }
-                    else if(gameId == "sw_or" || gameId == "sw_fj" || gameId == "sw_cashdaha")
+                    else if (gameId == "sw_or" || gameId == "sw_fj" || gameId == "sw_cashdaha")
                     {
                         gameType = GameType.Skywind_Fish;
+                    }
+                    break;
+                case (int)Tp.GPI:
+                    gameType = GameType.GPI_RNG;
+                    if (string.Equals(gameId, "keno", StringComparison.OrdinalIgnoreCase))
+                    {
+                        gameType = GameType.GPI_Keno;
+                    }
+                    else if (string.Equals(gameId, "sode", StringComparison.OrdinalIgnoreCase))
+                    {
+                        gameType = GameType.GPI_Sode;
+                    }
+                    else if (string.Equals(gameId, "thailottery", StringComparison.OrdinalIgnoreCase))
+                    {
+                        gameType = GameType.GPI_Thai_Lottery;
+                    }
+                    else if (string.Equals(gameId, "fast3", StringComparison.OrdinalIgnoreCase))
+                    {
+                        gameType = GameType.GPI_Fast3;
+                    }
+                    break;
+                case (int)Tp.PlayTech:
+                    gameType = GameType.PlayTech_RNG;
+                    var casinoPlayTech = GetGameCasinoWithCache(tpId);
+                    var checkPlayTech = casinoPlayTech.FirstOrDefault(x => x.GameId == gameId);
+                    if (checkPlayTech == null)
+                    {
+                        gameType = GameType.PlayTech_LiveCasino;
                     }
                     break;
                 default:
@@ -286,7 +309,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             SettlementType settlementType = SettlementType.SettledForValid;
             var casino = GetGameCasinoWithCache(tpId);
-            var check = casino.FirstOrDefault(x => x.GameId == gameId && x.TypeId == 3);
+
+            //Kiss918(21)
+            //PNG(54)
+            var check = tpId is 21 or 54 ? casino.FirstOrDefault(x => x.AppId == gameId && x.TypeId == 3)
+                : casino.FirstOrDefault(x => x.GameId == gameId && x.TypeId == 3);
             if (check != null)
             {
                 settlementType = SettlementType.SettledForValidNotRollover;
@@ -297,6 +324,30 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public int AddTpBetFailureRecord(TpBetFailureRecord tpBetFailureRecord)
         {
             return thirdPartyService.AddTpBetFailureRecord(tpBetFailureRecord);
+        }
+
+        public IEnumerable<FinancialLog> GetFinancialLogTransactionCheck(string RefTransId, string YYYYMM)
+        {
+            return thirdPartyService.GetFinancialLogTransactionCheck(RefTransId, YYYYMM);
+        }
+
+        public IEnumerable<BonusLog> GetBonusLogTransactionCheck(string RefTransId)
+        {
+            return thirdPartyService.GetBonusLogTransactionCheck(RefTransId);
+        }
+
+        public ServerInfo GetServerInfoBySiteName(string siteName)
+        {
+            string key = $"ServerInfo_{siteName}";
+            if (!ServerInfoData.ContainsKey(key))
+            {
+                var ServerInfoModel = thirdPartyService.GetServerInfoBySiteName(siteName);
+                if (ServerInfoModel != null)
+                {
+                    ServerInfoData.TryAdd(key, ServerInfoModel);
+                }
+            }
+            return ServerInfoData.ContainsKey(key) ? ServerInfoData[key] : null;
         }
     }
 }

@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace CommonService.Service.Model
+﻿namespace CommonService.Service.Model
 {
     public class CustInfoProfile
     {
+        public int CustId { get; set; }
+        public int SiteId { get; set; }
         public string UserName { get; set; }
         public int CurrencyId { get; set; }
         public int UserLevel { get; set; }
@@ -29,5 +26,15 @@ namespace CommonService.Service.Model
         public bool PhoneVerified { get; set; }
         public bool EmailVerified { get; set; }
         public string TpUserName { get; set; }
+
+        /// <summary>
+        /// 回傳區碼加手機號碼，手機號碼會移除第一碼的0，區碼會移除第一碼+號： ex:886912345678
+        /// </summary>
+        public string GetPhoneNo()
+        {
+            var phoneNo = PhoneNo.StartsWith("0") ? PhoneNo.Substring(1) : PhoneNo;
+            var areaCode = AreaCode.StartsWith("+") ? AreaCode.Substring(1) : AreaCode;
+            return $"{areaCode}{phoneNo}";
+        }
     }
 }

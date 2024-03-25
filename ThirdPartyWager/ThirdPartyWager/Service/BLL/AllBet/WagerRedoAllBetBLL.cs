@@ -1,36 +1,31 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
-using System.Collections.Generic;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class WagerRedoAllBetBLL
     {
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ApiAllBetBLL _apiAllBetBLL;
         private readonly WagerAllBetService _wagerAllBetService;
         private readonly ILogger<WagerRedoAllBetBLL> _logger;
         private IEnumerable<TpCurrency> _currencyList;
         private readonly int _tpId = (int)Tp.Allbet;
         private readonly IWebHostEnvironment _env;
+        private readonly AllBetConfig _siteAllBetConfig;
+
 
         public WagerRedoAllBetBLL(IServiceProvider provider)
         {
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _apiAllBetBLL = provider.GetRequiredService<ApiAllBetBLL>();
             _wagerAllBetService = provider.GetRequiredService<WagerAllBetService>();
             _logger = provider.GetRequiredService<ILogger<WagerRedoAllBetBLL>>();
             _currencyList = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(_tpId);
             _env = provider.GetRequiredService<IWebHostEnvironment>();
+            _siteAllBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AllBetConfig>(Tp.Allbet.ToString());
+
         }
 
         public async Task<bool> RedoWagersAsync(int tpId, string startTime, string endTime, long startUnix, long endUnix)
@@ -38,9 +33,6 @@ namespace ThirdPartyWager.Service.BLL
             var msg = "FATAL_ERROR";
             try
             {
-                // get api info
-                var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
-
                 // count interval wagers
                 var getWagerCount = _wagerAllBetService.GetWagerTotal(startUnix, endUnix);
                 var wagerCount = getWagerCount.wagerCount;
@@ -52,16 +44,16 @@ namespace ThirdPartyWager.Service.BLL
                 foreach (var currency in _currencyList)
                 {
                     try
-                    {                 
+                    {
                         // pagination
                         var pageIndex = 1;
                         var pageRowCnt = 1;
-                    
-                        var agent = setting[$"{currency.TpCurrencyId}Agent"];
+
+                        var agent = _siteAllBetConfig.CurrencyAgents.FirstOrDefault(x => x.CurrencyId == currency.TpCurrencyId)?.Agent;
                         while (pageRowCnt >= 1)
                         {
                             // bet 
-                            var dataWager = await _apiAllBetBLL.GetBetListByTime(setting, agent, startTime, endTime, pageIndex);
+                            var dataWager = _apiAllBetBLL.GetBetListByTime(agent, startTime, endTime, pageIndex);
                             if (dataWager == null)
                             {
                                 msg = "THIRD_PARTY_ERROR";

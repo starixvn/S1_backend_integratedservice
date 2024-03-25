@@ -1,21 +1,20 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
+
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
-    public class ThirdPartyBLL
+    public class ThirdPartyBLL : IThirdPartyBLL
     {
         private readonly ThirdPartyHelper thirdPartyHelper;
         private readonly TpCustInfoService tpCustInfoService;
         private readonly IMemoryCache cache;
 
-        public ThirdPartyBLL(ThirdPartyHelper thirdPartyHelper,TpCustInfoService tpCustInfoService, IMemoryCache cache)
+        public ThirdPartyBLL(ThirdPartyHelper thirdPartyHelper, TpCustInfoService tpCustInfoService, IMemoryCache cache)
         {
             this.thirdPartyHelper = thirdPartyHelper;
             this.tpCustInfoService = tpCustInfoService;
@@ -47,6 +46,22 @@ namespace ThirdPartyWager.Service.BLL
                 if (dataTpList != null)
                 {
                     setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(dataTpList.Setting);
+                    cache.Set(key, setting, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
+                }
+            }
+
+            return setting;
+        }
+        public T GetThirdPartyBySite<T>(int tpId, int siteId)
+        {
+            var key = $"Setting_{tpId}_{siteId}";
+            var setting = cache.Get<T>(key);
+            if (setting == null)
+            {
+                var dataTpList = thirdPartyHelper.GetThirdPartyBySite(tpId, siteId);
+                if (dataTpList != null)
+                {
+                    setting = JsonConvert.DeserializeObject<T>(dataTpList.Setting);
                     cache.Set(key, setting, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
                 }
             }
@@ -89,6 +104,12 @@ namespace ThirdPartyWager.Service.BLL
             return dataTpTimer;
         }
 
+        public TpWagerTimerReferenceModel GetThirdPartyTimerReferenceByReference(int tpId, int type, int gameType, string reference)
+        {
+            var dataTpTimer = thirdPartyHelper.GetThirdPartyTimerReferenceByReference(tpId, type, gameType, reference);
+            return dataTpTimer;
+        }
+
         public int SetThirdPartyTimerByCurrency(int tpId, int type, long start, string currency, int gameType = 0)
         {
             return thirdPartyHelper.SetThirdPartyTimerByCurrency(tpId, type, start, currency, gameType);
@@ -98,7 +119,12 @@ namespace ThirdPartyWager.Service.BLL
         {
             return thirdPartyHelper.SetThirdPartyTimerByGameType(tpId, type, start, gameType);
         }
-        
+
+        public int SetThirdPartyTimerByReference(int tpId, int type, long start, int gameType, string reference)
+        {
+            return thirdPartyHelper.SetThirdPartyTimerByReference(tpId, type, start, gameType, reference);
+        }
+
         public TpCustInfo GetTpCustInfoWithCache(int tpId, string tpUserName)
         {
             var key = $"TpCustInfo_{tpId}_{tpUserName}";
@@ -120,7 +146,7 @@ namespace ThirdPartyWager.Service.BLL
             var tpCustInfo = tpCustInfoService.GetTpCustInfo(tpId, tpUserName);
             return tpCustInfo;
         }
-        
+
         public SettlementType GetGameCasinoSettlementType(int tpId, string gameId)
         {
             var settlementType = SettlementType.SettledForValid;
@@ -145,5 +171,39 @@ namespace ThirdPartyWager.Service.BLL
 
             return tpGameCasino;
         }
+
+        public IEnumerable<TpListModel> GetTpListByTpId(int tpId)
+        {
+            var key = $"GetTpListByTpId_{tpId}";
+            var setting = cache.Get<IEnumerable<TpListModel>>(key);
+            if (setting == null)
+            {
+                var dataTpList = thirdPartyHelper.GetTpListByTpId(tpId);
+                if (dataTpList != null)
+                {
+                    setting = dataTpList.Where(x => x.Status == 1).ToList();
+                    cache.Set(key, setting, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(5)));
+                }
+            }
+
+            return setting;
+        }
+        
+        /// <summary>
+        /// 不分SiteId，用WorkerType取回TicketKey
+        /// </summary>
+        public long GetAllSiteTicketKey(WorkerType workerType, int tpId)
+        {
+            return thirdPartyHelper.GetSiteTicketKey(0, tpId, workerType);
+        }
+
+        /// <summary>
+        /// 不分SiteId，用WorkerType更新TicketKey
+        /// </summary>
+        public int SetAllSiteTicketKey(WorkerType workerType, int tpId, long ticketKey)
+        {
+            return thirdPartyHelper.SetSiteTicketKey(0, tpId, workerType, ticketKey);
+        }
+        
     }
 }

@@ -1,28 +1,24 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class WagerRedoDGBLL
     {
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ApiDGBLL _apiDGBLL;
         private readonly WagerDGService _wagerDGService;
         private readonly ILogger<WagerRedoDGBLL> _logger;
+        private readonly DGConfig _siteConfig;
 
         public WagerRedoDGBLL(IServiceProvider provider)
         {
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _apiDGBLL = provider.GetRequiredService<ApiDGBLL>();
             _wagerDGService = provider.GetRequiredService<WagerDGService>();
             _logger = provider.GetRequiredService<ILogger<WagerRedoDGBLL>>();
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<DGConfig>(Tp.DG.ToString());
         }
 
         public async Task<bool> RedoWagersAsync(int tpId, string startTime, string endTime, long startUnix, long endUnix)
@@ -31,7 +27,7 @@ namespace ThirdPartyWager.Service.BLL
             try
             {
                 // get dg api info
-                var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
+                var setting = _siteConfig;
 
                 // count interval wagers
                 var getWagerCount = _wagerDGService.GetWagerDGTotal(startUnix, endUnix);
@@ -42,7 +38,7 @@ namespace ThirdPartyWager.Service.BLL
                 var totalPage = 1;
                 while (page <= totalPage)
                 {
-                    var dataWager = await _apiDGBLL.GetBetListByTime(setting["WagerUrl"], setting["AgentAccount"], setting["APIkey"], startTime, endTime, page);
+                    var dataWager = await _apiDGBLL.GetBetListByTime(setting, startTime, endTime, page);
 
                     var errorCode = dataWager.codeId;
                     if (errorCode != 0)

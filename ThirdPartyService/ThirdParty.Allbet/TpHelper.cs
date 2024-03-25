@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -14,22 +14,48 @@ namespace ThirdParty.Allbet
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly AllBetConfig _siteAllBetConfig;
+        
+        public TpHelper(IServiceProvider provider)
+        {
+            _siteAllBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AllBetConfig>(TpEnum.Allbet.ToString());
+        }
+        
+        #region Model
         private class Result<T>
         {
             public string resultCode { get; set; }
             public string message { get; set; }
             public T data { get; set; }
         }
-        
+
         private class UserResult
         {
             public string player { get; set; }
         }
-        
+
         private class LoginResult
         {
             public string gameLoginUrl { get; set; }
         }
+
+        public class AllBetConfig
+        {
+            public string ApiUrl { get; set; }
+            public string Suffix { get; set; }
+            public string AllbetKey {  get; set; }
+            public string OperatorId { get; set; }
+            public string PartnerKey { get; set; }
+            public List<CurrencyAgent> CurrencyAgents { get; set; }
+        }
+        
+        public class CurrencyAgent
+        {
+            public string CurrencyId { get; set; }
+            public string Agent { get; set; }
+        }
+        
+        #endregion
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -38,18 +64,17 @@ namespace ThirdParty.Allbet
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
-            var agentKey = $"{tpCustInfo.TpCurrencyId}Agent";
-            var agent = inputs.ContainsKey(agentKey) && !string.IsNullOrEmpty(inputs[agentKey]) ? inputs[agentKey] : throw new Exception("Can't get agent.");
+            var apiUrl = _siteAllBetConfig.ApiUrl;
+            var agent = _siteAllBetConfig.CurrencyAgents.FirstOrDefault(x => x.CurrencyId == tpCustInfo.TpCurrencyId).Agent; 
             var path = "CheckOrCreate";
-            tpCustInfo.TpUserName = $"{tpCustInfo.TpUserName}{inputs["Suffix"]}";
+            tpCustInfo.TpUserName = $"{tpCustInfo.TpUserName}{_siteAllBetConfig.Suffix}";
             var parameters = ToJson(new
             {
                 agent,
                 player = tpCustInfo.TpUserName
             });
             var header = GetAuthData(inputs, path, parameters, out var contentType);
-            
+
             var result = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
 
             var oApiResult = new ApiResult();
@@ -90,15 +115,15 @@ namespace ThirdParty.Allbet
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string tpLangId, Dictionary<string, string> inputs)
         {
-            var apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
+            var apiUrl = _siteAllBetConfig.ApiUrl;
             var isFun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) && inputs["fun"] == "1";
             var path = isFun ? "LoginTrial" : "Login";
-                
-            if (!tpCustInfo.TpUserName.EndsWith(inputs["Suffix"]))
+
+            if (!tpCustInfo.TpUserName.EndsWith(_siteAllBetConfig.Suffix))
             {
-                tpCustInfo.TpUserName = $"{tpCustInfo.TpUserName}{inputs["Suffix"]}";
+                tpCustInfo.TpUserName = $"{tpCustInfo.TpUserName}{_siteAllBetConfig.Suffix}";
             }
-            
+
             var parameters = ToJson(new
             {
                 player = isFun ? null : tpCustInfo.TpUserName,
@@ -107,7 +132,7 @@ namespace ThirdParty.Allbet
             var header = GetAuthData(inputs, path, parameters, out var contentType);
 
             var result = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
-            
+
             var oApiResult = new ApiResult();
             if (IsJSON(result))
             {
@@ -169,7 +194,7 @@ namespace ThirdParty.Allbet
                     Detail = detail,
                     TpCurrency = tpCurrency,
                 }
-            };  
+            };
         }
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -177,13 +202,13 @@ namespace ThirdParty.Allbet
             var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_Allbet_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
             var gameCode = wagerDetail.GetValueOrDefault("gameType")?.ToString();
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
-            {             
-                GameID = gameCode,                       
+            {
+                GameID = gameCode,
                 Game = GetGameName(gameCode),
                 RefNo = wagerDetail.GetStringValue("betNum"),
                 Title = wagerDetail.GetStringValue("tableName"),
                 MatchID = wagerDetail.GetStringValue("gameRoundId"),
-                BetType = wagerDetail.GetStringValue("betType"), 
+                BetType = wagerDetail.GetStringValue("betType"),
                 BetChoice = string.Empty,
                 Result = wagerDetail.GetStringValue("gameResult"),
                 DeviceType = GetDeviceType(wagerDetail.GetStringValue("appType")),
@@ -219,18 +244,18 @@ namespace ThirdParty.Allbet
                 _ => gameCode,
             };
         }
-        
+
         private Dictionary<string, string> GetAuthData(IReadOnlyDictionary<string, string> inputs, string path, string parameters, out string contentType)
         {
             var md5 = Base64Md5(parameters);
             contentType = "application/json";
             var date = DateTime.UtcNow.ToString("dd MMM yyyy HH:mm:ss z", new CultureInfo("en-US"));
             var signString = $"POST\n{md5}\n{contentType}\n{date}\n/{path}";
-            var signature = Sign(signString, inputs["AllbetKey"]);
+            var signature = Sign(signString, _siteAllBetConfig.AllbetKey);
             return new Dictionary<string, string>
             {
                 { "Accept", "application/json" },
-                { "Authorization", $"AB {inputs["OperatorId"]}:{signature}" },
+                { "Authorization", $"AB {_siteAllBetConfig.OperatorId}:{signature}" },
                 { "Content-MD5", md5 },
                 { "Date", date }
             };
@@ -243,12 +268,12 @@ namespace ThirdParty.Allbet
 
             return Convert.ToBase64String(hash);
         }
-        
+
         private string Base64Md5(string data)
         {
             return Convert.ToBase64String(Md5(Encoding.UTF8.GetBytes(data)));
         }
-        
+
         private byte[] Md5(byte[] data)
         {
             using var md5Crp = new MD5CryptoServiceProvider();

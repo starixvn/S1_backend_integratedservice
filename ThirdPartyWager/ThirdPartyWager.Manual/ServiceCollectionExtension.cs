@@ -1,9 +1,9 @@
-﻿using System;
-using System.Net;
-using System.Net.Http;
+﻿using System.Net;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
@@ -15,22 +15,11 @@ namespace ThirdPartyWager.Manual
     {
         public static IServiceCollection AddDatabaseConnection(this IServiceCollection services, IConfiguration config)
         {
-            var provider = services.BuildServiceProvider();
-            var logger = provider.GetRequiredService<ILogger<MySqlClient>>();
-            
-            return services
-                .AddSingleton(param => new MySqlClient(config.GetConnectionString($"ConnectionString"), logger)
-                {
-                    DataBase = DataBase.Main
-                })
-                .AddSingleton(param => new MySqlClient(config.GetConnectionString($"ConnectionStringReport"), logger)
-                {
-                    DataBase = DataBase.Report
-                })
-                .AddSingleton(param => new MySqlClient(config.GetConnectionString($"ConnectionStringWager"), logger)
-                {
-                    DataBase = DataBase.Wager
-                });
+            var serviceType = Environment.GetEnvironmentVariable("ServiceType") ?? config.GetValue<string>("ServiceType");
+
+            services.AddSingleton(provider => new MySqlClient(provider, DataBase.Main, config.GetConnectionString($"{serviceType}_MainDB")));
+            services.AddSingleton(provider => new MySqlClient(provider, DataBase.Wager, config.GetConnectionString($"{serviceType}_WagerDB")));
+            return services;
         }
 
         public static IServiceCollection AddHttpClientProxy(this IServiceCollection services, IConfiguration config)
@@ -79,7 +68,6 @@ namespace ThirdPartyWager.Manual
             services.AddSingleton<WagerOneGamingService>();
             services.AddSingleton<WagerV8Service>();
             services.AddSingleton<WagerN2LiveService>();
-            services.AddSingleton<WagerPTService>();
             services.AddSingleton<LiveStreamingService>();
             services.AddSingleton<LatestHighlightVideoService>();
             services.AddSingleton<SabaOddsService>();
@@ -95,7 +83,7 @@ namespace ThirdPartyWager.Manual
             // Iconic
             services.AddSingleton<WagerIconicBLL>();
             services.AddSingleton<ApiIconicBLL>();
-            
+
             services.AddSingleton<WagerIconic>();
             return services;
         }

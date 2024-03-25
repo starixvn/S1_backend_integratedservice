@@ -1,21 +1,24 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Linq;
-using System.Web;
-using System.Xml.Serialization;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
-using ThirdPartyCore.Extensions;
 
 namespace ThirdParty.DG
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly DGConfig _siteConfig;
+
+        public TpHelper(IServiceProvider provider)
+        {
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<DGConfig>(TpEnum.DG.ToString());
+        }
+
         Dictionary<int, string> ErrorMassage = new Dictionary<int, string>()
         {   {1,"Parameter Error"},
             {2,"Token Verification Failed"},
@@ -72,18 +75,20 @@ namespace ThirdParty.DG
 
         Dictionary<string, string> limitGroupNoMapping = new Dictionary<string, string>(comparer: StringComparer.OrdinalIgnoreCase)
         {
-            {"MYR","A"},
-            {"CNY","A"},
-            {"THB","A"},
-            {"USD","A"},
-            {"IDR2","A"},
-            {"VND2","J"},
-            {"INR","A"}
+            {"MYR","G"},
+            {"THB","N"},
+            {"IDR2","G"},
+            {"VND2","G"},
+            {"CNY","G"},
+            {"USD","F"},
+            {"INR","G"},
+            {"BDT","A"}
         };
 
         private decimal dWinLimit = 0m;
         private const string DefaultLimitGroup = "A";
 
+        #region Request
         public class Member
         {
             public string username { get; set; }
@@ -111,7 +116,9 @@ namespace ThirdParty.DG
             public string currencyName { get; set; }
             public decimal winLimit { get; set; }
         }
+        #endregion
 
+        #region Response
         private class SignupResult : CommReq
         {
             public int codeId { get; set; }
@@ -124,7 +131,7 @@ namespace ThirdParty.DG
             public string domains { get; set; }
             public string[] list { get; set; }
         }
-
+        #endregion
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -133,30 +140,23 @@ namespace ThirdParty.DG
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            //throw new NotImplementedException();
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
-            string AgentName = inputs.ContainsKey("AgentAccount") && !string.IsNullOrEmpty(inputs["AgentAccount"]) ? inputs["AgentAccount"] : throw new Exception();
-            string APIkey = inputs.ContainsKey("APIkey") && !string.IsNullOrEmpty(inputs["APIkey"]) ? inputs["APIkey"] : throw new Exception();
+            var config = _siteConfig;
+
+            string ApiUrl = config.ApiUrl;
+            string AgentName = config.AgentAccount;
+            string APIkey = config.APIkey;
             ApiUrl = $"{ApiUrl}/user/signup/{AgentName}";
 
             SignupReq SignUp = new SignupReq();
             SignUp.member = new SignupMember();
 
-            //KEY MD5(agentName+API key + Random)
-            string MD5Key = "", Random = "";
-            Random = GetRandomString(8);
-            MD5Key = ToMD5($"{AgentName}{APIkey}{Random}").ToLower();
+            string Random = GetRandomString(8);
+            string MD5Key = ToMD5($"{AgentName}{APIkey}{Random}").ToLower();
             SignUp.token = MD5Key;
             SignUp.random = Random;
-            if (limitGroupNoMapping.ContainsKey(tpCustInfo.TpCurrencyId))
-            {
-                SignUp.data = limitGroupNoMapping[tpCustInfo.TpCurrencyId];
-            }
-            else
-            {
-                SignUp.data = DefaultLimitGroup;
-            }
-
+            SignUp.data = limitGroupNoMapping.ContainsKey(tpCustInfo.TpCurrencyId)
+                ? limitGroupNoMapping[tpCustInfo.TpCurrencyId]
+                : DefaultLimitGroup;
             SignUp.member.username = tpCustInfo.TpUserName;
             SignUp.member.password = tpCustInfo.TpPwd;
             SignUp.member.currencyName = tpCustInfo.TpCurrencyId;
@@ -204,18 +204,18 @@ namespace ThirdParty.DG
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
-            string AgentName = inputs.ContainsKey("AgentAccount") && !string.IsNullOrEmpty(inputs["AgentAccount"]) ? inputs["AgentAccount"] : throw new Exception();
-            string APIkey = inputs.ContainsKey("APIkey") && !string.IsNullOrEmpty(inputs["APIkey"]) ? inputs["APIkey"] : throw new Exception();
+            var config = _siteConfig;
+
+            string ApiUrl = config.ApiUrl;
+            string AgentName = config.AgentAccount;
+            string APIkey = config.APIkey;
             ApiUrl = $"{ApiUrl}/user/login/{AgentName}";
 
             LoginReq Login = new LoginReq();
             Login.member = new Member();
 
-            //KEY MD5(agentName+API key + Random)
-            string MD5Key = "", Random = "";
-            Random = GetRandomString(8);
-            MD5Key = ToMD5($"{AgentName}{APIkey}{Random}").ToLower();
+            string Random = GetRandomString(8);
+            string MD5Key = ToMD5($"{AgentName}{APIkey}{Random}").ToLower();
             Login.token = MD5Key;
             Login.random = Random;
             Login.lang = TpLangId;
@@ -224,7 +224,7 @@ namespace ThirdParty.DG
             Login.member.username = tpCustInfo.TpUserName.ToUpper();
             Login.member.password = tpCustInfo.TpPwd;
             Login.data = GetLimitGroup(tpCustInfo.TpCurrencyId, tpCustInfo.CustId);
-            
+
             string InputJson = JsonConvert.SerializeObject(Login);
 
             var result = HttpPost(ApiUrl, InputJson, "application/json");
@@ -287,7 +287,7 @@ namespace ThirdParty.DG
                     UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("betTime", DateTime.MinValue),
                     UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("calTime", DateTime.MinValue),
                     Stake = (decimal)wagerDetail.GetValueOrDefault("betPoints") * tpCurrency.ExchangeRate,
-                    WinlostAmount = ((decimal)wagerDetail.GetValueOrDefault("winOrLoss") - (decimal)wagerDetail.GetValueOrDefault("betPoints"))* tpCurrency.ExchangeRate,
+                    WinlostAmount = ((decimal)wagerDetail.GetValueOrDefault("winOrLoss") - (decimal)wagerDetail.GetValueOrDefault("betPoints")) * tpCurrency.ExchangeRate,
                     GameCode = wagerDetail.GetValueOrDefault("gameId")?.ToString(),
                     GameName = string.Empty,
                 },
@@ -323,7 +323,7 @@ namespace ThirdParty.DG
             };
         }
 
-        private DeviceType GetDeviceType(string device)
+        private static DeviceType GetDeviceType(string device)
         {
             return device switch
             {
@@ -340,21 +340,13 @@ namespace ThirdParty.DG
             var custBetLimit = BetLimitProvider.GetCustBetLimit(custId);
             if (custBetLimit != null)
             {
-                var limitGroup = JsonConvert.DeserializeObject<List<BetSetting>>(custBetLimit.BetSetting);
-                var dg = limitGroup?.SingleOrDefault(a => a.TpCategory == (int)TpCategory.LiveCasino)?.TpBetSetting
-                    .SingleOrDefault(b => b.GameTypeId == (int)TpGameType.DG_LiveCasino);
+                var betSetting = JsonConvert.DeserializeObject<List<BetSetting>>(custBetLimit.BetSetting);
+                var dg = betSetting?.SingleOrDefault(a => a.GameTypeId == (int)TpGameType.DG_LiveCasino);
                 if (dg != null)
                     return dg.LimitGroup;
             }
-            
-            if (!IsDevelopment && custId == 477682)
-            {
-                /* 
-                 GOAL123_477682 VND2 member can change bet limit to 80 - 40,000
-                */
-                return "F";
-            }
-            else if (limitGroupNoMapping.ContainsKey(tpCurrencyId))
+
+            if (limitGroupNoMapping.ContainsKey(tpCurrencyId))
             {
                 return limitGroupNoMapping[tpCurrencyId];
             }
@@ -363,16 +355,11 @@ namespace ThirdParty.DG
                 return DefaultLimitGroup;
             }
         }
-        public class TpBetSetting
+
+        private class BetSetting
         {
             public int GameTypeId { get; set; }
             public string LimitGroup { get; set; }
-        }
-
-        public class BetSetting
-        {
-            public int TpCategory { get; set; }
-            public IList<TpBetSetting> TpBetSetting { get; set; }
         }
     }
 }

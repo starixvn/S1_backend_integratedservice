@@ -1,10 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Serilog.Context;
+﻿using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -17,7 +11,7 @@ namespace ThirdPartyWager.Workers
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly WagerYGGBLL _wagerYGGBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-       
+
         private readonly string _tpName = Tp.YGG.ToString();
 
         private Timer _timer;

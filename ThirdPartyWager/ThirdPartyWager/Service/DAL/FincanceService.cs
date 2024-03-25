@@ -1,8 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using ThirdPartyWager.Service.Library;
+﻿using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -21,7 +17,7 @@ namespace ThirdPartyWager.Service.DAL
 
         public int SetFinanceTpDailySummary(IEnumerable<FincanceDailySummary> dailySummary)
         {
-           return _mainDbClient.Execute("Finance_Tp_DailySummary_Set", dailySummary);
+            return _mainDbClient.Execute("Finance_Tp_DailySummary_Set", dailySummary);
         }
     }
 }

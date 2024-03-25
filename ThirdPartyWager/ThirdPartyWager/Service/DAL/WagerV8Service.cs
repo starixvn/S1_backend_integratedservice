@@ -1,30 +1,35 @@
-﻿using Dapper;
-using Microsoft.Extensions.Configuration;
-using MySql.Data.MySqlClient;
-using System.Data;
+﻿using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.DAL
 {
     public class WagerV8Service
     {
-        private readonly IConfiguration configuration;
+        private readonly MySqlClient _wagerDbClient;
 
-        public WagerV8Service(IConfiguration configuration)
+        public WagerV8Service(IServiceProvider provider)
         {
-            this.configuration = configuration;
+            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
         }
 
         public int InsertWager(BetV8 bet)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpWagerPK_V8_Ins", bet, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.Execute("Service_TpWagerPK_V8_Ins", bet);
+        }
+
+        public int InsertWager_V2(BetV8 bet)
+        {
+            return _wagerDbClient.Execute("Service_TpWagerPK_V8_Ins_V2", bet);
         }
 
         public WagerV8Total GetWagerTotal(long beginTime, long endTime)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.QueryFirstOrDefault<WagerV8Total>("Service_TpWagerPK_V8_Total_Get", new { BeginTime = beginTime, EndTime = endTime}, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.QueryFirst<WagerV8Total>("Service_TpWagerPK_V8_Total_Get", new { BeginTime = beginTime, EndTime = endTime });
+        }
+        public WagerV8Total GetWagerTotalV2(long beginTime, long endTime, int agent)
+        {
+            return _wagerDbClient.QueryFirst<WagerV8Total>("Service_TpWagerPK_V8_Total_Get_V2", new { BeginTime = beginTime, EndTime = endTime, ChannelID = agent });
         }
     }
 }

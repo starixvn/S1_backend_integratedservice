@@ -1,10 +1,4 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace ThirdPartyService.Service.Library
+﻿namespace ThirdPartyService.Service.Library
 {
     public class Common
     {

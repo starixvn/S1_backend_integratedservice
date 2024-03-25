@@ -1,14 +1,9 @@
-﻿using System;
-using System.Dynamic;
-using System.Globalization;
-using System.Linq;
+﻿using System.Dynamic;
 using System.Text;
-using System.Threading.Tasks;
 using System.Web;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using MySql.Data.MySqlClient;
+
 using Newtonsoft.Json;
+
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -124,7 +119,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     _logger.LogError($"tpCheck:{JsonConvert.SerializeObject(authToken)}, wrong tpUser");
                     return false;
                 }
-                else if(tpCheck.Token != authToken.longTimeToken)
+                else if (tpCheck.Token != authToken.longTimeToken)
                 {
                     _logger.LogError($"tpCheck:{JsonConvert.SerializeObject(tpCheck)}, player session is expired");
                     return false;
@@ -145,10 +140,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return false;
             }
         }
-        
+
         public async Task<dynamic> FundTransfer(dynamic request)
         {
-            var tpUserName = (string) request.accountid;
+            var tpUserName = (string)request.accountid;
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.HB, tpUserName);
             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp.HB, tpCustInfo.CurrencyId);
 
@@ -163,16 +158,53 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        public async Task<dynamic> DebitAndCredit(dynamic request, TpCustInfo tpCustInfo, TpCurrency tpCurrency)
+        private async Task<dynamic> DebitAndCredit(dynamic request, TpCustInfo tpCustInfo, TpCurrency tpCurrency)
         {
             var transactionResult = 0;
             dynamic response = new ExpandoObject();
             var bonusId = 0;
             var afterAmount = 0m;
             var transId = "";
-            
+
+            // 檢查同時存在 bet & payout的下注額度是否足夠
+            if (request.funds.debitandcredit == true)
+            {
+                var custBalance = _tpCustInfoBLL.GetBalance((int)Tp.HB, (string)request.accountid, (int)GameType);
+                var tid = request.friendlygameinstanceid.ToString();
+                // 加總下注金額
+                Funds funds = JsonConvert.DeserializeObject<Funds>(JsonConvert.SerializeObject(request.funds));
+                var stake = funds.fundinfo.Where(x => x.amount < 0).Sum(x => x.amount);
+                if (tpCurrency.ExchangeRate != 0)
+                {
+                    stake *= tpCurrency.ExchangeRate;
+                    custBalance.Balance *= tpCurrency.ExchangeRate;
+                }
+
+                if (custBalance.Balance < 0)
+                {
+                    response.status = new ExpandoObject();
+                    response.status.success = false;
+                    response.status.nofunds = true;
+                    afterAmount = custBalance.Balance / tpCurrency.ExchangeRate;
+                    var TpCheckRecordParam = GetTpBetFailureParam_HB(tpCustInfo, custBalance, tpCurrency, funds, TpCheckRecordCode.InsufficientBalance, afterAmount, tid);
+                    _thirdPartyBLL.AddTpBetFailureRecord(TpCheckRecordParam);
+                    return response;
+                }
+                var checkBalance = custBalance.Balance - Math.Abs(stake);
+                if (checkBalance < 0)
+                {
+                    response.status = new ExpandoObject();
+                    response.status.success = false;
+                    response.status.nofunds = true;
+                    afterAmount = checkBalance / tpCurrency.ExchangeRate;
+                    var TpCheckRecordParam = GetTpBetFailureParam_HB(tpCustInfo, custBalance, tpCurrency, funds, TpCheckRecordCode.InsufficientBalance, afterAmount, tid);
+                    _thirdPartyBLL.AddTpBetFailureRecord(TpCheckRecordParam);
+                    return response;
+                }
+            }
+
             await using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
+            await conn.OpenAsync();
             await using var trans = await conn.BeginTransactionAsync();
             foreach (var fundInfo in request.funds.fundinfo)
             {
@@ -220,15 +252,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         gameinstanceid = request.gameinstanceid,
                         friendlygameinstanceid = request.friendlygameinstanceid,
                         gamestatemode = fundInfo.gamestatemode,
-                        transferid = (bool) request.isrecredit ? fundInfo.originaltransferid : fundInfo.transferid,
+                        transferid = (bool)request.isrecredit ? fundInfo.originaltransferid : fundInfo.transferid,
                         currencycode = fundInfo.currencycode,
                         amount = fundInfo.amount,
                         bonusamount = fundInfo.bonusamount,
                         jpwin = fundInfo.jpwin,
                         jpcont = fundInfo.jpcont,
                         isbonus = fundInfo.isbonus,
-                        dtevent = DateTimeOffset.Parse((string) fundInfo.dtevent).DateTime,
-                        initialdebittransferid = (bool) fundInfo.isbonus ? request.bonusdetails.bonusbalanceid : fundInfo.initialdebittransferid,
+                        dtevent = DateTimeOffset.Parse((string)fundInfo.dtevent).DateTime,
+                        initialdebittransferid = (bool)fundInfo.isbonus ? request.bonusdetails.bonusbalanceid : fundInfo.initialdebittransferid,
                         accounttransactiontype = fundInfo.accounttransactiontype,
                         gameinfeature = fundInfo.gameinfeature,
                         gamename = request.gamedetails.name,
@@ -246,7 +278,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     break;
                 }
             }
-            
+
             if (transactionResult > 0)
             {
                 if (afterAmount == 0)
@@ -255,15 +287,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 }
                 else
                 {
-                    if (tpCurrency.ExchangeRate > 0) 
+                    if (tpCurrency.ExchangeRate > 0)
                         afterAmount /= tpCurrency.ExchangeRate;
                 }
-                
-                trans.Commit();
+
+                await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 if (bonusId > 0)
                 {
                     _logger.LogInformation($"user {tpCustInfo.TpUserName} has bonus wallet bonusId:{bonusId} transId:{transId}");
-                    _settledService.UpdateTpBonusFlag_HB((int) Tp.HB, transId, (int) GameType.HB_RNG, TpCategory.Slots, out int CustId, out bonusId);
+                    _settledService.UpdateTpBonusFlag_HB((int)Tp.HB, transId, (int)GameType.HB_RNG, TpCategory.Slots, out int CustId, out bonusId);
                 }
                 response.status = new ExpandoObject();
                 response.status.success = true;
@@ -283,11 +315,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return response;
         }
 
-        public async Task<dynamic> Refund(dynamic request, TpCustInfo tpCustInfo, TpCurrency tpCurrency)
+        private async Task<dynamic> Refund(dynamic request, TpCustInfo tpCustInfo, TpCurrency tpCurrency)
         {
             dynamic response = new ExpandoObject();
             await using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
+            await conn.OpenAsync();
             await using var trans = await conn.BeginTransactionAsync();
             var cancelBet = new CancelBetRngDto_HB()
             {
@@ -301,10 +333,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (transactionResult.result > 0)
             {
-                trans.Commit();
+                await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
                 response.status = new ExpandoObject();
                 response.status.success = true;
                 response.status.refundstatus = 1;
+            }
+            else
+            {
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
             }
 
             if (transactionResult.result == -2)
@@ -347,6 +383,32 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 _logger.LogError($"invalid token:{token}");
                 return null;
             }
+        }
+
+        private TpBetFailureRecord GetTpBetFailureParam_HB(TpCustInfo tpCustInfo, TpCustBalance custBalance, TpCurrency tpCurrency, Funds funds, TpCheckRecordCode Code, decimal AfterAmount, string tid)
+        {
+            // BLL會經過匯率換算 下列還原為原始資料
+            TpBetFailureRecordInfo_HB InfoData = new TpBetFailureRecordInfo_HB
+            {
+                CurrentBalance = custBalance.Balance / tpCurrency.ExchangeRate,
+                BetAmount = funds.fundinfo.Where(x => x.amount < 0).Sum(x => x.amount) / tpCurrency.ExchangeRate,
+                WinAmount = funds.fundinfo.Where(x => x.amount > 0).Sum(x => x.amount) / tpCurrency.ExchangeRate,
+                InsufficientBalance = AfterAmount,
+                ExchangeRate = tpCurrency.ExchangeRate,
+            };
+
+            return new TpBetFailureRecord
+            {
+                TransId = tid,
+                TpId = (int)Tp.HB,
+                TpGameType = (int)GameType.HB_RNG,
+                SiteId = tpCustInfo.SiteId,
+                CustId = tpCustInfo.CustId,
+                UserName = tpCustInfo.UserName,
+                Code = (int)Code,
+                TransTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                Info = JsonConvert.SerializeObject(InfoData),
+            };
         }
     }
 }

@@ -1,12 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Serilog.Context;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -16,6 +13,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiAGBLL _apiAGBLL;
         private readonly WagerAGService _wagerAGService;
         private readonly ILogger<TicketAGBLL> _logger;
+        private readonly AGConfig _siteAgConfig;
 
         public TicketAGBLL(IServiceProvider provider)
         {
@@ -23,6 +21,7 @@ namespace ThirdPartyWager.Service.BLL
             _apiAGBLL = provider.GetRequiredService<ApiAGBLL>();
             _wagerAGService = provider.GetRequiredService<WagerAGService>();
             _logger = provider.GetRequiredService<ILogger<TicketAGBLL>>();
+            _siteAgConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AGConfig>(Tp.AG.ToString());
         }
 
         // TpRefundWorker
@@ -32,15 +31,15 @@ namespace ThirdPartyWager.Service.BLL
         }
 
         // TpRefundWorker
-        public async Task<bool> CheckTicketStatusAsync(dynamic setting, dynamic pending)
+        public async Task<bool> CheckTicketStatusAsync(dynamic pending, int gameType)
         {
             LogContext.PushProperty("SystemJob", $"Auto-Dispatch");
             var func = "CheckTicketStatusAsync";
-            var msg = "";
             var task = true;
 
-            var data = await _apiAGBLL.CheckTicketStatus(setting["CommonUrl"], pending.transactionID);
+            var data = await _apiAGBLL.CheckTicketStatus(_siteAgConfig.CommonUrl, pending.transactionID);
 
+            string msg;
             if (data == null)
             {
                 msg = $"{func} NO_DATA";

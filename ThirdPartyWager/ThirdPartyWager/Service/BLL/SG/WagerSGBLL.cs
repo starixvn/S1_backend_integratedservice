@@ -1,28 +1,25 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json;
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class WagerSGBLL
     {
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ApiSGBLL _apiSGBLL;
         private readonly WagerSGService _wagerSGService;
         private readonly ILogger<WagerSGBLL> _logger;
         private readonly TpUnsettleService _tpUnsettleService;
+        private readonly SGConfig _siteConfig;
 
         public WagerSGBLL(IServiceProvider provider)
         {
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _apiSGBLL = provider.GetRequiredService<ApiSGBLL>();
             _wagerSGService = provider.GetRequiredService<WagerSGService>();
             _logger = provider.GetRequiredService<ILogger<WagerSGBLL>>();
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SGConfig>(Tp.SG.ToString());
         }
 
         public async Task<bool> GetWagersAsync(int tpId, string startTime, string endTime)
@@ -32,7 +29,7 @@ namespace ThirdPartyWager.Service.BLL
             try
             {
                 // get api info
-                var setting = _thirdPartyBLL.GetThirdPartySetting(tpId);
+                var setting = _siteConfig;
 
                 // pagination
                 var page = 1;
@@ -40,7 +37,7 @@ namespace ThirdPartyWager.Service.BLL
                 while (page <= totalPage)
                 {
                     // get wager
-                    var dataWager = await _apiSGBLL.GetBetListByTime(setting["ApiUrl"], setting["merchantCode"], startTime, endTime, page, guid);
+                    var dataWager = await _apiSGBLL.GetBetListByTime(_siteConfig, startTime, endTime, page, guid);
 
                     // error condition
                     var errorCode = dataWager.code;
@@ -67,19 +64,14 @@ namespace ThirdPartyWager.Service.BLL
                         try
                         {
                             var result = 0;
-                            var gameType = GameType.SG_Fish;
-                            if (!bet.gameCode.StartsWith("F-", StringComparison.OrdinalIgnoreCase))
+                            if (!string.IsNullOrEmpty(bet.categoryId) && bet.categoryId.Equals("BN", StringComparison.OrdinalIgnoreCase))
                             {
-                                // slot
-                                result = _wagerSGService.InsertWagerRng(bet);
-                                gameType = GameType.SG_RNG;
-                            }
-                            else
-                            {
-                                // fish
-                                result = _wagerSGService.InsertWager(bet);
+                                continue;
                             }
 
+                            var gameType = GetGameType(bet.gameCode);
+                            result = gameType is GameType.SG_RNG or GameType.SG_Table ? _wagerSGService.InsertWagerRng(bet) : _wagerSGService.InsertWager(bet);
+                            
                             if (result > 0)
                             {
                                 _tpUnsettleService.InsertTpUnsettle(Tp.SG, gameType, bet.referenceId);
@@ -105,6 +97,22 @@ namespace ThirdPartyWager.Service.BLL
                 _logger.LogError(ex, $"GetWagersAsync {msg}\r\n{ex.Message}");
                 return false;
             }
+
+        }
+
+        private GameType GetGameType(string gameCode)
+        {
+            if (gameCode.StartsWith("F-", StringComparison.OrdinalIgnoreCase))
+            {
+                return GameType.SG_Fish;
+            }
+
+            if (gameCode.StartsWith("C-", StringComparison.OrdinalIgnoreCase))
+            {
+                return GameType.SG_Table;
+            }
+
+            return GameType.SG_RNG;
         }
     }
 }

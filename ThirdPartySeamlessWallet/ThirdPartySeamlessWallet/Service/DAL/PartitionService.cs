@@ -1,11 +1,7 @@
-﻿using Dapper;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Data;
+
+using Dapper;
+
 using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -46,7 +42,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             var p = new DynamicParameters(parameters);
             p.Add("YYYYMM", partitionTime.GetPartitionKey());
-            return _mainDbClient.QueryFirstAsync<int>(spName, transaction, p).Result;
+            return _mainDbClient.QueryFirst<int>(spName, transaction, p);
         }
 
         public IEnumerable<T> GetUnsettleDataList<T>(string spName, TpUnsettle tpUnsettle, int partitionCheckDay = 3)
@@ -63,6 +59,27 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             foreach (var item in tasks)
             {
                 result.AddRange(item.Result);
+            }
+            return result;
+        }
+
+        public IEnumerable<TResult> MonthlyQuery<TResult>(DateTime StartDate, DateTime endDate, string spName, object parameters)
+        {
+            var tasks = new List<Task<IEnumerable<TResult>>>();
+            foreach (var partitionKey in StartDate.GetMonthlyPartitionRange(endDate))
+            {
+                var p = new DynamicParameters(parameters);
+                p.Add("YYYYMM", partitionKey);
+                var task = _mainDbClient.QueryAsync<TResult>(spName, parameters: p);
+                tasks.Add(task);
+            }
+
+            Task.WhenAll(tasks);
+
+            var result = Enumerable.Empty<TResult>();
+            foreach (var item in tasks)
+            {
+                result = result.Concat(item.Result);
             }
             return result;
         }

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace ThirdPartyWager.Service.Model
+﻿namespace ThirdPartyWager.Service.Model
 {
     public class WagerV8Model
     {
@@ -26,7 +23,7 @@ namespace ThirdPartyWager.Service.Model
         public IList<int> ServerID { get; set; }
         public IList<int> KindID { get; set; }
         public IList<long> TableID { get; set; }
-        public IList<int> ChairID { get; set; }
+        public IList<int?> ChairID { get; set; }
         public IList<int> UserCount { get; set; }
         public IList<string> CardValue { get; set; }
         public IList<decimal> CellScore { get; set; }
@@ -37,7 +34,6 @@ namespace ThirdPartyWager.Service.Model
         public IList<string> GameEndTime { get; set; }
         public IList<int> ChannelID { get; set; }
         public IList<string> LineCode { get; set; }
-        // public IList<string> CreateTime { get; set; }
     }
 
     public class BetV8
@@ -72,10 +68,28 @@ namespace ThirdPartyWager.Service.Model
                 return new DateTimeOffset(GameEndTime, new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
             }
         }
+        public int TpId { get; set; }
+        public int TpGameType { get; set; }
     }
 
     public class WagerV8Total
     {
         public int wagerCount { get; set; }
+    }
+    //public class V8Config
+    //{
+    //    public string WagerUrl { get; set; }
+    //}
+    public class CurrencyData
+    {
+        public string Deskey { get; set; }
+        public string Agent { get; set; }
+        public string Md5key { get; set; }
+    }
+    public class V8Config
+    {
+        public string WagerUrl { get; set; }
+        public string ApiUrl { get; set; }
+        public Dictionary<string, CurrencyData> CurrencyData { get; set; }
     }
 }

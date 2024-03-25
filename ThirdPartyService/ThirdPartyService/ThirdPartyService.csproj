@@ -1,112 +1,81 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
 	<TargetFramework>net6.0</TargetFramework>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.0.0.0</FileVersion>
-    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 	<Nullable>disable</Nullable>
 	<ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Remove="Logs\**" />
-    <Content Remove="Logs\**" />
-    <EmbeddedResource Remove="Logs\**" />
-    <None Remove="Logs\**" />
-  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.0.123" />
+    <PackageReference Include="Elastic.Apm.NetCoreAll" Version="1.22.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.1" />
     <PackageReference Include="MySql.Data" Version="8.0.27" />
     <PackageReference Include="Serilog.AspNetCore" Version="6.0.1" />
     <PackageReference Include="Serilog.Exceptions" Version="8.3.0" />
   </ItemGroup>
+	
   <ItemGroup>
     <ProjectReference Include="..\ThirdParty.9W\ThirdParty.NineW.csproj" />
     <ProjectReference Include="..\ThirdParty.AG\ThirdParty.AG.csproj" />
     <ProjectReference Include="..\ThirdParty.Allbet\ThirdParty.Allbet.csproj" />
     <ProjectReference Include="..\ThirdParty.AMB\ThirdParty.AMB.csproj" />
+    <ProjectReference Include="..\ThirdParty.Amigo\ThirdParty.Amigo.csproj" />
     <ProjectReference Include="..\ThirdParty.AP\ThirdParty.AP.csproj" />
     <ProjectReference Include="..\ThirdParty.AWC\ThirdParty.AWC.csproj" />
+    <ProjectReference Include="..\ThirdParty.BNG\ThirdParty.BNG.csproj" />
     <ProjectReference Include="..\ThirdParty.BTI\ThirdParty.BTI.csproj" />
     <ProjectReference Include="..\ThirdParty.CF\ThirdParty.CF.csproj" />
     <ProjectReference Include="..\ThirdParty.CQ9\ThirdParty.CQ9.csproj" />
+    <ProjectReference Include="..\ThirdParty.CryptoSports\ThirdParty.CryptoSports.csproj" />
     <ProjectReference Include="..\ThirdParty.DG\ThirdParty.DG.csproj" />
     <ProjectReference Include="..\ThirdParty.EBet\ThirdParty.EBet.csproj" />
+    <ProjectReference Include="..\ThirdParty.END\ThirdParty.END.csproj" />
     <ProjectReference Include="..\ThirdParty.EVO\ThirdParty.EVO.csproj" />
+    <ProjectReference Include="..\ThirdParty.FaChai\ThirdParty.FaChai.csproj" />
+    <ProjectReference Include="..\ThirdParty.GA\ThirdParty.GA.csproj" />
     <ProjectReference Include="..\ThirdParty.GPI\ThirdParty.GPI.csproj" />
     <ProjectReference Include="..\ThirdParty.HB\ThirdParty.HB.csproj" />
+    <ProjectReference Include="..\ThirdParty.HL\ThirdParty.HL.csproj" />
     <ProjectReference Include="..\ThirdParty.Iconic\ThirdParty.Iconic.csproj" />
+    <ProjectReference Include="..\ThirdParty.IM\ThirdParty.IM.csproj" />
     <ProjectReference Include="..\ThirdParty.JILI\ThirdParty.JILI.csproj" />
     <ProjectReference Include="..\ThirdParty.Joker\ThirdParty.Joker.csproj" />
     <ProjectReference Include="..\ThirdParty.Kiss918\ThirdParty.Kiss918.csproj" />
     <ProjectReference Include="..\ThirdParty.KM\ThirdParty.KM.csproj" />
+    <ProjectReference Include="..\ThirdParty.MaxGame\ThirdParty.MaxGame.csproj" />
     <ProjectReference Include="..\ThirdParty.MP\ThirdParty.MP.csproj" />
     <ProjectReference Include="..\ThirdParty.N2Live\ThirdParty.N2Live.csproj" />
     <ProjectReference Include="..\ThirdParty.Netent\ThirdParty.Netent.csproj" />
+    <ProjectReference Include="..\ThirdParty.Nextspin\ThirdParty.Nextspin.csproj" />
+    <ProjectReference Include="..\ThirdParty.NLC\ThirdParty.NLC.csproj" />
     <ProjectReference Include="..\ThirdParty.One789\ThirdParty.One789.csproj" />
     <ProjectReference Include="..\ThirdParty.Mega\ThirdParty.Mega.csproj" />
     <ProjectReference Include="..\ThirdParty.MG\ThirdParty.MG.csproj" />
     <ProjectReference Include="..\ThirdParty.OneGaming\ThirdParty.OneGaming.csproj" />
+    <ProjectReference Include="..\ThirdParty.Pegasus\ThirdParty.Pegasus.csproj" />
     <ProjectReference Include="..\ThirdParty.PG\ThirdParty.PG.csproj" />
+    <ProjectReference Include="..\ThirdParty.PlayTech\ThirdParty.PlayTech.csproj" />
+    <ProjectReference Include="..\ThirdParty.PNG\ThirdParty.PNG.csproj" />
     <ProjectReference Include="..\ThirdParty.PP\ThirdParty.PP.csproj" />
-    <ProjectReference Include="..\ThirdParty.PT\ThirdParty.PT.csproj" />
     <ProjectReference Include="..\ThirdParty.RedTiger\ThirdParty.RedTiger.csproj" />
-    <ProjectReference Include="..\ThirdParty.Saba\ThirdParty.Saba.csproj" />
     <ProjectReference Include="..\ThirdParty.SA\ThirdParty.SA.csproj" />
     <ProjectReference Include="..\ThirdParty.SBO\ThirdParty.SBO.csproj" />
     <ProjectReference Include="..\ThirdParty.SBSW\ThirdParty.SBSW.csproj" />
     <ProjectReference Include="..\ThirdParty.Sexy\ThirdParty.Sexy.csproj" />
     <ProjectReference Include="..\ThirdParty.SG\ThirdParty.SG.csproj" />
     <ProjectReference Include="..\ThirdParty.SimplePlay\ThirdParty.SimplePlay.csproj" />
+    <ProjectReference Include="..\ThirdParty.SPRIBE\ThirdParty.SPRIBE.csproj" />
     <ProjectReference Include="..\ThirdParty.TCG\ThirdParty.TCG.csproj" />
+    <ProjectReference Include="..\ThirdParty.TF\ThirdParty.TFG.csproj" />
     <ProjectReference Include="..\ThirdParty.V8\ThirdParty.V8.csproj" />
     <ProjectReference Include="..\ThirdParty.WM\ThirdParty.WM.csproj" />
+    <ProjectReference Include="..\ThirdParty.Yeebet\ThirdParty.Yeebet.csproj" />
     <ProjectReference Include="..\ThirdParty.YGG\ThirdParty.YGG.csproj" />
     <ProjectReference Include="..\ThirdParty.YL\ThirdParty.YL.csproj" />
     <ProjectReference Include="..\ThirdParty.Skywind\ThirdParty.Skywind.csproj" />
+    <ProjectReference Include="..\ThiryParty.BG\ThirdParty.BG.csproj" />
+    <ProjectReference Include="..\ThirdParty.NTConnect\ThirdParty.NTConnect.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <None Update="Storage\PT\CNY.p12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\IDR.p12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\INR.p12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\MYR.p12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\THB.p12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\USD.p12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Storage\PT\VND.p12">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <TypeScriptTarget>ES5</TypeScriptTarget>
-    <TypeScriptJSXEmit>React</TypeScriptJSXEmit>
-    <TypeScriptModuleKind>ES6</TypeScriptModuleKind>
-    <TypeScriptCompileOnSaveEnabled>True</TypeScriptCompileOnSaveEnabled>
-    <TypeScriptNoImplicitAny>False</TypeScriptNoImplicitAny>
-    <TypeScriptRemoveComments>False</TypeScriptRemoveComments>
-    <TypeScriptOutFile />
-    <TypeScriptOutDir />
-    <TypeScriptGeneratesDeclarations>False</TypeScriptGeneratesDeclarations>
-    <TypeScriptNoEmitOnError>True</TypeScriptNoEmitOnError>
-    <TypeScriptSourceMap>True</TypeScriptSourceMap>
-    <TypeScriptMapRoot />
-    <TypeScriptSourceRoot />
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DebugSymbols>false</DebugSymbols>
-    <DebugType>none</DebugType>
-  </PropertyGroup>
+
 </Project>

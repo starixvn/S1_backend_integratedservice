@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using static System.Net.Mime.MediaTypeNames;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
-using Microsoft.Extensions.Logging;
+﻿using System.Text;
+
 using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Service.BLL.SBO
+using static System.Net.Mime.MediaTypeNames;
+
+namespace ThirdPartyWager.Service.BLL
 {
     public interface IApiSBOBLL
     {
@@ -42,15 +39,14 @@ namespace ThirdPartyWager.Service.BLL.SBO
             };
             try
             {
-
                 var stringContent = new StringContent(
-                    JsonConvert.SerializeObject(param), 
-                    Encoding.UTF8, 
+                    JsonConvert.SerializeObject(param),
+                    Encoding.UTF8,
                     Application.Json);
-                
+
                 var client = _httpHelper.GetClient();
                 var httpResponseMessage = await client.PostAsync(betListApi, stringContent);
-                
+
                 var content = await httpResponseMessage.Content.ReadAsStringAsync();
                 if (!httpResponseMessage.IsSuccessStatusCode)
                 {
@@ -62,7 +58,7 @@ namespace ThirdPartyWager.Service.BLL.SBO
             }
             catch (Exception e)
             {
-                _logger.LogError(e ,$"{betListApi} get bet list failed, request:{JsonConvert.SerializeObject(param)} exception:{e.Message}");
+                _logger.LogError(e, $"{betListApi} get bet list failed, request:{JsonConvert.SerializeObject(param)} exception:{e.Message}");
                 return null;
             }
         }

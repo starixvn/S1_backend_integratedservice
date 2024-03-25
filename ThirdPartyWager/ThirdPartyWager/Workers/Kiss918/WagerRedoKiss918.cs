@@ -1,236 +1,115 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Serilog.Context;
+﻿using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
-namespace ThirdPartyWager.Workers
+namespace ThirdPartyWager.Workers;
+
+public class WagerRedoKiss918 : BackgroundService
 {
-    public class WagerRedoKiss918 : BackgroundService
+    private readonly ILogger<WagerRedoKiss918> _logger;
+    private readonly ThirdPartyBLL _thirdPartyBLL;
+    private readonly DateTimeHelper _dateTimeHelper;
+    private readonly WagerKiss918BLL _wagerKiss918BLL;
+    private readonly CommonBLL _commonBLL;
+
+    private readonly int tpId = (int)Tp.Kiss918;
+    private readonly int tpType = (int)WagerTimerType.RedoWager;
+    private readonly int intervalMins = 30;
+    private readonly int intervalFasterMins = 15;
+    private readonly int iRangMins = 180;
+
+    private const int TimeZone = 0;
+    private Timer _timer;
+    private bool isFaster = false;
+
+
+    public WagerRedoKiss918(WagerKiss918BLL wagerKiss918Bll,
+                            ThirdPartyBLL thirdPartyBll,
+                            ILogger<WagerRedoKiss918> logger,
+                            DateTimeHelper dateTimeHelper,
+                            CommonBLL commonBll)
     {
-        private readonly ILogger<WagerRedoKiss918> logger;
-        private readonly WagerRedoKiss918BLL wagerRedoKiss918BLL;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly DateTimeHelper dateTimeHelper;
-        private readonly IHostEnvironment environment;
-        private Timer timerTHB;
-        private Timer timerMYR;
-        private Timer timerIDR;
-        private readonly int intervalMins = 60;
-        private readonly int tpId = (int)Tp.Kiss918;
-        private readonly string _tpName = Tp.Kiss918.ToString();
-        private readonly int tpType = (int)WagerTimerType.RedoWager;
-        private int quickTHB = 0;
-        private int quickMYR = 0;
-        private int quickIDR = 0;
+        _wagerKiss918BLL = wagerKiss918Bll;
+        _thirdPartyBLL = thirdPartyBll;
+        _logger = logger;
+        _dateTimeHelper = dateTimeHelper;
+        _commonBLL = commonBll;
+    }
 
-        public WagerRedoKiss918(
-            ILogger<WagerRedoKiss918> logger,
-            WagerRedoKiss918BLL wagerRedoKiss918BLL,
-            ThirdPartyBLL thirdPartyBLL,
-            DateTimeHelper dateTimeHelper,
-            IHostEnvironment environment
-        )
-        {
-            this.logger = logger;
-            this.wagerRedoKiss918BLL = wagerRedoKiss918BLL;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.dateTimeHelper = dateTimeHelper;
-            this.environment = environment;
-        }
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            timerTHB = new Timer(DoTaskTHB, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerMYR = new Timer(DoTaskMYR, null, TimeSpan.Zero, TimeSpan.Zero);
-            timerIDR = new Timer(DoTaskIDR, null, TimeSpan.Zero, TimeSpan.Zero);
-            return Task.CompletedTask;
-        }
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        _timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
+        return Task.CompletedTask;
+    }
 
-        private async void DoTaskTHB(object state)
+    private async void DoTask(object state)
+    {
+        LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+        LogContext.PushProperty("Tp", Tp.Kiss918.ToString());
+        try
         {
-            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-            LogContext.PushProperty("Tp", _tpName);
-            try
+            var TpCurrencyList = _commonBLL.GetTpCurrencyList((int)Tp.Kiss918);
+            foreach (var item in TpCurrencyList)
             {
-                var currency = "THB";
-                quickTHB = 0;
-                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
+                var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, item.TpCurrencyId);
+
+                var ts = DateTime.Now - dataTpTimer.StartTime;
+                var diffMin = (int)ts.TotalMinutes;
+                if (diffMin < 120) continue;
+
                 DateTime timerTime;
                 int last;
                 if (dataTpTimer == null)
                 {
-                    timerTime = DateTime.Now.AddMinutes(-2 * intervalMins);
-                    last = intervalMins;
+                    last = iRangMins - 1;
+                    timerTime = DateTime.Now.AddMinutes(-1 * last);
                 }
                 else
                 {
-                    timerTime = dataTpTimer.StartTime.AddSeconds(1);
-                    last = intervalMins;
+                    timerTime = dataTpTimer.StartTime;
+                    last = iRangMins - 1;
                 }
 
                 if (timerTime < DateTime.Now)
                 {
-                    var time = dateTimeHelper.GetTimeByHour(last, 8, "yyyy-MM-dd HH:mm:ss", timerTime);
-                    var result = await wagerRedoKiss918BLL.RedoWagersAsync(tpId, time.startTime, time.endTime, time.startUnix, time.endUnix, currency);
-                    if (result == true)
+                    var time = _dateTimeHelper.GetTimeByMinute(last, TimeZone, "yyyy-MM-dd HH:mm:ss.fff", timerTime);
+                    var result = await _wagerKiss918BLL.GetWagersRedoAsync(tpId, time.startTime);
+
+                    if (result)
                     {
-                        thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
+
+                        // 取得下個結帳時間
+                        var nextCheckTime = new DateTimeOffset(Convert.ToDateTime(time.startTime).AddMinutes(30), TimeSpan.Zero).ToUnixTimeSeconds();
+                        _thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, nextCheckTime, item.TpCurrencyId);
                     }
                 }
-                var ts = DateTime.Now - timerTime;
-                var diffMin = (int)ts.TotalMinutes;
-                if (diffMin >= 120)
-                {
-                    quickTHB = 1;
-                }
 
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, ex.Message);
-            }
-            finally
-            {
-                if (quickTHB == 1)
-                {
-                    var dueTimeSpan = TimeSpan.FromSeconds(120);
-                    timerTHB.Change(dueTimeSpan, TimeSpan.Zero);
-                }
+                ts = DateTime.Now - timerTime;
+                diffMin = (int)ts.TotalMinutes;
+                if (diffMin > 120)
+                    isFaster = true;
                 else
-                {
-                    var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                    timerTHB.Change(dueTimeSpan, TimeSpan.Zero);
-                }
+                    isFaster = false;
             }
         }
-
-        private async void DoTaskMYR(object state)
+        catch (Exception ex)
         {
-            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-            LogContext.PushProperty("Tp", _tpName);
-            try
-            {
-                var currency = "MYR";
-                quickMYR = 0;
-                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
-                DateTime timerTime;
-                int last;
-                if (dataTpTimer == null)
-                {
-                    timerTime = DateTime.Now.AddMinutes(-2 * intervalMins);
-                    last = intervalMins;
-                }
-                else
-                {
-                    timerTime = dataTpTimer.StartTime.AddSeconds(1);
-                    last = intervalMins;
-                }
-
-                if (timerTime < DateTime.Now)
-                {
-                    var time = dateTimeHelper.GetTimeByHour(last, 8, "yyyy-MM-dd HH:mm:ss", timerTime);
-                    var result = await wagerRedoKiss918BLL.RedoWagersAsync(tpId, time.startTime, time.endTime, time.startUnix, time.endUnix, currency);
-                    if (result == true)
-                    {
-                        thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
-                    }
-                }
-                var ts = DateTime.Now - timerTime;
-                var diffMin = (int)ts.TotalMinutes;
-                if (diffMin >= 120)
-                {
-                    quickMYR = 1;
-                }
-
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, ex.Message);
-            }
-            finally
-            {
-                if (quickMYR == 1)
-                {
-                    var dueTimeSpan = TimeSpan.FromSeconds(120);
-                    timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
-                }
-                else
-                {
-                    var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                    timerMYR.Change(dueTimeSpan, TimeSpan.Zero);
-                }
-            }
+            _logger.LogError(ex, ex.Message);
         }
-
-        private async void DoTaskIDR(object state)
+        finally
         {
-            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-            LogContext.PushProperty("Tp", _tpName);
-            try
+            if (isFaster)
             {
-                var currency = "IDR";
-                quickIDR = 0;
-                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(tpId, tpType, currency);
-                DateTime timerTime;
-                int last;
-                if (dataTpTimer == null)
-                {
-                    timerTime = DateTime.Now.AddMinutes(-2 * intervalMins);
-                    last = intervalMins;
-                }
-                else
-                {
-                    timerTime = dataTpTimer.StartTime.AddSeconds(1);
-                    last = intervalMins;
-                }
-
-                if (timerTime < DateTime.Now)
-                {
-                    var time = dateTimeHelper.GetTimeByHour(last, 8, "yyyy-MM-dd HH:mm:ss", timerTime);
-                    var result = await wagerRedoKiss918BLL.RedoWagersAsync(tpId, time.startTime, time.endTime, time.startUnix, time.endUnix, currency);
-                    if (result == true)
-                    {
-                        thirdPartyBLL.SetThirdPartyTimerByCurrency(tpId, tpType, time.endUnix, currency);
-                    }
-                }
-                var ts = DateTime.Now - timerTime;
-                var diffMin = (int)ts.TotalMinutes;
-                if (diffMin >= 120)
-                {
-                    quickIDR = 1;
-                }
-
+                var dueTimeSpan = TimeSpan.FromSeconds(intervalFasterMins); //15 Sec
+                _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
-            catch (Exception ex)
+            else
             {
-                logger.LogError(ex, ex.Message);
+                var dueTimeSpan = TimeSpan.FromMinutes(intervalMins); // 30 Min
+                _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
-            finally
-            {
-                if (quickIDR == 1)
-                {
-                    var dueTimeSpan = TimeSpan.FromSeconds(120);
-                    timerIDR.Change(dueTimeSpan, TimeSpan.Zero);
-                }
-                else
-                {
-                    var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                    timerIDR.Change(dueTimeSpan, TimeSpan.Zero);
-                }
-            }
-        }
-
-        public override Task StopAsync(CancellationToken cancellationToken)
-        {
-            //WriteToFile("WriteToFileHostedService: Process Stopped");
-            timerTHB?.Change(Timeout.Infinite, 0);
-            timerMYR?.Change(Timeout.Infinite, 0);
-            timerIDR?.Change(Timeout.Infinite, 0);
-            return Task.CompletedTask;
         }
     }
 }

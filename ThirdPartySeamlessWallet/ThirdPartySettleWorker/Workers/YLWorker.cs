@@ -1,8 +1,11 @@
 ﻿using Newtonsoft.Json;
+
 using Serilog.Context;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Interfaces;
 
 namespace ThirdPartySettleWorker.Workers
@@ -70,7 +73,8 @@ namespace ThirdPartySettleWorker.Workers
                                 SettledTime = unsettled.SettleTime,
                                 TransTime = unsettled.TransTime,
                                 SettlementType = unsettled.TicketStatus == (int)TicketStatus.Refund ? SettlementType.SettledForInvalid : SettlementType.SettledForValid,
-                                TicketStatus = (TicketStatus)unsettled.TicketStatus
+                                TicketStatus = (TicketStatus)unsettled.TicketStatus,
+                                GameID = unsettled.GameId,
                             };
 
                             var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, category);

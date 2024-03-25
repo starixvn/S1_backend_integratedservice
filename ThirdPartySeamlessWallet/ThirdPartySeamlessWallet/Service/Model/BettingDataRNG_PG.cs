@@ -1,8 +1,5 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
@@ -166,10 +163,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         [JsonProperty("jackpot_rtp_contribution_amount")]
         public decimal JackpotRtpContributionAmount { get; set; }
-        
+
         [JsonProperty("is_end_round")]
         public bool IsEndRound { get; set; }
-        
+
         [JsonProperty("platform")]
         public string Platform { get; set; }
 
@@ -187,5 +184,15 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         [JsonProperty("bet_transaction_id")]
         public string BetTransactionId { get; set; }
+    }
+
+    public class TpBetFailureRecordInfo_PG
+    {
+        public decimal CurrentBalance { get; set; }
+        public decimal BetAmount { get; set; }
+        public decimal WinAmount { get; set; }
+        public decimal TransferAmount { get; set; }
+        public decimal ExchangeRate { get; set; }
+        public decimal InsufficientBalance { get; set; }
     }
 }

@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Text;
+﻿using System.ComponentModel;
+
 using ThirdPartyCore.Model.enums;
 
 namespace ThirdPartyCore.Model
@@ -19,6 +17,7 @@ namespace ThirdPartyCore.Model
     {
         public int TpId { set; get; }
         public int CustId { set; get; }
+        public string LangId { set; get; }
         public decimal Amount { set; get; }
         public Direction direction { set; get; }
         public Dictionary<string, string> inputs { set; get; }
@@ -30,6 +29,7 @@ namespace ThirdPartyCore.Model
         public string Remarks { set; get; }
         public int Category { set; get; }
         public int DepositId { set; get; }
+        public bool IsDepositId { set; get; }
     }
 
     public class TransferResult
@@ -42,9 +42,9 @@ namespace ThirdPartyCore.Model
         public string ThirdId { get; set; }
         public decimal Difference { get; set; }
     }
-    public class AdjustWalletResult: TransferResult
+    public class AdjustWalletResult : TransferResult
     {
-        public AdjustWalletResult(){}
+        public AdjustWalletResult() { }
         public AdjustWalletResult(TransferResult result, string transId)
         {
             base.Status = result.Status;
@@ -54,7 +54,7 @@ namespace ThirdPartyCore.Model
         }
         public string TransId { get; set; }
     }
-    
+
     public class AutoTransferResult
     {
         public string Guid { get; set; }
@@ -89,6 +89,9 @@ namespace ThirdPartyCore.Model
         public int Status { get; set; }
         public int CStatus { get; set; }
         public string IsoCode { get; set; }
+        public string TpCustId { get; set; } = ""; //Default 空字串
+        public CustomerMemberTypeEnum MemberType { get; set; }
+        public string GameId { get; set; }
     }
 
     public class TpMerchantInfo
@@ -127,13 +130,13 @@ namespace ThirdPartyCore.Model
         public DateTime CreateTime { set; get; }
         public string ExtensionInfo { set; get; }
     }
-    
+
     public class TpPendingBonusTransferModel
     {
         public int BonusId { get; set; }
         public int CustId { get; set; }
     }
-    
+
     public class TpRemainingTransferBonusModel
     {
         public int BonusId { get; set; }
@@ -189,10 +192,10 @@ namespace ThirdPartyCore.Model
         public int SiteId { set; get; }
         public int PromoCategoryId { set; get; }
         public int BonusId { set; get; }
-        
+
         [Description("剩餘紅利: BonusAmount + LockedAmount + WinLossAmount")]
         public decimal RemainingBonus { set; get; }
-        
+
         [Description("退還本金: RemainingBonus - BonusAmount")]
         public decimal RefundAmount { set; get; }
 
@@ -267,24 +270,12 @@ namespace ThirdPartyCore.Model
         public int CustId { set; get; }
         public string BetSetting { get; set; }
     }
-    public class GetBetLimit
+
+    public class AddFreeSpin
     {
         public int TpId { set; get; }
         public int CustId { set; get; }
-    }
-
-    public class BetSettingLimit
-    {
-        public int error_code { get; set; }
-        public string message { get; set; }
-        public List<BetSetting> Data { get; set; }
-    }
-
-    public class BetSetting
-    {
-        public string sport_type { get; set; }
-        public decimal min_bet { get; set; }
-        public decimal max_bet { get; set; }
-        public decimal max_bet_per_match { get; set; }
+        public int SiteId { set; get; }
+        public Dictionary<string, string> inputs { set; get; }
     }
 }

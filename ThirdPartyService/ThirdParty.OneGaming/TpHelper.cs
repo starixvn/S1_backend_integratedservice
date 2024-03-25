@@ -1,11 +1,7 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Web;
+﻿using System.Security.Cryptography;
+
+using Newtonsoft.Json;
+
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -111,75 +107,79 @@ namespace ThirdParty.OneGaming
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string currency = tpCustInfo.TpCurrencyId;
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string agentCode = inputs.ContainsKey($"agent_code_{currency}") && !string.IsNullOrEmpty(inputs[$"agent_code_{currency}"]) ? inputs[$"agent_code_{currency}"] : throw new Exception($"agent_code_{currency}");
-            string secret_key = inputs.ContainsKey($"secret_key_{currency}") && !string.IsNullOrEmpty(inputs[$"secret_key_{currency}"]) ? inputs[$"secret_key_{currency}"] : throw new Exception($"secret_key_{currency}");
             ApiResult oApiResult = new ApiResult();
-
-            if (appType == AppType.Native)
-            {
-                oApiResult.ErrorCode = ErrorCode.Success;
-                oApiResult.Message = JsonConvert.SerializeObject(new
-                {
-                    account = tpCustInfo.TpUserName,
-                    password = tpCustInfo.TpPwd
-                });
-                return oApiResult;
-            }
-            else if (appType == AppType.Desktop)
-            {
-                ApiUrl = $"{ApiUrl}/gameLobby_URL";
-            }
-            else
-            {
-                ApiUrl = $"{ApiUrl}/gameLobby_m_URL";
-            }
-
-            var key = ApplyToken(tpCustInfo);
-            inputs.TryGetValue("Token", out string token);
-            var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId };
-            byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
-            string sessionKey = Convert.ToBase64String(bytes);
-
-            var param = new
-            {
-                agent_code = agentCode,
-                player_id = tpCustInfo.TpUserName,
-                l_token = HttpUtility.UrlEncode(sessionKey),
-                bcode = HMACSHA256($"{agentCode}{tpCustInfo.TpUserName}{HttpUtility.UrlEncode(sessionKey)}", secret_key),
-                lang = TpLangId
-            };
-
-            var result = HttpPost(
-                ApiUrl,
-                JsonConvert.SerializeObject(param),
-                "application/json"
-            );
-
-            if (IsJSON(result))
-            {
-                var json = JsonConvert.DeserializeObject<LoginResponse>(result);
-                if (json.status_code == "0")
-                {
-                    oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Message = json.LobbyUrl;
-                }
-                else
-                {
-                    oApiResult.ErrorCode = ErrorCode.Fail;
-                    oApiResult.RawMessage = json.message;
-                    oApiResult.RawErrorCode = json.error_code ?? json.status_code;
-                }
-            }
-            else
-            {
-                oApiResult.RawMessage = "No Result";
-                oApiResult.RawErrorCode = "1";
-                oApiResult.ErrorCode = ErrorCode.Fail;
-            }
-
+            oApiResult.RawMessage = "No Result";
+            oApiResult.RawErrorCode = "1";
+            oApiResult.ErrorCode = ErrorCode.Fail;
             return oApiResult;
+            //string currency = tpCustInfo.TpCurrencyId;
+            //string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
+            //string agentCode = inputs.ContainsKey($"agent_code_{currency}") && !string.IsNullOrEmpty(inputs[$"agent_code_{currency}"]) ? inputs[$"agent_code_{currency}"] : throw new Exception($"agent_code_{currency}");
+            //string secret_key = inputs.ContainsKey($"secret_key_{currency}") && !string.IsNullOrEmpty(inputs[$"secret_key_{currency}"]) ? inputs[$"secret_key_{currency}"] : throw new Exception($"secret_key_{currency}");
+
+            //if (appType == AppType.Native)
+            //{
+            //    oApiResult.ErrorCode = ErrorCode.Success;
+            //    oApiResult.Message = JsonConvert.SerializeObject(new
+            //    {
+            //        account = tpCustInfo.TpUserName,
+            //        password = tpCustInfo.TpPwd
+            //    });
+            //    return oApiResult;
+            //}
+            //else if (appType == AppType.Desktop)
+            //{
+            //    ApiUrl = $"{ApiUrl}/gameLobby_URL";
+            //}
+            //else
+            //{
+            //    ApiUrl = $"{ApiUrl}/gameLobby_m_URL";
+            //}
+
+            //var key = ApplyToken(tpCustInfo);
+            //inputs.TryGetValue("Token", out string token);
+            //var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId };
+            //byte[] bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
+            //string sessionKey = Convert.ToBase64String(bytes);
+
+            //var param = new
+            //{
+            //    agent_code = agentCode,
+            //    player_id = tpCustInfo.TpUserName,
+            //    l_token = HttpUtility.UrlEncode(sessionKey),
+            //    bcode = HMACSHA256($"{agentCode}{tpCustInfo.TpUserName}{HttpUtility.UrlEncode(sessionKey)}", secret_key),
+            //    lang = TpLangId
+            //};
+
+            //var result = HttpPost(
+            //    ApiUrl,
+            //    JsonConvert.SerializeObject(param),
+            //    "application/json"
+            //);
+
+            //if (IsJSON(result))
+            //{
+            //    var json = JsonConvert.DeserializeObject<LoginResponse>(result);
+            //    if (json.status_code == "0")
+            //    {
+            //        oApiResult.ErrorCode = ErrorCode.Success;
+            //        oApiResult.Message = json.LobbyUrl;
+            //    }
+            //    else
+            //    {
+            //        oApiResult.ErrorCode = ErrorCode.Fail;
+            //        oApiResult.RawMessage = json.message;
+            //        oApiResult.RawErrorCode = json.error_code ?? json.status_code;
+            //    }
+            //}
+            //else
+            //{
+            //    oApiResult.RawMessage = "No Result";
+            //    oApiResult.RawErrorCode = "1";
+            //    oApiResult.ErrorCode = ErrorCode.Fail;
+            //}
+
+            //return oApiResult;
         }
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
@@ -238,7 +238,7 @@ namespace ThirdParty.OneGaming
                 GameID = game,
                 Game = game,
                 RefNo = detail.GetStringValue("ticket"),
-                Title = detail.GetStringValue("table"),            
+                Title = detail.GetStringValue("table"),
                 MatchID = detail.GetStringValue("period"),
                 BetType = string.Empty,
                 BetChoice = string.Empty,

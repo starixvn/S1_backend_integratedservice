@@ -1,9 +1,4 @@
-﻿using Dapper;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ThirdPartySeamlessWallet.Service.Model;
+﻿using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.BLL
@@ -299,6 +294,84 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public int SetSettleFlag_KM(string spName, string transId)
         {
             return settledService.SetSettleFlag_KM(spName, transId);
+        }
+
+        #endregion
+
+        #region GPI
+
+        public int PayoutLT_GPI(SettledDataRNG_GPI settledDataRNG_GPI, int gameType, out decimal afterAmount, out string TransId)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.GPI, settledDataRNG_GPI.cust_id);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.GPI, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                settledDataRNG_GPI.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.PayoutLT_GPI(tpCustInfo, settledDataRNG_GPI, gameType, out afterAmount, out TransId);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+                settledDataRNG_GPI.amount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public int VoidBetLT_GPI(BettingDataRNG_GPI bettingDataRNG_GPI, int gameType, out decimal afterAmount, out string TransId)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.GPI, bettingDataRNG_GPI.cust_id);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.GPI, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataRNG_GPI.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.VoidBetLT_GPI(tpCustInfo, bettingDataRNG_GPI, gameType, out afterAmount, out TransId);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+                bettingDataRNG_GPI.amount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public int EditBetLT_GPI(BettingDataRNG_GPI bettingDataRNG_GPI, int gameType, out decimal afterAmount, out string TransId)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.GPI, bettingDataRNG_GPI.cust_id);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.GPI, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                bettingDataRNG_GPI.amount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.EditBetLT_GPI(tpCustInfo, bettingDataRNG_GPI, gameType, out afterAmount, out TransId);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+                bettingDataRNG_GPI.amount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
+        public int CancelBetLT_GPI(CancelBet_GPI cancelBet_GPI, int gameType, out decimal afterAmount, out string TransId)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.GPI, cancelBet_GPI.cust_id);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.GPI, tpCustInfo.CurrencyId);
+
+            var result = settledService.CancelBetLT_GPI(tpCustInfo, cancelBet_GPI, gameType, out afterAmount, out TransId);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
         }
 
         #endregion

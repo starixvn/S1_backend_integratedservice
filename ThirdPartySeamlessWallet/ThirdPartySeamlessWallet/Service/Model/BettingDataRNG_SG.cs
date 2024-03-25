@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
+﻿using System.Net;
+
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
@@ -17,10 +14,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string ticketId { get; set; }
         public string channel { get; set; }
 
-        /*
-         
-
-         */
         private string _playerIp;
         public string playerIp
         {
@@ -50,6 +43,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public SpecialGame specialGame { get; set; }
         public IEnumerable<string> refTicketIds { get; set; }
         public int TicketStatus { get; set; }
+        public string roundId { get; set; }
     }
     public class SpecialGame
     {
@@ -58,10 +52,18 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public int sequence { get; set; }
     }
 
-    public class SettleData_SG : SettleData 
+
+    public class SettleData_SG : SettleData
     {
         public string transferIdList { get; set; }
         public string referenceId { get; set; }
         public string ticketId { get; set; }
+    }
+
+    internal class SGConfig : TpSiteConfig
+    {
+        public string FunGameUrl { get; set; }
+
+        public string merchantCode { get; set; }
     }
 }

@@ -1,9 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Serilog.Context;
+﻿using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -71,7 +67,7 @@ namespace ThirdPartyWager.Workers
                     //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
                     //if (time.endUnix < cvTime)
                     //{
-                    var result = await wagerAllBetBLL.GetWagersAsync(tpId, time.startTime, time.endTime);
+                    var result = await wagerAllBetBLL.GetWagersAsync(time.startTime, time.endTime);
                     if (result)
                     {
                         thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);

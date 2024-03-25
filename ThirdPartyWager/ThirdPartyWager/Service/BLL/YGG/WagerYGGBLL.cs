@@ -1,27 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using ThirdPartyWager.Service.Library;
+﻿using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class WagerYGGBLL
     {
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ILogger<WagerYGGBLL> _logger;
         private readonly HttpHelper _httpHelper;
         private readonly Common _common;
         private readonly MySqlClient _wagerDbClient;
-        private readonly YggConfig _config;
+        private readonly YGGConfig _siteConfig;
 
-        private const int TpId = (int)Tp.YGG;
         private const int SuccessCode = 0;
+
+        private int _jobRunCounter = 0; // Job計數器，每一分鐘執行一次，每1小時會累積到 60
+        private int _JobCounterLimit = 60;
+        private const string DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
+
 
         public WagerYGGBLL(IServiceProvider provider)
         {
@@ -29,9 +26,7 @@ namespace ThirdPartyWager.Service.BLL
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            var setting = _thirdPartyBLL.GetThirdPartySetting(TpId);
-            _config = new YggConfig(setting);
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<YGGConfig>(Tp.YGG.ToString());
         }
 
         /// <summary>
@@ -44,8 +39,29 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {
-                await QueryBetRecordAsync(_config, startTime, endTime);
+                await QueryBetRecordAsync(_siteConfig, startTime, endTime);
+                _jobRunCounter++;
+                if (_jobRunCounter != _JobCounterLimit) return true;
+
+                #region 補撈2天前的資料
+
+                var hours = -54; // Hans說做前54小時
+                const int addHours = 18;
+                while (hours < 0)
+                {
+                    var redoStartTime = DateTime.Parse(endTime).AddHours(hours);
+                    var redoEndTime = redoStartTime.AddHours(addHours);
+
+                    await QueryBetRecordAsync(_siteConfig, redoStartTime.ToString(DateTimeFormat), redoEndTime.ToString(DateTimeFormat));
+                    hours += addHours;
+                }
+
+                _jobRunCounter = 0; // 歸零
+
                 return true;
+
+                #endregion
+
             }
             catch (Exception ex)
             {
@@ -54,16 +70,16 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        private async Task QueryBetRecordAsync(YggConfig config, string startTime, string endTime)
+        private async Task QueryBetRecordAsync(YGGConfig config, string startTime, string endTime)
         {
             var httpContent = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                { "topOrg", config.TopOrg },
-                { "org", config.Org },
+                { "topOrg", config.topOrg },
+                { "org", config.org },
                 { "lastId", "0"},
                 { "startTime", startTime},
                 { "endTime",endTime },
-                { "sign", _common.ToMD5($"{config.TopOrg}{config.Org}{config.Key}") },
+                { "sign", _common.ToMD5($"{config.topOrg}{config.org}{config.key}") },
                 { "gametype", "yg" }
             });
 
@@ -72,20 +88,22 @@ namespace ThirdPartyWager.Service.BLL
             {
                 throw new Exception($"StatusCode:{response.StatusCode} | Reason:{response.ReasonPhrase}");
             }
-            var json = await response.Content.ReadAsStringAsync();
-            _logger.LogInformation($"WagerYGG：{json}");
 
-            var betRecordResponse = _common.FromJson<WagerYggResponse>(json);
+            var responseResult = await response.Content.ReadAsStringAsync();
+            var requestContent = await httpContent.ReadAsStringAsync();
+            _logger.LogInformation($"{config.WagerUrl} RequestParameter：{requestContent} WagerYGG：{responseResult}");
 
-            if (betRecordResponse.Code == SuccessCode && betRecordResponse.Data.Count > 0)
+            var betRecordResponse = _common.FromJson<WagerYggResponse>(responseResult);
+
+            if (betRecordResponse.Code == SuccessCode && (betRecordResponse.Data != null && betRecordResponse.Data.Count > 0))
             {
                 var insertData = betRecordResponse.Data.Where(r => r.Type == "wager").ToList(); // wager 投注
-                var updateWinLoseAmount = betRecordResponse.Data.Where(r => r.Type == "endwager").ToList(); // endwager 結算
-                var updateJackpotAmount = betRecordResponse.Data.Where(r => r.Type == "appendwager").ToList(); // 獎金池
+                var updateWinLoseAmount = betRecordResponse.Data.Where(r => r.Type == "endwager" || r.Type == "endWager").ToList(); // endwager 結算
+                var updateJackpotAmount = betRecordResponse.Data.Where(r => r.Type == "appendwager" || r.Type == "appendWager").ToList(); // 獎金池
 
                 var tasks = new List<Task<int>>();
                 if (insertData.Count > 0) tasks.AddRange(insertData.Select(item => Task.Run(() => InsertWager(item))).ToList());
-                if (tasks.Count > 0) 
+                if (tasks.Count > 0)
                     await Task.WhenAll(tasks); // 寫入Wager資料
 
                 tasks.Clear();

@@ -1,9 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Serilog.Context;
+﻿using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -12,10 +8,11 @@ namespace ThirdPartyWager.Workers
 {
     public class WagerN2Live : BackgroundService
     {
-        private readonly ILogger<WagerN2Live> logger;
-        private readonly WagerN2LiveBLL wagerN2LiveBLL;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly DateTimeHelper dateTimeHelper;
+        private readonly ILogger<WagerN2Live> _logger;
+        private readonly DateTimeHelper _dateTimeHelper;
+        private readonly WagerN2LiveBLL _wagerN2LiveBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly Dictionary<int, Dictionary<string, string>> _siteConfigDic;
         private Timer timer;
         private readonly int intervalMins = 2;
         private readonly int iRangMins = 20;
@@ -26,18 +23,15 @@ namespace ThirdPartyWager.Workers
         private readonly int beyond = 6;
         private readonly int timeZone = 0;
 
-        public WagerN2Live(
-            ILogger<WagerN2Live> logger,
-            WagerN2LiveBLL wagerN2LiveBLL,
-            ThirdPartyBLL thirdPartyBLL,
-            DateTimeHelper dateTimeHelper
-        )
+        public WagerN2Live(IServiceProvider provider)
         {
-            this.logger = logger;
-            this.wagerN2LiveBLL = wagerN2LiveBLL;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.dateTimeHelper = dateTimeHelper;
+            _logger = provider.GetRequiredService<ILogger<WagerN2Live>>();
+            _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _wagerN2LiveBLL = provider.GetRequiredService<WagerN2LiveBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(Tp.N2Live.ToString());
         }
+
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
@@ -51,12 +45,11 @@ namespace ThirdPartyWager.Workers
             try
             {
                 quick = 0;
-                var siteIds = "1,2,3";
-                var site = siteIds.Split(",");
-                foreach (var siteId in site)
+                var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+                foreach (var siteData in siteList)
                 {
-                    var setting = thirdPartyBLL.GetThirdPartyBySite(tpId, Convert.ToInt32(siteId));
-                    var dataTpTimer = thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, tpType, Convert.ToInt32(siteId));
+                    var setting = _siteConfigDic[siteData.SiteId];
+                    var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, tpType, siteData.SiteId);
                     DateTime timerTime;
                     int last;
                     if (dataTpTimer == null)
@@ -71,10 +64,8 @@ namespace ThirdPartyWager.Workers
                     }
                     if (timerTime < DateTime.Now)
                     {
-                        var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
-                        //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
-                        //if (time.endUnix < cvTime)
-                        //{
+                        var time = _dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
+
                         var timeLimit = DateTime.UtcNow - DateTime.Parse(time.endTime);
                         if (timeLimit.TotalMinutes < 5)
                         {
@@ -82,10 +73,10 @@ namespace ThirdPartyWager.Workers
                             time.endTime = DateTime.Parse(time.endTime).AddMinutes(-5).ToString("yyyy-MM-dd HH:mm:ss");
                             time.endUnix -= 300;
                         }
-                        var result = await wagerN2LiveBLL.GetWagersAsync(tpId, setting["ApiUrl"], setting["VendorId"], setting["MerchantPassCode"], time.startTime, time.endTime);
+                        var result = await _wagerN2LiveBLL.GetWagersAsync(tpId, setting["ApiUrl"], setting["VendorId"], setting["MerchantPassCode"], time.startTime, time.endTime);
                         if (result)
                         {
-                            thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, tpType, time.endUnix, Convert.ToInt32(siteId));
+                            _thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, tpType, time.endUnix, siteData.SiteId);
                         }
                     }
                     var ts = DateTime.Now - timerTime;
@@ -98,7 +89,7 @@ namespace ThirdPartyWager.Workers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
             }
             finally
             {

@@ -1,19 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Web;
-using Google.Protobuf.WellKnownTypes;
-using Microsoft.AspNetCore.Http;
+
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -34,28 +28,20 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Tp thisTp;
         private readonly int gameType = 0;
         private readonly IHostEnvironment environment;
+        private readonly EBetConfig _siteEBetConfig;
 
-        public EBetController(
-            IHostEnvironment environment,
-            ILogger<EBetController> logger,
-            AuthBLL authBLL,
-            ThirdPartyBLL thirdPartyBLL,
-            TpCustInfoBLL tpCustInfoBLL,
-            BettingBLL bettingBLL,
-            SettledBLL settledBLL,
-            Log2File log2File
-        )
+        public EBetController(IServiceProvider provider)
         {
-            this.authBLL = authBLL;
-            this.logger = logger;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.tpCustInfoBLL = tpCustInfoBLL;
-            this.bettingBLL = bettingBLL;
-            this.settledBLL = settledBLL;
-            this.log2File = log2File;
+            authBLL = provider.GetRequiredService<AuthBLL>();
+            logger = provider.GetRequiredService<ILogger<EBetController>>(); 
+            thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            bettingBLL = provider.GetRequiredService<BettingBLL>();
+            settledBLL = provider.GetRequiredService<SettledBLL>();
+            log2File = provider.GetRequiredService<Log2File>();
             this.thisTp = Tp.EBet;
             gameType = (int)GameType.EBet_LiveCasino;
-            this.environment = environment;
+            _siteEBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<EBetConfig>(Tp.EBet.ToString());
         }
 
         #region Response
@@ -151,6 +137,21 @@ namespace ThirdPartySeamlessWallet.Controllers
             public int status { get; set; }
             public string seqNo { get; set; }
         }
+        
+        public class EBetConfig
+        {
+            public string ApiUrl { get; set; }
+            public List<Currency> Currency { get; set; }
+        }
+        
+        public class Currency
+        {
+            public string CurrencyId { get; set; }
+            public string GameUrl { get; set; }
+            public int ChannelId { get; set; }
+            public string PublicKey { get; set; }
+            public string PrivateKey { get; set; }
+        }
 
         #endregion
 
@@ -168,10 +169,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 log2File.Error($"{JsonConvert.SerializeObject(registerLoginReq)}\r\n{JsonConvert.SerializeObject(getRegisterLoginResp)}", logName);
                 return getRegisterLoginResp;
             }
-
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
+            
             string sign = $"{registerLoginReq.seqNo}{registerLoginReq.Event}{registerLoginReq.channelId}{registerLoginReq.timestamp}{registerLoginReq.username}{registerLoginReq.accessToken}";
-            string privateKey = thirdPartySetting.TpSetting[$"PrivateKey_{registerLoginReq.currency}"];
+            string privateKey = _siteEBetConfig.Currency.FirstOrDefault(x => x.CurrencyId == registerLoginReq.currency).PrivateKey;
             var check = VerifySignature(sign, registerLoginReq.signature, privateKey);
             if (!check)
             {
@@ -277,9 +277,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             // verify signature
-            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
             string sign = $"{getBetReq.seqNo}{getBetReq.Event}{getBetReq.channelId}{getBetReq.timestamp}{getBetReq.username}{getBetReq.money}";
-            string privateKey = thirdPartySetting.TpSetting[$"PrivateKey_{getBetReq.currency}"];
+            string privateKey = _siteEBetConfig.Currency.FirstOrDefault(x => x.CurrencyId == getBetReq.currency).PrivateKey;
             var check = VerifySignature(sign, getBetReq.signature, privateKey);
             if (!check)
             {

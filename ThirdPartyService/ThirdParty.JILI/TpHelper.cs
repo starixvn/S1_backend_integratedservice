@@ -1,10 +1,8 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Web;
+﻿using System.Text;
+using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -16,10 +14,12 @@ namespace ThirdParty.JILI
     public class TpHelper : ThirdPartyHelperBase
     {
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
+        private readonly Dictionary<int, JILIConfig> _siteConfigDic;
 
-        public TpHelper()
+        public TpHelper(IServiceProvider provider)
         {
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList(32).ToDictionary(d => d.AppId, d => d.Name);
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.JILI).ToDictionary(d => d.AppId, d => d.Name);
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<JILIConfig>(TpEnum.JILI.ToString());
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -48,14 +48,19 @@ namespace ThirdParty.JILI
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string GameUrl = inputs.ContainsKey("GameUrl") && !String.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception($"GameUrl is empty");
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+            string GameUrl = config.GameUrl;
+            string FunGameUrl = config.FunGameUrl;
+            string AgentId = config.AgentId;
+            string AgentKey = config.AgentKey;
+
             string HomeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
-            string FunGameUrl = inputs.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(inputs["FunGameUrl"]) ? inputs["FunGameUrl"] : throw new Exception("FunGameUrl");
-            string AgentId = inputs.ContainsKey("AgentId") && !String.IsNullOrEmpty(inputs["AgentId"]) ? inputs["AgentId"] : throw new Exception($"AgentId is empty");
-            string AgentKey = inputs.ContainsKey("AgentKey") && !String.IsNullOrEmpty(inputs["AgentKey"]) ? inputs["AgentKey"] : throw new Exception($"AgentKey is empty");
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
             GameUrl = $"{GameUrl}/Login";
+
+            if (tpCustInfo.MemberType == CustomerMemberTypeEnum.LiveStreaming)
+                AgentId = config.AgentId_Stream;
 
             ApiResult oApiResult = new ApiResult();
 
@@ -77,7 +82,7 @@ namespace ThirdParty.JILI
             string g = ToMD5($"{current}{AgentId}{AgentKey}").ToLower();
             var param = new
             {
-                Token = sessionKey,//HttpUtility.UrlEncode(sessionKey)
+                Token = sessionKey,
                 GameId = gameId,
                 Lang = TpLangId,
                 AgentId = AgentId
@@ -89,7 +94,6 @@ namespace ThirdParty.JILI
             string k = $"{GetRandomString(6)}{md5Param}{GetRandomString(6)}";
 
             oApiResult.ErrorCode = ErrorCode.Success;
-            //oApiResult.Message = $"{GameUrl}?Token={HttpUtility.UrlEncode(sessionKey)}&GameId={gameId}&Lang={TpLangId}&AgentId={AgentId}&HomeUrl={HomeUrl}&Key={k}";
             oApiResult.Message = $"{GameUrl}?{sParam}&HomeUrl={HomeUrl}&Key={k}";
             return oApiResult;
         }
@@ -101,9 +105,10 @@ namespace ThirdParty.JILI
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var apiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception();
-            var agentId = inputs.GetValueOrDefault("AgentId") ?? throw new Exception();
-            var agentKey = inputs.GetValueOrDefault("AgentKey") ?? throw new Exception();
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+            var apiUrl = config.ApiUrl;
+            var agentId = config.AgentId;
+            var agentKey = config.AgentKey;
 
             var url = $"{apiUrl}/GetGameDetailUrl";
             var current = new DateTimeOffset(DateTime.UtcNow).ToOffset(new TimeSpan(-4, 0, 0)).ToString("yyMMd");
@@ -206,7 +211,7 @@ namespace ThirdParty.JILI
             return dic.TryGetValue("en", out var result) ? result : string.Empty;
         }
 
-        private string GetFishGameName(string gameCode)
+        private static string GetFishGameName(string gameCode)
         {
             return gameCode switch
             {

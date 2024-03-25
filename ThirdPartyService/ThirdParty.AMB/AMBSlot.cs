@@ -1,28 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace ThirdParty.AMB
 {
-    public class AMBSlot :AMB
+    public class AMBSlot : AMB
     {
-        public AMBSlot(IReadOnlyDictionary<string, string> inputs, string tpCurrency)
+        private string CurrencyId { get; set; }
+        
+        private SlotCurrencyAgent SlotCurrencyConfig { get; set; }
+        
+        public AMBSlot(AMBConfig inputs, string tpCurrency)
         {
-            Setting = new AMBSetting()
-            {
-                ApiUrl = inputs[$"SlotApiUrl{tpCurrency}"], 
-                Agent = inputs[$"SlotAgent{tpCurrency}"], 
-                SecretKey = inputs[$"SlotSecretKey{tpCurrency}"]
-            };
+            Config = inputs;
+            CurrencyId = tpCurrency;
+            SlotCurrencyConfig = GetSlotCurrencyConfig(CurrencyId);
         }
 
         public override GameListResponse GetGameList(Func<string, string, string, Dictionary<string, string>, int, string> callback)
         {
-            var apiUrl = $"{Setting.ApiUrl}/seamless/list-games";
+            var apiUrl = $"{SlotCurrencyConfig.SlotApiUrl}/seamless/list-games";
             var param = new
             {
-                agent = Setting.Agent,
+                agent = SlotCurrencyConfig.Agent,
             };
             var jsonParam = JsonConvert.SerializeObject(param);
             try
@@ -46,20 +44,20 @@ namespace ThirdParty.AMB
 
         public override CommonResponse CreateMember(string tpUserName, Func<string, string, string, Dictionary<string, string>, int, string> callback)
         {
-            var apiUrl = $"{Setting.ApiUrl}/seamless/create";
+            var apiUrl = $"{SlotCurrencyConfig.SlotApiUrl}/seamless/create";
             var param = new
             {
                 username = tpUserName,
-                agent = Setting.Agent,
+                agent = SlotCurrencyConfig.Agent,
             };
 
             var jsonParam = JsonConvert.SerializeObject(param);
             var header = new Dictionary<string, string>
             {
-                {"x-ambslot-signature", HMACSHA512(jsonParam, Setting.SecretKey)}
+                {"x-ambslot-signature", HMACSHA512(jsonParam, SlotCurrencyConfig.SecretKey)}
             };
 
-            
+
             try
             {
                 var content = callback(apiUrl, jsonParam, "application/json", header, 0);
@@ -82,7 +80,7 @@ namespace ThirdParty.AMB
             Func<string, string, string, Dictionary<string, string>, int, string> callback)
         {
             var response = new CommonResponse();
-            var apiUrl = $"{Setting.ApiUrl}/seamless/launch";
+            var apiUrl = $"{SlotCurrencyConfig.SlotApiUrl}/seamless/launch";
             if (isFun)
             {
                 var games = GetGameList(callback);
@@ -100,7 +98,7 @@ namespace ThirdParty.AMB
                         {
                             url = game.demoUrl
                         };
-                        return response;   
+                        return response;
                     }
 
                     response.status = new Status()
@@ -108,7 +106,7 @@ namespace ThirdParty.AMB
                         code = 997,
                         message = "no this game"
                     };
-                    return response;   
+                    return response;
                 }
                 else
                 {
@@ -127,14 +125,14 @@ namespace ThirdParty.AMB
                     username = tpUserName,
                     gameId = gameId,
                     backLink = homeUrl,
-                    agent = Setting.Agent,
+                    agent = SlotCurrencyConfig.Agent,
                 };
                 var jsonParam = JsonConvert.SerializeObject(param);
                 var header = new Dictionary<string, string>
                 {
-                    {"x-ambslot-signature", HMACSHA512(jsonParam, Setting.SecretKey)}
+                    {"x-ambslot-signature", HMACSHA512(jsonParam, SlotCurrencyConfig.SecretKey)}
                 };
-                
+
                 try
                 {
                     var content = callback(apiUrl, jsonParam, "application/json", header, 0);
@@ -158,11 +156,11 @@ namespace ThirdParty.AMB
         {
             var games = GetGameList(callback);
             var game = games.data.SingleOrDefault(a => a.prefix.Trim() == gameId.Trim());
-            var apiUrl = $"{Setting.ApiUrl}/seamless/result";
+            var apiUrl = $"{SlotCurrencyConfig.SlotApiUrl}/seamless/result";
             var param = new
             {
                 tranId = roundId,
-                agent = Setting.Agent,
+                agent = SlotCurrencyConfig.Agent,
                 username = tpUserName,
                 language = "en",
                 provider = game.partner.ToLower(),
@@ -171,10 +169,10 @@ namespace ThirdParty.AMB
             var jsonParam = JsonConvert.SerializeObject(param);
             var header = new Dictionary<string, string>
             {
-                {"x-ambslot-signature", HMACSHA512(jsonParam, Setting.SecretKey)}
+                {"x-ambslot-signature", HMACSHA512(jsonParam, SlotCurrencyConfig.SecretKey)}
             };
             var result = callback(apiUrl, jsonParam, "application/json", header, 0);
-            
+
             try
             {
                 return JsonConvert.DeserializeObject<GameReportResponse>(result);

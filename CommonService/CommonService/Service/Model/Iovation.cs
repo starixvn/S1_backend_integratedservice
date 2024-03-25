@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace CommonService.Service.Model
+﻿namespace CommonService.Service.Model
 {
     public class IovationServicesConfig
     {
@@ -20,11 +17,33 @@ namespace CommonService.Service.Model
         public string type { get; set; }
     }
 
+    public class IovationDetails
+    {
+        public Device device { get; set; }
+        public RuleResults ruleResults { get; set; }
+    }
+    public class Device
+    {
+        public string alias { get; set; }
+        public string type { get; set; }
+    }
+    public class RuleResults
+    {
+        public int score { get; set; }
+        public int rulesMatched { get; set; }
+        public IList<Rule> rules { get; set; }
+    }
+    public class Rule
+    {
+        public string type { get; set; }
+        public string reason { get; set; }
+        public int score { get; set; }
+    }
     public class IovationResult
     {
 
         public int accountCode { get; set; }
-        public Dictionary<string, dynamic> details { get; set; }
+        public IovationDetails details { get; set; }
         public string id { get; set; }
         public string reason { get; set; }
         public string result { get; set; }
@@ -37,4 +56,14 @@ namespace CommonService.Service.Model
         public int code { get; set; }
         public string message { get; set; }
     }
+
+    public class IovationCheckResult
+    {
+        public string Result { get; set; }
+        public string Reason { get; set; }
+        public string DeviceId { get; set; }
+        public string DeviceType { get; set; }
+        public int Score { get; set; }
+    }
+
 }

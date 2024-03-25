@@ -4,6 +4,7 @@ using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Workers
 {
@@ -13,35 +14,35 @@ namespace ThirdPartyWager.Workers
         private readonly FinanceYGGBLL _financYGGBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly FincanceService _fincanceService;
+        private readonly YGGConfig _siteConfig;
         private readonly int _tpId = (int)Tp.YGG;
         private readonly string _tpName = Tp.YGG.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
         private readonly int _beyond = 2;
-        private Timer timer;
+        private Timer _timer;
 
-        public FinanceYGG(
-            IServiceProvider provider
-        )
+        public FinanceYGG(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceYGG>>();
             _financYGGBLL = provider.GetRequiredService<FinanceYGGBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _fincanceService = provider.GetRequiredService<FincanceService>();
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<YGGConfig>(_tpName);
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            timer = new Timer(DoReport, null, TimeSpan.Zero, TimeSpan.Zero);
+            _timer = new Timer(DoReport, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
         private async void DoReport(object state)
         {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
             var quick = 0;
             try
             {
-                LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-                LogContext.PushProperty("Tp", _tpName);
                 var res = await ExecReportAsync();
                 if (res)
                 {
@@ -57,12 +58,12 @@ namespace ThirdPartyWager.Workers
                 if (quick == 1)
                 {
                     var dueTimeSpan = TimeSpan.FromMinutes(10);
-                    timer.Change(dueTimeSpan, TimeSpan.Zero);
+                    _timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
                 else
                 {
                     var dueTimeSpan = TimeSpan.FromHours(4);
-                    timer.Change(dueTimeSpan, TimeSpan.Zero);
+                    _timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
         }
@@ -74,7 +75,7 @@ namespace ThirdPartyWager.Workers
             try
             {
                 // get setting
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+                var setting = _siteConfig;
 
                 // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
@@ -135,7 +136,7 @@ namespace ThirdPartyWager.Workers
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            timer?.Change(Timeout.Infinite, 0);
+            _timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

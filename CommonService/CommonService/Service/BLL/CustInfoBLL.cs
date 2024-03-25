@@ -1,24 +1,20 @@
 ﻿using CommonService.Service.DAL;
 using CommonService.Service.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CommonService.Service.BLL
 {
     public class CustInfoBLL
     {
-        private readonly CustInfoService custInfoService;
+        private readonly CustInfoService _custInfoService;
 
-        public CustInfoBLL(CustInfoService custInfoService)
+        public CustInfoBLL(IServiceProvider provider)
         {
-            this.custInfoService = custInfoService;
+            _custInfoService = provider.GetRequiredService<CustInfoService>();
         }
 
         public CustInfoProfile GetCustInfoProfile(int custId)
         {
-            return custInfoService.GetCustInfoProfile(custId);
+            return _custInfoService.GetCustInfoProfile(custId);
         }
 
     }

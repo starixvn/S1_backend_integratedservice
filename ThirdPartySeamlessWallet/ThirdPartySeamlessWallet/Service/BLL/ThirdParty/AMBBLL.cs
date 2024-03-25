@@ -1,17 +1,13 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using MySql.Data.MySqlClient;
+﻿using MySql.Data.MySqlClient;
+
 using Newtonsoft.Json;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+
+using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
@@ -30,6 +26,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
+        private readonly AMBConfig _siteAMBConfig;
 
         public string[] HasEndroundTableGameId { get; set; }
 
@@ -51,8 +48,28 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _settledService = provider.GetRequiredService<SettledService>();
 
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+            _siteAMBConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AMBConfig>(ThirdParty.ToString());
         }
 
+        #endregion
+        
+        #region Model
+        
+        public class AMBConfig
+        {
+            public string PokerAgent { get; set; }
+            public string PokerApiUrl { get; set; }
+            public string PokerSecretKey { get; set; }
+            public List<SlotCurrencyAgent> SlotCurrencyAgent { get; set; }
+        }
+        public class SlotCurrencyAgent
+        {
+            public string CurrencyId { get; set; }
+            public string Agent { get; set; }
+            public string SlotApiUrl { get; set; }
+            public string SecretKey { get; set; }
+        }
+        
         #endregion
 
         #region Methods
@@ -68,7 +85,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     status = new AMBSlotStatusModel() { code = AMBErrorCode.InvalidRequest, message = message }
                 };
             }
-            
+
             var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)ThirdParty, request.username, (int)GameType);
             if (tpCustBalance == null)
             {
@@ -78,7 +95,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = "Service not available" }
                 };
             }
-            
+
             //不確定會是用agentId還是anget，當參數檢查通過時兩個值互補
             var agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
 
@@ -100,7 +117,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             return new AMBSlotGetBalanceResponse()
             {
-                status = new AMBSlotStatusModel() { code = AMBErrorCode.Success, message = message },
+                status = new AMBSlotStatusModel() { code = AMBErrorCode.Success, message = "Success" },
                 data = new AMBSlotDataModelForBalance() { balance = tpCustBalance.Balance }
             };
         }
@@ -195,12 +212,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
 
             await using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
+            await conn.OpenAsync();
             await using var trans = await conn.BeginTransactionAsync();
 
             if (!CheckBetForSlotBet(partitionTime, data, out message))
             {
-                trans.Rollback();
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 return new AMBSlotBetResponse()
                 {
                     status = new AMBSlotStatusModel() { code = AMBErrorCode.DuplicateRound, message = message }
@@ -209,7 +226,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (!PlaceBetForSlotBet(partitionTime, data, out message, trans))
             {
-                trans.Rollback();
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 return new AMBSlotBetResponse()
                 {
                     status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
@@ -220,7 +237,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 if (!SetBalanceForSlotBet(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out afterBalance, out int bonusId, conn, trans))
                 {
-                    trans.Rollback();
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                     return new AMBSlotBetResponse()
                     {
                         status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
@@ -228,11 +245,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 }
             }
 
-            trans.Commit();
+            await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
 
             return new AMBSlotBetResponse()
             {
-                status = new AMBSlotStatusModel() { code = AMBErrorCode.Success, message = message },
+                status = new AMBSlotStatusModel() { code = AMBErrorCode.Success, message = "Success" },
                 data = new AMBSlotDataModelForBetPayoutCancel()
                 {
                     username = request.username,
@@ -318,12 +335,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
 
             await using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
+            await conn.OpenAsync();
             await using var trans = await conn.BeginTransactionAsync();
 
             if (!CheckPayoutForSlotPayout(partitionTime, data, out message))
             {
-                trans.Rollback();
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 return new AMBSlotPayoutResponse()
                 {
                     status = new AMBSlotStatusModel() { code = AMBErrorCode.DuplicateRound, message = message }
@@ -332,7 +349,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (!PlacePayoutForSlotPayout(partitionTime, data, out message, trans))
             {
-                trans.Rollback();
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 return new AMBSlotPayoutResponse()
                 {
                     status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
@@ -343,7 +360,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 if (!SetBalanceForSlotPayout(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out afterBalance, out int bonusId, conn, trans))
                 {
-                    trans.Rollback();
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                     return new AMBSlotPayoutResponse()
                     {
                         status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
@@ -367,7 +384,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (!CheckSettleForSlotPayout(data.gameId, out bool doSettle, out message))
             {
-                trans.Rollback();
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 return new AMBSlotPayoutResponse()
                 {
                     status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
@@ -378,7 +395,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 if (!InsertUnsettleForSlotPayout(partitionTime, data.roundId, out message, trans))
                 {
-                    trans.Rollback();
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                     return new AMBSlotPayoutResponse()
                     {
                         status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
@@ -386,11 +403,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 }
             }
 
-            trans.Commit();
+            await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
 
             return new AMBSlotPayoutResponse()
             {
-                status = new AMBSlotStatusModel() { code = AMBErrorCode.Success, message = message },
+                status = new AMBSlotStatusModel() { code = AMBErrorCode.Success, message = "Success" },
                 data = new AMBSlotDataModelForBetPayoutCancel()
                 {
                     username = request.username,
@@ -460,14 +477,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
 
             await using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
+            await conn.OpenAsync();
             await using var trans = await conn.BeginTransactionAsync();
 
             data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
 
             if (!CheckCancelForSlotCancel(partitionTime, data, out int sq, out message))
             {
-                trans.Rollback();
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 return new AMBSlotCancelResponse()
                 {
                     status = new AMBSlotStatusModel() { code = AMBErrorCode.DuplicateRound, message = message }
@@ -476,7 +493,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (!CancelBetForSlotCancel(partitionTime, sq, out message, trans))
             {
-                trans.Rollback();
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 return new AMBSlotCancelResponse()
                 {
                     status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
@@ -487,7 +504,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 if (!SetBalanceForSlotCancel(tpCustInfo, data, tpCurrency.ExchangeRate, out message, out afterBalance, out int bonusId, conn, trans))
                 {
-                    trans.Rollback();
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                     return new AMBSlotCancelResponse()
                     {
                         status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
@@ -495,11 +512,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 }
             }
 
-            trans.Commit();
+            await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
 
             return new AMBSlotCancelResponse()
             {
-                status = new AMBSlotStatusModel() { code = AMBErrorCode.Success, message = message },
+                status = new AMBSlotStatusModel() { code = AMBErrorCode.Success, message = "Success" },
                 data = new AMBSlotDataModelForBetPayoutCancel()
                 {
                     username = request.username,
@@ -510,6 +527,141 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
         }
 
+        public async Task<AMBSlotSettleResponse> SlotSettle(AMBSlotSettleRequest request)
+        {
+            var agent = string.IsNullOrWhiteSpace(request.agent) ? request.agentId : request.agent;
+            if (!CheckAgentId(agent, request.currency))
+            {
+                return CreateSettleError(AMBErrorCode.InvalidAgent);
+            }
+
+            var bonusId = 0;
+            var afterAmount = 0m;
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, request.username);
+            if (tpCheck == null || tpCheck.Locked)
+            {
+                return CreateSettleError(AMBErrorCode.InvalidUsernameOrToken, "user is not online");
+            }
+
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.AMB, request.username);
+            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp.AMB, tpCustInfo.CurrencyId);
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                request.amount *= tpCurrency.ExchangeRate;
+                request.bet *= tpCurrency.ExchangeRate;
+                request.winlose *= tpCurrency.ExchangeRate;
+                request.turnover *= tpCurrency.ExchangeRate;
+                request.roundAmount *= tpCurrency.ExchangeRate;
+            }
+            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.username, (int)GameType);
+            var beforeAmount = tpCustBalance.Balance;
+            if (beforeAmount < request.bet)
+            {
+                return CreateSettleError(AMBErrorCode.BalanceInsufficient);
+            }
+
+            var partitionTime = DateTimeOffset.Parse(request.timestamp).DateTime;
+            var data = new BettingDataRNG_AMB()
+            {
+                username = request.username,
+                agentId = agent,
+                game = request.game,
+                gameId = request.gameId,
+                roundId = request.roundId,
+                bet = Math.Abs(request.bet) * -1,
+                amount = request.amount,
+                winlose = request.winlose,
+                turnover = request.turnover,
+                roundAmount = request.roundAmount,
+                currency = request.currency,
+                transactionId = request.transactionId,
+                timestamp = partitionTime,
+                featureBuy = request.featureBuy,
+                isEndRound = request.isEndRound,
+                type = request.type,
+                tranId = request.tranId,
+                FromAPIType = BettransRng_AMBTypeEnum.FromPayout,
+                TicketType = request.isEndRound ? BettransType.EndRound : BettransType.Payout,
+                TicketStatus = TicketStatus.UnSettled
+            };
+            var slotDatas = _bettingService.IsExist_AMB(false, partitionTime, data);
+            if (slotDatas.Any())
+            {
+                return CreateSettleError(AMBErrorCode.DuplicateRoundId);
+            }
+
+            await using var conn = _mainDbClient.GetMySqlConnection();
+            await conn.OpenAsync();
+            await using var trans = await conn.BeginTransactionAsync();
+            var result = _settledService.BetAndPayout_AMB(partitionTime, data, trans);
+            if (!result)
+            {
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
+                _logger.LogError($"Service_BettransRng_AMB_Ins_V2 failed :{JsonConvert.SerializeObject(data)}");
+                return CreateSettleError(AMBErrorCode.ServiceNotAvailable);
+            }
+
+            if (data.bet != 0)
+            {
+                result = _bettingService.SetBalance_AMB(tpCustInfo, data, out afterAmount, ref bonusId, conn, trans);
+                if (!result)
+                {
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
+                    _logger.LogError("PlaceBetV2 failed");
+                    return CreateSettleError(AMBErrorCode.BalanceInsufficient);
+                }
+            }
+
+            if (data.amount != 0)
+            {
+                result = _settledService.SetBalance_AMB(tpCustInfo, data, TransType.Payout, "Payout", out afterAmount, ref bonusId, conn, trans);
+                if (!result)
+                {
+                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
+                    _logger.LogError("PayoutV2 failed");
+                    return CreateSettleError(AMBErrorCode.ServiceNotAvailable);
+                }
+            }
+            if (data.isEndRound)
+            {
+                result = _settledService.InsertUnsettle_AMB(partitionTime, data.roundId, trans);
+                if (!result)
+                {
+                    _logger.LogError($"InsertUnsettle_AMB failed {data.roundId}");
+                    return CreateSettleError(AMBErrorCode.ServiceNotAvailable);
+                }
+            }
+
+            if (afterAmount == 0)
+            {
+                tpCustBalance = _tpCustInfoBLL.GetBalance((int)ThirdParty, request.username, (int)GameType);
+                afterAmount = tpCustBalance.Balance;
+            }
+            else
+            {
+                if (tpCurrency.ExchangeRate > 0)
+                    afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
+            if (bonusId > 0)
+            {
+                _logger.LogInformation($"user {tpCustInfo.TpUserName} has bonus wallet bonusId:{bonusId} transId:{data.roundId}");
+                _settledService.UpdateTpBonusFlag((int)Tp.AMB, data.roundId, (int)GameType.AMB_RNG, TpCategory.Slots, out var custId, out bonusId);
+            }
+            return new AMBSlotSettleResponse()
+            {
+                status = new AMBSlotStatusModel() { code = AMBErrorCode.Success, message = "Success" },
+                data = new AMBSlotData()
+                {
+                    username = request.username,
+                    wallet = new AMBSlotWalletModel() { balance = afterAmount, lastUpdate = GetCurrentGameTime() },
+                    balance = new AMBSlotBalanceModel() { before = beforeAmount, after = afterAmount },
+                    refId = request.transactionId
+                }
+            };
+
+        }
         #endregion
 
         #region Private Methods
@@ -1396,16 +1548,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             try
             {
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)ThirdParty);
-
-                if (thirdPartySetting == null)
-                {
-                    _logger.LogError("CheckAgentId Fail: tpinfo not found.");
-                    return false;
-                }
-
-                var slotAgent = thirdPartySetting.TpSetting[$"SlotAgent{currencyId}"];
-
+                var slotAgent = _siteAMBConfig.SlotCurrencyAgent.FirstOrDefault(x => x.CurrencyId == currencyId)?.Agent;
+                
                 if (string.IsNullOrWhiteSpace(slotAgent))
                 {
                     _logger.LogError("CheckAgentId Fail: tpinfo.agent is null.");
@@ -1425,6 +1569,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 _logger.LogError(ex, $"CheckAgentId Exception:{ex.Message}");
                 return false;
             }
+        }
+
+        private AMBSlotSettleResponse CreateSettleError(AMBErrorCode errorCode, string message = "")
+        {
+            return new AMBSlotSettleResponse()
+            {
+                status = new AMBSlotStatusModel()
+                {
+                    code = errorCode,
+                    message = string.IsNullOrEmpty(message) ? errorCode.GetEnumDescription() : message
+                }
+            };
         }
 
         #endregion

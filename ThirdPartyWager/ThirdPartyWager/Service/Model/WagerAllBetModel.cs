@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace ThirdPartyWager.Service.Model
+﻿namespace ThirdPartyWager.Service.Model
 {
     public class WagerAllBetModel<T>
     {
@@ -54,7 +51,7 @@ namespace ThirdPartyWager.Service.Model
         public decimal validAmount { get; set; }
         public decimal winOrLossAmount { get; set; }
         public decimal deposit { get; set; }
-        
+
 
         public long betUnix
         {

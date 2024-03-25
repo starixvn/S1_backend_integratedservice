@@ -1,11 +1,16 @@
-﻿using MySql.Data.MySqlClient;
+﻿using System;
 using System.Collections.Concurrent;
-using ThirdPartyCore;
-using ThirdPartyService.Service.Model;
-using Dapper;
-using System.Reflection;
 using System.Data;
+using System.Reflection;
+using System.Text.Json;
+using MongoDB.Bson.IO;
 using Serilog.Context;
+
+using ThirdPartyCore;
+using ThirdPartyCore.Model.enums;
+
+using ThirdPartyService.Service.Library;
+using ThirdPartyService.Service.Model;
 
 namespace ThirdPartyService.Service.DAL
 {
@@ -13,35 +18,32 @@ namespace ThirdPartyService.Service.DAL
     {
         private static ConcurrentDictionary<int, IThirdPartyHelper> ThirdPartyHelperContainer = new();
         private static ConcurrentDictionary<string, ThirdPartyModel> ThirdPartyModelContainer = new();
-        private readonly IConfiguration configuration;
-        private readonly ILogger<ThirdPartyHelper> logger;
+        private readonly ILogger<ThirdPartyHelper> _logger;
         private readonly IServiceProvider _provider;
+        private readonly MySqlClient _mainDbClient;
 
         public ThirdPartyHelper(IServiceProvider provider)
         {
             _provider = provider;
-            configuration = provider.GetRequiredService<IConfiguration>();
-            logger = provider.GetRequiredService<ILogger<ThirdPartyHelper>>();
+            _logger = provider.GetRequiredService<ILogger<ThirdPartyHelper>>();
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
 
         public ThirdPartyModel GetThirdPartyBySite(int tpId, int siteId)
         {
-            string sKet = $"{tpId}_{siteId}";
+            var sKet = $"{tpId}_{siteId}";
             if (!ThirdPartyModelContainer.ContainsKey(sKet))
             {
-                using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-                var thirdPartyModel = conn.QueryFirstOrDefault<ThirdPartyModel>("Common_Tp_Get", new { TpId = tpId, SiteId = siteId }, commandType: CommandType.StoredProcedure);
+                var thirdPartyModel = _mainDbClient.QueryFirst<ThirdPartyModel>("Common_Tp_Get", new { TpId = tpId, SiteId = siteId });
                 if (thirdPartyModel != null)
                     ThirdPartyModelContainer.TryAdd(sKet, thirdPartyModel);
             }
-
             return ThirdPartyModelContainer.ContainsKey(sKet) ? ThirdPartyModelContainer[sKet] : null;
         }
 
         public ThirdPartyModel GetThirdPartySetting(int tpId)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.QueryFirstOrDefault<ThirdPartyModel>("Tp_Get", new { TpId = tpId }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.QueryFirst<ThirdPartyModel>("Tp_Get", new { TpId = tpId });
         }
 
         public IThirdPartyHelper GetThirdPartyHelper(int tpId, int siteId)
@@ -60,47 +62,37 @@ namespace ThirdPartyService.Service.DAL
             }
             return ThirdPartyHelperContainer[tpId];
         }
-        public void InsertLog(string url, string input, string output)
+
+        private void InsertLog(string url, string input, string output)
         {
             LogContext.PushProperty("Tp.Request.URL", url);
             var content = $"Url={url}, Input={input}, Output={output}";
-            logger.LogInformation(content);
+            _logger.LogInformation(content);
         }
 
         public string GetTpLanId(int tpId, string langId)
         {
-            using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
-            {
-                return conn.QueryFirstOrDefault<string>("TpLangId_Get", new { TpId = tpId, LangId = langId }, commandType: CommandType.StoredProcedure);
-            }
+            return _mainDbClient.QueryFirst<string>("TpLangId_Get", new { TpId = tpId, LangId = langId });
         }
 
         public IEnumerable<ThirdPartyModel> GetThirdPartyByWalletType(int walletType, int siteId)
         {
-            using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
-            {
-                return conn.Query<ThirdPartyModel>("Service_TpList_WalletType_Get", new { WalletType = walletType, SiteId = siteId }, commandType: CommandType.StoredProcedure);
-            }
+            return _mainDbClient.Query<ThirdPartyModel>("Service_TpList_WalletType_Get", new { WalletType = walletType, SiteId = siteId });
         }
+
         public IEnumerable<ThirdPartyModel> GetThirdPartyByWalletTypeByCustId(int walletType, int siteId, int custId)
         {
-            using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
-            {
-                return conn.Query<ThirdPartyModel>("Service_TpList_WalletType_ByCustId_Get_V2", new { WalletType = walletType, SiteId = siteId, CustId = custId }, commandType: CommandType.StoredProcedure);
-            }
+            return _mainDbClient.Query<ThirdPartyModel>("Service_TpList_WalletType_ByCustId_Get_V2", new { WalletType = walletType, SiteId = siteId, CustId = custId });
         }
+
         public BonusWallet CheckBonusWallet(int custid, int tpId)
         {
-            using (MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString")))
-            {
-                return conn.QueryFirstOrDefault<BonusWallet>("Service_CustBonus_Check", new { CustId = custid, TpId = tpId }, commandType: CommandType.StoredProcedure);
-            }
+            return _mainDbClient.QueryFirst<BonusWallet>("Service_CustBonus_Check", new { CustId = custid, TpId = tpId });
         }
 
         public IEnumerable<TpMaintain> GetTpMaintainList(int siteId)
         {
-            using MySqlConnection conn = new MySqlConnection(configuration.GetConnectionString("ConnectionString"));
-            return conn.Query<TpMaintain>("TpMaintain_Get", new { SiteId = siteId }, commandType: CommandType.StoredProcedure);
+            return _mainDbClient.Query<TpMaintain>("TpMaintain_Get", new { SiteId = siteId });
         }
 
         private bool CheckConstructor(Type type)

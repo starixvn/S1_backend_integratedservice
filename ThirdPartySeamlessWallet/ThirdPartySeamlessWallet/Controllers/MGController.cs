@@ -1,9 +1,5 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.Web;
 using ThirdPartySeamlessWallet.Extensions.ActionFilters;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -17,7 +13,7 @@ namespace ThirdPartySeamlessWallet.Controllers
     public class MGController : ControllerBase
     {
         private readonly IMGBLL _mgbll;
-        
+
         public MGController(IServiceProvider provider)
         {
             _mgbll = provider.GetService<IMGBLL>();
@@ -26,6 +22,16 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpGet]
         [Route("ping")]
         public string Ping() => "pong";
+
+        [HttpGet]
+        [Route("monitor")]
+        public MonitorResponse_MG Monitor([FromQuery] MonitorData_MG getReq)
+        {
+            return new MonitorResponse_MG
+            {
+                pong = getReq.ping
+            };
+        }
 
         /// <summary>
         /// 登入
@@ -36,7 +42,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             return _mgbll.Login(request);
         }
-        
+
         /// <summary>
         /// 取得餘額
         /// </summary>
@@ -46,7 +52,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             return _mgbll.GetBalance(request);
         }
-        
+
         /// <summary>
         /// 取得餘額
         /// </summary>
@@ -56,7 +62,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             return await _mgbll.UpdateBalance(request);
         }
-        
+
         /// <summary>
         /// 取得餘額
         /// </summary>
@@ -65,6 +71,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         public async Task<MGRollbackResponse> Rollback(MGRollbackeRequest request)
         {
             return await _mgbll.Rollback(request);
-        } 
+        }
     }
 }

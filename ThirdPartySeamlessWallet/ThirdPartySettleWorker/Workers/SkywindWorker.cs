@@ -1,17 +1,12 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+﻿using System.Text.RegularExpressions;
+
 using Serilog.Context;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -109,10 +104,11 @@ namespace ThirdPartySettleWorker.Workers
                         if (betData.Sum(x => x.amount) == wager.debit || betData.Sum(x => x.amount) == wager.Stake)
                         {
                             var stake = wager.Stake;
-                            var winLostAmount = wager.WinLostAmount + wager.ProgressiveWin - stake;
+                            var winLostAmount = wager.WinLostAmount - stake;
                             var settledTime = wager.SettleTime;
                             var betTime = wager.TransTime;
-                            var result = _settledBLL.Settled(tpCustInfo, new BetRecordInfo
+                            var gameCode = settleData.FirstOrDefault().gamecode;
+                            var betRecordInfo = new BetRecordInfo
                             {
                                 TpId = (int)Tp,
                                 Stake = stake,
@@ -123,10 +119,11 @@ namespace ThirdPartySettleWorker.Workers
                                 TpUserName = tpUserName,
                                 SettledTime = settledTime,
                                 TransTime = betTime,
-                                SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, settleData.FirstOrDefault().gamecode),
+                                SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, gameCode),
                                 TicketStatus = winLostAmount > 0 ? TicketStatus.Win : winLostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost,
-                                Revenue = wager.Revenue
-                            }, TpCategory.Slots);
+                                GameID = gameCode,
+                            };
+                            var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Slots);
 
                             if (result == 1)
                             {
@@ -135,7 +132,7 @@ namespace ThirdPartySettleWorker.Workers
                                     _tpUnSettledBLL.SetSettleFlag("Service_Bettrans_Skywind_Settle_Set", Tp, gametype, $"{tpUnsettle.TransId}-{gameId}", tpUnsettle.TransId, true, DataBase.Wager);
                                 });
                             }
-                        }                      
+                        }
                     }
                     catch (Exception ex1)
                     {
@@ -222,10 +219,11 @@ namespace ThirdPartySettleWorker.Workers
                         if (betData.Sum(x => x.amount) == wager.debit || betData.Sum(x => x.amount) == wager.Stake)
                         {
                             var stake = wager.Stake;
-                            var winLostAmount = wager.WinLostAmount + wager.ProgressiveWin - stake;
+                            var winLostAmount = wager.WinLostAmount - stake;
                             var settledTime = wager.SettleTime;
                             var betTime = wager.TransTime;
-                            var result = _settledBLL.Settled(tpCustInfo, new BetRecordInfo
+                            var gameCode = settleData.FirstOrDefault().gamecode;
+                            var betRecordInfo = new BetRecordInfo
                             {
                                 TpId = (int)Tp,
                                 Stake = stake,
@@ -236,10 +234,11 @@ namespace ThirdPartySettleWorker.Workers
                                 TpUserName = tpUserName,
                                 SettledTime = settledTime,
                                 TransTime = betTime,
-                                SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, settleData.FirstOrDefault().gamecode),
+                                SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, gameCode),
                                 TicketStatus = winLostAmount > 0 ? TicketStatus.Win : winLostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost,
-                                Revenue = wager.Revenue
-                            }, TpCategory.LiveCasino);
+                                GameID = gameCode,
+                            };
+                            var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
 
                             if (result == 1)
                             {
@@ -335,10 +334,11 @@ namespace ThirdPartySettleWorker.Workers
                         if (betData.Sum(x => x.amount) == wager.debit || betData.Sum(x => x.amount) == wager.Stake)
                         {
                             var stake = wager.Stake;
-                            var winLostAmount = wager.WinLostAmount + wager.ProgressiveWin - stake;
+                            var winLostAmount = wager.WinLostAmount - stake;
                             var settledTime = wager.SettleTime;
                             var betTime = wager.TransTime;
-                            var result = _settledBLL.Settled(tpCustInfo, new BetRecordInfo
+                            var gameCode = settleData.FirstOrDefault().gamecode;
+                            var betRecordInfo = new BetRecordInfo
                             {
                                 TpId = (int)Tp,
                                 Stake = stake,
@@ -349,10 +349,11 @@ namespace ThirdPartySettleWorker.Workers
                                 TpUserName = tpUserName,
                                 SettledTime = settledTime,
                                 TransTime = betTime,
-                                SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, settleData.FirstOrDefault().gamecode),
+                                SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, gameCode),
                                 TicketStatus = winLostAmount > 0 ? TicketStatus.Win : winLostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost,
-                                Revenue = wager.Revenue
-                            }, TpCategory.Fish);
+                                GameID = gameCode,
+                            };
+                            var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Fish);
 
                             if (result == 1)
                             {

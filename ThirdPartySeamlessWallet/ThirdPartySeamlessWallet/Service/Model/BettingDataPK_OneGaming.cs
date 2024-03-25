@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace ThirdPartySeamlessWallet.Service.Model
+﻿namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class BettingDataPK_OneGaming
     {
@@ -64,5 +59,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal WinLostAmount { get; set; }
         public string Account { get; set; }
         public long SettleTime { get; set; }
+        public string GameId { get; set; }
     }
 }

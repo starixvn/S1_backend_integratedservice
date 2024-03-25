@@ -1,6 +1,5 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
@@ -14,7 +13,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string game { get; set; }
         public string gameId { get; set; }
         public string roundId { get; set; }
+        public decimal bet { get; set; }
         public decimal amount { get; set; }
+        public decimal winlose { get; set; }
         public decimal turnover { get; set; }
         public decimal roundAmount { get; set; }
         public string currency { get; set; }
@@ -250,5 +251,85 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public AMBSlotStatusModel status { get; set; }
 
         public AMBSlotDataModelForBetPayoutCancel data { get; set; }
+    }
+
+    public class AMBSlotSettleRequest
+    {
+        public decimal roundAmount { get; set; }
+        public string type { get; set; }
+        public string tranId { get; set; }
+
+        /// <summary>
+        /// Member username
+        /// </summary>
+        public string username { get; set; }
+        /// <summary>
+        /// Agent id that AMBSlot has provided
+        /// </summary>
+        public string agent { get; set; }
+        public string agentId { get; set; }
+        /// <summary>
+        /// Game name that user played
+        /// </summary>
+        public string game { get; set; }
+        /// <summary>
+        /// Game code that user played
+        /// </summary>
+        public string gameId { get; set; }
+        /// <summary>
+        /// Round id for each bet transaction
+        /// </summary>
+        public string roundId { get; set; }
+        /// <summary>
+        /// Payout Amount number that received
+        /// </summary>
+        public decimal amount { get; set; }
+        /// <summary>
+        /// Amount number that user bet (+) 
+        /// </summary>
+        public decimal bet { get; set; }
+
+        /// <summary>
+        /// Amount that player win
+        /// </summary>
+        public decimal winlose { get; set; }
+        /// <summary>
+        /// Currency of amount
+        /// </summary>
+        public string currency { get; set; }
+        /// <summary>
+        /// Reference id that refer to this transaction (unique)
+        /// </summary>
+        public string transactionId { get; set; }
+        /// <summary>
+        /// Timestamp of this transaction
+        /// </summary>
+        public string timestamp { get; set; }
+        /// <summary>
+        /// Amount that user bet
+        /// </summary>
+        public decimal turnover { get; set; }
+        /// <summary>
+        /// If true. It’s last payout of current round
+        /// </summary>
+        public bool isEndRound { get; set; }
+        /// <summary>
+        /// Feature buy freespin
+        /// </summary>
+        public bool featureBuy { get; set; }
+    }
+
+    public class AMBSlotData
+    {
+        public string username { get; set; }
+        public AMBSlotWalletModel wallet { get; set; }
+        public AMBSlotBalanceModel balance { get; set; }
+        public string refId { get; set; }
+    }
+
+    public class AMBSlotSettleResponse
+    {
+        public AMBSlotStatusModel status { get; set; }
+        public AMBSlotData data { get; set; }
     }
 }

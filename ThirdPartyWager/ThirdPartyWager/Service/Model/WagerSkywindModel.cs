@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Newtonsoft.Json;
-
-/// <summary>
+﻿/// <summary>
 /// Summary description for Class1
 /// </summary>
 namespace ThirdPartyWager.Service.Model
@@ -96,6 +92,26 @@ namespace ThirdPartyWager.Service.Model
     public class SkywindUnsettleCheck
     {
         public string TransId { get; set; }
+    }
+    public class WagerSkywindThridPartyModel
+    {
+        public string extTrxId { get; set; }
+        public decimal win { get; set; }
+        public decimal bet { get; set; }
+        public string currency { get; set; }
+        public string brandId { get; set; }
+        public string playerCode { get; set; }
+        public string gameCode { get; set; }
+        public decimal? balanceBefore { get; set; }
+        public decimal? balanceAfter { get; set; }
+        public bool isTest { get; set; }
+        public decimal revenue { get; set; }
+        public string insertedAt { get; set; }
+        public string roundId { get; set; }
+        public string gameProviderCode { get; set; }
+        public bool finished { get; set; }
+        public int eventId { get; set; }
+        public int? providerSpecificData { get; set; }
     }
 }
 

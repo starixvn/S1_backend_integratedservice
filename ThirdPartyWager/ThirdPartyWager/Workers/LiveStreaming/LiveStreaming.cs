@@ -1,16 +1,12 @@
-﻿using System;
-using System.Net.Http;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Text.Json;
 using System.Web;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+
 using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+
 using static ThirdPartyWager.Extensions.MethodExtension;
 
 namespace ThirdPartyWager.Workers
@@ -18,7 +14,7 @@ namespace ThirdPartyWager.Workers
     public class LiveStreaming : BackgroundService
     {
         private readonly IHostEnvironment _environment;
-        private readonly ILogger<LiveStreaming> _logger; 
+        private readonly ILogger<LiveStreaming> _logger;
         private readonly HttpHelper _httpHelper;
         private readonly LiveStreamingBLL _liveStreamingBll;
         private Timer _timerLiveStreaming;
@@ -54,7 +50,7 @@ namespace ThirdPartyWager.Workers
                 var query = HttpUtility.ParseQueryString(builder.Query);
                 query["action"] = "getmatch";
                 query["apiuser"] = "nvc";
-                query["key"] = "lnQzpXfTvn";
+                query["key"] = "c912hnBgf";
                 query["format"] = "JSON";
                 builder.Query = query.ToString();
                 var newurl = builder.ToString();
@@ -66,7 +62,11 @@ namespace ThirdPartyWager.Workers
                 {
                     _liveStreamingBll.TruncateLiveStreaming();
                     var resultModel = JsonSerializer.Deserialize<GetLiveStreaming>(result.Content.ReadAsStringAsync().Result);
-                        await _liveStreamingBll.SetLiveStreaming(resultModel.Match);
+                    await _liveStreamingBll.SetLiveStreaming(resultModel.Match);
+                }
+                else
+                {
+                    _logger.LogError($"{newurl}\r\n{result.StatusCode}\r\n{result.ReasonPhrase}");
                 }
             }
             catch (Exception ex)

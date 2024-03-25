@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ThirdPartyCore;
+﻿using ThirdPartyCore;
+
 using ThirdPartyService.Service.DAL;
 
 namespace ThirdPartyService.Service.BLL
@@ -22,6 +19,10 @@ namespace ThirdPartyService.Service.BLL
         public string Authenticate(string Key)
         {
             return authService.Authenticate(Key);
+        }
+        public bool UpdateTpToken(string Token, string TpToken)
+        {
+            return authService.UpdateTpToken(Token, TpToken) > 0;
         }
     }
 }

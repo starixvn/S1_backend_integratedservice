@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace ThirdParty.AMB
+﻿namespace ThirdParty.AMB
 {
     public class CommonResponse
     {
@@ -41,9 +39,24 @@ namespace ThirdParty.AMB
         public string zh { get; set; }
         public string my { get; set; }
     }
-    
+
     public class Data
     {
         public string url { get; set; }
+    }
+    
+    public class AMBConfig
+    {
+        public string PokerAgent { get; set; }
+        public string PokerApiUrl { get; set; }
+        public string PokerSecretKey { get; set; }
+        public List<SlotCurrencyAgent> SlotCurrencyAgent { get; set; }
+    }
+    public class SlotCurrencyAgent
+    {
+        public string CurrencyId { get; set; }
+        public string Agent { get; set; }
+        public string SlotApiUrl { get; set; }
+        public string SecretKey { get; set; }
     }
 }

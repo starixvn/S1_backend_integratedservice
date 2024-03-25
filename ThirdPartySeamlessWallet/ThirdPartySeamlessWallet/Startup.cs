@@ -1,13 +1,7 @@
-using System;
-using System.Configuration;
-using System.Net;
-using System.Net.Http;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+﻿using System.Net;
+using System.Text.Json.Serialization;
+using StackExchange.Redis;
+
 using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Extensions.ActionFilters;
 using ThirdPartySeamlessWallet.Service.BLL;
@@ -17,8 +11,8 @@ using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.DAL.Interface;
 using ThirdPartySeamlessWallet.Service.DAL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.Library;
+using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.Options;
-using ThirdPartySeamlessWallet.Service.Workers;
 
 namespace ThirdPartySeamlessWallet
 {
@@ -31,11 +25,9 @@ namespace ThirdPartySeamlessWallet
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors(options => 
+            services.AddCors(options =>
             {
                 options.AddPolicy("BTIPolicy", builder =>
                 {
@@ -43,7 +35,7 @@ namespace ThirdPartySeamlessWallet
                             .AllowAnyHeader()
                             .WithMethods("GET")
                             .SetIsOriginAllowedToAllowWildcardSubdomains();
-                });                                 
+                });
             });
 
             services.AddMemoryCache();
@@ -65,6 +57,9 @@ namespace ThirdPartySeamlessWallet
             services.AddHttpClient();
             services.AddMvc().AddXmlSerializerFormatters();
             services.AddDatabaseConnection(Configuration);
+            services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(Configuration.GetValue<string>("RedisConnection")));
+            services.AddSingleton<ICacheHelper, RedisCacheHelper>();
+
             /*Library*/
             services.AddSingleton<Tools>();
             services.AddSingleton<HttpHelper>();
@@ -85,6 +80,7 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<TpUnRewardService>();
             services.AddSingleton<PartitionService>();
             services.AddSingleton<ConfigService>();
+            services.AddSingleton<TpRoundGenService>();
 
             /*BLL*/
             services.AddSingleton<TpCustInfoBLL>();
@@ -92,12 +88,27 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<BettingBLL>();
             services.AddSingleton<SettledBLL>();
             services.AddSingleton<AuthBLL>();
+            services.AddSingleton<BonusWalletBLL>();
             services.AddTransient<IKMService, KMService>();
             services.AddTransient<IMGBLL, MGBLL>();
             services.AddSingleton<IHBBLL, HBBLL>();
+            services.AddSingleton<IPegasusBLL, PegasusBLL>();
+            services.AddSingleton<IIMBLL, IMBLL>();
             services.AddTransient<IAMBBLL, AMBBLL>();
             services.AddTransient<ISBOBLL, SBOBLL>();
+            services.AddTransient<INextspinBLL, NextspinBLL>();
             services.AddTransient<IJokerBLL, JokerBLL>();
+            services.AddTransient<IKiss918BLL, Kiss918BLL>();
+            services.AddTransient<IYeebetBLL, YeebetBLL>();
+            services.AddTransient<IBGBLL, BGBLL>();
+            services.AddTransient<ITFGBLL, TFGBLL>();
+            services.AddTransient<V8BLL>();
+            services.AddTransient<AmigoBLL>();
+            services.AddTransient<IPNGBLL, PNGBLL>();
+            services.AddTransient<IFaChaiBLL, FaChaiBLL>();
+            services.AddTransient<IBNGBLL, BNGBLL>();
+            services.AddTransient<IGABLL, GABLL>();
+            services.AddTransient<INTConnectBLL, NTConnectBLL>();
             services.AddSingleton<TpUnSettledBLL>();
             services.AddSingleton<TpBetRecordExtendBLL>();
             services.AddSingleton<TpRequestFailBLL>();
@@ -105,12 +116,21 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<KMHeaderFilter>();
             services.AddSingleton<MGHeaderFilter>();
             services.AddSingleton<MGExceptionFilter>();
-            services.AddControllers();
+            services.AddControllers()
+                .AddJsonOptions(options =>
+                    {
+                      options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;   
+                    });
 
             services.AddOptionListByDB<SabaSportTypeOption>("Service_SabaSportType_Get");
+            //設定SiteConfig
+            services.AddOptionListByDB<ServerInfo>("ServerInfoList_Get");
+            services.AddOptionListByDB<ConfigObject>("SiteConfig_Get", new { ConfigGroup = "TP" });
+            services.AddSiteConfig();
+            services.AddSingleton<ConfigBLL>();
+            services.AddOptionListByDB<TpBetLimit>("Service_TpBetLimit_Get");
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())

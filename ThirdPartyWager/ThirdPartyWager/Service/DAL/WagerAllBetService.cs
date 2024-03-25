@@ -1,11 +1,5 @@
 ﻿using Dapper;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -41,7 +35,7 @@ namespace ThirdPartyWager.Service.DAL
             {
                 _tpUnsettleService.InsertTpUnsettle(Tp.Allbet, GameType.Allbet_LiveCasino, bet.betNum.ToString());
             }
-            return result;  
+            return result;
         }
 
         public WagerAllBetTotal GetWagerTotal(long beginTime, long endTime)
@@ -56,7 +50,7 @@ namespace ThirdPartyWager.Service.DAL
 
         public Task<IEnumerable<UnsettleCheck>> GetUnsettleCheckList()
         {
-            return _mainDbClient.QueryAsync<UnsettleCheck>("Service_BettransLC_Allbet_Unsettle_Check",null);
+            return _mainDbClient.QueryAsync<UnsettleCheck>("Service_BettransLC_Allbet_Unsettle_Check", null);
         }
     }
 }

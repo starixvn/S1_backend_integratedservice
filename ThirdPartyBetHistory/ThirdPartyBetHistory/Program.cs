@@ -1,11 +1,16 @@
 using Serilog;
+using Serilog.Events;
 using Serilog.Exceptions;
-using ThirdPartyBetHistory.Service.Worker;
+using Serilog.Formatting.Json;
 using ThirdPartyBetHistory;
 using ThirdPartyBetHistory.Extensions;
+using ThirdPartyBetHistory.Service.Worker;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
+
+var remoteUrls = builder.Configuration.GetSection("ConfigService").Get<string[]>();
+remoteUrls = builder.Configuration.CheckLocalConfig(builder.Environment, args, remoteUrls);
+builder.Configuration.AddRemoteJsonConfig(remoteUrls);
 
 var excludesMessage = builder.Configuration.GetSection("ExcludesMessage").Get<string[]>();
 var excludesApiEndpoints = builder.Configuration.GetSection("ExcludesApiEndpoint").Get<string[]>();
@@ -19,20 +24,43 @@ builder.Host.UseSerilog((context, Configuration) =>
                 excludesApiEndpoints.Any(item => p.Value.ToString().Contains(item))
                 || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item))))
         .Enrich.WithExceptionDetails();
+
+    OverrideLoggerWriteToLFile(Configuration);
 });
+
+void OverrideLoggerWriteToLFile(LoggerConfiguration configuration)
+{
+    const string cashSiteBrand = "Nova";
+
+    var brand = Environment.GetEnvironmentVariable("Brand") ?? string.Empty;
+    if (brand != cashSiteBrand) return;
+
+    var logFilePath = $"/bethistory/bethistory-{DateTime.Now:yyyyMMddHHmmssfff}.log";
+    configuration
+        .WriteTo.File(new JsonFormatter(),
+            logFilePath,
+            rollingInterval: RollingInterval.Day,
+            retainedFileCountLimit: 60,
+            fileSizeLimitBytes: 10485760,
+            rollOnFileSizeLimit: true,
+            restrictedToMinimumLevel: LogEventLevel.Information);
+}
 
 var startup = new Startup(builder.Configuration);
 startup.ConfigureServices(builder.Services);
 
 builder.Services
     .AddHostedService<WorkerService>()
-    .AddHostedService<BonusWorker>()
-    .AddHostedService<SabaLGWorkerService>()
     .AddHostedService<SabaByTransIdUnSettleWorkerService>()
-    .AddHostedService<SabaByTransIdSettleWorkerService>();
+    .AddHostedService<RngWorkerService>()
+    .AddHostedService<SabaVgamingUnSettleWorkerService>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
+
+var minWorkers = Environment.ProcessorCount * 4;
+var minIOCPs = Environment.ProcessorCount * 4;
+ThreadPool.SetMinThreads(minWorkers, minIOCPs);
 
 app.Run();
 

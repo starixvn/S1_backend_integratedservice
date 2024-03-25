@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.ComponentModel;
 using System.Text;
 using System.Web;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -15,6 +15,40 @@ namespace ThirdParty.YGG
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly YGGConfig _siteConfig;
+        public readonly string _contentType = "application/x-www-form-urlencoded";
+
+        public TpHelper(IServiceProvider provider)
+        {
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<YGGConfig>(TpEnum.YGG.ToString());
+        }
+
+        #region Response
+
+        public class LoginData
+        {
+            [JsonProperty("launchurl")]
+            public string LaunchUrl { get; set; }
+
+            [Description("試玩")]
+            [JsonProperty("pfflaunchurl")]
+            public string pfflaunchurl { get; set; }
+        }
+
+        public class LoginResponse
+        {
+            [JsonProperty("code")]
+            public int Code { get; set; }
+
+            [JsonProperty("msg")]
+            public string ErrorMsg { get; set; }
+
+            [JsonProperty("data")]
+            public LoginData Data { get; set; }
+        }
+
+        #endregion
+
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var oApiResult = new ApiResult
@@ -26,20 +60,34 @@ namespace ThirdParty.YGG
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var config = new YggConfig(inputs);
-            var channel = (appType == AppType.Desktop ? "pc" : "mobile");
+            var config = _siteConfig;
+            string fun = inputs.GetValueOrDefault("fun") ?? "0";
+            var GameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : string.Empty;
+            var HomeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : string.Empty;
+            var channel = appType == AppType.Desktop ? "pc" : "mobile";
             var sessionKey = GetSessionKey(tpCustInfo, inputs);
 
-            // YGG 試玩遊戲，Fun = 1 是試玩 ，不用打Api，自組登入 Url。
-            if (config.Fun.Equals("1", StringComparison.OrdinalIgnoreCase)) return GetPlayForFunLaunchUrl(TpLangId, config, channel);
-
-            // YGG 正式遊戲
-
             var apiUrl = config.GameUrl;
-            var sParam = $"loaginame={tpCustInfo.TpUserName}&key={sessionKey}&currency={tpCustInfo.TpCurrencyId}" +
-                $"&lang={TpLangId}&gameid={config.GameId}&org={config.Org}&channel={channel}&home={config.HomeUrl}&fullscreen=yes";
+            string sParam;
+            var isFun = false;
 
-            var responseJson = HttpPost(apiUrl, sParam, config.ContentType);
+            // 試玩
+            if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
+            {
+                isFun = true;
+                var DefaultTpCurrencyId = ServerInfoProvider.GetDefaultTpCurrencyIdByTpId(tpCustInfo.SiteId, (int)TpEnum.YGG);
+                tpCustInfo.TpCurrencyId = (DefaultTpCurrencyId != null) ? DefaultTpCurrencyId.TpCurrencyId : "";
+                apiUrl = config.FunGameUrl;
+                sParam = $"org={config.org}&currency={tpCustInfo.TpCurrencyId}&lang={TpLangId}&gameid={GameId}&channel={channel}&home={HomeUrl}&fullscreen=yes";
+            }
+            else
+            {
+                // 正式
+                sParam = $"loginname={tpCustInfo.TpUserName}&key={HttpUtility.UrlEncode(sessionKey)}&currency={tpCustInfo.TpCurrencyId}" +
+               $"&lang={TpLangId}&gameid={GameId}&org={config.org}&channel={channel}&home={HomeUrl}&fullscreen=yes";
+            }
+
+            var responseJson = HttpPost(apiUrl, sParam, _contentType);
             var responseResult = FromJson<LoginResponse>(responseJson);
 
             if (responseResult.Code != 0)
@@ -56,7 +104,7 @@ namespace ThirdParty.YGG
             return new ApiResult
             {
                 ErrorCode = ErrorCode.Success,
-                Message = responseResult.Data.LaunchUrl
+                Message = isFun ? responseResult.Data.pfflaunchurl : responseResult.Data.LaunchUrl
             };
         }
 
@@ -114,7 +162,7 @@ namespace ThirdParty.YGG
             {
                 TpCategory.Casino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
-                    GameID = detailList.GetFirstStringValue("cat3"),
+                    GameID = detailList.GetFirstStringValue("cat5"),
                     Game = detailList.GetFirstStringValue("cat4"),
                     RefNo = detailList.GetFirstStringValue("reference"),
                     Title = detailList.GetFirstStringValue("tag1"),
@@ -147,69 +195,7 @@ namespace ThirdParty.YGG
 
         #endregion
 
-        #region config & privateMethod
-
-        private class YggConfig
-        {
-            /// <summary>
-            /// login Api Url
-            /// </summary>
-            public string GameUrl { get; }
-
-            /// <summary>
-            /// 試玩Url
-            /// </summary>
-            public string FunGameUrl { get; }
-
-            /// <summary>
-            /// 品牌Id
-            /// </summary>
-            public string Org { get; }
-
-            /// <summary>
-            /// 試玩 0 否 1是
-            /// </summary>
-            public string Fun { get; }
-
-            /// <summary>
-            /// 子遊戲Id
-            /// </summary>
-            public string GameId { get; }
-
-            /// <summary>
-            /// 我方首頁Url
-            /// </summary>
-            public string HomeUrl { get; }
-
-            public string ContentType => "application/x-www-form-urlencoded";
-
-            public YggConfig(Dictionary<string, string> inputs)
-            {
-                GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"])
-                    ? inputs["GameUrl"]
-                    : throw new Exception();
-
-                FunGameUrl = inputs.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(inputs["FunGameUrl"])
-                    ? inputs["FunGameUrl"]
-                    : throw new Exception();
-
-                Org = inputs.ContainsKey("org") && !string.IsNullOrEmpty(inputs["org"])
-                    ? inputs["org"]
-                    : string.Empty;
-
-                GameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"])
-                    ? inputs["gameId"]
-                    : string.Empty;
-
-                HomeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"])
-                    ? inputs["homeUrl"]
-                    : string.Empty;
-
-                Fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"])
-                    ? inputs["fun"]
-                    : "0";
-            }
-        }
+        #region PrivateMethod
 
         /// <summary>
         /// 取得 SessionKey
@@ -223,48 +209,11 @@ namespace ThirdParty.YGG
             inputs.TryGetValue("Token", out var token);
             var sessionKeyArr = new string[] { key, token };
             var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
-            var sessionKey = Convert.ToBase64String(bytes);
+            var sessionKey = HttpUtility.UrlEncode(Convert.ToBase64String(bytes));
             return sessionKey;
         }
 
-        /// <summary>
-        /// 取得 YGG 試玩遊戲登入url
-        /// </summary>
-        /// <param name="TpLangId"></param>
-        /// <param name="config"></param>
-        /// <param name="channel"></param>
-        /// <returns></returns>
-        private static ApiResult GetPlayForFunLaunchUrl(string TpLangId, YggConfig config, string channel)
-        {
-            return new ApiResult()
-            {
-                ErrorCode = ErrorCode.Success,
-                Message =
-                    $"{config.FunGameUrl}?lang={TpLangId}&gameid={config.GameId}&org=demo&channel={channel}&home={HttpUtility.UrlEncode(config.HomeUrl)}&fullscreen=yes"
-            };
-        }
-
-        public class LoginData
-        {
-            [JsonProperty("launchurl")]
-            public string LaunchUrl { get; set; }
-        }
-
-        public class LoginResponse
-        {
-            [JsonProperty("code")]
-            public int Code { get; set; }
-
-            [JsonProperty("msg")]
-            public string ErrorMsg { get; set; }
-
-            [JsonProperty("data")]
-            public LoginData Data { get; set; }
-        }
-
-        #endregion
-
-        private DeviceType GetDeviceType(string device)
+        private static DeviceType GetDeviceType(string device)
         {
             if (device.Equals("Channel.PC", StringComparison.OrdinalIgnoreCase))
             {
@@ -278,5 +227,7 @@ namespace ThirdParty.YGG
 
             return DeviceType.None;
         }
+
+        #endregion
     }
 }

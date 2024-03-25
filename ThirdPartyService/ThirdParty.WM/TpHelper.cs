@@ -1,9 +1,8 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
+﻿using System.Web;
+using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -14,7 +13,14 @@ namespace ThirdParty.WM
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        //private string userPassword = "VyeYHngmE794AXLrDPTN";
+        private readonly WMConfig _siteConfig;
+
+        public TpHelper(IServiceProvider provider)
+        {
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<WMConfig>(TpEnum.WM.ToString());
+        }
+
+        #region Request
 
         public class SignupReq
         {
@@ -47,6 +53,7 @@ namespace ThirdParty.WM
             public long timestamp { get; set; }
         }
 
+        #endregion
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -56,9 +63,12 @@ namespace ThirdParty.WM
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             string currency = tpCustInfo.TpCurrencyId;
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string vendorId = inputs.ContainsKey($"vendorId_{currency}") && !string.IsNullOrEmpty(inputs[$"vendorId_{currency}"]) ? inputs[$"vendorId_{currency}"] : throw new Exception($"vendorId_{currency}");
-            string signature = inputs.ContainsKey($"signature_{currency}") && !string.IsNullOrEmpty(inputs[$"signature_{currency}"]) ? inputs[$"signature_{currency}"] : throw new Exception($"signature_{currency}");
+            var config = _siteConfig;
+            var currencyData = _siteConfig.CurrencyData[currency];
+
+            string ApiUrl = config.ApiUrl;
+            string vendorId = currencyData.vendorId;
+            string signature = currencyData.signature;
 
             var SignUp = new
             {
@@ -125,9 +135,12 @@ namespace ThirdParty.WM
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             string currency = tpCustInfo.TpCurrencyId;
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string vendorId = inputs.ContainsKey($"vendorId_{currency}") && !string.IsNullOrEmpty(inputs[$"vendorId_{currency}"]) ? inputs[$"vendorId_{currency}"] : throw new Exception($"vendorId_{currency}");
-            string signature = inputs.ContainsKey($"signature_{currency}") && !string.IsNullOrEmpty(inputs[$"signature_{currency}"]) ? inputs[$"signature_{currency}"] : throw new Exception("signature");
+            var config = _siteConfig;
+            var currencyData = _siteConfig.CurrencyData[currency];
+
+            string ApiUrl = config.ApiUrl;
+            string vendorId = currencyData.vendorId;
+            string signature = currencyData.signature;
             string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
 
             var Login = new

@@ -2,7 +2,6 @@
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 
 namespace CommonService.Controllers
 {
@@ -10,22 +9,24 @@ namespace CommonService.Controllers
     [ApiController]
     public class FPSController : ControllerBase
     {
-        private readonly CustInfoBLL custInfoBLL;
-        private readonly FPSBLL fpsBLL;
-        public FPSController(FPSBLL fpsBLL, CustInfoBLL custInfoBLL)
+        private readonly CustInfoBLL _custInfoBll;
+        private readonly FPSBLL _fpsBll;
+
+        public FPSController(IServiceProvider provider)
         {
-            this.fpsBLL = fpsBLL;
-            this.custInfoBLL = custInfoBLL;
+            _fpsBll = provider.GetRequiredService<FPSBLL>();
+            _custInfoBll = provider.GetRequiredService<CustInfoBLL>();
         }
+
         [HttpPost]
         public async Task<ApiResult> FPSChecksAsync(FPSChecksRequest fpsChecksRequest)
         {
-            ApiResult apiResult = new ApiResult();
-            var custInfo = custInfoBLL.GetCustInfoProfile(fpsChecksRequest.account);
+            var apiResult = new ApiResult();
+            var custInfo = _custInfoBll.GetCustInfoProfile(fpsChecksRequest.Account);
 
             if (custInfo != null && !string.IsNullOrEmpty(custInfo.TpUserName))
             {
-                var resultResp = await fpsBLL.FPSChecksAsync(custInfo, fpsChecksRequest);
+                var resultResp = await _fpsBll.FPSChecksAsync(custInfo, fpsChecksRequest);
                 apiResult.ErrorCode = resultResp.ErrorCode;
                 apiResult.Message = resultResp.Message;
             }

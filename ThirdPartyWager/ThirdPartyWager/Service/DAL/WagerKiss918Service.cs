@@ -1,31 +1,28 @@
-﻿using Dapper;
-using Microsoft.Extensions.Configuration;
-using MySql.Data.MySqlClient;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Text.Json;
+
+using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.DAL
 {
     public class WagerKiss918Service
     {
-        private readonly IConfiguration configuration;
+        private readonly MySqlClient _wagerDbClient;
 
-        public WagerKiss918Service(IConfiguration configuration)
+        public WagerKiss918Service(IServiceProvider provider)
         {
-            this.configuration = configuration;
+            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
         }
 
-        public int InsertWager(BetKiss918 bet)
+        public async Task<IEnumerable<WagerKiss918Model>> GetWager(string referenceID)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpWagerKiss918_Ins", bet, commandType: CommandType.StoredProcedure);
+            return await _wagerDbClient.QueryAsync<WagerKiss918Model>("Service_TpWagerKiss918_Detail_Get", new { _referenceID = referenceID });
         }
 
-        public IEnumerable<WagerKiss918Total> GetWagerTotal(long beginTime, long endTime, string currency)
+        public int InsertWager(IEnumerable<WagerKiss918Model> datas)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Query<WagerKiss918Total>("Service_TpWagerKiss918_Total_Get", new { BeginTime = beginTime, EndTime = endTime, Currency = currency }, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.Execute("Service_TpWagerKiss918Batch_Ins", new { _Infos = JsonSerializer.Serialize(datas) });
         }
     }
 }

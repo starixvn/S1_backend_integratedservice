@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ThirdPartyCore.Model.enums
+﻿namespace ThirdPartyCore.Model.enums
 {
     /// <summary>
     /// 第三方ID 列舉
@@ -25,7 +21,9 @@ namespace ThirdPartyCore.Model.enums
         OneGaming = 13,
         PG = 14,
         Sexy = 15,
+        CQ9 = 16,
         CF = 17,
+        EBet = 18,
         WM = 20,
         Kiss918 = 21,
         Mega = 22,
@@ -34,6 +32,8 @@ namespace ThirdPartyCore.Model.enums
         V8 = 25,
         PT = 27,
         N2Live = 28,
+        BTI = 29,
+        AMB = 30,
         NineW = 31,
         JILI = 32,
         TCG = 33,
@@ -42,9 +42,22 @@ namespace ThirdPartyCore.Model.enums
         EVO = 36,
         Netent = 37,
         RedTiger = 38,
+        AP = 39,
         HB = 40,
-        SimplePlay = 44
-
+        SBSW = 41,
+        SimplePlay = 44,
+        CryptoSports = 45,
+        Nextspin = 50,
+        PNG = 54,
+        FaChai = 55,
+        Pegasus = 56,
+        BNG = 57,
+        HaoLong = 58,
+        NLC = 59,
+        Amigo = 60,
+        MaxGame = 61,
+        NTConnect = 62,
+        GA = 63
     }
 
     public enum TpGameType
@@ -103,6 +116,13 @@ namespace ThirdPartyCore.Model.enums
         Netent_RNG = 64,
         RedTiger_RNG = 65,
         HB_RNG = 68,
+        SBSW_Sports = 69,
+        SBSW_NumberGame = 70,
+        SBSW_VirtualSports = 71,
+        SBSW_VirtualSports2 = 72,
+        SBSW_Keno = 73,
+        SBSW_Lottery = 74,
+        SBSW_TableGame = 75,
         AMB_RNG = 76,
         SBO_Sports = 77,
         SBO_Games = 78,
@@ -112,5 +132,26 @@ namespace ThirdPartyCore.Model.enums
         Skywind_LiveCasino = 84,
         Skywind_Fish = 85,
         SimplePlay_RNG = 86,
+        GPI_Keno = 88,
+        GPI_Sode = 89,
+        GPI_Thai_Lottery = 90,
+        GPI_Fast3 = 91,
+        SBSW_Vgaming = 95,
+        SBSW_CardClub = 96,
+        Nextspin_RNG = 99,
+        PlayTech_RNG = 100,
+        PlayTech_LiveCasino = 101,
+        IM_ESports = 102,
+        IM_Sports = 103,
+        SPRIBE_RNG = 104,
+        FaChai_RNG = 106,
+        BNG_RNG = 108,
+        SG_Table = 109,
+        HaoLong_4D = 110,
+        NLC_RNG = 111,
+        Amigo_RNG = 112,
+        MaxGame_Poker = 113,
+        NTConnect_Lottery = 114,
+        GA_CockFighting = 115
     }
 }

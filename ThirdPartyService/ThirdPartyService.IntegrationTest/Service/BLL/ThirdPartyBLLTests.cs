@@ -1,24 +1,26 @@
-﻿using NUnit.Framework;
-using System;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using NSubstitute;
-using Microsoft.Extensions.Configuration;
-using System.IO;
-using ThirdPartyService.IntegrationTest.Stubs;
-using ThirdPartyService.Service.Library;
 using Microsoft.Extensions.Logging;
+
+using Newtonsoft.Json;
+
+using NSubstitute;
+
+using NUnit.Framework;
+
+using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-using Microsoft.AspNetCore.Hosting;
-using ThirdPartyService.IntegrationTest.Models;
-using ThirdPartyService.Service.DAL;
-using Newtonsoft.Json;
-using ThirdPartyCore;
-using System.Collections.Generic;
 using ThirdPartyCore.Model.TpBetRecordExtend;
-using Microsoft.AspNetCore.Builder;
+
 using ThirdPartyService.Extensions;
+using ThirdPartyService.IntegrationTest.Models;
+using ThirdPartyService.IntegrationTest.Stubs;
+using ThirdPartyService.Service.DAL;
+using ThirdPartyService.Service.Library;
 
 namespace ThirdPartyService.Service.BLL.Tests
 {
@@ -35,7 +37,11 @@ namespace ThirdPartyService.Service.BLL.Tests
             {
                 EnvironmentName = "Local",
             });
-            builder.Configuration.AddRemoteJsonConfig(builder.Configuration.GetSection("ConfigService").Get<string[]>());
+
+            var remoteUrls = builder.Configuration.GetSection("ConfigService").Get<string[]>();
+            remoteUrls = builder.Configuration.CheckLocalConfig(builder.Environment, new[] { "Nova" }, remoteUrls);
+            builder.Configuration.AddRemoteJsonConfig(remoteUrls);
+
             var app = builder.Build();
             _configuration = app.Configuration;
             services.AddSingleton(_configuration);
@@ -53,7 +59,6 @@ namespace ThirdPartyService.Service.BLL.Tests
             services.AddTransient(p => Substitute.For<ILogger<MySqlClient>>());
             services.AddTransient(p => Substitute.For<ILogger<ThirdPartyBLL>>());
             services.AddTransient(p => Substitute.For<ILogger<ThirdPartyHelper>>());
-            services.AddTransient(p => Substitute.For<ILogger<Log2File>>());
 
             var startup = new StubStartUp(_configuration);
 
@@ -99,7 +104,7 @@ namespace ThirdPartyService.Service.BLL.Tests
         }
 
         [Ignore("dev")]
-        [TestCase(226500, "5WG09igtsu5CEV", 67, 39,51, ExpectedResult = ErrorCode.Success)]
+        [TestCase(226500, "5WG09igtsu5CEV", 67, 39, 51, ExpectedResult = ErrorCode.Success)]
         public ErrorCode GetTpBetRecordExtendTest(int custId, string transId, int gameType, int tpId, int currencyId)
         {
             var actual = _thirdPartyBLL.GetTpBetRecordExtend(new GetTpBetRecordExtendRequest

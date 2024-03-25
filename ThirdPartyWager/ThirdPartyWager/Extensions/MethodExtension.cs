@@ -9,7 +9,7 @@ namespace ThirdPartyWager.Extensions
         {
             return new StackTrace().GetFrame(1)?.GetMethod()?.Name;
         }
-        
+
         public static string GetCurrentAsyncMethod([CallerMemberName] string callerName = "")
         {
             return callerName;

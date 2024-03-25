@@ -1,22 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace CommonService.Service.Library
 {
     public class Tools
     {
-        public Tools()
-        {
-        }
         public string ToMD5(string encodeStr)
         {
             using (var cryptoMD5 = MD5.Create())
             {
-                var bytes = System.Text.Encoding.UTF8.GetBytes(encodeStr);
+                var bytes = Encoding.UTF8.GetBytes(encodeStr);
                 var hash = cryptoMD5.ComputeHash(bytes);
                 var md5 = BitConverter.ToString(hash)
                 .Replace("-", String.Empty)
@@ -25,6 +18,7 @@ namespace CommonService.Service.Library
                 return md5;
             }
         }
+
         public string GetRandomNumString(int length)
         {
             // var str = "0123456789abcdefghijklmnopqrstuvwxyz";//ABCDEFGHIJKLMNOPQRSTUVWXYZ

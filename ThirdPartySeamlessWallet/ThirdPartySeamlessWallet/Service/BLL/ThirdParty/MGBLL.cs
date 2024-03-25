@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -68,13 +64,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public MGGetBalanceResponse GetBalance(MGGetBalanceRequest request)
         {
-            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, request.playerId);
-            if (tpCheck == null || tpCheck.Locked)
-            {
-                _logger.LogError($"tpcheck fail:{JsonConvert.SerializeObject(tpCheck)}");
-                throw new MGException(MGErrorCode.PlayerIsLocked, $"{request.playerId} is locked");
-            }
-
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)ThirdParty, request.playerId);
             var gameType = _tpCustInfoBLL.GetCustGotoGameType(tpCustInfo.CustId, (int)ThirdParty);
 
@@ -121,6 +110,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 currency = request.currency,
                 txnId = request.txnId,
                 creationTime = request.creationTime,
+                creationTimeMs = convertCreationTimeMs(request.creationTimeMs),
                 contentCode = request.contentCode,
                 betId = request.betId,
                 roundId = request.roundId,
@@ -190,6 +180,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 currency = request.currency,
                 txnId = request.txnId,
                 creationTime = request.creationTime,
+                creationTimeMs = convertCreationTimeMs(request.creationTimeMs),
                 contentCode = request.contentCode,
                 betId = request.betId,
                 roundId = request.roundId,
@@ -256,22 +247,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 txnId = request.txnId,
                 playerId = request.playerId,
                 amount = request.amount,
-                creationTime = DateTime.UtcNow.Ticks
+                creationTime = DateTime.UtcNow.Ticks,
+                creationTimeMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             };
 
             var cancelResult = new MGCancelResult();
 
-            var gameType = getGameType(request.channel);
-            if (gameType == 0)
+            // check bettrans of gametype by table
+            var tpGameType = _settledService.GetTpGameType_MG(request.txnId, cancelData.creationTimeMs);
+            if (tpGameType == 0)
             {
-                // check bettrans of gametype by table
-                var tpGameType = _settledService.GetTpGameType_MG(request.betId, cancelData.creationTime);
-                if (tpGameType == 0)
-                {
-                    throw new MGException(MGErrorCode.GameTypeError, $"gameType error:{tpGameType}, betId:{request.betId}");
-                }
-                gameType = tpGameType;
+                throw new MGException(MGErrorCode.GameTypeError, $"gameType error:{tpGameType}, betId:{request.betId}");
             }
+            var gameType = tpGameType;
 
             if (gameType == (int)GameType.MG_RNG)
             {
@@ -322,7 +310,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 txnId = request.txnId,
                 playerId = request.playerId,
                 amount = request.amount,
-                creationTime = request.creationTime
+                creationTime = request.creationTime,
+                creationTimeMs = convertCreationTimeMs(request.creationTimeMs),
             };
 
             var cancelResult = new MGCancelResult();
@@ -385,7 +374,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private int getGameType(string channel = null)
         {
             var gameType = 0;
-            if(!string.IsNullOrEmpty(channel) && string.Equals(channel, "LIVEDEALER", StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrEmpty(channel) && string.Equals(channel, "LIVEDEALER", StringComparison.OrdinalIgnoreCase))
             {
                 gameType = (int)GameType.MG_LiveCasino;
             }
@@ -394,6 +383,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 gameType = (int)GameType.MG_RNG;
             }
             return gameType;
+        }
+
+        private long convertCreationTimeMs(long creationTimeMs)
+        {
+            var leng = creationTimeMs.ToString().Length;
+            if (leng == 13)
+            {
+                return creationTimeMs;
+            }
+            else if (leng == 10)
+            {
+                return creationTimeMs * 1000;
+            }
+            return DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         }
     }
 }

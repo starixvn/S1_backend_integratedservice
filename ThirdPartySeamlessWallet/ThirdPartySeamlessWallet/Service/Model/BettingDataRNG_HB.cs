@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-
-namespace ThirdPartySeamlessWallet.Service.Model
+﻿namespace ThirdPartySeamlessWallet.Service.Model
 {
     public class BettingDataRNG_HB
     {
@@ -127,7 +123,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public Auth auth { get; set; }
         public Playerdetailrequest playerdetailrequest { get; set; }
     }
-    
+
     public class Basegame
     {
         public string brandgameid { get; set; }
@@ -153,7 +149,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public playerdetailresponse playerdetailresponse { get; set; }
     }
-    
+
     public class HBStatus
     {
         public bool success { get; set; }
@@ -169,10 +165,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal balance { get; set; }
         public string currencycode { get; set; }
     }
-    
+
     #endregion
 
-    
+
     public class Fundinfo
     {
         public int gamestatemode { get; set; }
@@ -234,7 +230,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public Auth auth { get; set; }
         public dynamic fundtransferrequest { get; set; }
     }
-    
+
     public class Status
     {
         public bool success { get; set; }
@@ -261,6 +257,15 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string longTimeToken { get; set; }
         public string tpUserName { get; set; }
         public string gameId { get; set; }
+    }
+
+    public class TpBetFailureRecordInfo_HB
+    {
+        public decimal CurrentBalance { get; set; }
+        public decimal BetAmount { get; set; }
+        public decimal WinAmount { get; set; }
+        public decimal ExchangeRate { get; set; }
+        public decimal InsufficientBalance { get; set; }
     }
 
 }

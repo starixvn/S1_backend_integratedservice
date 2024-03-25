@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using ThirdPartySeamlessWallet.Service.DAL.Interface;
+﻿using ThirdPartySeamlessWallet.Service.DAL.Interface;
 using ThirdPartySeamlessWallet.Service.Model;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
@@ -12,13 +10,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             _custBetLimitService = custBetLimitService;
         }
-        
+
         public bool IsOutOfLimit(int custId, int tpCategory, int gameTypeId, decimal amount, out int minBet, out int maxBet)
         {
             minBet = 0;
             maxBet = 0;
             var custBetLimit = _custBetLimitService.GetCustBetLimit(custId);
-            if(custBetLimit == null)
+            if (custBetLimit == null)
                 return false;
 
             var betSetting = new BetLimit(custBetLimit.BetSettings)
@@ -32,7 +30,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             return false;
         }
-        
+
         public class BetLimit
         {
             public int MinBet { get; set; }
@@ -46,7 +44,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             public BetLimit SetBetLimit(int tpCategory, int gameTypeId)
             {
                 var category = _betSettings?.FirstOrDefault(a => a.TpCategory == tpCategory);
-                if(category == null)
+                if (category == null)
                     return this;
 
                 var gameType = category.TpBetSetting?.FirstOrDefault(a => a.GameTypeId == gameTypeId);

@@ -1,14 +1,11 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Serilog.Context;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
+
+using Newtonsoft.Json;
+
+using Serilog.Context;
+
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -26,7 +23,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly ILogger<TCGBLL> _logger;
         public readonly ThirdPartySetting thirdPartySetting;
         private readonly Dictionary<string, Func<TCGRequest, TCGConfig, Task<TCGReturnObj>>> _requestHandler;
-        
+        private readonly Dictionary<string, string> defaultConfig;
+
+        private int _processorCount { get; set; }
 
         public Tp ThirdParty { get; set; }
         public GameType GameType { get; set; }
@@ -50,14 +49,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 { TCGApiMethod.CheckTransactionStatus, CheckTransactionStatus},
             };
             _logger = provider.GetRequiredService<ILogger<TCGBLL>>();
-            LogContext.PushProperty("TP", "TCG");
+            LogContext.PushProperty("TP", ThirdParty.ToString());
+            _processorCount = Environment.ProcessorCount;
+
+            //用 SiteId = 0 取回預設Config
+            defaultConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(ThirdParty.ToString());
         }
 
         public async Task<TCGReturnObj> SeamlessWallet(string merchantCode, string @params, string sign)
         {
             try
             {
-                var tcgConfig = new TCGConfig(thirdPartySetting.TpSetting, merchantCode);
+                var tcgConfig = new TCGConfig(defaultConfig, merchantCode);
                 var jsonString = DesDecrypt(@params, tcgConfig.DesKey);
                 _logger.LogInformation(jsonString);
                 var desEncrypt = DesEncrypt(jsonString, tcgConfig.DesKey);
@@ -93,7 +96,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
             try
             {
-                var tcgConfig = new TCGConfig(thirdPartySetting.TpSetting, merchantCode);
+                var tcgConfig = new TCGConfig(defaultConfig, merchantCode);
                 return await _requestHandler[request.method].Invoke(request, tcgConfig);
             }
             catch (TCGException ex)
@@ -131,8 +134,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         private async Task<TCGReturnObj> Transaction(TCGRequest request, TCGConfig tcgConfig)
         {
-            var Tasks = request.transactions.Select(item => Task.Run(() => ExecuteTransaction(request, item))).ToArray();
-            var result = await Task.WhenAll(Tasks);
+            var result = new ConcurrentBag<TCGResult>();
+            Parallel.ForEach(
+                request.transactions,
+                new ParallelOptions() { MaxDegreeOfParallelism = _processorCount },
+                async (item) =>
+                {
+                    result.Add(await ExecuteTransaction(request, item));
+                });
 
             var error = result.FirstOrDefault(item => item.Result != 0);
             if (error != null)
@@ -151,15 +160,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             };
         }
 
-        private async Task<TCGResult> ExecuteTransaction(TCGRequest request , TCGTransactionData transaction)
+        private async Task<TCGResult> ExecuteTransaction(TCGRequest request, TCGTransactionData transaction)
         {
             try
             {
                 var (tpCustInfo, tpCurrency) = GetTPInfo(transaction.username);
                 transaction.amount *= tpCurrency.ExchangeRate;
-                
+
                 if (request.method == TCGApiMethod.Debit || request.method == TCGApiMethod.Reserve)
-                {        
+                {
                     var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)ThirdParty, tpCustInfo.TpUserName);
                     if (tpCheck == null)
                     {
@@ -200,8 +209,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         private async Task<TCGReturnObj> Reservation(TCGRequest request, TCGConfig tcgConfig)
         {
-            var Tasks = request.reservation_details.Select(item => Task.Run(() => ExecuteReservation(request, item))).ToArray();
-            var result = await Task.WhenAll(Tasks);
+            var result = new ConcurrentBag<TCGResult>();
+            Parallel.ForEach(
+                request.reservation_details,
+                new ParallelOptions() { MaxDegreeOfParallelism = _processorCount },
+                async (item) =>
+                {
+                    result.Add(await ExecuteReservation(request, item));
+                });
 
             var error = result.FirstOrDefault(item => item.Result != 0);
             if (error != null)
@@ -229,9 +244,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 return request.method switch
                 {
-                    TCGApiMethod.CancelReserve 
+                    TCGApiMethod.CancelReserve
                         => await settledService.CancelReserve_TCG(tpCustInfo, GetGameType(request.product_type), request, reservation),
-                    TCGApiMethod.ConfirmReserve 
+                    TCGApiMethod.ConfirmReserve
                         => await settledService.ConfirmReserve_TCG(tpCustInfo, GetGameType(request.product_type), request, reservation),
                     _ => throw new TCGException(TCGReturnCode.MethodNotFound, $"method:{request.method} not found.")
                 };
@@ -263,7 +278,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 var bettransLottery = await bettingService.BettransLottery_Get_TCG(item.username, item.ref_no);
                 queryList.Add(new TCGQueryResult(item.ref_no, bettransLottery));
             }
-            
+
             return new TCGCheckObj
             {
                 status = TCGReturnCode.Success.ToString(),
@@ -339,6 +354,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             return (tpCustInfo, tpCurrency);
         }
-      
+
     }
 }

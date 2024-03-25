@@ -1,4 +1,5 @@
 ﻿using Serilog.Context;
+
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
@@ -19,9 +20,7 @@ namespace ThirdPartyWager.Workers
         private readonly int _beyond = 2;
         private Timer timer;
 
-        public FinanceAMB(
-            IServiceProvider provider
-        )
+        public FinanceAMB(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceAMB>>();
             _financeAMBBLL = provider.GetRequiredService<FinanceAMBBLL>();
@@ -73,9 +72,6 @@ namespace ThirdPartyWager.Workers
             var quick = false;
             try
             {
-                // get setting
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
-
                 // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
 
@@ -93,7 +89,7 @@ namespace ThirdPartyWager.Workers
 
                 // report
                 DateTime reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);
-                var reportData = await _financeAMBBLL.GetReport(_tpId, setting, reportTime);
+                var reportData = await _financeAMBBLL.GetReport(_tpId, null, reportTime);
                 int result;
                 if (reportData.Count > 0)
                 {

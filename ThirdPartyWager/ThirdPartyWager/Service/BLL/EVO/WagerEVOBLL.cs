@@ -1,10 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -35,7 +30,7 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> ExecWagerWorker(int type, int timeRange)
         {
-            var wokerTime = GetWorkerTime(type, -180);
+            var wokerTime = GetWorkerTime(type, -480);
             var quick = CheckQuick(wokerTime, 5);
             var time = _dateTimeHelper.GetTimeByMinute(timeRange, _timeZone, _timeFormat, wokerTime);
 
@@ -54,9 +49,9 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> ExecWagerRedoWorker(int type, int timeRange)
         {
-            var wokerTime = GetWorkerTime(type, 1);
-            var quick = CheckQuick(wokerTime, 120);
-            var time = _dateTimeHelper.GetTimeByHour(timeRange, _timeZone, _timeFormat, wokerTime);
+            var wokerTime = GetWorkerTime(type, 0);
+            var quick = CheckQuick(wokerTime, 360);
+            var time = _dateTimeHelper.GetTimeByHour(timeRange, _timeZone, _timeFormat, wokerTime, 0);
 
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
@@ -76,6 +71,16 @@ namespace ThirdPartyWager.Service.BLL
             return quick;
         }
 
+        public async Task<bool> ExecUnsettleWorker(int type)
+        {
+            var result = await GetUnsettleAsync();
+            if (result)
+            {
+                _thirdPartyBLL.SetThirdPartyTimer(_tpId, type, DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+            }
+            return true;
+        }
+
         private async Task<bool> GetWagersAsync(string startTime, string endTime, bool compare = false, decimal wagerTotal = 0, decimal payoutTotal = 0)
         {
             var msg = "FATAL_ERROR";
@@ -85,7 +90,7 @@ namespace ThirdPartyWager.Service.BLL
                 var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
 
                 // get wager
-                var dataWager = await _apiEVOBLL.GetBetListByTime(setting["ApiUrl"], setting["CasinoKey"], setting["gameHistoryApiToken"], setting["GameProvider"], startTime, endTime, guid);
+                var dataWager = await _apiEVOBLL.GetBetListByTime(setting["ApiUrl_Backup"], setting["CasinoKey"], setting["gameHistoryApiToken"], setting["GameProvider"], startTime, endTime, guid);
 
                 // error condition
                 var error = dataWager.Select(x => x.error).FirstOrDefault();
@@ -101,12 +106,18 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     var wager = dataWager.Sum(x => x.wager);
                     var payout = dataWager.Sum(x => x.payout);
-
-                    if (wager == wagerTotal && payout == payoutTotal)
+                    var diffWager = Math.Abs(wager - wagerTotal);
+                    var diffPayout = Math.Abs(payout - payoutTotal);
+                    if (diffWager < 0.005m && diffPayout < 0.005m)
                     {
                         msg = "MATCH";
                         _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                         return true;
+                    }
+                    else
+                    {
+                        msg = "NO_MATCH";
+                        _logger.LogWarning($"{msg}\r\nwager={wager}\r\nwagerTotal={wagerTotal}\r\npayout={payout}\r\npayoutTotal={payoutTotal}");
                     }
                 }
 
@@ -197,6 +208,148 @@ namespace ThirdPartyWager.Service.BLL
             {
                 msg = "FATAL_ERROR";
                 _logger.LogError(ex, $"GetWagersAsync {msg}\r\n{ex.Message}");
+                return false;
+            }
+        }
+
+        private async Task<bool> GetUnsettleAsync()
+        {
+            var msg = "FATAL_ERROR";
+            var before = -30;
+            try
+            {
+                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+                // 取得目前未結算資料
+                var unsettledList = await _wagerEVOService.GetUnsettleCheckList();
+                if (unsettledList == null)
+                {
+                    msg = "NO_DATA";
+                    _logger.LogInformation($"{msg}\r\nunsettledList");
+                    return true;
+                }
+
+                // 超過30分鐘尚未結算的資料
+                var execBefore = DateTimeOffset.UtcNow.AddMinutes(before).ToUnixTimeSeconds();
+                var execUnsettleData = unsettledList.Where(i => i.SettleTime < execBefore).ToList();
+                if (execUnsettleData == null)
+                {
+                    msg = "NO_DATA";
+                    _logger.LogInformation($"{msg}\r\nexecUnsettleData");
+                    return true;
+                }
+
+                // 排除wager已存在的注單不用重新抓取
+                var unsettleOfTransId = execUnsettleData.Select(x => x.TransId).ToList();
+                var wagerData = await _wagerEVOService.GetTransIdList(JsonConvert.SerializeObject(unsettleOfTransId));
+                var reGetTransId = unsettleOfTransId;
+                if (wagerData.Any())
+                {
+                    var wagerOfTransId = wagerData.Select(x => x.TransId).ToList();
+                    reGetTransId = unsettleOfTransId.Except(wagerOfTransId).ToList();
+                }
+
+                // 準備以單號取得注單資料
+                foreach (var unsettled in execUnsettleData)
+                {
+                    if (!reGetTransId.Contains(unsettled.TransId))
+                    {
+                        msg = "DATA_EXIST";
+                        _logger.LogInformation($"{msg}\r\nTransId={unsettled.TransId}");
+                        continue;
+                    }
+                    // TooManyRequests:Please try again after 10 seconds
+                    Thread.Sleep(12000);
+
+                    // get wager
+                    var settleTime = DateTimeOffset.FromUnixTimeSeconds(unsettled.SettleTime).DateTime.AddMinutes(-5).ToString(_timeFormat);
+                    var dataWager = await _apiEVOBLL.GetBetListByTransId(setting["ApiUrl_Backup"], setting["CasinoKey"], setting["gameHistoryApiToken"], setting["GameProvider"], unsettled.TransId, settleTime);
+
+                    // error condition
+                    var error = dataWager.Select(x => x.error).FirstOrDefault();
+
+                    if (error != null && error != "nodata")
+                    {
+                        msg = "THIRD_PARTY_ERROR";
+                        _logger.LogError($"{msg}\r\nTransId={unsettled.TransId}\r\n{JsonConvert.SerializeObject(dataWager, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore })}");
+                        return false;
+                    }
+
+                    if (error == "nodata")
+                    {
+                        msg = "NO_DATA";
+                        _logger.LogInformation($"{msg}\r\nTransId={unsettled.TransId}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                        continue;
+                    }
+
+                    var name = "ROUNDID";
+                    var field = "";
+                    foreach (var round in dataWager)
+                    {
+                        try
+                        {
+                            field = round.id;
+
+                            var roundInfo = new WagerRoundInfo_EVO();
+                            roundInfo.id = round.id;
+                            roundInfo.gameProvider = round.gameProvider;
+                            roundInfo.startedAt = round.startedAt;
+                            roundInfo.settledAt = round.settledAt;
+                            roundInfo.status = round.status;
+                            roundInfo.gameType = round.gameType;
+                            roundInfo.table = JsonConvert.SerializeObject(round.table);
+                            roundInfo.dealer = JsonConvert.SerializeObject(round.dealer);
+                            roundInfo.currency = round.currency;
+                            roundInfo.result = JsonConvert.SerializeObject(round.result);
+                            roundInfo.wager = round.wager;
+                            roundInfo.payout = round.payout;
+                            roundInfo.TableId = round.table["id"];
+
+                            IList<Participant_EVO> participants = JsonConvert.DeserializeObject<IList<Participant_EVO>>(JsonConvert.SerializeObject(round.participants));
+                            foreach (var playerItem in participants)
+                            {
+                                foreach (var betItem in playerItem.bets)
+                                {
+                                    name = "WAGERID";
+                                    field = betItem.transactionId;
+
+                                    var bet = new Wager_EVO();
+                                    bet.RoundId = round.id;
+                                    bet.casinoId = playerItem.casinoId;
+                                    bet.playerId = playerItem.playerId;
+                                    bet.currency = playerItem.currency;
+                                    bet.code = betItem.code;
+                                    bet.stake = betItem.stake;
+                                    bet.payout = betItem.payout;
+                                    bet.placedOn = betItem.placedOn;
+                                    bet.description = betItem.description;
+                                    bet.transactionId = betItem.transactionId;
+                                    bet.playMode = playerItem.playMode;
+                                    bet.channel = playerItem.channel;
+                                    bet.participants = JsonConvert.SerializeObject(playerItem);
+                                    var r = _wagerEVOService.InsertWager(bet);
+                                    _ = r.Result;
+                                }
+                            }
+                            // 寫入wager待seamless settleworker執行結算
+                            var rr = _wagerEVOService.InsertWagerRoundInfo(roundInfo);
+                            _ = rr.Result;
+                        }
+                        catch (Exception ex)
+                        {
+                            msg = $"INSERT_WAGER({name}: {field} )";
+                            _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(round)}\r\n{ex.Message}");
+                            return false;
+                        }
+                    }
+                }
+                msg = "FINISH";
+                _logger.LogInformation($"GetUnsettleAsync {msg}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                msg = "FATAL_ERROR";
+                _logger.LogError(ex, $"GetUnsettleAsync {msg}\r\n{ex.Message}");
                 return false;
             }
         }

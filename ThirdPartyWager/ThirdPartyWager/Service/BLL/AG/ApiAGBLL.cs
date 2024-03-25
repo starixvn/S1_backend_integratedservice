@@ -1,14 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.IO;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+
+using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -24,16 +19,13 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<ApiAGBLL> _logger;
         private readonly string _tpName = Tp.AG.ToString();
 
-        public ApiAGBLL(
-            IServiceProvider provider,
-            IConfiguration configuration
-        )
+        public ApiAGBLL(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<ApiAGBLL>>();
-            _seamlessUrl = configuration.GetValue<string>("TpSWserviceUrl");
+            _seamlessUrl = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ServiceHostConfig>("ServiceHost").SeamlessService;
         }
 
         public async Task<WagerAGModel> GetBetListByTime(string apiUrl, string hashKey, string cagent, string startTime, string endTime, int page, string guid)
@@ -118,7 +110,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<string> callSeamlessApi(string type, BettransDataAG bettransDataAG)
         {
             // param
-            var url = $"{_seamlessUrl}/AG";
+            var url = $"{_seamlessUrl}AG";
             var uri = "/postTransfer";
             var cagent = "GF4";
             var platformType = "AGIN";

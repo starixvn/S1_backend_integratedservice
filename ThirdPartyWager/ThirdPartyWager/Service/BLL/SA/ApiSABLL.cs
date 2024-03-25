@@ -1,14 +1,10 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 using System.Xml;
+using Newtonsoft.Json;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -19,6 +15,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Log2File _log2File;
         private readonly ILogger<ApiSABLL> _logger;
         private readonly string _tpName = Tp.SA.ToString();
+        private readonly string _timeFormat = "yyyyMMddHHmmss";
 
         public ApiSABLL(IServiceProvider provider)
         {
@@ -28,18 +25,20 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<ApiSABLL>>();
         }
 
-        public async Task<WagerSAModel> GetBetListByTime(string apiUrl, string encrypKey, string md5Key, string secretKey, string startTime, string endTime, string guid)
+        public async Task<WagerSAModel> GetBetListByTime(SAConfig setting, string startTime, string endTime)
         {
+            var config = setting;
+
             // param
-            var url = $"{apiUrl}";
+            var url = config.WagerUrl;
             var method = "GetAllBetDetailsForTimeIntervalDV";
-            var time = new DateTimeOffset(DateTime.Now).ToString("yyyyMMddHHmmss");
-            var parameter = $"method={method}&Time={time}&FromTime={startTime}&ToTime={endTime}&Key={secretKey}";
+            var time = new DateTimeOffset(DateTime.Now).ToString(_timeFormat);
+            var parameter = $"method={method}&Time={time}&FromTime={startTime}&ToTime={endTime}&Key={config.SecretKey}";
 
             // encrype param
-            var q = _common.encrypt(parameter, encrypKey);
-            var s = _common.ToMD5($"{parameter}{md5Key}{time}{secretKey}");
-            var param = $"q={System.Web.HttpUtility.UrlEncode(q)}&s={ System.Web.HttpUtility.UrlEncode(s)}";
+            var q = _common.encrypt(parameter, config.EncrypKey);
+            var s = _common.ToMD5($"{parameter}{config.Md5Key}{time}{config.SecretKey}");
+            var param = $"q={System.Web.HttpUtility.UrlEncode(q)}&s={System.Web.HttpUtility.UrlEncode(s)}";
 
             // log
             _logger.LogInformation(parameter);
@@ -50,18 +49,20 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task<WagerRedoSAModel> GetBetSummaryByTime(string apiUrl, string encrypKey, string md5Key, string secretKey, string startTime, string endTime, string guid)
+        public async Task<WagerRedoSAModel> GetBetSummaryByTime(SAConfig setting, string startTime, string endTime)
         {
+            var config = setting;
+
             // param
-            var url = $"{apiUrl}";
+            var url = config.WagerUrl;
             var method = "GetTransactionDetails";
-            var time = new DateTimeOffset(DateTime.Now).ToString("yyyyMMddHHmmss");
-            var parameter = $"method={method}&Time={time}&FromTime={startTime}&ToTime={endTime}&Key={secretKey}";
+            var time = new DateTimeOffset(DateTime.Now).ToString(_timeFormat);
+            var parameter = $"method={method}&Time={time}&FromTime={startTime}&ToTime={endTime}&Key={config.SecretKey}";
 
             // encrype param
-            var q = _common.encrypt(parameter, encrypKey);
-            var s = _common.ToMD5($"{parameter}{md5Key}{time}{secretKey}");
-            var param = $"q={System.Web.HttpUtility.UrlEncode(q)}&s={ System.Web.HttpUtility.UrlEncode(s)}";
+            var q = _common.encrypt(parameter, config.EncrypKey);
+            var s = _common.ToMD5($"{parameter}{config.Md5Key}{time}{config.SecretKey}");
+            var param = $"q={System.Web.HttpUtility.UrlEncode(q)}&s={System.Web.HttpUtility.UrlEncode(s)}";
 
             // log
             _logger.LogInformation(parameter);

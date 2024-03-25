@@ -1,49 +1,42 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Net;
-using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
-using System.Web;
+
+using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
-using System.Security.Cryptography;
-using System.Net.Http.Headers;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class ApiAllBetBLL
     {
         private readonly string _seamlessUrl;
-        private readonly byte[] NULL_IV = Convert.FromBase64String("AAAAAAAAAAA=");
         private readonly HttpHelper _httpHelper;
-        private readonly Common _common;
         private readonly Log2File _log2File;
         private readonly ILogger<ApiAllBetBLL> _logger;
         private readonly string _tpName = Tp.Allbet.ToString();
         private readonly IConfiguration _configuration;
+        private readonly AllBetConfig _siteAllBetConfig;
 
         public ApiAllBetBLL(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
-            _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<ApiAllBetBLL>>();
             _configuration = provider.GetRequiredService<IConfiguration>();
-            _seamlessUrl = _configuration.GetValue<string>("TpSWserviceUrl");
+            _seamlessUrl = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ServiceHostConfig>("ServiceHost").SeamlessService;
+            _siteAllBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AllBetConfig>(Tp.Allbet.ToString());
         }
 
-        public async Task<WagerAllBetModel<BetAllBet>> GetBetListByTime(IReadOnlyDictionary<string, string> setting, string agent, string startDateTime, string endDateTime, int pageNum)
+        public WagerAllBetModel<BetAllBet> GetBetListByTime(string agent, string startDateTime, string endDateTime, int pageNum)
         {
             // param
-            var apiUrl = setting["ApiUrl"];
+            var apiUrl = _siteAllBetConfig.ApiUrl;
             var path = "PagingQueryBetRecords";
             var param = new
             {
@@ -56,7 +49,7 @@ namespace ThirdPartyWager.Service.BLL
             var parameters = JsonConvert.SerializeObject(param);
             // log
             _logger.LogInformation(parameters);
-            var header = GetAuthData(setting, path, parameters, out var contentType);
+            var header = GetAuthData(path, parameters, out var contentType);
             // request
             var r = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
             if (string.IsNullOrEmpty(r))
@@ -67,10 +60,10 @@ namespace ThirdPartyWager.Service.BLL
             return JsonConvert.DeserializeObject<WagerAllBetModel<BetAllBet>>(r);
         }
 
-        public async Task<SettleCheckAllBetModel> GetBetByBetNum(IReadOnlyDictionary<string, string> setting, string betNum)
+        public SettleCheckAllBetModel GetBetByBetNum(string betNum)
         {
             // param
-            var apiUrl = setting["ApiUrl"];
+            var apiUrl = _siteAllBetConfig.ApiUrl;
             var path = "QueryBetRecordByBetNum";
             var param = new
             {
@@ -79,7 +72,7 @@ namespace ThirdPartyWager.Service.BLL
             var parameters = JsonConvert.SerializeObject(param);
             // log
             _logger.LogInformation(parameters);
-            var header = GetAuthData(setting, path, parameters, out var contentType);
+            var header = GetAuthData(path, parameters, out var contentType);
             // request
             var r = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
             if (string.IsNullOrEmpty(r))
@@ -90,10 +83,10 @@ namespace ThirdPartyWager.Service.BLL
             return JsonConvert.DeserializeObject<SettleCheckAllBetModel>(r);
         }
 
-        public async Task<WagerAllBetModel<BetAllBet>> GetModifiedBetListByTime(IReadOnlyDictionary<string, string> setting, string agent, string startDateTime, string endDateTime)
+        public WagerAllBetModel<BetAllBet> GetModifiedBetListByTime(string agent, string startDateTime, string endDateTime)
         {
             // param
-            var apiUrl = setting["ApiUrl"];
+            var apiUrl = _siteAllBetConfig.ApiUrl;
             var path = "QueryModifiedBetRecords";
             var param = new
             {
@@ -104,7 +97,7 @@ namespace ThirdPartyWager.Service.BLL
             var parameters = JsonConvert.SerializeObject(param);
             // log
             _logger.LogInformation(parameters);
-            var header = GetAuthData(setting, path, parameters, out var contentType);
+            var header = GetAuthData(path, parameters, out var contentType);
             // request
             var r = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
             if (string.IsNullOrEmpty(r))
@@ -116,9 +109,9 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task<WagerAllBetModel<RewardAllBet>> GetRewardByTime(IReadOnlyDictionary<string, string> setting, string agent, string startDateTime, string endDateTime, int pageNum)
+        public WagerAllBetModel<RewardAllBet> GetRewardByTime(string agent, string startDateTime, string endDateTime, int pageNum)
         {
-            var apiUrl = setting["ApiUrl"];
+            var apiUrl = _siteAllBetConfig.ApiUrl;
             var path = "PagingQueryEventRecords";
             var param = new
             {
@@ -131,7 +124,7 @@ namespace ThirdPartyWager.Service.BLL
             var parameters = JsonConvert.SerializeObject(param);
             // log
             _logger.LogInformation(parameters);
-            var header = GetAuthData(setting, path, parameters, out var contentType);
+            var header = GetAuthData(path, parameters, out var contentType);
             // request
             var r = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
             if (string.IsNullOrEmpty(r))
@@ -145,10 +138,10 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        public async Task<CurrencyStats_AllBet> GetBetSummaryByTime(IReadOnlyDictionary<string, string> setting, string agent, string startTime)
+        public CurrencyStats_AllBet GetBetSummaryByTime(string agent, string startTime)
         {
             // param
-            var apiUrl = setting["ApiUrl"];
+            var apiUrl = _siteAllBetConfig.ApiUrl;
             var path = "QueryOneDaySumHistories";
             var param = new
             {
@@ -160,7 +153,7 @@ namespace ThirdPartyWager.Service.BLL
             var parameters = JsonConvert.SerializeObject(param);
             // log
             _logger.LogInformation(parameters);
-            var header = GetAuthData(setting, path, parameters, out var contentType);
+            var header = GetAuthData(path, parameters, out var contentType);
             // request
             var r = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
             if (string.IsNullOrEmpty(r))
@@ -171,12 +164,11 @@ namespace ThirdPartyWager.Service.BLL
             return JsonConvert.DeserializeObject<CurrencyStats_AllBet>(r);
         }
 
-
         public async Task<string> CallEventSettleApi(RewardAllBet reward)
         {
             try
             {
-                var url = $"{_seamlessUrl}/Allbet/transfer";
+                var url = $"{_seamlessUrl}Allbet/transfer";
 
                 var rewardAllBetRequest = new RewardAllBetRequest()
                 {
@@ -187,7 +179,7 @@ namespace ThirdPartyWager.Service.BLL
                     isRetry = true,
                     currency = reward.currency,
                     details = new List<RewardAllBet>() { reward },
-                };            
+                };
                 var param = JsonConvert.SerializeObject(rewardAllBetRequest);
 
                 var request = new HttpRequestMessage(HttpMethod.Post, url)
@@ -212,17 +204,17 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        private Dictionary<string, string> GetAuthData(IReadOnlyDictionary<string, string> setting, string path, string parameters, out string contentType)
+        private Dictionary<string, string> GetAuthData(string path, string parameters, out string contentType)
         {
             var md5 = Base64Md5(parameters);
             contentType = "application/json";
             var date = DateTime.UtcNow.ToString("dd MMM yyyy HH:mm:ss z", new CultureInfo("en-US"));
             var signString = $"POST\n{md5}\n{contentType}\n{date}\n/{path}";
-            var signature = Sign(signString, setting["AllbetKey"]);
+            var signature = Sign(signString, _siteAllBetConfig.AllbetKey);
             return new Dictionary<string, string>
             {
                 { "Accept", "application/json" },
-                { "Authorization", $"AB {setting["OperatorId"]}:{signature}" },
+                { "Authorization", $"AB {_siteAllBetConfig.OperatorId}:{signature}" },
                 { "Content-MD5", md5 },
                 { "Date", date }
             };
@@ -316,6 +308,5 @@ namespace ThirdPartyWager.Service.BLL
 
             return handler;
         }
-
     }
 }

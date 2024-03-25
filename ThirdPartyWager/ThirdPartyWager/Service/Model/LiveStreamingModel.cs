@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-
-namespace ThirdPartyWager.Service.Model
+﻿namespace ThirdPartyWager.Service.Model
 {
-    public class 
+    public class
         GetLiveStreaming
     {
         public IEnumerable<LiveStreamingJson> Match { get; set; }

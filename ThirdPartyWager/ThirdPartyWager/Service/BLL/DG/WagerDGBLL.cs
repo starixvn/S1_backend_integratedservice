@@ -1,42 +1,37 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
 
     public class WagerDGBLL
     {
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ApiDGBLL _apiDGBLL;
         private readonly WagerDGService _wagerDGService;
         private readonly ILogger<WagerDGBLL> _logger;
+        private readonly DGConfig _siteConfig;
 
         public WagerDGBLL(IServiceProvider provider)
         {
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _apiDGBLL = provider.GetRequiredService<ApiDGBLL>();
             _wagerDGService = provider.GetRequiredService<WagerDGService>();
             _logger = provider.GetRequiredService<ILogger<WagerDGBLL>>();
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<DGConfig>(Tp.DG.ToString());
         }
 
         public async Task<bool> GetWagersAsync()
         {
             var msg = "FATAL_ERROR";
-            // get dg api info
             try
             {
-                var setting = _thirdPartyBLL.GetThirdPartySetting((int)Tp.DG);
+                // get dg api info
+                var setting = _siteConfig;
 
                 var wagerIds = new List<long>();
                 // get wagers
-                var dataWager = await _apiDGBLL.GetBetList(setting["ApiUrl"], setting["AgentAccount"], setting["APIkey"]);
+                var dataWager = await _apiDGBLL.GetBetList(setting);
 
                 var errorCode = dataWager.codeId;
                 if (errorCode != 0)
@@ -50,7 +45,7 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     msg = "NO_DATA";
                     _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                    return true;
+                    return false;
                 }
 
                 // insert wager to db
@@ -69,7 +64,7 @@ namespace ThirdPartyWager.Service.BLL
                     }
                 }
                 // mark wager
-                await _apiDGBLL.MarkGotBetList(setting["ApiUrl"], setting["AgentAccount"], setting["APIkey"], wagerIds);
+                await _apiDGBLL.MarkGotBetList(setting, wagerIds);
 
                 msg = "FINISH";
                 _logger.LogInformation($"GetWagersAsync {msg}");

@@ -1,60 +1,74 @@
-﻿using CommonService.Service.Library;
+﻿using System.Net;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using CommonService.Service.DAL;
+using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-using CommonService.Service.DAL;
-using Microsoft.Extensions.Options;
+
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace CommonService.Service.BLL
 {
     public class IovationBLL
     {
-        private readonly IOptions<IovationServicesConfig> iovationServicesConfig;
-        private readonly IovationService iovationService;
-        private readonly HttpHelper httpHelper;
+        private readonly IovationServicesConfig _iovationServicesConfig;
+        private readonly IovationService _iovationService;
+        private readonly HttpHelper _httpHelper;
+        private readonly bool _IsProduction;
+        private readonly string _storagePath;
 
-        public IovationBLL(IOptions<IovationServicesConfig> iovationServicesConfig, IovationService iovationService, HttpHelper httpHelper)
+        public IovationBLL(IServiceProvider provider)
         {
-            this.iovationServicesConfig = iovationServicesConfig;
-            this.iovationService = iovationService;
-            this.httpHelper = httpHelper;
+            var env = provider.GetRequiredService<IWebHostEnvironment>();
+            _storagePath = $@"{env.ContentRootPath}/Storage/Iovation";
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _iovationService = provider.GetRequiredService<IovationService>();
+            _iovationServicesConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<IovationServicesConfig>("Iovation");
+            _IsProduction = env.IsProduction();
         }
-        public async Task<ApiResult> IovationChecksAsync(IovationChecksRequest iovationChecksRequest)
+
+        public async Task<ApiResult<IovationCheckResult>> IovationChecksAsync(IovationChecksRequest iovationChecksRequest)
         {
-            var apiResult = new ApiResult();
-
-            Dictionary<string, dynamic> sendIovationChecks = new Dictionary<string, dynamic>
-            {
-                { "accountCode", iovationChecksRequest.accountCode },
-                { "blackbox", iovationChecksRequest.blackbox },
-                { "statedIp", iovationChecksRequest.statedIp },
-                { "transactionInsight",iovationChecksRequest.transactionInsight},
-                { "type",iovationChecksRequest.type}
-            };
-
-            string Authtoken = $"{iovationServicesConfig.Value.SubscriberID}/{iovationServicesConfig.Value.SubscriberAccount}:{iovationServicesConfig.Value.Password}";
-            byte[] bytes = System.Text.Encoding.GetEncoding("utf-8").GetBytes(Authtoken);
+            var apiResult = new ApiResult<IovationCheckResult>();
+            
+            var authToken = $"{_iovationServicesConfig.SubscriberID}/{_iovationServicesConfig.SubscriberAccount}:{_iovationServicesConfig.Password}";
+            var bytes = Encoding.GetEncoding("utf-8").GetBytes(authToken);
             //編成 Base64 字串
-            string Base64Authtoken = Convert.ToBase64String(bytes);
-
-            Dictionary<string, string> Authorization = new Dictionary<string, string>
+            var base64AuthToken = Convert.ToBase64String(bytes);
+            var authorization = new Dictionary<string, string>
             {
-                { "Authorization", $"Basic {Base64Authtoken}" }
+                { "Authorization", $"Basic {base64AuthToken}" }
             };
+            
+            var certificate = GetCertificate();
+            using var result = await _httpHelper.HttpPostWithX509(
+                _iovationServicesConfig.ResourceURL, 
+                JsonConvert.SerializeObject(iovationChecksRequest) , 
+                "application/json",
+                authorization,
+                certificate
+                );
+            
+            var resultResp = JsonConvert.DeserializeObject<IovationResult>(await result.Content.ReadAsStringAsync());
+            var resultIns = _iovationService.IovationResultIns(resultResp);
 
-            var parameters = JsonConvert.SerializeObject(sendIovationChecks);
-            using var result = await httpHelper.HttpPost1Async(iovationServicesConfig.Value.ResourceURL, Authorization, parameters, "application/json");
-            var resultResp = JsonConvert.DeserializeObject<IovationResult>(result.Content.ReadAsStringAsync().Result);
-            var resultIns = iovationService.IovationResultIns(resultResp);
-
-            if (result.StatusCode == System.Net.HttpStatusCode.OK && resultIns > 0)
-                //if (result.StatusCode == System.Net.HttpStatusCode.OK)
+            if (result.StatusCode == HttpStatusCode.OK && resultIns > 0)
             {
+                var deviceId = resultResp?.details?.device?.alias;
+                var deviceType = resultResp?.details?.device?.type;
+                var score = resultResp?.details?.ruleResults?.score;
+
                 apiResult.ErrorCode = ErrorCode.Success;
                 apiResult.Message = resultResp.result;
+                apiResult.Data = new IovationCheckResult
+                {
+                    Result = resultResp.result,
+                    Reason = string.IsNullOrEmpty(resultResp.reason) ? "" : resultResp.reason,
+                    DeviceId = string.IsNullOrEmpty(deviceId) ? "" : deviceId,
+                    DeviceType = string.IsNullOrEmpty(deviceType) ? "" : deviceType,
+                    Score = score ?? 0
+                };
             }
             else
             {
@@ -63,6 +77,28 @@ namespace CommonService.Service.BLL
             }
 
             return apiResult;
+        }
+        
+        private X509Certificate2 GetCertificate()
+        {
+            string pem;
+            string key;
+            
+            if (_IsProduction)
+            {
+                // PRD
+                 pem = Path.Combine(_storagePath, "959500-api-cert.pem");
+                 key = Path.Combine(_storagePath, "959500-api-cert.key");
+            }
+            else
+            {
+                // DEV
+                 pem = Path.Combine(_storagePath, "1054302-ci-cert.pem");
+                 key = Path.Combine(_storagePath, "1054302-ci-cert.key");
+            }
+           
+            var cert = X509Certificate2.CreateFromPemFile(pem, key);
+            return new X509Certificate2(cert.Export(X509ContentType.Pfx));
         }
     }
 }

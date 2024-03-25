@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ThirdPartySeamlessWallet.Service.Model.enums;
+﻿using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
 {
@@ -26,7 +22,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class BettingDataLC_SA_BetDetail
     {
         public List<BettingDataLC_SA_Detail> details { get; set; }
-        
+
     }
     public class BettingDataLC_SA_Detail
     {
@@ -50,5 +46,14 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class SettleData_SA : SettleData
     {
         public new string Gameid { get; set; }
+    }
+
+    public class SAConfig : TpSiteConfig
+    {
+        public string SecretKey { get; set; }
+
+        public string EncrypKey { get; set; }
+
+        public string Md5Key { get; set; }
     }
 }

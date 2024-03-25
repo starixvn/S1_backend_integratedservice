@@ -1,34 +1,29 @@
-﻿using System;
-using System.Net;
-using System.Net.Http;
+﻿using System.Net;
 using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 
-namespace ThirdPartyWager.Service.BLL.MG
+namespace ThirdPartyWager.Service.BLL
 {
     public class ApiSWBLL : IApiSWBLL
     {
-        private readonly string _url;
+        private readonly string _seamlessUrl;
         private readonly ILogger<ApiSWBLL> _logger;
         private readonly IConfiguration _configuration;
         private readonly HttpClient _client;
-        
-        public ApiSWBLL(IServiceProvider provider, IConfiguration configuration)
+
+        public ApiSWBLL(IServiceProvider provider)
         {
-            _configuration = configuration;
-            _url = configuration.GetValue<string>("TpSWserviceUrl");
+            _configuration = provider.GetRequiredService<IConfiguration>();
+            _seamlessUrl = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ServiceHostConfig>("ServiceHost").SeamlessService;
             _logger = provider.GetRequiredService<ILogger<ApiSWBLL>>();
             var httpHelper = provider.GetRequiredService<HttpHelper>();
             _client = httpHelper.GetClientWithHandler(CreateHandler());
-            
-            
         }
+
         public async Task<bool> MgUpdateBalance(MGUpdatebalanceRequest request)
         {
             try
@@ -36,17 +31,17 @@ namespace ThirdPartyWager.Service.BLL.MG
                 var httpRequest = new HttpRequestMessage
                 {
                     Method = HttpMethod.Post,
-                    RequestUri = new Uri($"{_url}/MG/updatebalance"),
+                    RequestUri = new Uri($"{_seamlessUrl}MG/updatebalance"),
                     Headers = {
                         { "X-MGP-REQ-ID", Guid.NewGuid().ToString()},
-                        { "X-MGP-REQUEST-TIME", DateTime.UtcNow.Ticks.ToString()},
+                        { "X-MGP-REQUEST-TIMEMS", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString()},
                     },
                     Content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json")
                 };
                 var response = await _client.SendAsync(httpRequest);
                 return response.IsSuccessStatusCode;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, $"mg sw updatebalance failed, request{JsonConvert.SerializeObject(request)}");
                 return false;

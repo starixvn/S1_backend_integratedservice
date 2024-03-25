@@ -1,27 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Xml;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-using System.Xml;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
-using System.Linq;
-using Newtonsoft.Json;
 using ThirdPartyCore.Model.TpBetRecordExtend;
-using ThirdPartyCore.Extensions;
 
 
 namespace ThirdParty.AG
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly AGConfig _siteAGConfig;
+        private readonly ILogger<TpHelper> _logger;
+        public TpHelper(IServiceProvider provider)
+        {
+            _siteAGConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AGConfig>(TpEnum.AG.ToString());
+            _logger = provider.GetRequiredService<ILogger<TpHelper>>();
+        }
+        
         Dictionary<string, string> oddsTypeDic = new Dictionary<string, string>() {
             {"MYR","GF4B" },
-            {"CNY","C" },
+            {"CNY","B" },
             {"THB","GF4A" },
             {"IDR","GF4A" },
             {"VND ","GF4A" },
-            {"USD ","GF4A" },
+            {"USD ","A" },
             {"INR ","GF4A" }
         };
 
@@ -33,12 +41,34 @@ namespace ThirdParty.AG
             {"id", 11},
             {"th", 6},
             {"vi", 8},
+            {"khm", 9},
         };
         public class result
         {
             public string info { get; set; }
             public string msg { get; set; }
         }
+
+        public class AGConfig : TpSiteConfig
+        {
+            public string DesKey { get; set; }
+            public string Md5Key { get; set; }
+            public string cagent { get; set; }
+            public string HashKey { get; set; }
+            public string CommonUrl { get; set; }
+            public string SessionUrl { get; set; }
+            public string data_cagent { get; set; }
+        }
+
+        #region Response
+
+        public class BalanceResponse
+        {
+            public string ResponseCode { get; set; }
+            public decimal Balance { get; set; }
+        }
+
+        #endregion
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -47,20 +77,20 @@ namespace ThirdParty.AG
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !String.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
-            string actype = tpCustInfo.IsTest ? "0" : "1";
-            string cagent = inputs.ContainsKey("cagent") && !string.IsNullOrEmpty(inputs["cagent"]) ? inputs["cagent"] : throw new Exception();
-            string apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
-            string Md5key = inputs.ContainsKey("Md5key") && !string.IsNullOrEmpty(inputs["Md5key"]) ? inputs["Md5key"] : throw new Exception();
-
+            var actype = tpCustInfo.IsTest ? "0" : "1";
+            var cagent = _siteAGConfig.cagent; 
+            var apiUrl = _siteAGConfig.ApiUrl; 
+            var Md5key = _siteAGConfig.Md5Key; 
+                
             string _oddtype = null;
             oddsTypeDic.TryGetValue(tpCustInfo.TpCurrencyId, out _oddtype);
             string oddtype = _oddtype;
 
             string sParams = $"cagent={cagent}/\\\\/loginname={tpCustInfo.TpUserName}/\\\\/method=lg/\\\\/actype={actype}/\\\\/password={tpCustInfo.TpPwd}/\\\\/oddtype={oddtype}/\\\\/cur={tpCustInfo.TpCurrencyId}";
-            string eParams = DESEncrypt(sParams, inputs["Deskey"]);
+            _logger.LogInformation(sParams);
+            string eParams = DESEncrypt(sParams, _siteAGConfig.DesKey);
             string oMD5 = $"{eParams}{Md5key}";
-            string postParams = $"params={eParams}&key={ ToMD5(oMD5).ToLower() }";
+            string postParams = $"params={eParams}&key={ToMD5(oMD5).ToLower()}";
 
             Dictionary<string, string> header = new Dictionary<string, string>();
             header["User-Agent"] = $"WEB_LIB_GI_{cagent}";
@@ -108,21 +138,11 @@ namespace ThirdParty.AG
             return oApiResult;
         }
 
-        public override bool Equals(object obj)
-        {
-            return base.Equals(obj);
-        }
-
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
             oApiResult.ErrorCode = ErrorCode.Fail;
             return oApiResult;
-        }
-
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
         }
 
         public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -137,22 +157,22 @@ namespace ThirdParty.AG
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string actype = tpCustInfo.IsTest ? "0" : "1";
-            string cagent = inputs.ContainsKey("cagent") && !string.IsNullOrEmpty(inputs["cagent"]) ? inputs["cagent"] : throw new Exception();
-            string data_cagent = inputs.ContainsKey("data_cagent") && !string.IsNullOrEmpty(inputs["data_cagent"]) ? inputs["data_cagent"] : throw new Exception();
-            string Md5key = inputs.ContainsKey("Md5key") && !string.IsNullOrEmpty(inputs["Md5key"]) ? inputs["Md5key"] : throw new Exception();
-            string SessionUrl = inputs.ContainsKey("SessionUrl") && !string.IsNullOrEmpty(inputs["SessionUrl"]) ? inputs["SessionUrl"] : throw new Exception();
-            string GameUrl = inputs.ContainsKey("GameUrl") && !string.IsNullOrEmpty(inputs["GameUrl"]) ? inputs["GameUrl"] : throw new Exception();
-
+            var actype = tpCustInfo.IsTest ? "0" : "1";
+            var cagent = _siteAGConfig.cagent;
+            var data_cagent = _siteAGConfig.data_cagent;
+            var GameUrl = _siteAGConfig.GameUrl;
+            var Md5key = _siteAGConfig.Md5Key;
+            var SessionUrl = _siteAGConfig.SessionUrl;
+            
             string _oddtype = null;
             oddsTypeDic.TryGetValue(tpCustInfo.TpCurrencyId, out _oddtype);
             string oddtype = _oddtype;
 
-            string balance = "";
+            string balance = GetBalance(tpCustInfo.TpUserName);
             string token = "";
-            inputs.TryGetValue("Balance", out balance);
             inputs.TryGetValue("Token", out token);
             string postParams = $"productid={data_cagent}&username={tpCustInfo.TpUserName}&session_token={token}&credit={balance}";
+            _logger.LogInformation(postParams);
             Dictionary<string, string> header = new Dictionary<string, string>();
             header["User-Agent"] = $"WEB_LIB_GI_{cagent}";
 
@@ -199,9 +219,9 @@ namespace ThirdParty.AG
             }
 
             // encrypt
-            string eParams = DESEncrypt(sParams, inputs["Deskey"]);
+            string eParams = DESEncrypt(sParams, _siteAGConfig.DesKey);
             string oMD5 = $"{eParams}{Md5key}";
-            postParams = $"params={eParams}&key={ ToMD5(oMD5).ToLower() }";
+            postParams = $"params={eParams}&key={ToMD5(oMD5).ToLower()}";
 
             oApiResult.ErrorCode = ErrorCode.Success;
             oApiResult.Message = $"{GameUrl}?{postParams}";
@@ -219,7 +239,7 @@ namespace ThirdParty.AG
             var billNoList = TpBetRecordProvider.DbQuery("Service_BettransLC_AGV2_Payout_Get", new { transactionID = getBetDetail.TransId }, DataBase.Report)
                 .Select(item => item.GetValueOrDefault("billNo")?.ToString());
 
-            var wagerDetailList = TpBetRecordProvider.DbQuery("Service_TpWager_AG_Detail_Get", 
+            var wagerDetailList = TpBetRecordProvider.DbQuery("Service_TpWager_AG_Detail_Get",
                 new { billNoList = JsonConvert.SerializeObject(billNoList) }, DataBase.Wager);
 
             var detail = ToJson(wagerDetailList);
@@ -253,7 +273,7 @@ namespace ThirdParty.AG
         {
             var billNoList = TpBetRecordProvider.DbQuery("Service_BettransLC_AGV2_Payout_Get", new { transactionID = betRecordInfo.TransId }, DataBase.Main)
             .Select(item => item.GetValueOrDefault("billNo")?.ToString());
-            var detail = TpBetRecordProvider.DbQuery("Service_TpWager_AG_Detail_Get",new { billNoList = JsonConvert.SerializeObject(billNoList) }, DataBase.Wager);
+            var detail = TpBetRecordProvider.DbQuery("Service_TpWager_AG_Detail_Get", new { billNoList = JsonConvert.SerializeObject(billNoList) }, DataBase.Wager);
             var gameCode = detail.FirstOrDefault()?.GetValueOrDefault("gameType")?.ToString();
 
             return tpGameType.CategoryId switch
@@ -300,7 +320,7 @@ namespace ThirdParty.AG
                 "SHB" => "Sicbo",
                 "ROU" => "Roulette",
                 "LBAC" => "Bid Baccarat",
-                "NN"=> "Bull Bull",
+                "NN" => "Bull Bull",
                 "BJ" => "Blackjack",
                 "ZJH" => "Win Three Cards",
                 "BF" => "Bull Fight",
@@ -343,5 +363,27 @@ namespace ThirdParty.AG
             return nodes[0].SelectSingleNode("ResponseCode").InnerText; ;
         }
 
+        private string GetBalance(string TpUserName)
+        {
+            var postData = new
+            {
+                TpUserName = TpUserName
+            };
+
+            var parameters = JsonConvert.SerializeObject(postData);
+            var result = HttpPost(
+                $"{SeamlessServiceHost}AG/getBalance",
+                parameters,
+                "application/json"
+            );
+
+            if (!IsJSON(result))
+            {
+                return "0";
+            }
+
+            var response = JsonConvert.DeserializeObject<BalanceResponse>(result);
+            return response.Balance.ToString();
+        }
     }
 }

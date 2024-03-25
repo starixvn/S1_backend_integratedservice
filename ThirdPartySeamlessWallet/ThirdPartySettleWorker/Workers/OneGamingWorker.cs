@@ -1,8 +1,11 @@
 ﻿using Newtonsoft.Json;
+
 using Serilog.Context;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
 using ThirdPartySettleWorker.Model.Interfaces;
 
 namespace ThirdPartySettleWorker.Workers
@@ -15,8 +18,8 @@ namespace ThirdPartySettleWorker.Workers
         private readonly SettledBLL _settledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly ILogger<PTWorker> _logger;
-        
+        private readonly ILogger<OneGamingWorker> _logger;
+
         public OneGamingWorker(IServiceProvider provider)
         {
             _settledBLL = provider.GetRequiredService<SettledBLL>();
@@ -78,7 +81,8 @@ namespace ThirdPartySettleWorker.Workers
                                 TpUserName = unsettled.Account,
                                 SettledTime = unsettled.SettleTime,
                                 TransTime = unsettled.SettleTime,
-                                SettlementType = SettlementType.SettledForValid
+                                SettlementType = SettlementType.SettledForValid,
+                                GameID = unsettled.GameId
                             };
 
                             var result = _settledBLL.Settled_OneGaming(tpCustInfo, betRecordInfo);
@@ -88,7 +92,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             LogContext.PushProperty("TP", tpName);
                             isError = true;
-                            _logger.LogError($"{JsonConvert.SerializeObject(unsettled)}\r\n{ex1.ToString()}", logName);
+                            _logger.LogError(ex1, $"{JsonConvert.SerializeObject(unsettled)}");                            
                         }
                     }
                 }
@@ -96,7 +100,7 @@ namespace ThirdPartySettleWorker.Workers
             catch (Exception ex)
             {
                 LogContext.PushProperty("TP", tpName);
-                _logger.LogError(ex.ToString(), logName);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
                 isError = true;
             }
             finally

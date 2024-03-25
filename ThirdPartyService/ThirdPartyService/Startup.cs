@@ -1,11 +1,8 @@
-using System;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+﻿using Elastic.Apm.NetCoreAll;
+
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Model;
+
 using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
@@ -31,7 +28,6 @@ namespace ThirdPartyService
             /*Library*/
             services.AddSingleton<Tools>();
             services.AddSingleton<Common>();
-            services.AddSingleton<Log2File>();
             //services.AddSingleton<IBCDBLibrary>();
             services.AddSingleton<CacheHelper>();
 
@@ -56,15 +52,27 @@ namespace ThirdPartyService
             services.AddSingleton<AuthBLL>();
 
             ThirdPartyCore.ThirdPartyHelperBase.proxyHost = Configuration.GetValue<string>("ProxyHost");
+
             ThirdPartyCore.ThirdPartyHelperBase.proxyPort = Configuration.GetValue<int>("ProxyPort");
 
             //services.AddSingleton<Microsoft.Extensions.Hosting.IHostedService, WorkerService>();
             services.AddControllers();
 
             services.AddOptionListByDB<TpGameTypeOption>("Admin_TpGameType_Get");
-            services.AddOptionListByDB<GameCasinoOption>("Member_GameCasinoList_Get");
+            services.AddOptionListByDB<GameCasinoOption>("Member_GameCasinoList_Get_V2");
             services.AddOptionListByDB<TpListOption>("Common_TpList_Get");
             services.AddOptionListByDB<CurrencyOption>("Common_Currency_Get");
+
+            //處理SiteConfig
+            services.AddOptionListByDB<ServerInfoObject>("ServerInfoList_Get");
+            services.AddOptionListByDB<ConfigObject>("SiteConfig_Get", new { ConfigGroup = "TP" });
+            services.AddSiteConfig();
+            services.AddSingleton<ConfigBLL>();
+            
+            // 處理SiteLanguage
+            services.AddOptionListByDB<SiteLanguageObject>("SiteLanguage_Get", new { LanguageGroup = "TP" });
+            services.AddSiteLanguage();
+            services.AddSingleton<SiteLanguageBLL>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -76,7 +84,10 @@ namespace ThirdPartyService
             }
 
             //app.UseHttpsRedirection();
-
+            if (!env.IsEnvironment("Local"))
+            {
+                app.UseAllElasticApm(Configuration);
+            }
             app.UseRouting();
             app.UseRequestLogMiddleware();
             app.UseResponseLogMiddleware();

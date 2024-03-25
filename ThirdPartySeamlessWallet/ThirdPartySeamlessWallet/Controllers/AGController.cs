@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Serialization;
-using Microsoft.AspNetCore.Http;
+﻿using System.Text;
+
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
+
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -20,14 +15,16 @@ namespace ThirdPartySeamlessWallet.Controllers
     [ApiController]
     public class AGController : ControllerBase
     {
-        private readonly TpCustInfoBLL tpCustInfoBLL;
-        private readonly ILogger<SAController> logger;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly Tools tools;
-        private readonly BettingBLL bettingBLL;
-        private readonly SettledBLL settledBLL;
-        private readonly Log2File log2File;
-        private readonly int gameType = 0;
+        private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly ILogger<AGController> _logger;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly Tools _tools;
+        private readonly BettingBLL _bettingBLL;
+        private readonly SettledBLL _settledBLL;
+        private readonly Log2File _log2File;
+        private readonly int _thisTp;
+        private readonly int _gameType = 0;
+        private readonly string _tpName = Tp.AG.ToString();
 
         private readonly Dictionary<string, string> BetTransactionCode = new Dictionary<string, string>()
         {
@@ -43,17 +40,29 @@ namespace ThirdPartySeamlessWallet.Controllers
             {"BJB", null},
         };
 
-        public AGController(ILogger<SAController> logger, TpCustInfoBLL tpCustInfoBLL, ThirdPartyBLL thirdPartyBLL, Tools tools, BettingBLL bettingBLL, SettledBLL settledBLL, Log2File log2File)
+        public AGController(IServiceProvider provider)
         {
-            this.tpCustInfoBLL = tpCustInfoBLL;
-            this.logger = logger;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.tools = tools;
-            this.bettingBLL = bettingBLL;
-            this.settledBLL = settledBLL;
-            this.log2File = log2File;
-            gameType = (int)GameType.AG_LiveCasino;
+            _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _bettingBLL = provider.GetRequiredService<BettingBLL>();
+            _settledBLL = provider.GetRequiredService<SettledBLL>();
+            _tools = provider.GetRequiredService<Tools>();
+            _logger = provider.GetRequiredService<ILogger<AGController>>();
+            _log2File = provider.GetRequiredService<Log2File>();
+            _thisTp = (int)Tp.AG;
+            _gameType = (int)GameType.AG_LiveCasino;
         }
+
+        #region Request
+
+        public class BalanceReq
+        {
+            public string TpUserName { get; set; }
+        }
+
+        #endregion
+
+        #region Response
 
         public class TransferResponse
         {
@@ -65,6 +74,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             public decimal Balance { get; set; }
         }
 
+        #endregion
+
         [HttpPost]
         [Produces("application/xml")]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -74,20 +85,20 @@ namespace ThirdPartySeamlessWallet.Controllers
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<TransferResponse> postTransferAsync()
         {
+            string logName = $"{_tpName}_PostTransfer";
             string Content = "";
             var resp = new TransferResponse();
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 Content = await reader.ReadToEndAsync();
-                //logger.LogInformation(Content);
-                var xml = tools.XMLDeserialize<Data>(Content);
+                var xml = _tools.XMLDeserialize<Data>(Content);
                 var dataLC_AG = JsonConvert.DeserializeObject<DataLC_AG>(JsonConvert.SerializeObject(xml.Record));
                 string username = dataLC_AG.Playname.Substring(dataLC_AG.AgentCode.Length);
 
                 if (dataLC_AG.TransactionType.Equals("BET", StringComparison.OrdinalIgnoreCase))
                 {
-                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.AG, username);
+                    var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache(_thisTp, username);
                     if (tpCheck == null || tpCheck.Token != dataLC_AG.SessionToken)
                     {
                         resp.ResponseCode = Error.INVALID_SESSION.ToString();
@@ -100,14 +111,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                         Response.StatusCode = (int)Error.INSUFFICIENT_CLEARED_FUNDS;
                         return resp;
                     }
-                    var xmlBet = tools.XMLDeserialize<BetData>(Content);
+                    var xmlBet = _tools.XMLDeserialize<BetData>(Content);
                     var bettingDataLC_AG = JsonConvert.DeserializeObject<BettingDataLC_AG>(JsonConvert.SerializeObject(xmlBet.Record));
 
                     decimal tpAffterAmount = 0;
                     if (bettingDataLC_AG.Value > 0)
                     {
-                        logger.LogInformation(JsonConvert.SerializeObject(bettingDataLC_AG));
-                        int result = bettingBLL.PlaceBetLC_AG(bettingDataLC_AG, out tpAffterAmount);
+                        _logger.LogInformation(JsonConvert.SerializeObject(bettingDataLC_AG));
+                        int result = _bettingBLL.PlaceBetLC_AG(bettingDataLC_AG, out tpAffterAmount);
                         if (result > 0)
                         {
                             resp.ResponseCode = Error.OK.ToString();
@@ -116,51 +127,51 @@ namespace ThirdPartySeamlessWallet.Controllers
                         else if (tpAffterAmount < 0)
                         {
                             resp.ResponseCode = Error.INSUFFICIENT_FUNDS.ToString();
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username, gameType);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(_thisTp, username, _gameType);
                             resp.Balance = tpCustBalance.Balance;
                         }
                         else if (result == -1)
                         {
                             resp.ResponseCode = Error.OK.ToString();
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.AG, username, gameType);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalance(_thisTp, username, _gameType);
                             resp.Balance = tpCustBalance.Balance;
-                            log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", "AG_PostTransfer_Retry");
+                            _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", $"{logName}_Retry");
                         }
                         else
                         {
                             resp.ResponseCode = Error.INVALID_DATA.ToString();
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username, gameType);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(_thisTp, username, _gameType);
                             resp.Balance = tpCustBalance.Balance;
                         }
                     }
                     else
                     {
                         resp.ResponseCode = Error.INVALID_DATA.ToString();
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username, gameType);
+                        var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(_thisTp, username, _gameType);
                         resp.Balance = tpCustBalance.Balance;
                     }
                 }
                 else if (dataLC_AG.TransactionType.Equals("LOSE", StringComparison.OrdinalIgnoreCase) || dataLC_AG.TransactionType.Equals("WIN", StringComparison.OrdinalIgnoreCase))
                 {
-                    var xmlPayout = tools.XMLDeserialize<PayoutData>(Content);
+                    var xmlPayout = _tools.XMLDeserialize<PayoutData>(Content);
                     var payoutDataLC_AG = JsonConvert.DeserializeObject<PayoutDataLC_AG>(JsonConvert.SerializeObject(xmlPayout.Record));
                     int reslut = 0;
                     payoutDataLC_AG.TransactionID = xmlPayout.Record.TransactionIDs[0];
 
-                    logger.LogInformation(JsonConvert.SerializeObject(payoutDataLC_AG));
+                    _logger.LogInformation(JsonConvert.SerializeObject(payoutDataLC_AG));
                     decimal tpAffterAmount = 0;
-                    reslut = settledBLL.PayoutLC_AG(payoutDataLC_AG, out tpAffterAmount);
+                    reslut = _settledBLL.PayoutLC_AG(payoutDataLC_AG, out tpAffterAmount);
 
                     if (reslut > 0)
                     {
                         resp.ResponseCode = Error.OK.ToString();
-                        var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.AG, username, gameType);
+                        var tpCustBalance = _tpCustInfoBLL.GetBalance(_thisTp, username, _gameType);
                         resp.Balance = tpCustBalance.Balance;
                     }
                     else if (reslut == -1)
                     {
                         resp.ResponseCode = Error.OK.ToString();
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username, gameType);
+                        var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(_thisTp, username, _gameType);
                         resp.Balance = tpCustBalance.Balance;
                     }
                     else
@@ -171,12 +182,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else if (dataLC_AG.TransactionType.Equals("REFUND", StringComparison.OrdinalIgnoreCase))
                 {
                     decimal tpAffterAmount = 0;
-                    var xmlRefund = tools.XMLDeserialize<RefundData>(Content);
+                    var xmlRefund = _tools.XMLDeserialize<RefundData>(Content);
                     var bettingDataLC_AG_Refund = JsonConvert.DeserializeObject<BettingDataLC_AG_Refund>(JsonConvert.SerializeObject(xmlRefund.Record));
-                    logger.LogInformation(JsonConvert.SerializeObject(bettingDataLC_AG_Refund));
+                    _logger.LogInformation(JsonConvert.SerializeObject(bettingDataLC_AG_Refund));
                     if (bettingDataLC_AG_Refund.Value > 0)
                     {
-                        var result = settledBLL.RefundLC_AG(bettingDataLC_AG_Refund, out tpAffterAmount);
+                        var result = _settledBLL.RefundLC_AG(bettingDataLC_AG_Refund, out tpAffterAmount);
 
                         if (result > 0)
                         {
@@ -187,20 +198,20 @@ namespace ThirdPartySeamlessWallet.Controllers
                         else if (tpAffterAmount < 0)
                         {
                             resp.ResponseCode = Error.INSUFFICIENT_FUNDS.ToString();
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username, gameType);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(_thisTp, username, _gameType);
                             resp.Balance = tpCustBalance.Balance;
                         }
                         else
                         {
                             resp.ResponseCode = Error.INVALID_DATA.ToString();
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username, gameType);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(_thisTp, username, _gameType);
                             resp.Balance = tpCustBalance.Balance;
                         }
                     }
                     else
                     {
                         resp.ResponseCode = Error.INVALID_DATA.ToString();
-                        var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)Tp.AG, username, gameType);
+                        var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(_thisTp, username, _gameType);
                         resp.Balance = tpCustBalance.Balance;
                     }
                 }
@@ -212,17 +223,54 @@ namespace ThirdPartySeamlessWallet.Controllers
                     Response.StatusCode = (int)error;
                 }
 
-                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", $"AG_PostTransfer_{dataLC_AG.TransactionType}");
+                _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", $"{logName}_{dataLC_AG.TransactionType}");
             }
             catch (Exception ex)
             {
-                //logger.LogError(ex.Message);
                 resp.ResponseCode = Error.ERROR.ToString();
                 Response.StatusCode = (int)Error.ERROR;
-                log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", "AG_PostTransfer", ex);
+                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
             }
 
-            //logger.LogCritical(JsonConvert.SerializeObject(resp));
+            return resp;
+        }
+
+        [HttpPost]
+        public async Task<TransferResponse> GetBalanceAsync()
+        {
+            // 給TPS取得額度登入時帶入
+            string logName = $"{_tpName}_GetBalance";
+            string Content = "";
+            var resp = new TransferResponse();
+            try
+            {
+                using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+                Content = await reader.ReadToEndAsync();
+                var getReq = JsonConvert.DeserializeObject<BalanceReq>(Content);
+
+                // 檢查會員是否存在
+                var tpCustInfo = _tpCustInfoBLL.GetTpCustInfo(_thisTp, getReq.TpUserName);
+                if (tpCustInfo == null)
+                {
+                    resp.ResponseCode = Error.INVALID_DATA.ToString();
+                    resp.Balance = 0;
+                    _log2File.Error($"{JsonConvert.SerializeObject(getReq)}", logName);
+                    return resp;
+                }
+
+                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(_thisTp, getReq.TpUserName, _gameType);
+                resp.ResponseCode = Error.OK.ToString();
+                resp.Balance = tpCustBalance.Balance;
+                return resp;
+            }
+            catch (Exception ex)
+            {
+                resp.ResponseCode = Error.ERROR.ToString();
+                Response.StatusCode = (int)Error.ERROR;
+                _log2File.Error($"{ex.Message}", logName, ex);
+            }
+
+            _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", logName);
             return resp;
         }
 

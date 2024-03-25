@@ -1,7 +1,6 @@
-﻿using System.Threading.Tasks;
-using ThirdPartyWager.Service.Model;
+﻿using ThirdPartyWager.Service.Model;
 
-namespace ThirdPartyWager.Service.BLL.MG
+namespace ThirdPartyWager.Service.BLL
 {
     public interface IApiSWBLL
     {

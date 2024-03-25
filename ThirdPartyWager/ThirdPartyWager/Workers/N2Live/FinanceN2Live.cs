@@ -19,9 +19,7 @@ namespace ThirdPartyWager.Workers
         private readonly int _beyond = 2;
         private Timer timer;
 
-        public FinanceN2Live(
-            IServiceProvider provider
-        )
+        public FinanceN2Live(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceN2Live>>();
             _financeN2LiveBLL = provider.GetRequiredService<FinanceN2LiveBLL>();
@@ -74,7 +72,7 @@ namespace ThirdPartyWager.Workers
             try
             {
                 // get setting
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+                var setting = string.Empty;
 
                 // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);

@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using System.Text;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
@@ -20,46 +13,31 @@ namespace ThirdPartySeamlessWallet.Controllers
     [ApiController]
     public class SGController : ControllerBase
     {
-        private readonly Log2File log2File;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly Tp thisTp;
-        private readonly AuthBLL authBLL;
-        private readonly TpCustInfoBLL tpCustInfoBLL;
-        private readonly IHostEnvironment environment;
-        private readonly BettingBLL bettingBLL;
-        private readonly SettledBLL settledBLL;
+        private readonly Log2File _log2File;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly AuthBLL _authBLL;
+        private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly BettingBLL _bettingBLL;
+        private readonly SettledBLL _settledBLL;
+        private readonly Tp _thisTp;
+        private readonly string _tpName = Tp.SG.ToString();
+        private readonly SGConfig _siteConfig;
 
-        public SGController(IHostEnvironment environment, Log2File log2File, ThirdPartyBLL thirdPartyBLL, AuthBLL authBLL, TpCustInfoBLL tpCustInfoBLL, BettingBLL bettingBLL, SettledBLL settledBLL)
+
+        public SGController(IServiceProvider provider)
         {
-            this.log2File = log2File;
-            this.thirdPartyBLL = thirdPartyBLL;
-            thisTp = Tp.SG;
-            this.authBLL = authBLL;
-            this.tpCustInfoBLL = tpCustInfoBLL;
-            this.environment = environment;
-            this.bettingBLL = bettingBLL;
-            this.settledBLL = settledBLL;
-        }
-        public class Resp
-        {
-            public string merchantCode { get; set; }
-            public string msg { get; set; }
-            public int code { get; set; }
-            public string serialNo { get; set; }
-        }
-        public class AcctInfo
-        {
-            public string acctId { get; set; }
-            public decimal balance { get; set; }
-            public string userName { get; set; }
-            public string currency { get; set; }
-            //public string siteId { get; set; }
+            _authBLL = provider.GetRequiredService<AuthBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _bettingBLL = provider.GetRequiredService<BettingBLL>();
+            _settledBLL = provider.GetRequiredService<SettledBLL>();
+            _thisTp = Tp.SG;
+            _log2File = provider.GetRequiredService<Log2File>();
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SGConfig>(_tpName);
         }
 
-        public class AuthorizeResp : Resp
-        {
-            public AcctInfo acctInfo { get; set; }
-        }
+        #region Request
+
         public class AuthorizeReq
         {
             public string acctId { get; set; }
@@ -70,53 +48,107 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string gameCode { get; set; }
         }
 
+        public class GetBalanceReq
+        {
+            public string acctId { get; set; }
+            public string merchantCode { get; set; }
+            public string serialNo { get; set; }
+            public string gameCode { get; set; }
+            public string token { get; set; }
+        }
+
+        public class TransferReq : BettingDataRNG_SG
+        {
+
+        }
+
+        #endregion
+
+        #region Response
+
+        public class Resp
+        {
+            public string merchantCode { get; set; }
+            public string msg { get; set; }
+            public int code { get; set; }
+            public string serialNo { get; set; }
+        }
+
+        public class AcctInfo
+        {
+            public string acctId { get; set; }
+            public decimal balance { get; set; }
+            public string userName { get; set; }
+            public string currency { get; set; }
+        }
+
+        public class AuthorizeResp : Resp
+        {
+            public AcctInfo acctInfo { get; set; }
+        }
+
+        public class GetBalanceResp : Resp
+        {
+            public AcctInfo acctInfo { get; set; }
+        }
+
+        public class TransferResp : Resp
+        {
+            public string transferId { get; set; }
+            public string merchantTxId { get; set; }
+            public string acctId { get; set; }
+            public decimal balance { get; set; }
+        }
+        #endregion
+
         [Route("")]
         [HttpPost]
         public async Task<Resp> IndexAsync()
         {
-            Resp resp = new Resp();
+            Resp resp = new();
             Request.Headers.TryGetValue("API", out StringValues vs);
             var api = vs.FirstOrDefault();
+            var logName = $"{_tpName}_{api}";
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
+
             if (api.Equals("authorize", StringComparison.OrdinalIgnoreCase))
             {
-                AuthorizeResp authorizeResp = new AuthorizeResp
+                AuthorizeResp authorizeResp = new()
                 {
                     code = 1,
                     msg = "System Error"
                 };
                 var authorizeReq = JsonConvert.DeserializeObject<AuthorizeReq>(Content);
+
                 try
                 {
                     string sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(authorizeReq.token));
                     var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
                     string authToken = sessionKeyArr[0]; /* 1 Time*/
                     string sessionToken = sessionKeyArr[1];/* Long Time*/
-                    if (authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
+                    if (_authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
                     {
-                        var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
-                        if (tpCheck == null)
+                        var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, tpCustInfoAuth.TpUserName);
+                        if (tpCheck == null || tpCheck.Token != sessionToken)
                         {
                             authorizeResp.code = 50104;
                             authorizeResp.msg = "Token Validation Failed.";
-                        }
-                        else if (tpCheck.Token != sessionToken)
-                        {
-                            authorizeResp.code = 50104;
-                            authorizeResp.msg = $"Token Validation Failed.";
+                            _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(authorizeResp)}", logName);
+                            return authorizeResp;
                         }
                         else if (tpCheck.Locked)
                         {
                             authorizeResp.code = 50102;
                             authorizeResp.msg = "Acct Locked";
+                            _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(authorizeResp)}", logName);
+                            return authorizeResp;
                         }
                         else
                         {
-                            var gameType = thirdPartyBLL.GetGameType_SG(authorizeReq.gameCode);
-                            tpCustInfoBLL.SetCustGotoGame(tpCustInfoAuth.CustId, (int)thisTp, (int)gameType);
-                            var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, (int)gameType);
+                            var gameType = _thirdPartyBLL.GetGameType_SG(authorizeReq.gameCode);
+                            _tpCustInfoBLL.SetCustGotoGame(tpCustInfoAuth.CustId, (int)_thisTp, (int)gameType);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, tpCustInfoAuth.TpUserName, (int)gameType);
                             authorizeResp.acctInfo = new AcctInfo
                             {
                                 acctId = tpCustInfoAuth.TpUserName,
@@ -124,7 +156,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 userName = tpCustInfoAuth.TpUserName,
                                 balance = tpCustBalance.Balance
                             };
-                            authorizeResp.merchantCode = thirdPartySetting.TpSetting["merchantCode"];
+                            authorizeResp.merchantCode = _siteConfig.merchantCode;
                             authorizeResp.serialNo = authorizeReq.serialNo;
                             authorizeResp.code = 0;
                             authorizeResp.msg = "Success";
@@ -134,21 +166,23 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         authorizeResp.code = 50104;
                         authorizeResp.msg = "Token Validation Failed.";
+                        _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(authorizeResp)}", logName);
+                        return authorizeResp;
                     }
                 }
                 catch (Exception ex)
                 {
                     authorizeResp.code = 1;
                     authorizeResp.msg = "System Error";
-                    log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(authorizeResp)}\r\n{ex}", $"SG_{api}", ex);
+                    _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(authorizeResp)}\r\n{ex}", logName, ex);
                 }
 
-                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(authorizeResp)}", $"SG_{api}");
+                _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(authorizeResp)}", logName);
                 return authorizeResp;
             }
             else if (api.Equals("getBalance", StringComparison.OrdinalIgnoreCase))
             {
-                GetBalanceResp getBalanceResp = new GetBalanceResp
+                GetBalanceResp getBalanceResp = new()
                 {
                     code = 1,
                     msg = "System Error"
@@ -159,28 +193,26 @@ namespace ThirdPartySeamlessWallet.Controllers
                 string authToken = sessionKeyArr[0]; /* 1 Time*/
                 string sessionToken = sessionKeyArr[1];/* Long Time*/
 
-                var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getBalanceReq.acctId);
-                if (tpCheck == null)
+                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, getBalanceReq.acctId);
+                if (tpCheck == null || tpCheck.Token != sessionToken)
                 {
                     getBalanceResp.code = 50104;
                     getBalanceResp.msg = "Token Validation Failed";
-                }
-                else if (tpCheck.Token != sessionToken)
-                {
-                    getBalanceResp.code = 50104;
-                    getBalanceResp.msg = "Token Validation Failed";
+                    _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
+                    return getBalanceResp;
                 }
                 else if (tpCheck.Locked)
                 {
                     getBalanceResp.code = 50102;
                     getBalanceResp.msg = "Acct Locked";
+                    _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
+                    return getBalanceResp;
                 }
                 else
                 {
-                    var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, getBalanceReq.acctId);
-                    var gameType = tpCustInfoBLL.GetCustGotoGameType(tpCustInfo.CustId, (int)thisTp);
-                    var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBalanceReq.acctId, gameType);
+                    var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, getBalanceReq.acctId);
+                    var gameType = _tpCustInfoBLL.GetCustGotoGameType(tpCustInfo.CustId, (int)_thisTp);
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getBalanceReq.acctId, gameType);
                     getBalanceResp.acctInfo = new AcctInfo
                     {
                         acctId = getBalanceReq.acctId,
@@ -189,32 +221,34 @@ namespace ThirdPartySeamlessWallet.Controllers
                         balance = tpCustBalance.Balance
                     };
                     getBalanceResp.serialNo = getBalanceReq.serialNo;
-                    getBalanceResp.merchantCode = thirdPartySetting.TpSetting["merchantCode"];
+                    getBalanceResp.merchantCode = _siteConfig.merchantCode;
 
                     getBalanceResp.code = 0;
                     getBalanceResp.msg = "Success";
                 }
 
-                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", $"SG_{api}");
+                _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
                 return getBalanceResp;
             }
             else if (api.Equals("transfer", StringComparison.OrdinalIgnoreCase))
             {
-                TransferResp transferResp = new TransferResp
+                TransferResp transferResp = new()
                 {
                     code = 1,
                     msg = "System Error"
                 };
 
-                var thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)thisTp);
                 var transferReq = JsonConvert.DeserializeObject<TransferReq>(Content);
+
+                logName = $"{_tpName}_{api}_{transferReq.type}";
+
                 transferResp.acctId = transferReq.acctId;
                 transferResp.transferId = transferReq.transferId;
                 transferResp.merchantTxId = transferReq.transferId;
                 transferResp.serialNo = transferReq.serialNo;
-                transferResp.merchantCode = thirdPartySetting.TpSetting["merchantCode"];
+                transferResp.merchantCode = _siteConfig.merchantCode;
 
-                var gameType = thirdPartyBLL.GetGameType_SG(transferReq.gameCode);
+                var gameType = _thirdPartyBLL.GetGameType_SG(transferReq.gameCode);
 
                 if (transferReq.type == TransferType.PlaceBet)
                 {
@@ -224,32 +258,34 @@ namespace ThirdPartySeamlessWallet.Controllers
                     string sessionToken = sessionKeyArr[1];/* Long Time*/
                     try
                     {
-                        var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, transferReq.acctId);
+                        var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, transferReq.acctId);
                         if (tpCheck == null)
                         {
                             transferResp.code = 50104;
                             transferResp.msg = "Token Validation Failed";
+                            _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(transferResp)}", logName);
                             return transferResp;
                         }
                         else if (tpCheck.Token != sessionToken)
                         {
                             transferResp.code = 50104;
                             transferResp.msg = "Token Validation Failed";
+                            _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(transferResp)}", logName);
                             return transferResp;
                         }
                         else if (tpCheck.Locked)
                         {
                             transferResp.code = 50102;
                             transferResp.msg = "Acct Locked";
-
+                            _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(transferResp)}", logName);
                             return transferResp;
                         }
 
-                        if (bettingBLL.PlaceBetRNG_SG(transferReq, (int)gameType, out decimal tpAffterAmount) > 0)
+                        if (_bettingBLL.PlaceBetRNG_SG(transferReq, (int)gameType, out decimal tpAffterAmount) > 0)
                         {
                             if (transferReq.amount == 0)
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId, (int)gameType);
+                                var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, transferReq.acctId, (int)gameType);
                                 transferResp.balance = tpCustBalance.Balance;
                             }
                             else
@@ -261,34 +297,38 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else if (tpAffterAmount < 0)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId, (int)gameType);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, transferReq.acctId, (int)gameType);
                             transferResp.balance = tpCustBalance.Balance;
                             transferResp.code = 50110;
                             transferResp.msg = "Insufficient Balance";
+                            _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(transferResp)}", logName);
+                            return transferResp;
                         }
                         else/*Can't Insert Bet*/
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId, (int)gameType);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, transferReq.acctId, (int)gameType);
                             transferResp.balance = tpCustBalance.Balance;
                             transferResp.code = 1;
                             transferResp.msg = "System Error";
+                            _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(transferResp)}", logName);
+                            return transferResp;
                         }
                     }
                     catch (Exception ex)
                     {
-                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(transferResp)}\r\n{ex.Message}", $"SG_{api}_{transferReq.type}", ex);
-                        throw ex;
+                        _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(transferResp)}\r\n{ex.Message}", logName, ex);
+                        throw;
                     }
                 }
                 else if (transferReq.type == TransferType.CancelBet)
                 {
                     try
                     {
-                        if (settledBLL.CancelBetRNG_SG(transferReq, (int)gameType, out decimal tpAffterAmount) > 0)
+                        if (_settledBLL.CancelBetRNG_SG(transferReq, (int)gameType, out decimal tpAffterAmount) > 0)
                         {
                             if (transferReq.amount == 0)
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId, (int)gameType);
+                                var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, transferReq.acctId, (int)gameType);
                                 transferResp.balance = tpCustBalance.Balance;
                             }
                             else
@@ -300,7 +340,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId, (int)gameType);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, transferReq.acctId, (int)gameType);
                             transferResp.balance = tpCustBalance.Balance;
                             transferResp.code = 0;
                             transferResp.msg = "Success";
@@ -308,7 +348,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     catch (Exception ex)
                     {
-                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(transferResp)}\r\n{ex}", $"SG_{api}_{transferReq.type}", ex);
+                        _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(transferResp)}\r\n{ex}", logName, ex);
                         throw;
                     }
                 }
@@ -316,7 +356,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     try
                     {
-                        int result = settledBLL.PayoutRNG_SG(transferReq, (int)gameType, out decimal tpAffterAmount);
+                        int result = _settledBLL.PayoutRNG_SG(transferReq, (int)gameType, out decimal tpAffterAmount);
 
                         if (result > 0)
                         {
@@ -328,7 +368,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             }
                             else if (transferReq.amount == 0)
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId, (int)gameType);
+                                var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, transferReq.acctId, (int)gameType);
                                 transferResp.balance = tpCustBalance.Balance;
                                 transferResp.code = 0;
                                 transferResp.msg = "Success";
@@ -336,27 +376,31 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else if (result == -1)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId, (int)gameType);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, transferReq.acctId, (int)gameType);
                             transferResp.balance = tpCustBalance.Balance;
                             transferResp.code = 0;
                             transferResp.msg = "Success";
                         }
+                        else
+                        {
+                            _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(transferResp)}", logName);
+                            return transferResp;
+                        }
                     }
                     catch (Exception ex)
                     {
-                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(transferResp)}\r\n{ex.Message}", $"SG_{api}_{transferReq.type}", ex);
-                        throw ex;
+                        _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(transferResp)}\r\n{ex.Message}", logName, ex);
+                        throw;
                     }
                 }
                 else if (transferReq.type == TransferType.Bonus)
                 {
                     try
                     {
-                        int result = settledBLL.PayoutRNG_SG(transferReq, (int)gameType, out decimal tpAffterAmount);
+                        int result = _settledBLL.PayoutRNG_SG(transferReq, (int)gameType, out decimal tpAffterAmount);
 
                         if (result > 0)
                         {
-
                             if (transferReq.amount > 0)
                             {
                                 transferResp.balance = tpAffterAmount;
@@ -365,7 +409,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             }
                             else if (transferReq.amount == 0)
                             {
-                                var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId, (int)gameType);
+                                var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, transferReq.acctId, (int)gameType);
                                 transferResp.balance = tpCustBalance.Balance;
                                 transferResp.code = 0;
                                 transferResp.msg = "Success";
@@ -373,51 +417,31 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else if (result == -1)
                         {
-                            var tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferReq.acctId, (int)gameType);
+                            var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, transferReq.acctId, (int)gameType);
                             transferResp.balance = tpCustBalance.Balance;
                             transferResp.code = 0;
                             transferResp.msg = "Success";
+                            _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(transferResp)}", logName);
+                            return transferResp;
+                        }
+                        else
+                        {
+                            _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(transferResp)}", logName);
+                            return transferResp;
                         }
                     }
                     catch (Exception ex)
                     {
-                        log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(transferResp)}\r\n{ex.Message}", $"SG_{api}_{transferReq.type}", ex);
-                        throw ex;
+                        _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(transferResp)}\r\n{ex.Message}", logName, ex);
+                        throw;
                     }
                 }
 
-                log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(transferResp)}", $"SG_{api}_{transferReq.type}");
+                _log2File.Info($"{Content}\r\n{JsonConvert.SerializeObject(transferResp)}", logName);
                 return transferResp;
             }
 
             return resp;
-        }
-
-        public class GetBalanceResp : Resp
-        {
-            public AcctInfo acctInfo { get; set; }
-        }
-        public class GetBalanceReq
-        {
-            public string acctId { get; set; }
-            public string merchantCode { get; set; }
-            public string serialNo { get; set; }
-            public string gameCode { get; set; }
-            public string token { get; set; }
-        }
-
-
-        public class TransferReq : BettingDataRNG_SG
-        {
-
-        }
-
-        public class TransferResp : Resp
-        {
-            public string transferId { get; set; }
-            public string merchantTxId { get; set; }
-            public string acctId { get; set; }
-            public decimal balance { get; set; }
         }
     }
 }

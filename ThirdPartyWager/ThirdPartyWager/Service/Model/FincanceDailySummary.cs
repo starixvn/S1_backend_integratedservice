@@ -1,5 +1,4 @@
-﻿using System;
-using ThirdPartyWager.Service.Model.enums;
+﻿using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.Model
 {
@@ -18,5 +17,6 @@ namespace ThirdPartyWager.Service.Model
         public decimal ProgressiveWin { get; set; }
         public decimal Reward { get; set; }
         public string TpCurrencyId { get; set; }
+        public int WagerCount { get; set; }
     }
 }

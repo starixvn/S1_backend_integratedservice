@@ -6,7 +6,7 @@
         Goal123 = 2,
         Bwing = 3
     }
-    
+
     public enum Tp
     {
         None = 0,
@@ -48,14 +48,29 @@
         AP = 39,
         SBO = 42,
         Skywind = 43,
-        SimplePlay = 44
+        SimplePlay = 44,
+        Yeebet = 46,
+        BG = 47,
+        TFG = 48,
+        Nextspin = 50,
+        PlayTech = 51,
+        IM = 52,
+        SPRIBE = 53,
+        FaChai = 55,
+        Pegasus = 56,
+        BNG = 57,
+        HaoLong = 58,
+        NLC = 59,
+        NTConnect = 62,
+        GA = 63
     }
-
     public enum GameType
     {
         Allbet_LiveCasino = 6,
         AG_LiveCasino = 8,
         SA_LiveCasino = 9,
+        GPI_RNG = 11,
+        WM_LiveCasino = 32,
         One789_Lottery = 35,
         One789_Lottery_789 = 36,
         One789_LiveCasino = 37,
@@ -68,7 +83,9 @@
         SG_Fish = 31,
         SBO_Sports = 77,
         SBO_VirtualSports = 81,
+        V8_Poker = 42,
         PT_RNG = 46,
+        V8_Poker_None = 47, // without revenue games
         PT_LiveCasino = 48,
         YGG_RNG = 14,
         AMB_RNG = 76,
@@ -76,9 +93,23 @@
         Skywind_LiveCasino = 84,
         Skywind_Fish = 85,
         SimplePlay_RNG = 86,
+        GPI_Keno = 88,
+        GPI_Sode = 89,
+        GPI_Thai_Lottery = 90,
+        GPI_Fast3 = 91,
+        Yeebet_LiveCasino = 93,
+        BG_LiveCasino = 94,
+        TFG_Esports = 97,
+        Nextspin_RNG = 99,
+        IM_ESports = 102,
+        IM_Sports = 103,
+        FaChai_RNG = 106,
+        SG_Table = 109,
+        HaoLong_4D = 110,
+        NLC_RNG = 111,
+        NTConnect_Games = 114,
+        GA_CockFighting = 115,
     }
-    
-    
     public enum SettlementType
     {
         UnSettled = 0,
@@ -86,9 +117,9 @@
         SettledForInvalid = 2,
         SettledForValidNotRollover = 3,
         Cheating = 4
-   
+
     }
-    
+
     public enum TicketStatus
     {
         UnSettled = 0,/*Running, Waiting*/
@@ -103,7 +134,6 @@
     public enum DataBase
     {
         Main, //ConnectionString
-        Report,//ConnectionStringReport
         Wager,//ConnectionStringWager
     }
 
@@ -130,5 +160,14 @@
         CheckSettle = 5,//結帳檢查
         ReSettle = 6,//重新結帳
         UserReport = 7,//用戶報表
+        UnSettle = 8,//未結算注單
+    }
+    
+    public enum WorkerType
+    {
+        MainWager = 1,                  //使用TicketKey固定持續拉單
+        ByTransIdUnSettleWager = 3,     //檢查未結算注單
+        RngWager = 5,
+        VgamingUnSettle = 6,            //檢查Vgaming未結算，重打Saba Resubmit Process
     }
 }
