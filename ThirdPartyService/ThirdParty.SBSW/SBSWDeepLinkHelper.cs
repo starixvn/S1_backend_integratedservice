@@ -44,7 +44,7 @@ namespace ThirdParty.SBSW
             {"8","baseball" } ,
             {"9","badminton" } ,
             {"50", "indiancricket" },
-            {"161","numbergame" },
+            {"161","161" },
             {"164","164" },
             {"171","vgaming" },
             {"180","180" },
