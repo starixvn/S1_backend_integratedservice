@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
+using Ubiety.Dns.Core;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -3649,12 +3650,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     return -2;
                 }
-                
-                if (bettrans.Any(i => i.TicketType != (int)BettransType.Bet))
+
+                if (settleDataLC_WonCasino.type != (int)WonCasinoTypeEnum.ReSettle)
                 {
-                    return -3;
+                    if (bettrans.Any(i => i.TicketType != (int)BettransType.Bet))
+                    {
+                        return -3;
+                    }
                 }
-                
+
                 settleDataLC_WonCasino.username = tpCustInfo.TpUserName;
                 var p = new DynamicParameters(new
                 {
@@ -3733,6 +3737,97 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 null,
                                 out afterAmount,
                                 $"Payout",
+                                out bonusId,
+                                conn,
+                                trans,
+                                AllowNegative.Allow
+                            );
+                            break;
+                    }
+
+                    if (result > 0)
+                    {
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+        
+        public int Rollback_WonCasino(TpCustInfo tpCustInfo ,RollbackWonCasino rollbackDataLC_WonCasino, out decimal afterAmount)
+        {
+            var bonusId = 0;
+            var tpId = Tp.WonCasino;
+            var tpGameType = GameType.WonCasino_LiveCasino;
+            var category = TpCategory.LiveCasino;
+            var SetSpName = "Service_Bettrans_WonCasino_Ins";
+            afterAmount = 0;
+
+            var result = 0;
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var partitionTime = DateTime.Now;
+                
+                rollbackDataLC_WonCasino.username = tpCustInfo.TpUserName;
+                var p = new DynamicParameters(rollbackDataLC_WonCasino);
+                result = _partitionService.Execute(partitionTime, SetSpName, p, trans);
+
+                if (result > 0)
+                {
+                    switch (rollbackDataLC_WonCasino.type)
+                    {
+                        case (int)WonCasinoTypeEnum.Bet:
+                            result = PayoutV2(
+                                tpCustInfo,
+                                Math.Abs(rollbackDataLC_WonCasino.amount),
+                                (int)tpId,
+                                rollbackDataLC_WonCasino.serialnumber,
+                                (int)tpGameType,
+                                category,
+                                rollbackDataLC_WonCasino.serialnumber,
+                                TransType.Refunds,
+                                null,
+                                out afterAmount,
+                                "Void Rollback",
+                                out bonusId,
+                                conn,
+                                trans,
+                                AllowNegative.Allow
+                            );
+                            break;
+                        case (int)WonCasinoTypeEnum.Settle:
+                            result = PayoutV2(
+                                tpCustInfo,
+                                rollbackDataLC_WonCasino.amount,
+                                (int)tpId,
+                                rollbackDataLC_WonCasino.serialnumber,
+                                (int)tpGameType,
+                                category,
+                                rollbackDataLC_WonCasino.serialnumber,
+                                TransType.Payout,
+                                null,
+                                out afterAmount,
+                                $"ReSettle Rollback",
                                 out bonusId,
                                 conn,
                                 trans,
