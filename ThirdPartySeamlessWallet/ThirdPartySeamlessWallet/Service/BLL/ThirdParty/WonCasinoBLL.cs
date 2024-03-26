@@ -105,16 +105,21 @@ public class WonCasinoBLL : IWonCasinoBLL
                 return getErrorResponse;
             }
 
-            if (request.type != (int)WonCasinoTypeEnum.Bet)
+            switch (request.type)
             {
-                getErrorResponse.result = (int)WonCasinoErrorCodeEnum.TypeError;
-                getErrorResponse.desc = WonCasinoErrorCodeEnum.TypeError.GetEnumDescription();
-                return getErrorResponse;
+                case (int)WonCasinoTypeEnum.Bet:
+                    request.orderno = orderNo;
+                    request.TicketType = (int)BettransType.Bet;
+                    request.TicketStatus = (int)TicketStatus.UnSettled;
+                    break;
+                case (int)WonCasinoTypeEnum.Cancel:
+                    request.orderno = orderNo;
+                    request.TicketType = (int)BettransType.CancelBet;
+                    request.TicketStatus = (int)TicketStatus.Refund;
+                    break;
+                
             }
-
-            request.orderno = orderNo;
-            request.TicketType = (int)BettransType.Bet;
-            request.TicketStatus = (int)TicketStatus.UnSettled;
+            
             var result = Deduct_WonCasino(request, out decimal tpAffterAmount);
 
             if (result > 0 || result == -1)
@@ -215,6 +220,7 @@ public class WonCasinoBLL : IWonCasinoBLL
     {
         //Rollback 只有在两个情况出现  超时， HTTP没响应  (投注时，派彩时 ，撤销时）
         //触发rollback 的时候 依据 deposit / deduct 来操作 。
+        //WonCasino後台可觸發
         var logName = $"{_thisTp.ToString()}_RollBack";
         var getErrorResponse = new WonCasinoRollBackResponse()
         {
@@ -363,11 +369,21 @@ public class WonCasinoBLL : IWonCasinoBLL
         var bettrans = _partitionService.Query<BettransWonCasino>(partitionTime, GetSpName, 
             new { id = rollbackData_WonCasino.serialnumber , username = tpCustInfo.TpUserName });
         
+        //Rollback要驗notifyid+type+serialnumber以免重複處理。
+        
+        
         if (bettrans.All(i => i.id != long.Parse(rollbackData_WonCasino.serialnumber)))
         {
             afterAmount = 0.00m;
             return -2;
         }
+
+        if (VerifyNotifyId(rollbackData_WonCasino, bettrans))
+        {
+            afterAmount = 0.00m;
+            return -2;
+        }
+        
 
         switch (rollbackData_WonCasino.type)
         {
@@ -429,6 +445,13 @@ public class WonCasinoBLL : IWonCasinoBLL
     {
         return true;
     }
+
+    private bool VerifyNotifyId(string notifyId, string type,string serialNumber,IEnumerable<BettransWonCasino> bettransWonCasino)
+    {
+        var requestNotifyId = notifyId + type + serialNumber;
+        return bettransWonCasino.All(i => i.notifyid != requestNotifyId);
+    }
+    
     private static string GenerateRandomString(int mode)
     {
         var random = new Random();
