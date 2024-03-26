@@ -1031,15 +1031,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 var partitionTime = DateTimeOffset.FromUnixTimeSeconds(bettingDataLC_WonCasino.bets.createtime).DateTime;
-                // 檢查是否重複
                 var bettrans = _partitionService.Query<BettransWonCasino>(partitionTime, CheckSpName, 
                     new { id = bettingDataLC_WonCasino.bets.id , username = tpCustInfo.TpUserName });
-                
-                if (bettrans.All(i => i.id != bettingDataLC_WonCasino.bets.id))
-                {
-                    afterAmount = 0.00m;
-                    return -2;
-                }
                 
                 //若TicketStatus已經為 Refund = 3,/*Reject, Refund, Void, Draw*/,就不給再次扣款了。
                 if (bettrans.Any(i => i.TicketStatus == (int)TicketStatus.Refund))
