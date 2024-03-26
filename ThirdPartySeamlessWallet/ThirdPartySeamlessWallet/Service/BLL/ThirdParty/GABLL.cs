@@ -94,7 +94,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (tempResult > 0)
             {
-                if(reqData.type == (int)GAType.Uncancel)
+                if (reqData.type == (int)GAType.Uncancel)
                 {
                     tempResult = _settledService.PayoutV2(
                             tpCustInfo,
@@ -115,7 +115,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 }
                 else
                 {
-                    tempResult = _bettingService.PlaceBetV2(tpCustInfo, Math.Abs(bettingData.amount) * -1, (int)Tp.GA, bettingData.sid, (int)GameType.GA_CockFighting, bettingData.sid, null, TpCategory.Cockfighting, out afterAmount, ref bonusId, conn, trans, string.Empty);
+                    tempResult = _bettingService.PlaceBet(tpCustInfo, Math.Abs(bettingData.amount) * -1, (int)Tp.GA, bettingData.sid, (int)GameType.GA_CockFighting, bettingData.sid, out afterAmount, ref bonusId, out _, conn, trans, string.Empty);
                 }
             }
 
@@ -161,7 +161,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             //檢查目前住單的狀態是不是cancel(如果是的話要先uncancel才能payout)
-            if(previousTran.type == (int)GAType.TicketCancelation)
+            if (previousTran.type == (int)GAType.TicketCancelation)
             {
                 return (int)GATransactionStatus.BetIsCancel;
             }
@@ -316,12 +316,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         conn,
                         trans,
                         AllowNegative.Allow);
-                        
+
             }
 
             if (tempResult > 0)
             {
-                if(reqData.type == (int)GAType.Void)
+                if (reqData.type == (int)GAType.Void)
                 {
                     _ = _tpUnsettleService.InsertTpUnsettle(Tp.GA, GameType.GA_CockFighting, bettingData.sid, trans);
                 }
@@ -391,7 +391,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             tempResult = _partitionService.Execute(partitionTime, "Service_Bettrans_GA_Ins", bettingData, trans);
 
-            if(tempResult > 0)
+            if (tempResult > 0)
             {
                 tempResult = _settledService.PayoutV2(
                         tpCustInfo,
@@ -410,7 +410,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         trans,
                         AllowNegative.Allow);
             }
-            
+
             if (tempResult > 0)
             {
                 _mainDbClient.CommitAndDisposeConnection(conn, trans);

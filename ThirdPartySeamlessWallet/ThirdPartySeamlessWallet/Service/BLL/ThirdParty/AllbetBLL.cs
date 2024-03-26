@@ -368,16 +368,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 if (result > 0 && request.Amount != 0)
                 {
-                    result = _bettingService.PlaceBetV2(tpCustInfo, Math.Abs(request.Amount) * -1, (int)ThirdParty, $"T{request.TranId}",
-                        (int)GameType, request.TranId.ToString(), null, TpCategory.LiveCasino, out afterAmount, ref bonusId,
-                        conn, trans);
+                    result = _bettingService.PlaceBet(tpCustInfo, Math.Abs(request.Amount) * -1, (int)ThirdParty, $"T{request.TranId}",
+                        (int)GameType, request.TranId.ToString(), out afterAmount, ref bonusId, out decimal useBonus, conn, trans);
                     if (bonusId > 0)
                     {
                         foreach (var bet in request.Details)
                         {
                             _bettingService.AddTpBonus((int)ThirdParty, bet.BetNum.ToString(), (int)GameType, tpCustInfo.CustId,
-                                tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, bet.BetAmount, bonusId,
-                                TpCategory.LiveCasino, conn, trans);
+                                tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, useBonus, bonusId, trans);
                         }
                     }
                 }

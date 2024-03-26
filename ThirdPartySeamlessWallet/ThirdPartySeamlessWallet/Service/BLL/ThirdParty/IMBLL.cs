@@ -137,17 +137,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 if (result > 0)
                 {
-                    result = _bettingService.PlaceBetV2(
+                    result = _bettingService.PlaceBet(
                         tpCustInfo: tpCustInfo,
                         amount: Math.Abs(bet.Amount) * -1,
                         tpId: (int)tpId,
                         tpTransId: gameType == GameType.SPRIBE_RNG ? bet.RoundId : bet.BetId,
                         gameType: (int)gameType,
                         refId: bet.TransactionId,
-                        betData: null,
-                        tpCategory: tpCategory,
                         afterAmount: out var afterAmount,
                         bonusId: ref bonusId,
+                        useBonus: out _,
                         conn: conn,
                         trans: trans
                     );
