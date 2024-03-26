@@ -1060,7 +1060,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     commamount = bettingDataLC_WonCasino.bets.commamount,
                     winlost = bettingDataLC_WonCasino.bets.winlost,
                     foregift = bettingDataLC_WonCasino.bets.foregift,
-                    gamerroundid = bettingDataLC_WonCasino.bets.gameroundid,
+                    gameroundid = bettingDataLC_WonCasino.bets.gameroundid,
                     gameresult = bettingDataLC_WonCasino.bets.gameresult,
                     gametype = bettingDataLC_WonCasino.bets.gametype,
                     gamestyle = bettingDataLC_WonCasino.bets.gamestyle,
