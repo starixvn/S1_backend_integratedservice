@@ -86,7 +86,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class WonCasinoDeductResponse : WonCasinoBaseResponse
     {
-        public string serialnumber { get; set; }
         public decimal balance { get; set; }
         public string orderno { get; set; }
     }
