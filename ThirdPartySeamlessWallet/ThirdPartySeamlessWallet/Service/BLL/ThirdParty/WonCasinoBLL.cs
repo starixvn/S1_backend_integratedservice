@@ -282,6 +282,8 @@ public class WonCasinoBLL : IWonCasinoBLL
 
     private int Deduct_WonCasino(WonCasinoDeductRequest bettingData_WonCasino, out decimal afterAmount)
     {
+        var result = 0;
+        afterAmount = 0.00m;
         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, bettingData_WonCasino.username);
         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)_thisTp, tpCustInfo.CurrencyId);
         var custBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, bettingData_WonCasino.username, _gameType);
@@ -290,6 +292,7 @@ public class WonCasinoBLL : IWonCasinoBLL
         {
             bettingData_WonCasino.amount *= tpCurrency.ExchangeRate;
             bettingData_WonCasino.bets.betamount *= tpCurrency.ExchangeRate;
+            bettingData_WonCasino.bets.commamount *= tpCurrency.ExchangeRate;
             custBalance.Balance *= tpCurrency.ExchangeRate;
         }
 
@@ -305,8 +308,16 @@ public class WonCasinoBLL : IWonCasinoBLL
             afterAmount = checkBalance / tpCurrency.ExchangeRate;
             return 0;
         }
-        
-        var result = _bettingService.DeductLC_WonCasino(tpCustInfo, bettingData_WonCasino, out afterAmount);
+
+        result = bettingData_WonCasino.type switch
+        {
+            (int)WonCasinoTypeEnum.Bet => _bettingService.DeductLC_WonCasino(tpCustInfo, bettingData_WonCasino,
+                out afterAmount),
+            (int)WonCasinoTypeEnum.Cancel => _settledService.DeductLC_WonCasino(tpCustInfo, bettingData_WonCasino,
+                out afterAmount),
+            _ => result
+        };
+
         if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
         {
             afterAmount /= tpCurrency.ExchangeRate;
@@ -378,7 +389,7 @@ public class WonCasinoBLL : IWonCasinoBLL
             return -2;
         }
 
-        if (VerifyNotifyId(rollbackData_WonCasino.notifyid,rollbackData_WonCasino.type.ToString(),rollbackData_WonCasino.serialnumber, bettrans))
+        if (!VerifyNotifyId(rollbackData_WonCasino.notifyid,rollbackData_WonCasino.type.ToString(),rollbackData_WonCasino.serialnumber, bettrans))
         {
             afterAmount = 0.00m;
             return -2;
