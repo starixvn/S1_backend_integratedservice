@@ -378,7 +378,7 @@ public class WonCasinoBLL : IWonCasinoBLL
             return -2;
         }
 
-        if (VerifyNotifyId(rollbackData_WonCasino, bettrans))
+        if (VerifyNotifyId(rollbackData_WonCasino.notifyid,rollbackData_WonCasino.type.ToString(),rollbackData_WonCasino.serialnumber, bettrans))
         {
             afterAmount = 0.00m;
             return -2;
