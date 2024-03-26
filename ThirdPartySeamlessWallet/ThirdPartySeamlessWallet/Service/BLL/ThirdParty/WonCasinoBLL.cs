@@ -187,6 +187,19 @@ public class WonCasinoBLL : IWonCasinoBLL
                     orderno = orderNo
                 };
             }
+            
+            if (result == -2)
+            {
+                //無單號或已處理過，直接回傳成功並且回覆當前餘額
+                tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, request.username, _gameType);
+                tpAfterAmount = tpCustBalance.Balance;
+                return new WonCasinoDepositResponse()
+                { 
+                    result = 0,
+                    desc = "OK",
+                    balance = tpAfterAmount,
+                };
+            }
         }
         catch (Exception ex)
         {
@@ -241,7 +254,6 @@ public class WonCasinoBLL : IWonCasinoBLL
                     desc = "OK",
                     balance = tpAfterAmount,
                 };
-                
             }
         }
         catch (Exception ex)
@@ -359,25 +371,37 @@ public class WonCasinoBLL : IWonCasinoBLL
 
         switch (rollbackData_WonCasino.type)
         {
+            
             case (int)WonCasinoTypeEnum.Bet:
-                result = Rollback_Deduct_Check(bettrans, rollbackData_WonCasino);
+                result = Rollback_Deduct_Check(bettrans);
                 if (result != 0)
                 {
                     afterAmount = 0.00m;
                     return result;
                 }
                 rollbackRequest = RollbackWonCasinoRequest(bettrans, rollbackData_WonCasino,
-                    (int)BettransType.CancelBet, (int)TransType.Refunds, (int)SettleFlag.EndGame);
+                    (int)BettransType.CancelBet, (int)TicketStatus.Refund, (int)SettleFlag.EndGame);
+                break;
+            case(int)WonCasinoTypeEnum.Cancel:
+                result = Rollback_DepositOrCancel_Check(bettrans);
+                if (result != 0)
+                {
+                    afterAmount = 0.00m;
+                    return result;
+                }
+                rollbackRequest = RollbackWonCasinoRequest(bettrans, rollbackData_WonCasino,
+                    (int)BettransType.Payout, (int)TicketStatus.Refund, (int)SettleFlag.EndGame);
                 break;
             case (int)WonCasinoTypeEnum.Settle:
-                result = Rollback_Deposit_Check(bettrans, rollbackData_WonCasino);
+                result = Rollback_DepositOrCancel_Check(bettrans);
                 if (result != 0)
                 {
                     afterAmount = 0.00m;
                     return result;
                 }
+                //Settle Rollback 要恢復投注的狀態 通知WonCasino手動再次派彩
                 rollbackRequest = RollbackWonCasinoRequest(bettrans, rollbackData_WonCasino,
-                    (int)BettransType.CancelBet, (int)TransType.Undo, (int)SettleFlag.EndGame);
+                    (int)BettransType.CancelBet, (int)TicketStatus.UnSettled, (int)SettleFlag.Running);
                 break;
         }
         
@@ -421,8 +445,7 @@ public class WonCasinoBLL : IWonCasinoBLL
         return new string(stringChars);
     }
 
-    private int Rollback_Deduct_Check(IEnumerable<BettransWonCasino> bettransData_WonCasino,
-        WonCasinoRollBackRequest rollbackData_WonCasino)
+    private int Rollback_Deduct_Check(IEnumerable<BettransWonCasino> bettransData_WonCasino)
     {
         //当收到Rollback信息中 type=1的时候，将对 Deduct进行回滚操作
         //Rollback且Type = 1是針對下注狀態，若Count超過1個就直接回傳狀態
@@ -441,10 +464,10 @@ public class WonCasinoBLL : IWonCasinoBLL
         return - 2;
     }
     
-    private int Rollback_Deposit_Check(IEnumerable<BettransWonCasino> bettransData_WonCasino,
-        WonCasinoRollBackRequest rollbackData_WonCasino)
+    private int Rollback_DepositOrCancel_Check(IEnumerable<BettransWonCasino> bettransData_WonCasino)
     {
         //当收到Rollback信息中 type=9的时候，将对 Deposit 进行回滚操作
+        //Rollback Type = 7,直接算為取消結算結果，直接退還錢並直接結單，不再進行操作。
         //取最後結算狀態
         var settleBettrans =
             bettransData_WonCasino.LastOrDefault(i => i.TicketType == (int)BettransType.Payout);

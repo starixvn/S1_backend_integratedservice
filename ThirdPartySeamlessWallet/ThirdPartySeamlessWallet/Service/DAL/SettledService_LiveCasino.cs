@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
+using ThirdPartySeamlessWallet.Service.Model.SBSW;
 using Ubiety.Dns.Core;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
@@ -3650,13 +3651,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     return -2;
                 }
-
-                if (settleDataLC_WonCasino.type != (int)WonCasinoTypeEnum.ReSettle)
+                
+                //若TicketStatus已經為 Refund = 3,/*Reject, Refund, Void, Draw*/,就不給再次結算。
+                if (!bettrans.Any(i => i.TicketStatus == (int)TicketStatus.Refund))
                 {
-                    if (bettrans.Any(i => i.TicketType != (int)BettransType.Bet))
-                    {
-                        return -3;
-                    }
+                    return -2;
                 }
 
                 settleDataLC_WonCasino.username = tpCustInfo.TpUserName;
@@ -3680,7 +3679,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     commamount = settleDataLC_WonCasino.bets.commamount,
                     winlost = settleDataLC_WonCasino.bets.winlost,
                     foregift = settleDataLC_WonCasino.bets.foregift,
-                    gamerroundid = settleDataLC_WonCasino.bets.gameroundid,
+                    gameroundid = settleDataLC_WonCasino.bets.gameroundid,
                     gameresult = settleDataLC_WonCasino.bets.gameresult,
                     gametype = settleDataLC_WonCasino.bets.gametype,
                     gamestyle = settleDataLC_WonCasino.bets.gamestyle,
@@ -3708,7 +3707,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         case (int)WonCasinoTypeEnum.Cancel:
                             result = PayoutV2(
                                 tpCustInfo,
-                                Math.Abs(settleDataLC_WonCasino.amount),
+                                settleDataLC_WonCasino.amount,
                                 (int)tpId,
                                 settleDataLC_WonCasino.serialnumber,
                                 (int)tpGameType,
@@ -3809,6 +3808,25 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                                 null,
                                 out afterAmount,
                                 "Void Rollback",
+                                out bonusId,
+                                conn,
+                                trans,
+                                AllowNegative.Allow
+                            );
+                            break;
+                        case (int)WonCasinoTypeEnum.Cancel:
+                            result = PayoutV2(
+                                tpCustInfo,
+                                rollbackDataLC_WonCasino.amount,
+                                (int)tpId,
+                                rollbackDataLC_WonCasino.serialnumber,
+                                (int)tpGameType,
+                                category,
+                                rollbackDataLC_WonCasino.serialnumber,
+                                TransType.Undo,
+                                null,
+                                out afterAmount,
+                                "Settle Rollback",
                                 out bonusId,
                                 conn,
                                 trans,
