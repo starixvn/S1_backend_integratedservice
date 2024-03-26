@@ -3653,12 +3653,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 
                 //若TicketStatus已經為 Refund = 3,/*Reject, Refund, Void, Draw*/,就不給再次結算。
-                if (!bettrans.Any(i => i.TicketStatus == (int)TicketStatus.Refund))
+                if (bettrans.Any(i => i.TicketStatus == (int)TicketStatus.Refund))
                 {
                     return -2;
                 }
 
                 settleDataLC_WonCasino.username = tpCustInfo.TpUserName;
+                settleDataLC_WonCasino.notifyid = settleDataLC_WonCasino.notifyid + 
+                                                  settleDataLC_WonCasino.type +
+                                                  settleDataLC_WonCasino.bets.id;
                 var p = new DynamicParameters(new
                 {
                     id = settleDataLC_WonCasino.bets.id,

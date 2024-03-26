@@ -1049,12 +1049,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 // 檢查是否重複
                 var bettrans = _partitionService.Query<BettransWonCasino>(partitionTime, CheckSpName, 
                     new { id = bettingDataLC_WonCasino.bets.id , username = tpCustInfo.TpUserName });
-                if (bettrans.Any(i => i.TicketType == (int)BettransType.Bet && i.id == bettingDataLC_WonCasino.bets.id))
+                
+                if (bettrans.All(i => i.id != bettingDataLC_WonCasino.bets.id))
                 {
-                    return -1;
+                    afterAmount = 0.00m;
+                    return -2;
+                }
+                
+                //若TicketStatus已經為 Refund = 3,/*Reject, Refund, Void, Draw*/,就不給再次扣款了。
+                if (bettrans.Any(i => i.TicketStatus == (int)TicketStatus.Refund))
+                {
+                    return -2;
                 }
                 
                 bettingDataLC_WonCasino.username = tpCustInfo.TpUserName;
+                bettingDataLC_WonCasino.notifyid = bettingDataLC_WonCasino.notifyid + 
+                                                   bettingDataLC_WonCasino.type +
+                                                   bettingDataLC_WonCasino.bets.id;
                 var p = new DynamicParameters(new
                 {
                     id = bettingDataLC_WonCasino.bets.id,
@@ -1089,9 +1100,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     settletime = bettingDataLC_WonCasino.bets.settletime,
                     UTCBetTime = DateTimeOffset.FromUnixTimeSeconds(bettingDataLC_WonCasino.bets.createtime).UtcDateTime,
                     UTCSettleTime = DateTimeOffset.FromUnixTimeSeconds(bettingDataLC_WonCasino.bets.settletime).UtcDateTime,
-                    TicketType = (int)BettransType.Bet,
-                    TicketStatus = (int)TicketStatus.UnSettled,
-                    SettleFlag = 0
+                    TicketType = bettingDataLC_WonCasino.TicketType,
+                    TicketStatus = bettingDataLC_WonCasino.TicketStatus,
+                    SettleFlag = bettingDataLC_WonCasino.SettleFlag
                 });
                 
                 result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
