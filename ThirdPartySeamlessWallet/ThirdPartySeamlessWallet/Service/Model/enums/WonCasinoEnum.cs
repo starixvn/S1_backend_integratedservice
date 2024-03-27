@@ -13,11 +13,11 @@ public enum WonCasinoTypeEnum
 
 public enum WonCasinoStateEnum
 {
-    Rollback = -3,
-    Cancel = -2,
-    Void = -1,
-    Bet = 0,
-    Settle = 1,
+   Void = -2,
+   Cancel = -1,
+   Rollback = -3,
+   Bet = 0,
+   Settle = 1,
 }
 
 public enum WonCasinoErrorCodeEnum

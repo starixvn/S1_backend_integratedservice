@@ -107,7 +107,8 @@
         SG_Table = 109,
         HaoLong_4D = 110,
         NLC_RNG = 111,
-        GA_CockFighting = 115
+        GA_CockFighting = 115,
+        WonCasino_LiveCasino = 116,
     }
     public enum SettlementType
     {
