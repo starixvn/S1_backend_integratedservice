@@ -184,13 +184,63 @@ namespace ThirdParty.WonCasino
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            //拿wager資料，WonCasino無注單明細API
+            var spName = "Service_Bettrans_WonCasino_Detail_Get";
+            var db = DataBase.Main;
+            var YYYYMM = getBetDetail.SettledTime.GetPartitionKey();
+
+            TpCurrency tpCurrency = new()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+
+            var transId = int.Parse(getBetDetail.TransId);
+            var wagerDetail = TpBetRecordProvider.DbQuery(spName, new { YYYYMM, transId }, db);
+            var getDetail = wagerDetail.LastOrDefault();
+            var detail = ToJson(wagerDetail);
+            var gameType = getDetail.GetValueOrDefault("gametype").ToString();
+            var gameName = ConvertGameType(gameType);
+            
+            return new LiveCasinoDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                Detail = detail,
+                TpCurrency = tpCurrency,
+                RefTransId = getBetDetail.TransId,
+                GameCode =  gameType,
+                GameName = gameName,
+                TpUserName = getDetail.GetValueOrDefault("username")?.ToString(),
+                UTCBetTime = DateTime.Parse(getDetail.GetValueOrDefault("UTCBetTime")?.ToString()),
+                UTCSettledTime = DateTime.Parse(getDetail.GetValueOrDefault("UTCSettleTime")?.ToString()),
+                Stake = (decimal)getDetail.GetValueOrDefault("betamount"),
+                WinlostAmount = (decimal)getDetail.GetValueOrDefault("betamount") + (decimal)getDetail.GetValueOrDefault("winlost") 
+            };
         }
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo,
             Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var transId = int.Parse(betRecordInfo.TransId);
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_WonCasino_Get", new { id = transId }, DataBase.Wager);
+            if (detail == null)
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+            
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = detail.GetStringValue("bettype"),
+                Game = tpGameType.TypeName,
+                RefNo = detail.GetStringValue("gameroundid"),
+                Title = tpGameType.TypeName,
+                MatchID = betRecordInfo.TransId,
+                BetType = detail.GetStringValue("bettype"),
+                BetChoice = detail.GetStringValue("betpoint"),
+                Result = detail.GetStringValue("gameresult"),
+                IP = string.Empty,
+                Odds = decimal.TryParse(detail.GetStringValue("betodds"), out var odds) ? odds : 0,
+            };
         }
         
         #region private
@@ -217,16 +267,17 @@ namespace ThirdParty.WonCasino
             return inputs[key];
         }
 
-        private string ConvertLanguage(string languageCode)
+        private string ConvertGameType(string gametype)
         {
-            return languageCode switch
+            return gametype switch
             {
-                "1" => "1",
-                "2" => "2",
-                "5" => "5",
-                "10" => "10",
-                "11" => "11",
-                _ => "2"
+                "4" => "Baccarat",
+                "5" => "Roulette",
+                "10" => "DragonTiger",
+                "11" => "SicBo",
+                "18" => "ColorDisc",
+                "19" => "FishPrawnCrab",
+                _ => "NA"
             };
         }
         
