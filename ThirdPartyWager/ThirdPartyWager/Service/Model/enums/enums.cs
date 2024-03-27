@@ -110,6 +110,7 @@
         NLC_RNG = 111,
         NTConnect_Games = 114,
         GA_CockFighting = 115,
+        WonCasino_LiveCasino = 116,
     }
     public enum SettlementType
     {

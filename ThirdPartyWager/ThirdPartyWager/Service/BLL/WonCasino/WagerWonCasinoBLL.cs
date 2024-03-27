@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
@@ -9,10 +10,12 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<WagerWonCasinoBLL> _logger;
         private readonly ApiWonCasinoBLL _apiWonCasinoBLL;
         private readonly WagerWonCasinoService _wagerWonCasinoService;
+        private readonly TpUnsettleService _tpUnsettleService;
         public WagerWonCasinoBLL(IServiceProvider provider)
         {
             _logger = provider.GetService<ILogger<WagerWonCasinoBLL>>();
             _apiWonCasinoBLL = provider.GetRequiredService<ApiWonCasinoBLL>();
+            _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
             _wagerWonCasinoService = provider.GetRequiredService<WagerWonCasinoService>();
         }
 
@@ -36,7 +39,11 @@ namespace ThirdPartyWager.Service.BLL
                         {
                             try
                             {
-                                await _wagerWonCasinoService.InsertWager(wager);
+                                var result = await _wagerWonCasinoService.InsertWager(wager);
+                                if (result == 1)
+                                {
+                                    _ = _tpUnsettleService.InsertTpUnsettle(Tp.WonCasino, GameType.WonCasino_LiveCasino, wager.id.ToString());
+                                }
                             }
                             catch (Exception ex)
                             {

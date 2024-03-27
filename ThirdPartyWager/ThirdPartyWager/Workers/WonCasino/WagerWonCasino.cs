@@ -63,6 +63,6 @@ namespace ThirdPartyWager.Workers
                 var dueTimeSpan = TimeSpan.FromMinutes(3);
                 _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
-        }
+         }
     }
 }
