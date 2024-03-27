@@ -16,7 +16,7 @@ namespace ThirdParty.RedTiger
 
         public TpHelper()
         {
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList(38).ToDictionary(d => d.AppId, d => d.Name);
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.RedTiger).ToDictionary(d => d.AppId, d => d.Name);
         }
         public class LoginResponse
         {

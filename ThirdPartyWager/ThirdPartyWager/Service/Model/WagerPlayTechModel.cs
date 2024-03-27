@@ -22,7 +22,22 @@
         public string roundType { get; set; }
         public string roundStatus { get; set; }
         public string gameCode { get; set; }
-        public string currency { get; set; }
+        private string _currency;
+        public string currency
+        {
+            get
+            {
+                if (_currency == "Playtech_N")
+                {
+                    return "BRL";
+                }
+                return _currency;
+            }
+            set
+            {
+                _currency = value;
+            }
+        }
         public string platform { get; set; } = "";
         public decimal bets { get; set; }
         public decimal wins { get; set; }
@@ -69,7 +84,22 @@
         public int players { get; set; }
         public int games { get; set; }
         public decimal totalBets { get; set; }
-        public string currency { get; set; }
+        private string _currency;
+        public string currency
+        {
+            get
+            {
+                if (_currency == "Playtech_N")
+                {
+                    return "BRL";
+                }
+                return _currency;
+            }
+            set
+            {
+                _currency = value;
+            }
+        }
         public decimal totalJpw { get; set; }
         public decimal totalRakes { get; set; }
         public decimal totalJpc { get; set; }
