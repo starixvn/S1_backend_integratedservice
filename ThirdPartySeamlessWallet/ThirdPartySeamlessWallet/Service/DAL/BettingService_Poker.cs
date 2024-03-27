@@ -501,7 +501,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 foreach (var betDataSet in bettingData_MaxGame.Payload.BetDataSet)
                 {
-                    var partitionTime = DateTimeOffset.FromUnixTimeSeconds(bettingData_MaxGame.Payload.TransDateUnix).DateTime;
+                    DateTime.TryParse(bettingData_MaxGame.Timestamp, out DateTime partitionTime);
                     // 檢查是否重複
                     var bettrans = _partitionService.Query<BettransData_MaxGame>(partitionTime, "Service_BettransPK_MaxGame_TicketNo_Get", new { TicketNo = betDataSet.TicketNo });
                     if (bettrans.Any(i => i.TicketType == BettransType.Bet && i.Seq == bettingData_MaxGame.Seq))
@@ -515,7 +515,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         OperatorCustId = bettingData_MaxGame.Payload.OperatorCustId,
                         GameType = bettingData_MaxGame.Payload.GameType,
                         IpAddress = bettingData_MaxGame.Payload.IpAddress,
-                        TransDate = bettingData_MaxGame.Payload.TransDate,
                         SettleDate = new DateTime(1970, 1, 1),
                         TicketNo = betDataSet.TicketNo,
                         GameId = betDataSet.GameId,
@@ -533,14 +532,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         BonusId = "",
                         BonusName = "",
                         PrizeName = "",
-                        TransDateUnix = bettingData_MaxGame.Payload.TransDateUnix,
                         SettleDateUnix = 0,
                         TicketType = (int)BettransType.Bet,
                         TicketStatus = (int)TicketStatus.UnSettled,
                         SettleFlag = (int)SettleFlag.Running
                     });
                     p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
-                    result = _partitionService.Execute(partitionTime, "Service_BettransPK_MaxGame_Ins", p, trans);
+                    result = _partitionService.Execute(partitionTime, "Service_BettransPK_MaxGame_Ins_V2", p, trans);
 
                     if (result > 0 && betDataSet.ActualStake != 0)
                     {
