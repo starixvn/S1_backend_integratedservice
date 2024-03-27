@@ -380,15 +380,13 @@ public class WonCasinoBLL : IWonCasinoBLL
         var bettrans = _partitionService.Query<BettransWonCasino>(partitionTime, GetSpName, 
             new { id = rollbackData_WonCasino.serialnumber , username = tpCustInfo.TpUserName });
         
-        //Rollback要驗notifyid+type+serialnumber以免重複處理。
-        
-        
         if (bettrans.All(i => i.id != long.Parse(rollbackData_WonCasino.serialnumber)))
         {
             afterAmount = 0.00m;
             return -2;
         }
 
+        //Rollback要驗notifyid+type+serialnumber以免重複處理。
         if (!VerifyNotifyId(rollbackData_WonCasino.notifyid,rollbackData_WonCasino.type.ToString(),rollbackData_WonCasino.serialnumber, bettrans))
         {
             afterAmount = 0.00m;
@@ -517,7 +515,7 @@ public class WonCasinoBLL : IWonCasinoBLL
     }
 
     private RollbackWonCasino RollbackWonCasinoRequest(IEnumerable<BettransWonCasino> bettransData_WonCasino,
-        WonCasinoRollBackRequest rollbackData_WonCasino,int ticketType,int ticketStatus,int settleFalg)
+        WonCasinoRollBackRequest rollbackData_WonCasino,int ticketType,int ticketStatus,int settleFlag)
     {
         var result = new RollbackWonCasino();
         //拿bettrans的資料組request，拿最後狀態
@@ -557,7 +555,7 @@ public class WonCasinoBLL : IWonCasinoBLL
             UTCSettleTime = DateTimeOffset.FromUnixTimeSeconds(bettransData.settletime).UtcDateTime,
             TicketType = ticketType,
             TicketStatus = ticketStatus,
-            SettleFlag = settleFalg
+            SettleFlag = settleFlag
         };
 
         return result;
