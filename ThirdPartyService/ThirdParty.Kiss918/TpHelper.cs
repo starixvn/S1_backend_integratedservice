@@ -25,7 +25,7 @@ namespace ThirdParty.Kiss918
 
         public TpHelper()
         {
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList(21).ToDictionary(d => d.AppId, d => d.Name);
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.Kiss918).ToDictionary(d => d.AppId, d => d.Name);
         }
         private class CreateMemberResponse
         {

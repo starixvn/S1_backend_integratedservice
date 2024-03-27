@@ -1,10 +1,6 @@
-﻿
-
-using System.Text;
+﻿using System.Text;
 using System.Web;
-
 using Newtonsoft.Json;
-
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;

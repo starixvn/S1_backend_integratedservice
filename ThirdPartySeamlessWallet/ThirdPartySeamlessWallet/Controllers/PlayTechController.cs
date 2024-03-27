@@ -1,11 +1,8 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using System.Web;
-
 using Microsoft.AspNetCore.Mvc;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -27,6 +24,10 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly string _tpName = Tp.PlayTech.ToString();
         // 通常是一直重试直到成功, 但是由于我们每月会对账,所以到第二个月初如果还有没有完结的话会转入手工处置
         private readonly int _partitionCheckDay = 15;
+
+        Dictionary<string, string> _specialCurrency = new Dictionary<string, string>() {
+            {"BRL","Playtech_N" },
+        };
 
         public PlayTechController(IServiceProvider provider)
         {
@@ -205,7 +206,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     playerSessionId = HttpUtility.UrlEncode(tokenInfo.shortTimeToken),
                     playerId = tpCustInfoAuth.TpUserName,
                     playerName = tpCustInfoAuth.TpUserName,
-                    currency = tpCustInfoAuth.TpCurrencyId,
+                    currency = ProcessCurrency(tpCustInfoAuth.TpCurrencyId),
                     balance = tpCustBalance.Balance,
                     country = GetTpCountryCode(tpCustInfoAuth.TpCurrencyId, logName),
                     error = "0",
@@ -270,7 +271,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             BalanceResp response = new()
             {
                 requestId = getReq.requestId,
-                currency = tpCustBalance.TpCurrencyId,
+                currency = ProcessCurrency(tpCustBalance.TpCurrencyId),
                 balance = tpCustBalance.Balance,
                 bonusBalance = tpCustBalance.Balance,
                 error = "0",
@@ -376,7 +377,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         BalanceResp response = new()
                         {
                             requestId = getReq.requestId,
-                            currency = tpCustBalance.TpCurrencyId,
+                            currency = ProcessCurrency(tpCustBalance.TpCurrencyId),
                             balance = tpAffterAmount,
                             bonusBalance = 0,
                             error = "0",
@@ -419,7 +420,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         BalanceResp response = new()
                         {
                             requestId = getReq.requestId,
-                            currency = tpCustBalance.TpCurrencyId,
+                            currency = ProcessCurrency(tpCustBalance.TpCurrencyId),
                             balance = tpAffterAmount,
                             bonusBalance = 0,
                             error = "0",
@@ -462,7 +463,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         BalanceResp response = new()
                         {
                             requestId = getReq.requestId,
-                            currency = tpCustBalance.TpCurrencyId,
+                            currency = ProcessCurrency(tpCustBalance.TpCurrencyId),
                             balance = tpAffterAmount,
                             bonusBalance = 0,
                             error = "0",
@@ -497,7 +498,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         BalanceResp response = new()
                         {
                             requestId = getReq.requestId,
-                            currency = tpCustBalance.TpCurrencyId,
+                            currency = ProcessCurrency(tpCustBalance.TpCurrencyId),
                             balance = tpAffterAmount,
                             bonusBalance = 0,
                             error = "0",
@@ -579,7 +580,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     BalanceResp response = new()
                     {
                         requestId = getReq.requestId,
-                        currency = tpCustBalance.TpCurrencyId,
+                        currency = ProcessCurrency(tpCustBalance.TpCurrencyId),
                         balance = tpAffterAmount,
                         bonusBalance = 0,
                         error = "0",
@@ -723,6 +724,15 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             _log2File.Error($"GetTpCountryCode Error\r\n{tpCurrencyId}", logName);
             return "";
+        }
+
+        private string ProcessCurrency(string TpCurrencyId)
+        {
+            if (_specialCurrency.ContainsKey(TpCurrencyId))
+            {
+                return _specialCurrency[TpCurrencyId];
+            }
+            return TpCurrencyId;
         }
     }
 }

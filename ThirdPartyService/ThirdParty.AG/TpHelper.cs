@@ -30,7 +30,10 @@ namespace ThirdParty.AG
             {"IDR","GF4A" },
             {"VND ","GF4A" },
             {"USD ","A" },
-            {"INR ","GF4A" }
+            {"INR ","GF4A" },
+            {"JPY ","A" },
+            {"KRW ","A" },
+            {"BRL ","A" }
         };
 
         readonly Dictionary<string, int> langIdDic = new Dictionary<string, int>()
@@ -42,6 +45,9 @@ namespace ThirdParty.AG
             {"th", 6},
             {"vi", 8},
             {"khm", 9},
+            {"jp", 4},
+            {"kr", 5},
+            {"br", 23},
         };
         public class result
         {

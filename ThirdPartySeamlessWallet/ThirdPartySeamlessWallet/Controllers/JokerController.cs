@@ -73,7 +73,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         public class BalanceReq
         {
             public string appid { get; set; }
-            [Newtonsoft.Json.JsonIgnore]
+            [JsonIgnore]
             public string hash { get; set; }
             public long timestamp { get; set; }
             public string username { get; set; }
