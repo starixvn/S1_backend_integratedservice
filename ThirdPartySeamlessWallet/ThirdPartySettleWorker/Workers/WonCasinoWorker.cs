@@ -152,7 +152,7 @@ namespace ThirdPartySettleWorker.Workers
         
         #region private
 
-        public string ConvertGameType(int gametype)
+        private string ConvertGameType(int gametype)
         {
             return gametype switch
             {
