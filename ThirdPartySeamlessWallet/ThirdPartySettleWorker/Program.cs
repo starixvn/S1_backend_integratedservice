@@ -111,7 +111,8 @@ builder.Services
     .AddHostedService<HLWorker>()
     .AddHostedService<MaxGameWorker>()
     .AddHostedService<NTConnectWorker>()
-    .AddHostedService<GAWorker>();
+    .AddHostedService<GAWorker>()
+    .AddHostedService<WonCasinoWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
