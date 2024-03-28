@@ -191,9 +191,9 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         /// <summary>
         /// 取回最後一筆FinancialLog紀錄
         /// </summary>
-        public FinancialLog GetFinancialLog(int bonusId)
+        public FinancialLog GetFinancialLog(int transId)
         {
-            var sqlScript = @$"SELECT * FROM FinancialLog_{DateTime.Now:yyyyMM} WHERE RefTransId='{bonusId}' ORDER BY Id DESC LIMIT 1;;";
+            var sqlScript = @$"SELECT * FROM FinancialLog_{DateTime.Now:yyyyMM} WHERE RefTransId='{transId}' ORDER BY Id DESC LIMIT 1;";
             return _mySqlClient.Query<FinancialLog>(sqlScript, CommandType.Text).FirstOrDefault();
         }
 
