@@ -82,7 +82,10 @@ namespace ThirdParty.DG
             {"CNY","G"},
             {"USD","F"},
             {"INR","G"},
-            {"BDT","A"}
+            {"BDT","A"},
+            {"JPY","G"},
+            {"KRW2","F"},
+            {"BRL","B"}
         };
 
         private decimal dWinLimit = 0m;

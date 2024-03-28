@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -19,6 +18,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly int _timeZone = 0;
         private readonly int _gameType = 0; // 不會區分遊戲，只用來塞timer設定
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:00";
+
         public WagerPlayTechBLL(IServiceProvider provider)
         {
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
