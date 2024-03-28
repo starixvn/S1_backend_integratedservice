@@ -14,14 +14,13 @@ using NSubstitute;
 using ThirdPartySeamlessWallet.Core.Extensions;
 using ThirdPartySeamlessWallet.IntegrationTest.Models;
 using ThirdPartySeamlessWallet.IntegrationTest.Stubs;
-using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
-using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 using BonusLog = ThirdPartySeamlessWallet.IntegrationTest.Models.BonusLog;
 using FinancialLog = ThirdPartySeamlessWallet.IntegrationTest.Models.FinancialLog;
+using TpSeamlessBonus = ThirdPartySeamlessWallet.IntegrationTest.Models.TpSeamlessBonus;
 
 namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
 {
@@ -144,6 +143,12 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         {
             var sqlScript = @$"SELECT * FROM FinancialLog_{DateTime.Now:yyyyMM} WHERE RefTransId='{transId}' ORDER BY Id DESC LIMIT 1;";
             return _mySqlClient.Query<FinancialLog>(sqlScript, CommandType.Text).FirstOrDefault();
+        }
+
+        public TpSeamlessBonus GetTpSeamlessBonus(int tpId, string transId)
+        {
+            var sqlScript = @$"SELECT * FROM TpSeamlessBonus WHERE TpId='{tpId}' AND TransId='{transId}';";
+            return _mySqlClient.Query<TpSeamlessBonus>(sqlScript, CommandType.Text).FirstOrDefault();
         }
     }
 }

@@ -126,7 +126,10 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
 
                 var bonusLog = _bettingServiceSandbox.GetBonusLog(bonusId);
                 bonusLog.ChangeBonus.Should().Be(useBonus);
-                
+
+                var tpSeamlessBonus = _bettingServiceSandbox.GetTpSeamlessBonus(_tpId, _transId);
+                tpSeamlessBonus.Stake.Should().Be(useBonus);
+
                 if (stake > bonusAmount)
                 {
                     var financialLog = _bettingServiceSandbox.GetFinancialLog(_transId);

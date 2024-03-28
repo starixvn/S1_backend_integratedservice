@@ -221,7 +221,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             return _mySqlClient.Query<CustTransSummary>(sqlScript, CommandType.Text).FirstOrDefault();
         }
 
-        public int AddTpSeamlessBonus(TpSeamlessBonus tpSeamlessBonus)
+        public int AddTpSeamlessBonus(ThirdPartySeamlessWallet.Service.Model.TpSeamlessBonus tpSeamlessBonus)
         {
             return _mySqlClient.Execute("Service_TpSeamlessBonus_Ins", CommandType.StoredProcedure, tpSeamlessBonus);
         }
