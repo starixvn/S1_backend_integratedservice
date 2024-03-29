@@ -172,7 +172,6 @@ namespace ThirdPartySettleWorker.Workers
         private class SettleDataWonCasino : SettleData
         {
             public int gametype { get; set; }
-            public int state { get; set; }
             public int type { get; set; }
         }
         
