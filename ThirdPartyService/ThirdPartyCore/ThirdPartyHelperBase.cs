@@ -1,6 +1,7 @@
 ﻿using System.IO.Compression;
 using System.Net;
 using System.Net.Http.Headers;
+using System.Net.Http;
 using System.Net.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -471,6 +472,49 @@ namespace ThirdPartyCore
             }
         }
 
+        protected string HttpClientPost(string url, string parameters, string contentType, Dictionary<string, string> headers = null, int timeOutTime = 0)
+        {
+            try
+            {
+                //會http status code回傳非200，
+                //但同時又會回傳error message的response，可使用。
+                using (var client = new HttpClient())
+                {
+                    if (timeOutTime > 0)
+                    {
+                        client.Timeout = TimeSpan.FromSeconds(timeOutTime);
+                    }
+                    
+                    if (headers != null)
+                    {
+                        foreach (var item in headers)
+                        {
+                            client.DefaultRequestHeaders.Add(item.Key, item.Value);
+                        }
+                    }
+                    
+                    using (var content = new StringContent(parameters, Encoding.UTF8, contentType))
+                    {
+                        using (var request = new HttpRequestMessage(HttpMethod.Post, url))
+                        {
+                            request.Content = content;
+                            using (var response = client.Send(request))
+                            {
+                                var responseContent = response.Content.ReadAsStringAsync().Result;
+                                InsertLog?.Invoke(url, parameters, responseContent);
+                                return responseContent;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, e.Message);
+                return e.Message;
+            }
+        }
+
         protected string HttpGet(string url, string parameters, string contentType, Dictionary<string, string> headers = null)
         {
             try
@@ -753,7 +797,7 @@ namespace ThirdPartyCore
             return Convert.ToBase64String(sign);
         }
 
-        public string ApplyToken<T>(T t)
+        public string ApplyToken<T>(T t,int Expiry = 1)
         {
             if (AuthProvider != null)
             {
@@ -765,7 +809,7 @@ namespace ThirdPartyCore
                 GuidString = GuidString.Replace("_", "");
                 GuidString = GuidString.Replace("@", "");
 
-                if (AuthProvider.ApplyToken(GuidString, ToJson(t), 1))
+                if (AuthProvider.ApplyToken(GuidString, ToJson(t), Expiry))
                 {
                     return GuidString;
                 }

@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using Serilog.Context;
 
 using ThirdPartySeamlessWallet.Service.BLL;
@@ -131,6 +132,10 @@ namespace ThirdPartySettleWorker.Workers
                                 });
                             }
                         }
+                        else
+                        {
+                            _logger.LogError($" WinLostAmount || wager {Math.Round(wager.WinLostAmount, 2)}, bettrans {unsettled.WinLostAmount}\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}");
+                        }
                     }
                     catch (Exception ex1)
                     {
@@ -236,6 +241,10 @@ namespace ThirdPartySettleWorker.Workers
                                 });
                             }
                         }
+                        else
+                        {
+                            _logger.LogError($" WinLostAmount || wager {Math.Round(wager.WinLostAmount, 2)}, bettrans {unsettled.WinLostAmount} \r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}");
+                        }
                     }
                     catch (Exception ex1)
                     {
@@ -260,7 +269,7 @@ namespace ThirdPartySettleWorker.Workers
                 timerTable?.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
-        
+
         private void DoSettleFish(object state)
         {
             LogContext.PushProperty("TP", _tpName);
@@ -355,7 +364,8 @@ namespace ThirdPartySettleWorker.Workers
                 return true;
             }
 
-            return wager.Stake == unsettled.Stake && Math.Round(wager.WinLostAmount, 2) == unsettled.WinLostAmount;
+            var dDiffWinLost = Math.Abs(Math.Round(wager.WinLostAmount, 2)) - Math.Abs(unsettled.WinLostAmount);
+            return wager.Stake == unsettled.Stake && Math.Abs(dDiffWinLost) <= 0.2m;
         }
     }
 }

@@ -72,7 +72,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             _siteSabaConfigs = provider.GetRequiredService<ConfigBLL>()
                 .GetConfigValuesBySiteId<SabaConfig>(ThirdParty.ToString())
-                .Where(item => item.Key != 0)
+                .Where(item => item.Key != 0 && item.Value.OperatorId != null)
                 .ToDictionary(item => item.Value.OperatorId, item => item.Value);
         }
 

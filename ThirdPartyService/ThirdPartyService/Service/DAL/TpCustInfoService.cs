@@ -131,7 +131,7 @@ namespace ThirdPartyService.Service.DAL
             parameter.Add("_FirstRun", firstRun);
             parameter.Add("_TpId", tpId);
             parameter.Add("_SiteId", siteId);
-            return _reportDbClient.Query<BalanceTpCustInfoModel>("Service_TpCustInfo_Get", parameter, commandType: CommandType.StoredProcedure);
+            return _reportDbClient.Query<BalanceTpCustInfoModel>("Service_TpCustInfo_Get", parameter);
         }
 
         public void SetCustGotoGame(int custId, int tpId, int gameType)
@@ -143,7 +143,7 @@ namespace ThirdPartyService.Service.DAL
         {
             var parameter = new DynamicParameters();
             parameter.Add("_TpId", tpId);
-            return _reportDbClient.Query<int>("Service_CustWithoutTpCustInfo_Get", parameter, commandType: CommandType.StoredProcedure);
+            return _reportDbClient.Query<int>("Service_CustWithoutTpCustInfo_Get", parameter);
         }
         
         public IEnumerable<int> GetCustCurrencySiteIdWithoutSabaId(int tpId, int siteId,int currencyId)
@@ -152,7 +152,7 @@ namespace ThirdPartyService.Service.DAL
             parameter.Add("_TpId", tpId);
             parameter.Add("_SiteId", siteId);
             parameter.Add("_CurrencyId", currencyId);
-            return _reportDbClient.Query<int>("Service_CustCurrencySiteWithoutTpCustInfo_Get", parameter, commandType: CommandType.StoredProcedure);
+            return _reportDbClient.Query<int>("Service_CustCurrencySiteWithoutTpCustInfo_Get", parameter);
         }
 
         public IEnumerable<TpCurrency> GetTpCurrency(int tpId)
@@ -166,6 +166,11 @@ namespace ThirdPartyService.Service.DAL
         public TpCountryCode GetTpCurrencyCodeByCurrencyId(int tpId, string tpCurrencyId)
         {
             return _mainDbClient.QueryFirst<TpCountryCode>("Service_TpCountryCodeByTpCurrencyId_Get", new { TpId = tpId, TpCurrencyId = tpCurrencyId });
+        }
+
+        public TpCustInfo GetTpCustInfoByTpCustId(int tpId, string tpCustId)
+        {
+            return _mainDbClient.QueryFirst<TpCustInfo>("Common_TpCustInfoByTpCustId_Get", new { TpId = tpId, TpCustId = tpCustId });
         }
 
         private bool CheckTpForbidden(int custId, int tpId)

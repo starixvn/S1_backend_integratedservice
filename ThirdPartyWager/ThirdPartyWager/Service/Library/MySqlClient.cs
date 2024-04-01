@@ -19,19 +19,18 @@ namespace ThirdPartyWager.Service.Library
 
         private readonly ILogger<MySqlClient> _logger;
 
-        public MySqlClient(string connectionString, ILogger<MySqlClient> logger)
+        public MySqlClient(IServiceProvider provider, DataBase dataBase, string connectionString)
         {
-            LogContext.PushProperty("DataBase", DataBase.ToString());
+            LogContext.PushProperty("DataBase", dataBase.ToString());
             _connectionString = connectionString;
-            _logger = logger;
+            _logger = provider.GetRequiredService<ILogger<MySqlClient>>();
+            DataBase = dataBase;
         }
 
         public MySqlConnection GetMySqlConnection()
         {
             return new MySqlConnection(_connectionString);
         }
-
-        #region Query
 
         public async Task<T> QueryFirstAsync<T>(string name, SqlMapper.IDynamicParameters parameters)
         {
@@ -80,32 +79,7 @@ namespace ThirdPartyWager.Service.Library
             return result;
         }
 
-        public IEnumerable<T> Query<T>(string name)
-        {
-            IEnumerable<T> result;
-            var sw = Stopwatch.StartNew();
-            try
-            {
-                using var connection = new MySqlConnection(_connectionString);
-                var command = new CommandDefinition(name,
-                    commandType: CommandType.StoredProcedure,
-                    flags: CommandFlags.NoCache);
-                result = connection.Query<T>(command);
-                connection.Close();
-                connection.Dispose();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, name);
-                throw;
-            }
-
-            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug(name);
-            return result.ToList();
-        }
-
-        public IEnumerable<T> Query<T>(string name, object parameters)
+        public IEnumerable<T> Query<T>(string name, object parameters = null)
         {
             IEnumerable<T> result;
             var sw = Stopwatch.StartNew();
@@ -128,32 +102,6 @@ namespace ThirdPartyWager.Service.Library
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result.ToList();
-        }
-
-        public T Query<T>(string name, SqlMapper.IDynamicParameters parameters, Func<SqlMapper.GridReader, T> func)
-        {
-            T result;
-            var sw = Stopwatch.StartNew();
-            try
-            {
-                using var connection = new MySqlConnection(_connectionString);
-                var command = new CommandDefinition(name, parameters,
-                    commandType: CommandType.StoredProcedure,
-                    flags: CommandFlags.NoCache);
-                var multiple = connection.QueryMultiple(command);
-                result = func.Invoke(multiple);
-                connection.Close();
-                connection.Dispose();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, name);
-                throw;
-            }
-
-            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return result;
         }
 
         public async Task<IEnumerable<T>> QueryAsync<T>(string name, object parameters)
@@ -178,34 +126,6 @@ namespace ThirdPartyWager.Service.Library
             return result;
         }
 
-        public async Task<T> QueryAsync<T>(string name, SqlMapper.IDynamicParameters parameters, Func<SqlMapper.GridReader, T> func)
-        {
-            T result;
-            var sw = Stopwatch.StartNew();
-            try
-            {
-                await using var connection = new MySqlConnection(_connectionString);
-                var multiple =
-                    connection.QueryMultipleAsync(name, parameters, commandType: CommandType.StoredProcedure);
-                result = func.Invoke(await multiple);
-                await connection.CloseAsync();
-                await connection.DisposeAsync();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, name);
-                throw;
-            }
-
-            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return result;
-        }
-
-        #endregion
-
-        #region Execute
-
         public bool Execute(string name, SqlMapper.IDynamicParameters parameters)
         {
             var sw = Stopwatch.StartNew();
@@ -227,7 +147,7 @@ namespace ThirdPartyWager.Service.Library
             return true;
         }
 
-        public int Execute(string name, object parameters)
+        public int Execute(string name, object parameters = null)
         {
             int result;
             var sw = Stopwatch.StartNew();
@@ -246,28 +166,6 @@ namespace ThirdPartyWager.Service.Library
 
             LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
-            return result;
-        }
-
-        public int Execute(string command)
-        {
-            var sw = Stopwatch.StartNew();
-            int result;
-            try
-            {
-                using var connection = new MySqlConnection(_connectionString);
-                result = connection.Execute(command, commandType: CommandType.StoredProcedure);
-                connection.Close();
-                connection.Dispose();
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, command);
-                throw;
-            }
-
-            LogContext.PushProperty("elapsed", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug(command);
             return result;
         }
 
@@ -311,8 +209,6 @@ namespace ThirdPartyWager.Service.Library
             _logger.LogDebug($"{name} {sw.Elapsed:c}");
             return result;
         }
-
-        #endregion
 
     }
 }

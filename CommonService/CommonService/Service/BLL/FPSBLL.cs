@@ -3,6 +3,7 @@
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
+using Newtonsoft.Json;
 
 namespace CommonService.Service.BLL
 {
@@ -42,7 +43,7 @@ namespace CommonService.Service.BLL
 
             };
             
-            using var result = await _httpHelper.HttpFromPostAsync(url, null, sendIovationChecks, "application/json");
+            using var result = await _httpHelper.HttpPost1Async(url, null, JsonConvert.SerializeObject(sendIovationChecks), "application/json");
             
             if (result.StatusCode == HttpStatusCode.OK)
             {

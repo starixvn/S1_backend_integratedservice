@@ -5,16 +5,16 @@ namespace CommonService.Service.DAL
 {
     public class ConfigService
     {
-        private readonly MySqlClient _reportDbClient;
+        private readonly MySqlClient _mainDbClient;
 
         public ConfigService(IServiceProvider provider)
         {
-            _reportDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
+            _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
 
         public IEnumerable<T> Query<T>(string sql, object parameters = null)
         {
-            return _reportDbClient.Query<T>(sql, parameters);
+            return _mainDbClient.Query<T>(sql, parameters);
         }
     }
 }
