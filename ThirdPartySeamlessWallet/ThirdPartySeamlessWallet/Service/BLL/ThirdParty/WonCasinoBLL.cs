@@ -5,7 +5,6 @@ using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-using ThirdPartySeamlessWallet.Service.Model.SBSW;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 
@@ -40,13 +39,6 @@ public class WonCasinoBLL : IWonCasinoBLL
             desc = WonCasinoErrorCodeEnum.SystemError.GetEnumDescription(),
             balance = 0.00m
         };
-
-        if (!VerifySign(request.sign))
-        {
-            getErrorResponse.result = (int)WonCasinoErrorCodeEnum.SignError;
-            getErrorResponse.desc = WonCasinoErrorCodeEnum.SignError.GetEnumDescription();
-            return getErrorResponse;
-        }
         
         var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, request.username);
             
@@ -172,6 +164,22 @@ public class WonCasinoBLL : IWonCasinoBLL
         };
         try
         {
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, request.username);
+
+            if (tpCheck == null)
+            {
+                getErrorResponse.result = (int)WonCasinoErrorCodeEnum.PlayerInvalid;
+                getErrorResponse.desc = WonCasinoErrorCodeEnum.PlayerInvalid.GetEnumDescription();
+                return getErrorResponse;
+            }
+
+            if (tpCheck.Locked)
+            {
+                getErrorResponse.result = (int)WonCasinoErrorCodeEnum.PlayerFrozen;
+                getErrorResponse.desc = WonCasinoErrorCodeEnum.PlayerFrozen.GetEnumDescription();
+                return getErrorResponse;
+            }
+            
             var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, request.username, _gameType);
 
             request.orderno = orderNo;
@@ -220,6 +228,7 @@ public class WonCasinoBLL : IWonCasinoBLL
     {
         //Rollback 只有在两个情况出现  超时， HTTP没响应  (投注时，派彩时 ，撤销时）
         //触发rollback 的时候 依据 deposit / deduct 来操作 。
+        //實測後為若Deposit / Deduct，請求失敗才會發Rollback，但NotfiyId會是一樣的。
         //WonCasino後台可觸發
         var logName = $"{_thisTp.ToString()}_RollBack";
         var getErrorResponse = new WonCasinoRollBackResponse()
@@ -269,13 +278,7 @@ public class WonCasinoBLL : IWonCasinoBLL
         }
         
         _log2File.Error($"result={getErrorResponse}", logName);
-        return getErrorResponse;
-        // return new WonCasinoRollBackResponse()
-        // {
-        //     result = 0,
-        //     desc = "OK",
-        //     balance = 100000 - Math.Abs(request.amount),
-        // };
+        return getErrorResponse; 
     }
     
     #region Exchange
@@ -293,6 +296,7 @@ public class WonCasinoBLL : IWonCasinoBLL
             bettingData_WonCasino.amount *= tpCurrency.ExchangeRate;
             bettingData_WonCasino.bets.betamount *= tpCurrency.ExchangeRate;
             bettingData_WonCasino.bets.commamount *= tpCurrency.ExchangeRate;
+            bettingData_WonCasino.bets.foregift *= tpCurrency.ExchangeRate;
             custBalance.Balance *= tpCurrency.ExchangeRate;
         }
 
@@ -449,11 +453,6 @@ public class WonCasinoBLL : IWonCasinoBLL
     
     
     #region private
-
-    private bool VerifySign(string sign)
-    {
-        return true;
-    }
 
     private bool VerifyNotifyId(string notifyId, string type,string serialNumber,IEnumerable<BettransWonCasino> bettransWonCasino)
     {
