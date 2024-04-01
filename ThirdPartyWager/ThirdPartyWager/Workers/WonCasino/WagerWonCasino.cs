@@ -9,7 +9,7 @@ namespace ThirdPartyWager.Workers
     public class WagerWonCasino : BackgroundService
     {
         private readonly int _tpId = (int)Tp.WonCasino;
-        private readonly int _tpType = (int)WagerTimerType.RedoWager;
+        private readonly int _tpType = (int)WagerTimerType.Wager;
         private readonly string _tpName = Tp.WonCasino.ToString();
         private Timer _timer;
         private readonly Dictionary<int, WonCasinoConfig> _siteConfigDic;
