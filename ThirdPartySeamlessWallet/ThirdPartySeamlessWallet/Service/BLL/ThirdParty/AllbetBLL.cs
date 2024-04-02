@@ -377,7 +377,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         {
                             var betUseBonus = totalUseBonus >= bet.BetAmount ? bet.BetAmount : totalUseBonus;
                             _bettingService.AddTpBonus((int)ThirdParty, bet.BetNum.ToString(), (int)GameType, tpCustInfo.CustId,
-                                tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, betUseBonus, bonusId, trans);
+                                tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, betUseBonus, bonusId, trans, SetTpSeamlessBonusType.Update);
                             totalUseBonus -= betUseBonus;
                         }
                     }

@@ -34,7 +34,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             _bonusWalletBLL = provider.GetRequiredService<BonusWalletBLL>();
         }
 
-        public int AddTpBonus(int tpId, string transId, int gameType, int custId, string userName, int currencyId, int siteId, decimal useBonus, int bonusId, MySqlTransaction trans)
+        public int AddTpBonus(int tpId, string transId, int gameType, int custId, string userName, int currencyId, int siteId, decimal useBonus, int bonusId, MySqlTransaction trans, SetTpSeamlessBonusType setTpSeamlessBonusType = SetTpSeamlessBonusType.Insert)
         {            
             if (bonusId == 0)
             {
@@ -60,7 +60,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 Stake = useBonus,
                 BonusId = bonusId,
             };
-            return AddTpSeamlessBonus(tpSeamlessBonus, trans);
+            return AddTpSeamlessBonus(tpSeamlessBonus, trans, setTpSeamlessBonusType);
         }
 
         public int PlaceBet(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, string refId, out decimal afterAmount, ref int bonusId, out decimal useBonus, MySqlConnection conn, MySqlTransaction trans, string memo = "")
@@ -97,7 +97,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             Stake = useBonus, // 紀錄實際使用的Bonus金額
                             BonusId = bonusId,
                         };
-                        AddTpSeamlessBonus(tpSeamlessBonus, trans);
+                        AddTpSeamlessBonus(tpSeamlessBonus, trans, SetTpSeamlessBonusType.Insert);
                     }
 
                     if (afterBonus < 0)
@@ -136,9 +136,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        private int AddTpSeamlessBonus(TpSeamlessBonus tpSeamlessBonus, MySqlTransaction trans)
+        private int AddTpSeamlessBonus(TpSeamlessBonus tpSeamlessBonus, MySqlTransaction trans, SetTpSeamlessBonusType setTpSeamlessBonusType)
         {
-            return _mainDbClient.Execute("Service_TpSeamlessBonus_Ins", trans, tpSeamlessBonus);
+            var sp = setTpSeamlessBonusType switch
+            {
+                SetTpSeamlessBonusType.Insert => "Service_TpSeamlessBonus_Ins",
+                SetTpSeamlessBonusType.Update => "Service_TpSeamlessBonus_Set",
+            };       
+            return _mainDbClient.Execute(sp, trans, tpSeamlessBonus);
         }
     }
 }
