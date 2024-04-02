@@ -35,8 +35,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         public int AddTpBonus(int tpId, string transId, int gameType, int custId, string userName, int currencyId, int siteId, decimal useBonus, int bonusId, MySqlTransaction trans)
-        {
+        {            
             if (bonusId == 0)
+            {
+                return 0;
+            }
+
+            if (useBonus <= 0)
             {
                 return 0;
             }

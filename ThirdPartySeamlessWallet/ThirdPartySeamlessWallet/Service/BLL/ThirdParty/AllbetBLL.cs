@@ -368,10 +368,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         (int)GameType, request.TranId.ToString(), out afterAmount, ref bonusId, out decimal useBonus, conn, trans);
                     if (bonusId > 0)
                     {
+                        var totalUseBonus = useBonus;
                         foreach (var bet in request.Details)
                         {
+                            var betUseBonus = totalUseBonus >= bet.BetAmount ? bet.BetAmount : totalUseBonus;
                             _bettingService.AddTpBonus((int)ThirdParty, bet.BetNum.ToString(), (int)GameType, tpCustInfo.CustId,
-                                tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, useBonus, bonusId, trans);
+                                tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, betUseBonus, bonusId, trans);
+                            totalUseBonus -= betUseBonus;
                         }
                     }
                 }
