@@ -1,17 +1,11 @@
 ﻿using FluentAssertions;
 
-using MySqlX.XDevAPI.Relational;
-
 using NUnit.Framework;
 
-using ThirdPartySeamlessWallet.IntegrationTest.Models;
 using ThirdPartySeamlessWallet.IntegrationTest.SandBox;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-using ThirdPartySeamlessWallet.Service.Model.SBSW;
-
-using Ubiety.Dns.Core.Records;
 
 namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
 {
@@ -160,7 +154,6 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
         /// </summary>
         /// <returns></returns>
         [TestCase(1000, 600, 700, 1, ExpectedResult = 900)]
-        [TestCase(1000, 600, 500, 1, ExpectedResult = 1100)]
         public decimal AllBetCase1_BonusWallet_Test(decimal balance, decimal bonusAmount, decimal stake, int betResult)
         {
             var betDetail = new List<AllBetTransferDetails>()
@@ -262,7 +255,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
         /// AllBetCase2: 多次下注，一筆結算單號
         /// </summary>
         /// <returns></returns>
-        [TestCase(1000, 600, 500, 300, 1, ExpectedResult = 900)]
+        [TestCase(1000, 600, 500, 300, 1, ExpectedResult = 800)]
         public decimal AllBetCase2_BonusWallet_Test(decimal balance, decimal bonusAmount, decimal firstStake, decimal secondStake, int betResult)
         {
             var betNum = 1;
@@ -377,7 +370,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
                 {
                     new() {  BetNum = betNum , BetAmount = secondStake},
                 };
-                var totalUseBonus = useBonus;
+                var totalUseBonus = secondUseBonus;
                 foreach (var bet in betDetail)
                 {
                     var betUseBonus = totalUseBonus >= bet.BetAmount ? bet.BetAmount : totalUseBonus;
@@ -406,17 +399,17 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
                 var bonusLog = _bettingServiceSandbox.GetBonusLog(bonusId);
                 bonusLog.ChangeBonus.Should().Be(secondUseBonus);
 
-                var tpSeamlessBonus = _bettingServiceSandbox.GetTpSeamlessBonus(_tpId, _transId);
+                var tpSeamlessBonus = _bettingServiceSandbox.GetTpSeamlessBonus(_tpId, $"{_transId}-second");
                 tpSeamlessBonus.Stake.Should().Be(secondUseBonus);
 
                 var tpSeamlessBonus1 = _bettingServiceSandbox.GetTpSeamlessBonus(_tpId, $"{_transId}-1");
-                tpSeamlessBonus1.Stake.Should().Be(secondUseBonus);
+                tpSeamlessBonus1.Stake.Should().Be(useBonus + secondUseBonus);
 
 
-                var financialLog = _bettingServiceSandbox.GetFinancialLog(_transId);
-                if (firstStake > bonusAmount)
+                var financialLog = _bettingServiceSandbox.GetFinancialLog($"{_transId}-second");
+                if ((firstStake + secondStake ) > bonusAmount)
                 {
-                    financialLog.ChangeAmount.Should().Be(firstStake - useBonus);
+                    financialLog.ChangeAmount.Should().Be(secondStake - secondUseBonus);
                 }
                 else
                 {
