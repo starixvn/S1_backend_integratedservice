@@ -68,7 +68,7 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getWagerSp, new { sid = tpUnsettle.TransId }, DataBase.Wager).ToList().FirstOrDefault();
+                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getWagerSp, new { ugsbetid = tpUnsettle.TransId }, DataBase.Wager).ToList().FirstOrDefault();
 
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, settleData.Account);
                         var betRecordInfo = new BetRecordInfo
