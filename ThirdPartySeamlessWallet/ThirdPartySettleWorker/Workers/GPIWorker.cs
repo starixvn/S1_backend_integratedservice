@@ -103,7 +103,7 @@ namespace ThirdPartySettleWorker.Workers
 
                             Task.Run(() =>
                             {
-                                _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, settleDetail.TransId, isSuccess: true);
+                                _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, settleDetail.round_id, isSuccess: true);
                                 _settledBLL.SetSettleFlagRNG_GPI(settleDetail.round_id, settleDetail.cust_id, 1);
                             });
                         }
