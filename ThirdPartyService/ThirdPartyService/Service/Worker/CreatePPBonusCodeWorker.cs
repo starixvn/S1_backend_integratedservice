@@ -35,12 +35,12 @@ namespace ThirdPartyService.Service.Worker
             var isError = false;
             try
             {
-                var workList = _giftInfoBLL.getWorkList(WorkerName);
+                var workList = _giftInfoBLL.GetWorkList(WorkerName);
                 var giftList = _giftInfoBLL.GetGiftList((int)TpEnum.PP).Where(x => x.GiftType == 2);
 
                 foreach (var periodTask in workList)
                 {
-                    if (!(periodTask.SettleTime.Date < DateTime.UtcNow.Date)) continue;//判斷今天是否執行過
+                    if (periodTask.SettleTime.Date >= DateTime.UtcNow.Date) continue;//判斷今天是否執行過
 
                     var todoList = giftList.Where(x => x.SiteId == periodTask.SiteId && x.CurrencyId == periodTask.CurrencyId);
 
