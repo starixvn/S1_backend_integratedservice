@@ -59,7 +59,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        result = _tpUnsettleService.InsertTpUnsettle(Tp.GPI, GameType.GPI_RNG, TransId, trans);
+                        result = _tpUnsettleService.InsertTpUnsettle(Tp.GPI, GameType.GPI_RNG, settledDataRNG_GPI.round_id, trans);
                         if (result > 0)
                         {
                             _mainDbClient.CommitAndDisposeConnection(conn, trans);
