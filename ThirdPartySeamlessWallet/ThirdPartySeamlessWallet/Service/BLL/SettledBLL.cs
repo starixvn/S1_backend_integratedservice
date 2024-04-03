@@ -261,10 +261,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
-        public IEnumerable<SettleDataRNG_GPI> GetUnsettledListRNG_GPI()
+        
+        public IEnumerable<SettleDataRNG_GPI> GetUnsettledListRNG_GPI(string transId)
         {
-            return settledService.GetUnsettledListRNG_GPI();
+            return settledService.GetUnsettledListRNG_GPI(transId);
         }
+        
         public int SetSettleFlagRNG_GPI(string roundId, string custId, int SettleFlag)
         {
             return settledService.SetSettleFlagRNG_GPI(roundId, custId, SettleFlag);
