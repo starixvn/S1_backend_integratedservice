@@ -1,9 +1,7 @@
 ﻿using System.Dynamic;
 using System.Text;
 using System.Web;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;

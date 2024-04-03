@@ -1,13 +1,8 @@
 ﻿using System.Data;
-
 using Dapper;
-
 using MySql.Data.MySqlClient;
-
 using Newtonsoft.Json;
-
 using Serilog.Context;
-
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -244,7 +239,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 var bonusId = 0;
                 var afterAmount = 0m;
-                
+
                 if (bet.sportType == 157) // 主播打賞
                 {
                     result.SetBalanceResult = _walletService.SetBalance(
@@ -260,21 +255,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                            conn,
                            trans,
                            AllowNegative.NotAllow
-                       );                  
+                       );
                 }
                 else
                 {
-                    result.SetBalanceResult = _bettingService.PlaceBetV2(
+                    result.SetBalanceResult = _bettingService.PlaceBet(
                         tpCustInfo,
                         Math.Abs(bet.debitAmount) * -1,
                         (int)ThirdParty,
                         bet.refId,
                         (int)gameType,
                         bet.refId,
-                        null,
-                        tpCategory,
                         out afterAmount,
                         ref bonusId,
+                        out _,
                         conn,
                         trans);
                 }

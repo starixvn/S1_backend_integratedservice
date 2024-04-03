@@ -11,6 +11,15 @@ public enum WonCasinoTypeEnum
     RollBack = 12,
 }
 
+public enum WonCasinoStateEnum
+{
+   Void = -2,
+   Cancel = -1,
+   Rollback = -3,
+   Bet = 0,
+   Settle = 1,
+}
+
 public enum WonCasinoErrorCodeEnum
 {
     [Description("OK")]

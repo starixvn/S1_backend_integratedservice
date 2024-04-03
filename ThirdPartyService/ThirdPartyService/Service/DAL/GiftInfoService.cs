@@ -1,5 +1,4 @@
 ﻿using Dapper;
-using System.Reflection.Metadata;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Service.Library;
 using ThirdPartyService.Service.Model;
@@ -24,5 +23,25 @@ public class GiftInfoService
             _TpId = tpid 
         });
         return _reportDbClient.Query<GiftInfo>("Service_GiftList_Get",p);
+    }
+
+    public IEnumerable<WorkerPeriodTask> GetWorkList(string workerName)
+    {
+        var p = new DynamicParameters(new
+        {
+            _workerName = workerName
+        });
+        return _reportDbClient.Query<WorkerPeriodTask>("Service_WorkerPeriod_Get", p);
+    }
+
+    public int SetTaskDone(int periodTaskSiteId, int periodTaskCurrencyId, string workerName)
+    {
+        var p = new DynamicParameters(new
+        {
+            _SiteId = periodTaskSiteId,
+            _CurrencyId = periodTaskCurrencyId,
+            _WorkerName = workerName
+        });
+        return _mainDbClient.Execute("Service_WorkerPeriod_TaskDone_Set",p);
     }
 }

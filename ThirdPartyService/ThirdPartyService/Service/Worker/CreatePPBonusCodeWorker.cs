@@ -1,4 +1,5 @@
 ﻿using Serilog.Context;
+using System.Threading.Tasks;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Extensions;
@@ -12,6 +13,7 @@ namespace ThirdPartyService.Service.Worker
         private readonly GiftInfoBLL _giftInfoBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private Timer _timerCreatePPBonusCode;
+        private readonly string WorkerName = "CreatePPBonusCode";
 
         public CreatePPBonusCodeWorker(IServiceProvider provider)
         {
@@ -29,33 +31,43 @@ namespace ThirdPartyService.Service.Worker
         private void DoCreatePPBonusCodeTaskAsync(object state)
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-            _logger.LogInformation("Create PP FreeSpin BonusCode start");
+            _logger.LogInformation($"{WorkerName} start");
             var isError = false;
             try
             {
-                var createList = _giftInfoBLL.GetGiftList((int)TpEnum.PP).Where(x => x.GiftType == 2);
+                var workList = _giftInfoBLL.getWorkList(WorkerName);
+                var giftList = _giftInfoBLL.GetGiftList((int)TpEnum.PP).Where(x => x.GiftType == 2);
 
-                foreach (var item in createList)
+                foreach (var periodTask in workList)
                 {
-                    _logger.LogInformation($"{item.GiftId} in progress");
-                    var bonusCode = BonusCodeRule(item);
-                    var inputs = new Dictionary<string, string>
+                    if (!(periodTask.SettleTime.Date < DateTime.UtcNow.Date)) continue;//判斷今天是否執行過
+
+                    var todoList = giftList.Where(x => x.SiteId == periodTask.SiteId && x.CurrencyId == periodTask.CurrencyId);
+
+                    foreach (var item in todoList)
                     {
-                        { "GameId", "vs20olympnova88" },
-                        { "BonusCode", bonusCode },
-                        { "Round", item.Round.ToString() },
-                        { "Currency", item.TpCurrencyId }
-                    };
-                    var p = new CreateBonusCode()
-                    {
-                        TpId = 5,//PP
-                        SiteId = item.SiteId,
-                        inputs = inputs
-                    };
-                    var result = _thirdPartyBLL.CreateBonusCode(p);
-                    _logger.LogInformation(result.ErrorCode == 0
-                        ? $"GiftId:{item.GiftId}，BonusCode:{bonusCode} Create Success"
-                        : $"GiftId:{item.GiftId}，BonusCode:{bonusCode} Create Fail，{result.RawMessage}");
+                        _logger.LogInformation($"{item.GiftId} in progress");
+                        var bonusCode = BonusCodeRule(item);
+                        var inputs = new Dictionary<string, string>
+                        {
+                            { "GameId", "vs20olympnova88" },
+                            { "BonusCode", bonusCode },
+                            { "Round", item.Round.ToString() },
+                            { "Currency", item.TpCurrencyId }
+                        };
+                        var p = new CreateBonusCode()
+                        {
+                            TpId = 5,//PP
+                            SiteId = item.SiteId,
+                            inputs = inputs
+                        };
+                        var result = _thirdPartyBLL.CreateBonusCode(p);
+
+                        _logger.LogInformation(result.ErrorCode == 0
+                            ? $"GiftId:{item.GiftId}，BonusCode:{bonusCode} Create Success"
+                            : $"GiftId:{item.GiftId}，BonusCode:{bonusCode} Create Fail，{result.RawMessage}");
+                    }
+                    _giftInfoBLL.SetTaskDone(periodTask.SiteId, periodTask.CurrencyId, WorkerName);
                 }
             }
             catch (Exception ex)
@@ -83,7 +95,7 @@ namespace ThirdPartyService.Service.Worker
 
                 // 設定定時器
                 _timerCreatePPBonusCode.Change(dueTimeSpan, TimeSpan.Zero);
-                _logger.LogInformation("Create PP FreeSpin BonusCode End");
+                _logger.LogInformation($"{WorkerName} End");
             }
 
         }
