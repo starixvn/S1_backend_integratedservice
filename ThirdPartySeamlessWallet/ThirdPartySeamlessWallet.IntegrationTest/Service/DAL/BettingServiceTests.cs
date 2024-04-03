@@ -2,12 +2,10 @@
 
 using NUnit.Framework;
 
-using ThirdPartySeamlessWallet.IntegrationTest.Models;
 using ThirdPartySeamlessWallet.IntegrationTest.SandBox;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-using ThirdPartySeamlessWallet.Service.Model.SBSW;
 
 namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
 {
@@ -151,8 +149,12 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
             return afterAmount;
         }
 
+        /// <summary>
+        /// AllBetCase1: 一次下注，有多筆結算單號
+        /// </summary>
+        /// <returns></returns>
         [TestCase(1000, 600, 700, 1, ExpectedResult = 900)]
-        public decimal AllBet_BonusWallet_Test(decimal balance, decimal bonusAmount, decimal stake, int betResult)
+        public decimal AllBetCase1_BonusWallet_Test(decimal balance, decimal bonusAmount, decimal stake, int betResult)
         {
             var betDetail = new List<AllBetTransferDetails>()
             {
@@ -199,7 +201,8 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
                         _tpCustInfo.SiteId, 
                         betUseBonus, 
                         bonusId, 
-                        _bettingServiceSandbox.Trans);
+                        _bettingServiceSandbox.Trans,
+                        SetTpSeamlessBonusType.Update);
                     totalUseBonus -= betUseBonus;
                 }
             }
@@ -224,10 +227,14 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
                 var tpSeamlessBonus3 = _bettingServiceSandbox.GetTpSeamlessBonus(_tpId, $"{_transId}-3");
                 tpSeamlessBonus3.Should().Be(null);
 
+                var financialLog = _bettingServiceSandbox.GetFinancialLog(_transId);
                 if (stake > bonusAmount)
                 {
-                    var financialLog = _bettingServiceSandbox.GetFinancialLog(_transId);
                     financialLog.ChangeAmount.Should().Be(stake - useBonus);
+                }
+                else
+                {
+                    financialLog.Should().Be(null);
                 }
             }
             else
@@ -244,6 +251,179 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.Service.DAL
             return afterAmount;
         }
 
+        /// <summary>
+        /// AllBetCase2: 多次下注，一筆結算單號
+        /// </summary>
+        /// <returns></returns>
+        [TestCase(1000, 600, 500, 300, 1, ExpectedResult = 800)]
+        public decimal AllBetCase2_BonusWallet_Test(decimal balance, decimal bonusAmount, decimal firstStake, decimal secondStake, int betResult)
+        {
+            var betNum = 1;
+            int bonusId = 100;
+            _bettingServiceSandbox.BeginTransaction();
 
+            _bettingServiceSandbox.SetCustWallet(_tpCustInfo.CustId, balance);
+            _bettingServiceSandbox.ResetBonusStatusAndBonusAmount(bonusId, bonusAmount);
+
+            #region 第一次下注
+            
+            //第一次下注
+            var result = _bettingService.PlaceBet(
+                tpCustInfo: _tpCustInfo,
+                amount: Math.Abs(firstStake) * -1,
+                tpId: _tpId,
+                tpTransId: _transId,
+                gameType: _gameType,
+                refId: _transId,
+                afterAmount: out decimal afterAmount,
+                bonusId: ref bonusId,
+                useBonus: out decimal useBonus,
+                conn: _bettingServiceSandbox.Conn,
+                trans: _bettingServiceSandbox.Trans,
+                memo: " test"
+                );
+
+            //第一次紀錄Bonus
+            if (bonusId > 0)
+            {
+                var betDetail = new List<AllBetTransferDetails>()
+                {
+                    new() {  BetNum = 1 , BetAmount = firstStake},
+                };
+                var totalUseBonus = useBonus;
+                foreach (var bet in betDetail)
+                {
+                    var betUseBonus = totalUseBonus >= bet.BetAmount ? bet.BetAmount : totalUseBonus;
+                    _bettingService.AddTpBonus(
+                        _tpId,
+                        $"{_transId}-{bet.BetNum}",
+                        _gameType,
+                        _tpCustInfo.CustId,
+                        _tpCustInfo.UserName,
+                        _tpCustInfo.CurrencyId,
+                        _tpCustInfo.SiteId,
+                        betUseBonus,
+                        bonusId,
+                        _bettingServiceSandbox.Trans,
+                        SetTpSeamlessBonusType.Update);
+                    totalUseBonus -= betUseBonus;
+                }
+            }
+
+            Assert.AreEqual(betResult, result);
+            // 檢查第一次結果
+            if (result > 0)
+            {
+                _bettingServiceSandbox.Commit();
+
+                var bonusLog = _bettingServiceSandbox.GetBonusLog(bonusId);
+                bonusLog.ChangeBonus.Should().Be(useBonus);
+
+                var tpSeamlessBonus = _bettingServiceSandbox.GetTpSeamlessBonus(_tpId, _transId);
+                tpSeamlessBonus.Stake.Should().Be(useBonus);
+
+                var tpSeamlessBonus1 = _bettingServiceSandbox.GetTpSeamlessBonus(_tpId, $"{_transId}-1");
+                tpSeamlessBonus1.Stake.Should().Be(firstStake);
+
+
+                var financialLog = _bettingServiceSandbox.GetFinancialLog(_transId);
+                if (firstStake > bonusAmount)
+                {
+                    financialLog.ChangeAmount.Should().Be(firstStake - useBonus);
+                }
+                else
+                {
+                    financialLog.Should().Be(null);
+                }
+            }
+            else
+            {
+                _bettingServiceSandbox.Rollback();
+            }
+
+            #endregion
+
+            #region 第二次下注
+
+            //第二次下注
+            _bettingServiceSandbox.BeginTransaction();
+
+            var secondResult = _bettingService.PlaceBet(
+                tpCustInfo: _tpCustInfo,
+                amount: Math.Abs(secondStake) * -1,
+                tpId: _tpId,
+                tpTransId: $"{_transId}-second",
+                gameType: _gameType,
+                refId: $"{_transId}-second",
+                afterAmount: out decimal secondAfterAmount,
+                bonusId: ref bonusId,
+                useBonus: out decimal secondUseBonus,
+                conn: _bettingServiceSandbox.Conn,
+                trans: _bettingServiceSandbox.Trans,
+                memo: " test"
+            );
+       
+            //第二次紀錄Bonus
+            if (bonusId > 0)
+            {
+                var betDetail = new List<AllBetTransferDetails>()
+                {
+                    new() {  BetNum = betNum , BetAmount = secondStake},
+                };
+                var totalUseBonus = secondUseBonus;
+                foreach (var bet in betDetail)
+                {
+                    var betUseBonus = totalUseBonus >= bet.BetAmount ? bet.BetAmount : totalUseBonus;
+                    _bettingService.AddTpBonus(
+                        _tpId,
+                        $"{_transId}-{bet.BetNum}",
+                        _gameType,
+                        _tpCustInfo.CustId,
+                        _tpCustInfo.UserName,
+                        _tpCustInfo.CurrencyId,
+                        _tpCustInfo.SiteId,
+                        betUseBonus,
+                        bonusId,
+                        _bettingServiceSandbox.Trans,
+                        SetTpSeamlessBonusType.Update);
+                    totalUseBonus -= betUseBonus;
+                }
+            }
+
+            Assert.AreEqual(betResult, secondResult);
+            // 檢查第二次結果
+            if (secondResult > 0)
+            {
+                _bettingServiceSandbox.Commit();
+
+                var bonusLog = _bettingServiceSandbox.GetBonusLog(bonusId);
+                bonusLog.ChangeBonus.Should().Be(secondUseBonus);
+
+                var tpSeamlessBonus = _bettingServiceSandbox.GetTpSeamlessBonus(_tpId, $"{_transId}-second");
+                tpSeamlessBonus.Stake.Should().Be(secondUseBonus);
+
+                var tpSeamlessBonus1 = _bettingServiceSandbox.GetTpSeamlessBonus(_tpId, $"{_transId}-1");
+                tpSeamlessBonus1.Stake.Should().Be(useBonus + secondUseBonus);
+
+
+                var financialLog = _bettingServiceSandbox.GetFinancialLog($"{_transId}-second");
+                if ((firstStake + secondStake ) > bonusAmount)
+                {
+                    financialLog.ChangeAmount.Should().Be(secondStake - secondUseBonus);
+                }
+                else
+                {
+                    financialLog.Should().Be(null);
+                }
+            }
+            else
+            {
+                _bettingServiceSandbox.Rollback();
+            }
+
+            #endregion
+
+            return secondAfterAmount;
+        }
     }
 }
