@@ -67,13 +67,13 @@ namespace ThirdParty.AMB
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             var tpGameType = GetInputValue(inputs, "tpGameType");
-            var gameId = GetInputValue(inputs, "gameId");
+            var gameId = GetInputValue(inputs, "gameId", true);
             var homeUrl = GetInputValue(inputs, "homeUrl", true);
             var isFun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) && inputs["fun"] == "1";
             var enumGameType = (TpGameType)int.Parse(tpGameType);
             var tpCurrency = GetCurrency(tpCustInfo);
             var amb = AMBFactory.Create(enumGameType, _siteAMBConfig, tpCurrency);
-            var result = amb.LaunchGame(tpCustInfo.TpUserName, gameId, homeUrl, isFun, HttpPost);
+            var result = amb.LaunchGame(tpCustInfo.TpUserName, gameId, homeUrl, isFun, TpLangId, HttpPost);
 
             var oApiResult = new ApiResult();
             if (result.status.code == 0)

@@ -47,7 +47,7 @@ namespace ThirdParty.AMB
             }
         }
 
-        public override CommonResponse LaunchGame(string tpUserName, string gameId, string homeUrl, bool isFun,
+        public override CommonResponse LaunchGame(string tpUserName, string gameId, string homeUrl, bool isFun,string tpLangId,
             Func<string, string, string, Dictionary<string, string>, int, string> callback)
         {
             var apiUrl = $"{Config.PokerApiUrl}/seamless/launch";
