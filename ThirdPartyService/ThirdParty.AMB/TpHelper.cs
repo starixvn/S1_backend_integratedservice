@@ -73,7 +73,7 @@ namespace ThirdParty.AMB
             var enumGameType = (TpGameType)int.Parse(tpGameType);
             var tpCurrency = GetCurrency(tpCustInfo);
             var amb = AMBFactory.Create(enumGameType, _siteAMBConfig, tpCurrency);
-            var result = amb.LaunchGame(tpCustInfo.TpUserName, gameId, homeUrl, isFun, HttpPost);
+            var result = amb.LaunchGame(tpCustInfo.TpUserName, gameId, homeUrl, isFun, TpLangId, HttpPost);
 
             var oApiResult = new ApiResult();
             if (result.status.code == 0)
