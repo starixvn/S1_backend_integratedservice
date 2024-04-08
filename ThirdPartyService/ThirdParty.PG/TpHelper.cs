@@ -77,7 +77,7 @@ namespace ThirdParty.PG
             {
                 return new ApiResult()
                 {
-                    ErrorCode = ErrorCode.UM,
+                    ErrorCode = ErrorCode.BetDetailNotFound, //先回 3000 前端才有辦法走 UM
                     Message = "Currency UM"
                 };
             }
