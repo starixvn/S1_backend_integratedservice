@@ -35,12 +35,12 @@ namespace ThirdPartyService.Service.Worker
             var isError = false;
             try
             {
-                var workList = _giftInfoBLL.getWorkList(WorkerName);
+                var workList = _giftInfoBLL.GetWorkList(WorkerName);
                 var giftList = _giftInfoBLL.GetGiftList((int)TpEnum.PP).Where(x => x.GiftType == 2);
 
                 foreach (var periodTask in workList)
                 {
-                    if (!(periodTask.SettleTime.Date < DateTime.UtcNow.Date)) continue;//判斷今天是否執行過
+                    if (periodTask.SettleTime.Date >= DateTime.UtcNow.Date) continue;//判斷今天是否執行過
 
                     var todoList = giftList.Where(x => x.SiteId == periodTask.SiteId && x.CurrencyId == periodTask.CurrencyId);
 
@@ -77,20 +77,11 @@ namespace ThirdPartyService.Service.Worker
             }
             finally
             {
-                // 設定每天的特定時間
-                DateTime scheduledTime = DateTime.UtcNow.Date.AddHours(0);
-
-                // 計算距離下一次執行的時間間隔
-                TimeSpan dueTimeSpan = scheduledTime - DateTime.Now;
-                if (dueTimeSpan < TimeSpan.Zero)
-                {
-                    scheduledTime = scheduledTime.AddDays(1); // 如果已經超過了今天的指定時間，則推遲到明天的同一時間
-                    dueTimeSpan = scheduledTime - DateTime.Now;
-                }
+                TimeSpan dueTimeSpan = TimeSpan.FromMinutes(10);
 
                 if (isError)
                 {
-                    dueTimeSpan = TimeSpan.FromMinutes(10);
+                    dueTimeSpan = TimeSpan.FromMinutes(5);
                 }
 
                 // 設定定時器
@@ -103,7 +94,8 @@ namespace ThirdPartyService.Service.Worker
         private static string BonusCodeRule(GiftInfo giftInfo)
         {
             //BonusCode規則。ex.PPFREESPIN100FORNOVA8820240306
-            var bonusCode = $"PPFREESPIN{giftInfo.Round}FOR{giftInfo.SiteName.ToUpper()}{DateTime.UtcNow.ToString("yyyyMMdd")}";
+            //排程預先建立隔一日的bonuscode
+            var bonusCode = $"PPFREESPIN{giftInfo.Round}FOR{giftInfo.SiteName.ToUpper()}{DateTime.UtcNow.AddDays(1).ToString("yyyyMMdd")}";
             return bonusCode;
         }
 

@@ -19,7 +19,7 @@ public class GiftInfoBLL
         return _giftInfoService.GetGiftList(tpId);
     }
 
-    public IEnumerable<WorkerPeriodTask> getWorkList(string workerName)
+    public IEnumerable<WorkerPeriodTask> GetWorkList(string workerName)
     {
         return _giftInfoService.GetWorkList(workerName);
     }
