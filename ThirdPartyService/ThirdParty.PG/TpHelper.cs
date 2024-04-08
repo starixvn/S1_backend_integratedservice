@@ -72,7 +72,7 @@ namespace ThirdParty.PG
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             // 先將 VND 跟 IDR 排除不開放此款遊戲登入
-            var umCurrencyIds = new List<string> { "VND", "IDR" };
+            var umCurrencyIds = new List<string> { "VND", "IDR", "THB" };
             if (umCurrencyIds.Contains(tpCustInfo.TpCurrencyId))
             {
                 return new ApiResult()
