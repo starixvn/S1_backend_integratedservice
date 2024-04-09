@@ -71,7 +71,7 @@ namespace ThirdPartyWager.Service.BLL
 
                             if (result)
                             {
-                                _tpUnsettleService.InsertTpUnsettle(Tp.One789, record.GameType, record.TransId);
+                                _tpUnsettleService.InsertTpUnsettle(Tp.One789, (GameType)gameType, record.TransId);
                             }
                         }
                         catch (Exception ex)
