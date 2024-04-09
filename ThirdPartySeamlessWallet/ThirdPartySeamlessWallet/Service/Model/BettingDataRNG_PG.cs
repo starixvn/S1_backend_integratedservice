@@ -195,4 +195,47 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal ExchangeRate { get; set; }
         public decimal InsufficientBalance { get; set; }
     }
+
+    public class ResettleDataRNG_PG
+    {
+        public TransferType type { get; set; }
+
+        public string TraceId { get; set; }
+
+        [JsonProperty("GameId")]
+        public int GameId { get; set; }
+
+        [JsonProperty("ParentBetId")]
+        public string ParentBetId { get; set; }
+
+        [JsonProperty("BetId")]
+        public string BetId { get; set; }
+
+        [JsonProperty("PlayerName")]
+        public string PlayerName { get; set; }
+
+        [JsonProperty("CurrencyCode")]
+        public string CurrencyCode { get; set; }
+
+        [JsonProperty("TransferAmount")]
+        public decimal TransferAmount { get; set; }
+
+        [JsonProperty("TransactionId")]
+        public string TransactionId { get; set; }
+
+        [JsonProperty("BetTransactionId")]
+        public string BetTransactionId { get; set; }
+
+        [JsonProperty("IsEndRound")]
+        public string IsEndRound { get; set; }
+
+        [JsonProperty("BetAmount")]
+        public decimal BetAmount { get; set; }
+
+        [JsonProperty("WinAmount")]
+        public decimal WinAmount { get; set; }
+
+        [JsonProperty("WalletType")]
+        public string WalletType { get; set; }
+    }
 }
