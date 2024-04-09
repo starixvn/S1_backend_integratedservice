@@ -197,10 +197,10 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         Task.Run(() =>
                         {
-                            _tpUnSettledBLL.SetTpUnsettle(Tp, GameType.GA_CockFighting, tpUnsettle.TransId, false);
+                            _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, false);
                         });
                         LogContext.PushProperty("TP", _tpName);
-                        _logger.LogError(ex, $"GA Settle exception. {ex.Message} || TransId : {tpUnsettle.TransId}");
+                        _logger.LogError(ex, $"One789 Settle exception. {ex.Message} || TransId : {tpUnsettle.TransId}");
                     }
                 }
             }
