@@ -24,6 +24,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly ILogger<One789Worker> _logger;
         private readonly string _tpName;
         private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly TpUnSettledBLL _tpUnSettledBLL;
 
         public One789Worker(IServiceProvider provider)
         {
@@ -32,6 +33,7 @@ namespace ThirdPartySettleWorker.Workers
             _logger = provider.GetRequiredService<ILogger<One789Worker>>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
+            _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
             LogContext.PushProperty("TP", _tpName);
         }
 
@@ -72,26 +74,29 @@ namespace ThirdPartySettleWorker.Workers
 
             try
             {
-                var unsettledList = _settledBLL.GetUnsettledList_One789((int)gameType);
-                if (!unsettledList.Any())
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
+                if (!tpUnsettleList.Any())
                 {
-                    throw new UnsettleNotFoundException($"{gameType} no unsettle data.");
+                    throw new UnsettleNotFoundException($"{_tpName} {gameType} no unsettle data.");
                 }
-                if (unsettledList.Count() == 200)
+
+                if (tpUnsettleList.Count() == 200)
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(1);
                 }
 
-                foreach (var unsettled in unsettledList)
+                foreach (var tpUnsettle in tpUnsettleList)
                 {
                     try
                     {
-                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
-                        var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
-                        var wager = _settledBLL.GetSettle_TpWagerOne789((int)gameType, unsettled.TransId);
+                        var wager = _settledBLL.GetSettle_TpWagerOne789((int)gameType, tpUnsettle.TransId);
+                        var unsettled = _settledBLL.GetUnsettledList_One789((int)gameType, tpUnsettle.TransId);
 
                         if (wager != null)
                         {
+                            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, wager.Account);
+                            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
+
                             if (tpCurrency.ExchangeRate > 1)
                             {
                                 wager.Stake *= tpCurrency.ExchangeRate;
@@ -130,12 +135,19 @@ namespace ThirdPartySettleWorker.Workers
 
                                 var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
 
-                                _settledBLL.SetSettleFlag_TpWagerOne789((int)gameType, unsettled.TransId);
-                                _settledBLL.SetSettleFlag_Bettrans_One789((int)gameType, unsettled.TransId);
+                                if (result == 1)
+                                {
+                                    Task.Run(() =>
+                                    {
+                                        _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, true);
+                                    });
+                                }
                             }
                         }
                         else
                         {
+                            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
+                            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
                             //彩票進行未結算流程
                             if (tpCategory == TpCategory.Lottery)
                             {
@@ -169,14 +181,26 @@ namespace ThirdPartySettleWorker.Workers
                                     betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
                                     betRecordInfo.TicketStatus = TicketStatus.Refund;
                                 }
-                                _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
-                                _settledBLL.SetSettleFlag_Bettrans_One789((int)gameType, unsettled.TransId);
+                                var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
+
+                                if (result == 1)
+                                {
+                                    Task.Run(() =>
+                                    {
+                                        _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, true);
+                                    });
+                                }
                             }
                         }
                     }
-                    catch (Exception ex1)
+                    catch (Exception ex)
                     {
-                        _logger.LogError(ex1, $"{logName} || {JsonConvert.SerializeObject(unsettled)}");
+                        Task.Run(() =>
+                        {
+                            _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, false);
+                        });
+                        LogContext.PushProperty("TP", _tpName);
+                        _logger.LogError(ex, $"One789 Settle exception. {ex.Message} || TransId : {tpUnsettle.TransId}");
                     }
                 }
             }

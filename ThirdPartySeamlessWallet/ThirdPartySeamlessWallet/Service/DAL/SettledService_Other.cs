@@ -963,7 +963,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return data;
         }
 
-        public IEnumerable<SettleData> GetUnsettledList_One789(int gameType)
+        public SettleData GetUnsettledList_One789(int gameType, string TransId)
         {
             string sp = "";
             switch (gameType)
@@ -980,7 +980,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 default:
                     break;
             }
-            return _mainDbClient.Query<SettleData>($"{sp}", commandType: CommandType.StoredProcedure);
+            //return _mainDbClient.Query<SettleData>($"{sp}", commandType: CommandType.StoredProcedure);
+            return _mainDbClient.QueryFirst<SettleData>($"{sp}", new { TransId = TransId });
         }
 
         public SettleData_One789 GetSettle_TpWagerOne789(int gameType, string TransId)
