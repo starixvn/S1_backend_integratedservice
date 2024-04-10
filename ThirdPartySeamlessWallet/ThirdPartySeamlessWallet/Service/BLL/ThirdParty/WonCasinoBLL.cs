@@ -51,8 +51,8 @@ public class WonCasinoBLL : IWonCasinoBLL
             
         if (tpCheck.Locked)
         {
-            getErrorResponse.result = (int)WonCasinoErrorCodeEnum.PlayerInvalid;
-            getErrorResponse.desc = WonCasinoErrorCodeEnum.PlayerInvalid.GetEnumDescription();
+            getErrorResponse.result = (int)WonCasinoErrorCodeEnum.PlayerFrozen;
+            getErrorResponse.desc = WonCasinoErrorCodeEnum.PlayerFrozen.GetEnumDescription();
             return getErrorResponse;
         }
             
@@ -60,8 +60,8 @@ public class WonCasinoBLL : IWonCasinoBLL
         
         return new WonCasinoGetBalanceResponse()
         {
-            result = 0,
-            desc = "OK",
+            result = (int)WonCasinoErrorCodeEnum.Success,
+            desc = WonCasinoErrorCodeEnum.Success.GetEnumDescription(),
             balance = tpCustBalance.Balance
         };
     }
@@ -164,38 +164,20 @@ public class WonCasinoBLL : IWonCasinoBLL
         };
         try
         {
-            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, request.username);
-
-            if (tpCheck == null)
-            {
-                getErrorResponse.result = (int)WonCasinoErrorCodeEnum.PlayerInvalid;
-                getErrorResponse.desc = WonCasinoErrorCodeEnum.PlayerInvalid.GetEnumDescription();
-                return getErrorResponse;
-            }
-
-            if (tpCheck.Locked)
-            {
-                getErrorResponse.result = (int)WonCasinoErrorCodeEnum.PlayerFrozen;
-                getErrorResponse.desc = WonCasinoErrorCodeEnum.PlayerFrozen.GetEnumDescription();
-                return getErrorResponse;
-            }
-            
-            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, request.username, _gameType);
-
             request.orderno = orderNo;
             var result = Deposit_WonCasino(request, out var tpAfterAmount);
             if (result > 0 || result == -1)
             {
                 if (tpAfterAmount == 0 || result == -1)
                 { 
-                    tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, request.username, _gameType);
+                    var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, request.username, _gameType);
                     tpAfterAmount = tpCustBalance.Balance;
                 }
 
                 return new WonCasinoDepositResponse()
                 { 
-                    result = 0,
-                    desc = "OK",
+                    result = (int)WonCasinoErrorCodeEnum.Success,
+                    desc = WonCasinoErrorCodeEnum.Success.GetEnumDescription(),
                     balance = tpAfterAmount,
                     orderno = orderNo
                 };
@@ -204,12 +186,12 @@ public class WonCasinoBLL : IWonCasinoBLL
             if (result == -2)
             {
                 //無單號或已處理過，直接回傳成功並且回覆當前餘額
-                tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, request.username, _gameType);
+                var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, request.username, _gameType);
                 tpAfterAmount = tpCustBalance.Balance;
                 return new WonCasinoDepositResponse()
                 { 
-                    result = 0,
-                    desc = "OK",
+                    result = (int)WonCasinoErrorCodeEnum.Success,
+                    desc = WonCasinoErrorCodeEnum.Success.GetEnumDescription(),
                     balance = tpAfterAmount,
                 };
             }
@@ -239,21 +221,19 @@ public class WonCasinoBLL : IWonCasinoBLL
         };
         try
         {
-            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, request.username, _gameType);
-            
             var result = Rollback_WonCasino(request, out var tpAfterAmount);
             if (result > 0 || result == -1)
             {
                 if (tpAfterAmount == 0 || result == -1)
                 { 
-                    tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, request.username, _gameType);
+                    var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, request.username, _gameType);
                     tpAfterAmount = tpCustBalance.Balance;
                 }
 
                 return new WonCasinoRollBackResponse()
                 { 
-                    result = 0,
-                    desc = "OK",
+                    result = (int)WonCasinoErrorCodeEnum.Success,
+                    desc = WonCasinoErrorCodeEnum.Success.GetEnumDescription(),
                     balance = tpAfterAmount,
                 };
             }
@@ -261,12 +241,12 @@ public class WonCasinoBLL : IWonCasinoBLL
             if (result == -2)
             {
                 //無單號或已處理過，直接回傳成功並且回覆當前餘額
-                tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, request.username, _gameType);
+                var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, request.username, _gameType);
                 tpAfterAmount = tpCustBalance.Balance;
                 return new WonCasinoRollBackResponse()
                 { 
-                    result = 0,
-                    desc = "OK",
+                    result = (int)WonCasinoErrorCodeEnum.Success,
+                    desc = WonCasinoErrorCodeEnum.Success.GetEnumDescription(),
                     balance = tpAfterAmount,
                 };
             }
