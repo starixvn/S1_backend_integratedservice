@@ -20,6 +20,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly ILogger<RedTigerWorker> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly string _tpName;
+        private readonly TpUnSettledBLL _tpUnSettledBLL;
 
         public RedTigerWorker(IServiceProvider provider)
         {
@@ -28,6 +29,7 @@ namespace ThirdPartySettleWorker.Workers
             _logger = provider.GetRequiredService<ILogger<RedTigerWorker>>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
+            _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
             LogContext.PushProperty("TP", _tpName);
         }
 
@@ -46,7 +48,6 @@ namespace ThirdPartySettleWorker.Workers
         private void DoSettleRedTigerWork(object state)
         {
             var forContinue = false;
-            var isError = false;
             var thisTp = (int)Tp.RedTiger;
             var gameType = GameType.RedTiger_RNG;
             var category = TpCategory.Slots;
@@ -55,15 +56,16 @@ namespace ThirdPartySettleWorker.Workers
 
             try
             {
-                var unsettledList = _settledBLL.GetUnsettledList_RedTiger();
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
 
-                if (unsettledList != null)
+                if (tpUnsettleList != null)
                 {
-                    forContinue = unsettledList.Count() == 200;
-                    foreach (var unsettled in unsettledList)
+                    forContinue = tpUnsettleList.Count() == 200;
+                    foreach (var tpUnsettle in tpUnsettleList)
                     {
                         try
                         {
+                            var unsettled = _settledBLL.GetUnsettledList_RedTiger(tpUnsettle.TransId);
                             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
 
                             decimal stake = unsettled.Stake;
@@ -85,14 +87,24 @@ namespace ThirdPartySettleWorker.Workers
                                 GameID = unsettled.GameId,
                             };
 
-                            _settledBLL.Settled(tpCustInfo, betRecordInfo, category);
-                            _settledBLL.SetSettleFlag_RedTiger(unsettled.TransId);
+                            var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, category);
+
+                            if (result == 1)
+                            {
+                                Task.Run(() =>
+                                {
+                                    _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, true);
+                                });
+                            }
                         }
                         catch (Exception ex1)
                         {
-                            LogContext.PushProperty("TP", tpName);
-                            isError = true;
-                            _logger.LogError(ex1, $"{logName}:{JsonConvert.SerializeObject(unsettled)}");
+                            Task.Run(() =>
+                            {
+                                _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, false);
+                            });
+                            LogContext.PushProperty("TP", _tpName);
+                            _logger.LogError(ex1, $"RedTiger Settle exception. {ex1.Message} || TransId : {tpUnsettle.TransId}");
                         }
                     }
                 }
@@ -101,7 +113,6 @@ namespace ThirdPartySettleWorker.Workers
             {
                 LogContext.PushProperty("TP", tpName);
                 _logger.LogError(ex, $"{logName}:{ex.Message}");
-                isError = true;
             }
             finally
             {
@@ -110,10 +121,6 @@ namespace ThirdPartySettleWorker.Workers
                 if (forContinue)
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(1);
-                }
-                else if (isError)
-                {
-                    dueTimeSpan = TimeSpan.FromMinutes(1);
                 }
 
                 _timerSettleRedTiger.Change(dueTimeSpan, TimeSpan.Zero);
