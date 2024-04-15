@@ -1,7 +1,11 @@
 ﻿using System.Data;
+
 using Dapper;
+
 using MySql.Data.MySqlClient;
+
 using Newtonsoft.Json;
+
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -22,7 +26,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly MySqlClient _mainDbClient;
         private readonly MySqlClient _wagerDbClient;
         private readonly PartitionService _partitionService;
-        
+
         public PegasusBLL(IServiceProvider provider)
         {
             _thirdPartyBll = provider.GetService<ThirdPartyBLL>();
@@ -51,12 +55,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 using var conn = _mainDbClient.GetMySqlConnection();
                 conn.Open();
                 var trans = conn.BeginTransaction();
-                
-               if (tpCurrency.ExchangeRate > 0) 
-               { 
-                   bet.BetAmount *= tpCurrency.ExchangeRate;
-                   custBalance.Balance *= tpCurrency.ExchangeRate;
-               }
+
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    bet.BetAmount *= tpCurrency.ExchangeRate;
+                    custBalance.Balance *= tpCurrency.ExchangeRate;
+                }
 
                 var partitionTime = DateTime.Now.ToUniversalTime();
                 var bettingData = new BetTransaction_Pegasus
@@ -67,24 +71,23 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     TransactionNo = bet.TransactionNo,
                     ExtraInfo = JsonConvert.SerializeObject(bet.ExtraInfo)
                 };
-                
+
                 var p = new DynamicParameters(bettingData);
                 p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_Pegasus_Bet_Ins", p, trans);
 
                 if (result > 0)
                 {
-                    result = _bettingService.PlaceBetV2(
+                    result = _bettingService.PlaceBet(
                         tpCustInfo: tpCustInfo,
                         amount: Math.Abs(bettingData.BetAmount) * -1,
                         tpId: (int)tpId,
                         tpTransId: bettingData.TransactionNo,
                         gameType: (int)gameType,
                         refId: bettingData.TransactionNo,
-                        betData: null,
-                        tpCategory: TpCategory.Slots,
                         afterAmount: out var afterAmount,
                         bonusId: ref bonusId,
+                        useBonus: out _,
                         conn: conn,
                         trans: trans
                     );
@@ -133,13 +136,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             return result;
         }
-        
+
         public int Settle_Pegasus(SettleRequest_Pegasus settle, string tpUserName, Tp tpId, GameType gameType, out ResultPegasus resp)
         {
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)tpId, tpUserName);
             var tpCurrency = _thirdPartyBll.GetTpCurrency((int)tpId, tpCustInfo.CurrencyId);
             var afterAmount = _tpCustInfoBll.GetBalance((int)tpId, tpUserName, (int)gameType).Balance;
-            
+
             if (tpCurrency.ExchangeRate > 0)
             {
                 settle.PayoutAmount *= tpCurrency.ExchangeRate;
@@ -151,7 +154,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             var result = -1;
             resp = new ResultPegasus();
-          
+
             try
             {
                 var partitionTime = settle.SettlementTime;
@@ -161,7 +164,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     return -2;
                 }
-                
+
                 var ticketStatus = (settle.PayoutAmount - settle.BetAmount) switch
                 {
                     > 0 => TicketStatus.Win,
@@ -254,7 +257,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             return result;
         }
-        
+
         public int Cancel_Pegasus(CancelRequest_Pegasus cancel, string tpUserName, Tp tpId, GameType gameType, out ResultPegasus resp)
         {
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)tpId, tpUserName);
@@ -266,7 +269,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             var result = -1;
             resp = new ResultPegasus();
-          
+
             try
             {
                 var partitionTime = DateTime.UtcNow;
@@ -276,7 +279,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     return -2;
                 }
-                
+
                 var settleData = new SettleTransaction_Pegasus
                 {
                     TransactionNo = cancel.TransactionNo,
@@ -354,24 +357,24 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             return result;
         }
-        
+
         public int Bonus_Pegasus(BonusRequest_Pegasus bonus, string tpUserName, Tp tpId, GameType gameType,
             out BonusResultPegasus resp)
         {
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)tpId, tpUserName);
             var tpCurrency = _thirdPartyBll.GetTpCurrency((int)tpId, tpCustInfo.CurrencyId);
             var custBalance = _tpCustInfoBll.GetBalance((int)tpId, tpUserName, (int)gameType);
-            
+
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
 
-            if (tpCurrency.ExchangeRate > 0) 
-            { 
+            if (tpCurrency.ExchangeRate > 0)
+            {
                 bonus.Amount *= tpCurrency.ExchangeRate;
                 custBalance.Balance *= tpCurrency.ExchangeRate;
             }
-            
+
             var result = -1;
             resp = new BonusResultPegasus
             {
@@ -380,7 +383,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 BeforeAmount = custBalance.Balance,
                 AfterAmount = 0
             };
-          
+
             try
             {
                 var settleData = new BonusTransaction_Pegasus
@@ -391,8 +394,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     EventDetailInfo = JsonConvert.SerializeObject(bonus.eventDetailInfo)
                 };
                 var p = new DynamicParameters(settleData);
-                result = _mainDbClient.Execute( "Service_RewardRNG_Pegasus_Ins", trans , p);
-                
+                result = _mainDbClient.Execute("Service_RewardRNG_Pegasus_Ins", trans, p);
+
                 if (result > 0)
                 {
                     result = _settledService.PayoutV2(
@@ -417,7 +420,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     {
                         result = _tpUnRewardService.InsertTpUnReward(tpId, gameType, bonus.TransactionNo, bonus.PlayerUniqueID, trans);
                     }
-                    
+
                     if (result > 0)
                     {
                         if (afterAmount == 0)
@@ -456,7 +459,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             return result;
         }
-        
+
         public int SetSettleFlag_TpWager_Pegasus(string spName, string transId)
         {
             var result = _wagerDbClient.Execute(spName, parameters: new DynamicParameters(new { TransId = transId }));

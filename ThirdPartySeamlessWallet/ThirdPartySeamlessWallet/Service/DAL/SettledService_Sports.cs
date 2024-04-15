@@ -219,12 +219,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (btiResult.SetBalanceResult == 1)
                 {
-                    if (bonusId > 0)
-                    {
-                        //把BetID加入AddTpSeamlessBonus，避免結算無法正常取出BonusId
-                        _bettingService.AddTpBonus((int)Tp.BTI, credit.BetID, (int)GameType.BTI_Sports, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, credit.amount, bonusId, TpCategory.Sports, conn, trans);
-                    }
-
                     if (credit.SettleFlag == (int)SettleFlag.EndGame)
                     {
                         _tpUnsettleService.InsertTpUnsettle(Tp.BTI, GameType.BTI_Sports, credit.reserve_id, trans);
