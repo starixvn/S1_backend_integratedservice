@@ -1408,6 +1408,117 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        public int ResettleRNG_PG(TpCustInfo tpCustInfo, ResettleDataRNG_PG resettleDataRNG_PG, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            int gameType = (int)GameType.PG_RNG;
+
+            afterAmount = 0;
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+
+            decimal adjustAmount = 0;
+            var transType = TransType.Refunds;
+            if (resettleDataRNG_PG.type == TransferType.PlaceBet)
+            {
+                // cancel refund
+                transType = TransType.Undo;
+                adjustAmount = Math.Abs(resettleDataRNG_PG.TransferAmount);
+            }
+            if (resettleDataRNG_PG.type == TransferType.Payout)
+            {
+                // win to lose debit(-)
+                adjustAmount = resettleDataRNG_PG.TransferAmount * -1;
+            }
+
+            var p = new DynamicParameters(new
+            {
+                TransactionId = $"F-{resettleDataRNG_PG.TransactionId}",
+                BetTransactionId = resettleDataRNG_PG.BetTransactionId,
+                ParentBetId = resettleDataRNG_PG.ParentBetId,
+                BetId = resettleDataRNG_PG.BetId,
+                PlayerName = resettleDataRNG_PG.PlayerName,
+                GameId = resettleDataRNG_PG.GameId,
+                CurrencyCode = resettleDataRNG_PG.CurrencyCode,
+                BetAmount = 0,
+                WinAmount = 0,
+                TransferAmount = adjustAmount, // 抵銷winlose使用
+                IsEndRound = resettleDataRNG_PG.IsEndRound,
+                UpdatedTime = (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds,
+                CreateTime = (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds,
+                type = TransferType.CancelBet,
+                TraceId = resettleDataRNG_PG.TraceId,
+                WalletType = resettleDataRNG_PG.WalletType,
+                Flag = SettleFlag.Running,
+            });
+
+            try
+            {
+                result = _mainDbClient.Execute("Service_BettransRng_PG_Ins_V3", trans, p);
+
+                if (result > 0)
+                {
+                    if (resettleDataRNG_PG.TransferAmount != 0)
+                    {
+                        result = PayoutV2(
+                            tpCustInfo,
+                            adjustAmount,
+                            (int)Tp.PG,
+                            resettleDataRNG_PG.ParentBetId,
+                            gameType,
+                            TpCategory.Slots,
+                            $"F-{resettleDataRNG_PG.TransactionId}",
+                            transType,
+                            null,
+                            out afterAmount,
+                            $"{transType}",
+                            out bonusId,
+                            conn,
+                            trans,
+                            AllowNegative.Allow
+                        );
+                    }
+                    else
+                    {
+                        GetTpBonus((int)Tp.PG, resettleDataRNG_PG.ParentBetId, gameType, TpCategory.Slots, out int custId, out bonusId);
+                    }
+
+                    if (resettleDataRNG_PG.IsEndRound == "1")
+                    {
+                        result = _tpUnsettleService.InsertTpUnsettle(Tp.PG, GameType.PG_RNG, resettleDataRNG_PG.ParentBetId, trans);
+                    }
+
+                    if (result > 0)
+                    {
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                    }
+                }
+                else
+                {
+                    result = -1;
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    result = -1;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return result;
+        }
+
         public TpBetFailureRecord GetTpBetFailureParam_PG(TpCustInfo tpCustInfo, TpCustBalance custBalance, TpCurrency tpCurrency, TransferInOutDataRNG_PG transferInOutDataRNG_PG, TpCheckRecordCode Code, decimal AfterAmount)
         {
             // BLL會經過匯率換算 下列還原為原始資料

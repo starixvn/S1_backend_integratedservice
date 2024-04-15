@@ -218,8 +218,9 @@ public class IMESportsWager
         IsResettled = m.IsResettled;
         IsConfirmed = m.IsConfirmed;
         IsCancelled = m.IsCancelled;
-        SettlementDateTime = string.IsNullOrEmpty(m.SettlementDateTime) ? null
-            : DateTimeOffset.Parse(m.SettlementDateTime).UtcDateTime;
+        SettlementDateTime = DateTimeOffset.TryParse(m.SettlementDateTime, out var settleDateTime)
+            ? settleDateTime.UtcDateTime
+            : null;
         Tolerance = m.Tolerance;
         FlagCategory = m.FlagCategory;
         DetailItems = m.DetailItems;
@@ -284,8 +285,11 @@ public class IMSportsWager
         BetTradeCommission = m.BetTradeCommission;
         BetTradeBuybackAmount = m.BetTradeBuybackAmount;
         ComboType = m.ComboType;
-        SettlementDate = string.IsNullOrEmpty(m.SettlementDate) ? null
-            : DateTimeOffset.Parse(m.SettlementDate).UtcDateTime;
+        SettlementDate = DateTimeOffset.TryParse(m.SettlementDate, out var settleDateTime)
+            ? settleDateTime.UtcDateTime
+            : null;
+        // SettlementDate = string.IsNullOrEmpty(m.SettlementDate) ? null
+        //     : DateTimeOffset.Parse(m.SettlementDate).UtcDateTime;
         betTradeSuccessDateTime = DateTimeOffset.Parse(m.betTradeSuccessDateTime).UtcDateTime;
         DetailItems = m.DetailItems;
     }

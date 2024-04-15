@@ -1010,6 +1010,151 @@ namespace ThirdPartySeamlessWallet.Controllers
             return resp;
         }
 
+        public class ResettleReqq : ResettleDataRNG_PG
+        {
+            [JsonProperty("operator_token")]
+            public string OperatorToken { get; set; }
+
+            [JsonProperty("secret_key")]
+            public string SecretKey { get; set; }
+
+            [JsonProperty("operator_player_session")]
+            public string OperatorPlayerSession { get; set; }
+        }
+
+        [Route("[controller]/Resettle")]
+        [HttpPost]
+        public Resp Resettle([FromForm] Dictionary<string, string> reqq)
+        {
+            string logName = $"{thisTp}_Resettle";
+            Resp resp = new Resp();
+            resp.error = new Error
+            {
+                code = "1034",
+                message = "Invalid request."
+            };
+
+            var resettleReqq = JsonConvert.DeserializeObject<ResettleReqq>(JsonConvert.SerializeObject(reqq));
+
+            var secret_key = _config.secret_key;
+            var operator_token = _config.operator_token;
+
+            if (string.IsNullOrEmpty(resettleReqq.PlayerName) || !resettleReqq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !resettleReqq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase))
+            {
+                resp.error = new Error
+                {
+                    code = "1034",
+                    message = "Invalid request."
+                };
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                return resp;
+            }
+
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)thisTp, resettleReqq.PlayerName);
+            if (tpCustInfo == null)
+            {
+                resp.error = new Error
+                {
+                    code = "1034",
+                    message = "Invalid request."
+                };
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                return resp;
+            }
+
+            TpCustBalance tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, resettleReqq.PlayerName, gameType);
+            if (tpCustBalance == null || !tpCustBalance.TpCurrencyId.Equals(resettleReqq.CurrencyCode, StringComparison.OrdinalIgnoreCase))
+            {
+                resp.error = new Error
+                {
+                    code = "1034",
+                    message = "Invalid request."
+                };
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                return resp;
+            }
+
+            // 目前以bettrans table資料處理，外部傳進來的金額IDR & VND 是有已有轉換過匯率的
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.PG, tpCustInfo.CurrencyId);
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                resettleReqq.BetAmount /= tpCurrency.ExchangeRate;
+                resettleReqq.WinAmount /= tpCurrency.ExchangeRate;
+                resettleReqq.TransferAmount /= tpCurrency.ExchangeRate;
+            }
+
+            try
+            {
+                BalanceData respData = new BalanceData();
+                resp.data = respData;
+                respData.updated_time = (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
+                if (resettleReqq.type == TransferType.PlaceBet || resettleReqq.type == TransferType.Payout)
+                {
+                    int result = settledBLL.ResettleRNG_PG(resettleReqq, out decimal tpAffterAmount);
+                    if (result > 0)
+                    {
+                        if (resettleReqq.TransferAmount == 0)
+                        {
+                            tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, resettleReqq.PlayerName, gameType);
+                            respData.currency_code = tpCustBalance.TpCurrencyId;
+                            respData.balance_amount = tpCustBalance.Balance;
+                            resp.error = null;
+                        }
+                        else
+                        {
+                            respData.currency_code = tpCustBalance.TpCurrencyId;
+                            respData.balance_amount = tpAffterAmount;
+                            resp.error = null;
+                        }
+                    }
+                    else if (result == -1)
+                    {
+                        tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, resettleReqq.PlayerName, gameType);
+                        respData.currency_code = tpCustBalance.TpCurrencyId;
+                        respData.balance_amount = tpCustBalance.Balance;
+                        resp.error = null;
+                    }
+                    else if (tpAffterAmount < 0)
+                    {
+                        respData.currency_code = tpCustBalance.TpCurrencyId;
+                        respData.balance_amount = tpAffterAmount;
+                        resp.error = null;
+                        log2File.Error($"Insufficient {resettleReqq.PlayerName} {tpAffterAmount}", logName);
+                    }
+                    else
+                    {
+                        resp.data = null;
+                        resp.error = new Error
+                        {
+                            code = "1034",
+                            message = $"Invalid request.({result})"
+                        };
+                        log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                        return resp;
+                    }
+                }
+                else
+                {
+                    resp.data = null;
+                    resp.error = new Error
+                    {
+                        code = "1034",
+                        message = "Invalid request."
+                    };
+                    log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                    return resp;
+                }
+            }
+            catch (Exception ex)
+            {
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", logName, ex);
+                throw;
+            }
+
+            log2File.Info($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+            return resp;
+        }
+
         private TransferType GetType(string TransactionId)
         {
             string transactionType = TransactionId.Split("-")[2];
