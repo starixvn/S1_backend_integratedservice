@@ -35,77 +35,69 @@ namespace ThirdParty.WonCasino
             var currencyConfig = siteConfig.CurrencyList.FirstOrDefault(x => x.CurrencyCode == tpCustInfo.TpCurrencyId);
             var fun = GetValueOrDefault(inputs, "fun", "0");
             
-            try
+            //WonCasino Login 及 CreateMember都是同一隻API。
+            var req = new SortedDictionary<string, object>
             {
-                //WonCasino Login 及 CreateMember都是同一隻API。
-                var req = new SortedDictionary<string, object>
-                {
-                    {"appid", currencyConfig.AppId},
-                    {"username", tpCustInfo.TpUserName},
-                    {"nickname", tpCustInfo.UserName},
-                    {"iscreate", "1"},
-                    {"clienttype", (int)appType},
-                    {"language", TpLangId},
-                    {"currency", currencyConfig.CurrencyCode},
-                };
+                {"appid", currencyConfig.AppId},
+                {"username", tpCustInfo.TpUserName},
+                {"nickname", tpCustInfo.UserName},
+                {"iscreate", "1"},
+                {"clienttype", (int)appType},
+                {"language", TpLangId},
+                {"currency", currencyConfig.CurrencyCode},
+            };
 
-                if (fun == "1")
-                {
-                    req.Add("ist","1");
-                }
+            if (fun == "1") 
+            { 
+                req.Add("ist","1");
+            }
 
-                var sign = GetSign(req, currencyConfig.SecretKey).ToLower();
-                req.Add("sign",sign);
+            var sign = GetSign(req, currencyConfig.SecretKey).ToLower();
+            req.Add("sign",sign);
 
                 
-                var queryString =  string.Join("&", req.OrderBy(p => p.Key)
-                    .Select(p => $"{Uri.EscapeDataString(p.Key).ToLower()}={Uri.EscapeDataString(p.Value.ToString())}"));
+            var queryString =  string.Join("&", req.OrderBy(p => p.Key)
+                .Select(p => $"{Uri.EscapeDataString(p.Key).ToLower()}={Uri.EscapeDataString(p.Value.ToString())}"));
                 
-                var result = HttpPostWithoutParameters(apiUrl + "/api/login?" + queryString,null,30);
+            var result = HttpPostWithoutParameters(apiUrl + "/api/login?" + queryString,null,30);
                 
-                if (!IsJSON(result))
-                {
-                    return new ApiResult()
-                    {
-                        ErrorCode = ErrorCode.Fail,
-                        RawErrorCode = "1",
-                        RawMessage = "No Result. Response is not json."
-                    };
-                }
-                
-                var jsonResponse = JsonConvert.DeserializeObject<WonLoginResponse>(result);
-
-                if (jsonResponse == null)
-                {
-                    return new ApiResult()
-                    {
-                        ErrorCode = ErrorCode.Fail,
-                        RawErrorCode = "1",
-                        RawMessage = "No Result.Response is null."
-                    };
-                }
-
-                if (jsonResponse.result == 0 || jsonResponse.desc == "succeed")
-                {
-                    return new ApiResult()
-                    {
-                        ErrorCode = ErrorCode.Success,
-                        Message = jsonResponse.openurl
-                    };
-                }
-
+            if (!IsJSON(result))
+            {
                 return new ApiResult()
                 {
                     ErrorCode = ErrorCode.Fail,
                     RawErrorCode = "1",
-                    RawMessage = "No Result.Response is null."
-                };;
+                    RawMessage = "No Result. Response is not json." 
+                };
             }
-            catch (Exception e)
+                
+            var jsonResponse = JsonConvert.DeserializeObject<WonLoginResponse>(result);
+
+            if (jsonResponse == null)
             {
-                Console.WriteLine(e);
-                throw;
+                return new ApiResult()
+                {
+                    ErrorCode = ErrorCode.Fail,
+                    RawErrorCode = "1", 
+                    RawMessage = "No Result.Response is null." 
+                };
             }
+
+            if (jsonResponse.result == 0 || jsonResponse.desc == "succeed")
+            {
+                return new ApiResult()
+                {
+                    ErrorCode = ErrorCode.Success,
+                    Message = jsonResponse.openurl
+                };
+            }
+
+            return new ApiResult()
+            { 
+                ErrorCode = ErrorCode.Fail,
+                RawErrorCode = "1",
+                RawMessage = "No Result.Response is null." 
+            };
         }
         
         public ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -114,66 +106,59 @@ namespace ThirdParty.WonCasino
             var apiUrl = siteConfig.ApiUrl;
             var currencyConfig = siteConfig.CurrencyList.FirstOrDefault(x => x.CurrencyCode == tpCustInfo.TpCurrencyId);
             
-            try
+            var req = new SortedDictionary<string, object>
             {
-                var req = new SortedDictionary<string, object>
+                {"appid", currencyConfig.AppId},
+                {"username", tpCustInfo.TpUserName},
+            };
+
+            var sign = GetSign(req, currencyConfig.SecretKey).ToLower();
+            req.Add("sign",sign);
+
+
+            var queryString =  string.Join("&", req.OrderBy(p => p.Key)
+                .Select(p => $"{Uri.EscapeDataString(p.Key).ToLower()}={Uri.EscapeDataString(p.Value.ToString())}"));
+
+            var result = HttpPostWithoutParameters(apiUrl + "/api/kickout?" + queryString,null,30);
+
+            if (!IsJSON(result))
+            {
+                return new ApiResult()
                 {
-                    {"appid", currencyConfig.AppId},
-                    {"username", tpCustInfo.TpUserName},
+                    ErrorCode = ErrorCode.Fail,
+                    RawErrorCode = "1",
+                    RawMessage = "No Result. Response is not json."
                 };
+            }
 
-                var sign = GetSign(req, currencyConfig.SecretKey).ToLower();
-                req.Add("sign",sign);
+            var jsonResponse = JsonConvert.DeserializeObject<WonLoginResponse>(result);
 
-                
-                var queryString =  string.Join("&", req.OrderBy(p => p.Key)
-                    .Select(p => $"{Uri.EscapeDataString(p.Key).ToLower()}={Uri.EscapeDataString(p.Value.ToString())}"));
-                
-                var result = HttpPostWithoutParameters(apiUrl + "/api/kickout?" + queryString,null,30);
-                
-                if (!IsJSON(result))
-                {
-                    return new ApiResult()
-                    {
-                        ErrorCode = ErrorCode.Fail,
-                        RawErrorCode = "1",
-                        RawMessage = "No Result. Response is not json."
-                    };
-                }
-                
-                var jsonResponse = JsonConvert.DeserializeObject<WonLoginResponse>(result);
-
-                if (jsonResponse == null)
-                {
-                    return new ApiResult()
-                    {
-                        ErrorCode = ErrorCode.Fail,
-                        RawErrorCode = "1",
-                        RawMessage = "No Result.Response is null."
-                    };
-                }
-
-                if (jsonResponse.result == 0 || jsonResponse.desc == "succeed")
-                {
-                    return new ApiResult()
-                    {
-                        ErrorCode = ErrorCode.Success,
-                        Message = jsonResponse.desc
-                    };
-                }
-
+            if (jsonResponse == null)
+            {
                 return new ApiResult()
                 {
                     ErrorCode = ErrorCode.Fail,
                     RawErrorCode = "1",
                     RawMessage = "No Result.Response is null."
-                };;
+                };
             }
-            catch (Exception e)
+
+            if (jsonResponse.result == 0 || jsonResponse.desc == "succeed")
             {
-                Console.WriteLine(e);
-                throw;
+                return new ApiResult()
+                {
+                    ErrorCode = ErrorCode.Success,
+                    Message = jsonResponse.desc
+                };
             }
+
+            return new ApiResult()
+            {
+                ErrorCode = ErrorCode.Fail,
+                RawErrorCode = "1",
+                RawMessage = "No Result.Response is null."
+            };
+                
         }
         
         public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -183,10 +168,9 @@ namespace ThirdParty.WonCasino
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            //拿wager資料，WonCasino無注單明細API
-            var spName = "Service_Bettrans_WonCasino_Detail_Get";
-            var db = DataBase.Main;
-            var YYYYMM = getBetDetail.SettledTime.GetPartitionKey();
+            //拿TpWager_WonCasino，Bettrans會有撤銷情況導致WinLoss不準確，WonCasino無注單明細API
+            var spName = "Service_TpWager_WonCasino_Get";
+            var db = DataBase.Wager;
 
             TpCurrency tpCurrency = new()
             {
@@ -195,11 +179,9 @@ namespace ThirdParty.WonCasino
             };
 
             var transId = int.Parse(getBetDetail.TransId);
-            var wagerDetail = TpBetRecordProvider.DbQuery(spName, new { YYYYMM, transId }, db);
+            var wagerDetail = TpBetRecordProvider.DbQuery(spName, new{transId}, db);
             var getDetail = wagerDetail.LastOrDefault();
             var detail = ToJson(wagerDetail);
-            var gameType = getDetail.GetValueOrDefault("gametype").ToString();
-            var gameName = ConvertGameType(gameType);
             
             return new LiveCasinoDetail(getBetDetail.TpGameTypeOption)
             {
@@ -207,13 +189,11 @@ namespace ThirdParty.WonCasino
                 Detail = detail,
                 TpCurrency = tpCurrency,
                 RefTransId = getBetDetail.TransId,
-                GameCode =  gameType,
-                GameName = gameName,
                 TpUserName = getDetail.GetValueOrDefault("username")?.ToString(),
-                UTCBetTime = DateTime.Parse(getDetail.GetValueOrDefault("UTCBetTime")?.ToString()),
-                UTCSettledTime = DateTime.Parse(getDetail.GetValueOrDefault("UTCSettleTime")?.ToString()),
+                UTCBetTime = DateTime.Parse(getDetail.GetValueOrDefault("createtime")?.ToString()).ToUniversalTime(),
+                UTCSettledTime = DateTime.Parse(getDetail.GetValueOrDefault("updatetime")?.ToString()).ToUniversalTime(),
                 Stake = (decimal)getDetail.GetValueOrDefault("betamount"),
-                WinlostAmount = (decimal)getDetail.GetValueOrDefault("betamount") + (decimal)getDetail.GetValueOrDefault("winlost") 
+                WinlostAmount = (decimal)getDetail.GetValueOrDefault("winlost") 
             };
         }
 

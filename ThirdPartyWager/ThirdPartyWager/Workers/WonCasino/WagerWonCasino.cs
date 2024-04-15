@@ -1,6 +1,7 @@
 ﻿using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model.TpSiteConfig;
 
@@ -17,10 +18,12 @@ namespace ThirdPartyWager.Workers
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ILogger<WagerWonCasino> _logger;       
-        private readonly int timeZone = 0;
+        private readonly int timeZone = 8;
         private readonly int iRangMins = 5;
+        private int quick = 0;
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
-
+        private readonly int intervalMins = 5;
+        
         public WagerWonCasino(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<WagerWonCasino>>();
@@ -40,18 +43,43 @@ namespace ThirdPartyWager.Workers
          {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
+            var result = 0;
+            var nowTime = DateTime.Now;
 
             try
             {
-                var time = _dateTimeHelper.GetTimeByMinuteRevert(iRangMins, timeZone, _timeFormat, DateTime.UtcNow);
-                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
-                foreach (var site in siteList)
+                // var time = _dateTimeHelper.GetTimeByMinuteRevert(iRangMins, timeZone, _timeFormat, DateTime.UtcNow);
+                
+                quick = 0;
+                var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
+                
+                var timerTime = dataTpTimer?.StartTime ?? nowTime.AddMinutes(-(iRangMins - 1));
+                var last = (dataTpTimer == null) ? iRangMins - 1 : iRangMins;
+                
+
+                if (timerTime < nowTime)
                 {
-                    var _setting = _siteConfigDic[site.SiteId];
+                    var time = _dateTimeHelper.GetTimeByMinute(last, timeZone, _timeFormat, timerTime);
 
-                    if (_setting == null) continue;
+                    var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+                    foreach (var site in siteList)
+                    {
+                        var _setting = _siteConfigDic[site.SiteId];
 
-                    await _wagerWonCasinoBLL.GetWagerAsync(_setting, time.startUnix, time.endUnix);
+                        if (_setting == null) continue;
+
+                        result += await _wagerWonCasinoBLL.GetWagerAsync(_setting, time.startUnix, time.endUnix);
+                    }
+
+                    if (result >= 0)
+                    {
+                        _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, time.endUnix);
+                    }
+                }
+                
+                if ((int)DateTime.Now.Subtract(timerTime).TotalMinutes > 3)
+                {
+                    quick = 1;
                 }
             }
             catch (Exception ex)
@@ -60,8 +88,16 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                var dueTimeSpan = TimeSpan.FromMinutes(3);
-                _timer.Change(dueTimeSpan, TimeSpan.Zero);
+                if (quick == 1)
+                {
+                    var dueTimeSpan = TimeSpan.FromSeconds(10);
+                    _timer.Change(dueTimeSpan, TimeSpan.Zero);
+                }
+                else
+                {
+                    var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    _timer.Change(dueTimeSpan, TimeSpan.Zero);
+                }
             }
          }
     }

@@ -48,6 +48,7 @@ namespace ThirdPartyWager.Workers
             {
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
                 var nowDateTime = DateTime.Now;
+                var result = 0;
 
                 if (dataTpTimer == null)
                 {
@@ -74,9 +75,13 @@ namespace ThirdPartyWager.Workers
 
                         if (_setting == null) continue;
 
-                        await _wagerWonCasinoBLL.GetWagerAsync(_setting, time.startUnix, time.endUnix);
+                        result = await _wagerWonCasinoBLL.GetWagerAsync(_setting, time.startUnix, time.endUnix);
                     }
-                    _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, time.endUnix);
+                    
+                    if (result >= 0)
+                    {
+                        _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, time.endUnix);
+                    }
                 }
             }
             catch (Exception ex)

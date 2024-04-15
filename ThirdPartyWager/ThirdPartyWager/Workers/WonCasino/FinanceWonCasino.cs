@@ -8,7 +8,7 @@ namespace ThirdPartyWager.Workers
 {
     public class FinanceWonCasino : BackgroundService
     {
-        private readonly ILogger<FinanceGA> _logger;
+        private readonly ILogger<FinanceWonCasino> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly FinanceWonCasinoBLL _financeWonCasinoBLL;
         private readonly FincanceService _financeService;
@@ -20,7 +20,7 @@ namespace ThirdPartyWager.Workers
 
         public FinanceWonCasino(IServiceProvider provider)
         {
-            _logger = provider.GetRequiredService<ILogger<FinanceGA>>();
+            _logger = provider.GetRequiredService<ILogger<FinanceWonCasino>>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _financeWonCasinoBLL = provider.GetRequiredService<FinanceWonCasinoBLL>();
             _financeService = provider.GetRequiredService<FincanceService>();
