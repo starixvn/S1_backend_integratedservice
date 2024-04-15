@@ -53,7 +53,6 @@ namespace ThirdPartyWager.Service.BLL
                             }
                         }
                         
-                        successCount++;
                         //1個page取2000筆注單資料
                         totalPage = (wagerList.total / 2000) + 1;
                         page++;
@@ -62,9 +61,10 @@ namespace ThirdPartyWager.Service.BLL
                     else
                     {
                         break;
-                        
                     }
-                }                   
+                }     
+                //有執行成功就加
+                successCount++;
             }
             return successCount;
         }
