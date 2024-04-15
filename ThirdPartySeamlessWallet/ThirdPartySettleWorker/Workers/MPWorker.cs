@@ -102,6 +102,14 @@ namespace ThirdPartySettleWorker.Workers
                             GameID = settleData.GameId,
                         };
                         var result = _settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
+
+                        if (result == 1)
+                        {
+                            Task.Run(() =>
+                            {
+                                _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, true);
+                            });
+                        }
                     }
                     catch (Exception ex)
                     {
