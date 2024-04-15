@@ -19,9 +19,10 @@ namespace ThirdPartyWager.Service.BLL
             _wagerWonCasinoService = provider.GetRequiredService<WagerWonCasinoService>();
         }
 
-        public async Task GetWagerAsync(WonCasinoConfig setting, long startTime, long endTime)
+        public async Task<int> GetWagerAsync(WonCasinoConfig setting, long startTime, long endTime)
         {
             string msg;
+            var successCount = 0;
 
             foreach (var item in setting.CurrencyList)
             {
@@ -40,7 +41,7 @@ namespace ThirdPartyWager.Service.BLL
                             try
                             {
                                 var result = await _wagerWonCasinoService.InsertWager(wager);
-                                if (result == 1)
+                                if (result >= 1)
                                 {
                                     _ = _tpUnsettleService.InsertTpUnsettle(Tp.WonCasino, GameType.WonCasino_LiveCasino, wager.id.ToString());
                                 }
@@ -51,17 +52,21 @@ namespace ThirdPartyWager.Service.BLL
                                 _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(wager)}\r\n{ex.Message}");
                             }
                         }
-
+                        
+                        successCount++;
                         //1個page取2000筆注單資料
                         totalPage = (wagerList.total / 2000) + 1;
                         page++;
+                        
                     }
                     else
                     {
                         break;
+                        
                     }
                 }                   
             }
+            return successCount;
         }
     }
 }

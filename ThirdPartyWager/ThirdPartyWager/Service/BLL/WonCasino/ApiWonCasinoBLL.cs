@@ -29,7 +29,9 @@ namespace ThirdPartyWager.Service.BLL
             paraDic.Add("size", "2000");
             paraDic.Add("begintime", startTime.ToString());
             paraDic.Add("endtime", endTime.ToString());
-
+            
+            
+            _log2File.InsertRequestLog(_tpName, tmpUrl, $"{JsonConvert.SerializeObject(paraDic)}", "WinCasino encryption request");
             var sign = GetSignature(paraDic, currencySetting.SecretKey);
             List<string> paras = new List<string>();
             foreach (KeyValuePair<string, string> kvp in paraDic)
@@ -41,7 +43,8 @@ namespace ThirdPartyWager.Service.BLL
             string param = string.Join("&", paras.ToArray()) + "&sign=" + sign;
             var url = $"{tmpUrl}?{param}";
             var request = new HttpRequestMessage(HttpMethod.Get, url);
-
+            
+            _log2File.InsertRequestLog(_tpName, apiUrl, $"{url}", "request Url");
             var response = await _httpHelper.GetClient().SendAsync(request);
             var r = response.Content.ReadAsStringAsync().Result;
 

@@ -40,6 +40,7 @@ namespace ThirdPartyWager.Workers
          {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
+            var result = 0;
 
             try
             {
@@ -51,7 +52,12 @@ namespace ThirdPartyWager.Workers
 
                     if (_setting == null) continue;
 
-                    await _wagerWonCasinoBLL.GetWagerAsync(_setting, time.startUnix, time.endUnix);
+                    result = await _wagerWonCasinoBLL.GetWagerAsync(_setting, time.startUnix, time.endUnix);
+                }
+
+                if (result >= 0)
+                {
+                    _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, time.endUnix);
                 }
             }
             catch (Exception ex)
