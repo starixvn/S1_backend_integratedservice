@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using MySqlX.XDevAPI.Common;
+using Newtonsoft.Json;
 
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
@@ -13,6 +14,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiMPBLL _apiMPBLL;
         private readonly WagerMPService _wagerMPService;
         private readonly DateTimeHelper _dateTimeHelper;
+        private readonly TpUnsettleService _tpUnsettleService;
         private readonly ILogger<WagerMPBLL> _logger;
 
         private readonly int _tpId = (int)Tp.MP;
@@ -55,6 +57,7 @@ namespace ThirdPartyWager.Service.BLL
             _wagerMPService = provider.GetRequiredService<WagerMPService>();
             _logger = provider.GetRequiredService<ILogger<WagerMPBLL>>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
         }
 
         public async Task<bool> ExecWagerWorker(int type, int timeRange)
@@ -168,8 +171,12 @@ namespace ThirdPartyWager.Service.BLL
                     try
                     {
                         bet.GameType = _gameTypeList.ContainsKey(bet.KindID) ? (int)_gameTypeList[bet.KindID] : 0;
-                        var r = _wagerMPService.InsertWager(bet);
-                        _ = r.Result;
+                        var result = await _wagerMPService.InsertWager(bet);
+
+                        if (result > 0)
+                        {
+                            _tpUnsettleService.InsertTpUnsettle(Tp.MP, (GameType)bet.GameType, bet.GameID);
+                        }
                     }
                     catch (Exception ex)
                     {
