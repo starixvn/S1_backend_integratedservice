@@ -210,7 +210,8 @@ public class WonCasinoBLL : IWonCasinoBLL
     {
         //Rollback 只有在两个情况出现  超时， HTTP没响应  (投注时，派彩时 ，撤销时）
         //触发rollback 的时候 依据 deposit / deduct 来操作 。
-        //實測後為若Deposit / Deduct，請求失敗才會發Rollback，但NotfiyId會是一樣的。
+        //實測後為若Deposit / Deduct，請求失敗才會發Rollback，但NotfiyId及Type會是一樣的。
+        //若是NotifyId及Type與前一個function相同，則代表我方已經有此次Deposit / Deduct，則後續不再動作
         //WonCasino後台可觸發
         var logName = $"{_thisTp.ToString()}_RollBack";
         var getErrorResponse = new WonCasinoRollBackResponse()
@@ -363,33 +364,39 @@ public class WonCasinoBLL : IWonCasinoBLL
         
         var bettrans = _partitionService.Query<BettransWonCasino>(partitionTime, GetSpName, 
             new { id = rollbackData_WonCasino.serialnumber , username = tpCustInfo.TpUserName });
-        
-        if (bettrans.All(i => i.id != long.Parse(rollbackData_WonCasino.serialnumber)))
+
+        //若Bettrans 不為空代表前面有資料了
+        if (bettrans.Count() != 0)
         {
-            afterAmount = 0.00m;
-            return -2;
+            //Rollback要驗notifyid+type+serialnumber以免重複處理。 有相同則直接回覆成功不做處理。
+            if (VerifyNotifyId(rollbackData_WonCasino.notifyid, rollbackData_WonCasino.type.ToString(),
+                    rollbackData_WonCasino.serialnumber, bettrans))
+            {
+                afterAmount = 0.00m;
+                return -2;
+            }
         }
 
-        //Rollback要驗notifyid+type+serialnumber以免重複處理。
-        if (!VerifyNotifyId(rollbackData_WonCasino.notifyid,rollbackData_WonCasino.type.ToString(),rollbackData_WonCasino.serialnumber, bettrans))
-        {
-            afterAmount = 0.00m;
-            return -2;
-        }
-        
 
         switch (rollbackData_WonCasino.type)
         {
             
             case (int)WonCasinoTypeEnum.Bet:
                 result = Rollback_Deduct_Check(bettrans);
-                if (result != 0)
+                switch (result)
                 {
-                    afterAmount = 0.00m;
-                    return result;
+                    case -2:
+                        afterAmount = 0.00m;
+                        return result;
+                    case 0:
+                        rollbackRequest = RollbackWonCasinoRequest(bettrans, rollbackData_WonCasino,
+                            (int)BettransType.CancelBet, (int)TicketStatus.Refund, (int)SettleFlag.EndGame);
+                        break;
+                    case 1:
+                        rollbackRequest = DeductRollbackRequest(rollbackData_WonCasino,tpCustInfo,
+                            (int)BettransType.CancelBet, (int)TicketStatus.Refund, (int)SettleFlag.EndGame);
+                        break;
                 }
-                rollbackRequest = RollbackWonCasinoRequest(bettrans, rollbackData_WonCasino,
-                    (int)BettransType.CancelBet, (int)TicketStatus.Refund, (int)SettleFlag.EndGame);
                 break;
             case(int)WonCasinoTypeEnum.Cancel:
                 result = Rollback_DepositOrCancel_Check(bettrans);
@@ -464,15 +471,18 @@ public class WonCasinoBLL : IWonCasinoBLL
         {
             return -2;
         }
+
+        //若bettransData_WonCasino無資料為空 回1;
+        if (bettransData_WonCasino.Count() == 0) return 1;
         
-        if (bettransData_WonCasino.All(i => i.TicketStatus == (int)TicketStatus.UnSettled 
+        if (bettransData_WonCasino.All(i => i.TicketStatus == (int)TicketStatus.UnSettled
                                             && i.TicketType == (int)BettransType.Bet
-                                            && i.SettleFlag == (int)SettleFlag.Running ))
+                                            && i.SettleFlag == (int)SettleFlag.Running))
         {
             return 0;
         }
         
-        return - 2;
+        return -2;
     }
     
     private int Rollback_DepositOrCancel_Check(IEnumerable<BettransWonCasino> bettransData_WonCasino)
@@ -483,14 +493,18 @@ public class WonCasinoBLL : IWonCasinoBLL
         var settleBettrans =
             bettransData_WonCasino.LastOrDefault(i => i.TicketType == (int)BettransType.Payout);
 
-        switch (settleBettrans.TicketStatus)
+        if (settleBettrans != null)
         {
-            case (int)TicketStatus.Win:
-            case (int)TicketStatus.Lost:
-                return 0;
-            default:
-                return - 1;
+            switch (settleBettrans.TicketStatus)
+            {
+                case (int)TicketStatus.Win:
+                case (int)TicketStatus.Lost:
+                    return 0;
+                default:
+                    return -1;
+            }
         }
+        return -2;
     }
 
     private RollbackWonCasino RollbackWonCasinoRequest(IEnumerable<BettransWonCasino> bettransData_WonCasino,
@@ -532,6 +546,52 @@ public class WonCasinoBLL : IWonCasinoBLL
             settletime =  new DateTimeOffset(DateTime.UtcNow.AddHours(8)).ToUnixTimeSeconds(),
             UTCBetTime = DateTimeOffset.FromUnixTimeSeconds(bettransData.createtime).UtcDateTime,
             UTCSettleTime = DateTimeOffset.FromUnixTimeSeconds(bettransData.settletime).UtcDateTime,
+            TicketType = ticketType,
+            TicketStatus = ticketStatus,
+            SettleFlag = settleFlag
+        };
+
+        return result;
+    }
+
+    private RollbackWonCasino DeductRollbackRequest(WonCasinoRollBackRequest rollbackData_WonCasino,TpCustInfo tpCustInfo,int ticketType,int ticketStatus,int settleFlag)
+    {
+        //由於Deduct的Rollback沒有前資料，只能自行組一組並寫進DB，以免錯誤。
+        var result = new RollbackWonCasino();
+        //拿bettrans的資料組request，拿最後狀態
+        result = new RollbackWonCasino
+        {
+            appid = rollbackData_WonCasino.appid,
+            sign = rollbackData_WonCasino.sign,
+            notifyid = rollbackData_WonCasino.notifyid,
+            id = int.Parse(rollbackData_WonCasino.serialnumber),
+            amount = rollbackData_WonCasino.amount,
+            type = rollbackData_WonCasino.type,
+            currency =  tpCustInfo.TpCurrencyId,
+            orderno = "NA",
+            gameid = 0,
+            userid = 0,
+            userstatus = 1,
+            betpoint = "NA",
+            betodds = 0.00m,
+            betamount = rollbackData_WonCasino.amount,
+            commamount = 0.00m,
+            winlost = 0.00m,
+            foregift = 0.00m,
+            gameroundid =0,
+            gameresult = rollbackData_WonCasino.errmsg,
+            gametype = 0,
+            gamestyle = 0,
+            serialnumber = rollbackData_WonCasino.serialnumber,
+            gameroundno = 0,
+            gameno = 0,
+            bettype = 0,
+            cid = 0,
+            state = (int)WonCasinoStateEnum.Void,
+            createtime = new DateTimeOffset(DateTime.UtcNow.AddHours(8)).ToUnixTimeSeconds(),
+            settletime =  new DateTimeOffset(DateTime.UtcNow.AddHours(8)).ToUnixTimeSeconds(),
+            UTCBetTime = DateTimeOffset.FromUnixTimeSeconds(new DateTimeOffset(DateTime.UtcNow.AddHours(8)).ToUnixTimeSeconds()).UtcDateTime,
+            UTCSettleTime = DateTimeOffset.FromUnixTimeSeconds(new DateTimeOffset(DateTime.UtcNow.AddHours(8)).ToUnixTimeSeconds()).UtcDateTime,
             TicketType = ticketType,
             TicketStatus = ticketStatus,
             SettleFlag = settleFlag
