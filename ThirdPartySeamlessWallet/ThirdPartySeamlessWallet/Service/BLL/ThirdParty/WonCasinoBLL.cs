@@ -366,7 +366,7 @@ public class WonCasinoBLL : IWonCasinoBLL
             new { id = rollbackData_WonCasino.serialnumber , username = tpCustInfo.TpUserName });
 
         //若Bettrans 不為空代表前面有資料了
-        if (bettrans != null)
+        if (bettrans.Count() != 0)
         {
             //Rollback要驗notifyid+type+serialnumber以免重複處理。 有相同則直接回覆成功不做處理。
             if (VerifyNotifyId(rollbackData_WonCasino.notifyid, rollbackData_WonCasino.type.ToString(),
@@ -392,7 +392,7 @@ public class WonCasinoBLL : IWonCasinoBLL
                         rollbackRequest = RollbackWonCasinoRequest(bettrans, rollbackData_WonCasino,
                             (int)BettransType.CancelBet, (int)TicketStatus.Refund, (int)SettleFlag.EndGame);
                         break;
-                    default:
+                    case 1:
                         rollbackRequest = DeductRollbackRequest(rollbackData_WonCasino,tpCustInfo,
                             (int)BettransType.CancelBet, (int)TicketStatus.Refund, (int)SettleFlag.EndGame);
                         break;
