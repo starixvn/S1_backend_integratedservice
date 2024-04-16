@@ -2145,9 +2145,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public IEnumerable<SettleData> GetUnsettledList_Netent()
+        public SettleData GetUnsettledList_Netent(string transactionRefId)
         {
-            return settledService.GetUnsettledList_Netent();
+            return settledService.GetUnsettledList_Netent(transactionRefId);
         }
 
         public int SetSettleFlag_Netent(string TransId)
@@ -2210,9 +2210,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public IEnumerable<SettleData> GetUnsettledList_RedTiger()
+        public SettleData GetUnsettledList_RedTiger(string transactionRefId)
         {
-            return settledService.GetUnsettledList_RedTiger();
+            return settledService.GetUnsettledList_RedTiger(transactionRefId);
         }
 
         public int SetSettleFlag_RedTiger(string TransId)
