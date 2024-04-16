@@ -97,6 +97,12 @@ namespace ThirdPartySettleWorker.Workers
                             GameID = ConvertGameType(unsettled.gametype),
                         };
 
+                        //deduct rollback可能沒有ValidBet，改用Amount
+                        if (unsettled.ValidBet == 0.00m)
+                        {
+                            betRecordInfo.ValidBet = unsettled.Stake;
+                        }
+
                         if (betRecordInfo.SettlementType == SettlementType.SettledForInvalid)
                         {
                             betRecordInfo.TicketStatus = TicketStatus.Refund;
