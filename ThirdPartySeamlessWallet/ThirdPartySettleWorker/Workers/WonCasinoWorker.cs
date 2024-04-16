@@ -80,15 +80,7 @@ namespace ThirdPartySettleWorker.Workers
                         //拿最後一筆資料
                         var unsettled = getUnsettledList.LastOrDefault(x => x.TransId == wager.TransId);
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
-                        
-
-                        var transType = unsettled.type switch
-                        {
-                            (int)WonCasinoTypeEnum.ReSettle => SettlementType.SettledForInvalid,
-                            (int)WonCasinoTypeEnum.Cancel => SettlementType.SettledForInvalid, 
-                            (int)WonCasinoTypeEnum.Bet => SettlementType.UnSettled,
-                            _ => SettlementType.SettledForValid
-                        };
+                        var transType = TransTypeCheck(unsettled);
                         
                         var betRecordInfo = new BetRecordInfo
                         {
@@ -163,6 +155,24 @@ namespace ThirdPartySettleWorker.Workers
                 18 => "ColorDisc",
                 19 => "FishPrawnCrab",
                 _ => "NA"
+            };
+        }
+
+        private SettlementType TransTypeCheck(SettleDataWonCasino settleDataWonCasino)
+        {
+            var transType = (int)SettlementType.UnSettled;
+
+            return settleDataWonCasino.type switch
+            {
+                (int)WonCasinoTypeEnum.Bet => settleDataWonCasino.TicketStatus switch
+                {
+                    (int)TicketStatus.UnSettled => SettlementType.UnSettled,
+                    (int)TicketStatus.Refund => SettlementType.SettledForInvalid,
+                    _ => SettlementType.SettledForValid
+                },
+                (int)WonCasinoTypeEnum.Cancel => SettlementType.SettledForInvalid,
+                (int)WonCasinoTypeEnum.ReSettle => SettlementType.SettledForInvalid,
+                _ => SettlementType.SettledForValid
             };
         }
         #endregion
