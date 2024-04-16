@@ -45,17 +45,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     return btiResult;
                 }
 
-                btiResult.SetBalanceResult = PlaceBetV2(
+                btiResult.SetBalanceResult = PlaceBet(
                     tpCustInfo: tpCustInfo,
                     amount: Math.Abs(request.amount) * -1,
                     tpId: (int)Tp.BTI,
                     tpTransId: request.reserve_id,
                     gameType: (int)GameType.BTI_Sports,
                     refId: request.reserve_id,
-                    betData: null,
-                    tpCategory: TpCategory.Sports,
                     afterAmount: out decimal afterAmount,
                     bonusId: ref bonusId,
+                    useBonus: out _,
                     conn: conn,
                     trans: trans
                 );
@@ -93,7 +92,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 await using var conn = _mainDbClient.GetMySqlConnection();
                 await conn.OpenAsync();
                 await using var trans = await conn.BeginTransactionAsync();
-                
+
                 var p = new DynamicParameters(debitReserve);
                 p.Add("trx_id", dbType: DbType.Int64, direction: ParameterDirection.Output);
                 p.Add("SPResult", dbType: DbType.Int16, direction: ParameterDirection.Output);
@@ -142,39 +141,38 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 dto.TicketType = (int)BettransType.Bet;
                 dto.TicketStatus = (int)TicketStatus.UnSettled;
                 var p = new DynamicParameters(dto);
-                var result = await _mainDbClient.ExecuteAsync("Service_BettransSports_SBO_Deduct_Ins", trans , p );
-                
+                var result = await _mainDbClient.ExecuteAsync("Service_BettransSports_SBO_Deduct_Ins", trans, p);
+
                 if (result < 1)
                 {
-                    logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode}" +
+                    _logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode}" +
                                     $" exec Service_BettransSports_SBO_Deduct_Ins failed return Result:-1");
                     return new SBOResult() { Result = -1 };
                 }
 
-                result = PlaceBetV2(
+                result = PlaceBet(
                     tpCustInfo: tpCustInfo,
                     amount: Math.Abs(dto.Amount) * -1,
                     tpId: (int)Tp.SBO,
                     tpTransId: dto.TransferCode,
                     gameType: (int)dto.TpGameType,
                     refId: dto.TransferCode,
-                    betData: null,
-                    tpCategory: TpCategory.Sports,
                     afterAmount: out var afterAmount,
                     bonusId: ref bonusId,
+                    useBonus: out _,
                     conn: conn,
                     trans: trans
                 );
                 if (result != 1)
                 {
-                    logger.LogError($"Username:{dto.Username} afterAmount:{afterAmount} < 0 return Result:-2");
+                    _logger.LogError($"Username:{dto.Username} afterAmount:{afterAmount} < 0 return Result:-2");
                     return new SBOResult() { Result = -2 };
                 }
 
                 result = _tpUnsettleService.InsertTpUnsettle(Tp.SBO, dto.TpGameType, dto.TransferCode, trans, dto.BetTime);
                 if (result < 1)
                 {
-                    logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode} " +
+                    _logger.LogError($"Username:{dto.Username} TransferCode:{dto.TransferCode} " +
                                     $"exec Service_TpUnsettle_Ins_V2 failed return Result:-3");
                     return new SBOResult() { Result = -3 };
                 }
@@ -189,7 +187,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
                 return new SBOResult()
                 {
                     Result = -5

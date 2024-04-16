@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using System.Web;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
@@ -124,20 +123,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     string sessionToken = sessionKeyArr[1];/* Long Time*/
                     if (authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
                     {
-                        // 先暫時排除 VND IDR 玩家不給進入遊戲
-                        // 先將 VND 跟 IDR 排除不開放此款遊戲登入
-                        var umCurrencyIds = new List<string> { "VND", "IDR" };
-                        if (umCurrencyIds.Contains(tpCustInfoAuth.TpCurrencyId))
-                        {
-                            resp.error = new Error
-                            {
-                                code = "1308",
-                                message = "Player session is expired by VND AND IDR Currency"
-                            };
-                            log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
-                            return resp;
-                        }
-
                         var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
                         if (tpCheck == null)
                         {

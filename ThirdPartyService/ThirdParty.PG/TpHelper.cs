@@ -71,17 +71,6 @@ namespace ThirdParty.PG
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            // 先將 VND 跟 IDR 排除不開放此款遊戲登入
-            var umCurrencyIds = new List<string> { "VND", "IDR" };
-            if (umCurrencyIds.Contains(tpCustInfo.TpCurrencyId))
-            {
-                return new ApiResult()
-                {
-                    ErrorCode = ErrorCode.BetDetailNotFound, //先回 3000 前端才有辦法走 UM
-                    Message = "Currency UM"
-                };
-            }
-
             var config = _siteConfigs[tpCustInfo.SiteId];
 
             var operatorToken = config.operator_token;

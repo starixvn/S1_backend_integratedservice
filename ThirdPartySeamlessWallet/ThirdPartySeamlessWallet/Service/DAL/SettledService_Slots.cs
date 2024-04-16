@@ -1308,17 +1308,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     if (transferInOutDataRNG_PG.BetAmount != 0)
                     {
-                        result = _bettingService.PlaceBetV2(
+                        result = _bettingService.PlaceBet(
                             tpCustInfo,
                             transferInOutDataRNG_PG.BetAmount,
                             (int)Tp.PG,
                             transferInOutDataRNG_PG.ParentBetId,
                             gameType,
                             transferInOutDataRNG_PG.TransactionId,
-                            null,
-                            category,
                             out afterAmount,
                             ref bonusId,
+                            out _,
                             conn,
                             trans
                         );
@@ -3294,17 +3293,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     int bonusId = 0;
                     if (betAmount != 0)
                     {
-                        result = _bettingService.PlaceBetV2(
+                        result = _bettingService.PlaceBet(
                             tpCustInfo,
                             betAmount,
                             (int)Tp.JILI,
                             bettingData_JILI.round.ToString(),
                             gameType,
                             bettingData_JILI.round.ToString(),
-                            null,
-                            category,
                             out afterAmount,
                             ref bonusId,
+                            out _,
                             conn,
                             trans
                         );
@@ -6292,17 +6290,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (result > 0)
                         {
-                            result = _bettingService.PlaceBetV2(
+                            result = _bettingService.PlaceBet(
                                 tpCustInfo,
                                 Math.Abs(data.amount) * -1,
                                 (int)Tp.PlayTech,
                                 data.roundId,
                                 (int)gameType,
                                 data.roundId,
-                                null,
-                                tpCategory,
                                 out afterAmount,
                                 ref bonusId,
+                                out decimal useBonus,
                                 conn,
                                 trans,
                                 memo: $" - {data.transId} "
@@ -6311,7 +6308,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             if (bonusId > 0)
                             {
                                 verifyBonus.Add(data.roundId, bonusId);
-                                _bettingService.AddTpBonus((int)Tp.PlayTech, data.transId, (int)gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, data.amount, bonusId, tpCategory, conn, trans);
+                                _bettingService.AddTpBonus((int)Tp.PlayTech, data.transId, (int)gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, useBonus, bonusId, trans);
                             }
                         }
                     }

@@ -39,7 +39,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             if (result > 0 && bettingDataRNG_GPI.amount != 0)
             {
-                result = PlaceBetV2(tpCustInfo, bettingDataRNG_GPI.amount, (int)Tp.GPI, bettingDataRNG_GPI.round_id, gameType, bettingDataRNG_GPI.trx_id, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+                result = PlaceBet(tpCustInfo, bettingDataRNG_GPI.amount, (int)Tp.GPI, bettingDataRNG_GPI.round_id, gameType, bettingDataRNG_GPI.trx_id, out afterAmount, ref bonusId, out _, conn, trans);
             }
 
             if (result > 0)
@@ -84,17 +84,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             if (result > 0 && bettingDataRNG_PP.amount != 0)
             {
-                result = PlaceBetV2(
+                result = PlaceBet(
                     tpCustInfo,
                     bettingDataRNG_PP.amount,
                     (int)Tp.PP,
                     bettingDataRNG_PP.roundId.ToString(),
                     gameType,
                     bettingDataRNG_PP.reference,
-                    null,
-                    category,
                     out afterAmount,
                     ref bonusId,
+                    out _,
                     conn,
                     trans,
                     memo: $"{bonusCode}"
@@ -137,7 +136,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     if (result > 0 && insertData.amount < 0)
                     {
-                        result = PlaceBetV2(tpCustInfo, insertData.amount, (int)Tp.YGG, insertData.reference, gameType, insertData.subreference, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+                        result = PlaceBet(tpCustInfo, insertData.amount, (int)Tp.YGG, insertData.reference, gameType, insertData.subreference, out afterAmount, ref bonusId, out _, conn, trans);
                     }
 
                     if (result > 0)
@@ -216,24 +215,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 if (cash == false)
                 {
-                    result = PlaceBetV2(
+                    result = PlaceBet(
                         tpCustInfo,
                         bettingDataRNG_SG.amount,
                         (int)Tp.SG,
                         bettingDataRNG_SG.transferId,
                         gameType,
                         bettingDataRNG_SG.transferId,
-                        null,
-                        category,
                         out afterAmount,
                         ref bonusId,
+                        out _,
                         conn,
                         trans
                     );
                 }
                 else
                 {
-                    result = walletService.SetBalance(
+                    result = _walletService.SetBalance(
                         tpCustInfo.CustId,
                         tpCustInfo.SiteId,
                         tpCustInfo.UserName,
@@ -284,7 +282,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0 && bettingDataRNG_PG.TransferAmount != 0)
                 {
-                    result = PlaceBetV2(tpCustInfo, bettingDataRNG_PG.TransferAmount, (int)Tp.PG, bettingDataRNG_PG.ParentBetId, gameType, bettingDataRNG_PG.TransactionId, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+                    result = PlaceBet(tpCustInfo, bettingDataRNG_PG.TransferAmount, (int)Tp.PG, bettingDataRNG_PG.ParentBetId, gameType, bettingDataRNG_PG.TransactionId, out afterAmount, ref bonusId, out _, conn, trans);
                 }
 
                 if (result > 0)
@@ -332,7 +330,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             if (result > 0 && bettingDataRNG_Joker.amount != 0)
             {
-                result = PlaceBetV2(tpCustInfo, bettingDataRNG_Joker.amount, (int)Tp.Joker, bettingDataRNG_Joker.roundid, gameType, bettingDataRNG_Joker.id, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+                result = PlaceBet(tpCustInfo, bettingDataRNG_Joker.amount, (int)Tp.Joker, bettingDataRNG_Joker.roundid, gameType, bettingDataRNG_Joker.id, out afterAmount, ref bonusId, out _, conn, trans);
             }
 
             if (result > 0)
@@ -373,17 +371,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     var bonusId = 0;
                     var refId = bettingDataFish_Joker.id.Length > 45 ? bettingDataFish_Joker.id.Substring(0, 45) : bettingDataFish_Joker.id;
-                    result = PlaceBetV2(
+                    result = PlaceBet(
                         tpCustInfo,
                         Math.Abs(bettingDataFish_Joker.amount) * -1,
                         (int)Tp.Joker,
                         string.IsNullOrWhiteSpace(bettingDataFish_Joker.roundid) ? refId : bettingDataFish_Joker.roundid,
                         (int)GameType.Joker_Fish,
                         refId,
-                        null,
-                        TpCategory.Fish,
                         out afterAmount,
                         ref bonusId,
+                        out _,
                         conn,
                         trans);
                 }
@@ -399,7 +396,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
                 result = 0;
             }
 
@@ -430,16 +427,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public bool PlaceBetReward_Joker(TpCustInfo tpCustInfo, RewardRNG_Joker data,
                out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
-            var result = PlaceBetV2(tpCustInfo,
+            var result = PlaceBet(tpCustInfo,
                                     data.amount,
                                     (int)Tp.Joker,
                                     data.id,  //TpTransId
                                     (int)GameType.Joker_RNG,
                                     data.tournamentid,  //RefId
-                                    null,
-                                    TpCategory.Slots,
                                     out afterAmount,
                                     ref bonusId,
+                                    out _,
                                     conn,
                                     trans);
 
@@ -469,7 +465,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var isCompleted = await _mainDbClient.QueryFirstOrDefaultAsync<bool>("Service_BettransRng_MG_Check", trans, new { bettingDataRNG_MG.betId });
                 if (isCompleted)
                 {
-                    logger.LogError($"{bettingDataRNG_MG.betId} is completed");
+                    _logger.LogError($"{bettingDataRNG_MG.betId} is completed");
                     return new MGPlaceBetResult()
                     {
                         Result = 1,
@@ -484,17 +480,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0 && bettingDataRNG_MG.amount != 0)
                 {
-                    result = PlaceBetV2(
+                    result = PlaceBet(
                         tpCustInfo,
                         bettingDataRNG_MG.amount,
                         (int)Tp.MG,
                         bettingDataRNG_MG.betId,
                         gameType,
                         bettingDataRNG_MG.txnId,
-                        null,
-                        TpCategory.Slots,
                         out afterAmount,
                         ref bonusId,
+                        out _,
                         conn,
                         trans);
                 }
@@ -528,7 +523,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
-                    logger.LogError(mySqlEx, $"PlaceBetRNG_MG failed: {JsonConvert.SerializeObject(bettingDataRNG_MG)}");
+                    _logger.LogError(mySqlEx, $"PlaceBetRNG_MG failed: {JsonConvert.SerializeObject(bettingDataRNG_MG)}");
                     throw;
                 }
             }
@@ -554,17 +549,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 if (bettingDataRNG_CQ9.amount != 0)
                 {
-                    result = PlaceBetV2(
+                    result = PlaceBet(
                         tpCustInfo,
                         bettingDataRNG_CQ9.amount,
                         (int)Tp.CQ9,
                         bettingDataRNG_CQ9.roundid,
                         gameType,
                         bettingDataRNG_CQ9.mtcode,
-                        null,
-                        TpCategory.Slots,
                         out afterAmount,
                         ref bonusId,
+                        out _,
                         conn,
                         trans
                     );
@@ -646,7 +640,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     if (bettingDataRNG_CQ9.amount != 0)
                     {
-                        result = walletService.SetBalance(
+                        result = _walletService.SetBalance(
                             tpCustInfo.CustId,
                             tpCustInfo.SiteId,
                             tpCustInfo.UserName,
@@ -721,7 +715,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     if (bettingDataRNG_CQ9.amount != 0)
                     {
-                        result = walletService.SetBalance(
+                        result = _walletService.SetBalance(
                             tpCustInfo.CustId,
                             tpCustInfo.SiteId,
                             tpCustInfo.UserName,
@@ -798,17 +792,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (result > 0 && bettingDataRNG_Iconic.amount != 0)
                 {
 
-                    result = PlaceBetV2(
+                    result = PlaceBet(
                         tpCustInfo,
                         bettingDataRNG_Iconic.amount,
                         (int)Tp.Iconic,
                         bettingDataRNG_Iconic.transactionId.ToString(),
                         gameType,
                         bettingDataRNG_Iconic.transactionId.ToString(),
-                        null,
-                        category,
                         out afterAmount,
                         ref bonusId,
+                        out _,
                         conn,
                         trans
                     );
@@ -863,7 +856,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0 && bettingDataFish_Iconic.amount != 0)
                 {
-                    result = walletService.SetBalance(
+                    result = _walletService.SetBalance(
                         tpCustInfo.CustId,
                         tpCustInfo.SiteId,
                         tpCustInfo.UserName,
@@ -954,17 +947,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0 && bettingData_EVO.transaction.amount != 0)
                 {
-                    result = PlaceBetV2(
+                    result = PlaceBet(
                         tpCustInfo,
                         bettingData_EVO.transaction.amount,
                         (int)Tp.Netent,
                         bettingData_EVO.transaction.refId,
                         gameType,
                         bettingData_EVO.transaction.id,
-                        null,
-                        category,
                         out afterAmount,
                         ref bonusId,
+                        out _,
                         conn,
                         trans
                     );
@@ -1046,17 +1038,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0 && bettingData_EVO.transaction.amount != 0)
                 {
-                    result = PlaceBetV2(
+                    result = PlaceBet(
                         tpCustInfo,
                         bettingData_EVO.transaction.amount,
                         (int)Tp.RedTiger,
                         bettingData_EVO.transaction.refId,
                         gameType,
                         bettingData_EVO.transaction.id,
-                        null,
-                        category,
                         out afterAmount,
                         ref bonusId,
+                        out _,
                         conn,
                         trans
                     );
@@ -1143,17 +1134,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
                 if (result > 0 && bettingData_EVO.transaction.amount != 0)
                 {
-                    result = PlaceBetV2(
+                    result = PlaceBet(
                         tpCustInfo,
                         bettingData_EVO.transaction.amount,
                         (int)tpId,
                         bettingData_EVO.transaction.refId,
                         (int)tpGameType,
                         bettingData_EVO.transaction.id,
-                        null,
-                        tpCategory,
                         out afterAmount,
                         ref bonusId,
+                        out _,
                         conn,
                         trans
                     );
@@ -1235,7 +1225,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             if (result > 0 && bettingDataRNG_AP.stake != 0)
             {
-                result = PlaceBetV2(tpCustInfo, Math.Abs(bettingDataRNG_AP.stake) * -1, (int)Tp.AP, bettingDataRNG_AP.gameroundid, gameType, bettingDataRNG_AP.seq, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+                result = PlaceBet(tpCustInfo, Math.Abs(bettingDataRNG_AP.stake) * -1, (int)Tp.AP, bettingDataRNG_AP.gameroundid, gameType, bettingDataRNG_AP.seq, out afterAmount, ref bonusId, out _, conn, trans);
             }
 
             if (result > 0)
@@ -1300,17 +1290,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0 && bettingData_AdvantPlayMini.Amount != 0)
                 {
-                    result = PlaceBetV2(
+                    result = PlaceBet(
                         tpCustInfo,
                         Math.Abs(bettingData_AdvantPlayMini.Amount) * -1,
                         (int)Tp.AP,
                         bettingData_AdvantPlayMini.TransId,
                         gameType,
                         bettingData_AdvantPlayMini.TransId,
-                        null,
-                        TpCategory.Slots,
                         out afterAmount,
                         ref bonusId,
+                        out _,
                         conn,
                         trans
                     );
@@ -1327,7 +1316,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             catch (MySqlException mySqlEx)
             {
-                logger.LogError(mySqlEx.Message);
+                _logger.LogError(mySqlEx.Message);
                 // Duplicate
                 if (mySqlEx.Number == 1062)
                 {
@@ -1358,7 +1347,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.Message);
+                _logger.LogError(ex.Message);
                 throw;
             }
         }
@@ -1383,7 +1372,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.Message);
+                _logger.LogError(ex.Message);
                 throw;
             }
         }
@@ -1415,17 +1404,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (result > 0 && placeBetRngDto.amount != 0)
                 {
                     var roundId = placeBetRngDto.friendlygameinstanceid.ToString();
-                    result = PlaceBetV2(
+                    result = PlaceBet(
                         tpCustInfo,
                         Math.Abs(placeBetRngDto.amount) * -1,
                         (int)Tp.HB,
                         roundId,
                         (int)GameType.HB_RNG,
                         placeBetRngDto.transferid,
-                        null,
-                        TpCategory.Slots,
                         out afterAmount,
                         ref bonusId,
+                        out _,
                         conn,
                         trans);
                 }
@@ -1434,7 +1422,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
                 return -1;
             }
         }
@@ -1473,16 +1461,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public bool SetBalance_AMB(TpCustInfo tpCustInfo, BettingDataRNG_AMB data,
             out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
-            var result = PlaceBetV2(tpCustInfo,
+            var result = PlaceBet(tpCustInfo,
                                 data.bet == 0 ? data.amount : data.bet,
                                 (int)Tp.AMB,
                                 data.roundId,  //TpTransId
                                 (int)GameType.AMB_RNG,
                                 data.transactionId,  //RefId
-                                null,
-                                TpCategory.Slots,
                                 out afterAmount,
                                 ref bonusId,
+                                out _,
                                 conn,
                                 trans);
 
@@ -1517,33 +1504,20 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public bool SetBalance_Kiss918(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data,
             out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
-            var result = PlaceBetV2(tpCustInfo,
+            var result = PlaceBet(tpCustInfo,
                                 data.amount,
                                 (int)Tp.Kiss918,
                                 data.NewRoundId,  //TpTransId
                                 (int)GameType.Kiss918_RNG,
                                 data.NewRoundId,  //RefId
-                                null,
-                                TpCategory.Slots,
                                 out afterAmount,
                                 ref bonusId,
+                                out _,
                                 conn,
                                 trans,
                                 memo: $" - {data.referenceID} ");
 
             if (result <= 0)
-                return false;
-
-            return true;
-        }
-
-        public bool AddTpBonus_Kiss918(TpCustInfo tpCustInfo, BettingDataRNG_Kiss918 data, int bonusId, MySqlConnection conn, MySqlTransaction trans)
-        {
-            var result = AddTpBonus((int)Tp.Kiss918, data.referenceID, (int)GameType.Kiss918_RNG,
-                             tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, data.amount,
-                             bonusId, TpCategory.Slots, conn, trans);
-
-            if (result == 0)
                 return false;
 
             return true;
@@ -1600,24 +1574,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 result = _partitionService.Execute(partitionTime, "Service_BettransRng_JILI_Ins_V2", p, trans);
                 if (result > 0 && debit != 0)
                 {
-                    result = PlaceBetV2(
+                    result = PlaceBet(
                         tpCustInfo,
                         debit,
                         (int)Tp.JILI,
                         bettingData_JILI.sessionId.ToString(),
                         gameType,
                         bettingData_JILI.sessionId.ToString(),
-                        null,
-                        category,
                         out afterAmount,
                         ref bonusId,
+                        out decimal useBonus,
                         conn,
                         trans
                     );
 
                     if (bonusId > 0)
                     {
-                        AddTpBonus((int)Tp.JILI, bettingData_JILI.round.ToString(), gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, debit, bonusId, category, conn, trans);
+                        AddTpBonus((int)Tp.JILI, bettingData_JILI.round.ToString(), gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, useBonus, bonusId, trans);
                     }
                 }
 
@@ -1665,7 +1638,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                long timestamp = tools.ConvertLocTime(bettingData_SimplePlay.timestamp, timezone);
+                long timestamp = _tools.ConvertLocTime(bettingData_SimplePlay.timestamp, timezone);
                 var partitionTime = DateTimeOffset.FromUnixTimeSeconds(timestamp).DateTime;
 
                 var p = new DynamicParameters(new
@@ -1693,24 +1666,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    result = PlaceBetV2(
+                    result = PlaceBet(
                         tpCustInfo,
                         Math.Abs(bettingData_SimplePlay.amount) * -1,
                         (int)Tp.SimplePlay,
                         bettingData_SimplePlay.TransId,
                         gameType,
                         bettingData_SimplePlay.TransId,
-                        null,
-                        TpCategory.Slots,
                         out afterAmount,
                         ref bonusId,
+                        out decimal useBonus,
                         conn,
                         trans
                     );
 
                     if (bonusId > 0)
                     {
-                        AddTpBonus((int)Tp.SimplePlay, bettingData_SimplePlay.txnid, gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, bettingData_SimplePlay.amount, bonusId, TpCategory.Slots, conn, trans);
+                        AddTpBonus((int)Tp.SimplePlay, bettingData_SimplePlay.txnid, gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, useBonus, bonusId, trans);
                     }
 
                     if (result > 0)
@@ -1725,7 +1697,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             catch (MySqlException mySqlEx)
             {
-                logger.LogError(mySqlEx.Message);
+                _logger.LogError(mySqlEx.Message);
                 if (mySqlEx.Number == 1062)
                 {
                     /*Duplicate for key 'PRIMARY'*/
@@ -1765,7 +1737,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             if (result > 0 && bettingData_Skywind.amount != 0)
             {
                 var TransId = $"{bettingData_Skywind.round_id}-{bettingData_Skywind.game_id}";
-                result = PlaceBetV2(tpCustInfo, Math.Abs(bettingData_Skywind.amount) * -1, (int)Tp.Skywind, TransId, gameType, TransId, null, tpCategory, out afterAmount, ref bonusId, conn, trans);
+                result = PlaceBet(tpCustInfo, Math.Abs(bettingData_Skywind.amount) * -1, (int)Tp.Skywind, TransId, gameType, TransId, out afterAmount, ref bonusId, out _, conn, trans);
             }
 
             if (result > 0)
@@ -1870,17 +1842,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        result = PlaceBetV2(
+                        result = PlaceBet(
                             tpCustInfo,
                             Math.Abs(data.amount) * -1,
                             (int)Tp.PlayTech,
                             data.roundId,
                             (int)gameType,
                             data.roundId,
-                            null,
-                            tpCategory,
                             out afterAmount,
                             ref bonusId,
+                            out decimal useBonus,
                             conn,
                             trans,
                             memo: $" - {data.transId} "
@@ -1888,7 +1859,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (bonusId > 0)
                         {
-                            AddTpBonus((int)Tp.PlayTech, data.transId, (int)gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, data.amount, bonusId, tpCategory, conn, trans);
+                            AddTpBonus((int)Tp.PlayTech, data.transId, (int)gameType, tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.CurrencyId, tpCustInfo.SiteId, useBonus, bonusId, trans);
                         }
                     }
 
@@ -1905,7 +1876,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 catch (MySqlException mySqlEx)
                 {
                     result = 0;
-                    logger.LogError(mySqlEx.Message);
+                    _logger.LogError(mySqlEx.Message);
                     if (mySqlEx.Number == 1062)
                     {
                         /*Duplicate for key 'PRIMARY'*/
@@ -2008,17 +1979,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     throw new NextspinException(NextspinErrorCode.SystemError);
 
                 var bonusId = 0;
-                result = PlaceBetV2(
+                result = PlaceBet(
                     tpCustInfo: tpCustInfo,
                     amount: Math.Abs(bettingData.amount) * -1,
                     tpId: (int)Tp.Nextspin,
                     tpTransId: bettingData.referenceId,
                     gameType: (int)GameType.Nextspin_RNG,
                     refId: bettingData.transferId,
-                    betData: null,
-                    tpCategory: TpCategory.Slots,
                     afterAmount: out var afterAmount,
                     bonusId: ref bonusId,
+                    useBonus: out _,
                     conn: conn,
                     trans: trans);
                 if (result < 1)
@@ -2043,7 +2013,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             catch (Exception ex)
             {
                 await trans.RollbackAsync();
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
                 throw new NextspinException(NextspinErrorCode.SystemError);
             }
         }
@@ -2107,17 +2077,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    result = PlaceBetV2(
+                    result = PlaceBet(
                         tpCustInfo,
                         Math.Abs(bettingData_Endorphina.amount) * -1,
                         (int)tpId,
                         bettingData_Endorphina.id.ToString(),
                         gameType,
                         bettingData_Endorphina.id.ToString(),
-                        null,
-                        tpCategory,
                         out afterAmount,
                         ref bonusId,
+                        out _,
                         conn,
                         trans
                     );
@@ -2132,7 +2101,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             catch (MySqlException mySqlEx)
             {
                 result = 0;
-                logger.LogError(mySqlEx.Message);
+                _logger.LogError(mySqlEx.Message);
                 _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                 if (mySqlEx.Number == 1062)
                 {
@@ -2165,17 +2134,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     throw new PNGException(PNG_StatsuCodeEnum.Internal, "Reserve fail");
 
                 var bonusId = 0;
-                result = PlaceBetV2(
+                result = PlaceBet(
                     tpCustInfo: tpCustInfo,
                     amount: Math.Abs(bettingData.Amount) * -1,
                     tpId: (int)Tp.PNG,
                     tpTransId: bettingData.RoundId.ToString(),
                     gameType: (int)GameType.PNG_RNG,
                     refId: bettingData.RoundId.ToString(),
-                    betData: null,
-                    tpCategory: TpCategory.Slots,
                     afterAmount: out var afterAmount,
                     bonusId: ref bonusId,
+                    useBonus: out _,
                     conn: conn,
                     trans: trans);
 
@@ -2204,7 +2172,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             catch (PNGException ex)
             {
                 await trans.RollbackAsync();
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
                 throw;
             }
         }
@@ -2248,17 +2216,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (result > 0 && bettingData_Amigo.amount != 0 && string.IsNullOrEmpty(bettingData_Amigo.bonusCode))
                 {
                     // bonuscode bet 無須異動額度
-                    result = PlaceBetV2(
+                    result = PlaceBet(
                         tpCustInfo,
                         bettingData_Amigo.amount,
                         (int)tpId,
                         bettingData_Amigo.roundId.ToString(),
                         (int)tpGameType,
                         bettingData_Amigo.roundId.ToString(),
-                        null,
-                        tpCategory,
                         out afterAmount,
                         ref bonusId,
+                        out _,
                         conn,
                         trans
                     );
