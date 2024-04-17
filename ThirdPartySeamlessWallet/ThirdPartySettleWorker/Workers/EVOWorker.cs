@@ -121,6 +121,7 @@ namespace ThirdPartySettleWorker.Workers
                             if (betRecordInfo.WinlostAmount == 0)
                             {
                                 betRecordInfo.TicketStatus = TicketStatus.Draw;
+                                betRecordInfo.ValidBet = 0m;
                             }
 
                             var result = _settledBll.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
