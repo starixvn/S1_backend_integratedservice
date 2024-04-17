@@ -3629,10 +3629,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         #region WonCasino
         
         public int DeductLC_WonCasino(TpCustInfo tpCustInfo, WonCasinoDeductRequest settleDataLC_WonCasino,
-            out decimal afterAmount)
+            out decimal afterAmount,out string orderNo)
         {
             int bonusId = 0;
             afterAmount = 0;
+            orderNo = "99999999";
             var result = 0;
 
             var tpId = Tp.WonCasino;
@@ -3669,7 +3670,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     amount = settleDataLC_WonCasino.amount,
                     type = settleDataLC_WonCasino.type,
                     currency = settleDataLC_WonCasino.currency,
-                    orderno = settleDataLC_WonCasino.orderno,
                     appid = settleDataLC_WonCasino.appid,
                     sign = settleDataLC_WonCasino.sign,
                     gameid = settleDataLC_WonCasino.bets.gameid,
@@ -3699,7 +3699,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     TicketStatus = settleDataLC_WonCasino.TicketStatus,
                     SettleFlag = settleDataLC_WonCasino.SettleFlag
                 });
-                
+                p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
                 result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
                 if (result > 0 && settleDataLC_WonCasino.amount != 0)
                 {
@@ -3724,6 +3724,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
+                    orderNo = p.Get<long>("SQ").ToString();
                     _mainDbClient.CommitAndDisposeConnection(conn, trans);
                 }
                 else
@@ -3744,7 +3745,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
         
-        public int Deposit_WonCasino(TpCustInfo tpCustInfo, WonCasinoDepositRequest settleDataLC_WonCasino, out decimal afterAmount)
+        public int Deposit_WonCasino(TpCustInfo tpCustInfo, WonCasinoDepositRequest settleDataLC_WonCasino, 
+            out decimal afterAmount,out string orderNo)
         {
             var bonusId = 0;
             var tpId = Tp.WonCasino;
@@ -3753,6 +3755,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var InsSpName = "Service_Bettrans_WonCasino_Ins";
             var GetSpName = "Service_Bettrans_WonCasino_Get";
             afterAmount = 0;
+            orderNo = "99999999";
 
             var result = 0;
             using var conn = _mainDbClient.GetMySqlConnection();
@@ -3786,7 +3789,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     amount = settleDataLC_WonCasino.amount,
                     type = settleDataLC_WonCasino.type,
                     currency = settleDataLC_WonCasino.currency,
-                    orderno = settleDataLC_WonCasino.orderno,
                     appid = settleDataLC_WonCasino.appid,
                     sign = settleDataLC_WonCasino.sign,
                     gameid = settleDataLC_WonCasino.bets.gameid,
@@ -3816,7 +3818,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     TicketStatus = settleDataLC_WonCasino.TicketStatus,
                     SettleFlag = (int)SettleFlag.EndGame
                 });
-                
+                p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
                 result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
 
                 if (result > 0)
@@ -3865,6 +3867,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
+                        orderNo = p.Get<long>("SQ").ToString();
                         _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     }
                     else

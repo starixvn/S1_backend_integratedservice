@@ -19,7 +19,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string serialnumber { get; set; }
         public int type { get; set; }
         public string currency { get; set; }
-        public string orderno { get; set; }
         public WonCasinoBetsData bets { get; set; }
     }
     
@@ -29,7 +28,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string serialnumber { get; set; }
         public int type { get; set; }
         public string currency { get; set; }
-        public string orderno { get; set; }
         public WonCasinoBetsData bets { get; set; }
     }
     public class WonCasinoRollBackRequest : WonCasinoBaseRequest
@@ -117,7 +115,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public long createtime { get; set; }
         public long settletime { get; set; }
         public string currency { get; set; }
-        public string orderno { get; set; }
         public int gameid { get; set; }
         public int userid { get; set; }
         public byte userstatus { get; set; }
@@ -147,7 +144,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal amount { get; set; }
         public int type { get; set; }
         public string currency { get; set; }
-        public string orderno { get; set; }
         public string appid { get; set; }
         public string sign { get; set; }
         public string serialnumber { get; set; }
