@@ -191,9 +191,9 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         /// <summary>
         /// 取回最後一筆FinancialLog紀錄
         /// </summary>
-        public FinancialLog GetFinancialLog(int bonusId)
+        public FinancialLog GetFinancialLog(int transId)
         {
-            var sqlScript = @$"SELECT * FROM FinancialLog_{DateTime.Now:yyyyMM} WHERE RefTransId='{bonusId}' ORDER BY Id DESC LIMIT 1;;";
+            var sqlScript = @$"SELECT * FROM FinancialLog_{DateTime.Now:yyyyMM} WHERE RefTransId='{transId}' ORDER BY Id DESC LIMIT 1;";
             return _mySqlClient.Query<FinancialLog>(sqlScript, CommandType.Text).FirstOrDefault();
         }
 
@@ -221,7 +221,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             return _mySqlClient.Query<CustTransSummary>(sqlScript, CommandType.Text).FirstOrDefault();
         }
 
-        public int AddTpSeamlessBonus(TpSeamlessBonus tpSeamlessBonus)
+        public int AddTpSeamlessBonus(ThirdPartySeamlessWallet.Service.Model.TpSeamlessBonus tpSeamlessBonus)
         {
             return _mySqlClient.Execute("Service_TpSeamlessBonus_Ins", CommandType.StoredProcedure, tpSeamlessBonus);
         }

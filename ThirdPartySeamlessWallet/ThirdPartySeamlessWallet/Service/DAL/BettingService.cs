@@ -15,30 +15,33 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 {
     public partial class BettingService
     {
-        private readonly WalletService walletService;
-        private readonly Tools tools;
-        private readonly ILogger<BettingService> logger;
+        private readonly WalletService _walletService;
+        private readonly Tools _tools;
+        private readonly ILogger<BettingService> _logger;
         private readonly MySqlClient _mainDbClient;
         private readonly PartitionService _partitionService;
-        private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly TpUnsettleService _tpUnsettleService;
         private readonly BonusWalletBLL _bonusWalletBLL;
 
         public BettingService(IServiceProvider provider)
         {
-            walletService = provider.GetRequiredService<WalletService>();
-            tools = provider.GetRequiredService<Tools>();
-            logger = provider.GetRequiredService<ILogger<BettingService>>();
+            _walletService = provider.GetRequiredService<WalletService>();
+            _tools = provider.GetRequiredService<Tools>();
+            _logger = provider.GetRequiredService<ILogger<BettingService>>();
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
             _partitionService = provider.GetRequiredService<PartitionService>();
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
-            _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
             _bonusWalletBLL = provider.GetRequiredService<BonusWalletBLL>();
         }
 
-        public int AddTpBonus(int tpId, string transId, int gameType, int custId, string userName, int currencyId, int siteId, decimal stake, int bonusId, TpCategory tpCategory, MySqlConnection conn, MySqlTransaction trans)
-        {
+        public int AddTpBonus(int tpId, string transId, int gameType, int custId, string userName, int currencyId, int siteId, decimal useBonus, int bonusId, MySqlTransaction trans, SetTpSeamlessBonusType setTpSeamlessBonusType = SetTpSeamlessBonusType.Insert)
+        {            
             if (bonusId == 0)
+            {
+                return 0;
+            }
+
+            if (useBonus <= 0)
             {
                 return 0;
             }
@@ -54,14 +57,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 UserName = userName,
                 CurrencyId = currencyId,
                 SiteId = siteId,
-                Stake = stake,
+                Stake = useBonus,
                 BonusId = bonusId,
             };
-            return AddTpSeamlessBonus(tpSeamlessBonus, trans);
+            return AddTpSeamlessBonus(tpSeamlessBonus, trans, setTpSeamlessBonusType);
         }
 
-        public int PlaceBetV2(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, string refId, string betData, TpCategory tpCategory, out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans, string memo = "")
+        public int PlaceBet(TpCustInfo tpCustInfo, decimal amount, int tpId, string tpTransId, int gameType, string refId, out decimal afterAmount, ref int bonusId, out decimal useBonus, MySqlConnection conn, MySqlTransaction trans, string memo = "")
         {
+            useBonus = 0;
             afterAmount = 0;
             int result = 0;
             try
@@ -73,12 +77,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     bonusId = custBonus.BonusId;
 
                     // 用BonusId扣除CustBonus餘額
-                    result = walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount):#,##0.##}", refId, out afterAmount, ref bonusId, conn, trans);
+                    result = _walletService.SetBonus(gameType, tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount):#,##0.##}", refId, out decimal afterBonus, ref bonusId, conn, trans);
 
                     // 新增tpSeamlessBonus紀錄
                     if (result > 0)
                     {
                         var stake = Math.Abs(amount);
+                        useBonus = afterBonus < 0 ? stake + afterBonus : stake;
                         var tpSeamlessBonus = new TpSeamlessBonus
                         {
                             PromotionCategoryId = custBonus.PromoCategoryId,
@@ -89,25 +94,25 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             UserName = tpCustInfo.UserName,
                             CurrencyId = tpCustInfo.CurrencyId,
                             SiteId = tpCustInfo.SiteId,
-                            Stake = afterAmount < 0 ? stake + afterAmount : stake, // 紀錄實際使用的Bonus金額
+                            Stake = useBonus, // 紀錄實際使用的Bonus金額
                             BonusId = bonusId,
                         };
-                        AddTpSeamlessBonus(tpSeamlessBonus, trans);
+                        AddTpSeamlessBonus(tpSeamlessBonus, trans, SetTpSeamlessBonusType.Insert);
                     }
 
-                    if (afterAmount < 0)
+                    if (afterBonus < 0)
                     {
-                        amount = afterAmount;
-                        result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount):#,##0.##}", refId, out afterAmount, conn, trans);
+                        amount = afterBonus;
+                        result = _walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount):#,##0.##}", refId, out afterAmount, conn, trans);
                     }
                     else
                     {
-                        afterAmount += walletService.GetBalance(tpCustInfo.CustId);
+                        afterAmount = afterBonus + _walletService.GetBalance(tpCustInfo.CustId);
                     }
                 }
                 else
                 {
-                    result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount):#,##0.##}", refId, out afterAmount, conn, trans);
+                    result = _walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, amount, tpId, TransType.Wagers, $"Stake{memo}: {Math.Abs(amount):#,##0.##}", refId, out afterAmount, conn, trans);
                 }
             }
             catch (Exception ex)
@@ -122,19 +127,23 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     tpTransId,
                     gameType,
                     refId,
-                    tpCategory,
                     afterAmount,
                     bonusId,
                 };
-                logger.LogError(ex, $"{JsonConvert.SerializeObject(parameter)}\r\n{ex.Message}");
+                _logger.LogError(ex, $"{JsonConvert.SerializeObject(parameter)}\r\n{ex.Message}");
             }
 
             return result;
         }
 
-        private int AddTpSeamlessBonus(TpSeamlessBonus tpSeamlessBonus, MySqlTransaction trans)
+        private int AddTpSeamlessBonus(TpSeamlessBonus tpSeamlessBonus, MySqlTransaction trans, SetTpSeamlessBonusType setTpSeamlessBonusType)
         {
-            return _mainDbClient.Execute("Service_TpSeamlessBonus_Ins", trans, tpSeamlessBonus);
+            var sp = setTpSeamlessBonusType switch
+            {
+                SetTpSeamlessBonusType.Insert => "Service_TpSeamlessBonus_Ins",
+                SetTpSeamlessBonusType.Update => "Service_TpSeamlessBonus_Set",
+            };       
+            return _mainDbClient.Execute(sp, trans, tpSeamlessBonus);
         }
     }
 }

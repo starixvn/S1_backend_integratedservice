@@ -1,7 +1,11 @@
 ﻿using System.Data;
+
 using Dapper;
+
 using MySql.Data.MySqlClient;
+
 using Newtonsoft.Json;
+
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
@@ -45,7 +49,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (p.Get<int>("result") == 1)
                 {
-                    result = walletService.SetBalance(
+                    result = _walletService.SetBalance(
                         tpCustInfo.CustId,
                         tpCustInfo.SiteId,
                         tpCustInfo.UserName,
@@ -117,7 +121,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    result = walletService.SetBalance(
+                    result = _walletService.SetBalance(
                         tpCustInfo.CustId,
                         tpCustInfo.SiteId,
                         tpCustInfo.UserName,
@@ -210,18 +214,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     if (result == 0)
                     {
-                        logger.LogInformation("訂單已存在");
+                        _logger.LogInformation("訂單已存在");
                         return new KmDbResult() { SPResult = result, Trx_id = trxId };
                     }
 
-                    logger.LogError("exec Service_BettransPK_KM_Debit_Ins error");
+                    _logger.LogError("exec Service_BettransPK_KM_Debit_Ins error");
                     throw new KmException(KMErrorCode.SystemError);
                 }
 
                 var afterAmount = 0M;
                 if (debitTransaction.amt != 0)
                 {
-                    result = walletService.SetBalance(
+                    result = _walletService.SetBalance(
                         tpCustInfo.CustId,
                         tpCustInfo.SiteId,
                         tpCustInfo.UserName,
@@ -237,7 +241,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     if (result != 1)
                     {
                         await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
-                        logger.LogError($"PlaceBetPK_KM result:{result}, afterAmount:{afterAmount}");
+                        _logger.LogError($"PlaceBetPK_KM result:{result}, afterAmount:{afterAmount}");
                         if (result == 0 && afterAmount < 0)
                         {
                             throw new KmException(KMErrorCode.InsufficientFunds);
@@ -261,7 +265,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             catch (Exception e)
             {
-                logger.LogError(e, $"exec PlaceBetPK_KM failed: {e.Message}");
+                _logger.LogError(e, $"exec PlaceBetPK_KM failed: {e.Message}");
                 await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 throw new KmException(KMErrorCode.SystemError);
             }
@@ -315,11 +319,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     if (result == 0)
                     {
-                        logger.LogInformation($"訂單已存在:{trxId}");
+                        _logger.LogInformation($"訂單已存在:{trxId}");
                         return new KmDbResult() { SPResult = result, Trx_id = trxId };
                     }
 
-                    logger.LogError("exec Service_BettransPK_KM_Debit_Ins error");
+                    _logger.LogError("exec Service_BettransPK_KM_Debit_Ins error");
                     throw new KmException(KMErrorCode.SystemError);
                 }
 
@@ -332,7 +336,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
             catch (Exception e)
             {
-                logger.LogError(e, $"exec PlaceBetPK_KM failed: {e.Message}");
+                _logger.LogError(e, $"exec PlaceBetPK_KM failed: {e.Message}");
                 await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
                 throw new KmException(KMErrorCode.SystemError);
             }
@@ -379,7 +383,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0 && amount != 0)
                 {
-                    result = walletService.SetBalance(
+                    result = _walletService.SetBalance(
                         tpCustInfo.CustId,
                         tpCustInfo.SiteId,
                         tpCustInfo.UserName,
@@ -444,7 +448,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0 && bettingDataPK_V8.money != 0)
                 {
-                    result = walletService.SetBalance(
+                    result = _walletService.SetBalance(
                         tpCustInfo.CustId,
                         tpCustInfo.SiteId,
                         tpCustInfo.UserName,
@@ -468,7 +472,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             catch (MySqlException mySqlEx)
             {
                 result = 0;
-                logger.LogError(mySqlEx.Message);
+                _logger.LogError(mySqlEx.Message);
                 _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                 if (mySqlEx.Number == 1062)
                 {
@@ -542,7 +546,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0 && betDataSet.ActualStake != 0)
                     {
-                        result = walletService.SetBalance(
+                        result = _walletService.SetBalance(
                             tpCustInfo.CustId,
                             tpCustInfo.SiteId,
                             tpCustInfo.UserName,
@@ -588,7 +592,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             catch (MySqlException mySqlEx)
             {
                 result = 0;
-                logger.LogError(mySqlEx.Message);
+                _logger.LogError(mySqlEx.Message);
                 _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                 if (mySqlEx.Number == 1062)
                 {

@@ -749,6 +749,31 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public int ResettleRNG_PG(ResettleDataRNG_PG resettleDataRNG_PG, out decimal afterAmount)
+        {
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.PG, resettleDataRNG_PG.PlayerName);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.PG, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                resettleDataRNG_PG.BetAmount *= tpCurrency.ExchangeRate;
+                resettleDataRNG_PG.WinAmount *= tpCurrency.ExchangeRate;
+                resettleDataRNG_PG.TransferAmount *= tpCurrency.ExchangeRate;
+            }
+
+            var result = settledService.ResettleRNG_PG(tpCustInfo, resettleDataRNG_PG, out afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+                resettleDataRNG_PG.BetAmount /= tpCurrency.ExchangeRate;
+                resettleDataRNG_PG.WinAmount /= tpCurrency.ExchangeRate;
+                resettleDataRNG_PG.TransferAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+
         #endregion
 
         #region Sexy
@@ -2120,9 +2145,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public IEnumerable<SettleData> GetUnsettledList_Netent()
+        public SettleData GetUnsettledList_Netent(string transactionRefId)
         {
-            return settledService.GetUnsettledList_Netent();
+            return settledService.GetUnsettledList_Netent(transactionRefId);
         }
 
         public int SetSettleFlag_Netent(string TransId)
@@ -2185,9 +2210,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public IEnumerable<SettleData> GetUnsettledList_RedTiger()
+        public SettleData GetUnsettledList_RedTiger(string transactionRefId)
         {
-            return settledService.GetUnsettledList_RedTiger();
+            return settledService.GetUnsettledList_RedTiger(transactionRefId);
         }
 
         public int SetSettleFlag_RedTiger(string TransId)
