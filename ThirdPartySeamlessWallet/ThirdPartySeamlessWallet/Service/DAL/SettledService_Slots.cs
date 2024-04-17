@@ -59,11 +59,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
-                    }
-                    else
-                    {
-                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                        result = _tpUnsettleService.InsertTpUnsettle(Tp.GPI, GameType.GPI_RNG, settledDataRNG_GPI.round_id, trans);
+                        if (result > 0)
+                        {
+                            _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                        }
+                        else
+                        {
+                            _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                        }
                     }
                 }
             }
@@ -82,9 +86,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public IEnumerable<SettleDataRNG_GPI> GetUnsettledListRNG_GPI()
+        public IEnumerable<SettleDataRNG_GPI> GetUnsettledListRNG_GPI(string transId)
         {
-            return _mainDbClient.Query<SettleDataRNG_GPI>("Service_BettransRNG_GPI_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            var p = new DynamicParameters(new
+            {
+                _TransId = transId
+            });
+            
+            return _mainDbClient.Query<SettleDataRNG_GPI>("Service_BettransRNG_GPI_Unsettle_Get_V2", commandType: CommandType.StoredProcedure , p);
         }
 
         public int SetSettleFlagRNG_GPI(string roundId, string custId, int SettleFlag)
