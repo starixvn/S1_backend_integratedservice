@@ -69,8 +69,7 @@ public class WonCasinoBLL : IWonCasinoBLL
     public WonCasinoDeductResponse Deduct(WonCasinoDeductRequest request)
     {
         var logName = $"{_thisTp.ToString()}_Deduct";
-        //OrderNo 由接入方自行生產 隨機8位數字
-        var orderNo = GenerateRandomString(0);
+        var orderNo = "99999999";
         var getErrorResponse = new WonCasinoDeductResponse()
         {
             result = (int)WonCasinoErrorCodeEnum.SystemError,
@@ -100,19 +99,17 @@ public class WonCasinoBLL : IWonCasinoBLL
             switch (request.type)
             {
                 case (int)WonCasinoTypeEnum.Bet:
-                    request.orderno = orderNo;
                     request.TicketType = (int)BettransType.Bet;
                     request.TicketStatus = (int)TicketStatus.UnSettled;
                     break;
                 case (int)WonCasinoTypeEnum.Cancel:
-                    request.orderno = orderNo;
                     request.TicketType = (int)BettransType.CancelBet;
                     request.TicketStatus = (int)TicketStatus.Refund;
                     break;
                 
             }
             
-            var result = Deduct_WonCasino(request, out decimal tpAffterAmount);
+            var result = Deduct_WonCasino(request, out decimal tpAffterAmount,out string dbOrderNo);
 
             if (result > 0 || result == -1)
             {
@@ -127,7 +124,7 @@ public class WonCasinoBLL : IWonCasinoBLL
                     result = (int)WonCasinoErrorCodeEnum.Success,
                     desc = WonCasinoErrorCodeEnum.Success.GetEnumDescription(),
                     balance = tpAffterAmount,
-                    orderno = orderNo
+                    orderno = dbOrderNo
                 };
             }
 
@@ -154,7 +151,7 @@ public class WonCasinoBLL : IWonCasinoBLL
     public WonCasinoDepositResponse Deposit(WonCasinoDepositRequest request)
     {
         var logName = $"{_thisTp.ToString()}_Deposit";
-        var orderNo = GenerateRandomString(0);
+        var orderNo = "9999999";
         var getErrorResponse = new WonCasinoDepositResponse()
         {
             result = (int)WonCasinoErrorCodeEnum.SystemError,
@@ -165,8 +162,7 @@ public class WonCasinoBLL : IWonCasinoBLL
         
         try
         {
-            request.orderno = orderNo;
-            var result = Deposit_WonCasino(request, out var tpAfterAmount);
+            var result = Deposit_WonCasino(request, out var tpAfterAmount,out var dbOrderNo);
             if (result > 0 || result == -1)
             {
                 if (tpAfterAmount == 0 || result == -1)
@@ -180,7 +176,7 @@ public class WonCasinoBLL : IWonCasinoBLL
                     result = (int)WonCasinoErrorCodeEnum.Success,
                     desc = WonCasinoErrorCodeEnum.Success.GetEnumDescription(),
                     balance = tpAfterAmount,
-                    orderno = orderNo
+                    orderno = dbOrderNo
                 };
             }
             
@@ -194,6 +190,7 @@ public class WonCasinoBLL : IWonCasinoBLL
                     result = (int)WonCasinoErrorCodeEnum.Success,
                     desc = WonCasinoErrorCodeEnum.Success.GetEnumDescription(),
                     balance = tpAfterAmount,
+                    orderno = dbOrderNo
                 };
             }
         }
@@ -265,10 +262,12 @@ public class WonCasinoBLL : IWonCasinoBLL
     
     #region Exchange
 
-    private int Deduct_WonCasino(WonCasinoDeductRequest bettingData_WonCasino, out decimal afterAmount)
+    private int Deduct_WonCasino(WonCasinoDeductRequest bettingData_WonCasino, out decimal afterAmount, out string orderNo)
     {
         var result = 0;
         afterAmount = 0.00m;
+        orderNo = "9999999";
+        
         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, bettingData_WonCasino.username);
         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)_thisTp, tpCustInfo.CurrencyId);
         var custBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, bettingData_WonCasino.username, _gameType);
@@ -298,9 +297,9 @@ public class WonCasinoBLL : IWonCasinoBLL
         result = bettingData_WonCasino.type switch
         {
             (int)WonCasinoTypeEnum.Bet => _bettingService.DeductLC_WonCasino(tpCustInfo, bettingData_WonCasino,
-                out afterAmount),
+                out afterAmount, out orderNo),
             (int)WonCasinoTypeEnum.Cancel => _settledService.DeductLC_WonCasino(tpCustInfo, bettingData_WonCasino,
-                out afterAmount),
+                out afterAmount, out orderNo),
             _ => result
         };
 
@@ -311,8 +310,9 @@ public class WonCasinoBLL : IWonCasinoBLL
         return result;
     }
     
-    private int Deposit_WonCasino(WonCasinoDepositRequest settleData_WonCasino, out decimal afterAmount)
+    private int Deposit_WonCasino(WonCasinoDepositRequest settleData_WonCasino, out decimal afterAmount,out string orderNo)
     {
+        orderNo = "9999999";
         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, settleData_WonCasino.username);
         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)_thisTp, tpCustInfo.CurrencyId);
 
@@ -345,7 +345,7 @@ public class WonCasinoBLL : IWonCasinoBLL
                 break;
         }
         
-        var result = _settledService.Deposit_WonCasino(tpCustInfo, settleData_WonCasino, out afterAmount);
+        var result = _settledService.Deposit_WonCasino(tpCustInfo, settleData_WonCasino, out afterAmount,out orderNo);
         if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
         {
             afterAmount /= tpCurrency.ExchangeRate;
@@ -451,22 +451,6 @@ public class WonCasinoBLL : IWonCasinoBLL
         var requestNotifyId = notifyId + type + serialNumber;
         return bettransWonCasino.All(i => i.notifyid != requestNotifyId);
     }
-    
-    private static string GenerateRandomString(int mode)
-    {
-        var random = new Random();
-        var numericChars = "0123456789";
-        var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        var stringChars = new char[8];
-        var sourceChars = (mode == 0) ? numericChars : chars;
-
-        for (var i = 0; i < stringChars.Length; i++)
-        {
-            stringChars[i] = sourceChars[random.Next(sourceChars.Length)];
-        }
-        
-        return new string(stringChars);
-    }
 
     private int Rollback_Deduct_Check(IEnumerable<BettransWonCasino> bettransData_WonCasino)
     {
@@ -529,7 +513,6 @@ public class WonCasinoBLL : IWonCasinoBLL
             amount = rollbackData_WonCasino.amount,
             type = rollbackData_WonCasino.type,
             currency =  bettransData.currency,
-            orderno = bettransData.orderno,
             gameid = bettransData.gameid,
             userid = bettransData.userid,
             userstatus = bettransData.userstatus,
@@ -576,7 +559,6 @@ public class WonCasinoBLL : IWonCasinoBLL
             amount = 0.00m,
             type = rollbackData_WonCasino.type,
             currency =  tpCustInfo.TpCurrencyId,
-            orderno = "NA",
             gameid = 0,
             userid = 0,
             userstatus = 1,

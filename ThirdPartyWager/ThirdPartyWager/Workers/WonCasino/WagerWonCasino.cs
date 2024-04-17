@@ -71,7 +71,7 @@ namespace ThirdPartyWager.Workers
                         result += await _wagerWonCasinoBLL.GetWagerAsync(_setting, time.startUnix, time.endUnix);
                     }
 
-                    if (result >= 0)
+                    if (result > 0)
                     {
                         _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, time.endUnix);
                     }

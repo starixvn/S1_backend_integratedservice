@@ -34,6 +34,16 @@ namespace ThirdPartyWager.Service.BLL
                     //page index從0開始所以-1
                     var wagerList = await _apiWonCasinoBLL.GetWagerAsync(item, setting.ApiUrl, startTime, endTime, page - 1);
 
+                    //结果信息(0成功，<0失败)
+                    if (wagerList.result < 0)
+                    {
+                        //TP失敗 直接歸零回傳
+                        msg = $"WonCasino_GetWagerAsync_THIRD_PARTY_ERROR";
+                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(wagerList)}");
+                        successCount = 0;
+                        return successCount;
+                    }
+                    
                     if (wagerList.result == 0)
                     {
                         foreach (var wager in wagerList.array)
@@ -50,13 +60,18 @@ namespace ThirdPartyWager.Service.BLL
                             {
                                 msg = $"INSERT_WAGER(serialnumber: {wager.serialnumber}, id: {wager.id}, state: {wager.state} )";
                                 _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(wager)}\r\n{ex.Message}");
+                                //INSERT失敗到直接歸零回傳
+                                successCount = 0;
+                                return successCount;
                             }
                         }
                         
                         //1個page取2000筆注單資料
                         totalPage = (wagerList.total / 2000) + 1;
                         page++;
-                        
+                        //TP 限制一秒以上
+                        //3秒後在抓下一個currency
+                        Thread.Sleep(3000);
                     }
                     else
                     {
