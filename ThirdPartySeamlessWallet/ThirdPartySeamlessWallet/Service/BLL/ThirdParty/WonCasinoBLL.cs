@@ -578,9 +578,10 @@ public class WonCasinoBLL : IWonCasinoBLL
             bettype = 0,
             cid = 0,
             state = (int)WonCasinoStateEnum.Void,
-            createtime = new DateTimeOffset(DateTime.UtcNow.AddHours(8)).ToUnixTimeSeconds(),
+            //由於Deduct的Rollback request只有給單號，故createTime為Now - 10秒作為TransTime
+            createtime = new DateTimeOffset(DateTime.UtcNow.AddHours(8).AddSeconds(-10)).ToUnixTimeSeconds(),
             settletime =  new DateTimeOffset(DateTime.UtcNow.AddHours(8)).ToUnixTimeSeconds(),
-            UTCBetTime = DateTimeOffset.FromUnixTimeSeconds(new DateTimeOffset(DateTime.UtcNow.AddHours(8)).ToUnixTimeSeconds()).UtcDateTime,
+            UTCBetTime = DateTimeOffset.FromUnixTimeSeconds(new DateTimeOffset(DateTime.UtcNow.AddHours(8).AddSeconds(-10)).ToUnixTimeSeconds()).UtcDateTime,
             UTCSettleTime = DateTimeOffset.FromUnixTimeSeconds(new DateTimeOffset(DateTime.UtcNow.AddHours(8)).ToUnixTimeSeconds()).UtcDateTime,
             TicketType = ticketType,
             TicketStatus = ticketStatus,

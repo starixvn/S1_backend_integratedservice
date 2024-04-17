@@ -48,8 +48,6 @@ namespace ThirdPartyWager.Workers
 
             try
             {
-                // var time = _dateTimeHelper.GetTimeByMinuteRevert(iRangMins, timeZone, _timeFormat, DateTime.UtcNow);
-                
                 quick = 0;
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
                 

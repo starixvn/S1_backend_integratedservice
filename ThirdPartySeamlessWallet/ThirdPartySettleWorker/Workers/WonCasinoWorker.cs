@@ -55,6 +55,7 @@ namespace ThirdPartySettleWorker.Workers
             var logName = $"Settle_WonCasino";
             var getSP = $"Service_Bettrans_WonCasino_Settle_Get";
             var setSP = $"Service_Bettrans_WonCasino_Settle_Set";
+            var getWagerSP = $"Service_TpWager_WonCasino_Get";
             var dueTimeSpan = TimeSpan.FromMinutes(1);
             
             try
@@ -70,10 +71,22 @@ namespace ThirdPartySettleWorker.Workers
 
                 foreach (var wager in tpUnsettleList)
                 {
+                        
                     var getUnsettledList = _partitionService.GetUnsettleDataList<SettleDataWonCasino>(getSP, wager);
                     if(getUnsettledList == null || !getUnsettledList.Any())
                     {
-                        throw new UnsettleNotFoundException($"{_tpName} - WonCasino Can fount TransId : {wager.TransId}.");
+                        //此處去拿TpWager_WonCasino，Bettrans無資料，但有抓回來注單。
+                        //state為-3則代表異常錯誤
+                        //此單並無在我方下注成功，也未打Rollback
+                        //確認後直接刪單，以免卡住TpUnSettle
+                        var tpWagerData = _tpUnSettledBLL.GetTpUnsettleData<TpWagerWonCasinoModel>(getWagerSP, new { TransId = wager.TransId }, DataBase.Wager).FirstOrDefault();
+                        if (tpWagerData.state != -3)
+                        {
+                            throw new UnsettleNotFoundException(
+                                $"{_tpName} - WonCasino Can fount TransId : {wager.TransId}.");
+                        }
+                        _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, wager.TransId, isSuccess: true);
+                        continue;
                     }
                     try
                     {
@@ -177,7 +190,7 @@ namespace ThirdPartySettleWorker.Workers
                     _ => SettlementType.SettledForValid
                 },
                 (int)WonCasinoTypeEnum.Cancel => SettlementType.SettledForInvalid,
-                (int)WonCasinoTypeEnum.ReSettle => SettlementType.SettledForInvalid,
+                (int)WonCasinoTypeEnum.ReSettle => SettlementType.SettledForValid,
                 _ => SettlementType.SettledForValid
             };
         }
@@ -189,6 +202,25 @@ namespace ThirdPartySettleWorker.Workers
         {
             public int gametype { get; set; }
             public int type { get; set; }
+        }
+        
+        public class TpWagerWonCasinoModel
+        {
+            public int id { get; set; }
+            public int userid { get; set; }
+            public string username { get; set; }
+            public int gameid { get; set; }
+            public int gameroundid { get; set; }
+            public int gameroundno { get; set; }
+            public string gameresult { get; set; }
+            public int state { get; set; }
+            public int bettype { get; set; }
+            public string betpoint { get; set; }
+            public decimal betamount { get; set; }
+            public decimal winlost { get; set; }
+            public decimal betodds { get; set; }
+            public DateTime updatetime { get; set; }
+            public DateTime createtime { get; set; }
         }
         
         #endregion
