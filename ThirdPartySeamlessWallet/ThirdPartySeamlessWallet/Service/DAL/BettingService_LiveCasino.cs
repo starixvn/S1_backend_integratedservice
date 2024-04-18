@@ -1011,7 +1011,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         
         #region CQ9_WWC
         
-        public int RolloutWWC_CQ9(TpCustInfo tpCustInfo, BettingDataRNG_CQ9 bettingDataRNG_CQ9, int gameType, out decimal afterAmount)
+        public int RolloutWCC_CQ9(TpCustInfo tpCustInfo, BettingDataRNG_CQ9 bettingDataRNG_CQ9, int gameType, out decimal afterAmount)
         {
             afterAmount = 0;
             using var conn = _mainDbClient.GetMySqlConnection();
