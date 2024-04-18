@@ -237,6 +237,7 @@ public class TpHelper : ThirdPartyHelperBase
 
     public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
     {
+        // 测试环境仅是提供测试调用，仅有正式环境才可正常查看注单详情内容
         string method = "open.sn.video.order.detail.url.get";
         string currency = tpCustInfo.TpCurrencyId;
         string apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
