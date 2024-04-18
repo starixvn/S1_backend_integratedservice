@@ -4004,5 +4004,103 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         
         #endregion
+        
+        #region CQ9 WCC
+        public int RollinWCC_CQ9(TpCustInfo tpCustInfo, RollinDataFish_CQ9 rollinDataWCC_CQ9, int gameType, ref decimal afterAmount)
+        {
+            var result = 0;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                if (rollinDataWCC_CQ9.amount > 0)
+                {
+                    result = walletService.SetBalance(
+                       tpCustInfo.CustId,
+                       tpCustInfo.SiteId,
+                       tpCustInfo.UserName,
+                       rollinDataWCC_CQ9.amount,
+                       (int)Tp.CQ9,
+                       TransType.Payout,
+                       $"Payout: {Math.Abs(rollinDataWCC_CQ9.amount):#,##0.##}",
+                       rollinDataWCC_CQ9.mtcode,
+                       out afterAmount,
+                       conn,
+                       trans
+                   );
+                }
+
+                if (result > 0 || rollinDataWCC_CQ9.amount == 0)
+                {
+                    //Todo 要在確認正確金額
+                    decimal winlose = rollinDataWCC_CQ9.bet - rollinDataWCC_CQ9.win - rollinDataWCC_CQ9.rake;
+                    var ticketStatus = (int)TicketStatus.Win;
+                    if (winlose < 0)
+                    {
+                        ticketStatus = (int)TicketStatus.Lost;
+                    }
+                    else if (winlose == 0)
+                    {
+                        ticketStatus = (int)TicketStatus.Draw;
+                    }
+
+                    var p = new DynamicParameters(new
+                    {
+                        account = rollinDataWCC_CQ9.account,
+                        gamehall = rollinDataWCC_CQ9.gamehall,
+                        gamecode = rollinDataWCC_CQ9.gamecode,
+                        roundid = rollinDataWCC_CQ9.roundid,
+                        validbet = rollinDataWCC_CQ9.validbet,
+                        bet = Math.Abs(rollinDataWCC_CQ9.bet) * -1,
+                        win = rollinDataWCC_CQ9.win,
+                        roomfee = rollinDataWCC_CQ9.roomfee,
+                        amount = rollinDataWCC_CQ9.amount,
+                        mtcode = rollinDataWCC_CQ9.mtcode,
+                        rake = rollinDataWCC_CQ9.rake,
+                        gametype = rollinDataWCC_CQ9.gametype,
+                        eventUnix = rollinDataWCC_CQ9.eventUnix,
+                        createUnix = rollinDataWCC_CQ9.createUnix,
+                        before = afterAmount - (Math.Abs(rollinDataWCC_CQ9.amount)),
+                        balance = afterAmount,
+                        Actions = "rollin",
+                        TicketStatus = ticketStatus,
+                        TicketType = (int)BettransType.Payout,
+                        SettleFlag = (rollinDataWCC_CQ9.bet == 0 && rollinDataWCC_CQ9.win == 0) ? 1 : 2
+                    });
+
+                    result = _mainDbClient.Execute("Service_BettransFish_CQ9_Payout_Ins", trans, p);
+
+                    if (result > 0)
+                    {
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                    }
+                }
+
+            }
+            catch (MySqlException mySqlEx)
+            {
+                /*Duplicate for key 'PRIMARY'*/
+                if (mySqlEx.Number == 1062)
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+        
+        #endregion
     }
 }
