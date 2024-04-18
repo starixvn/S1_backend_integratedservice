@@ -33,14 +33,14 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     //page index從0開始所以-1
                     var wagerList = await _apiWonCasinoBLL.GetWagerAsync(item, setting.ApiUrl, startTime, endTime, page - 1);
-
+                    
                     //结果信息(0成功，<0失败)
                     if (wagerList.result < 0)
                     {
-                        //TP失敗 直接歸零回傳
+                        //TP失敗 直接-1回傳
                         msg = $"WonCasino_GetWagerAsync_THIRD_PARTY_ERROR";
                         _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(wagerList)}");
-                        successCount = 0;
+                        successCount = -1;
                         return successCount;
                     }
                     
@@ -51,18 +51,19 @@ namespace ThirdPartyWager.Service.BLL
                             try
                             {
                                 var result = await _wagerWonCasinoService.InsertWager(wager);
+                                result = -1;
                                 if (result >= 1)
                                 {
                                     _ = _tpUnsettleService.InsertTpUnsettle(Tp.WonCasino, GameType.WonCasino_LiveCasino, wager.id.ToString());
                                 }
+                                else
+                                {
+                                    return LogAndReturnFailure(wager.serialnumber, wager.id, wager.state, wager);
+                                }
                             }
                             catch (Exception ex)
                             {
-                                msg = $"INSERT_WAGER(serialnumber: {wager.serialnumber}, id: {wager.id}, state: {wager.state} )";
-                                _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(wager)}\r\n{ex.Message}");
-                                //INSERT失敗到直接歸零回傳
-                                successCount = 0;
-                                return successCount;
+                                return LogAndReturnFailure(wager.serialnumber, wager.id, wager.state, wager, ex);
                             }
                         }
                         
@@ -82,6 +83,20 @@ namespace ThirdPartyWager.Service.BLL
                 successCount++;
             }
             return successCount;
+        }
+        
+        private int LogAndReturnFailure(string serialnumber, int id, int state, object wager, Exception ex = null)
+        {
+            string msg = $"INSERT_WAGER(serialnumber: {serialnumber}, id: {id}, state: {state} )";
+            if (ex == null)
+            {
+                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(wager)}\r\nresult = -1");
+            }
+            else
+            {
+                _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(wager)}\r\n{ex.Message}");
+            }
+            return -1;
         }
     }
 }
