@@ -836,6 +836,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
+                    _ = _tpUnsettleService.InsertTpUnsettle(Tp.One789, (GameType)gameType, mixUniqueId, trans);
+
                     _mainDbClient.CommitAndDisposeConnection(conn, trans);
                 }
                 else
@@ -925,6 +927,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
+                        _ = _tpUnsettleService.InsertTpUnsettle(Tp.One789, (GameType)gameType, mixUniqueId, trans);
+
                         _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     }
                     else
