@@ -3984,6 +3984,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
+                        result = _tpUnsettleService.InsertTpUnsettle(Tp.Netent, GameType.Netent_RNG, bettingData_EVO.transaction.refId, trans);
+                    }
+
+                    if (result > 0)
+                    {
                         _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     }
                     else
@@ -4067,9 +4072,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public IEnumerable<SettleData> GetUnsettledList_Netent()
+        public SettleData GetUnsettledList_Netent(string transactionRefId)
         {
-            return _mainDbClient.Query<SettleData>("Service_BettransRng_Netent_Unsettle_Get");
+            return _mainDbClient.QueryFirst<SettleData>("Service_BettransRng_Netent_Unsettle_Get_V2", parameters: new DynamicParameters(new { TransactionRefId = transactionRefId }));
         }
 
         public int SetSettleFlag_Netent(string TransId)
@@ -4233,6 +4238,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
+                        result = _tpUnsettleService.InsertTpUnsettle(Tp.RedTiger, GameType.RedTiger_RNG, bettingData_EVO.transaction.refId, trans);
+                    }
+
+                    if (result > 0)
+                    {
                         _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     }
                     else
@@ -4315,9 +4325,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public IEnumerable<SettleData> GetUnsettledList_RedTiger()
+        public SettleData GetUnsettledList_RedTiger(string transactionRefId)
         {
-            return _mainDbClient.Query<SettleData>("Service_BettransRng_RedTiger_Unsettle_Get");
+            return _mainDbClient.QueryFirst<SettleData>("Service_BettransRng_RedTiger_Unsettle_Get_V2", parameters: new DynamicParameters(new { TransactionRefId = transactionRefId }));
         }
 
         public int SetSettleFlag_RedTiger(string TransId)
