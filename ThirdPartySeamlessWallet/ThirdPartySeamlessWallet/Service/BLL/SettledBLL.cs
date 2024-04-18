@@ -1424,6 +1424,49 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public int RollinWCC_CQ9(RollinDataFish_CQ9 rollinDataFish_CQ9, int gameType, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, rollinDataFish_CQ9.account);
+            if (tpCustInfo == null)
+            {
+                afterAmount = 0;
+                return -21;
+            }
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CQ9, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                rollinDataFish_CQ9.validbet *= tpCurrency.ExchangeRate;
+                rollinDataFish_CQ9.bet *= tpCurrency.ExchangeRate;
+                rollinDataFish_CQ9.win *= tpCurrency.ExchangeRate;
+                rollinDataFish_CQ9.roomfee *= tpCurrency.ExchangeRate;
+                rollinDataFish_CQ9.amount *= tpCurrency.ExchangeRate;
+                rollinDataFish_CQ9.rake *= tpCurrency.ExchangeRate;
+            }
+
+            if (rollinDataFish_CQ9.amount == 0)
+            {
+                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.CQ9, rollinDataFish_CQ9.account, gameType);
+                afterAmount = tpCustBalance.Balance;
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    afterAmount *= tpCurrency.ExchangeRate;
+                }
+            }
+
+            var result = settledService.RollinWCC_CQ9(tpCustInfo, rollinDataFish_CQ9, gameType, ref afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+        
+        
+        
         public IEnumerable<SettleDataRNG_CQ9> GetUnsettledListRNG_CQ9()
         {
             return settledService.GetUnsettledListRNG_CQ9();
@@ -1440,6 +1483,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         }
 
         public int SetSettleFlagFish_CQ9(string roundid, int SettleFlag)
+        {
+            return settledService.SetSettleFlagFish_CQ9(roundid, SettleFlag);
+        }
+        
+        public IEnumerable<SettleDataRNG_CQ9> GetUnsettledListWCC_CQ9()
+        {
+            return settledService.GetUnsettledListFish_CQ9();
+        }
+
+        public int SetSettleFlagWCC_CQ9(string roundid, int SettleFlag)
         {
             return settledService.SetSettleFlagFish_CQ9(roundid, SettleFlag);
         }

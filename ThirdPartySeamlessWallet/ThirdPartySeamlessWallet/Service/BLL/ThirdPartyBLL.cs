@@ -163,6 +163,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     {
                         gameType = GameType.CQ9_Fish;
                     }
+
+                    if (gameId == "CMCOCKFIGHT01")
+                    {
+                        gameType = GameType.CQ9_WCC;
+                    }
                     break;
                 case (int)Tp.JILI:
                     gameType = GameType.JILI_RNG;
