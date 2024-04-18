@@ -261,10 +261,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
-        public IEnumerable<SettleDataRNG_GPI> GetUnsettledListRNG_GPI()
+        
+        public IEnumerable<SettleDataRNG_GPI> GetUnsettledListRNG_GPI(string transId)
         {
-            return settledService.GetUnsettledListRNG_GPI();
+            return settledService.GetUnsettledListRNG_GPI(transId);
         }
+        
         public int SetSettleFlagRNG_GPI(string roundId, string custId, int SettleFlag)
         {
             return settledService.SetSettleFlagRNG_GPI(roundId, custId, SettleFlag);
@@ -2145,9 +2147,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public IEnumerable<SettleData> GetUnsettledList_Netent()
+        public SettleData GetUnsettledList_Netent(string transactionRefId)
         {
-            return settledService.GetUnsettledList_Netent();
+            return settledService.GetUnsettledList_Netent(transactionRefId);
         }
 
         public int SetSettleFlag_Netent(string TransId)
@@ -2210,9 +2212,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public IEnumerable<SettleData> GetUnsettledList_RedTiger()
+        public SettleData GetUnsettledList_RedTiger(string transactionRefId)
         {
-            return settledService.GetUnsettledList_RedTiger();
+            return settledService.GetUnsettledList_RedTiger(transactionRefId);
         }
 
         public int SetSettleFlag_RedTiger(string TransId)

@@ -41,7 +41,7 @@ namespace ThirdPartyWager.Service.BLL
                         wager.betupdatedon = wager.betupdatedon.ToUniversalTime();
                         wager.timestamp = wager.timestamp.ToUniversalTime();
                         var result = await _wagerKmService.InsertWager(wager);
-                        if (result == 1)
+                        if (result > 0)
                         {
                             _ = _tpUnsettleService.InsertTpUnsettle(Tp.KM, GameType.KM_Poker, wager.ugsbetid);                          
                         }
