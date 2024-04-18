@@ -220,6 +220,7 @@ public class WonCasinoBLL : IWonCasinoBLL
         };
         try
         {
+            //Rollback 無須回傳OrderNo
             var result = Rollback_WonCasino(request, out var tpAfterAmount);
             if (result > 0 || result == -1)
             {

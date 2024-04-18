@@ -1038,6 +1038,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 //若TicketStatus已經為 Refund = 3,/*Reject, Refund, Void, Draw*/,就不給再次扣款了。
                 if (bettrans.Any(i => i.TicketStatus == (int)TicketStatus.Refund))
                 {
+                    orderNo = bettrans.LastOrDefault().SQ.ToString();
                     return -2;
                 }
                 

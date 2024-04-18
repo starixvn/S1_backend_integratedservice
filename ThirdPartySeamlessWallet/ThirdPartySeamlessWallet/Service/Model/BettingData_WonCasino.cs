@@ -105,6 +105,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class BettransWonCasino : WonCasinoBaseRequest
     {
+        public long SQ { get; set; }
         public long id { get; set; }
         public int type { get; set; }
         public decimal amount { get; set; }

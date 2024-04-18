@@ -3655,6 +3655,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 //若TicketStatus已經為 Refund = 3,/*Reject, Refund, Void, Draw*/,就不給再次扣款了。
                 if (bettrans.Any(i => i.TicketStatus == (int)TicketStatus.Refund))
                 {
+                    orderNo = bettrans.LastOrDefault().SQ.ToString();
                     return -2;
                 }
                 
@@ -3774,6 +3775,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 //若TicketStatus已經為 Refund = 3,/*Reject, Refund, Void, Draw*/,就不給再次結算。
                 if (bettrans.Any(i => i.TicketStatus == (int)TicketStatus.Refund))
                 {
+                    orderNo = bettrans.LastOrDefault().SQ.ToString();
                     return -2;
                 }
 
@@ -3911,6 +3913,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 
                 rollbackDataLC_WonCasino.username = tpCustInfo.TpUserName;
                 var p = new DynamicParameters(rollbackDataLC_WonCasino);
+                p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
                 result = _partitionService.Execute(partitionTime, SetSpName, p, trans);
 
                 if (result > 0)
