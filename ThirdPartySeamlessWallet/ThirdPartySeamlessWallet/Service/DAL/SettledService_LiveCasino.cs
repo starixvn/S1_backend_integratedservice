@@ -4071,7 +4071,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         SettleFlag = (rollinDataWCC_CQ9.bet == 0 && rollinDataWCC_CQ9.win == 0) ? 1 : 2
                     });
 
-                    result = _mainDbClient.Execute("Service_BettransFish_CQ9_Payout_Ins", trans, p);
+                    result = _mainDbClient.Execute("Service_BettransWCC_CQ9_Payout_Ins", trans, p);
 
                     if (result > 0)
                     {
@@ -4096,6 +4096,57 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     throw mySqlEx;
                 }
+            }
+
+            return result;
+        }
+        
+        public int RefundWCC_CQ9(TpCustInfo tpCustInfo, RefundDataRNG_CQ9 refundDataRNG_CQ9, out decimal afterAmount)
+        {
+            afterAmount = 0;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            var result = _mainDbClient.Execute("Service_BettransWCC_CQ9_Refund_Set", trans, new
+            {
+                mtcode = refundDataRNG_CQ9.mtcode,
+                before = afterAmount - Math.Abs(refundDataRNG_CQ9.amount),
+                balance = afterAmount,
+            });
+
+            if (result > 0)
+            {
+                if (refundDataRNG_CQ9.amount != 0)
+                {
+                    result = walletService.SetBalance(
+                        tpCustInfo.CustId,
+                        tpCustInfo.SiteId,
+                        tpCustInfo.UserName,
+                        Math.Abs(refundDataRNG_CQ9.amount),
+                        (int)Tp.CQ9,
+                        TransType.Refunds,
+                        $"Refund: {Math.Abs(refundDataRNG_CQ9.amount):#,##0.##}",
+                        refundDataRNG_CQ9.mtcode,
+                        out afterAmount,
+                        conn,
+                        trans
+                    );
+                }
+
+                if (result > 0)
+                {
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                }
+            }
+            else
+            {
+                return -1;
             }
 
             return result;

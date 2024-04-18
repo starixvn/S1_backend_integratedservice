@@ -2313,6 +2313,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     return data;
                 }
             }
+            
+            if (data == null || data.Count() == 0)
+            {
+                data = _mainDbClient.Query<Record_CQ9>("Service_BettransWCC_CQ9_Get", commandType: CommandType.StoredProcedure, new { mtcode = mtcode });
+                if (data.Count() > 0)
+                {
+                    data.ElementAt(0).TableType = (int)GameType.CQ9_WCC;
+                    return data;
+                }
+            }
 
             if (data == null || data.Count() == 0)
             {

@@ -1276,14 +1276,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 refundDataRNG_CQ9.amount *= tpCurrency.ExchangeRate;
             }
 
-            if (gameType == (int)GameType.CQ9_Fish)
+            result = gameType switch
             {
-                result = settledService.RefundFish_CQ9(tpCustInfo, refundDataRNG_CQ9, out afterAmount);
-            }
-            else
-            {
-                result = settledService.RefundRNG_CQ9(tpCustInfo, refundDataRNG_CQ9, refundDataRNG_CQ9.amount, refundDataRNG_CQ9.roundid, out afterAmount);
-            }
+                (int)GameType.CQ9_Fish => settledService.RefundFish_CQ9(tpCustInfo, refundDataRNG_CQ9, out afterAmount),
+                (int)GameType.CQ9_RNG => settledService.RefundRNG_CQ9(tpCustInfo, refundDataRNG_CQ9,
+                    refundDataRNG_CQ9.amount, refundDataRNG_CQ9.roundid, out afterAmount),
+                (int)GameType.CQ9_WCC => settledService.RefundWCC_CQ9(tpCustInfo, refundDataRNG_CQ9, out afterAmount),
+                _ => result
+            };
 
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {

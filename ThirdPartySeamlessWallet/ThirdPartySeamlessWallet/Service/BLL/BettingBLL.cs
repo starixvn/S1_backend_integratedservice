@@ -397,7 +397,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 bettingDataRNG_CQ9.amount *= tpCurrency.ExchangeRate;
             }
 
-            var result = bettingService.RolloutWWC_CQ9(tpCustInfo, bettingDataRNG_CQ9, gameType, out afterAmount);
+            var result = bettingService.RolloutWCC_CQ9(tpCustInfo, bettingDataRNG_CQ9, gameType, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
