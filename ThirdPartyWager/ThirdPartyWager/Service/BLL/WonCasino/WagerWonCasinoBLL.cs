@@ -51,7 +51,7 @@ namespace ThirdPartyWager.Service.BLL
                             try
                             {
                                 var result = await _wagerWonCasinoService.InsertWager(wager);
-                                result = -1;
+                                
                                 if (result >= 1)
                                 {
                                     _ = _tpUnsettleService.InsertTpUnsettle(Tp.WonCasino, GameType.WonCasino_LiveCasino, wager.id.ToString());

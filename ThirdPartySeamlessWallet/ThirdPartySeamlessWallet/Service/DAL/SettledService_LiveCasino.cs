@@ -3769,6 +3769,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     new { id = settleDataLC_WonCasino.bets.id , username = tpCustInfo.TpUserName });
                 if (!bettrans.Any(i => i.id == settleDataLC_WonCasino.bets.id))
                 {
+                    orderNo = bettrans.LastOrDefault()?.SQ.ToString() ?? orderNo;
                     return -2;
                 }
                 
@@ -3982,6 +3983,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
+                        _tpUnsettleService.InsertTpUnsettle(Tp.WonCasino, GameType.WonCasino_LiveCasino, rollbackDataLC_WonCasino.id.ToString(), trans);
                         _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     }
                     else
