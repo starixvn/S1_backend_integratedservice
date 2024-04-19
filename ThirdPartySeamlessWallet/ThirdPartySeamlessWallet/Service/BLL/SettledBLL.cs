@@ -1465,9 +1465,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
         
-        
-        
-        public IEnumerable<SettleDataRNG_CQ9> GetUnsettledListRNG_CQ9()
+        public SettleDataRNG_CQ9 GetUnsettledListRNG_CQ9(string transId)
         {
             return settledService.GetUnsettledListRNG_CQ9(transId);
         }
@@ -1487,10 +1485,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlagFish_CQ9(roundid, SettleFlag);
         }
         
-        public IEnumerable<SettleDataRNG_CQ9> GetUnsettledListWCC_CQ9()
-        {
-            return settledService.GetUnsettledListFish_CQ9();
-        }
+        // public IEnumerable<SettleDataRNG_CQ9> GetUnsettledListWCC_CQ9()
+        // {
+        //     return settledService.GetUnsettledListFish_CQ9();
+        // }
 
         public int SetSettleFlagWCC_CQ9(string roundid, int SettleFlag)
         {

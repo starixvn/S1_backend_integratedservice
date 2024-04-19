@@ -216,8 +216,9 @@ namespace ThirdPartySettleWorker.Workers
 
             try
             {
-                var unsettledList = _settledBLL.GetUnsettledListWCC_CQ9();
-
+                //var unsettledList = _settledBll.GetUnsettledListWCC_CQ9();
+                var unsettledList = new List<SettleDataRNG_CQ9>();
+                
                 if (unsettledList != null)
                 {
                     forContinue = unsettledList.Count() == 200;
@@ -225,7 +226,7 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         try
                         {
-                            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
+                            var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache(thisTp, unsettled.Account);
 
                             var betRecordInfo = new BetRecordInfo
                             {
@@ -242,9 +243,9 @@ namespace ThirdPartySettleWorker.Workers
                                 GameID = unsettled.GameId
                             };
 
-                            var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, category);
+                            var result = _settledBll.Settled(tpCustInfo, betRecordInfo, category);
 
-                            _settledBLL.SetSettleFlagWCC_CQ9(unsettled.roundid, 1);
+                            _settledBll.SetSettleFlagWCC_CQ9(unsettled.roundid, 1);
                         }
                         catch (Exception ex1)
                         {
