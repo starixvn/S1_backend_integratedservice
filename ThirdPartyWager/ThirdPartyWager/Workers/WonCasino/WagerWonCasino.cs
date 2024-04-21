@@ -66,7 +66,7 @@ namespace ThirdPartyWager.Workers
 
                         if (_setting == null) continue;
 
-                        result += await _wagerWonCasinoBLL.GetWagerAsync(_setting, time.startUnix, time.endUnix);
+                        result = await _wagerWonCasinoBLL.GetWagerAsync(_setting, time.startUnix, time.endUnix);
                         if (result < 0)
                         {
                             //第三方因素或Insert失敗回傳為-1，直接進break不再更新時間。
