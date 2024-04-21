@@ -452,12 +452,6 @@ public class WonCasinoBLL : IWonCasinoBLL
         //若bettransData_WonCasino無資料為空 回1;
         if (bettransData_WonCasino.Count() == 0) return 1;
         
-        // if(!VerifyNotifyId(rollbackData_WonCasino.notifyid, rollbackData_WonCasino.type.ToString(),
-        //         rollbackData_WonCasino.serialnumber, bettransData_WonCasino))
-        // {
-        //     
-        // }
-        
         if (bettransData_WonCasino.All(i => i.TicketStatus == (int)TicketStatus.UnSettled
                                             && i.TicketType == (int)BettransType.Bet
                                             && i.SettleFlag == (int)SettleFlag.Running))
