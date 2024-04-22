@@ -1557,11 +1557,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         #endregion
 
         #region CQ9
-
         public int PayoutRNG_CQ9(TpCustInfo tpCustInfo, EndRoundDataRNG_CQ9 endRoundDataRNG_CQ9, ref decimal afterAmount)
         {
             int bonusId = 0;
-            int gameType = (int)GameType.CQ9_RNG;
+            var gameType = GameType.CQ9_RNG;
             var result = 0;
 
             using var conn = _mainDbClient.GetMySqlConnection();
@@ -1580,7 +1579,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             item.amount,
                             (int)Tp.CQ9,
                             endRoundDataRNG_CQ9.roundid,
-                            gameType,
+                            (int)gameType,
                             TpCategory.Slots,
                             item.mtcode,
                             TransType.Payout,
@@ -1624,7 +1623,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (insertRes > 0)
                         {
-                            cntSucc++;
+                            insertRes = _tpUnsettleService.InsertTpUnsettle(Tp.CQ9, gameType, endRoundDataRNG_CQ9.roundid, trans);
+                            if (insertRes > 0)
+                            {
+                                cntSucc++;
+                            }
                         }
                     }
                 }
@@ -1928,7 +1931,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         public int CreditRNG_CQ9(TpCustInfo tpCustInfo, BettingDataRNG_CQ9 bettingDataRNG_CQ9, out decimal afterAmount)
         {
             int bonusId = 0;
-            int gameType = (int)GameType.CQ9_RNG;
+            var gameType = GameType.CQ9_RNG;
 
             afterAmount = 0;
             using var conn = _mainDbClient.GetMySqlConnection();
@@ -1947,7 +1950,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         bettingDataRNG_CQ9.amount,
                         (int)Tp.CQ9,
                         bettingDataRNG_CQ9.roundid,
-                        gameType,
+                        (int)gameType,
                         TpCategory.Slots,
                         bettingDataRNG_CQ9.mtcode,
                         TransType.Undo,
@@ -1979,14 +1982,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         var insertRes = _mainDbClient.Execute("Service_BettransRng_CQ9_Ins", trans, p);
                         if (insertRes > 0)
                         {
-                            var settleRes = _mainDbClient.Execute("Service_BettransRng_CQ9_Settle_Set", trans, new { roundid = bettingDataRNG_CQ9.roundid, SettleFlag = 2 });
-                            if (settleRes > 0)
+                            insertRes = _tpUnsettleService.InsertTpUnsettle(Tp.CQ9, gameType, bettingDataRNG_CQ9.roundid, trans);
+                            if (insertRes > 0)
                             {
-                                _mainDbClient.CommitAndDisposeConnection(conn, trans);
-                            }
-                            else
-                            {
-                                _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                                var settleRes = _mainDbClient.Execute("Service_BettransRng_CQ9_Settle_Set", trans, new { roundid = bettingDataRNG_CQ9.roundid, SettleFlag = 2 });
+                                if (settleRes > 0)
+                                {
+                                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                                }
+                                else
+                                {
+                                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                                }
                             }
                         }
                     }
@@ -2059,14 +2066,18 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
-                        var settleRes = _mainDbClient.Execute("Service_BettransFish_CQ9_Settle_Set", trans, new { roundid = bettingDataRNG_CQ9.roundid, SettleFlag = 2 });
-                        if (settleRes > 0)
+                        result = _tpUnsettleService.InsertTpUnsettle(Tp.CQ9, GameType.CQ9_Fish, bettingDataRNG_CQ9.roundid, trans);
+                        if (result > 0)
                         {
-                            _mainDbClient.CommitAndDisposeConnection(conn, trans);
-                        }
-                        else
-                        {
-                            _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                            var settleRes = _mainDbClient.Execute("Service_BettransFish_CQ9_Settle_Set", trans, new { roundid = bettingDataRNG_CQ9.roundid, SettleFlag = 2 });
+                            if (settleRes > 0)
+                            {
+                                _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                            }
+                            else
+                            {
+                                _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                            }
                         }
                     }
                 }
@@ -2164,7 +2175,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public int RollinFish_CQ9(TpCustInfo tpCustInfo, RollinDataFish_CQ9 rollinDataFish_CQ9, int gameType, ref decimal afterAmount)
+        public int RollinFish_CQ9(TpCustInfo tpCustInfo, RollinDataFish_CQ9 rollinDataFish_CQ9, GameType gameType, ref decimal afterAmount)
         {
             var result = 0;
 
@@ -2204,6 +2215,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         ticketStatus = (int)TicketStatus.Draw;
                     }
 
+                    var settleFlag = (rollinDataFish_CQ9.bet == 0 && rollinDataFish_CQ9.win == 0) ? 1 : 2;
                     var p = new DynamicParameters(new
                     {
                         account = rollinDataFish_CQ9.account,
@@ -2224,12 +2236,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         balance = afterAmount,
                         Actions = "rollin",
                         TicketStatus = ticketStatus,
-                        TicketType = (int)BettransType.Payout,
-                        SettleFlag = (rollinDataFish_CQ9.bet == 0 && rollinDataFish_CQ9.win == 0) ? 1 : 2
+                        TicketType = (int) BettransType.Payout,
+                        SettleFlag = settleFlag
                     });
 
                     result = _mainDbClient.Execute("Service_BettransFish_CQ9_Payout_Ins", trans, p);
 
+                    if (result > 0 && settleFlag == 2)
+                    {
+                        result = _tpUnsettleService.InsertTpUnsettle(Tp.CQ9, gameType, rollinDataFish_CQ9.roundid, trans);
+                    }
+                    
                     if (result > 0)
                     {
                         _mainDbClient.CommitAndDisposeConnection(conn, trans);
@@ -2258,9 +2275,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public IEnumerable<SettleDataRNG_CQ9> GetUnsettledListRNG_CQ9()
+        public SettleDataRNG_CQ9 GetUnsettledListRNG_CQ9(string transId)
         {
-            return _mainDbClient.Query<SettleDataRNG_CQ9>("Service_BettransRng_CQ9_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
+            return _mainDbClient.QueryFirst<SettleDataRNG_CQ9>("Service_BettransRng_CQ9_Unsettle_Get_V3", new DynamicParameters( new { TransId = transId }));
         }
 
         public int SetSettleFlagRNG_CQ9(string roundid, int SettleFlag)
@@ -2273,9 +2290,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public IEnumerable<SettleDataRNG_CQ9> GetUnsettledListFish_CQ9()
+        public SettleDataRNG_CQ9 GetUnsettledListFish_CQ9(string transId)
         {
-            return _mainDbClient.Query<SettleDataRNG_CQ9>("Service_BettransFish_CQ9_Unsettle_Get_V2", commandType: CommandType.StoredProcedure);
+            return _mainDbClient.QueryFirst<SettleDataRNG_CQ9>("Service_BettransFish_CQ9_Unsettle_Get_V3", new DynamicParameters( new { TransId = transId }));
         }
 
         public int SetSettleFlagFish_CQ9(string roundid, int SettleFlag)
