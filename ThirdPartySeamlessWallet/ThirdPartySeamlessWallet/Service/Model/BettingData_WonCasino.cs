@@ -114,7 +114,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string serialnumber { get; set; }
         public int state { get; set; }
         public long createtime { get; set; }
-        public long settletime { get; set; }
+        public long? settletime { get; set; }
         public string currency { get; set; }
         public int gameid { get; set; }
         public int userid { get; set; }
@@ -156,7 +156,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public decimal commamount { get; set; }
         public int gameroundid { get; set; }
         public long createtime { get; set; }
-        public long settletime { get; set; }
+        public long? settletime { get; set; }
         public string gameresult { get; set; }
         public decimal winlost { get; set; }
         public int gametype { get; set; }

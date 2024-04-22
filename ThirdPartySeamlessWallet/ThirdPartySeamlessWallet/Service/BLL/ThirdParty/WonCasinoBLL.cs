@@ -522,9 +522,9 @@ public class WonCasinoBLL : IWonCasinoBLL
             cid = bettransData.cid,
             state = bettransData.state,
             createtime = bettransData.createtime,
-            settletime =  new DateTimeOffset(DateTime.UtcNow.AddHours(8)).ToUnixTimeSeconds(),
+            settletime =  bettransData.settletime ?? new DateTimeOffset(DateTime.UtcNow.AddHours(8)).ToUnixTimeSeconds(),
             UTCBetTime = DateTimeOffset.FromUnixTimeSeconds(bettransData.createtime).UtcDateTime,
-            UTCSettleTime = DateTimeOffset.FromUnixTimeSeconds(bettransData.settletime).UtcDateTime,
+            UTCSettleTime = DateTimeOffset.FromUnixTimeSeconds((long)bettransData.settletime).UtcDateTime,
             TicketType = ticketType,
             TicketStatus = ticketStatus,
             SettleFlag = settleFlag
@@ -570,8 +570,8 @@ public class WonCasinoBLL : IWonCasinoBLL
             //由於Deduct的Rollback request只有給單號，故createTime為Now - 10秒作為TransTime
             createtime = new DateTimeOffset(DateTime.UtcNow.AddHours(8).AddSeconds(-10)).ToUnixTimeSeconds(),
             settletime =  new DateTimeOffset(DateTime.UtcNow.AddHours(8)).ToUnixTimeSeconds(),
-            UTCBetTime = DateTimeOffset.FromUnixTimeSeconds(new DateTimeOffset(DateTime.UtcNow.AddHours(8).AddSeconds(-10)).ToUnixTimeSeconds()).UtcDateTime,
-            UTCSettleTime = DateTimeOffset.FromUnixTimeSeconds(new DateTimeOffset(DateTime.UtcNow.AddHours(8)).ToUnixTimeSeconds()).UtcDateTime,
+            UTCBetTime = new DateTimeOffset(DateTime.UtcNow.AddSeconds(-10)).DateTime,
+            UTCSettleTime = new DateTimeOffset(DateTime.UtcNow).DateTime,
             TicketType = ticketType,
             TicketStatus = ticketStatus,
             SettleFlag = settleFlag
