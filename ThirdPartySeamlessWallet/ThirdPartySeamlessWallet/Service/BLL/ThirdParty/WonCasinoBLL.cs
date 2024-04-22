@@ -492,6 +492,7 @@ public class WonCasinoBLL : IWonCasinoBLL
     {
         var result = new RollbackWonCasino();
         //拿bettrans的資料組request，拿最後狀態
+        var plus8NowTime = NowPlus8TimeZone();
         var bettransData = bettransData_WonCasino.LastOrDefault();
         result = new RollbackWonCasino
         {
@@ -522,7 +523,7 @@ public class WonCasinoBLL : IWonCasinoBLL
             cid = bettransData.cid,
             state = bettransData.state,
             createtime = bettransData.createtime,
-            settletime =  bettransData.settletime ?? new DateTimeOffset(DateTime.UtcNow.AddHours(8)).ToUnixTimeSeconds(),
+            settletime =  bettransData.settletime ?? new DateTimeOffset(plus8NowTime).ToUnixTimeSeconds(),
             UTCBetTime = DateTimeOffset.FromUnixTimeSeconds(bettransData.createtime).UtcDateTime,
             UTCSettleTime = DateTimeOffset.FromUnixTimeSeconds((long)bettransData.settletime).UtcDateTime,
             TicketType = ticketType,
@@ -538,6 +539,7 @@ public class WonCasinoBLL : IWonCasinoBLL
         //由於Deduct的Rollback沒有前資料，只能自行組一組並寫進DB，以免錯誤。
         //下注並未成功所以amount直接為0，除非下注成功在rollback才有金額。
         var result = new RollbackWonCasino();
+        var plus8NowTime = NowPlus8TimeZone();
         //拿bettrans的資料組request，拿最後狀態
         result = new RollbackWonCasino
         {
@@ -568,16 +570,24 @@ public class WonCasinoBLL : IWonCasinoBLL
             cid = 0,
             state = (int)WonCasinoStateEnum.Void,
             //由於Deduct的Rollback request只有給單號，故createTime為Now - 10秒作為TransTime
-            createtime = new DateTimeOffset(DateTime.UtcNow.AddHours(8).AddSeconds(-10)).ToUnixTimeSeconds(),
-            settletime =  new DateTimeOffset(DateTime.UtcNow.AddHours(8)).ToUnixTimeSeconds(),
-            UTCBetTime = new DateTimeOffset(DateTime.UtcNow.AddSeconds(-10)).DateTime,
-            UTCSettleTime = new DateTimeOffset(DateTime.UtcNow).DateTime,
+            createtime = new DateTimeOffset(plus8NowTime.AddSeconds(-10)).ToUnixTimeSeconds(),
+            settletime =  new DateTimeOffset(plus8NowTime).ToUnixTimeSeconds(),
+            UTCBetTime = DateTime.UtcNow.AddSeconds(-10),
+            UTCSettleTime = DateTime.UtcNow,
             TicketType = ticketType,
             TicketStatus = ticketStatus,
             SettleFlag = settleFlag
         };
 
         return result;
+    }
+    
+    private DateTime NowPlus8TimeZone()
+    {
+        var utcNow = DateTime.UtcNow;
+        var gmtPlus8 = TimeZoneInfo.FindSystemTimeZoneById("Singapore Standard Time");
+        var timeInGmtPlus8 = TimeZoneInfo.ConvertTimeFromUtc(utcNow, gmtPlus8);
+        return timeInGmtPlus8;
     }
     
     #endregion
