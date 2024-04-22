@@ -2300,10 +2300,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = _mainDbClient.Execute("Service_BettransFish_CQ9_Settle_Set", commandType: CommandType.StoredProcedure, new { roundid = roundid, SettleFlag = SettleFlag });
             return result;
         }
-        
-        public IEnumerable<SettleDataRNG_CQ9> GetUnsettledListWCC_CQ9()
+         
+        public SettleDataRNG_CQ9 GetUnsettledListWCC_CQ9(string transId)
         {
-            return _mainDbClient.Query<SettleDataRNG_CQ9>("Service_BettransWCC_CQ9_Unsettle_Get", commandType: CommandType.StoredProcedure);
+            return _mainDbClient.QueryFirst<SettleDataRNG_CQ9>("Service_BettransWCC_CQ9_Unsettle_Get", new DynamicParameters( new { TransId = transId }));
         }
 
         public int SetSettleFlagWCC_CQ9(string roundid, int SettleFlag)
