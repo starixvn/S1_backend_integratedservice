@@ -626,14 +626,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, endgameReq.game_id);
-                if (gameType != GameType.GPI_RNG)
-                {
-                    int result = _tpUnSettledBLL.InsertTpUnsettle(_thisTp, gameType, endgameReq.round_id);
-                }
-                else
-                {
-                    int result = _settledBLL.SetSettleFlagRNG_GPI(endgameReq.round_id, endgameReq.cust_id, 2);
-                }
+                _tpUnSettledBLL.InsertTpUnsettle(_thisTp, gameType, endgameReq.round_id);
             }
             catch (Exception ex)
             {
