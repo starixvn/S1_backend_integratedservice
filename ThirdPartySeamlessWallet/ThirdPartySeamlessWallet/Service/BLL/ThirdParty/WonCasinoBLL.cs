@@ -182,9 +182,11 @@ public class WonCasinoBLL : IWonCasinoBLL
             
             if (result == -2)
             {
-                //無單號或已處理過，直接回傳成功並且回覆當前餘額
+                //若TicketStatus已經為 Refund = 3,/*Reject, Refund, Void, Draw*/,就不給再次結算，要直接詢問WonCasino
+                //已處理過，直接回傳成功並且回覆當前餘額
                 var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, request.username, _gameType);
                 tpAfterAmount = tpCustBalance.Balance;
+                _log2File.Info($"Won Casino Deposit : {request.serialnumber} , Already Refund , Please check with WonCasino", logName);
                 return new WonCasinoDepositResponse()
                 { 
                     result = (int)WonCasinoErrorCodeEnum.Success,
@@ -192,6 +194,23 @@ public class WonCasinoBLL : IWonCasinoBLL
                     balance = tpAfterAmount,
                     orderno = dbOrderNo
                 };
+                
+            }
+            
+            if (result == -3)
+            {
+                //Deduct無單號，直接回傳成功並且回覆當前餘額
+                var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, request.username, _gameType);
+                tpAfterAmount = tpCustBalance.Balance;
+                _log2File.Info($"Won Casino Deposit: {request.serialnumber} ,Deduct Can't Found BetId", logName);
+                return new WonCasinoDepositResponse()
+                { 
+                    result = (int)WonCasinoErrorCodeEnum.Success,
+                    desc = WonCasinoErrorCodeEnum.Success.GetEnumDescription(),
+                    balance = tpAfterAmount,
+                    orderno = dbOrderNo
+                };
+                
             }
         }
         catch (Exception ex)
@@ -241,6 +260,7 @@ public class WonCasinoBLL : IWonCasinoBLL
             if (result == -2)
             {
                 //無單號或已處理過，直接回傳成功並且回覆當前餘額
+                _log2File.Info($"Won Casino Rollback: {request.serialnumber} ,Already Process.", logName);
                 var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, request.username, _gameType);
                 tpAfterAmount = tpCustBalance.Balance;
                 return new WonCasinoRollBackResponse()

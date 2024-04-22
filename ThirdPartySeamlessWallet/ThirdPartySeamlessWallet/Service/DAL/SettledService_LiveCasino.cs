@@ -3767,10 +3767,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var partitionTime = DateTime.Now;
                 var bettrans = _partitionService.Query<BettransWonCasino>(partitionTime, GetSpName, 
                     new { id = settleDataLC_WonCasino.bets.id , username = tpCustInfo.TpUserName });
+                //若Deduct無單號，直接回傳-3。
                 if (!bettrans.Any(i => i.id == settleDataLC_WonCasino.bets.id))
                 {
                     orderNo = bettrans.LastOrDefault()?.SQ.ToString() ?? orderNo;
-                    return -2;
+                    return -3;
                 }
                 
                 //若TicketStatus已經為 Refund = 3,/*Reject, Refund, Void, Draw*/,就不給再次結算。
