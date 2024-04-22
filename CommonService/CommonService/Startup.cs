@@ -53,6 +53,7 @@ namespace CommonService
             services.AddSingleton<OTPEmailBLL>();
             services.AddSingleton<Tools>();
             services.AddSingleton<ConfigService>();
+            services.AddSingleton<GaBLL>();
             services.AddControllers();
 
             //OTP與SMS

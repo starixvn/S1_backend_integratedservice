@@ -248,9 +248,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.GetRecordLT_One789(source);
         }
 
-        public IEnumerable<SettleData> GetUnsettledList_One789(int gameType)
+        public SettleData GetUnsettledList_One789(int gameType, string TransId)
         {
-            return settledService.GetUnsettledList_One789(gameType);
+            return settledService.GetUnsettledList_One789(gameType, TransId);
         }
 
         public SettleData_One789 GetSettle_TpWagerOne789(int gameType, string TransId)

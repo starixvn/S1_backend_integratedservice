@@ -56,19 +56,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, settledDataRNG_GPI.jackpot_win ?? 0, (int)Tp.GPI, TransType.Settled, $"Jackpot: {Math.Abs(settledDataRNG_GPI.jackpot_win ?? 0).ToString("#,##0.##")}", settledDataRNG_GPI.trx_id, out afterAmount, conn, trans);
                         result = PayoutV2(tpCustInfo, settledDataRNG_GPI.jackpot_win ?? 0, (int)Tp.GPI, settledDataRNG_GPI.round_id, gameType, TpCategory.Slots, settledDataRNG_GPI.trx_id, TransType.Prize, null, out afterAmount, $"Jackpot", out bonusId, conn, trans);
                     }
-
+                    
                     if (result > 0)
                     {
-                        result = _tpUnsettleService.InsertTpUnsettle(Tp.GPI, GameType.GPI_RNG, settledDataRNG_GPI.round_id, trans);
-                        if (result > 0)
-                        {
-                            _mainDbClient.CommitAndDisposeConnection(conn, trans);
-                        }
-                        else
-                        {
-                            _mainDbClient.RollbackAndDisposeConnection(conn, trans);
-                        }
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                    }
+                    
                 }
             }
             catch (MySqlException mySqlEx)
