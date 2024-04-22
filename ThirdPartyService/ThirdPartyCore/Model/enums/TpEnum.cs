@@ -57,7 +57,8 @@
         Amigo = 60,
         MaxGame = 61,
         NTConnect = 62,
-        GA = 63
+        GA = 63,
+        WonCasino = 64,
     }
 
     public enum TpGameType
@@ -152,6 +153,7 @@
         Amigo_RNG = 112,
         MaxGame_Poker = 113,
         NTConnect_Lottery = 114,
-        GA_CockFighting = 115
+        GA_CockFighting = 115,
+        WonCasino_LiveCasino = 116,
     }
 }

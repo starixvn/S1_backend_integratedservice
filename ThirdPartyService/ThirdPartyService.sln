@@ -136,6 +136,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.GA", "ThirdParty
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.NTConnect", "ThirdParty.NTConnect\ThirdParty.NTConnect.csproj", "{D8F15454-35EA-4686-8E54-348BCA389DCC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.WonCasino", "ThirdParty.WonCasino\ThirdParty.WonCasino.csproj", "{13A4920A-7A5A-4547-A214-D686194504E2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -398,6 +400,10 @@ Global
 		{D8F15454-35EA-4686-8E54-348BCA389DCC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D8F15454-35EA-4686-8E54-348BCA389DCC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D8F15454-35EA-4686-8E54-348BCA389DCC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{13A4920A-7A5A-4547-A214-D686194504E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13A4920A-7A5A-4547-A214-D686194504E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13A4920A-7A5A-4547-A214-D686194504E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13A4920A-7A5A-4547-A214-D686194504E2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -464,6 +470,7 @@ Global
 		{F5076B11-A856-4EAB-A7A1-4EAE81E70714} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{28B8FBD8-9671-4E24-A13A-041E5D6A336C} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{D8F15454-35EA-4686-8E54-348BCA389DCC} = {54887B85-B528-486C-A102-3E5FF55C1282}
+		{13A4920A-7A5A-4547-A214-D686194504E2} = {54887B85-B528-486C-A102-3E5FF55C1282}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {88130080-DA6F-45D5-BA4E-3A91181A0592}
