@@ -540,6 +540,9 @@ public class WonCasinoBLL : IWonCasinoBLL
         //下注並未成功所以amount直接為0，除非下注成功在rollback才有金額。
         var result = new RollbackWonCasino();
         var plus8NowTime = NowPlus8TimeZone();
+        _log2File.Info($"WonCasino NowTime : {DateTime.Now}","WonCasino NowTime");
+        _log2File.Info($"WonCasino Plus8NowTime : {plus8NowTime:yyyy-MM-dd HH:mm:ss}","WonCasino Plus8NowTime");
+
         //拿bettrans的資料組request，拿最後狀態
         result = new RollbackWonCasino
         {
@@ -578,7 +581,13 @@ public class WonCasinoBLL : IWonCasinoBLL
             TicketStatus = ticketStatus,
             SettleFlag = settleFlag
         };
+        
+        _log2File.Info($"WonCasino RollbackWonCasino CreateTime : {DateTime.Now:yyyy-MM-dd HH:mm:ss}","WonCasino CreateTime");
+        _log2File.Info($"WonCasino RollbackWonCasino SettleTime : {plus8NowTime:yyyy-MM-dd HH:mm:ss}","WonCasino SettleTime");
+        _log2File.Info($"WonCasino RollbackWonCasino UTCCreateTime : {result.UTCBetTime:yyyy-MM-dd HH:mm:ss}","WonCasino UTCCreateTime");
+        _log2File.Info($"WonCasino RollbackWonCasino UTCSettleTime : {result.UTCSettleTime:yyyy-MM-dd HH:mm:ss}","WonCasino UTCSettleTime");
 
+        
         return result;
     }
     
