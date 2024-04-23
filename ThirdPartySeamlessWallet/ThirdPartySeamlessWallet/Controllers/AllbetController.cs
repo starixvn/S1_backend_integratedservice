@@ -16,7 +16,6 @@ namespace ThirdPartySeamlessWallet.Controllers
     public class AllbetController : ControllerBase
     {
         private readonly ILogger<AllbetController> _logger;
-        private readonly Tp thisTp; 
         private static IAllbetBll _AllbetBll { get; set; }
         private readonly AllBetConfig _siteAllBetConfig;
 
@@ -24,7 +23,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         public AllbetController(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<AllbetController>>();
-            thisTp = Tp.Allbet;
             _AllbetBll = new AllbetBll(provider);
             _siteAllBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AllBetConfig>(Tp.Allbet.ToString());
         }

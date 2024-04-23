@@ -1,9 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using System.Web;
-
 using Newtonsoft.Json;
-
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -17,7 +15,7 @@ namespace ThirdParty.HB
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
         public TpHelper()
         {
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList(40).ToDictionary(d => d.AppId, d => d.Name);
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.HB).ToDictionary(d => d.AppId, d => d.Name);
         }
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
