@@ -1,10 +1,7 @@
 ﻿using System.Text;
 using System.Web;
-
 using Microsoft.AspNetCore.Mvc;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -23,8 +20,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly BettingBLL bettingBLL;
         private readonly SettledBLL settledBLL;
         private readonly Tp thisTp;
-        //private readonly int gameType = 0;
-        private readonly Tools tools;
         private readonly ILogger<SkywindController> logger;
         private readonly IHostEnvironment environment;
         #endregion
@@ -37,7 +32,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             bettingBLL = provider.GetRequiredService<BettingBLL>();
             settledBLL = provider.GetRequiredService<SettledBLL>();
-            tools = provider.GetRequiredService<Tools>();
             logger = provider.GetRequiredService<ILogger<SkywindController>>();
             thisTp = Tp.Skywind;
             environment = provider.GetRequiredService<IHostEnvironment>();

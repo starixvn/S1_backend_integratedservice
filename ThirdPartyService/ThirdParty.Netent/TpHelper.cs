@@ -1,7 +1,5 @@
 ﻿using System.Text;
-
 using Newtonsoft.Json;
-
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -18,7 +16,7 @@ namespace ThirdParty.Netent
 
         public TpHelper()
         {
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList(37).ToDictionary(d => d.AppId, d => d.Name);
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.Netent).ToDictionary(d => d.AppId, d => d.Name);
         }
 
         public class LoginResponse

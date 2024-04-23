@@ -518,6 +518,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
+                        if (gameType != (int)GameType.One789_LiveCasino)
+                        {
+                            _ = _tpUnsettleService.InsertTpUnsettle(Tp.One789, (GameType)gameType, mixUniqueId, trans);
+                        }
+
                         _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     }
                     else

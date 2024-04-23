@@ -62,7 +62,8 @@
         HaoLong = 58,
         NLC = 59,
         NTConnect = 62,
-        GA = 63
+        GA = 63,
+        WonCasino = 64,
     }
     public enum GameType
     {
@@ -110,6 +111,7 @@
         NLC_RNG = 111,
         NTConnect_Games = 114,
         GA_CockFighting = 115,
+        WonCasino_LiveCasino = 116,
     }
     public enum SettlementType
     {

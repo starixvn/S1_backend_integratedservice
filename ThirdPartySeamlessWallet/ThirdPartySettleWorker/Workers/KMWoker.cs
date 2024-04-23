@@ -70,32 +70,44 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getWagerSp, new { ugsbetid = tpUnsettle.TransId }, DataBase.Wager).ToList().FirstOrDefault();
 
-                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, settleData.Account);
-                        var betRecordInfo = new BetRecordInfo
+                        if(settleData != null)
                         {
-                            TpId = thisTp,
-                            Stake = settleData.Stake,
-                            ValidBet = settleData.ValidBet,
-                            WinlostAmount = settleData.WinLostAmount,
-                            TransId = settleData.TransId,
-                            Revenue = settleData.Revenue,
-                            GameType = GameType.KM_Poker,
-                            TpUserName = settleData.Account,
-                            SettledTime = settleData.SettleTime,
-                            TransTime = settleData.TransTime,
-                            SettlementType = SettlementType.SettledForValid,
-                            GameID = settleData.GameId,
-                        };
+                            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, settleData.Account);
+                            var betRecordInfo = new BetRecordInfo
+                            {
+                                TpId = thisTp,
+                                Stake = settleData.Stake,
+                                ValidBet = settleData.ValidBet,
+                                WinlostAmount = settleData.WinLostAmount,
+                                TransId = settleData.TransId,
+                                Revenue = settleData.Revenue,
+                                GameType = GameType.KM_Poker,
+                                TpUserName = settleData.Account,
+                                SettledTime = settleData.SettleTime,
+                                TransTime = settleData.TransTime,
+                                SettlementType = SettlementType.SettledForValid,
+                                GameID = settleData.GameId,
+                            };
 
-                        var result = _settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
+                            var result = _settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
 
-                        if (result == 1)
+                            if (result == 1)
+                            {
+                                Task.Run(() =>
+                                {
+                                    _tpUnSettledBLL.SetTpUnsettle(Tp, GameType.KM_Poker, tpUnsettle.TransId, true);
+                                });
+                            }
+                        }
+                        else
                         {
+                            //為了解決有些有拉到WAGER資料 但我們根本沒有收到注單
                             Task.Run(() =>
                             {
                                 _tpUnSettledBLL.SetTpUnsettle(Tp, GameType.KM_Poker, tpUnsettle.TransId, true);
                             });
                         }
+                        
                     }
                     catch (Exception ex)
                     {
