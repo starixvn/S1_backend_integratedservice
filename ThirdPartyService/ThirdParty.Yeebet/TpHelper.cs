@@ -1,8 +1,6 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
-
 using Newtonsoft.Json;
-
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -32,13 +30,6 @@ namespace ThirdParty.Yeebet
           { 45, "[D Q]" }, { 46, "[C Q]" },{ 47, "[H Q]" },{ 48, "[S Q]" },
           { 49, "[D K]" }, { 50, "[C K]" },{ 51, "[H K]" },{ 52, "[S K]" }
         };
-
-        //private readonly Dictionary<string, int> _langList = new() //Yeebet的語系編碼
-        //{
-        //    {"cs",1 },{ "en",2 },{ "ko",3 },{ "ja",4 },{ "th",5 },
-        //    {"zh_TW",6 },{ "vn",10 },{ "id",11 },{ "es",12 },{ "pt",13 },
-        //    {"tr",14 }
-        //};
 
         #region Model
 
@@ -80,10 +71,6 @@ namespace ThirdParty.Yeebet
             string secretKey = inputs.ContainsKey($"ApiSecretKey_{word}") && !string.IsNullOrEmpty(inputs[$"ApiSecretKey_{word}"]) ? inputs[$"ApiSecretKey_{word}"] : throw new Exception($"ApiSecretKey_{word}");
             var homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
             apiUrl = $"{apiUrl}api/login";
-
-            //var lang = 2; //default en
-            //if (_langList.ContainsKey(TpLangId))
-            //    lang = _langList[TpLangId];
 
             var loginRequest = new
             {

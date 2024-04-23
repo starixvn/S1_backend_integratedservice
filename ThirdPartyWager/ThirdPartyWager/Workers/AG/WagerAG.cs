@@ -1,5 +1,4 @@
 using Serilog.Context;
-
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -72,9 +71,6 @@ namespace ThirdPartyWager.Workers
                 if (timerTime < DateTime.Now)
                 {
                     var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
-                    //var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(timeZone, 0, 0)).ToUnixTimeSeconds();
-                    //if (time.endUnix < cvTime)
-                    //{
                     var result = await wagerAGBLL.GetWagersAsync(time.startTime, time.endTime);
                     if (result)
                     {
@@ -109,7 +105,6 @@ namespace ThirdPartyWager.Workers
         }
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            //WriteToFile("WriteToFileHostedService: Process Stopped");
             timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
