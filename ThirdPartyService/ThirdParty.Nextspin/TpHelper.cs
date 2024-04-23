@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -13,7 +12,7 @@ namespace ThirdParty.Nextspin
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
         public TpHelper()
         {
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList(50).ToDictionary(d => d.AppId, d => d.Name);
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.Nextspin).ToDictionary(d => d.AppId, d => d.Name);
         }
         #region NotImplemented
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)

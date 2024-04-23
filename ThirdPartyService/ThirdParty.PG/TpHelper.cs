@@ -37,7 +37,7 @@ namespace ThirdParty.PG
 
         public TpHelper(IServiceProvider provider)
         {
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList(14).ToDictionary(d => d.AppId, d => d.Name);
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.PG).ToDictionary(d => d.AppId, d => d.Name);
             _siteConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<PGSiteConfig>(TpEnum.PG.ToString());
         }
 

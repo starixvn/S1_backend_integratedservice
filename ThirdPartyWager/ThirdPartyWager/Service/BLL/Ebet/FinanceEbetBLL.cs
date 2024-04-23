@@ -57,11 +57,6 @@ namespace ThirdPartyWager.Service.BLL
 
             foreach (var item in tpCurrencyList)
             {
-                if (!_environment.IsProduction() && item.TpCurrencyId != "IDR")
-                {
-                    continue;
-                }
-
                 var currency = item.TpCurrencyId;
 
                 var getWagerSummary = await _apiEbetBLL.GetBetSummaryByTime(currency, reportTime.startTime, reportTime.endTime);

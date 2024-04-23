@@ -877,14 +877,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             return hashKey.Equals(_tools.ToMD5(p), StringComparison.OrdinalIgnoreCase);
         }
 
-        private static string GetSecureKeySuffixByAgentId(string agentId)
-        {
-            if (string.IsNullOrWhiteSpace(agentId))
-                return "";
-            else
-                return $"_Stream_{agentId.Split("_")[0]}";
-        }
-
         private static string GetSiteNameBySuffixAgentId(string agentId)
         {
             if (string.IsNullOrWhiteSpace(agentId))
