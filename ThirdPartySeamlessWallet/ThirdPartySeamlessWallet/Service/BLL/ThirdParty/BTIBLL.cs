@@ -1,4 +1,5 @@
 ﻿using System.Text;
+
 using Newtonsoft.Json;
 
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
@@ -6,6 +7,7 @@ using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
+
 using static ThirdPartySeamlessWallet.Controllers.APController;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty

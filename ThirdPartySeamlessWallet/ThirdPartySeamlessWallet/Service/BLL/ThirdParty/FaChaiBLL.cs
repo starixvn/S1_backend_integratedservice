@@ -37,7 +37,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var trans = conn.BeginTransaction();
 
             int bonusId = 0;
-            afterAmount = 0; 
+            afterAmount = 0;
 
             var partitionTime = ConvertLongToDateTime(bettingData.Ts);
 
@@ -65,7 +65,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (tempResult > 0 && bettingData.Bet != 0)
             {
-                tempResult = _bettingService.PlaceBetV2(tpCustInfo, Math.Abs(bettingData.Bet) * -1, (int)Tp.FaChai, bettingData.RecordID, (int)GameType.FaChai_RNG, bettingData.RecordID, null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+                tempResult = _bettingService.PlaceBet(tpCustInfo, Math.Abs(bettingData.Bet) * -1, (int)Tp.FaChai, bettingData.RecordID, (int)GameType.FaChai_RNG, bettingData.RecordID, out afterAmount, ref bonusId, out _, conn, trans);
             }
             else
             {
@@ -78,7 +78,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             bool getBonus = false;
             if (tempResult > 0 && bettingData.Win > 0)
             {
-                if(bonusId > 0)
+                if (bonusId > 0)
                 {
                     getBonus = true;
                     tempResult = _settledService.PayoutWithBonusId(
@@ -115,7 +115,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         conn,
                         trans);
                 }
-                
+
             }
 
             if (tempResult > 0)

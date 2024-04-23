@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -40,7 +41,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             var partitionTime = DateTimeOffset.Parse(reqData.c_at).DateTime;
 
-            var check = _partitionService.Query<BettransRng_BNG>(partitionTime, "Service_BettransRng_BNG_Check", new { reqData.uid});
+            var check = _partitionService.Query<BettransRng_BNG>(partitionTime, "Service_BettransRng_BNG_Check", new { reqData.uid });
             if (check.Any())
             {
                 afterAmount = _tpCustInfoBLL.GetBalance((int)Tp.BNG, tpCustInfo.TpUserName, (int)GameType.BNG_RNG).Balance;
@@ -86,7 +87,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             if (bettingData.bet > 0)
             {
-                tempResult = _bettingService.PlaceBetV2(tpCustInfo, Math.Abs(bettingData.bet) * -1, (int)Tp.BNG, reqData.args.round_id.ToString(), (int)GameType.BNG_RNG, reqData.args.round_id.ToString(), null, TpCategory.Slots, out afterAmount, ref bonusId, conn, trans);
+                tempResult = _bettingService.PlaceBet(tpCustInfo, Math.Abs(bettingData.bet) * -1, (int)Tp.BNG, reqData.args.round_id.ToString(), (int)GameType.BNG_RNG, reqData.args.round_id.ToString(), out afterAmount, ref bonusId, out _, conn, trans);
             }
 
             bool getBonus = false;
