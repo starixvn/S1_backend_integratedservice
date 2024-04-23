@@ -23,7 +23,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly string _tpName = Tp.SG.ToString();
         private readonly SGConfig _siteConfig;
 
-
         public SGController(IServiceProvider provider)
         {
             _authBLL = provider.GetRequiredService<AuthBLL>();

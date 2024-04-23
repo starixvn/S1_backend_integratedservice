@@ -47,7 +47,9 @@
         SBSW = 41,
         SimplePlay = 44,
         CryptoSports = 45,
+        Endorphina = 49,
         Nextspin = 50,
+        PlayTech = 51,
         PNG = 54,
         FaChai = 55,
         Pegasus = 56,
@@ -57,7 +59,8 @@
         Amigo = 60,
         MaxGame = 61,
         NTConnect = 62,
-        GA = 63
+        GA = 63,
+        WonCasino = 64,
     }
 
     public enum TpGameType
@@ -152,6 +155,7 @@
         Amigo_RNG = 112,
         MaxGame_Poker = 113,
         NTConnect_Lottery = 114,
-        GA_CockFighting = 115
+        GA_CockFighting = 115,
+        WonCasino_LiveCasino = 116,
     }
 }

@@ -1182,7 +1182,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         OperatorCustId = payoutData_MaxGame.Payload.OperatorCustId,
                         GameType = payoutData_MaxGame.Payload.GameType,
                         IpAddress = "",
-                        TransDate = new DateTime(1970, 1, 1),
                         SettleDate = betDataSet.SettleDate,
                         TicketNo = betDataSet.TicketNo,
                         GameId = betDataSet.GameId,
@@ -1200,7 +1199,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         BonusId = "",
                         BonusName = "",
                         PrizeName = "",
-                        TransDateUnix = 0,
                         SettleDateUnix = betDataSet.SettleDateUnix,
                         TicketType = (int)BettransType.Payout,
                         TicketStatus = (int)TicketStatus.UnSettled,
@@ -1208,7 +1206,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     });
 
                     p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
-                    result = _partitionService.Execute(partitionTime, "Service_BettransPK_MaxGame_Ins", p, trans);
+                    result = _partitionService.Execute(partitionTime, "Service_BettransPK_MaxGame_Ins_V2", p, trans);
 
                     // 檢查差額: 使用ActualStake當作該局的實際扣款金額，如果跟前面收到的PlaceBet下注金額加總後不符合，需要進行Refund
                     var placeBetActualStake = bettrans.Where(i => i.TicketType == BettransType.Bet).Sum(i => i.ActualStake);
@@ -1337,7 +1335,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         OperatorCustId = cancelBetData_MaxGame.Payload.OperatorCustId,
                         GameType = cancelBetData_MaxGame.Payload.GameType,
                         IpAddress = "",
-                        TransDate = partitionTime,
                         SettleDate = partitionTime,
                         TicketNo = betDataSet.TicketNo,
                         GameId = betDataSet.GameId,
@@ -1355,7 +1352,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         BonusId = "",
                         BonusName = "",
                         PrizeName = "",
-                        TransDateUnix = unix,
                         SettleDateUnix = unix,
                         TicketType = (int)BettransType.CancelBet,
                         TicketStatus = (int)TicketStatus.Refund,
@@ -1368,7 +1364,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         // insert cancel
                         p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
-                        result = _partitionService.Execute(partitionTime, "Service_BettransPK_MaxGame_Ins", p, trans);
+                        result = _partitionService.Execute(partitionTime, "Service_BettransPK_MaxGame_Ins_V2", p, trans);
                     }
                     else
                     {
@@ -1459,7 +1455,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         OperatorCustId = bonusData_MaxGame.Payload.OperatorCustId,
                         GameType = bonusData_MaxGame.Payload.GameType,
                         IpAddress = "",
-                        TransDate = new DateTime(1970, 1, 1),
                         SettleDate = betDataSet.SettleDate,
                         TicketNo = betDataSet.TicketNo,
                         GameId = betDataSet.GameId,
@@ -1477,7 +1472,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         BonusId = betDataSet.BonusId,
                         BonusName = betDataSet.BonusName,
                         PrizeName = betDataSet.PrizeName,
-                        TransDateUnix = 0,
                         SettleDateUnix = betDataSet.SettleDateUnix,
                         TicketType = (int)BettransType.Bonus,
                         TicketStatus = (int)TicketStatus.UnSettled,
@@ -1485,7 +1479,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     });
 
                     p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
-                    result = _partitionService.Execute(partitionTime, "Service_BettransPK_MaxGame_Ins", p, trans);
+                    result = _partitionService.Execute(partitionTime, "Service_BettransPK_MaxGame_Ins_V2", p, trans);
                     if (result > 0 && betDataSet.Payout != 0)
                     {
                         result = walletService.SetBalance(

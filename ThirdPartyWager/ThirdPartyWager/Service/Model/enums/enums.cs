@@ -62,7 +62,8 @@
         HaoLong = 58,
         NLC = 59,
         NTConnect = 62,
-        GA = 63
+        GA = 63,
+        WonCasino = 64,
     }
     public enum GameType
     {
@@ -77,6 +78,7 @@
         Iconic_RNG = 39,
         Iconic_Fish = 40,
         AMB_Poker = 50,
+        KM_Poker = 52,
         MP_Poker = 60,
         MP_Poker_None = 61, // without revenue games
         SG_RNG = 15,
@@ -109,6 +111,7 @@
         NLC_RNG = 111,
         NTConnect_Games = 114,
         GA_CockFighting = 115,
+        WonCasino_LiveCasino = 116,
     }
     public enum SettlementType
     {

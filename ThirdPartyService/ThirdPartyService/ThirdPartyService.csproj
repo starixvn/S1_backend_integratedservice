@@ -76,6 +76,7 @@
     <ProjectReference Include="..\ThirdParty.Skywind\ThirdParty.Skywind.csproj" />
     <ProjectReference Include="..\ThiryParty.BG\ThirdParty.BG.csproj" />
     <ProjectReference Include="..\ThirdParty.NTConnect\ThirdParty.NTConnect.csproj" />
+    <ProjectReference Include="..\ThirdParty.WonCasino\ThirdParty.WonCasino.csproj" />
   </ItemGroup>
 
 </Project>

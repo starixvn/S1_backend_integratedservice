@@ -1,8 +1,6 @@
 ﻿using System.Text;
 using System.Web;
-
 using Newtonsoft.Json;
-
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -41,7 +39,7 @@ namespace ThirdParty.PlayTech
 
         public TpHelper()
         {
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList(51).ToDictionary(d => d.AppId, d => d.Name);
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.PlayTech).ToDictionary(d => d.AppId, d => d.Name);
         }
 
         #endregion

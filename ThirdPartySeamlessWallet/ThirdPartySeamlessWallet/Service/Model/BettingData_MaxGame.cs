@@ -45,15 +45,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
         public string WalletSideToken { get; set; }
         public string GameType { get; set; }
         public string IpAddress { get; set; }
-        public DateTime TransDate { get; set; }
         public List<BetDataSet_PlaceBetReq_MaxGame> BetDataSet { get; set; }
-        public long TransDateUnix
-        {
-            get
-            {
-                return new DateTimeOffset(TransDate, new TimeSpan(-4, 0, 0)).ToUnixTimeSeconds();
-            }
-        }
     }
 
     public class BetDataSet_PlaceBetReq_MaxGame

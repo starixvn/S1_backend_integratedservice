@@ -1,7 +1,5 @@
 ﻿using System.Web;
-
 using Newtonsoft.Json;
-
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -138,6 +136,8 @@ public class TpHelper : ThirdPartyHelperBase
 
     public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
     {
+        bool isGetUrlSuccess = false;
+        string url = string.Empty;
         string method = "open.video.game.url";
         string currency = tpCustInfo.TpCurrencyId;
         string apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
@@ -164,38 +164,46 @@ public class TpHelper : ThirdPartyHelperBase
             jsonrpc = "2.0"
         });
 
-        var response = HttpPostClient(apiUrl, parameters, "application/json");
+        while (!isGetUrlSuccess)
+        {
+            var response = HttpPostClient(apiUrl, parameters, "application/json");
 
-        if (!IsJSON(response))
-            return new ApiResult()
+            if (!IsJSON(response))
+                return new ApiResult()
+                {
+                    ErrorCode = ErrorCode.Fail,
+                    RawErrorCode = "1",
+                    RawMessage = "No Result. Response is not json."
+                };
+
+            var jsonResponse = JsonConvert.DeserializeObject<JsonRpcResponse<string>>(response);
+
+            if (jsonResponse == null)
+                return new ApiResult()
+                {
+                    ErrorCode = ErrorCode.Fail,
+                    RawErrorCode = "-1",
+                    RawMessage = "No Result. Response is null."
+                };
+
+            if (jsonResponse.error != null)
+                return new ApiResult()
+                {
+                    ErrorCode = ErrorCode.Fail,
+                    RawErrorCode = jsonResponse.error.code ?? "",
+                    RawMessage = $"{jsonResponse.error.message ?? ""}" + " | " + $"{jsonResponse.error.reason ?? ""}"
+                };
+            if (!string.IsNullOrWhiteSpace(jsonResponse.result))
             {
-                ErrorCode = ErrorCode.Fail,
-                RawErrorCode = "1",
-                RawMessage = "No Result. Response is not json."
-            };
+                url = jsonResponse.result;
+                isGetUrlSuccess = true;
+            }
 
-        var jsonResponse = JsonConvert.DeserializeObject<JsonRpcResponse<string>>(response);
-
-        if (jsonResponse == null)
-            return new ApiResult()
-            {
-                ErrorCode = ErrorCode.Fail,
-                RawErrorCode = "-1",
-                RawMessage = "No Result. Response is null."
-            };
-
-        if (jsonResponse.error != null)
-            return new ApiResult()
-            {
-                ErrorCode = ErrorCode.Fail,
-                RawErrorCode = jsonResponse.error.code ?? "",
-                RawMessage = $"{jsonResponse.error.message ?? ""}" + " | " + $"{jsonResponse.error.reason ?? ""}"
-            };
-
+        }
         return new ApiResult()
         {
             ErrorCode = ErrorCode.Success,
-            Message = jsonResponse.result
+            Message = url
         };
     }
 
@@ -229,6 +237,7 @@ public class TpHelper : ThirdPartyHelperBase
 
     public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
     {
+        // 测试环境仅是提供测试调用，仅有正式环境才可正常查看注单详情内容
         string method = "open.sn.video.order.detail.url.get";
         string currency = tpCustInfo.TpCurrencyId;
         string apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");

@@ -40,7 +40,7 @@ namespace ThirdPartySettleWorker.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _timerSettleGpi = new Timer(DoSettleGPIWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            _timerSettleGpi = new Timer(DoSettleGPIWork, GameType.GPI_RNG, TimeSpan.Zero, TimeSpan.Zero);
             _timerLT_Keno = new Timer(DoSettleGPILotteryWork, GameType.GPI_Keno, TimeSpan.Zero, TimeSpan.Zero);
             _timerLT_Sode = new Timer(DoSettleGPILotteryWork, GameType.GPI_Sode, TimeSpan.Zero, TimeSpan.Zero);
             _timerLT_Thai = new Timer(DoSettleGPILotteryWork, GameType.GPI_Thai_Lottery, TimeSpan.Zero, TimeSpan.Zero);
@@ -63,24 +63,26 @@ namespace ThirdPartySettleWorker.Workers
             var forContinue = false;
             var isError = false;
             var thisTp = (int)Tp.GPI;
+            var gameType = (GameType)state;
             var tpName = Enum.GetName(typeof(Tp), thisTp);
 
             try
             {
-                var unsettledList = _settledBLL.GetUnsettledListRNG_GPI();
-
-                if (unsettledList != null)
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
+                
+                if (tpUnsettleList != null)
                 {
-                    forContinue = unsettledList.Count() == 200;
-                    foreach (var unsettled in unsettledList)
+                    forContinue = tpUnsettleList.Count() == 200;
+                    foreach (var unsettled in tpUnsettleList)
                     {
                         try
                         {
-                            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.cust_id);
+                            var settleDetail =  _settledBLL.GetUnsettledListRNG_GPI(unsettled.TransId).First();
+                            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, settleDetail.cust_id);
 
-                            decimal stake = unsettled.Stake;
-                            decimal validBet = unsettled.Stake;
-                            decimal winLostAmount = unsettled.WinLostAmount;
+                            var stake = settleDetail.Stake;
+                            var validBet = settleDetail.Stake;
+                            var winLostAmount = settleDetail.WinLostAmount;
 
                             var betRecordInfo = new BetRecordInfo
                             {
@@ -88,20 +90,21 @@ namespace ThirdPartySettleWorker.Workers
                                 Stake = stake,
                                 ValidBet = validBet,
                                 WinlostAmount = winLostAmount,
-                                TransId = unsettled.round_id,
+                                TransId = settleDetail.round_id,
                                 GameType = GameType.GPI_RNG,
-                                TpUserName = unsettled.cust_id,
-                                SettledTime = unsettled.SettleTime,
-                                TransTime = unsettled.TransTime,
-                                SettlementType = _settledBLL.GetSettlementType(GameType.GPI_RNG, unsettled.game_id),
-                                GameID = unsettled.game_id,
+                                TpUserName = settleDetail.cust_id,
+                                SettledTime = settleDetail.SettleTime,
+                                TransTime = settleDetail.TransTime,
+                                SettlementType = _settledBLL.GetSettlementType(gameType, settleDetail.game_id),
+                                GameID = settleDetail.game_id,
                             };
 
                             var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Slots);
 
                             Task.Run(() =>
                             {
-                                _settledBLL.SetSettleFlagRNG_GPI(unsettled.round_id, unsettled.cust_id, 1);
+                                _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, settleDetail.round_id, isSuccess: true);
+                                _settledBLL.SetSettleFlagRNG_GPI(settleDetail.round_id, settleDetail.cust_id, 1);
                             });
                         }
                         catch (Exception ex1)

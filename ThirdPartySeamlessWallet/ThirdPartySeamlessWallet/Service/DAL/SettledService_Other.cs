@@ -836,6 +836,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
+                    _ = _tpUnsettleService.InsertTpUnsettle(Tp.One789, (GameType)gameType, mixUniqueId, trans);
+
                     _mainDbClient.CommitAndDisposeConnection(conn, trans);
                 }
                 else
@@ -925,6 +927,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
+                        _ = _tpUnsettleService.InsertTpUnsettle(Tp.One789, (GameType)gameType, mixUniqueId, trans);
+
                         _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     }
                     else
@@ -963,24 +967,25 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return data;
         }
 
-        public IEnumerable<SettleData> GetUnsettledList_One789(int gameType)
+        public SettleData GetUnsettledList_One789(int gameType, string TransId)
         {
             string sp = "";
             switch (gameType)
             {
                 case (int)GameType.One789_Lottery:
-                    sp = "Service_BettransLT_One789_Unsettle_Get_V3";
+                    sp = "Service_BettransLT_One789_Unsettle_Get_V4";
                     break;
                 case (int)GameType.One789_Lottery_789:
-                    sp = "Service_BettransLT_One789_789_Unsettle_Get_V3";
+                    sp = "Service_BettransLT_One789_789_Unsettle_Get_V4";
                     break;
                 case (int)GameType.One789_LiveCasino:
-                    sp = "Service_BettransLC_One789_Unsettle_Get_V3";
+                    sp = "Service_BettransLC_One789_Unsettle_Get_V4";
                     break;
                 default:
                     break;
             }
-            return _mainDbClient.Query<SettleData>($"{sp}", commandType: CommandType.StoredProcedure);
+
+            return _mainDbClient.QueryFirst<SettleData>($"{sp}", new { TransId = TransId });
         }
 
         public SettleData_One789 GetSettle_TpWagerOne789(int gameType, string TransId)

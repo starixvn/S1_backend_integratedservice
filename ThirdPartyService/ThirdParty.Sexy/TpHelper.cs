@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
@@ -14,14 +13,7 @@ namespace ThirdParty.Sexy
     public class TpHelper : ThirdPartyHelperBase
     {
         private readonly Dictionary<string, string> _siteConfig;
-        private readonly Dictionary<string, int> currencyIdMapping = new Dictionary<string, int>() {
-            {"MYR",1 },
-            {"CNY",3 },
-            {"IDR",6 },
-            {"THB",9 },
-            {"VND",11 },
-            {"INR",15 },
-        };
+
         private readonly Dictionary<int, string> ErrorMassage = new Dictionary<int, string>()
         {
             {1,"Success成功"},
