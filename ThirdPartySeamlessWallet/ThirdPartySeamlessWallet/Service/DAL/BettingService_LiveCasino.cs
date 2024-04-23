@@ -1087,17 +1087,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
                 if (result > 0 && bettingDataLC_WonCasino.amount != 0)
                 {
-                    result = PlaceBetV2(
+                    result = PlaceBet(
                         tpCustInfo,
                         bettingDataLC_WonCasino.amount,
                         (int)tpId,
                         bettingDataLC_WonCasino.serialnumber,
                         (int)tpGameType,
                         bettingDataLC_WonCasino.serialnumber,
-                        null,
-                        tpCategory,
                         out afterAmount,
                         ref bonusId,
+                        out _,
                         conn,
                         trans
                     );
