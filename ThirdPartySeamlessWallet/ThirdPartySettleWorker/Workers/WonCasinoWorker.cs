@@ -98,6 +98,7 @@ namespace ThirdPartySettleWorker.Workers
                         //為不影響STATEMENT顯示，固直接刪單不處理。
                         if (unsettled.type == 7)
                         {
+                            _logger.LogInformation($"{logName} , TransId : {wager.TransId} , Void Order");
                             _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, unsettled.TransId, isSuccess: true);
                             continue;
                         }
@@ -108,6 +109,7 @@ namespace ThirdPartySettleWorker.Workers
                             if (unsettled.Stake == 0.00m && unsettled.WinLostAmount < 0)
                             {
                                 unsettled.Stake = unsettled.ValidBet;
+                                _logger.LogInformation($"{logName} , TransId : {wager.TransId} , Lose , Stake = {unsettled.Stake}");
                             }
                         }
                         
