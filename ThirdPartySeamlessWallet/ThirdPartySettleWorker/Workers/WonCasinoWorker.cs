@@ -92,6 +92,25 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         //拿最後一筆資料
                         var unsettled = getUnsettledList.LastOrDefault(x => x.TransId == wager.TransId);
+                        
+                        //Void單結算不處理
+                        //經詢問type == 7 只有 玩家手動撤銷注單以及後台手動撤單(PRD 總代帳號才有權限)，
+                        //為不影響STATEMENT顯示，固直接刪單不處理。
+                        if (unsettled.type == 7)
+                        {
+                            _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, unsettled.TransId, isSuccess: true);
+                            continue;
+                        }
+
+                        //settled的 輸單stake會是0，會導致沒有Turnover，已ValidBet取代;
+                        if (unsettled.type == 9)
+                        {
+                            if (unsettled.Stake == 0.00m && unsettled.WinLostAmount < 0)
+                            {
+                                unsettled.Stake = unsettled.ValidBet;
+                            }
+                        }
+                        
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
                         var transType = TransTypeCheck(unsettled);
                         
