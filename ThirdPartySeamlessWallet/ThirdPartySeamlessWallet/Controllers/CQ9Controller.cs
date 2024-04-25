@@ -1360,7 +1360,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         tpAfterAmount = tpAfterAmountFish;
                         break;
                     case GameType.CQ9_WCC:
-                        result = _settledBLL.RollinWCC_CQ9(rollinReq, (int)gameType, out decimal tpAfterAmountWCC);
+                        result = _settledBLL.RollinWCC_CQ9(rollinReq, gameType, out decimal tpAfterAmountWCC);
                         tpAfterAmount = tpAfterAmountWCC;
                         break;
                 }

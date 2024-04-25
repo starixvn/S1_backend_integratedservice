@@ -216,8 +216,7 @@ namespace ThirdPartySettleWorker.Workers
 
             try
             {
-                //var unsettledList = _settledBll.GetUnsettledListWCC_CQ9();
-                var unsettledList = new List<SettleDataRNG_CQ9>();
+                var unsettledList = _tpUnSettledBll.GetTpUnsettleList(Tp, gameType);
                 
                 if (unsettledList != null)
                 {
@@ -226,26 +225,32 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         try
                         {
-                            var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache(thisTp, unsettled.Account);
+                            var unsettledData = _settledBll.GetUnsettledListWCC_CQ9(unsettled.TransId);
+                            var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache(thisTp, unsettledData.Account);
 
                             var betRecordInfo = new BetRecordInfo
                             {
                                 TpId = thisTp,
-                                Stake = unsettled.Stake,
-                                ValidBet = unsettled.Stake,
-                                WinlostAmount = unsettled.WinLostAmount,
-                                TransId = unsettled.roundid,
+                                Stake = unsettledData.Stake,
+                                ValidBet = unsettledData.Stake,
+                                WinlostAmount = unsettledData.WinLostAmount,
+                                TransId = unsettledData.roundid,
                                 GameType = gameType,
-                                TpUserName = unsettled.Account,
-                                SettledTime = unsettled.SettleTime,
-                                TransTime = unsettled.TransTime,
+                                TpUserName = unsettledData.Account,
+                                SettledTime = unsettledData.SettleTime,
+                                TransTime = unsettledData.TransTime,
                                 SettlementType = SettlementType.SettledForValid,
-                                GameID = unsettled.GameId
+                                GameID = unsettledData.GameId
                             };
 
                             var result = _settledBll.Settled(tpCustInfo, betRecordInfo, category);
 
-                            _settledBll.SetSettleFlagWCC_CQ9(unsettled.roundid, 1);
+                            Task.Run(() =>
+                            {
+                                _settledBll.SetSettleFlagWCC_CQ9(unsettledData.roundid, 1);
+                                _tpUnSettledBll.SetTpUnsettle(Tp, gameType, unsettledData.roundid, isSuccess: true);
+                            });
+                            
                         }
                         catch (Exception ex1)
                         {
