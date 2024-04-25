@@ -245,10 +245,4 @@ namespace ThirdPartyCore.Model.enums
         GotoGame = 2
     }
 
-    public enum GeneralStatusEnum
-    {
-        Disable = 0,
-        Enable = 1
-    }
-
 }

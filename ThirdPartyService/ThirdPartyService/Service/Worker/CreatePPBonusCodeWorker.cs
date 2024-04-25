@@ -36,7 +36,7 @@ namespace ThirdPartyService.Service.Worker
             try
             {
                 var workList = _giftInfoBLL.GetWorkList(WorkerName);
-                var giftList = _giftInfoBLL.GetGiftList((int)TpEnum.PP).Where(x => x.GiftType == 2);
+                var giftList = _giftInfoBLL.GetGiftList((int)TpEnum.PP).Where(x => x.GiftType == GiftTypeEnum.FreeSpin);
 
                 foreach (var periodTask in workList)
                 {
