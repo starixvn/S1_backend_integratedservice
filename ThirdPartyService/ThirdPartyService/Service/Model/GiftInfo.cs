@@ -17,7 +17,7 @@ public class GiftInfo
     public int Stock { get; set; }
     public int Sort { get; set; }
 
-    public int GiftType { get; set; }
+    public GiftTypeEnum GiftType { get; set; }
 
     public int Round { get; set; }
 }
@@ -34,4 +34,16 @@ public class WorkerPeriodTask
     public string TimeZone { set; get; }
     public DateTime CurrencyNowTime { set; get; }
     public DateTime LastCurrencySettledTime { get; set; }
+}
+
+public enum GeneralStatusEnum
+{
+    Disable = 0,
+    Enable = 1
+}
+
+public enum GiftTypeEnum
+{
+    Common = 1,
+    FreeSpin = 2
 }
