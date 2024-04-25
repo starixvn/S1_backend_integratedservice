@@ -4041,17 +4041,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0 || rollinDataWCC_CQ9.amount == 0)
                 {
-                    //Todo 要在確認正確金額
-                    decimal winlose = rollinDataWCC_CQ9.bet - rollinDataWCC_CQ9.win - rollinDataWCC_CQ9.rake;
-                    var ticketStatus = (int)TicketStatus.Win;
-                    if (winlose < 0)
+                    decimal winLose = rollinDataWCC_CQ9.win;
+                    var ticketStatus = winLose switch
                     {
-                        ticketStatus = (int)TicketStatus.Lost;
-                    }
-                    else if (winlose == 0)
-                    {
-                        ticketStatus = (int)TicketStatus.Draw;
-                    }
+                        < 0 => (int)TicketStatus.Lost,
+                        0 => (int)TicketStatus.Draw,
+                        _ => (int)TicketStatus.Win
+                    };
 
                     var p = new DynamicParameters(new
                     {
@@ -4074,10 +4070,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         Actions = "rollin",
                         TicketStatus = ticketStatus,
                         TicketType = (int)BettransType.Payout,
-                        SettleFlag = (rollinDataWCC_CQ9.bet == 0 && rollinDataWCC_CQ9.win == 0) ? 1 : 2
+                        SettleFlag = (int)SettleFlag.EndGame
                     });
 
                     result = _mainDbClient.Execute("Service_BettransWCC_CQ9_Payout_Ins", trans, p);
+                    
+                    if (result > 0)
+                    {
+                        result = _tpUnsettleService.InsertTpUnsettle(Tp.CQ9, GameType.CQ9_WCC, rollinDataWCC_CQ9.roundid, trans);
+                    }
 
                     if (result > 0)
                     {
