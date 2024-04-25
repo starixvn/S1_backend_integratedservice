@@ -40,11 +40,6 @@ namespace ThirdParty.HB
             }
             else
             {
-                //除了有域名阻擋問題的區域以外，平時無需使用
-                if (!string.IsNullOrEmpty(tpCustInfo.TpCurrencyId) && tpCustInfo.TpCurrencyId == "BRL")
-                {
-                    launchUrl = GetInputValue(inputs, "LaunchUrl_Backup");
-                }
                 var key = ApplyToken(tpCustInfo);
                 inputs.TryGetValue("Token", out var token);
                 var sessionKeyArr = new string[] { key, token, tpCustInfo.TpUserName };
