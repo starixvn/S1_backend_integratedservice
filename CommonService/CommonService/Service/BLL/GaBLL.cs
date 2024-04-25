@@ -30,6 +30,7 @@ namespace CommonService.Service.BLL
             {
                 apiResult.ErrorCode = ErrorCode.Success;
                 apiResult.Message = $"not production environment ignore purchaseEventSend always return success";
+                return apiResult;
             }
 
             try
