@@ -55,7 +55,8 @@ if (!string.IsNullOrEmpty(serviceType) && serviceType.Equals("worker", StringCom
     builder.Services
         .AddHostedService<TransferWorkerService>()
         .AddHostedService<SBSWCreateMemberWorker>()
-        .AddHostedService<HLCreateMemberWorker>();
+        .AddHostedService<HLCreateMemberWorker>()
+        .AddHostedService<CreatePPBonusCodeWorker>();
 }
 
 var app = builder.Build();

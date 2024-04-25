@@ -1,4 +1,5 @@
-﻿using ThirdPartyCore.Model;
+﻿using Newtonsoft.Json;
+using ThirdPartyCore.Model;
 
 namespace ThirdParty.PP
 {
@@ -69,5 +70,31 @@ namespace ThirdParty.PP
     {
         public int error { get; set; }
         public string description { get; set; }
+    }
+
+    public class CreateBonusCodeResult
+    {
+        public int error { get; set; }
+        public string description { get; set; }
+    }
+
+    public class CreateFRB
+    {
+        public List<GameList> gameList = new();
+    }
+
+    public class GameList
+    {
+        public string gameId { get; set; }
+        public List<BetValues> betValues { get; set; }
+    }
+
+    public class BetValues
+    {
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public decimal betPerLine { get; set; }
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public decimal totalBet { get; set; }
+        public string currency { get; set; }
     }
 }
