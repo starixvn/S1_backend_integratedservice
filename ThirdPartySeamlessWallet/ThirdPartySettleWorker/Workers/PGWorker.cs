@@ -56,8 +56,8 @@ namespace ThirdPartySettleWorker.Workers
 
             var logName = $"SettlePG";
             var getSP = $"Service_BettransRng_PG_Unsettle_Get_V2";
+            var getSP_Fix = $"Service_BettransRng_PG_Unsettle_Fix_Get";
             var setSP = $"Service_BettransRng_PG_Settle_Set_V2";
-
             try
             {
                 var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype);
@@ -73,6 +73,12 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP, new { TransId = transId }, DataBase.Main).First();
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
+                        var fix = false;
+                        if ((settleData.TransTime >= 1712320200 && settleData.TransTime <= 1712348100) && (tpCustInfo.CurrencyId == 51 || tpCustInfo.CurrencyId == 15))
+                        {
+                            fix = true;
+                            settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getSP_Fix, new { TransId = transId }, DataBase.Main).First();
+                        }
 
                         var betRecordInfo = new BetRecordInfo
                         {
@@ -89,6 +95,14 @@ namespace ThirdPartySettleWorker.Workers
                             TicketStatus = settleData.WinLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost,
                             GameID = settleData.GameId,
                         };
+
+                        // fix issue ticket to refund and not roll
+                        if (fix && settleData.TicketStatus > 0)
+                        {
+                            betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
+                            betRecordInfo.TicketStatus = TicketStatus.Refund;
+                        }
+
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)
                         {

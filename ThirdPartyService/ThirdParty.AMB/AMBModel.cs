@@ -5,6 +5,13 @@
         public Status status { get; set; }
         public Data? data { get; set; }
     }
+
+    public class DemoUrlResponse
+    {
+        public Status status { get; set; }
+        public string data { get; set; }
+    }
+
     public class GameReportResponse
     {
         public Status status { get; set; }

@@ -1,9 +1,6 @@
 ﻿using System.Data;
-
 using Dapper;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -210,17 +207,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 {
                     return new Result { Code = ResultCode.DatabaseError, Message = "Service_BettransSports_TFG_Bet_Ins" };
                 }
-                result = _bettingService.PlaceBetV2(
+                result = _bettingService.PlaceBet(
                         tpCustInfo: tpCustInfo,
                         amount: Math.Abs(bet.amount) * -1,
                         tpId: (int)Tp.TFG,
                         tpTransId: bet.id,
                         gameType: (int)bet.TpGameType,
                         refId: bet.id,
-                        betData: null,
-                        tpCategory: TpCategory.Esports,
                         afterAmount: out var afterAmount,
                         bonusId: ref bonusId,
+                        useBonus: out _,
                         conn: conn,
                         trans: trans
                 );

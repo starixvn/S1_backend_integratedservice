@@ -11,7 +11,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly WagerOne789Service _wagerOne789Service;
         private readonly ILogger<WagerOne789BLL> _logger;
         private readonly One789Config _siteConfig;
-
+        private readonly TpUnsettleService _tpUnsettleService;
         public WagerOne789BLL(IServiceProvider provider)
         {
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
@@ -19,6 +19,7 @@ namespace ThirdPartyWager.Service.BLL
             _wagerOne789Service = provider.GetRequiredService<WagerOne789Service>();
             _logger = provider.GetRequiredService<ILogger<WagerOne789BLL>>();
             _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<One789Config>(Tp.One789.ToString());
+            _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
         }
 
         public async Task<bool> GetWagersAsync(string startTime, string endTime, int gameType)
@@ -66,7 +67,12 @@ namespace ThirdPartyWager.Service.BLL
                                 record.Numbers = JsonConvert.SerializeObject(record.Numbers);
                                 record.TransId = $"{record.Term}_{record.GameType}_{record.Username}";
                             }
-                            _wagerOne789Service.InsertWagerOne789(record, gameType);
+                            var result = _wagerOne789Service.InsertWagerOne789(record, gameType);
+
+                            if (result)
+                            {
+                                _tpUnsettleService.InsertTpUnsettle(Tp.One789, (GameType)gameType, record.TransId);
+                            }
                         }
                         catch (Exception ex)
                         {

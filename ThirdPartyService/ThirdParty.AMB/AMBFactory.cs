@@ -24,7 +24,7 @@ namespace ThirdParty.AMB
         public abstract GameListResponse GetGameList(Func<string, string, string, Dictionary<string, string>, int, string> callback);
         public abstract CommonResponse CreateMember(string tpUserName, Func<string, string, string, Dictionary<string, string>, int, string> callback);
 
-        public abstract CommonResponse LaunchGame(string tpUserName, string gameId, string homeUrl, bool isFun,
+        public abstract CommonResponse LaunchGame(string tpUserName, string gameId, string homeUrl, bool isFun,string tpLangId,
             Func<string, string, string, Dictionary<string, string>, int, string> callback);
 
         public abstract GameReportResponse GetRoundResult(string tpUserName, string roundId, string gameId,

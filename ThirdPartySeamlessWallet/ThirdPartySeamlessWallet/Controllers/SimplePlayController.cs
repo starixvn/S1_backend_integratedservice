@@ -1,11 +1,8 @@
 ﻿using System.Text;
 using System.Web;
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -27,7 +24,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly int _thisTp;
         private readonly int _gameType = 0;
         private readonly string _tpName = Tp.SimplePlay.ToString();
-        private readonly IHostEnvironment _environment;
 
         public SimplePlayController(IServiceProvider provider)
         {
@@ -38,7 +34,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             _tools = provider.GetRequiredService<Tools>();
             _logger = provider.GetRequiredService<ILogger<SimplePlayController>>();
             _log2File = provider.GetRequiredService<Log2File>();
-            _environment = provider.GetRequiredService<IHostEnvironment>();
             _thisTp = (int)Tp.SimplePlay;
             _gameType = (int)GameType.SimplePlay_RNG;
         }
