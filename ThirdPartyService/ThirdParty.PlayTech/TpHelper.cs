@@ -165,6 +165,17 @@ namespace ThirdParty.PlayTech
             string sessionKey = Convert.ToBase64String(bytes);
 
             gameId = (tpGameType == (int)TpGameType.PlayTech_LiveCasino) ? "ubal" : gameId;
+            /*
+             * 對於 BRL 貨幣
+             * 必須使用 PTN 遊戲代碼才能存取遊戲
+             * 測試環境和正式環境使用的遊戲程式碼不同
+             */
+            if (!IsDevelopment && tpCustInfo.TpCurrencyId == "BRL")
+            {
+                // 套用ptn_，讓SlotGame不用多設定，直接使用原資料
+                gameId = $"ptn_{gameId}";
+            }
+
             ApiResult oApiResult = new ApiResult
             {
                 ErrorCode = ErrorCode.Success,
