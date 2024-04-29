@@ -222,7 +222,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string? streamerId { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-        public int? tableId { get; set; }
+        public string? tableId { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string? dealerDomain { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
