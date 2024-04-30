@@ -1,8 +1,5 @@
-﻿using Elastic.Apm.NetCoreAll;
-
-using ThirdPartyCore.BLL;
+﻿using ThirdPartyCore.BLL;
 using ThirdPartyCore.Model;
-
 using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
@@ -84,10 +81,7 @@ namespace ThirdPartyService
             }
 
             //app.UseHttpsRedirection();
-            if (!env.IsEnvironment("Local"))
-            {
-                app.UseAllElasticApm(Configuration);
-            }
+
             app.UseRouting();
             app.UseRequestLogMiddleware();
             app.UseResponseLogMiddleware();
