@@ -116,6 +116,17 @@ namespace ThirdParty.PlayTech
             string roundId = wagerDetail.GetStringValue("roundId");
             string platform = wagerDetail.GetStringValue("platform");
 
+            /*
+             * 對於 BRL 貨幣
+             * 必須使用 PTN 遊戲代碼才能存取遊戲
+             * 測試環境和正式環境使用的遊戲程式碼不同
+             */
+            if (tpCustInfo.TpCurrencyId == "BRL" && gameCode.StartsWith("ptn_", StringComparison.OrdinalIgnoreCase))
+            {
+                // 去除ptn_，讓rebate計算可以使用SlotGame原資料設定
+                gameCode = gameCode.Substring(4);
+            }
+
             return tpGameType.CategoryId switch
             {
                 TpCategory.LiveCasino => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
