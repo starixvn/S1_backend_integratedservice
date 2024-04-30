@@ -152,7 +152,7 @@ namespace ThirdParty.PlayTech
         {
             var tpConfig = new TpConfig(inputs);
             string gameId = inputs.GetValueOrDefault("gameId") ?? throw new Exception("gameId");
-            int tpGameType = (gameId == "0" || gameId == "" || inputs.GetValueOrDefault("tpGameType") == TpGameType.PlayTech_LiveCasino.ToString()) ? (int)TpGameType.PlayTech_LiveCasino : (int)TpGameType.PlayTech_RNG;
+            int tpGameType = (gameId == "0" || gameId == "" || int.Parse(inputs.GetValueOrDefault("tpGameType", "0")) == (int)TpGameType.PlayTech_LiveCasino) ? (int)TpGameType.PlayTech_LiveCasino : (int)TpGameType.PlayTech_RNG;
             string fun = inputs.GetValueOrDefault("fun") ?? "0";
             string homeUrl = inputs.GetValueOrDefault("homeUrl") ?? "";
             string token = inputs.GetValueOrDefault("Token") ?? throw new Exception("Token");
