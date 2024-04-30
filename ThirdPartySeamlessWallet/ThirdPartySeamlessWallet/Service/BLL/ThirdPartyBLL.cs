@@ -285,6 +285,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 case (int)Tp.PlayTech:
                     gameType = GameType.PlayTech_RNG;
                     var casinoPlayTech = GetGameCasinoWithCache(tpId);
+                    /*
+                     * 對於 BRL 貨幣
+                     * 必須使用 PTN 遊戲代碼才能存取遊戲
+                     * 測試環境和正式環境使用的遊戲程式碼不同
+                     */
+                    if (gameId.StartsWith("ptn_", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // 去除ptn_，比對原gameid是否存在
+                        gameId = gameId.Substring(4);
+                    }
                     var checkPlayTech = casinoPlayTech.FirstOrDefault(x => x.GameId == gameId);
                     if (checkPlayTech == null)
                     {

@@ -129,6 +129,18 @@ namespace ThirdPartySettleWorker.Workers
                         var validBet = wager.ValidBet;
                         var winLostAmount = wager.WinLostAmount;
                         var gameId = wager.GameId.ToString();
+
+                        /*
+                         * 對於 BRL 貨幣
+                         * 必須使用 PTN 遊戲代碼才能存取遊戲
+                         * 測試環境和正式環境使用的遊戲程式碼不同
+                         */
+                        if (tpCurrency.TpCurrencyId == "BRL" && gameId.StartsWith("ptn_", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // 去除ptn_，讓rebate計算可以使用SlotGame原資料設定
+                            gameId = gameId.Substring(4);
+                        }
+
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
