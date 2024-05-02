@@ -770,10 +770,19 @@ namespace ThirdPartySeamlessWallet.Controllers
                 _log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
+            
+            // check gametype
+            var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, debitReq.gamecode);
+            if (gameType == GameType.CQ9_WCC)
+            {
+                apiResponse.status.code = "1100";
+                apiResponse.status.message = "Error : gamecode is WCC";
+                _log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                return apiResponse;
+            }
 
             try
             {
-                var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, debitReq.gamecode);
                 int result = _settledBLL.DebitRNG_CQ9(debitReq, (int)gameType, out decimal tpAffterAmount);
                 if (result > 0)
                 {
@@ -869,10 +878,19 @@ namespace ThirdPartySeamlessWallet.Controllers
                 _log2File.Error($"{JsonConvert.SerializeObject(getCreditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
+            
+            // check gametype
+            var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, creditReq.gamecode);
+            if (gameType == GameType.CQ9_WCC)
+            {
+                apiResponse.status.code = "1100";
+                apiResponse.status.message = "Error : gamecode is WCC";
+                _log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                return apiResponse;
+            }
 
             try
             {
-                var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, creditReq.gamecode);
                 var result = _settledBLL.CreditRNG_CQ9(creditReq, (int)gameType, out decimal tpAffterAmount);
                 if (result > 0)
                 {
@@ -1346,7 +1364,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             if (!validGameTypes.Contains(gameType))
             {
                 apiResponse.status.code = "1100";
-                apiResponse.status.message = "Error : gamecode is not fish";
+                apiResponse.status.message = "Error : gamecode is not fish or WCC";
                 _log2File.Error($"{JsonConvert.SerializeObject(rollinReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }

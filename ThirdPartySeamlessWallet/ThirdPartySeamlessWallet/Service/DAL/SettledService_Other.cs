@@ -1920,5 +1920,171 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+        
+        #region CQ9 WCC
+        public int RollinWCC_CQ9(TpCustInfo tpCustInfo, RollinDataFish_CQ9 rollinDataWCC_CQ9, int gameType, ref decimal afterAmount)
+        {
+            var tpId = Tp.CQ9;
+            //var tpGameType = GameType.CQ9_WCC;
+            var tpCategory = TpCategory.Cockfighting;
+            var result = 0;
+            int bonusId = 0;
+            afterAmount = 0;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                if (rollinDataWCC_CQ9.amount > 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        rollinDataWCC_CQ9.amount,
+                        (int)tpId,
+                        rollinDataWCC_CQ9.roundid,
+                        gameType,
+                        tpCategory,
+                        rollinDataWCC_CQ9.roundid,
+                        TransType.Payout,
+                        null,
+                        out afterAmount,
+                        "Payout",
+                        out bonusId,
+                        conn,
+                        trans,
+                        AllowNegative.Allow
+                    );
+                }
+
+                if (result > 0 || rollinDataWCC_CQ9.amount == 0)
+                {
+                    decimal winLose = rollinDataWCC_CQ9.win;
+                    var ticketStatus = winLose switch
+                    {
+                        < 0 => (int)TicketStatus.Lost,
+                        0 => (int)TicketStatus.Draw,
+                        _ => (int)TicketStatus.Win
+                    };
+
+                    var p = new DynamicParameters(new
+                    {
+                        account = rollinDataWCC_CQ9.account,
+                        gamehall = rollinDataWCC_CQ9.gamehall,
+                        gamecode = rollinDataWCC_CQ9.gamecode,
+                        roundid = rollinDataWCC_CQ9.roundid,
+                        validbet = rollinDataWCC_CQ9.validbet,
+                        bet = Math.Abs(rollinDataWCC_CQ9.bet) * -1,
+                        win = rollinDataWCC_CQ9.win,
+                        roomfee = rollinDataWCC_CQ9.roomfee,
+                        amount = rollinDataWCC_CQ9.amount,
+                        mtcode = rollinDataWCC_CQ9.mtcode,
+                        rake = rollinDataWCC_CQ9.rake,
+                        gametype = rollinDataWCC_CQ9.gametype,
+                        eventUnix = rollinDataWCC_CQ9.eventUnix,
+                        createUnix = rollinDataWCC_CQ9.createUnix,
+                        before = afterAmount - (Math.Abs(rollinDataWCC_CQ9.amount)),
+                        balance = afterAmount,
+                        Actions = "rollin",
+                        TicketStatus = ticketStatus,
+                        TicketType = (int)BettransType.Payout,
+                        SettleFlag = (int)SettleFlag.EndGame
+                    });
+
+                    result = _mainDbClient.Execute("Service_BettransCF_CQ9_Payout_Ins", trans, p);
+                    
+                    if (result > 0)
+                    {
+                        result = _tpUnsettleService.InsertTpUnsettle(Tp.CQ9, GameType.CQ9_WCC, rollinDataWCC_CQ9.roundid, trans);
+                    }
+
+                    if (result > 0)
+                    {
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                    }
+                }
+
+            }
+            catch (MySqlException mySqlEx)
+            {
+                /*Duplicate for key 'PRIMARY'*/
+                if (mySqlEx.Number == 1062)
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+        
+        public int RefundWCC_CQ9(TpCustInfo tpCustInfo, RefundDataRNG_CQ9 refundDataRNG_CQ9, out decimal afterAmount)
+        {
+            var tpId = Tp.CQ9;
+            var tpGameType = GameType.CQ9_WCC;
+            var tpCategory = TpCategory.Cockfighting;
+            int bonusId = 0;
+            afterAmount = 0;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            var result = _mainDbClient.Execute("Service_BettransCF_CQ9_Refund_Set", trans, new
+            {
+                mtcode = refundDataRNG_CQ9.mtcode,
+                before = afterAmount - Math.Abs(refundDataRNG_CQ9.amount),
+                balance = afterAmount,
+            });
+
+            if (result > 0)
+            {
+                if (refundDataRNG_CQ9.amount != 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        Math.Abs(refundDataRNG_CQ9.amount),
+                        (int)tpId,
+                        refundDataRNG_CQ9.roundid,
+                        (int)tpGameType,
+                        tpCategory,
+                        refundDataRNG_CQ9.roundid,
+                        TransType.Refunds,
+                        null,
+                        out afterAmount,
+                        "Refund",
+                        out bonusId,
+                        conn,
+                        trans,
+                        AllowNegative.Allow);
+                }
+
+                if (result > 0)
+                {
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                }
+            }
+            else
+            {
+                return -1;
+            }
+
+            return result;
+        }
+        
+        #endregion
     }
 }
