@@ -1,12 +1,9 @@
 ﻿using Newtonsoft.Json;
-
 using Serilog.Context;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -99,7 +96,7 @@ namespace ThirdPartySettleWorker.Workers
                         if (wager.Stake != bettrans.Sum(x => x.Stake) || wager.WinLostAmount != bettrans.Sum(x => x.WinLostAmount))
                         {
                             LogContext.PushProperty("TP", _tpName);
-                            _logger.LogWarning($"amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}");
+                            _logger.LogWarning($"{logName} amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}");
                             continue;
                         }
 
@@ -140,7 +137,7 @@ namespace ThirdPartySettleWorker.Workers
                             _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, unsettled.TransId, isSuccess: false);
                         });
                         isError = true;
-                        _logger.LogError(ex1, $"exMessage:{ex1.Message} || TransId : {unsettled.TransId}");
+                        _logger.LogError(ex1, $"{logName} exMessage:{ex1.Message} || TransId : {unsettled.TransId}");
                     }
                 }
             }
@@ -150,7 +147,7 @@ namespace ThirdPartySettleWorker.Workers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
                 isError = true;
             }
             finally
