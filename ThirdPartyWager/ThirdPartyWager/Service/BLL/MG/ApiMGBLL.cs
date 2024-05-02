@@ -1,9 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
-
 using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -12,37 +10,37 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class ApiMGBLL : IApiMGBLL
     {
-        public Dictionary<string, string> MgConfig { get; set; }
         private readonly ILogger<ApiMGBLL> _logger;
         private readonly Log2File _log2File;
         private readonly IConfiguration _configuration;
         private readonly HttpClient _client;
         private readonly string _tpName = Tp.MG.ToString();
+        private readonly MGConfig _siteConfig;
 
         public ApiMGBLL(IServiceProvider provider, IConfiguration configuration)
         {
+            var httpHelper = provider.GetRequiredService<HttpHelper>();
             _configuration = configuration;
             _logger = provider.GetRequiredService<ILogger<ApiMGBLL>>();
-            var httpHelper = provider.GetRequiredService<HttpHelper>();
             _log2File = provider.GetRequiredService<Log2File>();
             _client = httpHelper.GetClientWithHandler(CreateHandler());
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<MGConfig>(_tpName);
+
         }
 
         public async Task<List<MGFailedTransactions>> GetFailedTransactionsAsync(string token, string currencyId)
         {
-            var apiUrl = GetInputValue(MgConfig, "ApiUrl");
-            var strAgents = GetInputValue(MgConfig, "Agent");
-            var mgAgents = JsonConvert.DeserializeObject<List<MGAgents>>(strAgents);
+            var apiUrl = _siteConfig.ApiUrl;
+            var currencyData = _siteConfig.CurrencyData[currencyId];
 
             try
             {
-                var agent = mgAgents.Single(a => a.Currency == currencyId);
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                var response = await _client.GetAsync($"{apiUrl}/agents/{agent.AgentCode}/failedTransactions");
+                var response = await _client.GetAsync($"{apiUrl}/agents/{currencyData.AgentCode}/failedTransactions");
                 var result = await response.Content.ReadAsStringAsync();
                 if (result != "[]")
                 {
-                    _logger.LogInformation($"{agent.AgentCode} get failedTransactions:{result}");
+                    _logger.LogInformation($"{currencyData.AgentCode} get failedTransactions:{result}");
                 }
                 var failedTransactions = JsonConvert.DeserializeObject<List<MGFailedTransactions>>(result);
                 return failedTransactions;
@@ -56,15 +54,13 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task UpdateFailedTransactionToResolvedState(string token, string txnId, string currencyId)
         {
-            var apiUrl = GetInputValue(MgConfig, "ApiUrl");
-            var strAgents = GetInputValue(MgConfig, "Agent");
-            var mgAgents = JsonConvert.DeserializeObject<List<MGAgents>>(strAgents);
+            var apiUrl = _siteConfig.ApiUrl;
+            var currencyData = _siteConfig.CurrencyData[currencyId];
 
             try
             {
-                var agent = mgAgents.Single(a => a.Currency == currencyId);
                 _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                var response = await _client.PatchAsync($"{apiUrl}/agents/{agent.AgentCode}/failedTransactions/{txnId}", null);
+                var response = await _client.PatchAsync($"{apiUrl}/agents/{currencyData.AgentCode}/failedTransactions/{txnId}", null);
                 _logger.LogInformation($"update mg failed transactions {response.StatusCode}");
             }
             catch (Exception ex)
@@ -77,15 +73,13 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {
-                var tokenUrl = GetInputValue(MgConfig, "TokenUrl");
-                var strAgents = GetInputValue(MgConfig, "Agent");
-                var mgAgents = JsonConvert.DeserializeObject<List<MGAgents>>(strAgents);
-                var agent = mgAgents.Single(a => a.Currency == tpCurrencyId);
+                var tokenUrl = _siteConfig.TokenUrl;
+                var currencyData = _siteConfig.CurrencyData[tpCurrencyId];
 
                 var httpContent = new FormUrlEncodedContent(new Dictionary<string, string>
                 {
-                    { "client_id", agent.AgentCode },
-                    { "client_secret", agent.SecretKey },
+                    { "client_id", currencyData.AgentCode },
+                    { "client_secret", currencyData.SecretKey },
                     { "grant_type", "client_credentials" }
                 });
                 var response = await _client.PostAsync($"{tokenUrl}/connect/token", httpContent);
@@ -104,11 +98,10 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {
-                var apiUrl = GetInputValue(MgConfig, "ApiUrl");
-                var strAgents = GetInputValue(MgConfig, "Agent");
-                var mgAgents = JsonConvert.DeserializeObject<List<MGAgents>>(strAgents);
-                var agent = mgAgents.Single(a => a.Currency == currencyId);
-                var url = $"{apiUrl}/agents/{agent.AgentCode}/reports/playerGameAnalysis";
+                var apiUrl = _siteConfig.ApiUrl;
+                var currencyData = _siteConfig.CurrencyData[currencyId];
+
+                var url = $"{apiUrl}/agents/{currencyData.AgentCode}/reports/playerGameAnalysis";
                 var parameters = new
                 {
                     fromDate = date.ToString("yyyy-MM-dd HH:mm:ss.fff"),
@@ -137,11 +130,10 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {
-                var apiUrl = GetInputValue(MgConfig, "ApiUrl");
-                var strAgents = GetInputValue(MgConfig, "Agent");
-                var mgAgents = JsonConvert.DeserializeObject<List<MGAgents>>(strAgents);
-                var agent = mgAgents.Single(a => a.Currency == currencyId);
-                var url = $"{apiUrl}/agents/{agent.AgentCode}/reports/fortuneRewards";
+                var apiUrl = _siteConfig.ApiUrl;
+                var currencyData = _siteConfig.CurrencyData[currencyId];
+
+                var url = $"{apiUrl}/agents/{currencyData.AgentCode}/reports/fortuneRewards";
                 var parameters = new
                 {
                     fromDate = date.ToString("yyyy-MM-dd HH:mm:ss.fff"),
@@ -165,18 +157,15 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        private string GetInputValue(Dictionary<string, string> inputs, string key)
+        public class MGConfig
         {
-            if (inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))
-            {
-                return inputs[key];
-            }
-            throw new Exception();
+            public string ApiUrl { get; set; }
+            public string TokenUrl { get; set; }
+            public Dictionary<string, CurrencyDataMG> CurrencyData { get; set; }
         }
 
-        private class MGAgents
+        public class CurrencyDataMG
         {
-            public string Currency { get; set; }
             public string MasterAgent { get; set; }
             public string AgentCode { get; set; }
             public string SecretKey { get; set; }

@@ -1,5 +1,4 @@
 ﻿using Serilog.Context;
-
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
@@ -13,7 +12,7 @@ namespace ThirdPartyWager.Workers
         private Timer _timer;
         private readonly string _tpName = Tp.MG.ToString();
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly int tpId = (int)Tp.MG;
+        private readonly int _tpId = (int)Tp.MG;
 
         public FinanceMG(IServiceProvider provider)
         {
@@ -37,7 +36,7 @@ namespace ThirdPartyWager.Workers
 
             try
             {
-                var lastTime = _thirdPartyBLL.GetThirdPartyTimer(tpId, timerType);
+                var lastTime = _thirdPartyBLL.GetThirdPartyTimer(_tpId, timerType);
                 var date = lastTime?.StartTime ?? DateTime.UtcNow.BeginningOfTheDay();
                 var endTime = date.AddDays(1).AddMilliseconds(-1);
                 if (endTime > DateTime.UtcNow)
@@ -49,7 +48,7 @@ namespace ThirdPartyWager.Workers
                 if (isSuccess)
                 {
                     _logger.LogInformation($"MG Get {date:yyyy-MM-dd} report");
-                    _thirdPartyBLL.SetThirdPartyTimer(tpId, timerType, new DateTimeOffset(date.AddDays(intervalDays)).ToUnixTimeSeconds());
+                    _thirdPartyBLL.SetThirdPartyTimer(_tpId, timerType, new DateTimeOffset(date.AddDays(intervalDays)).ToUnixTimeSeconds());
                 }
 
                 if ((int)DateTime.UtcNow.AddDays(-1).Subtract(date).TotalDays > intervalDays)
