@@ -1,10 +1,8 @@
 using Serilog.Context;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -23,7 +21,6 @@ namespace ThirdPartySettleWorker.Workers
         private readonly ILogger<HBWorker> _logger;
         private readonly string _tpName;
         private readonly PartitionService _partitionService;
-
 
         public HBWorker(IServiceProvider provider)
         {
