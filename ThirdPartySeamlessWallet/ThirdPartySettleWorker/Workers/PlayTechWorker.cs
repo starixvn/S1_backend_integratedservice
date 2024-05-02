@@ -1,13 +1,10 @@
 ﻿using Newtonsoft.Json;
-
 using Serilog.Context;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -19,7 +16,6 @@ namespace ThirdPartySettleWorker.Workers
 
         private Timer _timerRNG;
         private Timer _timerLC;
-        private readonly Tools _tools;
         private readonly SettledBLL _settledBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
@@ -31,7 +27,6 @@ namespace ThirdPartySettleWorker.Workers
 
         public PlayTechWorker(IServiceProvider provider)
         {
-            _tools = provider.GetRequiredService<Tools>();
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
