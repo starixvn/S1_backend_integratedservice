@@ -16,9 +16,6 @@ namespace ThirdPartySettleWorker.Workers
         private Timer timerRngByRound;
         private Timer timerRngBySessionId;
         private Timer timerRngBySessionIdCancel;
-        private Timer timerSettleJILIRng;
-        private Timer timerSettleJILIFish;
-        private Timer timerTransactionCheck;
 
         private readonly SettledBLL _settledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
@@ -53,9 +50,6 @@ namespace ThirdPartySettleWorker.Workers
             timerRngByRound?.Change(Timeout.Infinite, 0);
             timerRngBySessionId?.Change(Timeout.Infinite, 0);
             timerRngBySessionIdCancel?.Change(Timeout.Infinite, 0);
-            timerSettleJILIRng?.Change(Timeout.Infinite, 0);
-            timerSettleJILIFish?.Change(Timeout.Infinite, 0);
-            timerTransactionCheck?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
 
