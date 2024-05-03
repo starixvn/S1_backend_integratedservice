@@ -1,8 +1,8 @@
 ﻿using System.Web;
-
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -13,65 +13,73 @@ namespace ThirdParty.MP
 {
     public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular
     {
+        private readonly MPConfig _siteConfig;
+
+        public TpHelper(IServiceProvider provider)
+        {
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<MPConfig>(TpEnum.MP.ToString());
+        }
+
         #region ErrorCode
-        Dictionary<int, string> ErrorMassage = new Dictionary<int, string>()
-        {   {1,"TOKEN 丢失"},
-            {2,"渠道不存在"},
-            {3,"验证时间超时"},
-            {4,"验证错误"},
-            {5,"渠道白名单错误"},
-            {6,"验证字段丢失"},
-            {8,"不存在的请求"},
-            {15,"渠道验证错误"},
-            {16,"数据不存在（当前没有注单）"},
-            {20,"账号禁用"},
-            {22,"AES 解密失败"},
-            {24,"渠道拉取数据超过时间范围"},
-            {26,"订单号不存在"},
-            {27,"数据库异常"},
-            {28,"ip 禁用"},
-            {29,"订单号与订单规则不符"},
-            {30,"获取玩家在线状态失败"},
-            {31,"更新的分数小于或者等于 0 "},
-            {32,"更新玩家信息失败"},
-            {33,"更新玩家金币失败"},
-            {34,"订单重复"},
-            {35,"获取玩家信息失败（请调用登录接口创建账号）"},
-            {36,"KindID 不存在"},
-            {37,"登录瞬间禁止下分，导致下分失败"},
-            {38,"余额不足导致下分失败"},
-            {39,"禁止同一账号登录带分、上分、下分并发请求，后一个请求被拒"},
-            {40,"单次上下分数量不能超过一百亿"},
-            {41,"拉取对局汇总统计时间范围有误"},
-            {42,"代理被禁用"},
-            {43,"拉单过于频繁(两次拉单时间间隔必须大于 1 秒)"},
-            {44,"订单正在处理中"},
-            {999,"请求失败"},
-            {1001,"注册会员账号系统异常"},
-            {1002,"代理商金额不足"},
-            {1003,"玩家大厅上分/下分异常"},
-            {1004,"代理商渠道不存在"},
-            {1005,"会员金额不足"},
-            {1006,"会员游戏上分/下分异常"},
-            {1007,"玩家登录游戏上分异常"},
-            {1008,"玩家注销游戏下分异常"},
-            {1009,"上下分出现负数(非法值)"},
-            {1010,"会员退出大厅异常"},
-            {1011,"订单已存在"},
-            {1012,"订单号不符合规则"},
-            {1013,"后台上分/下分异常"},
-            {1014,"上级代理金额不足"},
-            {1015,"会员代理充值异常(不能跨代理给会员充值) "},
-            {1016,"玩家账户被锁"},
-            {1017,"更新会员、浏览器信息异常"},
-            {1018,"存储过程参数格式不正确或参数为空"},
-            {1019,"更新会员玩过的游戏信息异常"},
-            {1020,"玩家大厅进(出)游戏上分(下分)生成订单异常"},
-            {1021,"会员订单失效或不存在"},
-            {1022,"会员订单已经处理过，不能重复处理"},
-            {1023,"玩家正在游戏中，不能上下分"},
-            {1024,"大厅会员账号不存在"},
-            {1025,"参数错误，子渠道标识不能为空"},
+        readonly Dictionary<int, string> ErrorMassage = new()
+        {
+            { 1, "TOKEN 丢失" },
+            { 2, "渠道不存在" },
+            { 3, "验证时间超时" },
+            { 4, "验证错误" },
+            { 5, "渠道白名单错误" },
+            { 6, "验证字段丢失" },
+            { 8, "不存在的请求" },
+            { 15, "渠道验证错误" },
+            { 16, "数据不存在（当前没有注单）" },
+            { 20, "账号禁用" },
+            { 22, "AES 解密失败" },
+            { 24, "渠道拉取数据超过时间范围" },
+            { 26, "订单号不存在" },
+            { 27, "数据库异常" },
+            { 28, "ip 禁用" },
+            { 29, "订单号与订单规则不符" },
+            { 30, "获取玩家在线状态失败" },
+            { 31, "更新的分数小于或者等于 0 " },
+            { 32, "更新玩家信息失败" },
+            { 33, "更新玩家金币失败" },
+            { 34, "订单重复" },
+            { 35, "获取玩家信息失败（请调用登录接口创建账号）" },
+            { 36, "KindID 不存在" },
+            { 37, "登录瞬间禁止下分，导致下分失败" },
+            { 38, "余额不足导致下分失败" },
+            { 39, "禁止同一账号登录带分、上分、下分并发请求，后一个请求被拒" },
+            { 40, "单次上下分数量不能超过一百亿" },
+            { 41, "拉取对局汇总统计时间范围有误" },
+            { 42, "代理被禁用" },
+            { 43, "拉单过于频繁(两次拉单时间间隔必须大于 1 秒)" },
+            { 44, "订单正在处理中" },
+            { 999, "请求失败" },
+            { 1001, "注册会员账号系统异常" },
+            { 1002, "代理商金额不足" },
+            { 1003, "玩家大厅上分/下分异常" },
+            { 1004, "代理商渠道不存在" },
+            { 1005, "会员金额不足" },
+            { 1006, "会员游戏上分/下分异常" },
+            { 1007, "玩家登录游戏上分异常" },
+            { 1008, "玩家注销游戏下分异常" },
+            { 1009, "上下分出现负数(非法值)" },
+            { 1010, "会员退出大厅异常" },
+            { 1011, "订单已存在" },
+            { 1012, "订单号不符合规则" },
+            { 1013, "后台上分/下分异常" },
+            { 1014, "上级代理金额不足" },
+            { 1015, "会员代理充值异常(不能跨代理给会员充值) " },
+            { 1016, "玩家账户被锁" },
+            { 1017, "更新会员、浏览器信息异常" },
+            { 1018, "存储过程参数格式不正确或参数为空" },
+            { 1019, "更新会员玩过的游戏信息异常" },
+            { 1020, "玩家大厅进(出)游戏上分(下分)生成订单异常" },
+            { 1021, "会员订单失效或不存在" },
+            { 1022, "会员订单已经处理过，不能重复处理" },
+            { 1023, "玩家正在游戏中，不能上下分" },
+            { 1024, "大厅会员账号不存在" },
+            { 1025, "参数错误，子渠道标识不能为空" },
         };
         #endregion
 
@@ -80,10 +88,10 @@ namespace ThirdParty.MP
         {
             public int s { get; set; }
             public string m { get; set; }
-            public info d { get; set; }
+            public Info d { get; set; }
         }
 
-        public class info
+        public class Info
         {
             public int code { get; set; }
             public string url { get; set; }
@@ -96,10 +104,10 @@ namespace ThirdParty.MP
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string Agent = inputs.ContainsKey("Agent") && !string.IsNullOrEmpty(inputs["Agent"]) ? inputs["Agent"] : throw new Exception("Agent");
-            string Deskey = inputs.ContainsKey("Deskey") && !string.IsNullOrEmpty(inputs["Deskey"]) ? inputs["Deskey"] : throw new Exception("Deskey");
-            string Md5key = inputs.ContainsKey("Md5key") && !string.IsNullOrEmpty(inputs["Md5key"]) ? inputs["Md5key"] : throw new Exception("Md5key");
+            string ApiUrl = _siteConfig.ApiUrl;
+            string Agent = _siteConfig.Agent;
+            string Deskey = _siteConfig.Deskey;
+            string Md5key = _siteConfig.Md5key;
 
             var current = new DateTimeOffset(DateTime.UtcNow);
             var timestamp = current.ToUnixTimeMilliseconds();
@@ -115,7 +123,7 @@ namespace ThirdParty.MP
             var CheckTransfer = new
             {
                 agent = Agent,
-                timestamp = timestamp,
+                timestamp,
                 param = AesEncrypt(sParam, Deskey),
                 key = ToMD5($"{Agent}{timestamp}{Md5key}").ToLower()
             };
@@ -128,7 +136,7 @@ namespace ThirdParty.MP
                 "application/x-www-form-urlencoded"
             );
 
-            ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
+            ApiResult<TransferResult> apiResult = new();
             if (!IsJSON(result))
             {
                 apiResult.RawMessage = "No Result";
@@ -175,32 +183,38 @@ namespace ThirdParty.MP
         {
             tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x").ToLower();
 
-            ApiResult oApiResult = new ApiResult();
-            oApiResult.ErrorCode = ErrorCode.Success;
+            ApiResult oApiResult = new()
+            {
+                ErrorCode = ErrorCode.Success
+            };
             return oApiResult;
         }
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
-            oApiResult.ErrorCode = ErrorCode.Fail;
+            ApiResult<UserBalance> oApiResult = new()
+            {
+                ErrorCode = ErrorCode.Fail
+            };
             return oApiResult;
         }
 
         public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            TransIdModel transIdModel = new TransIdModel();
-            transIdModel.Implemented = true;
+            TransIdModel transIdModel = new()
+            {
+                Implemented = true
+            };
             return transIdModel;
         }
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string Agent = inputs.ContainsKey("Agent") && !string.IsNullOrEmpty(inputs["Agent"]) ? inputs["Agent"] : throw new Exception("Agent");
-            string Deskey = inputs.ContainsKey("Deskey") && !string.IsNullOrEmpty(inputs["Deskey"]) ? inputs["Deskey"] : throw new Exception("Deskey");
-            string Md5key = inputs.ContainsKey("Md5key") && !string.IsNullOrEmpty(inputs["Md5key"]) ? inputs["Md5key"] : throw new Exception("Md5key");
-            string gameId = inputs.GetValueOrDefault("gameId", ""); 
+            string ApiUrl = _siteConfig.ApiUrl;
+            string Agent = _siteConfig.Agent;
+            string Deskey = _siteConfig.Deskey;
+            string Md5key = _siteConfig.Md5key;
+            string gameId = inputs.GetValueOrDefault("gameId", "");
 
             var current = new DateTimeOffset(DateTime.UtcNow);
             var timestamp = current.ToUnixTimeMilliseconds();
@@ -222,7 +236,7 @@ namespace ThirdParty.MP
             var Login = new
             {
                 agent = Agent,
-                timestamp = timestamp,
+                timestamp,
                 param = AesEncrypt(sParam, Deskey),
                 key = ToMD5($"{Agent}{timestamp}{Md5key}").ToLower()
             };
@@ -236,7 +250,7 @@ namespace ThirdParty.MP
                 "application/x-www-form-urlencoded"
             );
 
-            ApiResult oApiResult = new ApiResult();
+            ApiResult oApiResult = new();
             if (!IsJSON(result))
             {
                 oApiResult.RawMessage = "No Result";
@@ -295,7 +309,7 @@ namespace ThirdParty.MP
             var Transfer = new
             {
                 agent = Agent,
-                timestamp = timestamp,
+                timestamp,
                 param = AesEncrypt(sParam, Deskey),
                 key = ToMD5($"{Agent}{timestamp}{Md5key}").ToLower()
             };
@@ -308,7 +322,7 @@ namespace ThirdParty.MP
                 "application/x-www-form-urlencoded"
             );
 
-            ApiResult<TransferResult> apiResult = new ApiResult<TransferResult>();
+            ApiResult<TransferResult> apiResult = new();
             apiResult.RawMessage = "No Result";
             apiResult.RawErrorCode = "1";
             apiResult.ErrorCode = ErrorCode.TransferPending;
@@ -367,7 +381,7 @@ namespace ThirdParty.MP
             var Logout = new
             {
                 agent = Agent,
-                timestamp = timestamp,
+                timestamp,
                 param = AesEncrypt(sParam, Deskey),
                 key = ToMD5($"{Agent}{timestamp}{Md5key}").ToLower()
             };
@@ -380,7 +394,7 @@ namespace ThirdParty.MP
                 "application/x-www-form-urlencoded"
             );
 
-            ApiResult oApiResult = new ApiResult();
+            ApiResult oApiResult = new();
             if (!IsJSON(result))
             {
                 oApiResult.RawMessage = "No Result";
@@ -418,7 +432,7 @@ namespace ThirdParty.MP
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
             var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerPK_MP_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
-            Dictionary<string, string> keyValuePairs = new Dictionary<string, string>();
+            Dictionary<string, string> keyValuePairs = new();
             foreach (var item in wagerDetail.Select((val, i) => new { i, val }))
             {
                 keyValuePairs.Add(item.val.Key, item.val.Value.ToString());
@@ -438,7 +452,7 @@ namespace ThirdParty.MP
             var GetDetail = new
             {
                 agent = Agent,
-                timestamp = timestamp,
+                timestamp,
                 param = AesEncrypt(sParam, Deskey),
                 key = ToMD5($"{Agent}{timestamp}{Md5key}").ToLower(),
                 lang = "en"
@@ -524,7 +538,7 @@ namespace ThirdParty.MP
             };
         }
 
-        private string GetGameName(string gameCode)
+        private static string GetGameName(string gameCode)
         {
             return gameCode switch
             {
