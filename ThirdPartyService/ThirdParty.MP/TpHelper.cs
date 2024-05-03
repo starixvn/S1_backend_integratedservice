@@ -286,10 +286,10 @@ namespace ThirdParty.MP
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string Agent = inputs.ContainsKey("Agent") && !string.IsNullOrEmpty(inputs["Agent"]) ? inputs["Agent"] : throw new Exception("Agent");
-            string Deskey = inputs.ContainsKey("Deskey") && !string.IsNullOrEmpty(inputs["Deskey"]) ? inputs["Deskey"] : throw new Exception("Deskey");
-            string Md5key = inputs.ContainsKey("Md5key") && !string.IsNullOrEmpty(inputs["Md5key"]) ? inputs["Md5key"] : throw new Exception("Md5key");
+            string ApiUrl = _siteConfig.ApiUrl;
+            string Agent = _siteConfig.Agent;
+            string Deskey = _siteConfig.Deskey;
+            string Md5key = _siteConfig.Md5key;
 
             var current = new DateTimeOffset(DateTime.UtcNow);
             var timestamp = current.ToUnixTimeMilliseconds();
@@ -363,10 +363,10 @@ namespace ThirdParty.MP
 
         public ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string Agent = inputs.ContainsKey("Agent") && !string.IsNullOrEmpty(inputs["Agent"]) ? inputs["Agent"] : throw new Exception("Agent");
-            string Deskey = inputs.ContainsKey("Deskey") && !string.IsNullOrEmpty(inputs["Deskey"]) ? inputs["Deskey"] : throw new Exception("Deskey");
-            string Md5key = inputs.ContainsKey("Md5key") && !string.IsNullOrEmpty(inputs["Md5key"]) ? inputs["Md5key"] : throw new Exception("Md5key");
+            string ApiUrl = _siteConfig.ApiUrl;
+            string Agent = _siteConfig.Agent;
+            string Deskey = _siteConfig.Deskey;
+            string Md5key = _siteConfig.Md5key;
 
             var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
 
@@ -419,10 +419,10 @@ namespace ThirdParty.MP
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string WagerUrl = inputs.ContainsKey("WagerUrl") && !string.IsNullOrEmpty(inputs["WagerUrl"]) ? inputs["WagerUrl"] : throw new Exception("WagerUrl");
-            string Agent = inputs.ContainsKey("Agent") && !string.IsNullOrEmpty(inputs["Agent"]) ? inputs["Agent"] : throw new Exception("Agent");
-            string Deskey = inputs.ContainsKey("Deskey") && !string.IsNullOrEmpty(inputs["Deskey"]) ? inputs["Deskey"] : throw new Exception("Deskey");
-            string Md5key = inputs.ContainsKey("Md5key") && !string.IsNullOrEmpty(inputs["Md5key"]) ? inputs["Md5key"] : throw new Exception("Md5key");
+            string WagerUrl = _siteConfig.WagerUrl;
+            string Agent = _siteConfig.Agent;
+            string Deskey = _siteConfig.Deskey;
+            string Md5key = _siteConfig.Md5key;
 
             var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
 
