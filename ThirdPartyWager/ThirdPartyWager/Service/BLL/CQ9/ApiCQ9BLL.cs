@@ -45,6 +45,26 @@ namespace ThirdPartyWager.Service.BLL
             var result = JsonConvert.DeserializeObject<CurrencyStats_CQ9>(r);
             return result;
         }
+        
+        public async Task<CurrencyStats_CQ9> GetLiveBetSummaryByTime(dynamic setting, string token, string gametype, string startTime, string endTime)
+        {
+            var apiUrl = setting["ApiUrl"];
+            // param
+            var url = $"{apiUrl}/gameboy/report/ss/live";
+            var param = new
+            {
+                starttime = HttpUtility.UrlEncode(startTime),
+                endtime = HttpUtility.UrlEncode(endTime),
+                groupby = "day",
+                page = 1,
+                gamecode = gametype
+            };
+
+            // request
+            var r = await DoHttpClientAsync(url, token, param, HttpMethod.Get);
+            var result = JsonConvert.DeserializeObject<CurrencyStats_CQ9>(r);
+            return result;
+        }
 
         private async Task<string> DoHttpClientAsync(string url, string token, object param, HttpMethod method)
         {
