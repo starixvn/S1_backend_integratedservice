@@ -22,6 +22,8 @@ namespace ThirdParty.NLC
             _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<NLCConfig>(TpEnum.NLC.ToString());
         }
 
+        #region Response
+
         public class LoginResponse
         {
             [JsonProperty("entry")]
@@ -52,6 +54,8 @@ namespace ThirdParty.NLC
             public string Name { get; set; }
 
         }
+
+        #endregion
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
