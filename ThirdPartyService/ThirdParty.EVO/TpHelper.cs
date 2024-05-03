@@ -1,6 +1,8 @@
 ﻿using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -11,11 +13,22 @@ namespace ThirdParty.EVO
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly EVOConfig _siteConfig;
+
+        public TpHelper(IServiceProvider provider)
+        {
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<EVOConfig>(TpEnum.EVO.ToString());
+        }
+
+        #region Response
+
         public class LoginResponse
         {
             public string entry { get; set; }
             public string entryEmbedded { get; set; }
         }
+
+        #endregion
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -32,8 +45,10 @@ namespace ThirdParty.EVO
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
-            oApiResult.ErrorCode = ErrorCode.Fail;
+            ApiResult<UserBalance> oApiResult = new()
+            {
+                ErrorCode = ErrorCode.Fail
+            };
             return oApiResult;
         }
 
@@ -44,9 +59,10 @@ namespace ThirdParty.EVO
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl_Backup") && !string.IsNullOrEmpty(inputs["ApiUrl_Backup"]) ? inputs["ApiUrl_Backup"] : throw new Exception("ApiUrl_Backup");
-            string Ua2Token = inputs.ContainsKey("Ua2Token") && !string.IsNullOrEmpty(inputs["Ua2Token"]) ? inputs["Ua2Token"] : throw new Exception("Ua2Token");
-            string CasinoKey = inputs.ContainsKey("CasinoKey") && !string.IsNullOrEmpty(inputs["CasinoKey"]) ? inputs["CasinoKey"] : throw new Exception("CasinoKey");
+            string ApiUrl = _siteConfig.ApiUrl_Backup;
+            string Ua2Token = _siteConfig.Ua2Token;
+            string CasinoKey = _siteConfig.CasinoKey;
+
             string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
             string GameUrl = ApiUrl;
             ApiUrl = $"{ApiUrl}/ua/v1/{CasinoKey}/{Ua2Token}";
@@ -58,7 +74,7 @@ namespace ThirdParty.EVO
             bool mobile = appType != AppType.Desktop;
             var siteName = ServerInfoProvider.GetSiteName(tpCustInfo.SiteId);
 
-            ApiResult oApiResult = new ApiResult();
+            ApiResult oApiResult = new();
 
             if (string.IsNullOrEmpty(siteName))
             {
@@ -214,7 +230,6 @@ namespace ThirdParty.EVO
 
         }
 
-
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerLC_EVO_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
@@ -267,7 +282,7 @@ namespace ThirdParty.EVO
             }
         }
 
-        private DeviceType GetDeviceType(string device)
+        private static DeviceType GetDeviceType(string device)
         {
             return device switch
             {

@@ -26,7 +26,7 @@ namespace ThirdPartyWager.Workers
             _financeNLCBLL = provider.GetRequiredService<FinanceNLCBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _fincanceService = provider.GetRequiredService<FincanceService>();
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<NLCConfig>(Tp.NLC.ToString());
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<NLCConfig>(_tpName);
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)

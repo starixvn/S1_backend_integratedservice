@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -13,6 +12,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiEVOBLL _apiEVOBLL;
         private readonly WagerEVOService _wagerEVOService;
         private readonly DateTimeHelper _dateTimeHelper;
+        private readonly EVOConfig _siteConfig;
         private readonly ILogger<WagerEVOBLL> _logger;
 
         private readonly int _tpId = (int)Tp.EVO;
@@ -26,6 +26,7 @@ namespace ThirdPartyWager.Service.BLL
             _wagerEVOService = provider.GetRequiredService<WagerEVOService>();
             _logger = provider.GetRequiredService<ILogger<WagerEVOBLL>>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<EVOConfig>(Tp.EVO.ToString());
         }
 
         public async Task<bool> ExecWagerWorker(int type, int timeRange)
@@ -84,13 +85,12 @@ namespace ThirdPartyWager.Service.BLL
         private async Task<bool> GetWagersAsync(string startTime, string endTime, bool compare = false, decimal wagerTotal = 0, decimal payoutTotal = 0)
         {
             var msg = "FATAL_ERROR";
-            var guid = Guid.NewGuid().ToString();
             try
             {
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+                var setting = _siteConfig;
 
                 // get wager
-                var dataWager = await _apiEVOBLL.GetBetListByTime(setting["ApiUrl_Backup"], setting["CasinoKey"], setting["gameHistoryApiToken"], setting["GameProvider"], startTime, endTime, guid);
+                var dataWager = await _apiEVOBLL.GetBetListByTime(setting, startTime, endTime);
 
                 // error condition
                 var error = dataWager.Select(x => x.error).FirstOrDefault();
@@ -136,20 +136,22 @@ namespace ThirdPartyWager.Service.BLL
                     {
                         field = round.id;
 
-                        var roundInfo = new WagerRoundInfo_EVO();
-                        roundInfo.id = round.id;
-                        roundInfo.gameProvider = round.gameProvider;
-                        roundInfo.startedAt = round.startedAt;
-                        roundInfo.settledAt = round.settledAt;
-                        roundInfo.status = round.status;
-                        roundInfo.gameType = round.gameType;
-                        roundInfo.table = JsonConvert.SerializeObject(round.table);
-                        roundInfo.dealer = JsonConvert.SerializeObject(round.dealer);
-                        roundInfo.currency = round.currency;
-                        roundInfo.result = JsonConvert.SerializeObject(round.result);
-                        roundInfo.wager = round.wager;
-                        roundInfo.payout = round.payout;
-                        roundInfo.TableId = round.table["id"];
+                        var roundInfo = new WagerRoundInfo_EVO
+                        {
+                            id = round.id,
+                            gameProvider = round.gameProvider,
+                            startedAt = round.startedAt,
+                            settledAt = round.settledAt,
+                            status = round.status,
+                            gameType = round.gameType,
+                            table = JsonConvert.SerializeObject(round.table),
+                            dealer = JsonConvert.SerializeObject(round.dealer),
+                            currency = round.currency,
+                            result = JsonConvert.SerializeObject(round.result),
+                            wager = round.wager,
+                            payout = round.payout,
+                            TableId = round.table["id"]
+                        };
 
                         IList<Participant_EVO> participants = JsonConvert.DeserializeObject<IList<Participant_EVO>>(JsonConvert.SerializeObject(round.participants));
                         foreach (var playerItem in participants)
@@ -159,26 +161,28 @@ namespace ThirdPartyWager.Service.BLL
                                 name = "WAGERID";
                                 field = betItem.transactionId;
 
-                                var bet = new Wager_EVO();
-                                bet.RoundId = round.id;
-                                bet.casinoId = playerItem.casinoId;
-                                bet.playerId = playerItem.playerId;
-                                //bet.screenName = playerItem.screenName;
-                                //bet.sessionId = playerItem.sessionId;
-                                //bet.casinoSessionId = playerItem.casinoSessionId;
-                                bet.currency = playerItem.currency;
-                                bet.code = betItem.code;
-                                bet.stake = betItem.stake;
-                                bet.payout = betItem.payout;
-                                bet.placedOn = betItem.placedOn;
-                                bet.description = betItem.description;
-                                bet.transactionId = betItem.transactionId;
-                                //bet.configOverlays = JsonConvert.SerializeObject(playerItem.configOverlays);
-                                bet.playMode = playerItem.playMode;
-                                bet.channel = playerItem.channel;
-                                //bet.os = playerItem.os;
-                                //bet.device = playerItem.device;
-                                bet.participants = JsonConvert.SerializeObject(playerItem);
+                                var bet = new Wager_EVO
+                                {
+                                    RoundId = round.id,
+                                    casinoId = playerItem.casinoId,
+                                    playerId = playerItem.playerId,
+                                    //bet.screenName = playerItem.screenName;
+                                    //bet.sessionId = playerItem.sessionId;
+                                    //bet.casinoSessionId = playerItem.casinoSessionId;
+                                    currency = playerItem.currency,
+                                    code = betItem.code,
+                                    stake = betItem.stake,
+                                    payout = betItem.payout,
+                                    placedOn = betItem.placedOn,
+                                    description = betItem.description,
+                                    transactionId = betItem.transactionId,
+                                    //bet.configOverlays = JsonConvert.SerializeObject(playerItem.configOverlays);
+                                    playMode = playerItem.playMode,
+                                    channel = playerItem.channel,
+                                    //bet.os = playerItem.os;
+                                    //bet.device = playerItem.device;
+                                    participants = JsonConvert.SerializeObject(playerItem)
+                                };
                                 var r = _wagerEVOService.InsertWager(bet);
                                 _ = r.Result;
                             }
@@ -218,7 +222,7 @@ namespace ThirdPartyWager.Service.BLL
             var before = -30;
             try
             {
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+                var setting = _siteConfig;
                 // 取得目前未結算資料
                 var unsettledList = await _wagerEVOService.GetUnsettleCheckList();
                 if (unsettledList == null)
@@ -262,7 +266,7 @@ namespace ThirdPartyWager.Service.BLL
 
                     // get wager
                     var settleTime = DateTimeOffset.FromUnixTimeSeconds(unsettled.SettleTime).DateTime.AddMinutes(-5).ToString(_timeFormat);
-                    var dataWager = await _apiEVOBLL.GetBetListByTransId(setting["ApiUrl_Backup"], setting["CasinoKey"], setting["gameHistoryApiToken"], setting["GameProvider"], unsettled.TransId, settleTime);
+                    var dataWager = await _apiEVOBLL.GetBetListByTransId(setting, unsettled.TransId, settleTime);
 
                     // error condition
                     var error = dataWager.Select(x => x.error).FirstOrDefault();
@@ -289,20 +293,22 @@ namespace ThirdPartyWager.Service.BLL
                         {
                             field = round.id;
 
-                            var roundInfo = new WagerRoundInfo_EVO();
-                            roundInfo.id = round.id;
-                            roundInfo.gameProvider = round.gameProvider;
-                            roundInfo.startedAt = round.startedAt;
-                            roundInfo.settledAt = round.settledAt;
-                            roundInfo.status = round.status;
-                            roundInfo.gameType = round.gameType;
-                            roundInfo.table = JsonConvert.SerializeObject(round.table);
-                            roundInfo.dealer = JsonConvert.SerializeObject(round.dealer);
-                            roundInfo.currency = round.currency;
-                            roundInfo.result = JsonConvert.SerializeObject(round.result);
-                            roundInfo.wager = round.wager;
-                            roundInfo.payout = round.payout;
-                            roundInfo.TableId = round.table["id"];
+                            var roundInfo = new WagerRoundInfo_EVO
+                            {
+                                id = round.id,
+                                gameProvider = round.gameProvider,
+                                startedAt = round.startedAt,
+                                settledAt = round.settledAt,
+                                status = round.status,
+                                gameType = round.gameType,
+                                table = JsonConvert.SerializeObject(round.table),
+                                dealer = JsonConvert.SerializeObject(round.dealer),
+                                currency = round.currency,
+                                result = JsonConvert.SerializeObject(round.result),
+                                wager = round.wager,
+                                payout = round.payout,
+                                TableId = round.table["id"]
+                            };
 
                             IList<Participant_EVO> participants = JsonConvert.DeserializeObject<IList<Participant_EVO>>(JsonConvert.SerializeObject(round.participants));
                             foreach (var playerItem in participants)
@@ -312,20 +318,22 @@ namespace ThirdPartyWager.Service.BLL
                                     name = "WAGERID";
                                     field = betItem.transactionId;
 
-                                    var bet = new Wager_EVO();
-                                    bet.RoundId = round.id;
-                                    bet.casinoId = playerItem.casinoId;
-                                    bet.playerId = playerItem.playerId;
-                                    bet.currency = playerItem.currency;
-                                    bet.code = betItem.code;
-                                    bet.stake = betItem.stake;
-                                    bet.payout = betItem.payout;
-                                    bet.placedOn = betItem.placedOn;
-                                    bet.description = betItem.description;
-                                    bet.transactionId = betItem.transactionId;
-                                    bet.playMode = playerItem.playMode;
-                                    bet.channel = playerItem.channel;
-                                    bet.participants = JsonConvert.SerializeObject(playerItem);
+                                    var bet = new Wager_EVO
+                                    {
+                                        RoundId = round.id,
+                                        casinoId = playerItem.casinoId,
+                                        playerId = playerItem.playerId,
+                                        currency = playerItem.currency,
+                                        code = betItem.code,
+                                        stake = betItem.stake,
+                                        payout = betItem.payout,
+                                        placedOn = betItem.placedOn,
+                                        description = betItem.description,
+                                        transactionId = betItem.transactionId,
+                                        playMode = playerItem.playMode,
+                                        channel = playerItem.channel,
+                                        participants = JsonConvert.SerializeObject(playerItem)
+                                    };
                                     var r = _wagerEVOService.InsertWager(bet);
                                     _ = r.Result;
                                 }
@@ -360,7 +368,7 @@ namespace ThirdPartyWager.Service.BLL
             return (lastTime == null) ? DateTime.Now.AddHours(-7) : lastTime.StartTime.AddSeconds(vary);
         }
 
-        private bool CheckQuick(DateTime workTime, int excess)
+        private static bool CheckQuick(DateTime workTime, int excess)
         {
             var diff = DateTime.Now - workTime;
             return DateTime.Now > workTime && diff.TotalMinutes > excess;
