@@ -1,6 +1,4 @@
-﻿using MySqlX.XDevAPI.Common;
-using Newtonsoft.Json;
-
+﻿using Newtonsoft.Json;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -16,41 +14,44 @@ namespace ThirdPartyWager.Service.BLL
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly TpUnsettleService _tpUnsettleService;
         private readonly ILogger<WagerMPBLL> _logger;
+        private readonly MPConfig _siteConfig;
 
         private readonly int _tpId = (int)Tp.MP;
+        private readonly string _tpName = Tp.MP.ToString();
         private readonly int _timeZone = 0;
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
 
-        private readonly Dictionary<int, GameType> _gameTypeList = new Dictionary<int, GameType>() {
-            {900,GameType.MP_Poker_None },// 900	无抽水
-            {910,GameType.MP_Poker_None },// 910	无抽水
-            {960,GameType.MP_Poker_None },// 960	无抽水
-            {502,GameType.MP_Poker_None },// 502	无抽水
-            {180,GameType.MP_Poker },// 180	抽水5%
-            {600,GameType.MP_Poker },// 600	抽水5%
-            {220,GameType.MP_Poker },// 220	抽水5%
-            {620,GameType.MP_Poker },// 620	抽水5%
-            {830,GameType.MP_Poker },// 830	抽水5%
-            {501,GameType.MP_Poker },// 501	抽水5%
-            {504,GameType.MP_Poker },// 504	抽水5%
-            {503,GameType.MP_Poker },// 503	抽水5%
-            {505,GameType.MP_Poker },// 505	抽水5%
-            {506,GameType.MP_Poker },// 506 抽水5%
-            {509,GameType.MP_Poker },// 509	抽水5%
-            {508,GameType.MP_Poker },// 508	抽水5%
-            {510,GameType.MP_Poker_None },// 510	无抽水
-            {512,GameType.MP_Poker },// 512	抽水5%
-            {514,GameType.MP_Poker_None },// 514	无抽水
-            {516,GameType.MP_Poker },// 516	抽水5%
-            {1000,GameType.MP_Poker_None },// 1000	无抽水
-            {517,GameType.MP_Poker },// 517	抽水5%
-            {519,GameType.MP_Poker },// 519	抽水5%
-            {515,GameType.MP_Poker_None },// 515	无抽水
-            {181,GameType.MP_Poker },// 181	抽水5%
-            {182,GameType.MP_Poker },// 182	抽水5%
+        private readonly Dictionary<int, GameType> _gameTypeList = new()
+        {
+            { 900, GameType.MP_Poker_None },// 900	无抽水
+            { 910, GameType.MP_Poker_None },// 910	无抽水
+            { 960, GameType.MP_Poker_None },// 960	无抽水
+            { 502, GameType.MP_Poker_None },// 502	无抽水
+            { 180, GameType.MP_Poker },// 180	抽水5%
+            { 600, GameType.MP_Poker },// 600	抽水5%
+            { 220, GameType.MP_Poker },// 220	抽水5%
+            { 620, GameType.MP_Poker },// 620	抽水5%
+            { 830, GameType.MP_Poker },// 830	抽水5%
+            { 501, GameType.MP_Poker },// 501	抽水5%
+            { 504, GameType.MP_Poker },// 504	抽水5%
+            { 503, GameType.MP_Poker },// 503	抽水5%
+            { 505, GameType.MP_Poker },// 505	抽水5%
+            { 506, GameType.MP_Poker },// 506 抽水5%
+            { 509, GameType.MP_Poker },// 509	抽水5%
+            { 508, GameType.MP_Poker },// 508	抽水5%
+            { 510, GameType.MP_Poker_None },// 510	无抽水
+            { 512, GameType.MP_Poker },// 512	抽水5%
+            { 514, GameType.MP_Poker_None },// 514	无抽水
+            { 516, GameType.MP_Poker },// 516	抽水5%
+            { 1000, GameType.MP_Poker_None },// 1000	无抽水
+            { 517, GameType.MP_Poker },// 517	抽水5%
+            { 519, GameType.MP_Poker },// 519	抽水5%
+            { 515, GameType.MP_Poker_None },// 515	无抽水
+            { 181, GameType.MP_Poker },// 181	抽水5%
+            { 182, GameType.MP_Poker },// 182	抽水5%
         };
 
-        public WagerMPBLL(IServiceProvider provider, IConfiguration configuration)
+        public WagerMPBLL(IServiceProvider provider)
         {
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _apiMPBLL = provider.GetRequiredService<ApiMPBLL>();
@@ -58,6 +59,7 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<WagerMPBLL>>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<MPConfig>(_tpName);
         }
 
         public async Task<bool> ExecWagerWorker(int type, int timeRange)
@@ -104,14 +106,13 @@ namespace ThirdPartyWager.Service.BLL
 
         private async Task<bool> GetWagersAsync(long startUnix, long endUnix, bool compare = false, int total = 0)
         {
-            var msg = "FATAL_ERROR";
-            var guid = Guid.NewGuid().ToString();
+            string msg;
             try
             {
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+                var setting = _siteConfig;
 
                 // get wager
-                var dataWager = await _apiMPBLL.GetBetListByTime(setting["WagerUrl"], setting["Agent"], setting["Deskey"], setting["Md5key"], startUnix, endUnix, guid);
+                var dataWager = await _apiMPBLL.GetBetListByTime(setting, startUnix, endUnix);
 
                 // error condition
                 var errorCode = dataWager.d.code;
@@ -209,7 +210,7 @@ namespace ThirdPartyWager.Service.BLL
             return (lastTime == null) ? DateTime.Now.AddHours(-6) : lastTime.StartTime.AddSeconds(vary);
         }
 
-        private bool CheckQuick(DateTime workTime, int excess)
+        private static bool CheckQuick(DateTime workTime, int excess)
         {
             var diff = DateTime.Now - workTime;
             return DateTime.Now > workTime && diff.TotalMinutes > excess;
