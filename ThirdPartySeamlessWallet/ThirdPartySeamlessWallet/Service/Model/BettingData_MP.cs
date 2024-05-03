@@ -30,4 +30,11 @@
     {
         public int GameType { get; set; }
     }
+
+    public class MPConfig : TpSiteConfig
+    {
+        public string Agent { get; set; }
+        public string Deskey { get; set; }
+        public string Md5key { get; set; }
+    }
 }
