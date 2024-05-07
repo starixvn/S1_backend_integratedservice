@@ -4,10 +4,10 @@
     {
         public int s { get; set; }
         public string m { get; set; }
-        public info_MP d { get; set; }
+        public Info_MP d { get; set; }
     }
 
-    public class info_MP
+    public class Info_MP
     {
         public int code { get; set; }
         public BetList_MP list { get; set; }
@@ -106,5 +106,14 @@
         public decimal playerPL { get; set; }
         public decimal totalWinAmount { get; set; }
         public string currency { get; set; }
+    }
+
+    public class MPConfig
+    {
+        public string ApiUrl { get; set; }
+        public string WagerUrl { get; set; }
+        public string Agent { get; set; }
+        public string Deskey { get; set; }
+        public string Md5key { get; set; }
     }
 }

@@ -1,12 +1,9 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using System.Web;
-
 using Microsoft.AspNetCore.Mvc;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -18,33 +15,26 @@ namespace ThirdPartySeamlessWallet.Controllers
     public class MPController : ControllerBase
     {
         private readonly ILogger<MPController> _logger;
-        private readonly IConfiguration _configuration;
-        private readonly IHostEnvironment _environment;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly BettingBLL _bettingBLL;
         private readonly SettledBLL _settledBLL;
         private readonly Log2File _log2File;
         private readonly Tools _tools;
-        private readonly Tp thisTp;
+        private readonly Tp _thisTp;
+        private readonly MPConfig _siteConfig;
 
-        public MPController(
-            IServiceProvider provider,
-            ILogger<MPController> logger,
-            IConfiguration configuration,
-            IHostEnvironment environment
-        )
+        public MPController(IServiceProvider provider, ILogger<MPController> logger)
         {
             _logger = logger;
             _log2File = provider.GetRequiredService<Log2File>();
-            _configuration = configuration;
-            _environment = environment;
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _bettingBLL = provider.GetRequiredService<BettingBLL>();
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tools = provider.GetRequiredService<Tools>();
-            thisTp = Tp.MP;
+            _thisTp = Tp.MP;
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<MPConfig>(_thisTp.ToString());
         }
 
         #region HttpStatusCode
@@ -110,17 +100,16 @@ namespace ThirdPartySeamlessWallet.Controllers
                 code = (int)MPErrorCode.Error
             };
 
-            string logName = $"{thisTp}_getBalance1";
+            string logName = $"{_thisTp}_getBalance1";
             var Content = JsonConvert.SerializeObject(getReq);
             var apiReq = JsonConvert.DeserializeObject<ApiReq>(Content);
             var encrypt = apiReq.param;
 
-            var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            string Agent = thirdPartySetting.TpSetting["Agent"];
-            string Deskey = thirdPartySetting.TpSetting["Deskey"];
+            string Agent = _siteConfig.Agent;
+            string Deskey = _siteConfig.Deskey;
 
             string sResult;
-            var check = checkAuthorization(encrypt, Deskey, Agent, true);
+            var check = CheckAuthorization(encrypt, Deskey, Agent, true);
             if (check.StatusCode != (int)Error.OK)
             {
                 // 參數不符、簽名、解密失敗 Body留空只傳Http Status Code
@@ -131,14 +120,14 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             var balance = JsonConvert.DeserializeObject<BalanceData_MP>(JsonConvert.SerializeObject(check));
 
-            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, balance.playerId);
+            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, balance.playerId);
             if (tpCustBalance != null)
             {
                 Response.StatusCode = (int)Error.OK;
                 var Param = new
                 {
                     channelId = Agent,
-                    account = balance.account,
+                    balance.account,
                     balance = tpCustBalance.Balance
                 };
 
@@ -163,16 +152,15 @@ namespace ThirdPartySeamlessWallet.Controllers
             };
 
             string sResult;
-            string logName = $"{thisTp}_withdraw";
+            string logName = $"{_thisTp}_withdraw";
             var Content = JsonConvert.SerializeObject(getReq);
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var encrypt = await reader.ReadToEndAsync();
 
-            var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            string Agent = thirdPartySetting.TpSetting["Agent"];
-            string Deskey = thirdPartySetting.TpSetting["Deskey"];
+            string Agent = _siteConfig.Agent;
+            string Deskey = _siteConfig.Deskey;
 
-            var check = checkAuthorization(encrypt, Deskey, Agent, true);
+            var check = CheckAuthorization(encrypt, Deskey, Agent, true);
             if (check.StatusCode != (int)Error.OK)
             {
                 // 參數不符、簽名、解密失敗 Body留空只傳Http Status Code
@@ -189,14 +177,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     if (tpAffterAmount == 0)
                     {
-                        tpAffterAmount = _tpCustInfoBLL.GetBalance((int)thisTp, transfer.playerId).Balance;
+                        tpAffterAmount = _tpCustInfoBLL.GetBalance((int)_thisTp, transfer.playerId).Balance;
                     }
 
                     Response.StatusCode = (int)Error.OK;
                     var Param = new
                     {
                         channelId = Agent,
-                        account = transfer.account,
+                        transfer.account,
                         balance = tpAffterAmount
                     };
 
@@ -206,7 +194,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else if (result == -1)
                 {
-                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transfer.playerId);
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, transfer.playerId);
 
                     Response.StatusCode = (int)Error.INVALID_DATA;
                     var Param = new
@@ -255,16 +243,15 @@ namespace ThirdPartySeamlessWallet.Controllers
             };
 
             string sResult;
-            string logName = $"{thisTp}_deposit";
+            string logName = $"{_thisTp}_deposit";
             var Content = JsonConvert.SerializeObject(getReq);
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var encrypt = await reader.ReadToEndAsync();
 
-            var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            string Agent = thirdPartySetting.TpSetting["Agent"];
-            string Deskey = thirdPartySetting.TpSetting["Deskey"];
+            string Agent = _siteConfig.Agent;
+            string Deskey = _siteConfig.Deskey;
 
-            var check = checkAuthorization(encrypt, Deskey, Agent, false);
+            var check = CheckAuthorization(encrypt, Deskey, Agent, false);
             if (check.StatusCode != (int)Error.OK)
             {
                 // 參數不符、簽名、解密失敗 Body留空只傳Http Status Code
@@ -281,14 +268,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     if (tpAffterAmount == 0)
                     {
-                        tpAffterAmount = _tpCustInfoBLL.GetBalance((int)thisTp, transfer.playerId).Balance;
+                        tpAffterAmount = _tpCustInfoBLL.GetBalance((int)_thisTp, transfer.playerId).Balance;
                     }
 
                     Response.StatusCode = (int)Error.OK;
                     var Param = new
                     {
                         channelId = Agent,
-                        account = transfer.account,
+                        transfer.account,
                         balance = tpAffterAmount
                     };
 
@@ -298,7 +285,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else if (result == -1)
                 {
-                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transfer.playerId);
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, transfer.playerId);
 
                     Response.StatusCode = (int)Error.INVALID_DATA;
                     var Param = new
@@ -347,16 +334,15 @@ namespace ThirdPartySeamlessWallet.Controllers
             };
 
             string sResult;
-            string logName = $"{thisTp}_cancel";
+            string logName = $"{_thisTp}_cancel";
             var Content = JsonConvert.SerializeObject(getReq);
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var encrypt = await reader.ReadToEndAsync();
 
-            var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)thisTp);
-            string Agent = thirdPartySetting.TpSetting["Agent"];
-            string Deskey = thirdPartySetting.TpSetting["Deskey"];
+            string Agent = _siteConfig.Agent;
+            string Deskey = _siteConfig.Deskey;
 
-            var check = checkAuthorization(encrypt, Deskey, Agent, false);
+            var check = CheckAuthorization(encrypt, Deskey, Agent, false);
             if (check.StatusCode != (int)Error.OK)
             {
                 // 參數不符、簽名、解密失敗 Body留空只傳Http Status Code
@@ -381,7 +367,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         isCanceled = true,
                         channelId = Agent,
-                        account = transfer.account,
+                        transfer.account,
                         balance = tpAffterAmount
                     };
 
@@ -391,7 +377,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else if (result == -1 || result == -2)
                 {
-                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, transfer.playerId);
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, transfer.playerId);
 
                     Response.StatusCode = (int)Error.INVALID_DATA;
                     var Param = new
@@ -418,7 +404,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
         }
 
-        private CheckResp checkAuthorization(string param, string desKey, string agent, bool checkOnline)
+        private CheckResp CheckAuthorization(string param, string desKey, string agent, bool checkOnline)
         {
             CheckResp resp = new()
             {
@@ -456,7 +442,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 if (checkOnline)
                 {
-                    var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, decryptRequest.playerId);
+                    var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, decryptRequest.playerId);
                     if (tpCheck == null || tpCheck.Locked)
                     {
                         var Param = new
