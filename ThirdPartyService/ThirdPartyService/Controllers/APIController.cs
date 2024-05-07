@@ -345,5 +345,22 @@ namespace ThirdPartyService.Controllers
             }
             return apiResult;
         }
+
+        [HttpPost]
+        public ActionResult<ApiResult> CreateBonusCode([FromBody] CreateBonusCode createBonusCode)
+        {
+            var apiResult = new ApiResult();
+            try
+            {
+                apiResult = _thirdPartyBLL.CreateBonusCode(createBonusCode);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+                apiResult.ErrorCode = ErrorCode.SystemError;
+                apiResult.RawMessage = ex.Message;
+            }
+            return apiResult;
+        }
     }
 }
