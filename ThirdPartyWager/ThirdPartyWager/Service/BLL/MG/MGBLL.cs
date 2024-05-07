@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -12,7 +11,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly IApiSWBLL _swApi;
         private readonly ILogger<MGBLL> _logger;
         private readonly FincanceService _fincanceService;
-        private readonly Tp tp = Tp.MG;
+        private readonly Tp _tp = Tp.MG;
         private readonly IEnumerable<TpCurrency> _tpCurrency;
         private readonly Dictionary<string, int> _currencyId;
 
@@ -20,11 +19,9 @@ namespace ThirdPartyWager.Service.BLL
         {
             _mgApi = provider.GetRequiredService<IApiMGBLL>();
             _swApi = provider.GetRequiredService<IApiSWBLL>();
-            var config = provider.GetRequiredService<ThirdPartyBLL>().GetThirdPartySetting((int)tp);
-            _mgApi.MgConfig = config;
             _logger = provider.GetRequiredService<ILogger<MGBLL>>();
             _fincanceService = provider.GetRequiredService<FincanceService>();
-            _tpCurrency = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList((int)tp);
+            _tpCurrency = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList((int)_tp);
             _currencyId = _tpCurrency.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
         }
 
@@ -85,7 +82,7 @@ namespace ThirdPartyWager.Service.BLL
                     var dailySummary = new List<FincanceDailySummary>() { new FincanceDailySummary(){
                         SummaryType = SummaryType.TpBetRecord,
                         SummaryDate = date,
-                        TpId = (int)tp,
+                        TpId = (int)_tp,
                         CurrencyId = _currencyId[currency.TpCurrencyId],
                         Stake = stake,
                         ValidBet = stake,
@@ -134,7 +131,7 @@ namespace ThirdPartyWager.Service.BLL
                {
                     SummaryType = SummaryType.TpRewardTotalAmount,
                     SummaryDate = date,
-                    TpId = (int)tp,
+                    TpId = (int)_tp,
                     CurrencyId = currencyId,
                     Payout = fortuneRewards.Sum(i=>i.payout),
                     Reward = fortuneRewards.Sum(i=>i.rewardAmount),
@@ -143,7 +140,7 @@ namespace ThirdPartyWager.Service.BLL
                {
                     SummaryType = SummaryType.TpRewardCash,
                     SummaryDate = date,
-                    TpId = (int)tp,
+                    TpId = (int)_tp,
                     CurrencyId = currencyId,
                     Payout = cash.Sum(i=>i.payout),
                     Reward = cash.Sum(i=>i.rewardAmount),
@@ -152,7 +149,7 @@ namespace ThirdPartyWager.Service.BLL
                {
                     SummaryType = SummaryType.TpRewardFreeGame,
                     SummaryDate = date,
-                    TpId = (int)tp,
+                    TpId = (int)_tp,
                     CurrencyId = currencyId,
                     Payout = freeGame.Sum(i=>i.payout),
                     Reward = freeGame.Sum(i=>i.rewardAmount),
@@ -160,6 +157,5 @@ namespace ThirdPartyWager.Service.BLL
             };
         }
     }
-
 
 }
