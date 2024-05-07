@@ -67,8 +67,10 @@ namespace ThirdPartyWager.Workers
                         if (_setting == null) continue;
 
                         result = await _wagerWonCasinoBLL.GetWagerAsync(_setting, time.startUnix, time.endUnix);
+                        _logger.LogInformation($"WonCasino GetWager Result: {result} , {site.SiteId}","WonCasino UpdateTime Step 1");
                         if (result < 0)
                         {
+                            _logger.LogInformation($"WonCasino To Break","WinCasino To Break");
                             //第三方因素或Insert失敗回傳為-1，直接進break不再更新時間。
                             break;
                         }
@@ -76,7 +78,9 @@ namespace ThirdPartyWager.Workers
 
                     if (result > 0)
                     {
-                        _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, time.endUnix);
+                        _logger.LogInformation($"WonCasino SetTimer Inside : {result}","WonCasino UpdateTime Step 1");
+                        var setResult = _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, time.endUnix);
+                        _logger.LogInformation($"WonCasino SetTimer Result{setResult}","WonCasino UpdateTime Step 2");
                     }
                 }
                 
