@@ -4,8 +4,6 @@ namespace ThirdPartyWager.Service.BLL
 {
     public interface IApiMGBLL
     {
-        Dictionary<string, string> MgConfig { get; set; }
-
         Task<List<MGFailedTransactions>> GetFailedTransactionsAsync(string token, string currencyId);
 
         Task UpdateFailedTransactionToResolvedState(string token, string txnId, string currencyId);
