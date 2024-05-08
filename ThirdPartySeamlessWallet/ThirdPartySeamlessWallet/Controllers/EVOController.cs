@@ -25,7 +25,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Log2File _log2File;
         private readonly Tp _thisTp;
         private readonly string _tpName;
-        public string[] PromoTransactionTypeList { get; set; }
         private readonly NLCConfig _siteConfigOfNLC;
         private readonly EVOConfig _siteConfigOfEVO;
         private readonly NetentConfig _siteConfigOfNetent;
@@ -47,10 +46,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             _tpRequestFailBll = provider.GetRequiredService<TpRequestFailBLL>();
             _thisTp = Tp.EVO;
             _tpName = Enum.GetName(typeof(Tp), _thisTp);
-            PromoTransactionTypeList = new string[] { "JackpotWin",
-                "FreeRoundPlayableSpent",
-                "RewardGamePlayableSpent", "RewardGameWinCapReached", "RewardGameMinBetLimitReached",
-                "FromGame", "RtrMonetaryReward" };
             // 取共用，設定依機器分為(nova、aiking)
             _siteConfigOfEVO = provider.GetRequiredService<ConfigBLL>().GetConfigValue<EVOConfig>(Tp.EVO.ToString());
             _siteConfigOfNetent = provider.GetRequiredService<ConfigBLL>().GetConfigValue<NetentConfig>(Tp.Netent.ToString());
@@ -983,13 +978,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             if (string.IsNullOrWhiteSpace(request.promoTransaction.type))
             {
                 _logger.LogError($"CheckRequest Fail: request.promoTransaction.type is Invalid.");
-                status = "INVALID_PARAMETER";
-                return false;
-            }
-
-            if (!PromoTransactionTypeList.Contains(request.promoTransaction.type))
-            {
-                _logger.LogError($"CheckRequest Fail: request.promoTransaction.type can't found.");
                 status = "INVALID_PARAMETER";
                 return false;
             }
