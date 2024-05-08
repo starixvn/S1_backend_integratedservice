@@ -13,12 +13,13 @@ namespace ThirdParty.HB.Tests
         private TpHelper _tpHelper;
         private TpCustInfo _tpCustInfo;
         private Dictionary<string, string> _inputs;
+        private IServiceProvider _provider;
 
         [SetUp]
         public void Setup()
         {
             //Arrange
-            _tpHelper = new TpHelper();
+            _tpHelper = new TpHelper(_provider);
 
             _tpCustInfo = new TpCustInfo()
             {

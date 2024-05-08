@@ -12,8 +12,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 {
     public class HBBLL : IHBBLL
     {
-        private readonly Tp thisTp;
-        public readonly GameType GameType;
+        private readonly Tp _thisTp;
+        public readonly GameType _GameType;
         private readonly AuthBLL _authBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
@@ -24,8 +24,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public HBBLL(IServiceProvider provider)
         {
-            thisTp = Tp.HB;
-            GameType = GameType.HB_RNG;
+            _thisTp = Tp.HB;
+            _GameType = GameType.HB_RNG;
             _authBLL = provider.GetService<AuthBLL>();
             _thirdPartyBLL = provider.GetService<ThirdPartyBLL>();
             _tpCustInfoBLL = provider.GetService<TpCustInfoBLL>();
@@ -50,7 +50,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
             var tpUserName = authToken.tpUserName;
 
-            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpUserName);
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, tpUserName);
             if (tpCheck == null || tpCheck.Token != authToken.longTimeToken)
             {
                 _logger.LogError($"tpCheck:{JsonConvert.SerializeObject(tpCheck)}, player session is expired");
@@ -62,7 +62,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             else
             {
-                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpUserName, (int)GameType);
+                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, tpUserName, (int)_GameType);
                 if (tpCustBalance != null)
                 {
                     return PlayerDetailResponse("", tpUserName, tpCustBalance.Balance, tpCustBalance.TpCurrencyId);
@@ -71,7 +71,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        private playerdetailresponse PlayerDetailResponse(string message, string tpUserName = "", decimal balance = 0m, string currency = "")
+        private static playerdetailresponse PlayerDetailResponse(string message, string tpUserName = "", decimal balance = 0m, string currency = "")
         {
             if (string.IsNullOrEmpty(message))
             {
@@ -111,7 +111,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return false;
                 }
 
-                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, authToken.tpUserName);
+                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, authToken.tpUserName);
                 if (tpCheck == null)
                 {
                     _logger.LogError($"tpCheck:{JsonConvert.SerializeObject(authToken)}, wrong tpUser");
@@ -142,8 +142,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public async Task<dynamic> FundTransfer(dynamic request)
         {
             var tpUserName = (string)request.accountid;
-            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.HB, tpUserName);
-            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp.HB, tpCustInfo.CurrencyId);
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, tpUserName);
+            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)_thisTp, tpCustInfo.CurrencyId);
 
             // 退款
             if ((bool)request.isretry && (bool)request.isrefund)
@@ -167,7 +167,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             // 檢查同時存在 bet & payout的下注額度是否足夠
             if (request.funds.debitandcredit == true)
             {
-                var custBalance = _tpCustInfoBLL.GetBalance((int)Tp.HB, (string)request.accountid, (int)GameType);
+                var custBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, (string)request.accountid, (int)_GameType);
                 var tid = request.friendlygameinstanceid.ToString();
                 // 加總下注金額
                 Funds funds = JsonConvert.DeserializeObject<Funds>(JsonConvert.SerializeObject(request.funds));
@@ -281,7 +281,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 if (afterAmount == 0)
                 {
-                    afterAmount = _tpCustInfoBLL.GetBalance((int)Tp.HB, (string)request.accountid, (int)GameType).Balance;
+                    afterAmount = _tpCustInfoBLL.GetBalance((int)_thisTp, (string)request.accountid, (int)_GameType).Balance;
                 }
                 else
                 {
@@ -293,7 +293,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 if (bonusId > 0)
                 {
                     _logger.LogInformation($"user {tpCustInfo.TpUserName} has bonus wallet bonusId:{bonusId} transId:{transId}");
-                    _settledService.UpdateTpBonusFlag_HB((int)Tp.HB, transId, (int)GameType.HB_RNG, TpCategory.Slots, out int CustId, out bonusId);
+                    _settledService.UpdateTpBonusFlag_HB((int)_thisTp, transId, (int)GameType.HB_RNG, TpCategory.Slots, out int CustId, out bonusId);
                 }
                 response.status = new ExpandoObject();
                 response.status.success = true;
@@ -305,7 +305,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 response.status = new ExpandoObject();
                 response.status.success = false;
                 response.status.nofunds = true;
-                afterAmount = _tpCustInfoBLL.GetBalance((int)Tp.HB, (string)request.accountid, (int)GameType).Balance;
+                afterAmount = _tpCustInfoBLL.GetBalance((int)_thisTp, (string)request.accountid, (int)_GameType).Balance;
             }
 
             response.balance = afterAmount;
@@ -348,7 +348,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 response.status.refundstatus = 2;
             }
 
-            response.balance = _tpCustInfoBLL.GetBalance((int)Tp.HB, (string)request.accountid, (int)GameType).Balance;
+            response.balance = _tpCustInfoBLL.GetBalance((int)_thisTp, (string)request.accountid, (int)_GameType).Balance;
             response.currencycode = tpCurrency.TpCurrencyId;
 
             return response;
@@ -378,15 +378,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             catch (FormatException e)
             {
-                _logger.LogError($"invalid token:{token}");
+                _logger.LogError(e, $"invalid token:{token}");
                 return null;
             }
         }
 
-        private TpBetFailureRecord GetTpBetFailureParam_HB(TpCustInfo tpCustInfo, TpCustBalance custBalance, TpCurrency tpCurrency, Funds funds, TpCheckRecordCode Code, decimal AfterAmount, string tid)
+        private static TpBetFailureRecord GetTpBetFailureParam_HB(TpCustInfo tpCustInfo, TpCustBalance custBalance, TpCurrency tpCurrency, Funds funds, TpCheckRecordCode Code, decimal AfterAmount, string tid)
         {
             // BLL會經過匯率換算 下列還原為原始資料
-            TpBetFailureRecordInfo_HB InfoData = new TpBetFailureRecordInfo_HB
+            TpBetFailureRecordInfo_HB InfoData = new()
             {
                 CurrentBalance = custBalance.Balance / tpCurrency.ExchangeRate,
                 BetAmount = funds.fundinfo.Where(x => x.amount < 0).Sum(x => x.amount) / tpCurrency.ExchangeRate,

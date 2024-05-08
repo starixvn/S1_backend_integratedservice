@@ -1,8 +1,10 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using System.Web;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -12,10 +14,12 @@ namespace ThirdParty.HB
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly HBConfig _siteConfig;
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
-        public TpHelper()
+        public TpHelper(IServiceProvider provider)
         {
             _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.HB).ToDictionary(d => d.AppId, d => d.Name);
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<HBConfig>(TpEnum.HB.ToString());
         }
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -28,8 +32,9 @@ namespace ThirdParty.HB
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var brandId = GetInputValue(inputs, "BrandId");
-            var launchUrl = GetInputValue(inputs, "LaunchUrl");
+            var brandId = _siteConfig.BrandId;
+            var launchUrl = _siteConfig.LaunchUrl;
+
             var gameId = GetInputValue(inputs, "gameId");
             var homeUrl = GetInputValue(inputs, "homeUrl", true);
 
@@ -64,14 +69,12 @@ namespace ThirdParty.HB
             return oApiResult;
         }
 
-        public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID,
-            string ThirdPartyTransID)
+        public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
         }
 
-        public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID,
-            string ThirdPartyTransID)
+        public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
         }
@@ -83,9 +86,10 @@ namespace ThirdParty.HB
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var brandId = GetInputValue(inputs, "BrandId");
-            var url = GetInputValue(inputs, "LaunchUrl");
-            var apiKey = GetInputValue(inputs, "APIKey");
+            var brandId = _siteConfig.BrandId;
+            var url = _siteConfig.LaunchUrl;
+            var apiKey = _siteConfig.APIKey;
+
             var idx = url.LastIndexOf('/');
             var gameHistory = url[..idx];
             var friendlygameinstanceid = getBetDetail.TransId;
@@ -121,7 +125,7 @@ namespace ThirdParty.HB
             return inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) && inputs["fun"] == "1";
         }
 
-        private string SHA256(string message)
+        private static string SHA256(string message)
         {
             var sha256 = new SHA256CryptoServiceProvider();
             var source = Encoding.UTF8.GetBytes(message);
