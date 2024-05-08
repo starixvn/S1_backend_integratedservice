@@ -23,10 +23,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly SettledBLL _settledBLL;
         private readonly TpRequestFailBLL _tpRequestFailBll;
         private readonly Log2File _log2File;
-        private readonly Tp thisTp;
+        private readonly Tp _thisTp;
         private readonly string _tpName;
-        public string[] promoTransactionTypeList { get; set; }
         private readonly NLCConfig _siteConfigOfNLC;
+        private readonly EVOConfig _siteConfigOfEVO;
+        private readonly NetentConfig _siteConfigOfNetent;
+        private readonly RedTigerConfig _siteConfigOfRedTiger;
 
         #endregion
 
@@ -42,14 +44,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             _bettingBLL = provider.GetRequiredService<BettingBLL>();
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tpRequestFailBll = provider.GetRequiredService<TpRequestFailBLL>();
-            provider.GetRequiredService<Tools>();
-            thisTp = Tp.EVO;
-            _tpName = Enum.GetName(typeof(Tp), thisTp);
-            promoTransactionTypeList = new string[] { "JackpotWin",
-                "FreeRoundPlayableSpent",
-                "RewardGamePlayableSpent", "RewardGameWinCapReached", "RewardGameMinBetLimitReached",
-                "FromGame", "RtrMonetaryReward" };
+            _thisTp = Tp.EVO;
+            _tpName = Enum.GetName(typeof(Tp), _thisTp);
             // 取共用，設定依機器分為(nova、aiking)
+            _siteConfigOfEVO = provider.GetRequiredService<ConfigBLL>().GetConfigValue<EVOConfig>(Tp.EVO.ToString());
+            _siteConfigOfNetent = provider.GetRequiredService<ConfigBLL>().GetConfigValue<NetentConfig>(Tp.Netent.ToString());
+            _siteConfigOfRedTiger = provider.GetRequiredService<ConfigBLL>().GetConfigValue<RedTigerConfig>(Tp.RedTiger.ToString());
             _siteConfigOfNLC = provider.GetRequiredService<ConfigBLL>().GetConfigValue<NLCConfig>(Tp.NLC.ToString());
         }
 
@@ -144,7 +144,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/{path1?}")]
         public async Task<dynamic> NotFoundAsync()
         {
-            string logName = $"{thisTp}_common_NotFound";
+            string logName = $"{_thisTp}_common_NotFound";
 
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
@@ -158,19 +158,21 @@ namespace ThirdPartySeamlessWallet.Controllers
         public async Task<dynamic> SidAsync([FromQuery] Dictionary<string, string> getQuery)
         {
             // api: sid (only for test environments)
-            string logName = $"{thisTp}_sid";
+            string logName = $"{_thisTp}_sid";
 
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
             _log2File.Info(Content, logName);
 
             SidReq getReq = JsonConvert.DeserializeObject<SidReq>(Content);
-            SidResp getApiResponse = new SidResp();
-            getApiResponse.status = "UNKNOWN_ERROR";
+            SidResp getApiResponse = new()
+            {
+                status = "UNKNOWN_ERROR"
+            };
 
             var authToken = getQuery["authToken"];
             // 因為是測試使用API，加上是共用Authorization，此使用預設TP.EVO
-            var check = CheckAuthorization(authToken, (int)thisTp);
+            var check = CheckAuthorization(authToken, (int)_thisTp);
             if (check.status != "OK")
             {
                 getApiResponse.status = check.status;
@@ -205,15 +207,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
 
                 var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(tpId, getReq.userId);
-                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getReq.userId);
+                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, getReq.userId);
                 if (tpCheck == null)
                 {
                     string token = null;
                     string clientIp = "";
-                    tpCustInfo = _tpCustInfoBLL.GetTpCustInfo((int)thisTp, getReq.userId);
+                    tpCustInfo = _tpCustInfoBLL.GetTpCustInfo((int)_thisTp, getReq.userId);
                     _tpCustInfoBLL.AddLoginRecord(tpCustInfo.CustId, tpCustInfo.SiteId, clientIp, out token);
                     _tpCustInfoBLL.AddUserLoginLog(tpCustInfo.CustId, tpCustInfo.UserName, tpCustInfo.SiteId, clientIp, $"Web - {_tpName}", $"Web - {_tpName}");
-                    tpCheck = _thirdPartyBLL.ThirdPartyCheck((int)thisTp, getReq.userId);
+                    tpCheck = _thirdPartyBLL.ThirdPartyCheck((int)_thisTp, getReq.userId);
                 }
                 if (tpCheck == null || tpCheck.Locked)
                 {
@@ -240,14 +242,14 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/check")]
         public async Task<dynamic> CheckAsync([FromQuery] Dictionary<string, string> getQuery)
         {
-            string logName = $"{thisTp}_common_check";
+            string logName = $"{_thisTp}_common_check";
 
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
             _log2File.Info(Content, logName);
 
             AuthReq getReq = JsonConvert.DeserializeObject<AuthReq>(Content);
-            AuthResp getApiResponse = new AuthResp();
+            AuthResp getApiResponse = new();
 
             if (string.IsNullOrEmpty(getReq.sid) || string.IsNullOrEmpty(getReq.userId))
             {
@@ -317,14 +319,14 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/balance")]
         public async Task<dynamic> BalanceAsync([FromQuery] Dictionary<string, string> getQuery)
         {
-            string logName = $"{thisTp}_common_balance";
+            string logName = $"{_thisTp}_common_balance";
 
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
             _log2File.Info(Content, logName);
 
             AuthReq getReq = JsonConvert.DeserializeObject<AuthReq>(Content);
-            BalanceResp getApiResponse = new BalanceResp();
+            BalanceResp getApiResponse = new();
 
             if (string.IsNullOrEmpty(getReq.sid) || string.IsNullOrEmpty(getReq.userId))
             {
@@ -379,15 +381,17 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/debit")]
         public async Task<dynamic> DebitAsync([FromQuery] Dictionary<string, string> getQuery)
         {
-            string logName = $"{thisTp}_common_debit";
+            string logName = $"{_thisTp}_common_debit";
 
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
             _log2File.Info(Content, logName);
 
             BettingData_EVO getReq = JsonConvert.DeserializeObject<BettingData_EVO>(Content);
-            BetResp getApiResponse = new BetResp();
-            getApiResponse.status = "UNKNOWN_ERROR";
+            BetResp getApiResponse = new()
+            {
+                status = "UNKNOWN_ERROR"
+            };
 
             if (string.IsNullOrEmpty(getReq.sid) || string.IsNullOrEmpty(getReq.userId))
             {
@@ -508,15 +512,17 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/cancel")]
         public async Task<dynamic> CancelAsync([FromQuery] Dictionary<string, string> getQuery)
         {
-            string logName = $"{thisTp}_common_cancel";
+            string logName = $"{_thisTp}_common_cancel";
 
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
             _log2File.Info(Content, logName);
 
             BettingData_EVO getReq = JsonConvert.DeserializeObject<BettingData_EVO>(Content);
-            BetResp getApiResponse = new BetResp();
-            getApiResponse.status = "UNKNOWN_ERROR";
+            BetResp getApiResponse = new()
+            {
+                status = "UNKNOWN_ERROR"
+            };
 
             if (string.IsNullOrEmpty(getReq.sid) || string.IsNullOrEmpty(getReq.userId))
             {
@@ -610,15 +616,17 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/credit")]
         public async Task<dynamic> CreditAsync([FromQuery] Dictionary<string, string> getQuery)
         {
-            string logName = $"{thisTp}_common_credit";
+            string logName = $"{_thisTp}_common_credit";
 
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
             _log2File.Info(Content, logName);
 
             BettingData_EVO getReq = JsonConvert.DeserializeObject<BettingData_EVO>(Content);
-            BetResp getApiResponse = new BetResp();
-            getApiResponse.status = "UNKNOWN_ERROR";
+            BetResp getApiResponse = new()
+            {
+                status = "UNKNOWN_ERROR"
+            };
 
             if (string.IsNullOrEmpty(getReq.sid) || string.IsNullOrEmpty(getReq.userId))
             {
@@ -849,7 +857,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         private CommonResp CheckAuthorization(string authorization, int tpId)
         {
-            CommonResp checkResponse = new CommonResp();
+            CommonResp checkResponse = new();
 
             if (string.IsNullOrEmpty(authorization))
             {
@@ -858,14 +866,26 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             string authToken;
-            if (tpId == (int)Tp.NLC)
+            switch (tpId)
             {
-                authToken = _siteConfigOfNLC.AuthToken;
-            }
-            else
-            {
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting(tpId);
-                authToken = thirdPartySetting.TpSetting["AuthToken"];
+                case (int)Tp.EVO:
+                    authToken = _siteConfigOfEVO.AuthToken;
+                    break;
+                case (int)Tp.Netent:
+                    authToken = _siteConfigOfNetent.AuthToken;
+                    break;
+                case (int)Tp.RedTiger:
+                    authToken = _siteConfigOfRedTiger.AuthToken;
+                    break;
+                case (int)Tp.NLC:
+                    authToken = _siteConfigOfNLC.AuthToken;
+                    break;
+                default:
+                    {
+                        authToken = "";
+                        _logger.LogError($"CheckAuthorization Fail: tpId not mapping {tpId}.");
+                        break;
+                    }
             }
 
             if (HttpUtility.UrlDecode(authorization) != authToken)
@@ -958,13 +978,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             if (string.IsNullOrWhiteSpace(request.promoTransaction.type))
             {
                 _logger.LogError($"CheckRequest Fail: request.promoTransaction.type is Invalid.");
-                status = "INVALID_PARAMETER";
-                return false;
-            }
-
-            if (!promoTransactionTypeList.Contains(request.promoTransaction.type))
-            {
-                _logger.LogError($"CheckRequest Fail: request.promoTransaction.type can't found.");
                 status = "INVALID_PARAMETER";
                 return false;
             }
