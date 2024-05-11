@@ -341,9 +341,9 @@ namespace ThirdPartySettleWorker.Workers
 
             var fWagerStake = Math.Truncate(wagerStake * 10) / 10;
             betTrans.Stake = Math.Truncate(betTrans.Stake * 10) / 10;
+            var dDiffStake = Math.Abs(fWagerStake - betTrans.Stake);
 
-            var isSame = fWagerStake == betTrans.Stake
-                         && Math.Abs(wagerWinLostAmount - betTrans.WinLostAmount) < Convert.ToDecimal(2);
+            var isSame = dDiffStake < 0.1m && Math.Abs(wagerWinLostAmount - betTrans.WinLostAmount) < Convert.ToDecimal(2);
 
             if (!isSame)
             {
