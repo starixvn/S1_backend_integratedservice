@@ -1,11 +1,8 @@
-﻿using Newtonsoft.Json;
-
-using Serilog.Context;
-
+﻿using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
+using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
 namespace ThirdPartySettleWorker.Workers
@@ -14,11 +11,14 @@ namespace ThirdPartySettleWorker.Workers
     {
         public Tp Tp => Tp.MP;
         private Timer _timerSettleMP;
+        private Timer _timerSettleMPNoRevenue;
 
         private readonly SettledBLL _settledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly ILogger<MPWorker> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly TpUnSettledBLL _tpUnSettledBLL;
+        private readonly string _tpName;
 
         public MPWorker(IServiceProvider provider)
         {
@@ -26,17 +26,21 @@ namespace ThirdPartySettleWorker.Workers
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _logger = provider.GetRequiredService<ILogger<MPWorker>>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
+            _tpName = Enum.GetName(typeof(Tp), Tp);
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _timerSettleMP = new Timer(DoSettleMPWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            _timerSettleMP = new Timer(DoSettleMPWork, GameType.MP_Poker, TimeSpan.Zero, TimeSpan.Zero);
+            _timerSettleMPNoRevenue = new Timer(DoSettleMPWork, GameType.MP_Poker_None, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
             _timerSettleMP?.Change(Timeout.Infinite, 0);
+            _timerSettleMPNoRevenue?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
 
@@ -45,54 +49,76 @@ namespace ThirdPartySettleWorker.Workers
             var forContinue = false;
             var isError = false;
             var thisTp = (int)Tp.MP;
-            var logName = "Settle_MP_PK";
             var tpName = Enum.GetName(typeof(Tp), thisTp);
+            var gameType = (GameType)state;
+            var logName = gameType switch
+            {
+                GameType.MP_Poker => "Settle_MP_PK",
+                GameType.MP_Poker_None => "Settle_MPNoRevenue_PK",
+                _ => throw new NotImplementedException(),
+            };
+            const string getWagerSp = "Service_TpWagerPK_MP_Get"; // 取得下注紀錄
 
             try
             {
-                var unsettledList = _settledBLL.GetUnsettledListPK_MP();
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
 
-                if (unsettledList != null)
+                if (!tpUnsettleList.Any())
                 {
-                    forContinue = unsettledList.Count() == 200;
-                    foreach (var unsettled in unsettledList)
-                    {
-                        try
-                        {
-                            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
-                            var tpCurrency = _thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
-                            if (tpCurrency.ExchangeRate > 1)
-                            {
-                                unsettled.Stake *= tpCurrency.ExchangeRate;
-                                unsettled.ValidBet *= tpCurrency.ExchangeRate;
-                                unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
-                                unsettled.Revenue *= tpCurrency.ExchangeRate;
-                            }
+                    throw new UnsettleNotFoundException($"{_tpName} {gameType} no unsettle data.");
+                }
 
-                            var betRecordInfo = new BetRecordInfo
-                            {
-                                TpId = thisTp,
-                                Stake = unsettled.Stake,
-                                ValidBet = unsettled.ValidBet,
-                                Revenue = unsettled.Revenue,
-                                WinlostAmount = unsettled.WinLostAmount,
-                                TransId = unsettled.TransId,
-                                GameType = (GameType)unsettled.GameType,
-                                TpUserName = unsettled.Account,
-                                SettledTime = unsettled.SettleTime,
-                                TransTime = unsettled.TransTime,
-                                SettlementType = SettlementType.SettledForValid,
-                                GameID = unsettled.GameId,
-                            };
-                            var result = _settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
-                            _settledBLL.SetSettleFlag_TpWagerPK_MP(unsettled.TransId);
-                        }
-                        catch (Exception ex1)
+                forContinue = tpUnsettleList.Count() == 200;
+
+                foreach (var tpUnsettle in tpUnsettleList)
+                {
+                    try
+                    {
+                        var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getWagerSp, new { GameID = tpUnsettle.TransId }, DataBase.Wager).ToList().FirstOrDefault();
+
+                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, settleData.Account);
+                        var tpCurrency = _thirdPartyBLL.GetTpCurrency(thisTp, tpCustInfo.CurrencyId);
+                        if (tpCurrency.ExchangeRate > 1)
                         {
-                            LogContext.PushProperty("TP", tpName);
-                            isError = true;
-                            _logger.LogError(ex1, $"{logName}:{JsonConvert.SerializeObject(unsettled)}");
+                            settleData.Stake *= tpCurrency.ExchangeRate;
+                            settleData.ValidBet *= tpCurrency.ExchangeRate;
+                            settleData.WinLostAmount *= tpCurrency.ExchangeRate;
+                            settleData.Revenue *= tpCurrency.ExchangeRate;
                         }
+
+                        var betRecordInfo = new BetRecordInfo
+                        {
+                            TpId = thisTp,
+                            Stake = settleData.Stake,
+                            ValidBet = settleData.ValidBet,
+                            Revenue = settleData.Revenue,
+                            WinlostAmount = settleData.WinLostAmount,
+                            TransId = settleData.TransId,
+                            GameType = gameType,
+                            TpUserName = settleData.Account,
+                            SettledTime = settleData.SettleTime,
+                            TransTime = settleData.TransTime,
+                            SettlementType = SettlementType.SettledForValid,
+                            GameID = settleData.GameId,
+                        };
+                        var result = _settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
+
+                        if (result == 1)
+                        {
+                            Task.Run(() =>
+                            {
+                                _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, true);
+                            });
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Task.Run(() =>
+                        {
+                            _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, false);
+                        });
+                        LogContext.PushProperty("TP", _tpName);
+                        _logger.LogError(ex, $"{logName} Settle exception. {ex.Message} || TransId : {tpUnsettle.TransId}");
                     }
                 }
             }
