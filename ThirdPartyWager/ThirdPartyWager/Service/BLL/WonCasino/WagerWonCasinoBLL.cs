@@ -50,7 +50,6 @@ namespace ThirdPartyWager.Service.BLL
                         {
                             try
                             {
-                                
                                 var result = await _wagerWonCasinoService.InsertWager(wager);
                                 
                                 if (result >= 1)
@@ -64,7 +63,6 @@ namespace ThirdPartyWager.Service.BLL
                             }
                             catch (Exception ex)
                             {
-                                
                                 return LogAndReturnFailure(wager.serialnumber, wager.id, wager.state, wager, ex);
                             }
                         }
@@ -84,7 +82,6 @@ namespace ThirdPartyWager.Service.BLL
                 //有執行成功就加
                 successCount++;
             }
-            _logger.LogInformation( $"{successCount}", "WinCasino SuccessCount");
             return successCount;
         }
         
