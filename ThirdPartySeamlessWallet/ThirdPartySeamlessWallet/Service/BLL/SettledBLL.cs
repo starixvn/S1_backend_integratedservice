@@ -1383,7 +1383,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public int RollinFish_CQ9(RollinDataFish_CQ9 rollinDataFish_CQ9, int gameType, out decimal afterAmount)
+        public int RollinFish_CQ9(RollinDataFish_CQ9 rollinDataFish_CQ9, GameType gameType, out decimal afterAmount)
         {
             afterAmount = 0;
             var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, rollinDataFish_CQ9.account);
@@ -1406,7 +1406,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             if (rollinDataFish_CQ9.amount == 0)
             {
-                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.CQ9, rollinDataFish_CQ9.account, gameType);
+                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.CQ9, rollinDataFish_CQ9.account, (int)gameType);
                 afterAmount = tpCustBalance.Balance;
                 if (tpCurrency.ExchangeRate > 0)
                 {
@@ -1424,9 +1424,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
-        public IEnumerable<SettleDataRNG_CQ9> GetUnsettledListRNG_CQ9()
+        public SettleDataRNG_CQ9 GetUnsettledListRNG_CQ9(string transId)
         {
-            return settledService.GetUnsettledListRNG_CQ9();
+            return settledService.GetUnsettledListRNG_CQ9(transId);
         }
 
         public int SetSettleFlagRNG_CQ9(string roundid, int SettleFlag)
@@ -1434,9 +1434,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlagRNG_CQ9(roundid, SettleFlag);
         }
 
-        public IEnumerable<SettleDataRNG_CQ9> GetUnsettledListFish_CQ9()
+        public SettleDataRNG_CQ9 GetUnsettledListFish_CQ9(string transId)
         {
-            return settledService.GetUnsettledListFish_CQ9();
+            return settledService.GetUnsettledListFish_CQ9(transId);
         }
 
         public int SetSettleFlagFish_CQ9(string roundid, int SettleFlag)

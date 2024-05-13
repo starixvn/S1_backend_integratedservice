@@ -1,13 +1,10 @@
 ﻿using Newtonsoft.Json;
-
 using Serilog.Context;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -19,7 +16,6 @@ namespace ThirdPartySettleWorker.Workers
 
         private Timer _timerRNG;
         private Timer _timerLC;
-        private readonly Tools _tools;
         private readonly SettledBLL _settledBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
@@ -31,7 +27,6 @@ namespace ThirdPartySettleWorker.Workers
 
         public PlayTechWorker(IServiceProvider provider)
         {
-            _tools = provider.GetRequiredService<Tools>();
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
@@ -77,13 +72,13 @@ namespace ThirdPartySettleWorker.Workers
 
             try
             {
-                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype);
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype, 5000);
                 if (!tpUnsettleList.Any())
                 {
                     throw new UnsettleNotFoundException($"{_tpName} {gametype} no unsettle data.");
                 }
 
-                forContinue = tpUnsettleList.Count() == 200;
+                forContinue = tpUnsettleList.Count() == 5000;
                 foreach (var unsettled in tpUnsettleList)
                 {
                     try
@@ -129,6 +124,18 @@ namespace ThirdPartySettleWorker.Workers
                         var validBet = wager.ValidBet;
                         var winLostAmount = wager.WinLostAmount;
                         var gameId = wager.GameId.ToString();
+
+                        /*
+                         * 對於 BRL 貨幣
+                         * 必須使用 PTN 遊戲代碼才能存取遊戲
+                         * 測試環境和正式環境使用的遊戲程式碼不同
+                         */
+                        if (tpCurrency.TpCurrencyId == "BRL" && gameId.StartsWith("ptn_", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // 去除ptn_，讓rebate計算可以使用SlotGame原資料設定
+                            gameId = gameId.Substring(4);
+                        }
+
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,

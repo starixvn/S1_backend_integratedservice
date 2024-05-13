@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -18,6 +17,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly SettledService _settledService;
         private readonly ILogger<MGBLL> _logger;
         private readonly Dictionary<MGTxnType, Func<MGUpdatebalanceRequest, Task<MGUpdatebalanceResponse>>> _processRequestHandler;
+
         public MGBLL(IServiceProvider provider)
         {
             ThirdParty = Tp.MG;
@@ -110,7 +110,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 currency = request.currency,
                 txnId = request.txnId,
                 creationTime = request.creationTime,
-                creationTimeMs = convertCreationTimeMs(request.creationTimeMs),
+                creationTimeMs = ConvertCreationTimeMs(request.creationTimeMs),
                 contentCode = request.contentCode,
                 betId = request.betId,
                 roundId = request.roundId,
@@ -119,9 +119,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 completed = request.completed,
             };
 
-            var placeBetResult = new MGPlaceBetResult();
+            MGPlaceBetResult placeBetResult;
 
-            var gameType = getGameType(request.channel);
+            var gameType = GetGameType(request.channel);
             if (gameType == (int)GameType.MG_RNG)
             {
                 placeBetResult = await _bettingService.PlaceBetRNG_MG(tpCustInfo, bettingData, gameType);
@@ -180,7 +180,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 currency = request.currency,
                 txnId = request.txnId,
                 creationTime = request.creationTime,
-                creationTimeMs = convertCreationTimeMs(request.creationTimeMs),
+                creationTimeMs = ConvertCreationTimeMs(request.creationTimeMs),
                 contentCode = request.contentCode,
                 betId = request.betId,
                 roundId = request.roundId,
@@ -190,8 +190,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 transNum = request.transNum
             };
 
-            var payoutResult = new MGPayoutResult();
-            var gameType = getGameType(request.channel);
+            MGPayoutResult payoutResult;
+
+            var gameType = GetGameType(request.channel);
             if (gameType == (int)GameType.MG_RNG)
             {
                 payoutResult = await _settledService.PayoutRNG_MG(tpCustInfo, bettingData, gameType);
@@ -251,7 +252,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 creationTimeMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
             };
 
-            var cancelResult = new MGCancelResult();
+            MGCancelResult cancelResult;
 
             // check bettrans of gametype by table
             var tpGameType = _settledService.GetTpGameType_MG(request.txnId, cancelData.creationTimeMs);
@@ -259,8 +260,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 throw new MGException(MGErrorCode.GameTypeError, $"gameType error:{tpGameType}, betId:{request.betId}");
             }
-            var gameType = tpGameType;
 
+            var gameType = tpGameType;
             if (gameType == (int)GameType.MG_RNG)
             {
                 cancelResult = await _settledService.CancelBetRNG_MG(tpCustInfo, cancelData, gameType);
@@ -311,12 +312,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 playerId = request.playerId,
                 amount = request.amount,
                 creationTime = request.creationTime,
-                creationTimeMs = convertCreationTimeMs(request.creationTimeMs),
+                creationTimeMs = ConvertCreationTimeMs(request.creationTimeMs),
             };
 
-            var cancelResult = new MGCancelResult();
+            MGCancelResult cancelResult;
 
-            var gameType = getGameType(request.channel);
+            var gameType = GetGameType(request.channel);
             if (gameType == (int)GameType.MG_RNG)
             {
                 cancelResult = await _settledService.CancelBetRNG_MG(tpCustInfo, cancelData, gameType);
@@ -371,9 +372,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return (tpCustInfo, tpCurrency);
         }
 
-        private int getGameType(string channel = null)
+        private static int GetGameType(string channel = null)
         {
-            var gameType = 0;
+            int gameType;
             if (!string.IsNullOrEmpty(channel) && string.Equals(channel, "LIVEDEALER", StringComparison.OrdinalIgnoreCase))
             {
                 gameType = (int)GameType.MG_LiveCasino;
@@ -385,7 +386,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return gameType;
         }
 
-        private long convertCreationTimeMs(long creationTimeMs)
+        private static long ConvertCreationTimeMs(long creationTimeMs)
         {
             var leng = creationTimeMs.ToString().Length;
             if (leng == 13)

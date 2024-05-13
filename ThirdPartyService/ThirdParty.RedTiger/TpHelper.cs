@@ -1,6 +1,8 @@
 ﻿using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -12,12 +14,17 @@ namespace ThirdParty.RedTiger
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly RedTigerConfig _siteConfig;
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
 
-        public TpHelper()
+        public TpHelper(IServiceProvider provider)
         {
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList(38).ToDictionary(d => d.AppId, d => d.Name);
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.RedTiger).ToDictionary(d => d.AppId, d => d.Name);
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<RedTigerConfig>(TpEnum.RedTiger.ToString());
         }
+
+        #region Response
+
         public class LoginResponse
         {
             public string entry { get; set; }
@@ -34,6 +41,8 @@ namespace ThirdParty.RedTiger
             public string link { get; set; }
         }
 
+        #endregion
+
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -49,8 +58,10 @@ namespace ThirdParty.RedTiger
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
-            oApiResult.ErrorCode = ErrorCode.Fail;
+            ApiResult<UserBalance> oApiResult = new()
+            {
+                ErrorCode = ErrorCode.Fail
+            };
             return oApiResult;
         }
 
@@ -61,9 +72,10 @@ namespace ThirdParty.RedTiger
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl_Backup") && !string.IsNullOrEmpty(inputs["ApiUrl_Backup"]) ? inputs["ApiUrl_Backup"] : throw new Exception("ApiUrl_Backup");
-            string Ua2Token = inputs.ContainsKey("Ua2Token") && !string.IsNullOrEmpty(inputs["Ua2Token"]) ? inputs["Ua2Token"] : throw new Exception("Ua2Token");
-            string CasinoKey = inputs.ContainsKey("CasinoKey") && !string.IsNullOrEmpty(inputs["CasinoKey"]) ? inputs["CasinoKey"] : throw new Exception("CasinoKey");
+            string ApiUrl = _siteConfig.ApiUrl_Backup;
+            string Ua2Token = _siteConfig.Ua2Token;
+            string CasinoKey = _siteConfig.CasinoKey;
+
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
             string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
             string GameUrl = ApiUrl;
@@ -76,7 +88,7 @@ namespace ThirdParty.RedTiger
             bool mobile = appType != AppType.Desktop;
             var siteName = ServerInfoProvider.GetSiteName(tpCustInfo.SiteId);
 
-            ApiResult oApiResult = new ApiResult();
+            ApiResult oApiResult = new();
 
             if (string.IsNullOrEmpty(siteName))
             {
@@ -166,15 +178,16 @@ namespace ThirdParty.RedTiger
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl_Backup") && !string.IsNullOrEmpty(inputs["ApiUrl_Backup"]) ? inputs["ApiUrl_Backup"] : throw new Exception("ApiUrl_Backup");
-            string GameProvider = inputs.ContainsKey("GameProvider") && !String.IsNullOrEmpty(inputs["GameProvider"]) ? inputs["GameProvider"] : throw new Exception($"GameProvider is empty");
-            string gameHistoryApiToken = inputs.ContainsKey("gameHistoryApiToken") && !string.IsNullOrEmpty(inputs["gameHistoryApiToken"]) ? inputs["gameHistoryApiToken"] : throw new Exception("gameHistoryApiToken");
-            string CasinoKey = inputs.ContainsKey("CasinoKey") && !string.IsNullOrEmpty(inputs["CasinoKey"]) ? inputs["CasinoKey"] : throw new Exception("CasinoKey");
+            string ApiUrl = _siteConfig.ApiUrl_Backup;
+            string GameProvider = _siteConfig.GameProvider;
+            string GameHistoryApiToken = _siteConfig.GameHistoryApiToken;
+            string CasinoKey = _siteConfig.CasinoKey;
+
             var WagerUrl = $"{ApiUrl}/api/gamehistory/v1/casino/games/stream";
 
             string word = "://";
             string[] cutHost = ApiUrl.Split(word);
-            string BetDetailUrl = $"{cutHost[0]}{word}{CasinoKey}:{gameHistoryApiToken}@{cutHost[1]}";
+            string BetDetailUrl = $"{cutHost[0]}{word}{CasinoKey}:{GameHistoryApiToken}@{cutHost[1]}";
 
             var slotData = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_RedTiger_Detail_Get", new { TransId = getBetDetail.TransId }, DataBase.Report);
 
@@ -191,8 +204,10 @@ namespace ThirdParty.RedTiger
                 var dicP = FromJson<Dictionary<string, string>>(ToJson(BetDetail));
                 var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-                Dictionary<string, string> header = new Dictionary<string, string>();
-                header.Add("Authorization", "Basic " + Convert.ToBase64String(new ASCIIEncoding().GetBytes($"{CasinoKey}:{gameHistoryApiToken}")));
+                Dictionary<string, string> header = new()
+                {
+                    { "Authorization", "Basic " + Convert.ToBase64String(new ASCIIEncoding().GetBytes($"{CasinoKey}:{GameHistoryApiToken}")) }
+                };
 
                 var result = HttpGet(
                     WagerUrl,

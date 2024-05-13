@@ -1,11 +1,7 @@
-﻿using Newtonsoft.Json;
-
-using Serilog.Context;
-
+﻿using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -139,6 +135,8 @@ namespace ThirdPartySettleWorker.Workers
                                 {
                                     Task.Run(() =>
                                     {
+                                        // one789自動退款wager排程，會取bettrans未結算資料處理
+                                        _settledBLL.SetSettleFlag_Bettrans_One789((int)gameType, unsettled.TransId);
                                         _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, true);
                                     });
                                 }
@@ -187,6 +185,8 @@ namespace ThirdPartySettleWorker.Workers
                                 {
                                     Task.Run(() =>
                                     {
+                                        // one789自動退款wager排程，會取bettrans未結算資料處理
+                                        _settledBLL.SetSettleFlag_Bettrans_One789((int)gameType, unsettled.TransId);
                                         _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, tpUnsettle.TransId, true);
                                     });
                                 }

@@ -1,8 +1,5 @@
-﻿using Elastic.Apm.NetCoreAll;
-
-using ThirdPartyCore.BLL;
+﻿using ThirdPartyCore.BLL;
 using ThirdPartyCore.Model;
-
 using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.DAL;
@@ -44,12 +41,14 @@ namespace ThirdPartyService
             services.AddSingleton<TpBetRecordService>();
             services.AddSingleton<ConfigService>();
             services.AddSingleton<BetLimitService>();
+            services.AddSingleton<GiftInfoService>();
 
             /*BLL*/
             services.AddSingleton<ThirdPartyBLL>();
             services.AddSingleton<ServerInfoBLL>();
             services.AddSingleton<TpCustInfoBLL>();
             services.AddSingleton<AuthBLL>();
+            services.AddSingleton<GiftInfoBLL>();
 
             ThirdPartyCore.ThirdPartyHelperBase.proxyHost = Configuration.GetValue<string>("ProxyHost");
 
@@ -84,10 +83,7 @@ namespace ThirdPartyService
             }
 
             //app.UseHttpsRedirection();
-            if (!env.IsEnvironment("Local"))
-            {
-                app.UseAllElasticApm(Configuration);
-            }
+
             app.UseRouting();
             app.UseRequestLogMiddleware();
             app.UseResponseLogMiddleware();

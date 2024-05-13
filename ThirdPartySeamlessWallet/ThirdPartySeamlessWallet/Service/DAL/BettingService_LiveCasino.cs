@@ -1008,5 +1008,124 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+        
+        #region WonCasino
+        
+        public int DeductLC_WonCasino(TpCustInfo tpCustInfo, WonCasinoDeductRequest bettingDataLC_WonCasino,
+            out decimal afterAmount,out string orderNo)
+        {
+            int bonusId = 0;
+            afterAmount = 0;
+            orderNo = "99999999";
+            var result = 0;
+
+            var tpId = Tp.WonCasino;
+            var tpGameType = GameType.WonCasino_LiveCasino;
+            var tpCategory = TpCategory.LiveCasino;
+            var InsSpName = "Service_Bettrans_WonCasino_Ins";
+            var CheckSpName = "Service_Bettrans_WonCasino_Get";
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                var partitionTime = DateTimeOffset.FromUnixTimeSeconds(bettingDataLC_WonCasino.bets.createtime).DateTime;
+                var bettrans = _partitionService.Query<BettransWonCasino>(partitionTime, CheckSpName, 
+                    new { id = bettingDataLC_WonCasino.bets.id , username = tpCustInfo.TpUserName });
+                
+                //若TicketStatus已經為 Refund = 3,/*Reject, Refund, Void, Draw*/,就不給再次扣款了。
+                if (bettrans.Any(i => i.TicketStatus == (int)TicketStatus.Refund))
+                {
+                    orderNo = bettrans.LastOrDefault().SQ.ToString();
+                    return -2;
+                }
+                
+                bettingDataLC_WonCasino.username = tpCustInfo.TpUserName;
+                bettingDataLC_WonCasino.notifyid = bettingDataLC_WonCasino.notifyid + 
+                                                   bettingDataLC_WonCasino.type +
+                                                   bettingDataLC_WonCasino.bets.id;
+                var p = new DynamicParameters(new
+                {
+                    id = bettingDataLC_WonCasino.bets.id,
+                    username = bettingDataLC_WonCasino.username,
+                    notifyid = bettingDataLC_WonCasino.notifyid,
+                    amount = bettingDataLC_WonCasino.amount,
+                    type = bettingDataLC_WonCasino.type,
+                    currency = bettingDataLC_WonCasino.currency,
+                    appid = bettingDataLC_WonCasino.appid,
+                    sign = bettingDataLC_WonCasino.sign,
+                    gameid = bettingDataLC_WonCasino.bets.gameid,
+                    userid = bettingDataLC_WonCasino.bets.userid,
+                    userstatus = bettingDataLC_WonCasino.bets.userstatus,
+                    betpoint = bettingDataLC_WonCasino.bets.betpoint,
+                    betodds = bettingDataLC_WonCasino.bets.betodds,
+                    betamount = bettingDataLC_WonCasino.bets.betamount,
+                    commamount = bettingDataLC_WonCasino.bets.commamount,
+                    winlost = bettingDataLC_WonCasino.bets.winlost,
+                    foregift = bettingDataLC_WonCasino.bets.foregift,
+                    gameroundid = bettingDataLC_WonCasino.bets.gameroundid,
+                    gameresult = bettingDataLC_WonCasino.bets.gameresult,
+                    gametype = bettingDataLC_WonCasino.bets.gametype,
+                    gamestyle = bettingDataLC_WonCasino.bets.gamestyle,
+                    serialnumber = bettingDataLC_WonCasino.serialnumber,
+                    gameroundno = bettingDataLC_WonCasino.bets.gameroundno,
+                    gameno = bettingDataLC_WonCasino.bets.gameno,
+                    bettype = bettingDataLC_WonCasino.bets.bettype,
+                    cid = bettingDataLC_WonCasino.bets.cid,
+                    state = bettingDataLC_WonCasino.bets.state,
+                    createtime =  bettingDataLC_WonCasino.bets.createtime,
+                    settletime = bettingDataLC_WonCasino.bets.settletime,
+                    UTCBetTime = DateTimeOffset.FromUnixTimeSeconds(bettingDataLC_WonCasino.bets.createtime).UtcDateTime,
+                    UTCSettleTime = DateTimeOffset.FromUnixTimeSeconds(bettingDataLC_WonCasino.bets.settletime).UtcDateTime,
+                    TicketType = bettingDataLC_WonCasino.TicketType,
+                    TicketStatus = bettingDataLC_WonCasino.TicketStatus,
+                    SettleFlag = bettingDataLC_WonCasino.SettleFlag
+                });
+                p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
+                result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
+                if (result > 0 && bettingDataLC_WonCasino.amount != 0)
+                {
+                    result = PlaceBet(
+                        tpCustInfo,
+                        bettingDataLC_WonCasino.amount,
+                        (int)tpId,
+                        bettingDataLC_WonCasino.serialnumber,
+                        (int)tpGameType,
+                        bettingDataLC_WonCasino.serialnumber,
+                        out afterAmount,
+                        ref bonusId,
+                        out _,
+                        conn,
+                        trans
+                    );
+                }
+
+                if (result > 0)
+                {
+                    orderNo = p.Get<long>("SQ").ToString();
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+                throw;
+            }
+
+            return result;
+        }
+        
+        #endregion
+        
     }
 }

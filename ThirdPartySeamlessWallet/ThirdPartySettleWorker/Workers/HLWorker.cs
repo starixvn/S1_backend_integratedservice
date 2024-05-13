@@ -19,9 +19,6 @@ namespace ThirdPartySettleWorker.Workers
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly ILogger<HLWorker> _logger;
         private readonly string _tpName;
-        private readonly int tpId = (int)Tp.HaoLong;
-        private readonly int workerType = 1;
-        
         
         public HLWorker(IServiceProvider provider)
         {

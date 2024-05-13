@@ -1,13 +1,9 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using System.Web;
-
 using Microsoft.AspNetCore.Mvc;
-
 using Newtonsoft.Json;
-
 using ThirdPartySeamlessWallet.Service.BLL;
-using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -19,7 +15,6 @@ namespace ThirdPartySeamlessWallet.Controllers
     public class EBetController : ControllerBase
     {
         private readonly AuthBLL authBLL;
-        private readonly ILogger<EBetController> logger;
         private readonly ThirdPartyBLL thirdPartyBLL;
         private readonly TpCustInfoBLL tpCustInfoBLL;
         private readonly BettingBLL bettingBLL;
@@ -27,19 +22,17 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Log2File log2File;
         private readonly Tp thisTp;
         private readonly int gameType = 0;
-        private readonly IHostEnvironment environment;
         private readonly EBetConfig _siteEBetConfig;
 
         public EBetController(IServiceProvider provider)
         {
             authBLL = provider.GetRequiredService<AuthBLL>();
-            logger = provider.GetRequiredService<ILogger<EBetController>>(); 
             thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             bettingBLL = provider.GetRequiredService<BettingBLL>();
             settledBLL = provider.GetRequiredService<SettledBLL>();
             log2File = provider.GetRequiredService<Log2File>();
-            this.thisTp = Tp.EBet;
+            thisTp = Tp.EBet;
             gameType = (int)GameType.EBet_LiveCasino;
             _siteEBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<EBetConfig>(Tp.EBet.ToString());
         }
@@ -651,7 +644,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
         }
 
-        private bool VerifySignature(string dataToSign, string signedData, string publicKey)
+        private static bool VerifySignature(string dataToSign, string signedData, string publicKey)
         {
             var encoder = new UTF8Encoding();
             using var RSAalg = new RSACryptoServiceProvider();

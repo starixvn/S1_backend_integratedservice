@@ -1,5 +1,4 @@
 ﻿using Serilog.Context;
-
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -22,6 +21,7 @@ namespace ThirdPartyWager.Workers
             _logger = provider.GetRequiredService<ILogger<WagerRedoMP>>();
             _wagerMPBLL = provider.GetRequiredService<WagerMPBLL>();
         }
+
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);

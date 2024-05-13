@@ -1251,7 +1251,27 @@ namespace ThirdPartyService.Service.BLL
 
             return apiResult;
         }
-        
+
+        public ApiResult CreateBonusCode(CreateBonusCode createBonusCode)
+        {
+            var apiResult = new ApiResult();
+
+            var tpHelper = (IThirdPartyEventParticular)thirdPartyHelper.GetThirdPartyHelper(createBonusCode.TpId, createBonusCode.SiteId);
+            var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper
+                .GetThirdPartyBySite(createBonusCode.TpId, createBonusCode.SiteId).Setting);
+            if (createBonusCode.inputs != null)
+            {
+                foreach (var infoI in createBonusCode.inputs)
+                {
+                    inputs.Add(infoI.Key, infoI.Value);
+                }
+            }
+
+            apiResult = tpHelper.CreateBonusCode(createBonusCode.SiteId, inputs);
+
+            return apiResult;
+        }
+
 
         #region Private Methods
 

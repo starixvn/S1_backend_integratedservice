@@ -19,7 +19,7 @@ namespace ThirdParty.Pegasus
         public TpHelper(IServiceProvider provider)
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(TpEnum.Pegasus.ToString());
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList(32).ToDictionary(d => d.AppId, d => d.Name);
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.Pegasus).ToDictionary(d => d.AppId, d => d.Name);
         }
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)

@@ -1,9 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using System.Web;
-
 using Newtonsoft.Json;
-
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -17,7 +15,7 @@ namespace ThirdParty.HB
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
         public TpHelper()
         {
-            _gameNameList = TpBetRecordProvider.GetGameCasinoList(40).ToDictionary(d => d.AppId, d => d.Name);
+            _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.HB).ToDictionary(d => d.AppId, d => d.Name);
         }
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -35,7 +33,7 @@ namespace ThirdParty.HB
             var gameId = GetInputValue(inputs, "gameId");
             var homeUrl = GetInputValue(inputs, "homeUrl", true);
 
-            var gameUrl = "";
+            string gameUrl;
             if (IsFunMode(inputs))
             {
                 gameUrl = $"{launchUrl}?brandid={brandId}&keyname={gameId}&mode=fun&locale={TpLangId}&lobbyurl={homeUrl}";
@@ -59,8 +57,10 @@ namespace ThirdParty.HB
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
-            oApiResult.ErrorCode = ErrorCode.Fail;
+            ApiResult<UserBalance> oApiResult = new()
+            {
+                ErrorCode = ErrorCode.Fail
+            };
             return oApiResult;
         }
 
@@ -104,7 +104,7 @@ namespace ThirdParty.HB
             };
         }
 
-        private string GetInputValue(Dictionary<string, string> inputs, string key, bool allowNull = false)
+        private static string GetInputValue(Dictionary<string, string> inputs, string key, bool allowNull = false)
         {
             if (inputs.ContainsKey(key) && !string.IsNullOrEmpty(inputs[key]))
             {
@@ -116,7 +116,7 @@ namespace ThirdParty.HB
             throw new Exception($"inputs {key} is empty");
         }
 
-        private bool IsFunMode(Dictionary<string, string> inputs)
+        private static bool IsFunMode(Dictionary<string, string> inputs)
         {
             return inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) && inputs["fun"] == "1";
         }
