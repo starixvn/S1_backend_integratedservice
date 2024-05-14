@@ -1,5 +1,4 @@
 ﻿using Serilog.Context;
-
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -18,18 +17,18 @@ namespace ThirdPartyWager.Workers
         private Timer _sportsBookWagerTimer;
         private Timer _virtualSportsWagerTimer;
 
-        private readonly Dictionary<GameType, SBOPortfolio> _gameTypeMap = new Dictionary<GameType, SBOPortfolio>()
+        private readonly Dictionary<GameType, SBOPortfolio> _gameTypeMap = new()
         {
             { GameType.SBO_Sports, SBOPortfolio.SportsBook },
             { GameType.SBO_VirtualSports, SBOPortfolio.VirtualSports }
         };
 
-        public WagerSBO(ISBOBLL sboBll, ThirdPartyBLL thirdPartyBll, ILogger<WagerSBO> logger, DateTimeHelper dateTimeHelper)
+        public WagerSBO(IServiceProvider provider)
         {
-            _sboBll = sboBll;
-            _thirdPartyBLL = thirdPartyBll;
-            _logger = logger;
-            _dateTimeHelper = dateTimeHelper;
+            _logger = provider.GetRequiredService<ILogger<WagerSBO>>();
+            _sboBll = provider.GetRequiredService<ISBOBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -39,7 +38,7 @@ namespace ThirdPartyWager.Workers
             return Task.CompletedTask;
         }
 
-        private async void QueryWager(object? state)
+        private async void QueryWager(object state)
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", Tp.SBO.ToString());
