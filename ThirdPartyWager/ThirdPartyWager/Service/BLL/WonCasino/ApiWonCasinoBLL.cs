@@ -47,9 +47,6 @@ namespace ThirdPartyWager.Service.BLL
             _log2File.InsertRequestLog(_tpName, apiUrl, $"{url}", "request Url");
             var response = await _httpHelper.GetClient().SendAsync(request);
             var r = response.Content.ReadAsStringAsync().Result;
-            
-            _log2File.InsertRequestLog(_tpName, tmpUrl, $"{JsonConvert.SerializeObject(r)}", "Step1 : WonCasino Result");
-
 
             if (!response.IsSuccessStatusCode)
             {

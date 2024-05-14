@@ -389,17 +389,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            if (doSettle || data.isEndRound)
-            {
-                if (!InsertUnsettleForSlotPayout(partitionTime, data.roundId, out message, trans))
-                {
-                    await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
-                    return new AMBSlotPayoutResponse()
-                    {
-                        status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
-                    };
-                }
-            }
+            // TODO : 拔掉測試
+            // if (doSettle || data.isEndRound)
+            // {
+            //     if (!InsertUnsettleForSlotPayout(partitionTime, data.roundId, out message, trans))
+            //     {
+            //         await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
+            //         return new AMBSlotPayoutResponse()
+            //         {
+            //             status = new AMBSlotStatusModel() { code = AMBErrorCode.ServiceNotAvailable, message = message }
+            //         };
+            //     }
+            // }
 
             await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
 
@@ -620,15 +621,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     return CreateSettleError(AMBErrorCode.ServiceNotAvailable);
                 }
             }
-            if (data.isEndRound)
-            {
-                result = _settledService.InsertUnsettle_AMB(partitionTime, data.roundId, trans);
-                if (!result)
-                {
-                    _logger.LogError($"InsertUnsettle_AMB failed {data.roundId}");
-                    return CreateSettleError(AMBErrorCode.ServiceNotAvailable);
-                }
-            }
+            
+            //TODO : 暫時拔掉測試
+            // if (data.isEndRound)
+            // {
+            //     result = _settledService.InsertUnsettle_AMB(partitionTime, data.roundId, trans);
+            //     if (!result)
+            //     {
+            //         _logger.LogError($"InsertUnsettle_AMB failed {data.roundId}");
+            //         return CreateSettleError(AMBErrorCode.ServiceNotAvailable);
+            //     }
+            // }
 
             if (afterAmount == 0)
             {
