@@ -495,6 +495,12 @@ public class WonCasinoBLL : IWonCasinoBLL
             return -2;
         }
 
+        //最後一筆不是state不是結算，但送取消結算過來的話直接不處理
+        if (lastBettrans.state == 1 && rollbackData_WonCasino.type == 9)
+        {
+            return -2;
+        }
+
         switch (lastBettrans.TicketType)
         {
             case (int)BettransType.Bet:
