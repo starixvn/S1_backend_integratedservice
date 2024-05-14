@@ -5,14 +5,14 @@ using Newtonsoft.Json;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
-
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public interface IApiSBOBLL
     {
-        Task<SboWagers> GetBetListByModifyDateAsync(string startTime, string endTime, SBOPortfolio portfolio, SboSetting setting);
+        Task<SboWagers> GetBetListByModifyDateAsync(string startTime, string endTime, SBOPortfolio portfolio, SBOConfig setting);
     }
 
     public class ApiSBOBLL : IApiSBOBLL
@@ -25,7 +25,7 @@ namespace ThirdPartyWager.Service.BLL
             _logger = logger;
         }
 
-        public async Task<SboWagers> GetBetListByModifyDateAsync(string startTime, string endTime, SBOPortfolio portfolio, SboSetting setting)
+        public async Task<SboWagers> GetBetListByModifyDateAsync(string startTime, string endTime, SBOPortfolio portfolio, SBOConfig setting)
         {
             var betListApi = $"{setting.ApiUrl}/web-root/restricted/report/get-bet-list-by-modify-date.aspx";
             var param = new
@@ -37,12 +37,14 @@ namespace ThirdPartyWager.Service.BLL
                 StartDate = startTime,
                 EndDate = endTime
             };
+
             try
             {
                 var stringContent = new StringContent(
                     JsonConvert.SerializeObject(param),
                     Encoding.UTF8,
-                    Application.Json);
+                    Application.Json
+                );
 
                 var client = _httpHelper.GetClient();
                 var httpResponseMessage = await client.PostAsync(betListApi, stringContent);
