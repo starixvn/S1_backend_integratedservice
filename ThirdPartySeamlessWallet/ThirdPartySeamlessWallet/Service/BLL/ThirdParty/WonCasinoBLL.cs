@@ -433,10 +433,6 @@ public class WonCasinoBLL : IWonCasinoBLL
         if (tpCurrency.ExchangeRate != 0)
         {
             rollbackRequest.amount *= tpCurrency.ExchangeRate;
-            //rollbackRequest.betamount *= tpCurrency.ExchangeRate;
-            //rollbackRequest.commamount *= tpCurrency.ExchangeRate;
-            //rollbackRequest.winlost *= tpCurrency.ExchangeRate;
-            //rollbackRequest.foregift *= tpCurrency.ExchangeRate;
         }
         
         result = _settledService.Rollback_WonCasino(tpCustInfo,rollbackRequest, out afterAmount);
@@ -486,13 +482,25 @@ public class WonCasinoBLL : IWonCasinoBLL
     private int Rollback_DepositOrCancel_Check(IEnumerable<BettransWonCasino> bettransData_WonCasino,WonCasinoRollBackRequest rollbackData_WonCasino)
     {
         //当收到Rollback信息中 type=9的时候，将对 Deposit 进行回滚操作
-        //Rollback Type = 7,直接算為取消結算結果，直接退還錢並直接結單，不再進行操作。
         //取最後狀態，不一定是結算
         var lastBettrans = bettransData_WonCasino.LastOrDefault();
 
         if (lastBettrans == null)
         {
             return -2;
+        }
+
+        //最後一筆不是type不是9(結算)，但送取消結算過來的話
+        //代表我們沒有處理到結算，不需要去做事，直接不處理
+        if (lastBettrans.type == 1 && rollbackData_WonCasino.type == 9)
+        {
+            return -2;
+        }
+
+        //Rollback Type = 7,直接算為取消結算結果，直接退還錢並直接結單，不再進行操作。
+        if (lastBettrans.type == 9 && rollbackData_WonCasino.type == 7)
+        {
+            return 0;
         }
 
         switch (lastBettrans.TicketType)
