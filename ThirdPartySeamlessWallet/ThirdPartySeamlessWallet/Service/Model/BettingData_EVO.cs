@@ -146,4 +146,16 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string GameProvider { get; set; }
         public string GameHistoryApiToken { get; set; }
     }
+
+    public class EVOConfig : NLCConfig
+    {
+    }
+
+    public class NetentConfig : NLCConfig
+    {
+    }
+
+    public class RedTigerConfig : NLCConfig
+    {
+    }
 }

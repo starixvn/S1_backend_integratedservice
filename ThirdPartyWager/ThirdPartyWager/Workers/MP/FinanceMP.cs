@@ -1,5 +1,4 @@
 ﻿using Serilog.Context;
-
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
@@ -14,6 +13,7 @@ namespace ThirdPartyWager.Workers
         private readonly FinanceMPBLL _financeMPBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly FincanceService _fincanceService;
+        private readonly MPConfig _siteConfig;
         private readonly int _tpId = (int)Tp.MP;
         private readonly string _tpName = Tp.MP.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
@@ -26,6 +26,7 @@ namespace ThirdPartyWager.Workers
             _financeMPBLL = provider.GetRequiredService<FinanceMPBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _fincanceService = provider.GetRequiredService<FincanceService>();
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<MPConfig>(_tpName);
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -73,7 +74,7 @@ namespace ThirdPartyWager.Workers
             try
             {
                 // get setting
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+                var setting = _siteConfig;
 
                 // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);

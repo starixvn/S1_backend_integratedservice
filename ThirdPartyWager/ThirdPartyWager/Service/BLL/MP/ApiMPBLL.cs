@@ -1,7 +1,5 @@
 ﻿using System.Text;
-
 using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -24,11 +22,11 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<ApiMPBLL>>();
         }
 
-        public async Task<WagerMPModel> GetBetListByTime(string wagerUrl, string agent, string deskey, string md5key, long startUnix, long endUnix, string guid)
+        public async Task<WagerMPModel> GetBetListByTime(MPConfig setting, long startUnix, long endUnix)
         {
             var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
             // param
-            var url = wagerUrl;
+            var url = setting.WagerUrl;
             var param = new
             {
                 s = 6,
@@ -43,10 +41,10 @@ namespace ThirdPartyWager.Service.BLL
 
             var wager = new
             {
-                agent = agent,
-                timestamp = timestamp,
-                param = _common.AesEncrypt(sParam, deskey),
-                key = _common.ToMD5($"{agent}{timestamp}{md5key}").ToLower()
+                agent = setting.Agent,
+                timestamp,
+                param = _common.AesEncrypt(sParam, setting.Deskey),
+                key = _common.ToMD5($"{setting.Agent}{timestamp}{setting.Md5key}").ToLower()
             };
             dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(wager));
             sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
@@ -57,21 +55,17 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task<CurrencyStats_MP> GetBetSummaryByTime(dynamic setting, string startTime, string endTime)
+        public async Task<CurrencyStats_MP> GetBetSummaryByTime(MPConfig setting, string startTime, string endTime)
         {
             var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
-            var wagerUrl = setting["WagerUrl"];
-            var deskey = setting["Deskey"];
-            var agent = setting["Agent"];
-            var md5key = setting["Md5key"];
 
             // param
-            var url = wagerUrl;
+            var url = setting.WagerUrl;
             var param = new
             {
                 s = 61,
-                startTime = startTime,
-                endTime = endTime,
+                startTime,
+                endTime,
             };
             var dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(param));
             var sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());
@@ -81,10 +75,10 @@ namespace ThirdPartyWager.Service.BLL
 
             var report = new
             {
-                agent = agent,
-                timestamp = timestamp,
-                param = _common.AesEncrypt(sParam, deskey),
-                key = _common.ToMD5($"{agent}{timestamp}{md5key}").ToLower()
+                agent = setting.Agent,
+                timestamp,
+                param = _common.AesEncrypt(sParam, setting.Deskey),
+                key = _common.ToMD5($"{setting.Agent}{timestamp}{setting.Md5key}").ToLower()
             };
             dicP = _common.FromJson<Dictionary<string, string>>(_common.ToJson(report));
             sParam = string.Join("&", dicP.Where(x => x.Value != null).Select(kp => $"{kp.Key}={kp.Value}").ToArray());

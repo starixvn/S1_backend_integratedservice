@@ -873,5 +873,14 @@ namespace ThirdPartyCore
         {
             throw new NotImplementedException($"TpId:{tpCustInfo.TpId} AddPrizeToPlayer NotImplemented.");
         }
+        /// <summary>
+        /// 呼叫第三方API創建BonusCode
+        /// </summary>
+        /// <param name="inputs"></param>
+        /// <returns></returns>
+        public virtual ApiResult CreateBonusCode(int siteId, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException($"CreateBonusCode NotImplemented.");
+        }
     }
 }

@@ -206,7 +206,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     playerSessionId = HttpUtility.UrlEncode(tokenInfo.shortTimeToken),
                     playerId = tpCustInfoAuth.TpUserName,
                     playerName = tpCustInfoAuth.TpUserName,
-                    currency = ProcessCurrency(tpCustInfoAuth.TpCurrencyId),
+                    currency = tpCustInfoAuth.TpCurrencyId,
                     balance = tpCustBalance.Balance,
                     country = GetTpCountryCode(tpCustInfoAuth.TpCurrencyId, logName),
                     error = "0",
@@ -271,7 +271,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             BalanceResp response = new()
             {
                 requestId = getReq.requestId,
-                currency = ProcessCurrency(tpCustBalance.TpCurrencyId),
+                currency = tpCustBalance.TpCurrencyId,
                 balance = tpCustBalance.Balance,
                 bonusBalance = tpCustBalance.Balance,
                 error = "0",
@@ -377,7 +377,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         BalanceResp response = new()
                         {
                             requestId = getReq.requestId,
-                            currency = ProcessCurrency(tpCustBalance.TpCurrencyId),
+                            currency = tpCustBalance.TpCurrencyId,
                             balance = tpAffterAmount,
                             bonusBalance = 0,
                             error = "0",
@@ -420,7 +420,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         BalanceResp response = new()
                         {
                             requestId = getReq.requestId,
-                            currency = ProcessCurrency(tpCustBalance.TpCurrencyId),
+                            currency = tpCustBalance.TpCurrencyId,
                             balance = tpAffterAmount,
                             bonusBalance = 0,
                             error = "0",
@@ -463,7 +463,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         BalanceResp response = new()
                         {
                             requestId = getReq.requestId,
-                            currency = ProcessCurrency(tpCustBalance.TpCurrencyId),
+                            currency = tpCustBalance.TpCurrencyId,
                             balance = tpAffterAmount,
                             bonusBalance = 0,
                             error = "0",
@@ -498,7 +498,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         BalanceResp response = new()
                         {
                             requestId = getReq.requestId,
-                            currency = ProcessCurrency(tpCustBalance.TpCurrencyId),
+                            currency = tpCustBalance.TpCurrencyId,
                             balance = tpAffterAmount,
                             bonusBalance = 0,
                             error = "0",
@@ -580,7 +580,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     BalanceResp response = new()
                     {
                         requestId = getReq.requestId,
-                        currency = ProcessCurrency(tpCustBalance.TpCurrencyId),
+                        currency = tpCustBalance.TpCurrencyId,
                         balance = tpAffterAmount,
                         bonusBalance = 0,
                         error = "0",

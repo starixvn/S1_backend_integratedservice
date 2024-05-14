@@ -1,13 +1,10 @@
 ﻿using Newtonsoft.Json;
-
 using Serilog.Context;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -163,7 +160,7 @@ namespace ThirdPartySettleWorker.Workers
                             _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, unsettled.TransId, isSuccess: false);
                         });
                         isError = true;
-                        _logger.LogError(ex1,$"{logName}:{JsonConvert.SerializeObject(unsettled)}");
+                        _logger.LogError(ex1, $"{logName}:{JsonConvert.SerializeObject(unsettled)}");
                     }
                 }
             }
@@ -344,9 +341,10 @@ namespace ThirdPartySettleWorker.Workers
 
             var fWagerStake = Math.Truncate(wagerStake * 10) / 10;
             betTrans.Stake = Math.Truncate(betTrans.Stake * 10) / 10;
+            var dDiffStake = Math.Abs(fWagerStake - betTrans.Stake);
+            var dDiffAmount = (tpCurrency.ExchangeRate == 1000m) ? 1.1m : 0.1m;
 
-            var isSame = fWagerStake == betTrans.Stake
-                         && Math.Abs(wagerWinLostAmount - betTrans.WinLostAmount) < Convert.ToDecimal(2);
+            var isSame = dDiffStake < dDiffAmount && Math.Abs(wagerWinLostAmount - betTrans.WinLostAmount) < Convert.ToDecimal(2);
 
             if (!isSame)
             {
