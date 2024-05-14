@@ -433,10 +433,10 @@ public class WonCasinoBLL : IWonCasinoBLL
         if (tpCurrency.ExchangeRate != 0)
         {
             rollbackRequest.amount *= tpCurrency.ExchangeRate;
-            rollbackRequest.betamount *= tpCurrency.ExchangeRate;
-            rollbackRequest.commamount *= tpCurrency.ExchangeRate;
-            rollbackRequest.winlost *= tpCurrency.ExchangeRate;
-            rollbackRequest.foregift *= tpCurrency.ExchangeRate;
+            //rollbackRequest.betamount *= tpCurrency.ExchangeRate;
+            //rollbackRequest.commamount *= tpCurrency.ExchangeRate;
+            //rollbackRequest.winlost *= tpCurrency.ExchangeRate;
+            //rollbackRequest.foregift *= tpCurrency.ExchangeRate;
         }
         
         result = _settledService.Rollback_WonCasino(tpCustInfo,rollbackRequest, out afterAmount);
