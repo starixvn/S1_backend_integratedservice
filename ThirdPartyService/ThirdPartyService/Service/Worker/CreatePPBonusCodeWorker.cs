@@ -53,7 +53,8 @@ namespace ThirdPartyService.Service.Worker
                             { "GameId", "vs20olympnova88" },
                             { "BonusCode", bonusCode },
                             { "Round", item.Round.ToString() },
-                            { "Currency", item.TpCurrencyId }
+                            { "Currency", item.TpCurrencyId },
+                            { "ExpirationDay","8"} //有效期限8天
                         };
                         var p = new CreateBonusCode()
                         {
