@@ -20,6 +20,7 @@ public class WagerAMB : BackgroundService
         private readonly int tpType = (int)WagerTimerType.Wager;
         private int quick = 0;
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
+        private readonly int intervalMins = 5;
         public WagerAMB(IServiceProvider provider)
         {
             _wagerAMBBLL = provider.GetRequiredService<WagerAMBBLL>();
@@ -51,11 +52,19 @@ public class WagerAMB : BackgroundService
                 var last = (dataTpTimer == null) ? iRangMins - 1 : iRangMins;
                 var time = _dateTimeHelper.GetTimeByMinute(last, timeZone, _timeFormat, timerTime);
 
-                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
-                result = await _wagerAMBBLL.GetWagerAsync(time.startTime, time.endTime);
-                if (result)
+                if (timerTime < nowTime)
                 {
-                    _thirdPartyBLL.SetThirdPartyTimer(_tpId, tpType, time.endUnix);
+                    var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+                    result = await _wagerAMBBLL.GetWagerAsync(time.startTime, time.endTime);
+                    if (result)
+                    {
+                        _thirdPartyBLL.SetThirdPartyTimer(_tpId, tpType, time.endUnix);
+                    }
+                }
+
+                if ((int)DateTime.Now.Subtract(timerTime).TotalMinutes > 3)
+                {
+                    quick = 1;
                 }
             }
             catch (Exception ex)
@@ -64,8 +73,16 @@ public class WagerAMB : BackgroundService
             }
             finally
             {
-                var dueTimeSpan = TimeSpan.FromMinutes(5);
-                _timer.Change(dueTimeSpan, TimeSpan.Zero);
+                if (quick == 1)
+                {
+                    var dueTimeSpan = TimeSpan.FromSeconds(10);
+                    _timer.Change(dueTimeSpan, TimeSpan.Zero);
+                }
+                else
+                {
+                    var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                    _timer.Change(dueTimeSpan, TimeSpan.Zero);
+                }
             }
         }
     
