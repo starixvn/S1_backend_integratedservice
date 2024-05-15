@@ -389,7 +389,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 };
             }
 
-            // TODO : 拔掉測試
+            // 改為注單抓取後再塞TpUnsettle
             // if (doSettle || data.isEndRound)
             // {
             //     if (!InsertUnsettleForSlotPayout(partitionTime, data.roundId, out message, trans))
@@ -622,7 +622,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 }
             }
             
-            //TODO : 暫時拔掉測試
+            // 改為注單抓取後再塞TpUnsettle
             // if (data.isEndRound)
             // {
             //     result = _settledService.InsertUnsettle_AMB(partitionTime, data.roundId, trans);
