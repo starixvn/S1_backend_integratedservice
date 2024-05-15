@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using System.Text.RegularExpressions;
+using Dapper;
 using MySql.Data.MySqlClient;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -37,7 +38,7 @@ public class WagerAMBService
                 p.Add("turnover", wager.turnover);
                 p.Add("winlose", wager.winlose);
                 p.Add("commission", wager.commission);
-                p.Add("LocalDateTime", ConvertUTCTime(wager.timestamp));
+                p.Add("LocalDateTime", ConvertUTCTime(ConvertDateFormat(wager.timestamp)));
         
                 result = _wagerDbClient.Execute("Service_TpWagerPK_AMB_Ins", p);
                 return !result ? 0 : 1;
@@ -59,7 +60,7 @@ public class WagerAMBService
                 d.Add("isFreespin", wager.isFreespin);
                 d.Add("isBuyFeature", wager.isBuyFeature);
                 d.Add("isGamble", wager.isGamble);
-                d.Add("LocalDateTime", ConvertUTCTime(wager.timestamp));
+                d.Add("LocalDateTime", ConvertUTCTime(ConvertDateFormat(wager.timestamp)));
         
                 result = _wagerDbClient.Execute("Service_TpWagerRng_AMB_Ins", d);
                 return !result ? 0 : 1;
@@ -85,7 +86,14 @@ public class WagerAMBService
     {
         DateTime dateTime;
         var convert = DateTime.TryParse(date, out dateTime);
-        return convert ? new DateTimeOffset(dateTime, new TimeSpan(-4, 0, 0)).UtcDateTime : dateTime;
+        return convert ? new DateTimeOffset(dateTime, new TimeSpan(8,0, 0)).UtcDateTime : dateTime;
+    }
+    
+    private static string ConvertDateFormat(string originalString)
+    {
+        var pattern = @"(?<day>\d{2})-(?<month>\d{2})-(?<year>\d{4}) (?<hour>\d{2}):(?<minute>\d{2}):(?<second>\d{2})";
+        var replacement = "${year}-${month}-${day} ${hour}:${minute}:${second}";
+        return Regex.Replace(originalString, pattern, replacement);
     }
     
 }
