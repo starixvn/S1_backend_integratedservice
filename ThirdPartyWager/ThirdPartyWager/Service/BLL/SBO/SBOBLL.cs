@@ -1,8 +1,7 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.DAL;
-using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -18,6 +17,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly IApiSBOBLL _apiSboBll;
         private readonly ILogger<SBOBLL> _logger;
         private readonly int _tpId = (int)Tp.SBO;
+        private readonly Dictionary<int, SBOConfig> _siteConfigDic;
 
         public SBOBLL(IServiceProvider provider)
         {
@@ -25,6 +25,7 @@ namespace ThirdPartyWager.Service.BLL
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _wagerSboService = provider.GetRequiredService<IWagerSBOService>();
             _apiSboBll = provider.GetRequiredService<IApiSBOBLL>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SBOConfig>(Tp.SBO.ToString());
         }
 
         public async Task<bool> GetWagersAsync(string startTime, string endTime, SBOPortfolio portfolio)
@@ -32,14 +33,13 @@ namespace ThirdPartyWager.Service.BLL
             var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
             foreach (var siteData in siteList)
             {
-
                 if (siteData.SiteId == 1)
                 {
                     continue;
                 }
+                // 分Site取得TpList
+                var sboSetting = _siteConfigDic[siteData.SiteId];
 
-                var dictSetting = _thirdPartyBLL.GetThirdPartyBySite((int)Tp.SBO, siteData.SiteId);
-                var sboSetting = GetSboSetting(dictSetting);
                 var sboWagers = await _apiSboBll.GetBetListByModifyDateAsync(startTime, endTime, portfolio, sboSetting);
 
                 if (sboWagers == null) return false;
@@ -72,17 +72,6 @@ namespace ThirdPartyWager.Service.BLL
             }
 
             return true;
-        }
-
-        private static SboSetting GetSboSetting(Dictionary<string, string> setting)
-        {
-            return new SboSetting()
-            {
-                CompanyKey = setting["CompanyKey"],
-                ApiUrl = setting["ApiUrl"],
-                ServerId = setting["ServerId"],
-                Agent = setting["Agent"]
-            };
         }
     }
 }
