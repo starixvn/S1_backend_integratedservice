@@ -15,8 +15,8 @@ public class WagerAMB : BackgroundService
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ILogger<WagerGA> _logger;
-        private readonly int timeZone = 0;
-        private readonly int iRangMins = 15;
+        private readonly int timeZone = 8;
+        private readonly int iRangMins = 5;
         private readonly int tpType = (int)WagerTimerType.Wager;
         private int quick = 0;
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
@@ -49,10 +49,14 @@ public class WagerAMB : BackgroundService
                 
                 var timerTime = dataTpTimer?.StartTime ?? nowTime.AddMinutes(-(iRangMins - 1));
                 var last = (dataTpTimer == null) ? iRangMins - 1 : iRangMins;
-                var time = _dateTimeHelper.GetTimeByMinuteRevert(iRangMins, timeZone, _timeFormat, DateTime.UtcNow);
+                var time = _dateTimeHelper.GetTimeByMinute(last, timeZone, _timeFormat, timerTime);
 
                 var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
-                await _wagerAMBBLL.GetWagerAsync(time.startTime, time.endTime);
+                result = await _wagerAMBBLL.GetWagerAsync(time.startTime, time.endTime);
+                if (result)
+                {
+                    _thirdPartyBLL.SetThirdPartyTimer(_tpId, tpType, time.endUnix);
+                }
             }
             catch (Exception ex)
             {
@@ -60,7 +64,7 @@ public class WagerAMB : BackgroundService
             }
             finally
             {
-                var dueTimeSpan = TimeSpan.FromMinutes(3);
+                var dueTimeSpan = TimeSpan.FromMinutes(5);
                 _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }

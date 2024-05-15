@@ -76,8 +76,7 @@ public class WagerAMBBLL
             }
         }
         
-        
-        return null;
+        return true;
     }
     
     private int InsertNewAMBWager(betRecord_AMB wagerData,int gameType)
