@@ -948,5 +948,87 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
 
         #endregion
+        
+        #region CQ9_WWC
+        
+        public int RolloutWCC_CQ9(TpCustInfo tpCustInfo, BettingDataRNG_CQ9 bettingDataRNG_CQ9, int gameType, out decimal afterAmount)
+        {
+            var tpId = Tp.CQ9;
+            //var tpGameType = GameType.CQ9_WCC;
+            var tpCategory = TpCategory.Cockfighting;
+            
+            int bonusId = 0;
+            afterAmount = 0;
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            var result = 0;
+
+            bettingDataRNG_CQ9.amount = Math.Abs(bettingDataRNG_CQ9.amount) * -1;
+            try
+            {
+                var p = new DynamicParameters(new
+                {
+                    account = bettingDataRNG_CQ9.account,
+                    eventUnix = bettingDataRNG_CQ9.eventUnix,
+                    gamehall = bettingDataRNG_CQ9.gamehall,
+                    gamecode = bettingDataRNG_CQ9.gamecode,
+                    roundid = bettingDataRNG_CQ9.roundid,
+                    amount = bettingDataRNG_CQ9.amount,
+                    mtcode = bettingDataRNG_CQ9.mtcode,
+                    before = afterAmount + (Math.Abs(bettingDataRNG_CQ9.amount)),
+                    balance = afterAmount,
+                    TicketType = (int)BettransType.Bet,
+                    Actions = "rollout",
+                    TicketStatus = (int)TicketStatus.UnSettled
+                });
+                result = _mainDbClient.Execute("Service_BettransCF_CQ9_Ins", p, conn, trans);
+
+                if (result > 0)
+                {
+                    if (bettingDataRNG_CQ9.amount != 0)
+                    {
+                        result = PlaceBet(
+                            tpCustInfo,
+                            bettingDataRNG_CQ9.amount,
+                            (int)tpId,
+                            bettingDataRNG_CQ9.roundid,
+                            gameType,
+                            bettingDataRNG_CQ9.roundid,
+                            out afterAmount,
+                            ref bonusId,
+                            out _,
+                            conn,
+                            trans
+                        );
+                    }
+                }
+
+                if (result > 0)
+                {
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
+            }
+
+            return result;
+        }
+        
+        #endregion
     }
 }

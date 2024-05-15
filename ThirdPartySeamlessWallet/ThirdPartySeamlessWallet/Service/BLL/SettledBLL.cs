@@ -1276,14 +1276,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 refundDataRNG_CQ9.amount *= tpCurrency.ExchangeRate;
             }
 
-            if (gameType == (int)GameType.CQ9_Fish)
+            result = gameType switch
             {
-                result = settledService.RefundFish_CQ9(tpCustInfo, refundDataRNG_CQ9, out afterAmount);
-            }
-            else
-            {
-                result = settledService.RefundRNG_CQ9(tpCustInfo, refundDataRNG_CQ9, refundDataRNG_CQ9.amount, refundDataRNG_CQ9.roundid, out afterAmount);
-            }
+                (int)GameType.CQ9_Fish => settledService.RefundFish_CQ9(tpCustInfo, refundDataRNG_CQ9, out afterAmount),
+                (int)GameType.CQ9_RNG => settledService.RefundRNG_CQ9(tpCustInfo, refundDataRNG_CQ9,
+                    refundDataRNG_CQ9.amount, refundDataRNG_CQ9.roundid, out afterAmount),
+                (int)GameType.CQ9_WCC => settledService.RefundWCC_CQ9(tpCustInfo, refundDataRNG_CQ9, out afterAmount),
+                _ => result
+            };
 
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
             {
@@ -1424,6 +1424,50 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
 
+        public int RollinWCC_CQ9(RollinDataFish_CQ9 rollinDataWCC_CQ9, GameType gameType, out decimal afterAmount)
+        {
+            //共用Fish rollin欄位
+            afterAmount = 0;
+            var tpCustInfo = tpCustInfoBLL.GetTpCustInfo((int)Tp.CQ9, rollinDataWCC_CQ9.account);
+            if (tpCustInfo == null)
+            {
+                afterAmount = 0;
+                return -21;
+            }
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.CQ9, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate > 0)
+            {
+                rollinDataWCC_CQ9.validbet *= tpCurrency.ExchangeRate;
+                rollinDataWCC_CQ9.bet *= tpCurrency.ExchangeRate;
+                rollinDataWCC_CQ9.win *= tpCurrency.ExchangeRate;
+                rollinDataWCC_CQ9.roomfee *= tpCurrency.ExchangeRate;
+                rollinDataWCC_CQ9.amount *= tpCurrency.ExchangeRate;
+                rollinDataWCC_CQ9.rake *= tpCurrency.ExchangeRate;
+            }
+
+            if (rollinDataWCC_CQ9.amount == 0)
+            {
+                var tpCustBalance = tpCustInfoBLL.GetBalance((int)Tp.CQ9, rollinDataWCC_CQ9.account, (int)gameType);
+                afterAmount = tpCustBalance.Balance;
+                if (tpCurrency.ExchangeRate > 0)
+                {
+                    afterAmount *= tpCurrency.ExchangeRate;
+                }
+            }
+
+            var result = settledService.RollinWCC_CQ9(tpCustInfo, rollinDataWCC_CQ9, (int)gameType, ref afterAmount);
+
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate > 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+
+            return result;
+        }
+        
+        
+        
         public SettleDataRNG_CQ9 GetUnsettledListRNG_CQ9(string transId)
         {
             return settledService.GetUnsettledListRNG_CQ9(transId);
@@ -1442,6 +1486,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         public int SetSettleFlagFish_CQ9(string roundid, int SettleFlag)
         {
             return settledService.SetSettleFlagFish_CQ9(roundid, SettleFlag);
+        }
+        
+        public SettleDataRNG_CQ9 GetUnsettledListWCC_CQ9(string transId)
+        {
+            return settledService.GetUnsettledListWCC_CQ9(transId);
+        }
+
+        public int SetSettleFlagWCC_CQ9(string roundid, int SettleFlag)
+        {
+            return settledService.SetSettleFlagWCC_CQ9(roundid, SettleFlag);
         }
 
         public IEnumerable<Record_CQ9> GetRecordRNG_CQ9(string mtcode)
