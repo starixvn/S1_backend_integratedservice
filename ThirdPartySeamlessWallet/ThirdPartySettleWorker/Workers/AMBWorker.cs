@@ -162,57 +162,77 @@ namespace ThirdPartySettleWorker.Workers
             var thisTp = (int)Tp.AMB;
             var gameType = GameType.AMB_Poker;
             var logName = "Settle_AMB";
+            var getSP = $"Service_BettransPK_AMB_Unsettle_Get_V2";
+            var setSP = $"Service_BettransPK_AMB_Settle_Set";
             var tpName = Enum.GetName(typeof(Tp), thisTp);
 
             try
             {
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
+                if (!tpUnsettleList.Any())
+                {
+                    throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
+                }
+                
+                //forContinue
+                forContinue = tpUnsettleList.Count() == 200;
                 var unsettledList = _settledBLL.GetUnsettledListPK_AMB();
 
-                if (unsettledList != null)
+                foreach (var wager in tpUnsettleList)
                 {
-                    forContinue = unsettledList.Count() == 200;
-                    foreach (var unsettled in unsettledList)
+                    var getUnsettledList = _tpUnSettledBLL.GetTpUnsettleData<SettleData_AMB>(getSP, new { TransId = wager.TransId }, DataBase.Main);
+                    if(getUnsettledList == null || !getUnsettledList.Any())
                     {
-                        try
+                        throw new UnsettleNotFoundException($"{_tpName} - AMB_Poker Can fount TransId : {wager.TransId}.");
+                    }
+                    
+                    try
+                    {
+                        var unsettled = getUnsettledList.FirstOrDefault();
+                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
+                        decimal stake = unsettled.Stake;
+                        decimal validBet = unsettled.ValidBet;
+                        decimal winLostAmount = unsettled.WinLostAmount;
+                        decimal revenue = (decimal)unsettled.Revenue;
+
+                        var betRecordInfo = new BetRecordInfo
                         {
-                            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
-                            decimal stake = unsettled.Stake;
-                            decimal validBet = unsettled.ValidBet;
-                            decimal winLostAmount = unsettled.WinLostAmount;
-                            decimal revenue = (decimal)unsettled.Revenue;
+                            TpId = thisTp,
+                            Stake = stake,
+                            ValidBet = validBet,
+                            Revenue = revenue,
+                            WinlostAmount = winLostAmount,
+                            TransId = unsettled.TransId,
+                            GameType = gameType,
+                            TpUserName = unsettled.Account,
+                            SettledTime = unsettled.SettleTime,
+                            TransTime = unsettled.TransTime,
+                            SettlementType = SettlementType.SettledForValid,
+                            GameID = unsettled.GameId,
+                        };
 
-                            var betRecordInfo = new BetRecordInfo
-                            {
-                                TpId = thisTp,
-                                Stake = stake,
-                                ValidBet = validBet,
-                                Revenue = revenue,
-                                WinlostAmount = winLostAmount,
-                                TransId = unsettled.TransId,
-                                GameType = gameType,
-                                TpUserName = unsettled.Account,
-                                SettledTime = unsettled.SettleTime,
-                                TransTime = unsettled.TransTime,
-                                SettlementType = SettlementType.SettledForValid,
-                                GameID = unsettled.GameId,
-                            };
-
-                            if (unsettled.IsRefund == 1)
-                            {
-                                betRecordInfo.TicketStatus = TicketStatus.Refund;
-                            }
-
-                            var result = _settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
-                            _settledBLL.SetSettleFlag_BettransPK_AMB(unsettled.TransId);
-                        }
-                        catch (Exception ex1)
+                        if (unsettled.IsRefund == 1)
                         {
-                            LogContext.PushProperty("TP", tpName);
-                            isError = true;
-                            _logger.LogError(ex1,$"{logName}:{JsonConvert.SerializeObject(unsettled)}");
+                            betRecordInfo.TicketStatus = TicketStatus.Refund;
                         }
+
+                        var result = _settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
+                        
+                        if (result == 1)
+                        {
+                            _ = _settledBLL.SetSettleFlag_BettransPK_AMB(unsettled.TransId);
+                            _ = _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, unsettled.TransId, true);
+                        }
+                        
+                    }
+                    catch (Exception ex1)
+                    {
+                        LogContext.PushProperty("TP", tpName);
+                        isError = true;
+                        _logger.LogError(ex1,$"{logName}:{JsonConvert.SerializeObject(wager)}");
                     }
                 }
+                
             }
             catch (Exception ex)
             {
