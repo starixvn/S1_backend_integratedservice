@@ -770,10 +770,19 @@ namespace ThirdPartySeamlessWallet.Controllers
                 _log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
+            
+            // check gametype
+            var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, debitReq.gamecode);
+            if (gameType == GameType.CQ9_WCC)
+            {
+                apiResponse.status.code = "1100";
+                apiResponse.status.message = "Error : gamecode is WCC";
+                _log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                return apiResponse;
+            }
 
             try
             {
-                var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, debitReq.gamecode);
                 int result = _settledBLL.DebitRNG_CQ9(debitReq, (int)gameType, out decimal tpAffterAmount);
                 if (result > 0)
                 {
@@ -869,10 +878,19 @@ namespace ThirdPartySeamlessWallet.Controllers
                 _log2File.Error($"{JsonConvert.SerializeObject(getCreditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
+            
+            // check gametype
+            var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, creditReq.gamecode);
+            if (gameType == GameType.CQ9_WCC)
+            {
+                apiResponse.status.code = "1100";
+                apiResponse.status.message = "Error : gamecode is WCC";
+                _log2File.Error($"{JsonConvert.SerializeObject(creditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
+                return apiResponse;
+            }
 
             try
             {
-                var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, creditReq.gamecode);
                 var result = _settledBLL.CreditRNG_CQ9(creditReq, (int)gameType, out decimal tpAffterAmount);
                 if (result > 0)
                 {
@@ -1006,9 +1024,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         public GetApiResp Rollout([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getRolloutReq)
         {
             string logName = $"{_tpGameName}_Rollout";
+            var validGameTypes = new[] { GameType.CQ9_Fish, GameType.CQ9_WCC };
             var json = JsonConvert.SerializeObject(getRolloutReq);
             _log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
             var rolloutReq = JsonConvert.DeserializeObject<BettingDataRNG_CQ9>(json);
+            var result = 0;
+            var tpAfterAmount = 0.00m;
 
             /*** TEST ***/
             //if (environment.IsDevelopment() && getRolloutReq.ContainsKey("gamecode"))
@@ -1078,22 +1099,33 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             // check gametype
             var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, rolloutReq.gamecode);
-            if (gameType != GameType.CQ9_Fish)
+            if (!validGameTypes.Contains(gameType))
             {
                 apiResponse.status.code = "1100";
-                apiResponse.status.message = "Error : gamecode is not fish";
+                apiResponse.status.message = "Error : gamecode is not fish or WCC";
                 _log2File.Error($"{JsonConvert.SerializeObject(rolloutReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
             try
             {
-                int result = _bettingBLL.RolloutFish_CQ9(rolloutReq, (int)gameType, out decimal tpAffterAmount);
+                switch (gameType)
+                {
+                    case GameType.CQ9_Fish:
+                        result = _bettingBLL.RolloutFish_CQ9(rolloutReq, (int)gameType, out decimal tpAfterAmountFish);
+                        tpAfterAmount = tpAfterAmountFish;
+                        break;
+                    case GameType.CQ9_WCC:
+                        result = _bettingBLL.RolloutWCC_CQ9(rolloutReq, (int)gameType, out decimal tpAfterAmountWWC);
+                        tpAfterAmount = tpAfterAmountWWC;
+                        break;
+                }
+                //result = _bettingBLL.RolloutFish_CQ9(rolloutReq, (int)gameType, out decimal tpAffterAmount);
                 if (result > 0)
                 {
                     var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, rolloutReq.account, (int)gameType);
                     apiResponse.data = new BalanceData();
-                    apiResponse.data.balance = tpAffterAmount;
+                    apiResponse.data.balance = tpAfterAmount;
                     apiResponse.data.currency = tpCustBalance.TpCurrencyId;
                     apiResponse.status.code = "0";
                     apiResponse.status.message = "Success";
@@ -1107,7 +1139,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     apiResponse.status.code = "2009";
                     apiResponse.status.message = "Error : mtcode exist";
                 }
-                else if (tpAffterAmount < 0)
+                else if (tpAfterAmount < 0)
                 {
                     // 當餘額不足時回傳 1005
                     apiResponse.status.code = "1005";
@@ -1253,9 +1285,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         public GetApiResp Rollin([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getRollinReq)
         {
             string logName = $"{_tpGameName}_Rollin";
+            var validGameTypes = new[] { GameType.CQ9_Fish, GameType.CQ9_WCC };
             var json = JsonConvert.SerializeObject(getRollinReq);
             _log2File.Info($"wtoken={wtoken}\r\n{json}", logName);
             var rollinReq = JsonConvert.DeserializeObject<RollinDataFish_CQ9>(json);
+            var result = 0;
+            var tpAfterAmount = 0.00m;
 
             /*** TEST ***/
             //if (environment.IsDevelopment() && getRollinReq.ContainsKey("gamecode") && !getRollinReq.ContainsKey("gametype"))
@@ -1326,22 +1361,34 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             // check gametype
             var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, rollinReq.gamecode);
-            if (gameType != GameType.CQ9_Fish)
+            if (!validGameTypes.Contains(gameType))
             {
                 apiResponse.status.code = "1100";
-                apiResponse.status.message = "Error : gamecode is not fish";
+                apiResponse.status.message = "Error : gamecode is not fish or WCC";
                 _log2File.Error($"{JsonConvert.SerializeObject(rollinReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
 
             try
             {
-                var result = _settledBLL.RollinFish_CQ9(rollinReq, gameType, out decimal tpAffterAmount);
+                switch (gameType)
+                {
+                    case GameType.CQ9_Fish:
+                        result = _settledBLL.RollinFish_CQ9(rollinReq, gameType, out decimal tpAfterAmountFish);
+                        tpAfterAmount = tpAfterAmountFish;
+                        break;
+                    case GameType.CQ9_WCC:
+                        result = _settledBLL.RollinWCC_CQ9(rollinReq, gameType, out decimal tpAfterAmountWCC);
+                        tpAfterAmount = tpAfterAmountWCC;
+                        break;
+                }
+                
+                //var result = _settledBLL.RollinFish_CQ9(rollinReq, (int)gameType, out decimal tpAffterAmount);
                 if (result > 0)
                 {
                     var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, rollinReq.account, (int)gameType);
                     apiResponse.data = new BalanceData();
-                    apiResponse.data.balance = tpAffterAmount;
+                    apiResponse.data.balance = tpAfterAmount;
                     apiResponse.data.currency = tpCustBalance.TpCurrencyId;
                     apiResponse.status.code = "0";
                     apiResponse.status.message = "Success";

@@ -2297,6 +2297,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = _mainDbClient.Execute("Service_BettransFish_CQ9_Settle_Set", commandType: CommandType.StoredProcedure, new { roundid = roundid, SettleFlag = SettleFlag });
             return result;
         }
+         
+        public SettleDataRNG_CQ9 GetUnsettledListWCC_CQ9(string transId)
+        {
+            return _mainDbClient.QueryFirst<SettleDataRNG_CQ9>("Service_BettransCF_CQ9_Unsettle_Get", new DynamicParameters( new { TransId = transId }));
+        }
+
+        public int SetSettleFlagWCC_CQ9(string roundid, int SettleFlag)
+        {
+            var result = _mainDbClient.Execute("Service_BettransCF_CQ9_Settle_Set", commandType: CommandType.StoredProcedure, new { roundid = roundid, SettleFlag = SettleFlag });
+            return result;
+        }
 
         public IEnumerable<Record_CQ9> GetRecordRNG_CQ9(string mtcode)
         {
@@ -2313,6 +2324,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 if (data.Count() > 0)
                 {
                     data.ElementAt(0).TableType = (int)GameType.CQ9_Fish;
+                    return data;
+                }
+            }
+            
+            if (data == null || data.Count() == 0)
+            {
+                data = _mainDbClient.Query<Record_CQ9>("Service_BettransCF_CQ9_Get", commandType: CommandType.StoredProcedure, new { mtcode = mtcode });
+                if (data.Count() > 0)
+                {
+                    data.ElementAt(0).TableType = (int)GameType.CQ9_WCC;
                     return data;
                 }
             }

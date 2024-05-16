@@ -35,5 +35,7 @@
         public string datetime { get; set; }
         public decimal rakes { get; set; }
         public decimal roomfee { get; set; }
+        public decimal donate { get; set; }
+        public string gameType { get; set; }
     }
 }
