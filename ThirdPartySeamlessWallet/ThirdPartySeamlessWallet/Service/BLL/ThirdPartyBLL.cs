@@ -164,7 +164,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.CQ9_Fish;
                     }
 
-                    if (gameId == "CMCOCKFIGHT01")
+                    if (gameId == "CMCOCKFIGHT01" || gameId == "COCKFIGHT01")
                     {
                         gameType = GameType.CQ9_WCC;
                     }
