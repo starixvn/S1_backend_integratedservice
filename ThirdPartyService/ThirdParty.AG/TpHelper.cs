@@ -28,12 +28,12 @@ namespace ThirdParty.AG
             {"CNY","B" },
             {"THB","GF4A" },
             {"IDR","GF4A" },
-            {"VND ","GF4A" },
-            {"USD ","A" },
-            {"INR ","GF4A" },
-            {"JPY ","A" },
-            {"KRW ","A" },
-            {"BRL ","A" }
+            {"VND","GF4A" },
+            {"USD","A" },
+            {"INR","GF4A" },
+            {"JPY","A" },
+            {"KRW","A" },
+            {"BRL","A" }
         };
 
         readonly Dictionary<string, int> langIdDic = new Dictionary<string, int>()
