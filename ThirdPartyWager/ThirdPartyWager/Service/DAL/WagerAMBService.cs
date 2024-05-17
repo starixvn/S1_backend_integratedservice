@@ -24,6 +24,12 @@ public class WagerAMBService
             switch (gameType)
         {
             case (int)GameType.AMB_Poker:
+
+                if (string.IsNullOrEmpty(wager.roomId))
+                {
+                    wager.roomId = "NA";
+                }
+                
                 var p = new DynamicParameters();
                 p.Add("id", wager._id);
                 p.Add("username", wager.username);
