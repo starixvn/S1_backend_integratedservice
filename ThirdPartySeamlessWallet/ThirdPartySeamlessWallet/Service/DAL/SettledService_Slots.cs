@@ -2328,15 +2328,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
             }
             
-            if (data == null || data.Count() == 0)
-            {
-                data = _mainDbClient.Query<Record_CQ9>("Service_BettransCF_CQ9_Get", commandType: CommandType.StoredProcedure, new { mtcode = mtcode });
-                if (data.Count() > 0)
-                {
-                    data.ElementAt(0).TableType = (int)GameType.CQ9_WCC;
-                    return data;
-                }
-            }
+            //TODO:待 05/21 CF上完後再拔註解
+            // if (data == null || data.Count() == 0)
+            // {
+            //     data = _mainDbClient.Query<Record_CQ9>("Service_BettransCF_CQ9_Get", commandType: CommandType.StoredProcedure, new { mtcode = mtcode });
+            //     if (data.Count() > 0)
+            //     {
+            //         data.ElementAt(0).TableType = (int)GameType.CQ9_WCC;
+            //         return data;
+            //     }
+            // }
 
             if (data == null || data.Count() == 0)
             {
