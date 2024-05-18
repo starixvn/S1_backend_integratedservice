@@ -71,7 +71,7 @@ namespace ThirdPartyWager.Service.BLL
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"TCG GetUnsettleAsync Exception. batchTime:{batchTime} | currency:{currency}");
+                _logger.LogError(ex, $"TCG GetUnsettleAsync Exception. batchTime:{batchTime} | currency:{currency} | {ex.Message}");
                 return false;
             }
         }
@@ -205,7 +205,7 @@ namespace ThirdPartyWager.Service.BLL
                 var queryReuslt = _common.FromJson<TCGUnSettleObj>(json);
                 if (queryReuslt.status != 0)
                 {
-                    return result;
+                    throw new Exception($"{queryReuslt.status} | {queryReuslt.error_desc}");
                 }
 
                 var unSettleData = isVN ?
