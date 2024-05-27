@@ -109,7 +109,14 @@ namespace ThirdParty.SBSW
                     _ => string.Empty,
                 };
 
-            _gameUrl = resultUrl.Append(deeplink).ToString();
+            resultUrl.Append(deeplink);
+
+            if (inputs.TryGetValue("isAPP", out var isAPP))
+            {
+                resultUrl.Append($"&isAPP={isAPP}");
+            }
+
+            _gameUrl = resultUrl.ToString();
         }
 
         private bool CheckSportType()
