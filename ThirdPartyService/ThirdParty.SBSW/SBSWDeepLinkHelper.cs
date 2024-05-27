@@ -186,7 +186,15 @@ namespace ThirdParty.SBSW
                 types = "CL";
             }
 
-            var result = $"&types={types}&isChinaView=true";
+            // hotfix vgaming 無法登入，Saba RD 通知新增skin=0
+            var skinParam = string.Empty;
+            if (!string.IsNullOrEmpty(types) && types == "vgaming")
+            {
+                skinParam = "&skin=0";
+            }
+
+            var result = $"&types={types}&isChinaView=true{skinParam}";
+
 
             if (!string.IsNullOrEmpty(_matchId) && _matchId != "0")
             {
