@@ -294,7 +294,7 @@ namespace ThirdPartyWager.Service.BLL
                             bet.transactionId = betItem.transactionId;
                             bet.playMode = playerItem.playMode;
                             bet.mathId = playerItem.mathId;
-                            bet.channel = playerItem.channel;
+                            bet.channel = !string.IsNullOrEmpty(playerItem.channel) ? playerItem.channel : "";
                             bet.os = !string.IsNullOrEmpty(playerItem.os) ? playerItem.os : "";
                             bet.device = !string.IsNullOrEmpty(playerItem.device) ? playerItem.device : "";
                             bet.skinId = playerItem.skinId;
