@@ -1,7 +1,5 @@
 ﻿using FluentAssertions;
-
 using NUnit.Framework;
-
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 
