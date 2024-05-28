@@ -116,6 +116,11 @@ namespace ThirdParty.SBSW
                 resultUrl.Append($"&isAPP={isAPP}");
             }
 
+            if (inputs.TryGetValue("skin", out var skin))
+            {
+                resultUrl.Append($"&skin={skin}");
+            }
+
             _gameUrl = resultUrl.ToString();
         }
 
