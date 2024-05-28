@@ -120,6 +120,14 @@ namespace ThirdParty.SBSW
             {
                 resultUrl.Append($"&skin={skin}");
             }
+            else
+            {
+                //vgaming的H5強制加skin = 0
+                if (_appType == AppType.Mobile && _sportType == "171")
+                {
+                    resultUrl.Append($"&skin=0");
+                }
+            }
 
             _gameUrl = resultUrl.ToString();
         }
