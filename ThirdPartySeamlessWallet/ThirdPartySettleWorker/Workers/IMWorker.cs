@@ -116,27 +116,36 @@ namespace ThirdPartySettleWorker.Workers
                             }
 
                             var tpWagerData = _tpUnSettledBLL.GetTpUnsettleData<WagerDataIM>("Service_TpWagerSports_IM_Unsettle_Get", new { BetId = transId }, DataBase.Wager).FirstOrDefault();
-
-                            betRecordInfo.WinlostAmount = winLostAmount;
-                            betRecordInfo.SettledTime = new DateTimeOffset(lastBetTransData.TimeStamp).ToUnixTimeSeconds();
-                            betRecordInfo.TransTime = new DateTimeOffset(tpWagerData.WagerCreationDateTime).ToUnixTimeSeconds();
-
-                            CalculateTicketStatusAndAmount(betRecordInfo, tpWagerData, lastBetTransData.ActionId, out var isRefund);
-
-                            if (tpWagerData.IsSettled == 1)
+                            if (tpWagerData == null && settleBetTrans.Any(i => i.Type == "PlaceBetRefund"))
                             {
-                                var settleAmountDataIm = new SettleAmountDataIM
+                                betRecordInfo.WinlostAmount = 0;
+                                betRecordInfo.SettledTime = new DateTimeOffset(lastBetTransData.TimeStamp).ToUnixTimeSeconds();
+                                betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
+                                betRecordInfo.TicketStatus = TicketStatus.Refund;
+                            }
+                            else
+                            {
+                                betRecordInfo.WinlostAmount = winLostAmount;
+                                betRecordInfo.SettledTime = new DateTimeOffset(lastBetTransData.TimeStamp).ToUnixTimeSeconds();
+                                betRecordInfo.TransTime = new DateTimeOffset(tpWagerData.WagerCreationDateTime).ToUnixTimeSeconds();
+
+                                CalculateTicketStatusAndAmount(betRecordInfo, tpWagerData, lastBetTransData.ActionId, out var isRefund);
+
+                                if (tpWagerData.IsSettled == 1)
                                 {
-                                    Stake = betRecordInfo.Stake,
-                                    ValidBet = betRecordInfo.ValidBet,
-                                    WinLostAmount = betRecordInfo.WinlostAmount
-                                };
-                                if (!IsBetTransSameAsTpWager(settleAmountDataIm, tpWagerData, tpCurrency, isRefund))
-                                {
-                                    _logger.LogWarning($"transId: {transId} is not equal " +
-                                                     $"settle: {JsonConvert.SerializeObject(settleAmountDataIm)} " +
-                                                     $"wager: {JsonConvert.SerializeObject(tpWagerData)}");
-                                    continue;
+                                    var settleAmountDataIm = new SettleAmountDataIM
+                                    {
+                                        Stake = betRecordInfo.Stake,
+                                        ValidBet = betRecordInfo.ValidBet,
+                                        WinLostAmount = betRecordInfo.WinlostAmount
+                                    };
+                                    if (!IsBetTransSameAsTpWager(settleAmountDataIm, tpWagerData, tpCurrency, isRefund))
+                                    {
+                                        _logger.LogWarning($"transId: {transId} is not equal " +
+                                                         $"settle: {JsonConvert.SerializeObject(settleAmountDataIm)} " +
+                                                         $"wager: {JsonConvert.SerializeObject(tpWagerData)}");
+                                        continue;
+                                    }
                                 }
                             }
                         }
