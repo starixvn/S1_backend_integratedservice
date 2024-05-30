@@ -16,6 +16,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             _hbbll = hbbll;
         }
+
         [HttpGet]
         [Route("Test")]
         public string Ping() => "ok";

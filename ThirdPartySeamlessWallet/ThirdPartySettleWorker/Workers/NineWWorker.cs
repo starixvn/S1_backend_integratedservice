@@ -98,6 +98,12 @@ namespace ThirdPartySettleWorker.Workers
                             GameID = unsettled.GameId,
                         };
 
+                        if (isSettled && unsettled.BetStatus.Equals("Voided", StringComparison.OrdinalIgnoreCase))
+                        {
+                            betRecordInfo.TicketStatus = TicketStatus.Refund;
+                            betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
+                        }
+
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Sports);
                         if (result == 1)
                         {

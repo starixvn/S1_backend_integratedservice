@@ -1,6 +1,7 @@
-﻿using Newtonsoft.Json;
-
+﻿using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -13,10 +14,16 @@ namespace ThirdParty.SBO
     public class TpHelper : ThirdPartyHelperBase, IThirdPartyBetLimitParticular
     {
         private const string ContentType = "application/json";
+        private readonly Dictionary<int, SBOConfig> _siteConfigDic;
+
+        public TpHelper(IServiceProvider provider)
+        {
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SBOConfig>(TpEnum.SBO.ToString());
+        }
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var config = new SboConfig(inputs);
+            var config = _siteConfigDic[tpCustInfo.SiteId];
             var apiUrl = $"{config.ApiUrl}/web-root/restricted/player/register-player.aspx";
 
             var registerPlayer = new
@@ -27,9 +34,7 @@ namespace ThirdParty.SBO
                 ServerId = config.ServerId
             };
 
-            var responseJson = HttpPostClient(apiUrl,
-                JsonConvert.SerializeObject(registerPlayer),
-                ContentType);
+            var responseJson = HttpPostClient(apiUrl, JsonConvert.SerializeObject(registerPlayer), ContentType);
 
             var responseResult = FromJson<RegisterPlayerResponse>(responseJson);
             if (responseResult.Error.Id == 0)
@@ -50,20 +55,19 @@ namespace ThirdParty.SBO
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var config = new SboConfig(inputs);
+            var config = _siteConfigDic[tpCustInfo.SiteId];
             var apiUrl = $"{config.ApiUrl}/web-root/restricted/player/login.aspx";
-
+            var TpGameTypeId = inputs.ContainsKey("tpGameType") ? inputs["tpGameType"] : string.Empty;
+            
             var playerLogin = new
             {
                 Username = tpCustInfo.TpUserName,
-                Portfolio = TpGameTypeMap(int.Parse(config.TpGameTypeId)),
+                Portfolio = TpGameTypeMap(int.Parse(TpGameTypeId)),
                 CompanyKey = config.CompanyKey,
                 ServerId = config.ServerId,
             };
 
-            var responseJson = HttpPostClient(apiUrl,
-                JsonConvert.SerializeObject(playerLogin),
-                ContentType);
+            var responseJson = HttpPostClient(apiUrl, JsonConvert.SerializeObject(playerLogin), ContentType);
 
             var responseResult = FromJson<PlayerLoginResponse>(responseJson);
             if (responseResult.Error.Id != 0)
@@ -74,7 +78,7 @@ namespace ThirdParty.SBO
                     RawErrorCode = responseResult.Error.Id.ToString()
                 };
 
-            var device = (appType == AppType.Desktop ? "d" : "m");
+            var device = appType == AppType.Desktop ? "d" : "m";
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Success,
@@ -92,7 +96,7 @@ namespace ThirdParty.SBO
 
 
             var betDetail = getBetDetail.TpGameTypeOption.Type == (int)TpGameType.SBO_Sports
-                ? GetSportsBookDetail(getBetDetail, inputs, tpCurrency) // SportsBook(打第三方API取得)
+                ? GetSportsBookDetail(getBetDetail, _siteConfigDic[tpCustInfo.SiteId], tpCurrency) // SportsBook(打第三方API取得)
                 : GetVirtualSportsDetail(getBetDetail, tpCurrency);  // VirtualSports(查TpWager)
 
             return betDetail;
@@ -153,43 +157,6 @@ namespace ThirdParty.SBO
 
 
         #endregion
-
-        private class SboConfig
-        {
-            public string ApiUrl { get; private set; }
-
-            public string CompanyKey { get; private set; }
-
-            public string ServerId { get; private set; }
-
-            public string Agent { get; private set; }
-
-            /// <summary>
-            /// 遊戲類型，只有Login的時候前端會帶入
-            /// </summary>
-            public string TpGameTypeId { get; private set; }
-
-            public SboConfig(Dictionary<string, string> config)
-            {
-                ApiUrl = config.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(config["ApiUrl"])
-                    ? config["ApiUrl"]
-                    : throw new Exception("ApiUrl is empty");
-
-                CompanyKey = config.ContainsKey("CompanyKey") && !string.IsNullOrEmpty(config["CompanyKey"])
-                    ? config["CompanyKey"]
-                    : throw new Exception("CompanyKey is empty");
-
-                ServerId = config.ContainsKey("ServerId") && !string.IsNullOrEmpty(config["ServerId"])
-                    ? config["ServerId"]
-                    : throw new Exception("ServerId is empty");
-
-                Agent = config.ContainsKey("Agent") && !string.IsNullOrEmpty(config["Agent"])
-                    ? config["Agent"]
-                    : throw new Exception("Agent is empty");
-
-                TpGameTypeId = config.ContainsKey("tpGameType") ? config["tpGameType"] : string.Empty;
-            }
-        }
 
         private class BetLimit
         {
@@ -272,12 +239,9 @@ namespace ThirdParty.SBO
         /// <param name="tpCurrency"></param>
         /// <returns></returns>
         /// <exception cref="BetDetailNotFoundException"></exception>
-        private BaseDetail GetSportsBookDetail(GetBetDetail getBetDetail,
-            Dictionary<string, string> inputs,
-            TpCurrency tpCurrency)
+        private BaseDetail GetSportsBookDetail(GetBetDetail getBetDetail, SBOConfig siteConfig, TpCurrency tpCurrency)
         {
-
-            var config = new SboConfig(inputs);
+            var config = siteConfig;
             var apiUrl = $"{config.ApiUrl}/web-root/restricted/report/get-bet-payload.aspx";
 
             var betDetail = new
@@ -288,9 +252,7 @@ namespace ThirdParty.SBO
                 Refno = getBetDetail.TransId
             };
 
-            var responseJson = HttpPostClient(apiUrl,
-                JsonConvert.SerializeObject(betDetail),
-                ContentType);
+            var responseJson = HttpPostClient(apiUrl, JsonConvert.SerializeObject(betDetail), ContentType);
 
             var responseResult = FromJson<BetDetailResponse>(responseJson);
 
@@ -313,7 +275,7 @@ namespace ThirdParty.SBO
         /// <param name="getBetDetail"></param>
         /// <param name="tpCurrency"></param>
         /// <returns></returns>
-        private SportsDetail GetVirtualSportsDetail(GetBetDetail getBetDetail, TpCurrency tpCurrency)
+        private static SportsDetail GetVirtualSportsDetail(GetBetDetail getBetDetail, TpCurrency tpCurrency)
         {
             const string spName = "Service_TpWagerSBO_Get";
             var wager = TpBetRecordProvider.DbQueryFirst(spName, new { getBetDetail.TransId }, DataBase.Wager);
@@ -338,7 +300,7 @@ namespace ThirdParty.SBO
         /// </summary>
         /// <param name="dbDateTime"></param>
         /// <returns></returns>
-        private DateTime ConvertToUtcTime(string dbDateTime)
+        private static DateTime ConvertToUtcTime(string dbDateTime)
         {
             var dateTime = DateTime.Parse(dbDateTime);
             var dateTimeOffset = new DateTimeOffset(dateTime, new TimeSpan(-4, 0, 0));
@@ -403,7 +365,7 @@ namespace ThirdParty.SBO
             public string marketType { get; set; }
         }
 
-        private OddsTypeEnum GetOddsType(string oddsType)
+        private static OddsTypeEnum GetOddsType(string oddsType)
         {
             return oddsType switch
             {
@@ -417,7 +379,7 @@ namespace ThirdParty.SBO
 
         public ApiResult SetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, string betSetting)
         {
-            var config = new SboConfig(inputs);
+            var config = _siteConfigDic[tpCustInfo.SiteId];
             var apiUrl = $"{config.ApiUrl}/web-root/restricted/player/update-player-bet-settings.aspx";
             var betLimit = JsonConvert.DeserializeObject<BetLimit>(betSetting);
             var betSettings = new

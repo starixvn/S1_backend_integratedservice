@@ -12,6 +12,7 @@ namespace ThirdPartySettleWorker.Workers
         public Tp Tp => Tp.CQ9;
         private Timer _timerSettleCq9Slot;
         private Timer _timerSettleCq9Fish;
+        private Timer _timerSettleCq9WCC;
 
         private readonly SettledBLL _settledBll;
         private readonly TpCustInfoBLL _tpCustInfoBll;
@@ -30,6 +31,7 @@ namespace ThirdPartySettleWorker.Workers
         {
             _timerSettleCq9Slot = new Timer(DoSettleCQ9SlotWork, null, TimeSpan.Zero, TimeSpan.Zero);
             _timerSettleCq9Fish = new Timer(DoSettleCQ9FishWork, null, TimeSpan.Zero, TimeSpan.Zero);
+            _timerSettleCq9WCC = new Timer(DoSettleCQ9WCCWork, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -37,6 +39,7 @@ namespace ThirdPartySettleWorker.Workers
         {
             _timerSettleCq9Slot?.Change(Timeout.Infinite, 0);
             _timerSettleCq9Fish?.Change(Timeout.Infinite, 0);
+            _timerSettleCq9WCC?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
         
@@ -198,6 +201,86 @@ namespace ThirdPartySettleWorker.Workers
                 }
 
                 _timerSettleCq9Fish.Change(dueTimeSpan, TimeSpan.Zero);
+            }
+        }
+        
+        private void DoSettleCQ9WCCWork(object state)
+        {
+            var forContinue = false;
+            var isError = false;
+            var thisTp = (int)Tp.CQ9;
+            var gameType = GameType.CQ9_WCC;
+            var category = TpCategory.Cockfighting;
+            var logName = "Settle_CQ9_WCC";
+            var tpName = Enum.GetName(typeof(Tp), thisTp);
+
+            try
+            {
+                var unsettledList = _tpUnSettledBll.GetTpUnsettleList(Tp, gameType);
+                
+                if (unsettledList != null)
+                {
+                    forContinue = unsettledList.Count() == 200;
+                    foreach (var unsettled in unsettledList)
+                    {
+                        try
+                        {
+                            var unsettledData = _settledBll.GetUnsettledListWCC_CQ9(unsettled.TransId);
+                            var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache(thisTp, unsettledData.Account);
+
+                            var betRecordInfo = new BetRecordInfo
+                            {
+                                TpId = thisTp,
+                                Stake = unsettledData.Stake,
+                                ValidBet = unsettledData.Stake,
+                                WinlostAmount = unsettledData.WinLostAmount,
+                                TransId = unsettledData.roundid,
+                                GameType = gameType,
+                                TpUserName = unsettledData.Account,
+                                SettledTime = unsettledData.SettleTime,
+                                TransTime = unsettledData.TransTime,
+                                SettlementType = SettlementType.SettledForValid,
+                                GameID = unsettledData.GameId
+                            };
+
+                            var result = _settledBll.Settled(tpCustInfo, betRecordInfo, category);
+
+                            Task.Run(() =>
+                            {
+                                _settledBll.SetSettleFlagWCC_CQ9(unsettledData.roundid, 1);
+                                _tpUnSettledBll.SetTpUnsettle(Tp, gameType, unsettledData.roundid, isSuccess: true);
+                            });
+                            
+                        }
+                        catch (Exception ex1)
+                        {
+                            LogContext.PushProperty("TP", tpName);
+                            isError = true;
+                            _logger.LogError(ex1, $"{logName}:{JsonConvert.SerializeObject(unsettled)}");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogContext.PushProperty("TP", tpName);
+                _logger.LogError(ex, $"{logName}:{ex.Message}");
+                isError = true;
+            }
+            finally
+            {
+                var dueTimeSpan = TimeSpan.FromMinutes(1);
+
+                if (forContinue)
+                {
+                    dueTimeSpan = TimeSpan.FromSeconds(1);
+                }
+                else if (isError)
+                {
+                    dueTimeSpan = TimeSpan.FromMinutes(1);
+                }
+
+                _timerSettleCq9WCC.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
     }

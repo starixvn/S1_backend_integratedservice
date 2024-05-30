@@ -45,6 +45,7 @@
         AP = 39,
         HB = 40,
         SBSW = 41,
+        SBO = 42,
         SimplePlay = 44,
         CryptoSports = 45,
         Endorphina = 49,

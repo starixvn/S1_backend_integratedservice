@@ -109,7 +109,27 @@ namespace ThirdParty.SBSW
                     _ => string.Empty,
                 };
 
-            _gameUrl = resultUrl.Append(deeplink).ToString();
+            resultUrl.Append(deeplink);
+
+            if (inputs.TryGetValue("isAPP", out var isAPP))
+            {
+                resultUrl.Append($"&isAPP={isAPP}");
+            }
+
+            if (inputs.TryGetValue("skin", out var skin))
+            {
+                resultUrl.Append($"&skin={skin}");
+            }
+            else
+            {
+                //vgaming的H5強制加skin = 0
+                if (_appType == AppType.Mobile && _sportType == "171")
+                {
+                    resultUrl.Append($"&skin=0");
+                }
+            }
+
+            _gameUrl = resultUrl.ToString();
         }
 
         private bool CheckSportType()
