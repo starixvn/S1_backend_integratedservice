@@ -176,7 +176,6 @@ namespace ThirdPartySettleWorker.Workers
                 
                 //forContinue
                 forContinue = tpUnsettleList.Count() == 200;
-                var unsettledList = _settledBLL.GetUnsettledListPK_AMB();
 
                 foreach (var wager in tpUnsettleList)
                 {
