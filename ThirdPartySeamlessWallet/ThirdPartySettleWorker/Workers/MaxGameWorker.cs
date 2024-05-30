@@ -52,7 +52,7 @@ namespace ThirdPartySettleWorker.Workers
             var forContinue = false;
             var isError = false;
             var gametype = (GameType)state;
-            var bettransGet = "Service_BettransPK_MaxGame_Settle_Get_V2";
+            var bettransGet = "Service_BettransPK_MaxGame_Settle_Get_V3";
             var bettransSet = "Service_BettransPK_MaxGame_Settle_Set";
             string logName = $"Settle_MaxGame";
 
