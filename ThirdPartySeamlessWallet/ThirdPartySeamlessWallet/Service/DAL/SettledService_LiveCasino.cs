@@ -3462,9 +3462,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.Execute("Service_Reward_EVO_Settle_Set", parameters: new DynamicParameters(new { _SQ = sq }));
         }
 
-        public SettleData GetSettle_TpWagerLC_EVO(string TransId)
+        public SettleData_EVO GetSettle_TpWagerLC_EVO(string TransId)
         {
-            return _wagerDbClient.QueryFirst<SettleData>("Service_TpWagerLC_EVO_Settle_Get", parameters: new DynamicParameters(new { TransId = TransId }));
+            return _wagerDbClient.QueryFirst<SettleData_EVO>("Service_TpWagerLC_EVO_Settle_Get_V2", parameters: new DynamicParameters(new { TransId = TransId }));
         }
 
         public IEnumerable<Reward_EVO> GetExistReward_EVO(PromoData_EVO data, int tpId, int tpGameType)
