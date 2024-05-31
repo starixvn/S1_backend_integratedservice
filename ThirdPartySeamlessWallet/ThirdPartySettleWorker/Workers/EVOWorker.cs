@@ -124,6 +124,12 @@ namespace ThirdPartySettleWorker.Workers
                                 betRecordInfo.ValidBet = 0m;
                             }
 
+                            if (string.Equals(wager.status, "Cancelled", StringComparison.OrdinalIgnoreCase))
+                            {
+                                betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
+                                betRecordInfo.TicketStatus = TicketStatus.Refund;
+                            }
+
                             var result = _settledBll.Settled(tpCustInfo, betRecordInfo, TpCategory.LiveCasino);
 
                             if (result == 1)
