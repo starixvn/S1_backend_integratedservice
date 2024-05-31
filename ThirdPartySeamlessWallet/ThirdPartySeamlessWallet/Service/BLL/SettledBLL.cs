@@ -2120,7 +2120,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return settledService.SetSettleFlag_EVO(TransId);
         }
 
-        public SettleData GetSettle_TpWagerLC_EVO(string TransId)
+        public SettleData_EVO GetSettle_TpWagerLC_EVO(string TransId)
         {
             return settledService.GetSettle_TpWagerLC_EVO(TransId);
         }
