@@ -136,6 +136,11 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string status { get; set; }
     }
 
+    public class SettleData_EVO : SettleData
+    {
+        public string status { get; set; }
+    }
+
     public class NLCConfig : TpSiteConfig
     {
         public string ApiUrl_Backup { get; set; }
