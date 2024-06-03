@@ -149,6 +149,14 @@ namespace ThirdPartySettleWorker.Workers
                                     betRecordInfo.SettlementType = SettlementType.SettledForValid;
                                     betRecordInfo.TicketStatus = payoutData.type == (int)GAType.TicketWinnings ? TicketStatus.Win : payoutData.type == (int)GAType.TicketDraw ? TicketStatus.Draw : TicketStatus.Lost;
                                     betRecordInfo.ProgressiveBet = anteAmount;
+
+                                    if (betRecordInfo.TicketStatus == TicketStatus.Draw && string.Equals(wagerData.result, "draw", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        // 所有没有任何输赢的投注将不被计算在Valid Stake
+                                        betRecordInfo.ValidBet = 0;
+                                        betRecordInfo.ProgressiveBet = 0;
+                                    }
+
                                     return true;
                                 }
                             }
