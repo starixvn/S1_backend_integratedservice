@@ -476,16 +476,9 @@ namespace ThirdParty.SBSW
             { "E-Sports", SportType.ESports }
         };
 
-        private string GetGameName(string gameName)
+        private static string GetGameName(string gameName)
         {
-            if (GameNameMappings.TryGetValue(gameName, out var sportType))
-            {
-                return Enum.GetName(typeof(SportType), sportType);
-            }
-            else
-            {
-                return gameName;
-            }
+            return GameNameMappings.TryGetValue(gameName, out var sportType) ? Enum.GetName(typeof(SportType), sportType) : gameName;
         }
 
         private OddsTypeEnum GetOddsType(int oddsType)

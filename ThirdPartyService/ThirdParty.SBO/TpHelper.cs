@@ -391,7 +391,7 @@ namespace ThirdParty.SBO
             { "Saba basketball", SportType.Basketball }
         };
 
-        private string GetGameName(string gameName)
+        private static string GetGameName(string gameName)
         {
             if (GameNameMappings.TryGetValue(gameName, out var sportType))
             {

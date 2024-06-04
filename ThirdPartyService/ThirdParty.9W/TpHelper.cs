@@ -405,7 +405,7 @@ namespace ThirdParty.NineW
             { "S/R SOCCER", SportType.Soccer }
         };
 
-        private string GetGameName(string gameName)
+        private static string GetGameName(string gameName)
         {
             return GameNameMappings.TryGetValue(gameName, out var sportType)
                 ? Enum.GetName(typeof(SportType), sportType)

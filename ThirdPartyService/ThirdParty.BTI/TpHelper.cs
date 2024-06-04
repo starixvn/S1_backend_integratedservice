@@ -286,16 +286,11 @@ namespace ThirdParty.BTI
             { "Virtual Soccer", SportType.VirtualSports }
         };
 
-        private string GetGameName(string gameName)
+        private static string GetGameName(string gameName)
         {
-            if (GameNameMappings.TryGetValue(gameName, out var sportType))
-            {
-                return Enum.GetName(typeof(SportType), sportType) ?? gameName;
-            }
-            else
-            {
-                return gameName;
-            }
+            return GameNameMappings.TryGetValue(gameName, out var sportType)
+                ? Enum.GetName(typeof(SportType), sportType)
+                : gameName;
         }
     }
 }
