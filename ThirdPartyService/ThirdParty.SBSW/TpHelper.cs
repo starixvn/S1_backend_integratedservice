@@ -365,7 +365,7 @@ namespace ThirdParty.SBSW
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
                     GameID = GetGameID(tpGameType, betDetail.sport_type),
-                    Game = betDetail.sportname?.FirstOrDefault(i => i.lang == "en")?.name ?? string.Empty,
+                    Game = GetGameName(betDetail.sportname?.FirstOrDefault(i => i.lang == "en")?.name ?? string.Empty),
                     RefNo = betDetail.parlay_ref_no ?? string.Empty,
                     Title = betDetail.leaguename?.FirstOrDefault(i => i.lang == "en")?.name ?? string.Empty,
                     MatchID = betDetail.match_id ?? string.Empty,
@@ -465,6 +465,26 @@ namespace ThirdParty.SBSW
                     return DeviceType.Desktop;
                 default:
                     return DeviceType.None;
+            }
+        }
+
+        private static readonly Dictionary<string, SportType> GameNameMappings = new Dictionary<string, SportType>
+        {
+            { "SBSW Virtual Sports", SportType.VirtualSports },
+            { "SBSW Virtual Sports 2", SportType.VirtualSports },
+            { "SBSW Number Game", SportType.NumberGame },
+            { "E-Sports", SportType.ESports }
+        };
+
+        private string GetGameName(string gameName)
+        {
+            if (GameNameMappings.TryGetValue(gameName, out var sportType))
+            {
+                return Enum.GetName(typeof(SportType), sportType);
+            }
+            else
+            {
+                return gameName;
             }
         }
 
