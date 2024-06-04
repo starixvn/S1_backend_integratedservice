@@ -470,6 +470,8 @@ namespace ThirdParty.SBSW
 
         private static readonly Dictionary<string, SportType> GameNameMappings = new Dictionary<string, SportType>
         {
+            //各三方的Sport名稱先以SBSW為主，並建立SportType Enum以供轉換
+            //額外轉換以下4項
             { "SBSW Virtual Sports", SportType.VirtualSports },
             { "SBSW Virtual Sports 2", SportType.VirtualSports },
             { "SBSW Number Game", SportType.NumberGame },
