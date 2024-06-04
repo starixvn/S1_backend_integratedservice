@@ -111,7 +111,7 @@ namespace ThirdParty.SBO
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
                     GameID = detail.GetStringValue("sportsType"),
-                    Game = detail.GetStringValue("sportsType"),
+                    Game = GetGameName(detail.GetStringValue("sportsType")),
                     RefNo = detail.GetStringValue("refNo"),
                     Title = betList.FirstOrDefault()?.match ?? tpGameType.TypeName,
                     MatchID = string.Empty,
@@ -375,6 +375,36 @@ namespace ThirdParty.SBO
                 "I" => OddsTypeEnum.IndoOdds,
                 _ => OddsTypeEnum.None,
             };
+        }
+
+        private static readonly Dictionary<string, SportType> GameNameMappings = new Dictionary<string, SportType>
+        {
+            { "Soccer", SportType.Soccer },
+            { "Basketball", SportType.Basketball },
+            { "Football", SportType.Football },
+            { "Tennis", SportType.Tennis },
+            { "Baseball", SportType.Baseball },
+            { "Golf", SportType.Golf },
+            { "Motorsports", SportType.Motorsports },
+            { "E-Sport", SportType.ESports },
+            { "Saba soccer", SportType.Soccer },
+            { "Saba basketball", SportType.Basketball }
+        };
+
+        private static string GetGameName(string gameName)
+        {
+            if (GameNameMappings.TryGetValue(gameName, out var sportType))
+            {
+                return Enum.GetName(typeof(SportType), sportType);
+            }
+            else if (gameName.Contains("Virtual"))
+            {
+                return Enum.GetName(typeof(SportType), SportType.VirtualSports);
+            }
+            else
+            {
+                return gameName;
+            }
         }
 
         public ApiResult SetBetLimit(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, string betSetting)

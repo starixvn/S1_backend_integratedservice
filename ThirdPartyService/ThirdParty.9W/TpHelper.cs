@@ -267,7 +267,7 @@ namespace ThirdParty.NineW
                 TpCategory.Sports => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
                     GameID = detail.GetStringValue("eventType"),
-                    Game = detail.GetStringValue("eventTypeName"),
+                    Game = GetGameName(detail.GetStringValue("eventTypeName")),
                     RefNo = detail.GetStringValue("betId"),
                     Title = detail.GetStringValue("eventName"),
                     MatchID = detail.GetStringValue("eventId"),
@@ -395,6 +395,21 @@ namespace ThirdParty.NineW
                 "1" => OddsTypeEnum.IndianOdds,
                 _ => OddsTypeEnum.None,
             };
+        }
+
+        private static readonly Dictionary<string, SportType> GameNameMappings = new Dictionary<string, SportType>
+        {
+            { "S/R CRICKET", SportType.Cricket },
+            { "Book CRICKET", SportType.Cricket },
+            { "CRICKET", SportType.Cricket },
+            { "S/R SOCCER", SportType.Soccer }
+        };
+
+        private static string GetGameName(string gameName)
+        {
+            return GameNameMappings.TryGetValue(gameName, out var sportType)
+                ? Enum.GetName(typeof(SportType), sportType)
+                : gameName;
         }
 
     }
