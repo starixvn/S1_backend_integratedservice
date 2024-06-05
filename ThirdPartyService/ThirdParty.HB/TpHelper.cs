@@ -197,7 +197,7 @@ namespace ThirdParty.HB
 
             if (result.Success)
             {
-                launchUrl = $"{result.LaunchURL}go.ashx?";
+                launchUrl = $"{result.LaunchURL}go.ashx";
             }
             else
             {
