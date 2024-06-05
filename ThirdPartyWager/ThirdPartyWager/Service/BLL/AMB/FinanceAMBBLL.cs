@@ -9,13 +9,13 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class FinanceAMBBLL : ITpReportBLL
     {
-        
+
         private readonly ILogger<FinanceAMBBLL> _logger;
         private readonly CommonBLL _commonBLL;
         private readonly ApiAMBBLL _apiAMBBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = 0; // 報表帶入參數為日期格式，對方API預設+8，後續功能有運用需將tpbetrecord轉換時間+8時間比對
-        private readonly List<int> _gameTypeList = new List<int>() { (int)GameType.AMB_Poker, /*(int)GameType.AMB_RNG*/ };
+        private readonly List<int> _gameTypeList = new List<int>() { (int)GameType.AMB_Poker, (int)GameType.AMB_RNG };
         private readonly int _tpId = (int)Tp.AMB;
         private readonly IEnumerable<TpCurrency> _tpCurrencyList;
 
@@ -77,7 +77,7 @@ namespace ThirdPartyWager.Service.BLL
                 foreach (var gameType in _gameTypeList)
                 {
                     // CNY、USD Poker未開放 暫時排除
-                    if (currency == "USD" || currency == "CNY")
+                    if (gameType == (int)GameType.AMB_Poker && (currency == "USD" || currency == "CNY"))
                     {
                         continue;
                     }
