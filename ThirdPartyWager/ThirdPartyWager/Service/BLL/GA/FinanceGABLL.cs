@@ -43,6 +43,7 @@ namespace ThirdPartyWager.Service.BLL
             }
             return dailyData;
         }
+
         public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
         {
             var reportData = new List<dynamic>();
@@ -50,6 +51,7 @@ namespace ThirdPartyWager.Service.BLL
             reportData.AddRange(result);
             return reportData;
         }
+
         public TimeCast GetReportTime(DateTime startTime, int day)
         {
             var reportTime = _dateTimeHelper.GetTimeByDay(1440, _timeZone, "yyyy-MM-dd HH:mm:ss", startTime);
