@@ -197,7 +197,11 @@ namespace ThirdParty.HB
 
             if (result.Success)
             {
-                launchUrl = result.LaunchURL;
+                launchUrl = $"{result.LaunchURL}go.ashx?";
+            }
+            else
+            {
+                _logger.LogWarning($"HB GetGameDomain API error: {JsonConvert.SerializeObject(result)}");
             }
 
             return launchUrl;
