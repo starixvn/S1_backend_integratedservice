@@ -1,7 +1,10 @@
-﻿using System.Security.Cryptography;
+﻿using System.Diagnostics.Metrics;
+using System.Security.Cryptography;
 using System.Text;
 using System.Web;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
@@ -16,10 +19,13 @@ namespace ThirdParty.HB
     {
         private readonly HBConfig _siteConfig;
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
+        private readonly ILogger<TpHelper> _logger;
+
         public TpHelper(IServiceProvider provider)
         {
             _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.HB).ToDictionary(d => d.AppId, d => d.Name);
             _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<HBConfig>(TpEnum.HB.ToString());
+            _logger = provider.GetRequiredService<ILogger<TpHelper>>();
         }
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -34,6 +40,17 @@ namespace ThirdParty.HB
         {
             var brandId = _siteConfig.BrandId;
             var launchUrl = _siteConfig.LaunchUrl;
+
+            try
+            {
+                // 透過三方api取得LaunchUrl
+                var tpCountryCode = TpCustInfoProvider.GetTpCurrencyCodeByCurrencyId((int)TpEnum.HB, tpCustInfo.TpCurrencyId);
+                launchUrl = GetLaunchUrl(launchUrl, _siteConfig, tpCountryCode.CountryCode);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
 
             var gameId = GetInputValue(inputs, "gameId");
             var homeUrl = GetInputValue(inputs, "homeUrl", true);
@@ -167,6 +184,23 @@ namespace ThirdParty.HB
             }
             var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
             return dic.TryGetValue("en", out var result) ? result : string.Empty;
+        }
+
+        private string GetLaunchUrl(string launchUrl, HBConfig config, string tpCountryCode)
+        {
+            var parameters = JsonConvert.SerializeObject(new {
+                config.BrandId,
+                Country = tpCountryCode
+            });
+            var json = HttpPost($"{config.ApiUrl}/jsonapi/GetGameDomain", parameters, "application/json");
+            var result = FromJson<LaunchUrlResponse>(json);
+
+            if (result.Success)
+            {
+                launchUrl = result.LaunchURL;
+            }
+
+            return launchUrl;
         }
     }
 }
