@@ -13,5 +13,6 @@ namespace ThirdParty.HB
     {
         public bool Success { get; set; }
         public string LaunchURL { get; set; }
+        public string Message { get; set; }      
     }
 }

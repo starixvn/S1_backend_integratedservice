@@ -199,6 +199,10 @@ namespace ThirdParty.HB
             {
                 launchUrl = result.LaunchURL;
             }
+            else
+            {
+                _logger.LogWarning($"HB GetGameDomain API error: {JsonConvert.SerializeObject(result)}");
+            }
 
             return launchUrl;
         }
