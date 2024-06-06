@@ -369,7 +369,7 @@ namespace ThirdPartyWager.Extensions
             
             services.AddHostedService<FinanceAMB>();
             services.AddHostedService<WagerAMB>();
-            
+            services.AddHostedService<WagerRedoAMB>();
 
             return services;
         }
