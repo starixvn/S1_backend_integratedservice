@@ -365,7 +365,7 @@ namespace ThirdParty.SBSW
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
                     GameID = GetGameID(tpGameType, betDetail.sport_type),
-                    Game = betDetail.sportname?.FirstOrDefault(i => i.lang == "en")?.name ?? string.Empty,
+                    Game = GetGameName(betDetail.sportname?.FirstOrDefault(i => i.lang == "en")?.name ?? string.Empty),
                     RefNo = betDetail.parlay_ref_no ?? string.Empty,
                     Title = betDetail.leaguename?.FirstOrDefault(i => i.lang == "en")?.name ?? string.Empty,
                     MatchID = betDetail.match_id ?? string.Empty,
@@ -466,6 +466,21 @@ namespace ThirdParty.SBSW
                 default:
                     return DeviceType.None;
             }
+        }
+
+        private static readonly Dictionary<string, SportType> GameNameMappings = new Dictionary<string, SportType>
+        {
+            //各三方的Sport名稱先以SBSW為主，並建立SportType Enum以供轉換
+            //額外轉換以下4項
+            { "SBSW Virtual Sports", SportType.VirtualSports },
+            { "SBSW Virtual Sports 2", SportType.VirtualSports },
+            { "SBSW Number Game", SportType.NumberGame },
+            { "E-Sports", SportType.ESports }
+        };
+
+        private static string GetGameName(string gameName)
+        {
+            return GameNameMappings.TryGetValue(gameName, out var sportType) ? Enum.GetName(typeof(SportType), sportType) : gameName;
         }
 
         private OddsTypeEnum GetOddsType(int oddsType)

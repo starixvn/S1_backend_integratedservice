@@ -1383,7 +1383,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                         break;
                 }
                 
-                //var result = _settledBLL.RollinFish_CQ9(rollinReq, (int)gameType, out decimal tpAffterAmount);
                 if (result > 0)
                 {
                     var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, rollinReq.account, (int)gameType);

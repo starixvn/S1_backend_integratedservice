@@ -1466,8 +1466,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             return result;
         }
         
-        
-        
         public SettleDataRNG_CQ9 GetUnsettledListRNG_CQ9(string transId)
         {
             return settledService.GetUnsettledListRNG_CQ9(transId);

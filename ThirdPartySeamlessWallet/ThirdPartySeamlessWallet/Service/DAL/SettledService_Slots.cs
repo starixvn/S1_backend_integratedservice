@@ -89,8 +89,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 _TransId = transId
             });
-            
-            return _mainDbClient.Query<SettleDataRNG_GPI>("Service_BettransRNG_GPI_Unsettle_Get_V2", commandType: CommandType.StoredProcedure , p);
+
+            return _mainDbClient.Query<SettleDataRNG_GPI>("Service_BettransRNG_GPI_Unsettle_Get_V2", commandType: CommandType.StoredProcedure, p);
         }
 
         public int SetSettleFlagRNG_GPI(string roundId, string custId, int SettleFlag)

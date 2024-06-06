@@ -1,5 +1,4 @@
-﻿using MySqlX.XDevAPI.Common;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
