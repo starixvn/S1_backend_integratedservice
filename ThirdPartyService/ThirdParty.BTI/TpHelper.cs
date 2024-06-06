@@ -160,7 +160,7 @@ namespace ThirdParty.BTI
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
                 GameID = selection.Attribute("BranchID").Value,
-                Game = selection.Attribute("BranchName").Value,
+                Game = GetGameName(selection.Attribute("BranchName").Value),
                 RefNo = detail.GetStringValue("reserve_id"),
                 Title = selection.Attribute("EventName").Value,
                 MatchID = selection.Attribute("EventID").Value,
@@ -274,6 +274,23 @@ namespace ThirdParty.BTI
                 "Indo" => OddsTypeEnum.IndoOdds,
                 _ => OddsTypeEnum.None,
             };
+        }
+
+        private static readonly Dictionary<string, SportType> GameNameMappings = new Dictionary<string, SportType>
+        {
+            { "Soccer", SportType.Soccer },
+            { "Basketball", SportType.Basketball },
+            { "Badminton", SportType.Badminton },
+            { "Tennis", SportType.Tennis },
+            { "Volleyball", SportType.Volleyball },
+            { "Virtual Soccer", SportType.VirtualSports }
+        };
+
+        private static string GetGameName(string gameName)
+        {
+            return GameNameMappings.TryGetValue(gameName, out var sportType)
+                ? Enum.GetName(typeof(SportType), sportType)
+                : gameName;
         }
     }
 }

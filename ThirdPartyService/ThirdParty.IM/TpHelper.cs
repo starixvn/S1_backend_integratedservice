@@ -261,7 +261,7 @@ namespace ThirdParty.IM
                 TpCategory.Sports => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
                     GameID = wagerDetail.GetValueOrDefault("GameID")?.ToString(),
-                    Game = detailSportModel?.SportsName,
+                    Game = GetGameName(detailSportModel?.SportsName),
                     RefNo = wagerDetail.GetValueOrDefault("BetId")?.ToString(),
                     Title = detailSportModel?.EventName,
                     MatchID = detailSportModel?.EventId,
@@ -327,6 +327,22 @@ namespace ThirdParty.IM
                 "INDO" => OddsTypeEnum.IndoOdds,
                 _ => OddsTypeEnum.None,
             };
+        }
+
+        private static readonly Dictionary<string, SportType> GameNameMappings = new Dictionary<string, SportType>
+        {
+            { "Soccer", SportType.Soccer },
+            { "Basketball", SportType.Basketball },
+            { "Volleyball", SportType.Volleyball },
+            { "Badminton", SportType.Badminton },
+            { "Tennis", SportType.Tennis }
+        };
+
+        private static string GetGameName(string gameName)
+        {
+            return GameNameMappings.TryGetValue(gameName, out var sportType)
+                ? Enum.GetName(typeof(SportType), sportType)
+                : gameName;
         }
 
     }
