@@ -1,4 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
@@ -10,9 +13,12 @@ namespace ThirdParty.Nextspin
     public class TpHelper : ThirdPartyHelperBase
     {
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
-        public TpHelper()
+        private readonly ILogger<TpHelper> _logger;
+
+        public TpHelper(IServiceProvider provider)
         {
             _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.Nextspin).ToDictionary(d => d.AppId, d => d.Name);
+            _logger = provider.GetRequiredService<ILogger<TpHelper>>();
         }
         #region NotImplemented
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -42,6 +48,17 @@ namespace ThirdParty.Nextspin
             var merchantCode = GetInputValue(inputs, "MerchantCode");
             var launchUrl = GetInputValue(inputs, "LaunchUrl");
             var gameCode = GetInputValue(inputs, "gameId");
+            var apiUrl = GetInputValue(inputs, "ApiUrl");
+
+            try
+            {
+                // 透過三方api取得LaunchUrl       
+                launchUrl = GetLaunchUrl(launchUrl, apiUrl, merchantCode);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
 
             string gameUrl;
             if (IsFunMode(inputs))
@@ -158,6 +175,34 @@ namespace ThirdParty.Nextspin
             }
 
             return DeviceType.None;
+        }
+
+        private string GetLaunchUrl(string launchUrl, string apiUrl, string merchantCode)
+        {
+            var header = new Dictionary<string, string>()
+            {
+                {"API", "getDomainList"},
+                {"DataType", "JSON"}
+            };
+            var parameters = JsonConvert.SerializeObject(new
+            {
+                merchantCode,
+                serialNo = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
+            });
+
+            var json = HttpPost(apiUrl, parameters, "application/json", header);
+            var result = FromJson<GetDomainListResponse>(json);
+
+            if (result.code == 0)
+            {
+                launchUrl = result.domains[0];
+            }
+            else
+            {
+                _logger.LogWarning($"Nextspin getDomainList API error: {JsonConvert.SerializeObject(result)}");
+            }
+
+            return launchUrl;
         }
     }
 }
