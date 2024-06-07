@@ -94,14 +94,13 @@ public class WagerAMBBLL
                     }
 
                     var getWager = await _apiAMBBLL.GetBetListByTime(startTime, endTime, currency, gameType);
+                    // sleep 15 sec
+                    Thread.Sleep(15000);
                     if (getWager.status.code != 0)
                     {
-                        if (getWager.status.code != 997)
-                        {
-                            msg = "THIRD_PARTY_ERROR";
-                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(getWager)}");
-                            return false;
-                        }
+                        msg = "THIRD_PARTY_ERROR";
+                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(getWager)}");
+                        return false;
                     }
 
                     if (getWager.data.totalRecords == 0 || getWager.data.result == null)
