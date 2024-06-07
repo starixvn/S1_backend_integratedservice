@@ -179,7 +179,7 @@ namespace ThirdPartySettleWorker.Workers
 
                 foreach (var wager in tpUnsettleList)
                 {
-                    var getUnsettledList = _tpUnSettledBLL.GetTpUnsettleData<SettleData_AMB>(getSP, new { TransId = wager.TransId }, DataBase.Main);
+                    var getUnsettledList = _tpUnSettledBLL.GetTpUnsettleData<SettleData_AMB>(getSP, new { _TransId = wager.TransId }, DataBase.Main);
                     if(getUnsettledList == null || !getUnsettledList.Any())
                     {
                         throw new UnsettleNotFoundException($"{_tpName} - AMB_Poker Can fount TransId : {wager.TransId}.");
