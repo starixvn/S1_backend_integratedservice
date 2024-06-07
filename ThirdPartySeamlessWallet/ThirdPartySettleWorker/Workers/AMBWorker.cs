@@ -162,7 +162,7 @@ namespace ThirdPartySettleWorker.Workers
             var thisTp = (int)Tp.AMB;
             var gameType = GameType.AMB_Poker;
             var logName = "Settle_AMB";
-            var getSP = $"Service_BettransPK_AMB_Unsettle_Get_V2";
+            var getSP = $"Service_BettransPK_AMB_Settle_Get";
             var setSP = $"Service_BettransPK_AMB_Settle_Set";
             var tpName = Enum.GetName(typeof(Tp), thisTp);
 
