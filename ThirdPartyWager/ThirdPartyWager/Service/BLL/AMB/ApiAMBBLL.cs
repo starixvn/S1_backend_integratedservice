@@ -42,7 +42,8 @@ namespace ThirdPartyWager.Service.BLL
                 endDate = endTime,
                 limit = 1000,
             };
-            
+            // sleep 15 sec
+            Thread.Sleep(15000);
             var sParam = JsonConvert.SerializeObject(param);
 
             // request
