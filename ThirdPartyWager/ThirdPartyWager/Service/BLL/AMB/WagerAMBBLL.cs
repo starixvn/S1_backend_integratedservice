@@ -98,12 +98,9 @@ public class WagerAMBBLL
                     Thread.Sleep(15000);
                     if (getWager.status.code != 0)
                     {
-                        if (getWager.status.code != 997)
-                        {
-                            msg = "THIRD_PARTY_ERROR";
-                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(getWager)}");
-                            return false;
-                        }
+                        msg = "THIRD_PARTY_ERROR";
+                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(getWager)}");
+                        return false;
                     }
 
                     if (getWager.data.totalRecords == 0 || getWager.data.result == null)
