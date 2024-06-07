@@ -45,7 +45,7 @@ public class WagerAMB : BackgroundService
         {
             if (quick)
             {
-                var dueTimeSpan = TimeSpan.FromSeconds(10);
+                var dueTimeSpan = TimeSpan.FromSeconds(30);
                 _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
             else
