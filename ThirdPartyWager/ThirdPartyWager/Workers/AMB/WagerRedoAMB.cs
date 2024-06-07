@@ -10,9 +10,9 @@ namespace ThirdPartyWager.Workers
         private Timer _timer;
         private readonly WagerAMBBLL _wagerAMBBLL;
         private readonly ILogger<WagerGA> _logger;
-        private readonly int timeRange = 60; //in minutes 
-        private readonly int quickTime = 3; // in minutes
-        private readonly int runTime = 1; // in hours
+        private readonly int timeRange = 9; //in minutes
+        private readonly int quickTime = 5; // in minutes
+        private readonly int runTime = 10; // in minutes
         private readonly int tpType = (int)WagerTimerType.RedoWager;
 
         public WagerRedoAMB(IServiceProvider provider)
@@ -50,7 +50,7 @@ namespace ThirdPartyWager.Workers
                 }
                 else
                 {
-                    var dueTimeSpan = TimeSpan.FromHours(runTime);
+                    var dueTimeSpan = TimeSpan.FromMinutes(runTime);
                     _timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
