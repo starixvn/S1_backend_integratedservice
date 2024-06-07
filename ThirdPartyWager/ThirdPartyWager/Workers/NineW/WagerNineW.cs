@@ -30,11 +30,11 @@ namespace ThirdPartyWager.Workers
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _nineWService = provider.GetRequiredService<NineWBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
-            DoGetDomain();
         }
         
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            DoGetDomain();
             _getDomainTimer = new Timer(DoGetDomain, null, TimeSpan.FromMinutes(1), TimeSpan.Zero);
             _settleTimer = new Timer(DoSettle, null, TimeSpan.FromSeconds(1), TimeSpan.Zero);
             _settleTimerByDate = new Timer(DoSettleByDate, null, TimeSpan.FromSeconds(3), TimeSpan.Zero);
