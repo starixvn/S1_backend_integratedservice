@@ -12,7 +12,7 @@ public class WagerAMB : BackgroundService
     private readonly ILogger<WagerGA> _logger;
     private readonly int timeRange = 5;
     private readonly int tpType = (int)WagerTimerType.Wager;
-    private readonly int runTime = 5;
+    private readonly int runTime = 2;
     public WagerAMB(IServiceProvider provider)
     {
         _wagerAMBBLL = provider.GetRequiredService<WagerAMBBLL>();
