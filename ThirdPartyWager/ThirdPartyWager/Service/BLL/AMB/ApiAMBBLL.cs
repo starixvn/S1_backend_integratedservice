@@ -25,7 +25,7 @@ namespace ThirdPartyWager.Service.BLL
             _siteAMBConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AMBConfig>(_tpName);
         }
 
-        public async Task<Wager_AMB> GetBetListByTime(string startTime, string endTime,string currency,int gameType)
+        public async Task<Wager_AMB> GetBetListByTime(string startTime, string endTime, string currency, int gameType)
         {
             var settingByGameType = GetTpListByGameType(currency, gameType);
             var apiUrl = settingByGameType["ApiUrl"];
@@ -42,17 +42,17 @@ namespace ThirdPartyWager.Service.BLL
                 endDate = endTime,
                 limit = 1000,
             };
-            // sleep 15 sec
-            Thread.Sleep(15000);
+            // sleep 12 sec
+            Thread.Sleep(12000);
             var sParam = JsonConvert.SerializeObject(param);
 
             // request
             var r = await DoHttpClientAsync(url, sParam, secretKey, headerKey, HttpMethod.Post);
             var result = JsonConvert.DeserializeObject<Wager_AMB>(r);
-            
+
             return result;
         }
-        
+
         public async Task<CurrencyStats_AMB> GetBetSummaryByTime(string currency, int gameType, string startTime, string endTime)
         {
             var settingByGameType = GetTpListByGameType(currency, gameType);
@@ -81,7 +81,7 @@ namespace ThirdPartyWager.Service.BLL
         private Dictionary<string, string> GetTpListByGameType(string currency, int gameType)
         {
             var result = new Dictionary<string, string>();
-            
+
             switch (gameType)
             {
                 case (int)GameType.AMB_Poker:
@@ -100,7 +100,7 @@ namespace ThirdPartyWager.Service.BLL
                         { "ApiUrl", slotCurrencyConfig.SlotApiUrl },
                         { "Agent", slotCurrencyConfig.Agent },
                         { "SecretKey", slotCurrencyConfig.SecretKey },
-                        { "HeaderKey", "x-ambslot-signature" } 
+                        { "HeaderKey", "x-ambslot-signature" }
                     };
                     break;
             }
@@ -122,6 +122,22 @@ namespace ThirdPartyWager.Service.BLL
             {
                 _log2File.InsertHttpErrorLog(_tpName, response.StatusCode, response.ReasonPhrase);
                 _log2File.InsertResponseLog(_tpName, url, param, result);
+            }
+            else
+            {
+                var dict = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(result);
+                if (dict.ContainsKey("status") && dict["status"].ToString() == "429")
+                {
+                    _log2File.InsertResponseLog(_tpName, url, param, result, false);
+                    var temp = new CurrencyStats_AMB();
+                    temp.status = new Status_AMB
+                    {
+                        code = 429,
+                        message = dict["message"]
+                    };
+                    _log2File.InsertResponseLog(_tpName, url, param, JsonConvert.SerializeObject(temp), false);
+                    return JsonConvert.SerializeObject(temp);
+                }
             }
 
             return result;
