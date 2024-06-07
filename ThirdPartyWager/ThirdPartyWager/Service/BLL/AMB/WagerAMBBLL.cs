@@ -54,8 +54,8 @@ public class WagerAMBBLL
     public async Task<bool> ExecWagerRedoWorker(int type, int timeRange)
     {
         var wokerTime = GetWorkerTime(type, 1);
-        var quick = CheckQuick(wokerTime, 120);
-        var time = _dateTimeHelper.GetTimeByHour(timeRange, _timeZone, _timeFormat, wokerTime);
+        var quick = CheckQuick(wokerTime, 90);
+        TimeCast time = _dateTimeHelper.GetTimeByMinute(timeRange, _timeZone, _timeFormat, wokerTime);
 
         var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
         if (time.endUnix < cvTime)
@@ -94,8 +94,6 @@ public class WagerAMBBLL
                     }
 
                     var getWager = await _apiAMBBLL.GetBetListByTime(startTime, endTime, currency, gameType);
-                    // sleep 15 sec
-                    Thread.Sleep(15000);
                     if (getWager.status.code != 0)
                     {
                         msg = "THIRD_PARTY_ERROR";
