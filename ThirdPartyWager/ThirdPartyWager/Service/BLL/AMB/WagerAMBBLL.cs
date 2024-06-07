@@ -94,6 +94,8 @@ public class WagerAMBBLL
                     }
 
                     var getWager = await _apiAMBBLL.GetBetListByTime(startTime, endTime, currency, gameType);
+                    // sleep 15 sec
+                    Thread.Sleep(15000);
                     if (getWager.status.code != 0)
                     {
                         if (getWager.status.code != 997)
