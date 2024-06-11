@@ -53,7 +53,7 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task<CurrencyStats_AMB> GetBetSummaryByTime(string currency, int gameType, string startTime, string endTime)
+        public async Task<CurrencyStats_AMB> GetBetSummaryByTime(string currency, int gameType, string startTime, string endTime, int perPage, int page)
         {
             var settingByGameType = GetTpListByGameType(currency, gameType);
             var apiUrl = settingByGameType["ApiUrl"];
@@ -68,8 +68,11 @@ namespace ThirdPartyWager.Service.BLL
                 agent = agent,
                 startDate = startTime,
                 endDate = endTime,
+                limit = perPage,
+                page = page
             };
-
+            // sleep 12 sec
+            Thread.Sleep(12000);
             var sParam = JsonConvert.SerializeObject(param);
 
             // request
