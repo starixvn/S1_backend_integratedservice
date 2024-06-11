@@ -4,8 +4,6 @@ using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.TpSiteConfig;
 using Serilog.Context;
-using System.Collections.Generic;
-using System;
 
 namespace ThirdPartyWager.Workers
 {
@@ -20,10 +18,11 @@ namespace ThirdPartyWager.Workers
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ILogger<WagerWonCasino> _logger;
-        private readonly int timeZone = 0;
-        private readonly int iRangMins = 30;
+        private readonly int _timeZone = 0;
+        private readonly int _iRangMins = 30;
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
-        private readonly int intervalMins = 5;
+        private readonly int _runTime = 1;
+        private readonly int _quickTime = 5; // in minute
         public WagerRedoWonCasino(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<WagerWonCasino>>();
@@ -43,6 +42,7 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
+            bool quick = false;
 
             try
             {
@@ -64,9 +64,11 @@ namespace ThirdPartyWager.Workers
                     dataTpTimer.StartTime = dataTpTimer.StartTime.AddSeconds(1);
                 }
 
-                if (dataTpTimer.StartTime <= DateTime.Now.AddMinutes(-30))
+                quick = CheckQuick(dataTpTimer.StartTime, 120);
+                var cvTime = DateTimeOffset.Now.AddHours(-1).ToOffset(new TimeSpan(_timeZone, 0, 0)).DateTime;
+                if (dataTpTimer.StartTime <= cvTime)
                 {
-                    var time = _dateTimeHelper.GetTimeByMinute(iRangMins - 1, timeZone, _timeFormat, dataTpTimer.StartTime);
+                    var time = _dateTimeHelper.GetTimeByMinute(_iRangMins - 1, _timeZone, _timeFormat, dataTpTimer.StartTime);
                     var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
 
                     foreach (var site in siteList)
@@ -76,15 +78,14 @@ namespace ThirdPartyWager.Workers
                         if (_setting == null) continue;
 
                         result = await _wagerWonCasinoBLL.GetWagerAsync(_setting, time.startUnix, time.endUnix);
-                        
+
                         if (result < 0)
                         {
                             //第三方因素或Insert失敗回傳為-1，直接進break不再更新時間。
                             break;
                         }
-                        
                     }
-                    
+
                     if (result > 0)
                     {
                         _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, time.endUnix);
@@ -97,9 +98,15 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                var dueTimeSpan = quick ? TimeSpan.FromMinutes(_quickTime) : TimeSpan.FromHours(_runTime);
                 _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
+        }
+
+        private static bool CheckQuick(DateTime workTime, int excess)
+        {
+            var diff = DateTime.Now - workTime;
+            return DateTime.Now > workTime && diff.TotalMinutes > excess;
         }
     }
 }
