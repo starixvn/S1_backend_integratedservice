@@ -12,7 +12,7 @@ namespace ThirdPartyWager.Workers
         private readonly CommonBLL _commonBLL;
         private readonly int tpType = (int)WagerTimerType.RedoWager;
         private readonly int timeRange = 60; //in minutes
-        private readonly int quickTime = 75; // in seconds
+        private readonly int quickTime = 5; // in minutes
         private readonly int runTime = 1; // in hours
         private readonly string _tpName = Tp.V8.ToString();
         private readonly int tpId = (int)Tp.V8;
@@ -34,14 +34,13 @@ namespace ThirdPartyWager.Workers
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var isFast = false;
-            var quick = false;
             try
             {
                 var TpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
                 foreach (var item in TpCurrencyList)
                 {
                     _logger.LogWarning(item.TpCurrencyId);
-                    quick = await _wagerV8BLL.ExecWagerRedoWorker(tpType, timeRange, item.TpCurrencyId);
+                    var quick = await _wagerV8BLL.ExecWagerRedoWorker(tpType, timeRange, item.TpCurrencyId);
                     if (!isFast && quick) isFast = true;
                 }
             }
@@ -51,7 +50,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                var dueTimeSpan = isFast ? TimeSpan.FromSeconds(quickTime) : TimeSpan.FromHours(runTime);
+                var dueTimeSpan = isFast ? TimeSpan.FromMinutes(quickTime) : TimeSpan.FromHours(runTime);
                 timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
