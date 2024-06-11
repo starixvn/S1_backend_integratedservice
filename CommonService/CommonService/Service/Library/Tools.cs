@@ -31,5 +31,12 @@ namespace CommonService.Service.Library
             }
             return builder.ToString();
         }
+        
+        public string SHA256(string input)
+        {
+            var inputBytes = Encoding.UTF8.GetBytes(input);
+            var outputBytes = new SHA256CryptoServiceProvider().ComputeHash(inputBytes);
+            return BitConverter.ToString(outputBytes).Replace("-", "").ToLower();
+        }
     }
 }

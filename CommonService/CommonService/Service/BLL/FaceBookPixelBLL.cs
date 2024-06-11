@@ -1,0 +1,84 @@
+﻿using System.Net;
+using CommonService.Service.Library;
+using CommonService.Service.Model;
+using CommonService.Service.Model.enums;
+using Newtonsoft.Json;
+
+namespace CommonService.Service.BLL
+{
+    public class FaceBookPixelBLL
+    {
+        private readonly ILogger<FaceBookPixelBLL> _logger;
+        private readonly HttpHelper _httpHelper;
+        private readonly FaceBookPixelConfig _faceBookPixelConfig;
+        private readonly bool _isProduction;
+        private readonly Tools _tools;
+        
+
+        public FaceBookPixelBLL(IServiceProvider provider)
+        {
+            _logger = provider.GetRequiredService<ILogger<FaceBookPixelBLL>>();
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            var env = provider.GetRequiredService<IWebHostEnvironment>();
+            _isProduction = env.IsProduction();
+            _faceBookPixelConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<FaceBookPixelConfig>("FaceBookPixelConfig");
+            _tools = provider.GetRequiredService<Tools>();
+        }
+
+        public async Task<ApiResult> SendAsync(PixelRequest request)
+        {
+            var apiResult = new ApiResult();
+            // if (!_isProduction)
+            // {
+            //     apiResult.ErrorCode = ErrorCode.Success;
+            //     apiResult.Message = $"not production environment ignore FaceBookPixelSend always return success";
+            //     return apiResult;
+            // }
+
+            try
+            {
+                var url = string.Format(_faceBookPixelConfig.ApiUrl, _faceBookPixelConfig.PixelId, _faceBookPixelConfig.Token);
+
+                var eventData = new EventData
+                {
+                    data = new List<PixelEvent>
+                    {
+                        new()
+                        {
+                            event_name = request.PixelEvent.ToString(),
+                            event_time = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                            user_data = new UserData
+                            {
+                                external_id = new List<string> {_tools.SHA256(request.CustId.ToString())}
+                            },
+                            custom_data = new CustomData
+                            {
+                                currency = request.IsoCode,
+                                value = request.Value
+                            },
+                            event_source_url = request.Url,
+                            action_source = "website"
+                        }
+                    }
+                 };
+                
+                var parameters = new Dictionary<string, string>
+                {
+                    { "data", JsonConvert.SerializeObject(eventData.data) },
+                    {"access_token",_faceBookPixelConfig.Token }
+                }; 
+                
+                var response = await _httpHelper.HttpFromPostAsync(url, null, parameters, "application/x-www-form-urlencoded");
+                apiResult.ErrorCode = response.StatusCode == HttpStatusCode.OK ? ErrorCode.Success : ErrorCode.Fail;
+                
+                return apiResult;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Send FaceBookPixel Error , Message :{ex.Message}");
+            }
+
+            return apiResult;
+        }
+    }
+}
