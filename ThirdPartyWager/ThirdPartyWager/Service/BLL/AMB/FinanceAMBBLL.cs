@@ -80,29 +80,38 @@ namespace ThirdPartyWager.Service.BLL
                         continue;
                     }
 
-                    CurrencyStats_AMB getWagerSummary = await _apiAMBBLL.GetBetSummaryByTime(currency, gameType, reportTime.startTime, reportTime.endTime);
-                    if (getWagerSummary.status.code != 0)
+                    // pagination
+                    var page = 1;
+                    int totalPage = 1;
+                    var perPage = 500;
+                    while (page <= totalPage)
                     {
-                        var msg = "THIRD_PARTY_ERROR";
-                        _logger.LogError($"{msg}\r\n{gameType}\r\n{currency}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                        SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
-                        throw systemException;
-                    }
-
-                    if (getWagerSummary.status.code == 0 && getWagerSummary.data.response == null)
-                    {
-                        var msg = "NO_DATA";
-                        _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                        continue;
-                    }
-
-                    foreach (var dataList in getWagerSummary.data.response)
-                    {
-                        foreach (var data in dataList.result)
+                        CurrencyStats_AMB getWagerSummary = await _apiAMBBLL.GetBetSummaryByTime(currency, gameType, reportTime.startTime, reportTime.endTime, perPage, page);
+                        if (getWagerSummary.status.code != 0)
                         {
-                            data.TpCurrencyId = currency;
-                            reportData.Add(data);
+                            var msg = "THIRD_PARTY_ERROR";
+                            _logger.LogError($"{msg}\r\n{gameType}\r\n{currency}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                            SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
+                            throw systemException;
                         }
+
+                        if (getWagerSummary.status.code == 0 && getWagerSummary.data.response == null && getWagerSummary.data.pageNumber == 0)
+                        {
+                            var msg = "NO_DATA";
+                            _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                            continue;
+                        }
+                        totalPage = (getWagerSummary.data.totalRecords / perPage) + 1;
+
+                        foreach (var dataList in getWagerSummary.data.response)
+                        {
+                            foreach (var data in dataList.result)
+                            {
+                                data.TpCurrencyId = currency;
+                                reportData.Add(data);
+                            }
+                        }
+                        page++;
                     }
                 }
             }
