@@ -15,6 +15,9 @@
 
     public class CurrencyStatsData_AMB
     {
+        public int totalRecords { get; set; }
+        public int pageNumber { get; set; }
+        public int currentRecords { get; set; }
         public IList<CurrencyStatsItem_AMB> response { get; set; }
 
     }
@@ -42,9 +45,9 @@
         public decimal commission { get; set; }
         public string TpCurrencyId { get; set; }
     }
-    
+
     #region Wager
-    
+
     public class Wager_AMB
     {
         public Status_AMB status { get; set; }
@@ -93,6 +96,6 @@
         public bool isBuyFeature { get; set; }
         public bool isGamble { get; set; }
     }
-    
+
     #endregion
 }
