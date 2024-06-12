@@ -12,7 +12,7 @@ namespace ThirdPartyWager.Workers
         private readonly ILogger<WagerGA> _logger;
         private readonly int timeRange = 9; //in minutes
         private readonly int quickTime = 5; // in minutes
-        private readonly int runTime = 10; // in minutes
+        private readonly int runTime = 5; // in minutes
         private readonly int tpType = (int)WagerTimerType.RedoWager;
 
         public WagerRedoAMB(IServiceProvider provider)
