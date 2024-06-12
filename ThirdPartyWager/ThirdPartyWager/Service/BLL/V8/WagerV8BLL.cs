@@ -65,6 +65,10 @@ namespace ThirdPartyWager.Service.BLL
                 }
                 // 拉单过于频繁(两次拉单时间间隔必须大于 60 秒)
                 Thread.Sleep(67000);
+                if (!result)
+                {
+                    quick = true;
+                }
             }
 
             return quick;
