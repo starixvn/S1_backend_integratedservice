@@ -51,11 +51,11 @@ namespace CommonService.Service.BLL
                 var custSha = _tools.SHA256(request.CustId.ToString());
                 var isoCode = _currencyService.GetCurrency().FirstOrDefault(x => x.CurrencyId == request.CurrencyId)?.IsoCode;
                 
-                foreach (var requestData in request.Data)
+                foreach (var pixelEvent in request.PixelEvent)
                 {
                     var data = new PixelEvent
                     {
-                        event_name =  requestData.PixelEvent.ToString(),
+                        event_name =  pixelEvent.ToString(),
                         event_time = now,
                         user_data = new UserData
                         {
@@ -64,7 +64,7 @@ namespace CommonService.Service.BLL
                         custom_data = new CustomData
                         {
                             currency = isoCode,
-                            value = requestData.Value
+                            value = request.Value
                         },
                         event_source_url = request.Url,
                         action_source =  "website"
