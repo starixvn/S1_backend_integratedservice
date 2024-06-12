@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using CommonService.Service.DAL;
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
@@ -11,10 +12,11 @@ namespace CommonService.Service.BLL
         private readonly ILogger<FaceBookPixelBLL> _logger;
         private readonly HttpHelper _httpHelper;
         private readonly FaceBookPixelConfig _faceBookPixelConfig;
+        private readonly CurrencyService _currencyService;
         private readonly bool _isProduction;
         private readonly Tools _tools;
         
-
+        
         public FaceBookPixelBLL(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FaceBookPixelBLL>>();
@@ -22,6 +24,7 @@ namespace CommonService.Service.BLL
             var env = provider.GetRequiredService<IWebHostEnvironment>();
             _isProduction = env.IsProduction();
             _faceBookPixelConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<FaceBookPixelConfig>("FaceBookPixelConfig");
+            _currencyService = provider.GetRequiredService<CurrencyService>();
             _tools = provider.GetRequiredService<Tools>();
         }
 
@@ -34,33 +37,40 @@ namespace CommonService.Service.BLL
             //     apiResult.Message = $"not production environment ignore FaceBookPixelSend always return success";
             //     return apiResult;
             // }
-
+            
             try
             {
                 var url = string.Format(_faceBookPixelConfig.ApiUrl, _faceBookPixelConfig.PixelId, _faceBookPixelConfig.Token);
 
                 var eventData = new EventData
                 {
-                    data = new List<PixelEvent>
+                    data = new List<PixelEvent>()
+                };
+
+                var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                var custSha = _tools.SHA256(request.CustId.ToString());
+                var isoCode = _currencyService.GetCurrency().FirstOrDefault(x => x.CurrencyId == request.CurrencyId)?.IsoCode;
+                
+                foreach (var requestData in request.Data)
+                {
+                    var data = new PixelEvent
                     {
-                        new()
+                        event_name =  requestData.PixelEvent.ToString(),
+                        event_time = now,
+                        user_data = new UserData
                         {
-                            event_name = request.PixelEvent.ToString(),
-                            event_time = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                            user_data = new UserData
-                            {
-                                external_id = new List<string> {_tools.SHA256(request.CustId.ToString())}
-                            },
-                            custom_data = new CustomData
-                            {
-                                currency = request.IsoCode,
-                                value = request.Value
-                            },
-                            event_source_url = request.Url,
-                            action_source = "website"
-                        }
-                    }
-                 };
+                            external_id = new List<string> {custSha}
+                        },
+                        custom_data = new CustomData
+                        {
+                            currency = isoCode,
+                            value = requestData.Value
+                        },
+                        event_source_url = request.Url,
+                        action_source =  "website"
+                    };
+                    eventData.data.Add(data);
+                }
                 
                 var parameters = new Dictionary<string, string>
                 {
