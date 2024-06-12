@@ -57,7 +57,7 @@ public class WagerAMBBLL
         var quick = CheckQuick(wokerTime, 60);
         TimeCast time = _dateTimeHelper.GetTimeByMinute(timeRange, _timeZone, _timeFormat, wokerTime);
 
-        var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
+        var cvTime = DateTimeOffset.Now.AddHours(1).ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
         if (time.endUnix < cvTime)
         {
             var result = await GetWagerAsync(time.startTime, time.endTime, true);
