@@ -20,15 +20,20 @@ namespace CommonService.Service.Model
     public class PixelRequest
     {
         public int CustId { get; set; }
+        public int CurrencyId { get; set; }
+        public string Url { get; set; }
+        public List<PixelData> Data { get; set; }
+    }
+
+    public class PixelData
+    {
         /// <summary>
         /// eventName
         /// </summary>
         public FaceBookPixel PixelEvent { get; set; }
-        public string IsoCode { get; set; }
         public decimal Value { get; set; }
-        public string Url { get; set; }
     }
-
+    
     #endregion
   
     
