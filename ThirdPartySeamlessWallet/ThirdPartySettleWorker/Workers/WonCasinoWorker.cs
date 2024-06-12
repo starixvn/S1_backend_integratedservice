@@ -11,16 +11,16 @@ namespace ThirdPartySettleWorker.Workers
     public class WonCasinoWorker : BackgroundService, ISettleWorker
     {
         public Tp Tp => Tp.WonCasino;
-        
+
         private Timer _timer;
-        
+
         private readonly SettledBLL _settledBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly PartitionService _partitionService;
         private readonly ILogger<WonCasinoWorker> _logger;
         private readonly string _tpName;
-        
+
         public WonCasinoWorker(IServiceProvider provider)
         {
             _settledBLL = provider.GetRequiredService<SettledBLL>();
@@ -36,7 +36,7 @@ namespace ThirdPartySettleWorker.Workers
             _timer = new Timer(DoWonCasinoSettle, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
-        
+
         public override Task StopAsync(CancellationToken cancellationToken)
         {
             _timer?.Change(Timeout.Infinite, 0);
@@ -57,7 +57,7 @@ namespace ThirdPartySettleWorker.Workers
             var setSP = $"Service_Bettrans_WonCasino_Settle_Set";
             var getWagerSP = $"Service_TpWager_WonCasino_Get";
             var dueTimeSpan = TimeSpan.FromMinutes(1);
-            
+
             try
             {
                 var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
@@ -71,9 +71,9 @@ namespace ThirdPartySettleWorker.Workers
 
                 foreach (var wager in tpUnsettleList)
                 {
-                        
+
                     var getUnsettledList = _partitionService.GetUnsettleDataList<SettleDataWonCasino>(getSP, wager);
-                    if(getUnsettledList == null || !getUnsettledList.Any())
+                    if (getUnsettledList == null || !getUnsettledList.Any())
                     {
                         //此處去拿TpWager_WonCasino，Bettrans無資料，但有抓回來注單。
                         //state為-3則代表異常錯誤
@@ -92,7 +92,7 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         //拿最後一筆資料
                         var unsettled = getUnsettledList.LastOrDefault(x => x.TransId == wager.TransId);
-                        
+
                         //Void單結算不處理
                         //經詢問type == 7 只有 玩家手動撤銷注單以及後台手動撤單(PRD 總代帳號才有權限)，
                         //為不影響STATEMENT顯示，固直接刪單不處理。
@@ -110,10 +110,10 @@ namespace ThirdPartySettleWorker.Workers
                                 unsettled.Stake = unsettled.ValidBet;
                             }
                         }
-                        
+
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
                         var transType = TransTypeCheck(unsettled);
-                        
+
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
@@ -123,8 +123,8 @@ namespace ThirdPartySettleWorker.Workers
                             WinlostAmount = unsettled.WinLostAmount,
                             TransId = unsettled.TransId,
                             GameType = gameType,
-                            SettledTime = unsettled.SettleTime,
-                            TransTime = unsettled.TransTime,
+                            SettledTime = getUnsettledList.Max(x => x.SettleTime),
+                            TransTime = getUnsettledList.Min(x => x.TransTime),
                             SettlementType = transType,
                             GameID = ConvertGameType(unsettled.gametype),
                         };
@@ -179,7 +179,7 @@ namespace ThirdPartySettleWorker.Workers
                 _timer?.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
-        
+
         #region private
 
         private string ConvertGameType(int gametype)
@@ -214,15 +214,15 @@ namespace ThirdPartySettleWorker.Workers
             };
         }
         #endregion
-        
+
         #region Model
-        
+
         private class SettleDataWonCasino : SettleData
         {
             public int gametype { get; set; }
             public int type { get; set; }
         }
-        
+
         public class TpWagerWonCasinoModel
         {
             public int id { get; set; }
@@ -241,7 +241,7 @@ namespace ThirdPartySettleWorker.Workers
             public DateTime updatetime { get; set; }
             public DateTime createtime { get; set; }
         }
-        
+
         #endregion
-        }
+    }
 }
