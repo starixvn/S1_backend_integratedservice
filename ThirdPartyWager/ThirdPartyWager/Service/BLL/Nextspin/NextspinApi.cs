@@ -1,11 +1,9 @@
 ﻿using System.Net;
 using System.Text;
-
 using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
-
+using ThirdPartyWager.Service.Model.enums;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace ThirdPartyWager.Service.BLL
@@ -20,12 +18,14 @@ namespace ThirdPartyWager.Service.BLL
     {
         private readonly HttpHelper _httpHelper;
         private readonly IConfiguration _configuration;
-        private readonly ILogger<NextspinApi> _logger;
-        public NextspinApi(HttpHelper httpHelper, ILogger<NextspinApi> logger, IConfiguration configuration)
+        private readonly Log2File _log2File;
+        private readonly string _tpName = Tp.Nextspin.ToString();
+
+        public NextspinApi(IServiceProvider provider)
         {
-            _httpHelper = httpHelper;
-            _logger = logger;
-            _configuration = configuration;
+            _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _configuration = provider.GetRequiredService<IConfiguration>();
+            _log2File = provider.GetRequiredService<Log2File>();
         }
 
         public async Task<NextspinBetHistory> GetBetHistory(string beginDate, string endDate, int page, NextspinSetting setting)
@@ -39,39 +39,46 @@ namespace ThirdPartyWager.Service.BLL
                 endDate,
                 page
             };
+            var json = JsonConvert.SerializeObject(request);
 
             try
             {
                 var stringContent = new StringContent(
-                    JsonConvert.SerializeObject(request),
+                    json,
                     Encoding.UTF8,
-                    Application.Json);
+                    Application.Json
+                );
 
                 using var client = _httpHelper.GetClientWithHandler(CreateHandler());
                 client.DefaultRequestHeaders.Add("API", "getBetHistory");
                 client.DefaultRequestHeaders.Add("DataType", "JSON");
+                _log2File.InsertRequestLog(_tpName, apiUrl, $"{json}\r\n{JsonConvert.SerializeObject(client.DefaultRequestHeaders)}", "1");
+
                 var httpResponseMessage = await client.PostAsync(apiUrl, stringContent);
 
                 var content = await httpResponseMessage.Content.ReadAsStringAsync();
                 if (!httpResponseMessage.IsSuccessStatusCode)
                 {
-                    _logger.LogError($"failed, request:{JsonConvert.SerializeObject(request)} response:{content}");
+                    _log2File.InsertHttpErrorLog(_tpName, httpResponseMessage.StatusCode, httpResponseMessage.ReasonPhrase);
+                    _log2File.InsertResponseLog(_tpName, apiUrl, json, httpResponseMessage.Content.ReadAsStringAsync().Result);
                     return null;
                 }
                 var nextspinBetHistory = JsonConvert.DeserializeObject<NextspinBetHistory>(content);
                 if (nextspinBetHistory.Code != 0)
                 {
-                    _logger.LogError($"failed, request:{JsonConvert.SerializeObject(request)} response:{nextspinBetHistory.Msg}");
+                    _log2File.InsertHttpErrorLog(_tpName, nextspinBetHistory.Code, nextspinBetHistory.Msg);
+                    _log2File.InsertResponseLog(_tpName, apiUrl, json, JsonConvert.SerializeObject(content));
                     return null;
                 }
                 return nextspinBetHistory;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"{apiUrl} get bet list failed, request:{JsonConvert.SerializeObject(request)} exception:{ex.Message}");
+                _log2File.InsertResponseLog(_tpName, apiUrl, json, ex.Message);
                 return null;
             }
         }
+
         public async Task<NextspinProfitLoss> RetrieveProfitLoss(string beginDate, string endDate, int pageIndex, NextspinSetting setting)
         {
             var merchantCode = setting.Agent;
@@ -84,39 +91,46 @@ namespace ThirdPartyWager.Service.BLL
                 isAll = true,
                 pageIndex
             };
+            var json = JsonConvert.SerializeObject(request);
 
             try
             {
                 var stringContent = new StringContent(
-                    JsonConvert.SerializeObject(request),
+                    json,
                     Encoding.UTF8,
-                    Application.Json);
+                    Application.Json
+                );
 
                 using var client = _httpHelper.GetClientWithHandler(CreateHandler());
                 client.DefaultRequestHeaders.Add("API", "getProfitLoss");
                 client.DefaultRequestHeaders.Add("DataType", "JSON");
+                _log2File.InsertRequestLog(_tpName, apiUrl, $"{json}\r\n{JsonConvert.SerializeObject(client.DefaultRequestHeaders)}", "1");
+
                 var httpResponseMessage = await client.PostAsync(apiUrl, stringContent);
 
                 var content = await httpResponseMessage.Content.ReadAsStringAsync();
                 if (!httpResponseMessage.IsSuccessStatusCode)
                 {
-                    _logger.LogError($"failed, request:{JsonConvert.SerializeObject(request)} response:{content}");
+                    _log2File.InsertHttpErrorLog(_tpName, httpResponseMessage.StatusCode, httpResponseMessage.ReasonPhrase);
+                    _log2File.InsertResponseLog(_tpName, apiUrl, json, httpResponseMessage.Content.ReadAsStringAsync().Result);
                     return null;
                 }
                 var profitLoss = JsonConvert.DeserializeObject<NextspinProfitLoss>(content);
                 if (profitLoss.Code != 0)
                 {
-                    _logger.LogError($"failed, request:{JsonConvert.SerializeObject(request)} response:{profitLoss.Msg}");
+                    _log2File.InsertHttpErrorLog(_tpName, profitLoss.Code, profitLoss.Msg);
+                    _log2File.InsertResponseLog(_tpName, apiUrl, json, JsonConvert.SerializeObject(content));
                     return null;
                 }
                 return profitLoss;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"{apiUrl} get bet list failed, request:{JsonConvert.SerializeObject(request)} exception:{ex.Message}");
+                _log2File.InsertResponseLog(_tpName, apiUrl, json, ex.Message);
                 return null;
             }
         }
+
         private HttpClientHandler CreateHandler()
         {
             var handler = new HttpClientHandler();
