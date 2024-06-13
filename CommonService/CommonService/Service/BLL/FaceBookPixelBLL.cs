@@ -13,7 +13,6 @@ namespace CommonService.Service.BLL
         private readonly HttpHelper _httpHelper;
         private readonly FaceBookPixelConfig _faceBookPixelConfig;
         private readonly CurrencyService _currencyService;
-        private readonly bool _isProduction;
         private readonly Tools _tools;
         
         
@@ -21,8 +20,6 @@ namespace CommonService.Service.BLL
         {
             _logger = provider.GetRequiredService<ILogger<FaceBookPixelBLL>>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
-            var env = provider.GetRequiredService<IWebHostEnvironment>();
-            _isProduction = env.IsProduction();
             _faceBookPixelConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<FaceBookPixelConfig>("FaceBookPixelConfig");
             _currencyService = provider.GetRequiredService<CurrencyService>();
             _tools = provider.GetRequiredService<Tools>();
@@ -31,12 +28,12 @@ namespace CommonService.Service.BLL
         public async Task<ApiResult> SendAsync(PixelRequest request)
         {
             var apiResult = new ApiResult();
-            // if (!_isProduction)
-            // {
-            //     apiResult.ErrorCode = ErrorCode.Success;
-            //     apiResult.Message = $"not production environment ignore FaceBookPixelSend always return success";
-            //     return apiResult;
-            // }
+            if (_faceBookPixelConfig.Status == 0)
+            {
+                apiResult.ErrorCode = ErrorCode.Success;
+                apiResult.Message = $"not production environment ignore FaceBookPixelSend , always return success";
+                return apiResult;
+            }
             
             try
             {
