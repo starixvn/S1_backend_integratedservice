@@ -3085,7 +3085,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 // 已結束局
                 if (bettrans.Any(a => a.Completed))
                 {
-                    logger.LogError($"{cancelDataRng_MG.betId} is completed");
+                    logger.LogError($"{cancelDataRng_MG.betId} is completed(txnId)");
+                    return new MGCancelResult() { Result = 1 };
+                }
+                // 檢查該局是否已經結算
+                var checkBetId = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLC_MG_Check", new { cancelDataRng_MG.betId });
+                if (checkBetId.Any())
+                {
+                    logger.LogError($"{cancelDataRng_MG.betId} is completed(betId)");
                     return new MGCancelResult() { Result = 1 };
                 }
 
