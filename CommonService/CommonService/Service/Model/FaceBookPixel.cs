@@ -6,6 +6,7 @@ namespace CommonService.Service.Model
 
     public class FaceBookPixelConfig
     {
+        public int Status { get; set; }
         public string ApiUrl { get; set; }
 
         public string Token { get; set; }
