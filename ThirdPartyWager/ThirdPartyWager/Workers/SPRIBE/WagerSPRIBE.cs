@@ -41,7 +41,7 @@ namespace ThirdPartyWager.Workers
                 var siteList = _thirdPartyBLL.GetTpListByTpId(TpId);
                 foreach (var siteData in siteList)
                 {
-                    var _setting = _siteConfigDic[0];
+                    var _setting = _siteConfigDic[siteData.SiteId];
 
                     if (_setting == null) continue;
                     sec = await _wagerSPRIBEBLL.ExecWagerWorker(_setting, siteData, TpType);
