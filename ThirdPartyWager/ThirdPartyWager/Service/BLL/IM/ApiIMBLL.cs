@@ -29,8 +29,8 @@ public class ApiIMBLL
 
     public async Task<IMWagerModel<T>> GetBetListByTime<T>(GetBetListByTimeParam param, Tp tp)
     {
-        var wagerUrl = param.Setting["WagerUrl"];
-        var merchantCode = param.Setting["Key"];
+        var wagerUrl = param.Setting.WagerUrl;
+        var merchantCode = param.Setting.Key;
         const string uri = "/Report/GetBetLog";
         const int pageSize = 1000; // MAX: 50000
 
@@ -56,8 +56,8 @@ public class ApiIMBLL
     /// </summary>
     public async Task<IMWagerModel<T>> GetSportsBetListByTime<T>(GetBetListByTimeParam param, Tp tp)
     {
-        var wagerUrl = param.Setting["WagerUrl"];
-        var merchantCode = param.Setting["Key"];
+        var wagerUrl = param.Setting.WagerUrl;
+        var merchantCode = param.Setting.Key;
         const string uri = "/Report/GetBetLog";
 
         var req = new IMGetSportsBetLogReq
