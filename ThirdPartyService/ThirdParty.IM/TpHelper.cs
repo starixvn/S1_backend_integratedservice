@@ -21,6 +21,8 @@ namespace ThirdParty.IM
             { TpGameType.IM_ESports, (int)ProductWallet.ESportsbull },
         };
 
+        private readonly Dictionary<int, IMConfig> _siteIMConfig;
+        private readonly Dictionary<int, SPRIBEConfig> _siteSPRIBEConfig;
         #endregion
 
         private const string ContentType = "application/json";
@@ -33,15 +35,29 @@ namespace ThirdParty.IM
             {
                 _proxy = new WebProxy(tokyoProxyConfig.ProxyHost, tokyoProxyConfig.ProxyPort);
             }
+
+            _siteIMConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<IMConfig>(TpEnum.IM.ToString());
+            _siteSPRIBEConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SPRIBEConfig>(TpEnum.SPRIBE.ToString());
         }
+
+        public class IMSPRIBEConfig : TpSiteConfig
+        {
+            public string Key { get; set; }
+            public string Prefix { get; set; }
+            public string MerchantName { get; set; }
+        }
+        public class IMConfig : IMSPRIBEConfig { }
+        public class SPRIBEConfig : IMSPRIBEConfig { }
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var apiUrl = $"{inputs["ApiUrl"]}/Player/Register";
 
+            IMSPRIBEConfig config = tpCustInfo.TpId == (int)TpEnum.IM ? _siteIMConfig[0] : _siteSPRIBEConfig[0];
+
             var signUp = new RegisterModel
             {
-                MerchantCode = inputs["Key"],
+                MerchantCode = config.Key,
                 PlayerId = tpCustInfo.TpUserName,
                 Currency = tpCustInfo.TpCurrencyId,
                 Password = tpCustInfo.TpPwd
@@ -76,9 +92,11 @@ namespace ThirdParty.IM
             var tpGameType = inputs.ContainsKey("tpGameType") && !string.IsNullOrEmpty(inputs["tpGameType"]) ? Convert.ToInt32(inputs["tpGameType"]) : (int)TpGameType.IM_Sports;
             var productWallet = _productWallet[(TpGameType)tpGameType];
 
+            IMSPRIBEConfig config = inputs["tpId"] == ((int)TpEnum.IM).ToString() ? _siteIMConfig[0] : _siteSPRIBEConfig[0];
+
             var signUp = new LaunchGameModel
             {
-                MerchantCode = inputs["Key"],
+                MerchantCode = config.Key,
                 PlayerId = playerName,
                 GameCode = inputs["gameId"],
                 Language = TpLangId,
