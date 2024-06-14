@@ -52,7 +52,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<bool> ExecWagerRedoWorker(int type, int timeRange, string tpCurrencyId)
         {
             var wokerTime = GetRedoWorkerTime(type, 1, tpCurrencyId);
-            var quick = CheckQuick(wokerTime, 120);
+            var quick = CheckQuick(wokerTime, 100);
             var time = _dateTimeHelper.GetTimeByHour(timeRange, _timeZone, _timeFormat, wokerTime);
 
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
