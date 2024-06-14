@@ -527,8 +527,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                     betReq.type = BettransType.Bonus;
                     var gameType = (int)GameType.PP_RNG;
                     _settledBLL.BonusWinRNG_PP(betReq, out decimal tpAffterAmount);
-                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, betReq.userId, (int)gameType);
-                    payoutResp.cash = tpAffterAmount;
+                    var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, betReq.userId, gameType);
+                    payoutResp.cash = tpCustBalance.Balance;
                     payoutResp.currency = tpCustBalance.TpCurrencyId;
                     payoutResp.bonus = 0;
                     payoutResp.error = 0;

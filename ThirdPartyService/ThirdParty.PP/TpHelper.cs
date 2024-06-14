@@ -314,7 +314,10 @@ namespace ThirdParty.PP
             var currency = inputs["Currency"];
             var round = inputs["Round"];
             var startDate = DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
-            var expirationDate = DateTimeOffset.Now.AddDays(30).ToUnixTimeSeconds().ToString();
+            // 判斷 inputs["ExpirationDay"] 是否有值，若沒指定則預設30天
+            var expirationDate = inputs.ContainsKey("ExpirationDay") && int.TryParse(inputs["ExpirationDay"], out int expirationDays)
+                ? DateTimeOffset.Now.AddDays(expirationDays).ToUnixTimeSeconds().ToString()
+                : DateTimeOffset.Now.AddDays(30).ToUnixTimeSeconds().ToString();
             var Uri = "/v3/http/FreeRoundsBonusAPI/v2/bonus/create";
 
             var oApiResult = new ApiResult();

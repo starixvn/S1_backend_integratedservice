@@ -25,15 +25,15 @@ namespace ThirdParty.AG
         
         Dictionary<string, string> oddsTypeDic = new Dictionary<string, string>() {
             {"MYR","GF4B" },
-            {"CNY","B" },
+            {"CNY","C" },
             {"THB","GF4A" },
             {"IDR","GF4A" },
-            {"VND ","GF4A" },
-            {"USD ","A" },
-            {"INR ","GF4A" },
-            {"JPY ","A" },
-            {"KRW ","A" },
-            {"BRL ","A" }
+            {"VND","GF4A" },
+            {"USD","GF4A" },
+            {"INR","GF4A" },
+            {"JPY","A" },
+            {"KRW","A" },
+            {"BRL","A" }
         };
 
         readonly Dictionary<string, int> langIdDic = new Dictionary<string, int>()

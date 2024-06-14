@@ -364,8 +364,12 @@ namespace ThirdPartyWager.Extensions
         {
             services.AddSingleton<ApiAMBBLL>();
             services.AddSingleton<FinanceAMBBLL>();
-
+            services.AddSingleton<WagerAMBBLL>();
+            services.AddSingleton<WagerAMBService>();
+            
             services.AddHostedService<FinanceAMB>();
+            services.AddHostedService<WagerAMB>();
+            services.AddHostedService<WagerRedoAMB>();
 
             return services;
         }

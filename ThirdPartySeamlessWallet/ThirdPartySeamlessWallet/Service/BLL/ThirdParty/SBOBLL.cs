@@ -19,41 +19,46 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly SettledService _settledService;
         private readonly ISBOService _sboService;
         private readonly ILogger<SBOBLL> _logger;
+        private readonly Dictionary<int, SBOConfig> _siteConfigDic;
+        private readonly string _tpName = Tp.SBO.ToString();
 
-        public Dictionary<int, string> SBOStatusMap = new Dictionary<int, string>()
+        public Dictionary<int, string> SBOStatusMap = new()
         {
             { 0, "running" },
             { 1, "settled " },
             { 2, "void " }
         };
 
-        private Dictionary<SBOProductType, GameType> _sboGameTypeMap = new Dictionary<SBOProductType, GameType>()
+        private readonly Dictionary<SBOProductType, GameType> _sboGameTypeMap = new()
         {
             { SBOProductType.SportsBook, GameType.SBO_Sports },
             { SBOProductType.VirtualSports, GameType.SBO_VirtualSports }
         };
 
-        public SBOBLL(ThirdPartyBLL thirdPartyBll, TpCustInfoBLL tpCustInfoBll, ILogger<SBOBLL> logger, BettingService bettingService, SettledService settledService, ISBOService sboService)
+        public SBOBLL(IServiceProvider provider)
         {
             ThirdParty = Tp.SBO;
-            _thirdPartyBLL = thirdPartyBll;
-            _tpCustInfoBLL = tpCustInfoBll;
-            _bettingService = bettingService;
-            _settledService = settledService;
-            _sboService = sboService;
-            _logger = logger;
+            _thirdPartyBLL = provider.GetService<ThirdPartyBLL>();
+            _tpCustInfoBLL = provider.GetService<TpCustInfoBLL>();
+            _bettingService = provider.GetService<BettingService>();
+            _settledService = provider.GetRequiredService<SettledService>();
+            _logger = provider.GetService<ILogger<SBOBLL>>();
+            _sboService = provider.GetService<ISBOService>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SBOConfig>(_tpName);
         }
 
         public SBOBalanceResponse GetBalance(SBOBalanceRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Username)) throw new SBOException(SBOErrorCode.UsernameEmpty);
-            var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)ThirdParty);
+
+            // 因CompanyKey都是同一組共用，只取第一筆即可，如要使用其他欄位請先確認是否可共用
+            var thirdPartySetting = _siteConfigDic.FirstOrDefault().Value;
             if (thirdPartySetting == null)
             {
-                _logger.LogError("thirdPartySetting not found");
+                _logger.LogError("siteConfig not found");
                 throw new SBOException(SBOErrorCode.CompanyKeyError);
             }
-            var companyKey = thirdPartySetting.TpSetting["CompanyKey"];
+            var companyKey = thirdPartySetting.CompanyKey;
             if (companyKey != request.CompanyKey) throw new SBOException(SBOErrorCode.CompanyKeyError);
 
             var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)ThirdParty, request.Username);

@@ -1,12 +1,9 @@
 using Newtonsoft.Json;
-
 using Serilog.Context;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -40,8 +37,8 @@ namespace ThirdPartySettleWorker.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _timerRng = new Timer(DoSettleRng, null, TimeSpan.Zero, TimeSpan.Zero);
-            _timerPoker = new Timer(DoSettlePoker, null, TimeSpan.Zero, TimeSpan.Zero);
+            _timerRng = new Timer(DoSettleRng, GameType.AMB_RNG, TimeSpan.Zero, TimeSpan.Zero);
+            _timerPoker = new Timer(DoSettlePoker, GameType.AMB_Poker, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -59,8 +56,12 @@ namespace ThirdPartySettleWorker.Workers
 
             var forContinue = false;
             var isError = false;
-            var gametype = GameType.AMB_RNG;
+            var gametype = (GameType)state;
             var tpCategory = TpCategory.Slots;
+            var logName = "Settle_AMB_RNG";
+            var bettransGet = "Service_BettransRng_AMB_Settle_Get";
+            var wagerGet = "Service_TpWagerRng_AMB_Settle_Get";
+
             try
             {
                 var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gametype);
@@ -70,44 +71,64 @@ namespace ThirdPartySettleWorker.Workers
                     throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
                 }
 
-                forContinue = unsettleList.Count() == 200;
+                forContinue = unsettleList.Count == 200;
+
                 foreach (var tpUnsettle in unsettleList)
                 {
                     try
                     {
-                        var unsettleData = _partitionService.GetUnsettleDataList<SettleData>("Service_BettransRng_AMB_Unsettle_Get_V2", tpUnsettle).FirstOrDefault();
-                        if (unsettleData != null)
+                        var unsettleData = _partitionService.GetUnsettleDataList<SettleData>(bettransGet, tpUnsettle).FirstOrDefault();
+                        if (unsettleData == null)
                         {
-                            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettleData.Account);
-                            if (tpCustInfo == null)
-                            {
-                                throw new UnsettleNotFoundException($"{unsettleData.Account} TpCustInfo not found.");
-                            }
+                            _logger.LogWarning($"{logName}:bettrans not found ({gametype})\r\n{JsonConvert.SerializeObject(tpUnsettle)}");
+                            continue;
+                        }
 
-                            var betRecordInfo = new BetRecordInfo
-                            {
-                                TpId = (int)Tp,
-                                Stake = unsettleData.Stake,
-                                ValidBet = unsettleData.ValidBet,
-                                WinlostAmount = unsettleData.WinLostAmount,
-                                TransId = tpUnsettle.TransId,
-                                GameType = gametype,
-                                TpUserName = unsettleData.Account,
-                                SettledTime = unsettleData.SettleTime,
-                                TransTime = unsettleData.TransTime,
-                                SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, unsettleData.GameId),
-                                TicketStatus = SetTicketStatus(unsettleData.WinLostAmount),
-                                GameID = unsettleData.GameId,
-                            };
+                        var wager = _tpUnSettledBLL.GetTpUnsettleData<SettleData_AMB>(wagerGet, new { _TransId = tpUnsettle.TransId, _TpUserName = unsettleData.Account }, DataBase.Wager).FirstOrDefault();
+                        if (wager == null)
+                        {
+                            _logger.LogWarning($"{logName}:wager not found ({gametype})\r\n{JsonConvert.SerializeObject(tpUnsettle)}");
+                            continue;
+                        }
 
-                            var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
-                            if (result == 1)
+                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettleData.Account);
+                        var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
+                        if (tpCurrency.ExchangeRate != 0)
+                        {
+                            wager.Stake *= tpCurrency.ExchangeRate;
+                            wager.WinLostAmount *= tpCurrency.ExchangeRate;
+                            wager.ValidBet *= tpCurrency.ExchangeRate;
+                        }
+
+                        if (wager.Stake != unsettleData.Stake || wager.WinLostAmount != unsettleData.WinLostAmount)
+                        {
+                            _logger.LogWarning($"{logName}:amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(tpUnsettle)}");
+                            continue;
+                        }
+
+                        var betRecordInfo = new BetRecordInfo
+                        {
+                            TpId = (int)Tp,
+                            Stake = unsettleData.Stake,
+                            ValidBet = wager.ValidBet,
+                            WinlostAmount = unsettleData.WinLostAmount,
+                            TransId = tpUnsettle.TransId,
+                            GameType = gametype,
+                            TpUserName = unsettleData.Account,
+                            SettledTime = unsettleData.SettleTime,
+                            TransTime = unsettleData.TransTime,
+                            SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, unsettleData.GameId),
+                            TicketStatus = SetTicketStatus(unsettleData.WinLostAmount),
+                            GameID = unsettleData.GameId,
+                        };
+
+                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
+                        if (result == 1)
+                        {
+                            Task.Run(() =>
                             {
-                                Task.Run(() =>
-                                {
-                                    _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, tpUnsettle.TransId, true);
-                                });
-                            }
+                                _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, tpUnsettle.TransId, true);
+                            });
                         }
                     }
                     catch (Exception ex1)
@@ -146,77 +167,111 @@ namespace ThirdPartySettleWorker.Workers
             }
         }
 
-        private TicketStatus SetTicketStatus(decimal winLostAmount)
-        {
-            if (winLostAmount == 0) return TicketStatus.Draw;
-
-            if (winLostAmount > 0) return TicketStatus.Win;
-
-            return TicketStatus.Lost;
-        }
-
         private void DoSettlePoker(object state)
         {
             var forContinue = false;
             var isError = false;
-            var thisTp = (int)Tp.AMB;
-            var gameType = GameType.AMB_Poker;
-            var logName = "Settle_AMB";
-            var tpName = Enum.GetName(typeof(Tp), thisTp);
+            var gameType = (GameType)state;
+            var logName = "Settle_AMB_Poker";
+            var bettransGet = "Service_BettransPK_AMB_Settle_Get";
+            var wagerGet = "Service_TpWagerPK_AMB_Settle_Get";
 
             try
             {
-                var unsettledList = _settledBLL.GetUnsettledListPK_AMB();
-
-                if (unsettledList != null)
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
+                if (!tpUnsettleList.Any())
                 {
-                    forContinue = unsettledList.Count() == 200;
-                    foreach (var unsettled in unsettledList)
+                    throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
+                }
+
+                //forContinue
+                forContinue = tpUnsettleList.Count() == 200;
+
+                foreach (var ticket in tpUnsettleList)
+                {
+                    var getUnsettledList = _tpUnSettledBLL.GetTpUnsettleData<SettleData_AMB>(bettransGet, new { _TransId = ticket.TransId }, DataBase.Main);
+                    if (getUnsettledList == null || !getUnsettledList.Any())
                     {
-                        try
+                        _logger.LogWarning($"{logName}:bettrans not found ({gameType})\r\n{JsonConvert.SerializeObject(ticket)}");
+                        continue;
+                    }
+
+                    var tpUserName = getUnsettledList.FirstOrDefault().Account;
+                    var roundid = ticket.TransId.Replace($"_{tpUserName}", "");
+
+                    var wager = _tpUnSettledBLL.GetTpUnsettleData<SettleData_AMB>(wagerGet, new { _TransId = roundid, _TpUserName = tpUserName }, DataBase.Wager).FirstOrDefault();
+                    if (wager == null)
+                    {
+                        _logger.LogWarning($"{logName}:wager not found ({gameType})\r\n{JsonConvert.SerializeObject(ticket)}");
+                        continue;
+                    }
+
+                    try
+                    {
+                        var unsettled = getUnsettledList.FirstOrDefault();
+                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
+                        var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
+
+                        decimal stake = unsettled.Stake;
+                        decimal validBet = unsettled.ValidBet;
+                        decimal winLostAmount = unsettled.WinLostAmount;
+                        decimal revenue = (decimal)unsettled.Revenue;
+
+                        if (tpCurrency.ExchangeRate != 0)
                         {
-                            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(thisTp, unsettled.Account);
-                            decimal stake = unsettled.Stake;
-                            decimal validBet = unsettled.ValidBet;
-                            decimal winLostAmount = unsettled.WinLostAmount;
-                            decimal revenue = (decimal)unsettled.Revenue;
-
-                            var betRecordInfo = new BetRecordInfo
-                            {
-                                TpId = thisTp,
-                                Stake = stake,
-                                ValidBet = validBet,
-                                Revenue = revenue,
-                                WinlostAmount = winLostAmount,
-                                TransId = unsettled.TransId,
-                                GameType = gameType,
-                                TpUserName = unsettled.Account,
-                                SettledTime = unsettled.SettleTime,
-                                TransTime = unsettled.TransTime,
-                                SettlementType = SettlementType.SettledForValid,
-                                GameID = unsettled.GameId,
-                            };
-
-                            if (unsettled.IsRefund == 1)
-                            {
-                                betRecordInfo.TicketStatus = TicketStatus.Refund;
-                            }
-
-                            var result = _settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
-                            _settledBLL.SetSettleFlag_BettransPK_AMB(unsettled.TransId);
+                            wager.Stake *= tpCurrency.ExchangeRate;
+                            wager.WinLostAmount *= tpCurrency.ExchangeRate;
+                            wager.ValidBet *= tpCurrency.ExchangeRate;
                         }
-                        catch (Exception ex1)
+
+                        if (wager.Stake != stake || wager.WinLostAmount != winLostAmount)
                         {
-                            LogContext.PushProperty("TP", tpName);
-                            isError = true;
-                            _logger.LogError(ex1,$"{logName}:{JsonConvert.SerializeObject(unsettled)}");
+                            _logger.LogWarning($"{logName}:amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettled)}");
+                            continue;
                         }
+
+                        var betRecordInfo = new BetRecordInfo
+                        {
+                            TpId = (int)Tp,
+                            Stake = stake,
+                            ValidBet = wager.ValidBet,
+                            Revenue = revenue,
+                            WinlostAmount = winLostAmount,
+                            TransId = unsettled.TransId,
+                            GameType = gameType,
+                            TpUserName = unsettled.Account,
+                            SettledTime = unsettled.SettleTime,
+                            TransTime = unsettled.TransTime,
+                            SettlementType = SettlementType.SettledForValid,
+                            GameID = unsettled.GameId,
+                        };
+
+                        if (unsettled.IsRefund == 1)
+                        {
+                            betRecordInfo.TicketStatus = TicketStatus.Refund;
+                        }
+
+                        var result = _settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
+
+                        if (result == 1)
+                        {
+                            _ = _settledBLL.SetSettleFlag_BettransPK_AMB(unsettled.TransId);
+                            _ = _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, unsettled.TransId, true);
+                        }
+
+                    }
+                    catch (Exception ex1)
+                    {
+                        LogContext.PushProperty("TP", _tpName);
+                        isError = true;
+                        _logger.LogError(ex1, $"{logName}:{JsonConvert.SerializeObject(ticket)}");
                     }
                 }
+
             }
             catch (Exception ex)
             {
-                LogContext.PushProperty("TP", tpName);
+                LogContext.PushProperty("TP", _tpName);
                 _logger.LogError(ex, $"{logName}:{ex.Message}");
                 isError = true;
             }
@@ -235,6 +290,15 @@ namespace ThirdPartySettleWorker.Workers
 
                 _timerPoker?.Change(dueTimeSpan, TimeSpan.Zero);
             }
+        }
+
+        private static TicketStatus SetTicketStatus(decimal winLostAmount)
+        {
+            if (winLostAmount == 0) return TicketStatus.Draw;
+
+            if (winLostAmount > 0) return TicketStatus.Win;
+
+            return TicketStatus.Lost;
         }
     }
 }

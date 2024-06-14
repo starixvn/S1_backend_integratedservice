@@ -53,7 +53,8 @@ namespace ThirdPartyService.Service.Worker
                             { "GameId", "vs20olympnova88" },
                             { "BonusCode", bonusCode },
                             { "Round", item.Round.ToString() },
-                            { "Currency", item.TpCurrencyId }
+                            { "Currency", item.TpCurrencyId },
+                            { "ExpirationDay","8"} //有效期限8天
                         };
                         var p = new CreateBonusCode()
                         {
@@ -93,9 +94,9 @@ namespace ThirdPartyService.Service.Worker
 
         private static string BonusCodeRule(GiftInfo giftInfo)
         {
-            //BonusCode規則。ex.PPFREESPIN100FORNOVA8820240306
+            //BonusCode規則。ex.PP2FREESPIN100FORNOVA8820240306
             //排程預先建立隔一日的bonuscode
-            var bonusCode = $"PPFREESPIN{giftInfo.Round}FOR{giftInfo.SiteName.ToUpper()}{DateTime.UtcNow.AddDays(1).ToString("yyyyMMdd")}";
+            var bonusCode = $"PP{giftInfo.CurrencyId}FREESPIN{giftInfo.Round}FOR{giftInfo.SiteName.ToUpper()}{DateTime.UtcNow.AddDays(1).ToString("yyyyMMdd")}";
             return bonusCode;
         }
 

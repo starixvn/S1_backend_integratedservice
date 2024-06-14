@@ -1,21 +1,19 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
-using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class FinanceAMBBLL : ITpReportBLL
     {
-        
+
         private readonly ILogger<FinanceAMBBLL> _logger;
         private readonly CommonBLL _commonBLL;
         private readonly ApiAMBBLL _apiAMBBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = 0; // 報表帶入參數為日期格式，對方API預設+8，後續功能有運用需將tpbetrecord轉換時間+8時間比對
-        private readonly List<int> _gameTypeList = new List<int>() { (int)GameType.AMB_Poker, /*(int)GameType.AMB_RNG*/ };
+        private readonly List<int> _gameTypeList = new List<int>() { (int)GameType.AMB_Poker, (int)GameType.AMB_RNG };
         private readonly int _tpId = (int)Tp.AMB;
         private readonly IEnumerable<TpCurrency> _tpCurrencyList;
 
@@ -77,34 +75,43 @@ namespace ThirdPartyWager.Service.BLL
                 foreach (var gameType in _gameTypeList)
                 {
                     // CNY、USD Poker未開放 暫時排除
-                    if (currency == "USD" || currency == "CNY")
+                    if (gameType == (int)GameType.AMB_Poker && (currency == "USD" || currency == "CNY"))
                     {
                         continue;
                     }
 
-                    CurrencyStats_AMB getWagerSummary = await _apiAMBBLL.GetBetSummaryByTime(currency, gameType, reportTime.startTime, reportTime.endTime);
-                    if (getWagerSummary.status.code != 0)
+                    // pagination
+                    var page = 1;
+                    int totalPage = 1;
+                    var perPage = 500;
+                    while (page <= totalPage)
                     {
-                        var msg = "THIRD_PARTY_ERROR";
-                        _logger.LogError($"{msg}\r\n{gameType}\r\n{currency}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                        SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
-                        throw systemException;
-                    }
-
-                    if (getWagerSummary.status.code == 0 && getWagerSummary.data.response == null)
-                    {
-                        var msg = "NO_DATA";
-                        _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                        continue;
-                    }
-
-                    foreach (var dataList in getWagerSummary.data.response)
-                    {
-                        foreach (var data in dataList.result)
+                        CurrencyStats_AMB getWagerSummary = await _apiAMBBLL.GetBetSummaryByTime(currency, gameType, reportTime.startTime, reportTime.endTime, perPage, page);
+                        if (getWagerSummary.status.code != 0)
                         {
-                            data.TpCurrencyId = currency;
-                            reportData.Add(data);
+                            var msg = "THIRD_PARTY_ERROR";
+                            _logger.LogError($"{msg}\r\n{gameType}\r\n{currency}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                            SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
+                            throw systemException;
                         }
+
+                        if (getWagerSummary.status.code == 0 && getWagerSummary.data.response == null && getWagerSummary.data.pageNumber == 0)
+                        {
+                            var msg = "NO_DATA";
+                            _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                            continue;
+                        }
+                        totalPage = (getWagerSummary.data.totalRecords / perPage) + 1;
+
+                        foreach (var dataList in getWagerSummary.data.response)
+                        {
+                            foreach (var data in dataList.result)
+                            {
+                                data.TpCurrencyId = currency;
+                                reportData.Add(data);
+                            }
+                        }
+                        page++;
                     }
                 }
             }
