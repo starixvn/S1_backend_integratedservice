@@ -53,7 +53,7 @@ namespace ThirdParty.IM
         {
             var apiUrl = $"{inputs["ApiUrl"]}/Player/Register";
 
-            IMSPRIBEConfig config = tpCustInfo.TpId == (int)TpEnum.IM ? _siteIMConfig[0] : _siteSPRIBEConfig[0];
+            IMSPRIBEConfig config = tpCustInfo.TpId == (int)TpEnum.IM ? _siteIMConfig[tpCustInfo.TpId] : _siteSPRIBEConfig[tpCustInfo.TpId];
 
             var signUp = new RegisterModel
             {
@@ -92,7 +92,7 @@ namespace ThirdParty.IM
             var tpGameType = inputs.ContainsKey("tpGameType") && !string.IsNullOrEmpty(inputs["tpGameType"]) ? Convert.ToInt32(inputs["tpGameType"]) : (int)TpGameType.IM_Sports;
             var productWallet = _productWallet[(TpGameType)tpGameType];
 
-            IMSPRIBEConfig config = inputs["tpId"] == ((int)TpEnum.IM).ToString() ? _siteIMConfig[0] : _siteSPRIBEConfig[0];
+            IMSPRIBEConfig config = inputs["tpId"] == ((int)TpEnum.IM).ToString() ? _siteIMConfig[tpCustInfo.SiteId] : _siteSPRIBEConfig[tpCustInfo.SiteId];
 
             var signUp = new LaunchGameModel
             {
