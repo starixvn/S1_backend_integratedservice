@@ -51,6 +51,8 @@
         Endorphina = 49,
         Nextspin = 50,
         PlayTech = 51,
+        IM = 52,
+        SPRIBE = 53,
         PNG = 54,
         FaChai = 55,
         Pegasus = 56,

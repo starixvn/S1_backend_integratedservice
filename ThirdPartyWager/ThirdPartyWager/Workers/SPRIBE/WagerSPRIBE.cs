@@ -2,6 +2,7 @@ using Serilog.Context;
 
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Workers
 {
@@ -15,12 +16,14 @@ namespace ThirdPartyWager.Workers
         private const int TpType = (int)WagerTimerType.Wager;
         private readonly string _tpName = Tp.SPRIBE.ToString();
         private const int TpId = (int)Tp.SPRIBE;
+        private readonly Dictionary<int, SPRIBEConfig> _siteConfigDic;
 
         public WagerSPRIBE(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<WagerSPRIBE>>();
             _wagerSPRIBEBLL = provider.GetRequiredService<WagerSPRIBEBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SPRIBEConfig>(Tp.SPRIBE.ToString());
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -38,7 +41,10 @@ namespace ThirdPartyWager.Workers
                 var siteList = _thirdPartyBLL.GetTpListByTpId(TpId);
                 foreach (var siteData in siteList)
                 {
-                    sec = await _wagerSPRIBEBLL.ExecWagerWorker(siteData, TpType);
+                    var _setting = _siteConfigDic[0];
+
+                    if (_setting == null) continue;
+                    sec = await _wagerSPRIBEBLL.ExecWagerWorker(_setting, siteData, TpType);
                 }
             }
             catch (Exception ex)

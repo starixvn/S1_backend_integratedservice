@@ -2,6 +2,7 @@ using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL;
 
@@ -34,7 +35,7 @@ public class WagerSPRIBEBLL
         _logger = provider.GetRequiredService<ILogger<WagerSPRIBEBLL>>();
     }
 
-    public async Task<int> ExecWagerWorker(TpListModel siteData, int type)
+    public async Task<int> ExecWagerWorker(SPRIBEConfig config, TpListModel siteData, int type)
     {
         var siteId = siteData.SiteId;
         const int runTime = 120; // sec
@@ -55,7 +56,7 @@ public class WagerSPRIBEBLL
         if (time.endUnix >= cvTime)
             return runTime;
 
-        var result = await GetWagersAsync(time, siteData, IMProductWalletEnum.IMSlot);
+        var result = await GetWagersAsync(time, siteData, IMProductWalletEnum.IMSlot, config);
         if (result)
             _thirdPartyBll.SetThirdPartyTimerByReference(TpId, type, time.endUnix, gameType, siteId.ToString());
 
@@ -65,7 +66,7 @@ public class WagerSPRIBEBLL
 
     #region Private
 
-    private async Task<bool> GetWagersAsync(TimeCast wagerTime, TpListModel tpInfo, IMProductWalletEnum productWallet)
+    private async Task<bool> GetWagersAsync(TimeCast wagerTime, TpListModel tpInfo, IMProductWalletEnum productWallet, SPRIBEConfig config)
     {
         const string workerName = "SPRIBE_GetWagers";
         string msg;
@@ -73,7 +74,7 @@ public class WagerSPRIBEBLL
         {
             var param = new GetBetListByTimeParam
             {
-                Setting = tpInfo.SettingDic,
+                Setting = config,
                 ProductWallet = productWallet,
                 StartTime = wagerTime.startTime,
                 EndTime = wagerTime.endTime
