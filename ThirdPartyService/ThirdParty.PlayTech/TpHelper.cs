@@ -1,7 +1,9 @@
 ﻿using System.Text;
 using System.Web;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -13,35 +15,20 @@ namespace ThirdParty.PlayTech
     {
         #region PlayTech Configs Setting
 
-        private class TpConfig
-        {
-            public string ApiUrl { get; set; }
-
-            public string GameUrl { get; set; }
-
-            public string BrandId { get; set; }
-
-            public string BrandName { get; set; }
-
-            public string SecretKey { get; set; }
-
-            public TpConfig(Dictionary<string, string> inputs)
-            {
-                ApiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception("ApiUrl");
-                GameUrl = inputs.GetValueOrDefault("GameUrl") ?? throw new Exception("GameUrl");
-                BrandId = inputs.GetValueOrDefault("BrandId") ?? throw new Exception("BrandId");
-                BrandName = inputs.GetValueOrDefault("BrandName") ?? throw new Exception("BrandName");
-                SecretKey = inputs.GetValueOrDefault("SecretKey") ?? throw new Exception("SecretKey");
-            }
-        }
-
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
+        private readonly Dictionary<int, PlayTechConfig> _sitePlayTechConfig;
 
-        public TpHelper()
+        public TpHelper(IServiceProvider provider)
         {
             _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.PlayTech).ToDictionary(d => d.AppId, d => d.Name);
+            _sitePlayTechConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<PlayTechConfig>(TpEnum.PlayTech.ToString());
         }
-
+        public class PlayTechConfig : TpSiteConfig
+        {
+            public string BrandId { get; set; }
+            public string BrandName { get; set; }
+            public string SecretKey { get; set; }
+        }
         #endregion
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -161,7 +148,7 @@ namespace ThirdParty.PlayTech
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var tpConfig = new TpConfig(inputs);
+            var tpConfig = _sitePlayTechConfig[tpCustInfo.SiteId];
             string gameId = inputs.GetValueOrDefault("gameId") ?? throw new Exception("gameId");
             int tpGameType = (gameId == "0" || gameId == "" || int.Parse(inputs.GetValueOrDefault("tpGameType", "0")) == (int)TpGameType.PlayTech_LiveCasino) ? (int)TpGameType.PlayTech_LiveCasino : (int)TpGameType.PlayTech_RNG;
             string fun = inputs.GetValueOrDefault("fun") ?? "0";
