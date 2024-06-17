@@ -1484,6 +1484,16 @@ namespace ThirdPartyService.Service.BLL
                     .Where(item => item.MaintainCheck(DateTime.UtcNow)));
         }
 
+        private IEnumerable<TpGameIdListData> GetTpGameIdList()
+        {
+            var key = $"GetTpGameIdList";
+            return _cacheHelper.TryGetOrCreate(
+                key,
+                new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(10)),
+                i => thirdPartyHelper.GetTpGameIdList().ToList()
+            );
+        }
+
         private decimal DealTransferAmount(decimal amount, decimal exchangeRate, int tpId, out decimal credit, out bool execute, out bool skip)
         {
             execute = true;
@@ -1532,13 +1542,45 @@ namespace ThirdPartyService.Service.BLL
             {
                 if (!int.TryParse(tpInfo.inputs.GetValueOrDefault("tpGameType"), out var tpGameType))
                 {
-                    _logger.LogError($"SetRecentlyPlayed tpGameType Error. tpInfo:{JsonConvert.SerializeObject(tpInfo)}");
-                    return;
+                    if (string.IsNullOrEmpty(tpInfo.inputs.GetValueOrDefault("tpGameType")))
+                    {
+                        var tpGameId = GetTpGameIdList();
+                        if (tpGameId == null && !tpGameId.Any())
+                        {
+                            _logger.LogWarning($"SetRecentlyPlayed tpGameType(tpGameId) Error. tpInfo:{JsonConvert.SerializeObject(tpInfo)}");
+                            return;
+                        }
+
+                        var gameId = tpInfo.inputs.ContainsKey("gameId") ? tpInfo.inputs["gameId"] : "0";
+                        gameId = (gameId == "undefined" || gameId == "null") ? "" : gameId;
+                        var betType = tpInfo.inputs.ContainsKey("bettype") ? tpInfo.inputs["bettype"] : "";
+                        var getDbTpGameType = string.Empty;
+
+                        if (tpInfo.inputs.ContainsKey("gameType") && string.Equals(tpInfo.inputs["gameType"], "slots", StringComparison.OrdinalIgnoreCase))
+                        {
+                             getDbTpGameType = tpGameId?.FirstOrDefault(i => i.TpId == tpInfo.TpId)?.TpGameType.ToString() ?? string.Empty;
+                        }
+                        if (tpInfo.TpId == (int)TpEnum.SBSW)
+                        {
+                             getDbTpGameType = tpGameId?.FirstOrDefault(i => i.TpId == tpInfo.TpId && i.GameId == gameId && i.BetType == betType)?.TpGameType.ToString() ?? string.Empty;
+                        }
+                        // 其他情況暫不處理
+                        if (string.IsNullOrEmpty(getDbTpGameType))
+                        {
+                            _logger.LogWarning($"SetRecentlyPlayed tpGameType(getDbTpGameType) Error. tpInfo:{JsonConvert.SerializeObject(tpInfo)}");
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"SetRecentlyPlayed tpGameType Error. tpInfo:{JsonConvert.SerializeObject(tpInfo)}");
+                        return;
+                    }
                 }
 
                 if (!_tpGameTypeConfig.TryGetValue(tpGameType, out var gameTypeOption))
                 {
-                    _logger.LogError($"SetRecentlyPlayed _tpGameTypeConfig Error. tpInfo:{JsonConvert.SerializeObject(tpInfo)}");
+                    _logger.LogWarning($"SetRecentlyPlayed _tpGameTypeConfig Error. tpInfo:{JsonConvert.SerializeObject(tpInfo)}");
                     return;
                 }
 

@@ -94,6 +94,11 @@ namespace ThirdPartyService.Service.DAL
             return _mainDbClient.Query<TpMaintain>("TpMaintain_Get", new { SiteId = siteId });
         }
 
+        public IEnumerable<TpGameIdListData> GetTpGameIdList()
+        {
+            return _mainDbClient.Query<TpGameIdListData>("Member_TpGameId_Get", null);
+        }
+
         private bool CheckConstructor(Type type)
         {
             foreach (var constructor in type.GetConstructors())
