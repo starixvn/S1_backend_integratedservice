@@ -13,7 +13,7 @@ using ThirdPartySeamlessWallet.Service.DAL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.Options;
-
+ 
 namespace ThirdPartySeamlessWallet
 {
     public class Startup
