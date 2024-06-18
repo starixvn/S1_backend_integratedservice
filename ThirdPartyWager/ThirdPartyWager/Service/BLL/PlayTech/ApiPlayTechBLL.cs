@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -23,11 +24,11 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<ApiPlayTechBLL>>();
         }
 
-        public async Task<WagerPlayTechModel> GetBetListByTime(dynamic setting, string startTime, string endTime, int page)
+        public async Task<WagerPlayTechModel> GetBetListByTime(PlayTechConfig config, string startTime, string endTime, int page)
         {
-            string wagerUrl = setting["WagerUrl"];
-            string brandId = setting["BrandId"];
-            string SecretKey = setting["SecretKey"];
+            string wagerUrl = config.WagerUrl;
+            string brandId = config.BrandId;
+            string SecretKey = config.SecretKey;
             string uri = "/history/game";
             // param
             var param = new
@@ -52,11 +53,11 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task<CurrencyStats_PlayTech> GetBetSummaryByTime(dynamic setting, string startTime, string endTime)
+        public async Task<CurrencyStats_PlayTech> GetBetSummaryByTime(PlayTechConfig config, string startTime, string endTime)
         {
-            string wagerUrl = setting["WagerUrl"];
-            string brandId = setting["BrandId"];
-            string SecretKey = setting["SecretKey"];
+            string wagerUrl = config.WagerUrl;
+            string brandId = config.BrandId;
+            string SecretKey = config.SecretKey;
             string uri = "/history/gameReport";
             // param
             var param = new
