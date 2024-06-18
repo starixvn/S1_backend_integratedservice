@@ -2,6 +2,7 @@
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -12,6 +13,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly CommonBLL _commonBLL;
         private readonly ApiPlayTechBLL _apiPlayTechBLL;
         private readonly DateTimeHelper _dateTimeHelper;
+        private readonly Dictionary<int, PlayTechConfig> _siteConfigDic;
         private readonly int _timeZone = 0;
 
         public FinancePlayTechBLL(IServiceProvider provider)
@@ -21,6 +23,7 @@ namespace ThirdPartyWager.Service.BLL
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _apiPlayTechBLL = provider.GetRequiredService<ApiPlayTechBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<PlayTechConfig>(Tp.PlayTech.ToString());
         }
 
         public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
@@ -76,8 +79,8 @@ namespace ThirdPartyWager.Service.BLL
             var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
             foreach (var site in siteList)
             {
-                setting = site.SettingDic;
-                var getWagerSummary = await _apiPlayTechBLL.GetBetSummaryByTime(setting, reportTime.startTime, reportTime.endTime);
+                var config = _siteConfigDic[site.SiteId];
+                var getWagerSummary = await _apiPlayTechBLL.GetBetSummaryByTime(config, reportTime.startTime, reportTime.endTime);
                 if (getWagerSummary.error != "0")
                 {
                     var msg = "THIRD_PARTY_ERROR";
