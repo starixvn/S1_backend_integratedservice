@@ -3,6 +3,7 @@ using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -28,7 +29,7 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<WagerPlayTechBLL>>();
         }
 
-        public async Task<bool> ExecWagerWorker(TpListModel siteData, int type, int timeRange)
+        public async Task<bool> ExecWagerWorker(TpListModel siteData, int type, int timeRange, PlayTechConfig config)
         {
             var siteId = siteData.SiteId;
             var wokerTime = GetWorkerTime(type, -120, siteId);
@@ -38,7 +39,7 @@ namespace ThirdPartyWager.Service.BLL
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
             {
-                var result = await GetWagersAsync(time, siteData);
+                var result = await GetWagersAsync(config, time, siteData);
                 if (result)
                 {
                     _thirdPartyBLL.SetThirdPartyTimerByReference(_tpId, type, time.endUnix, _gameType, siteId.ToString());
@@ -48,7 +49,7 @@ namespace ThirdPartyWager.Service.BLL
             return quick;
         }
 
-        public async Task<bool> ExecWagerRedoWorker(TpListModel siteData, int type, int timeRange)
+        public async Task<bool> ExecWagerRedoWorker(TpListModel siteData, int type, int timeRange, PlayTechConfig config)
         {
             var siteId = siteData.SiteId;
             var wokerTime = GetWorkerTime(type, 1, siteId);
@@ -58,7 +59,7 @@ namespace ThirdPartyWager.Service.BLL
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
             {
-                var result = await GetWagersAsync(time, siteData, true);
+                var result = await GetWagersAsync(config, time, siteData, true);
                 if (result)
                 {
                     _thirdPartyBLL.SetThirdPartyTimerByReference(_tpId, type, time.endUnix, 0, siteId.ToString());
@@ -68,7 +69,7 @@ namespace ThirdPartyWager.Service.BLL
             return quick;
         }
 
-        public async Task<bool> GetWagersAsync(TimeCast wagerTime, TpListModel siteData, bool redo = false)
+        public async Task<bool> GetWagersAsync(PlayTechConfig config, TimeCast wagerTime, TpListModel siteData, bool redo = false)
         {
             var workerName = redo ? "GetRedoWagersAsync" : "GetWagersAsync";
             string msg;
@@ -76,7 +77,6 @@ namespace ThirdPartyWager.Service.BLL
             {
                 // get api info
                 var siteId = siteData.SiteId;
-                var setting = siteData.SettingDic;
 
                 // pagination
                 var page = 1;
@@ -84,7 +84,7 @@ namespace ThirdPartyWager.Service.BLL
                 while (page <= totalPage)
                 {
                     // get wager
-                    var dataWager = await _apiPlayTechBLL.GetBetListByTime(setting, wagerTime.startTime, wagerTime.endTime, page);
+                    var dataWager = await _apiPlayTechBLL.GetBetListByTime(config, wagerTime.startTime, wagerTime.endTime, page);
 
                     // error condition
                     if (dataWager == null || dataWager.error != "0")
