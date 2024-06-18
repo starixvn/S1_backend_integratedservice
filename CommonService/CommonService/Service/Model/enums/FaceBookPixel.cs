@@ -3,12 +3,12 @@
 public enum FaceBookPixel
 {
     registerSubmit = 1,
-    completeRegistration = 2,
+    CompleteRegistration = 2,
     depositSubmit = 3,
     firstDeposit = 4,
     withdraw = 5,
     firstDepositArrival = 6,
-    purchase = 7,
+    Purchase = 7,
     redeposit = 8,
     startTrial = 9
 }
