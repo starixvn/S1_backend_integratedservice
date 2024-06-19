@@ -21,7 +21,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<NextspinFinancBLL> _logger;
         private readonly Dictionary<int, NextspinConfig> _siteConfigDic;
 
-        public NextspinFinancBLL(ServiceProvider provider)
+        public NextspinFinancBLL(IServiceProvider provider)
         {
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _apiNextspinBll = provider.GetRequiredService<INextspinApi>();
