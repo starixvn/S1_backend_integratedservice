@@ -148,7 +148,7 @@ namespace CommonService.Service.DAL
 
         public int InsertOTPLog(OTPLog oTPLog)
         {
-            var result = _mainDbClient.Execute("Service_OTPLog_Ins", oTPLog);
+            var result = _mainDbClient.Execute("Service_OTPLog_Ins_V2", oTPLog);
             return result;
         }
 
