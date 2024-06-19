@@ -1,6 +1,7 @@
 ﻿using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -17,6 +18,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly IWagerNextspinService _wagerService;
         private readonly ILogger<NextspinBLL> _logger;
         private readonly List<int> _siteList;
+        private readonly Dictionary<int, NextspinConfig> _siteConfigDic;
 
         public NextspinBLL(IServiceProvider provider)
         {
@@ -26,6 +28,7 @@ namespace ThirdPartyWager.Service.BLL
             _apiNextspinBll = provider.GetRequiredService<INextspinApi>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _siteList = _commonBLL.GetSiteByTpGameType((int)GameType.Nextspin_RNG).ToList();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<NextspinConfig>(Tp.Nextspin.ToString());
         }
 
         public async Task<bool> GetWagersAsync(string startTime, string endTime)
@@ -34,13 +37,13 @@ namespace ThirdPartyWager.Service.BLL
             {
                 foreach (var siteId in _siteList)
                 {
-                    var setting = _thirdPartyBLL.GetThirdPartyBySite<NextspinSetting>((int)Tp.Nextspin, siteId);
+                    var config = _siteConfigDic[siteId];
 
                     var page = 1;
                     int count;
                     do
                     {
-                        var betHistory = await _apiNextspinBll.GetBetHistory(startTime, endTime, page, setting);
+                        var betHistory = await _apiNextspinBll.GetBetHistory(startTime, endTime, page, config);
 
                         if (betHistory == null) return false;
 
