@@ -119,7 +119,8 @@ namespace ThirdParty.PP
             string cashierUrl = inputs.ContainsKey("CashierUrl") && !string.IsNullOrEmpty(inputs["CashierUrl"]) ? inputs["CashierUrl"] : "";
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
-            string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "";
+            string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
+            string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : homeUrl;
 
             string Uri = "/v3/http/CasinoGameAPI/game/url/";
             var parameters = new Dictionary<string, string>()
@@ -328,7 +329,7 @@ namespace ThirdParty.PP
             {
                 oApiResult.RawMessage = "betValues No result";
                 oApiResult.RawErrorCode = "1";
-                oApiResult.ErrorCode = ErrorCode.Fail; 
+                oApiResult.ErrorCode = ErrorCode.Fail;
                 return oApiResult;
             }
 
@@ -342,7 +343,7 @@ namespace ThirdParty.PP
             newGameList.gameList.Add(gameList);
 
             var totalJson = JsonConvert.SerializeObject(newGameList);
- 
+
             var parameters = new Dictionary<string, string>()
             {
                 { "secureLogin", secureLogin },
@@ -459,5 +460,5 @@ namespace ThirdParty.PP
             return null;
         }
 
-    }    
+    }
 }
