@@ -182,6 +182,42 @@ namespace CommonService.Controllers
         }
 
         [HttpPost]
+        public ApiResult SignUpVerifyOTP(SignUpVerifyOTPReq req)
+        {
+            var apiResult = new ApiResult();
+
+            try
+            {
+                _logger.LogInformation($"PhoneNo: {req.AreaPhoneNo}\r\nInput: {req.InputOTP}");
+
+                if (req.InputOTP.Length >= 10)
+                {
+                    apiResult.ErrorCode = ErrorCode.Fail;
+                    return apiResult;
+                }
+
+                var getOtpVerifyResult = _oTPSMSBLL.GetSignUpOTPVerifyInfo(req.AreaPhoneNo);
+
+                if (getOtpVerifyResult.ErrorCode == 0)
+                {
+                    apiResult = _oTPSMSBLL.SignUpVerifyOTP(req);
+                }
+                else
+                {
+                    apiResult.ErrorCode = getOtpVerifyResult.ErrorCode;
+                }
+            }
+            catch (Exception ex)
+            {
+                var msg = $"SignUpVerifyOTP || {ex.Message}";
+                apiResult.RawMessage = msg;
+                _logger.LogError(ex, msg);
+            }
+
+            return apiResult;
+        }
+            
+        [HttpPost]
         public ApiResult<SendOTPSMSResult> GetOTPVerifyInfo(RequestObject req)
         {
             var apiResult = new ApiResult<SendOTPSMSResult>();

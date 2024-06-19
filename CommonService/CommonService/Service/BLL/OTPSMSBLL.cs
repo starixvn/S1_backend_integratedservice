@@ -67,6 +67,14 @@ namespace CommonService.Service.BLL
             return apiResult;
         }
 
+        public ApiResult SignUpVerifyOTP(SignUpVerifyOTPReq verifyOtpReq)
+        {
+            var apiResult = new ApiResult();
+            var result = _otpSmsService.SignUpVerifyOTP(verifyOtpReq);
+            apiResult.ErrorCode = (ErrorCode)result;
+            return apiResult;
+        }
+        
         public int InsertOTPLog(OTPLog oTPLog)
         {
             return _otpSmsService.InsertOTPLog(oTPLog);
