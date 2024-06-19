@@ -121,6 +121,30 @@ namespace CommonService.Service.DAL
             }
             return result;
         }
+        
+        public int SignUpVerifyOTP(SignUpVerifyOTPReq verifyOTPReq)
+        {
+            var p = new DynamicParameters(new
+            {
+                CustId = 0,
+                _OTPType = (int)OtpType.SignUp,
+                OTPNumInput = verifyOTPReq.InputOTP
+            });
+
+            p.Add("OTPResult", dbType: DbType.Int32, direction: ParameterDirection.Output);
+            _mainDbClient.Execute("Service_VerifyOTPinfo_Get", p);
+            var result = p.Get<int>("OTPResult");
+            if (result == 0)
+            {
+                OTPLogVerify(new OTPLog
+                {
+                    CustId = 0,
+                    OTPType = (int)OtpType.SignUp,
+                    OTPNum = verifyOTPReq.InputOTP
+                });
+            }
+            return result;
+        }
 
         public int InsertOTPLog(OTPLog oTPLog)
         {
