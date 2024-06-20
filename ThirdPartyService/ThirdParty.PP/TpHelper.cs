@@ -1,7 +1,11 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Net;
+using System.Text.RegularExpressions;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
@@ -131,7 +135,7 @@ namespace ThirdParty.PP
                 { "technology", "H5"},
                 { "platform", (appType == AppType.Desktop) ? "WEB" : "MOBILE" },
                 { "language", TpLangId },
-                { "lobbyUrl", lobbyUrl },
+                { "lobbyUrl", WebUtility.UrlEncode(lobbyUrl) },
                 { "cashierUrl", cashierUrl },
                 { "playMode", (fun.Equals("1", StringComparison.OrdinalIgnoreCase)) ? "DEMO" : "REAL" },
                 { "stylename", SecureLogin },
