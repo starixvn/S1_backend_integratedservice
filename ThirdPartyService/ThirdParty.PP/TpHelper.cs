@@ -135,7 +135,7 @@ namespace ThirdParty.PP
                 { "technology", "H5"},
                 { "platform", (appType == AppType.Desktop) ? "WEB" : "MOBILE" },
                 { "language", TpLangId },
-                { "lobbyUrl", WebUtility.UrlEncode(lobbyUrl) },
+                { "lobbyUrl", lobbyUrl },
                 { "cashierUrl", cashierUrl },
                 { "playMode", (fun.Equals("1", StringComparison.OrdinalIgnoreCase)) ? "DEMO" : "REAL" },
                 { "stylename", SecureLogin },
