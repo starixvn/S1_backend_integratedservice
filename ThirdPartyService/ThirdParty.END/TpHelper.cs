@@ -1,8 +1,10 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using System.Web;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -14,36 +16,21 @@ namespace ThirdParty.END
     {
         #region  Configs Setting
 
-        private class TpConfig
+        private readonly Dictionary<int, ENDConfig> _siteConfig;
+        public class ENDConfig : TpSiteConfig
         {
-            public string ApiUrl { get; set; }
-
-            public string GameUrl { get; set; }
-
             public string FunGameUrl { get; set; }
-
             public string NodeId { get; set; }
-
             public string EdemoId { get; set; }
-
             public string SecretKey { get; set; }
-
-            public TpConfig(Dictionary<string, string> inputs)
-            {
-                ApiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception("ApiUrl");
-                GameUrl = inputs.GetValueOrDefault("GameUrl") ?? throw new Exception("GameUrl");
-                FunGameUrl = inputs.GetValueOrDefault("FunGameUrl") ?? throw new Exception("FunGameUrl");
-                NodeId = inputs.GetValueOrDefault("NodeId") ?? throw new Exception("NodeId");
-                EdemoId = inputs.GetValueOrDefault("EdemoId") ?? throw new Exception("EdemoId");
-                SecretKey = inputs.GetValueOrDefault("SecretKey") ?? throw new Exception("SecretKey");
-            }
         }
 
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
 
-        public TpHelper()
+        public TpHelper(IServiceProvider provider)
         {
             _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.Endorphina).ToDictionary(d => d.AppId, d => d.Name);
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<ENDConfig>(TpEnum.Endorphina.ToString());
         }
 
         #endregion
@@ -99,7 +86,7 @@ namespace ThirdParty.END
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var tpConfig = new TpConfig(inputs);
+            var tpConfig = _siteConfig[tpCustInfo.SiteId];
 
             var tpCurrency = new TpCurrency()
             {
@@ -171,7 +158,7 @@ namespace ThirdParty.END
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var tpConfig = new TpConfig(inputs);
+            var tpConfig = _siteConfig[tpCustInfo.SiteId];
             string gameId = inputs.GetValueOrDefault("gameId") ?? throw new Exception("gameId");
             string fun = inputs.GetValueOrDefault("fun") ?? "0";
             string homeUrl = inputs.GetValueOrDefault("homeUrl") ?? "";
@@ -226,42 +213,6 @@ namespace ThirdParty.END
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
-        }
-
-        private ApiResult<List<GamesResponse>> GetGameList(string TpCurrencyId, AppType appType, Dictionary<string, string> inputs)
-        {
-            var tpConfig = new TpConfig(inputs);
-            var url = $"{tpConfig.ApiUrl}/api/seamless/rest/v1/games";
-            var gameListReq = new
-            {
-                currency = TpCurrencyId,
-                nodeId = tpConfig.NodeId,
-            };
-            var dicP = FromJson<Dictionary<string, dynamic>>(ToJson(gameListReq));
-            var sParam = string.Join("", dicP.Where(x => x.Value != null).OrderBy(kp => kp.Key).Select(kp => kp.Value).ToArray());
-            var p = $"{sParam}{tpConfig.SecretKey}";
-            var sign = EncryptSha1(p).ToLower();
-
-            var queryParam = $"currency={gameListReq.currency}&nodeId={gameListReq.nodeId}&sign={sign}";
-            var json = HttpGet(url, queryParam, "application/x-www-form-urlencoded");
-
-            var oApiResult = new ApiResult<List<GamesResponse>>
-            {
-                Data = new List<GamesResponse>()
-            };
-
-            if (IsJSON(json))
-            {
-                var data = JsonConvert.DeserializeObject<List<GamesResponse>>(json);
-
-                if (data != null && data.Any())
-                {
-                    oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Data = data;
-                }
-            }
-
-            return oApiResult;
         }
 
         private string EncryptSha1(string str)
