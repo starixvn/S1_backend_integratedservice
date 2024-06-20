@@ -163,7 +163,6 @@ namespace ThirdParty.END
             string fun = inputs.GetValueOrDefault("fun") ?? "0";
             string homeUrl = inputs.GetValueOrDefault("homeUrl") ?? "";
             string token = inputs.GetValueOrDefault("Token") ?? throw new Exception("Token");
-            string FunGameUrl = inputs.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(inputs["FunGameUrl"]) ? inputs["FunGameUrl"] : throw new Exception("FunGameUrl");
 
             ApiResult oApiResult = new ApiResult();
             if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
