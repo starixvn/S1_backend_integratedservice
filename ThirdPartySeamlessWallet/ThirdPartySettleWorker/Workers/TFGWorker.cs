@@ -108,11 +108,9 @@ namespace ThirdPartySettleWorker.Workers
                             transTime = wagerData.unix_date_created;
                             settledTime = wagerData.unix_settlement_datetime;
                             if (
-                                // 正常情境
-                                !(betData.amount == wagerData.amount && (wagerData.earnings == null || wagerData.earnings == earnings))
-                                || 
-                                // 半輸
-                                !(betData.amount == wagerData.amount && (wagerData.earnings == null || (wagerData.earnings * 2) == earnings))
+                                // 正常情境 + 半輸
+                                !(betData.amount == wagerData.amount && 
+                                (wagerData.earnings == null || wagerData.earnings == earnings || (wagerData.earnings * 2) == earnings))                 
                                 )
                             {
                                 LogContext.PushProperty("TP", _tpName);
