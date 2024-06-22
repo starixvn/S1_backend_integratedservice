@@ -107,7 +107,9 @@ namespace ThirdPartySettleWorker.Workers
                             }
                             transTime = wagerData.unix_date_created;
                             settledTime = wagerData.unix_settlement_datetime;
-                            if (!(betData.amount == wagerData.amount && (wagerData.earnings == null || wagerData.earnings == earnings)))
+                            //if (!(betData.amount == wagerData.amount && (wagerData.earnings == null || wagerData.earnings == earnings)))
+                            // 改成先檢查下注金額就好
+                            if (betData.amount != wagerData.amount)
                             {
                                 LogContext.PushProperty("TP", _tpName);
                                 _logger.LogError($"betData=\r\n{JsonConvert.SerializeObject(betData)}\r\nwagerData=\r\n{JsonConvert.SerializeObject(wagerData)}");
