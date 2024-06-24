@@ -209,10 +209,10 @@ namespace ThirdParty.AG
             // parameter handle
             long sTimestemp = GetTimestemp1();
 
-            string dm = "www.nova88.net";
-            if (inputs.ContainsKey("host"))
+            string dm = string.Empty;
+            if (inputs.ContainsKey("homeUrl"))
             {
-                dm = inputs["host"];
+                dm = inputs["homeUrl"];
             }
 
             var langId = langIdDic.TryGetValue(TpLangId, out int _langId) ? _langId : 3;
