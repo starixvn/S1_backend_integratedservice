@@ -1,9 +1,11 @@
-﻿using System.Text.Json;
+﻿using System.Security.Policy;
+using System.Text.Json;
 
 using Serilog.Context;
 
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Workers;
 
@@ -13,6 +15,7 @@ public class WagerBG : BackgroundService
     private readonly WagerBGBLL _wagerBGBLL;
     private readonly CommonBLL _commonBLL;
     private readonly ThirdPartyBLL _thirdPartyBLL;
+    private readonly Dictionary<int, GAConfig> _siteConfigDic;
 
     private readonly int tpId = (int)Tp.BG;
     private readonly WagerTimerType tpType = WagerTimerType.Wager;
@@ -61,6 +64,8 @@ public class WagerBG : BackgroundService
                         if (!isFast && quick) isFast = true;
                     }
                 }
+                var _setting = _siteConfigDic[siteInfo.SiteId];
+                if (_setting == null) continue;
             }
         }
         catch (Exception ex)

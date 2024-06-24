@@ -48,6 +48,7 @@
         SBO = 42,
         SimplePlay = 44,
         CryptoSports = 45,
+        BG = 47,
         Endorphina = 49,
         Nextspin = 50,
         PlayTech = 51,
