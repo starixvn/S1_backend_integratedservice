@@ -1,22 +1,16 @@
 ﻿using FluentAssertions;
-
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-
 using Newtonsoft.Json;
-
 using NSubstitute;
-
 using NUnit.Framework;
-
 using ThirdPartyCore;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-
 using ThirdPartyService.Extensions;
 using ThirdPartyService.IntegrationTest.Models;
 using ThirdPartyService.IntegrationTest.Stubs;
@@ -33,6 +27,7 @@ namespace ThirdParty.Skywind.Tests
         private TpCustInfo _tpCustInfo;
         private Dictionary<string, string> _inputs;
         private IConfiguration _configuration;
+        private IServiceProvider _provider;
 
         public SkywindTpHelperTests()
         {
@@ -74,28 +69,11 @@ namespace ThirdParty.Skywind.Tests
             ThirdPartyHelperBase.TpCustInfoProvider = provider.GetRequiredService<TpCustInfoBLL>();
         }
 
-
         [SetUp]
         public void Setup()
         {
             //Arrange
-            _tpHelper = new TpHelper();
-
-            //_tpCustInfo = new TpCustInfo()
-            //{
-            //    TpId = 33,
-            //    CustId = 249951,
-            //    SiteId = 1,
-            //    UserName = "hanstest01",
-            //    TpUserName = "xnova88x249951",
-            //    TpPwd = "h5N3Bjn",
-            //    TpCurrencyId = "MYR",
-            //    ExchangeRate = 1.0000m,
-            //    IsTest = false,
-            //    ActStatus = 2,
-            //    Status = 1,
-            //    CStatus = 1,
-            //};
+            _tpHelper = new TpHelper(_provider);
 
             _tpCustInfo = new TpCustInfo()
             {
@@ -112,16 +90,6 @@ namespace ThirdParty.Skywind.Tests
                 Status = 1,
                 CStatus = 1,
             };
-
-            //_inputs = new Dictionary<string, string>
-            //{
-            //    { "GameUrl_MYR", "https://tcgmyr.nova88asia.com/" },
-            //    { "ApiUrl", "http://www.connect6play.com/doBusiness.do" },
-            //    { "HomeUrl", "https://www.nova88.net/" },
-            //    { "MerchantCode_MYR", "xpnovamyr" },
-            //    { "DESKey_MYR", "dHJoyySB" },
-            //    { "SHA256Key_MYR", "70tOVKomTbE5booC" },
-            //};
 
             _inputs = new Dictionary<string, string>
             {
@@ -161,48 +129,6 @@ namespace ThirdParty.Skywind.Tests
             //Assert
             actual.ErrorCode.Should().Be(ErrorCode.Success);
         }
-
-        //[Test()]
-        //public void DesEncryptTest()
-        //{
-        //    //Arrange
-        //    //var sParam = new
-        //    //{
-        //    //    method = "cm",
-        //    //    username = _tpCustInfo.TpUserName,
-        //    //    password = _tpCustInfo.TpPwd,
-        //    //    currency = _tpCustInfo.TpCurrencyId
-        //    //};
-
-        //    var sParam = new
-        //    {
-        //        method = "sgb",
-        //        username = _tpCustInfo.TpUserName,
-        //        product_type = "384",//420,
-        //        request_time = DateTime.Now.ToFileTime(),
-        //    };
-
-        //    var merchantCode = _inputs["MerchantCode_MYR"];
-        //    var desKey = _inputs["DESKey_MYR"];
-        //    var SignKey = _inputs["SHA256Key_MYR"];
-        //    var hashString = ToJson(sParam);
-
-        //    //Act
-        //    var desEncrypt = _tpHelper.DesEncrypt(hashString, desKey);
-        //    var sign = _tpHelper.SHA256($"{desEncrypt}{SignKey}");
-
-        //    var requestBody = $"?merchant_code={HttpUtility.UrlEncode(merchantCode)}&params={HttpUtility.UrlEncode(desEncrypt)}&sign={HttpUtility.UrlEncode(sign)}";
-
-        //    //Assert
-        //    var result = _tpHelper.DesDecrypt(desEncrypt, desKey);
-        //    result.Should().Be(hashString);
-
-
-        //    var resultdesEncrypt = _tpHelper.DesEncrypt(result, desKey);
-        //    var checkSing = _tpHelper.SHA256($"{resultdesEncrypt}{SignKey}");
-        //    sign.Should().Be(checkSing);
-        //}
-
 
         private string ToJson(object t)
         {

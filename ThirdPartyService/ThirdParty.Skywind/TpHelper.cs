@@ -1,10 +1,10 @@
 ﻿using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
-
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -14,9 +14,13 @@ namespace ThirdParty.Skywind
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        public TpHelper()
+        private readonly Dictionary<int, SkywindConfig> _siteConfigDic;
+
+        public TpHelper(IServiceProvider provider)
         {
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SkywindConfig>(TpEnum.Skywind.ToString());
         }
+
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -24,15 +28,19 @@ namespace ThirdParty.Skywind
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            ApiResult oApiResult = new ApiResult();
-            oApiResult.ErrorCode = ErrorCode.Success;
+            ApiResult oApiResult = new()
+            {
+                ErrorCode = ErrorCode.Success
+            };
             return oApiResult;
         }
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
-            oApiResult.ErrorCode = ErrorCode.Fail;
+            ApiResult<UserBalance> oApiResult = new()
+            {
+                ErrorCode = ErrorCode.Fail
+            };
             return oApiResult;
         }
 
@@ -43,12 +51,14 @@ namespace ThirdParty.Skywind
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
-            string SecretKey = inputs.ContainsKey("SecretKey") && !string.IsNullOrEmpty(inputs["SecretKey"]) ? inputs["SecretKey"] : throw new Exception();
-            string Username = inputs.ContainsKey("Username") && !string.IsNullOrEmpty(inputs["Username"]) ? inputs["Username"] : throw new Exception();
-            string Password = inputs.ContainsKey("Password") && !string.IsNullOrEmpty(inputs["Password"]) ? inputs["Password"] : throw new Exception();
-            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception();
-            string LobbyUrl = inputs.ContainsKey("StagingLobbies") && !string.IsNullOrEmpty(inputs["StagingLobbies"]) ? inputs["StagingLobbies"] : throw new Exception();
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+            string ApiUrl = config.ApiUrl;
+            string SecretKey = config.SecretKey;
+            string Username = config.Username;
+            string Password = config.Password;
+            string LobbyUrl = config.StagingLobbies;
+
+            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
 
             #region token
             var key = ApplyToken(tpCustInfo);
@@ -74,7 +84,7 @@ namespace ThirdParty.Skywind
             if (tpGameType == (int)TpGameType.Skywind_LiveCasino)
             {
                 var lobbyUrl = $"{LobbyUrl}/#/ticket/{sessionKey}?language={TpLangId}";
-                ApiResult oApiResult = new ApiResult();
+                ApiResult oApiResult = new();
                 {
                     oApiResult.ErrorCode = ErrorCode.Success;
                     oApiResult.Message = lobbyUrl;
@@ -84,13 +94,16 @@ namespace ThirdParty.Skywind
             else
             {
                 var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
+                Dictionary<string, string> header = new()
+                {
+                    { "X-ACCESS-TOKEN", jwtToken.accessToken }
+                };
+
                 var gameUrl = $"{ApiUrl}/players/{tpCustInfo.TpUserName}/games/{gameId}";
-                Dictionary<string, string> header = new Dictionary<string, string>();
-                header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
                 var sParam = $"ticket={sessionKey}&language={TpLangId}";
                 string json = HttpGet(gameUrl, sParam, "application/json", header);
 
-                ApiResult oApiResult = new ApiResult();
+                ApiResult oApiResult = new();
                 {
                     if (IsJSON(json))
                     {
@@ -125,30 +138,32 @@ namespace ThirdParty.Skywind
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            Dictionary<string, string> itgGame = new Dictionary<string, string>();
-            itgGame.Add("itg_moneytreesofspring", "itg_moneytreesofspring");
-            itgGame.Add("itg_goldenroad", "itg_goldenroad");
-            itgGame.Add("itg_megatrail", "itg_megatrail");
-            itgGame.Add("itg_megamonkeys", "itg_megamonkeys");
-            itgGame.Add("itg_bigirishbucks", "itg_bigirishbucks");
-            itgGame.Add("itg_bigmoneyvegas", "itg_bigmoneyvegas");
-            itgGame.Add("itg_monkeyhero", "itg_monkeyhero");
-            itgGame.Add("itg_moneytreesofspring_9606", "itg_moneytreesofspring_9606");
-            itgGame.Add("itg_goldenroad_9599", "itg_goldenroad_9599");
-            itgGame.Add("itg_goldenroad_9401", "itg_goldenroad_9401");
-            itgGame.Add("itg_megatrail_9601", "itg_megatrail_9601");
-            itgGame.Add("itg_megatrail_9400", "itg_megatrail_9400");
-            itgGame.Add("itg_megamonkeys_9605", "itg_megamonkeys_9605");
-            itgGame.Add("itg_megamonkeys_9402", "itg_megamonkeys_9402");
-            itgGame.Add("itg_bigirishbucks_9599", "itg_bigirishbucks_9599");
-            itgGame.Add("itg_bigirishbucks_9404", "itg_bigirishbucks_9404");
-            itgGame.Add("itg_bigmoneyvegas_9600", "itg_bigmoneyvegas_9600");
+            Dictionary<string, string> itgGame = new()
+            {
+                { "itg_moneytreesofspring", "itg_moneytreesofspring" },
+                { "itg_goldenroad", "itg_goldenroad" },
+                { "itg_megatrail", "itg_megatrail" },
+                { "itg_megamonkeys", "itg_megamonkeys" },
+                { "itg_bigirishbucks", "itg_bigirishbucks" },
+                { "itg_bigmoneyvegas", "itg_bigmoneyvegas" },
+                { "itg_monkeyhero", "itg_monkeyhero" },
+                { "itg_moneytreesofspring_9606", "itg_moneytreesofspring_9606" },
+                { "itg_goldenroad_9599", "itg_goldenroad_9599" },
+                { "itg_goldenroad_9401", "itg_goldenroad_9401" },
+                { "itg_megatrail_9601", "itg_megatrail_9601" },
+                { "itg_megatrail_9400", "itg_megatrail_9400" },
+                { "itg_megamonkeys_9605", "itg_megamonkeys_9605" },
+                { "itg_megamonkeys_9402", "itg_megamonkeys_9402" },
+                { "itg_bigirishbucks_9599", "itg_bigirishbucks_9599" },
+                { "itg_bigirishbucks_9404", "itg_bigirishbucks_9404" },
+                { "itg_bigmoneyvegas_9600", "itg_bigmoneyvegas_9600" }
+            };
 
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
-            string SecretKey = inputs.ContainsKey("SecretKey") && !string.IsNullOrEmpty(inputs["SecretKey"]) ? inputs["SecretKey"] : throw new Exception();
-            string Username = inputs.ContainsKey("Username") && !string.IsNullOrEmpty(inputs["Username"]) ? inputs["Username"] : throw new Exception();
-            string Password = inputs.ContainsKey("Password") && !string.IsNullOrEmpty(inputs["Password"]) ? inputs["Password"] : throw new Exception();
-            string HistoryUrl = inputs.ContainsKey("HistoryUrl") && !string.IsNullOrEmpty(inputs["HistoryUrl"]) ? inputs["HistoryUrl"] : throw new Exception();
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+            string ApiUrl = config.ApiUrl;
+            string SecretKey = config.SecretKey;
+            string Username = config.Username;
+            string Password = config.Password;
 
             string[] sArray = Regex.Split(getBetDetail.TransId, "-", RegexOptions.IgnoreCase);
             var roundId = sArray[0];
@@ -156,13 +171,16 @@ namespace ThirdParty.Skywind
             var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_Skywind_Detail_Get", new { TransId = roundId }, DataBase.Wager);
             var GameID = detail.GetStringValue("gameCode");
 
+            var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
+            Dictionary<string, string> header = new()
+            {
+                { "X-ACCESS-TOKEN", jwtToken.accessToken }
+            };
+
             if (itgGame.ContainsKey(GameID))
             {
-                var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
                 var detailUrl = $"{ApiUrl}/history/game";
                 string getParams = $"roundId={roundId}";
-                Dictionary<string, string> header = new Dictionary<string, string>();
-                header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
                 string json = HttpGet(detailUrl, getParams, "application/json", header);
                 return new BaseDetail(getBetDetail.TpGameTypeOption)
                 {
@@ -177,10 +195,7 @@ namespace ThirdParty.Skywind
             }
             else
             {
-                var jwtToken = GetJwtToken(ApiUrl, Username, Password, SecretKey);
                 var detailUrl = $"{ApiUrl}/history/game/{roundId}/image";
-                Dictionary<string, string> header = new Dictionary<string, string>();
-                header.Add("X-ACCESS-TOKEN", jwtToken.accessToken);
                 string json = HttpGet(detailUrl, "", "application/json", header);
                 var result = FromJson<DetailUrl>(json);
 
@@ -219,6 +234,7 @@ namespace ThirdParty.Skywind
                 IP = string.Empty,
             };
         }
+
         private JwtToken GetJwtToken(string apiUrl, string username, string password, string secretKey)
         {
             string url = $"{apiUrl}/login";
@@ -233,7 +249,8 @@ namespace ThirdParty.Skywind
             var result = JsonConvert.DeserializeObject<JwtToken>(r);
             return result;
         }
-        private DeviceType GetDeviceType(string device)
+
+        private static DeviceType GetDeviceType(string device)
         {
             if (device == "web")
                 return DeviceType.Desktop;
@@ -242,17 +259,20 @@ namespace ThirdParty.Skywind
             else
                 return DeviceType.None;
         }
+
         public class JwtToken
         {
             public string key { get; set; }
             public string username { get; set; }
             public string accessToken { get; set; }
         }
+
         public class GameURL
         {
             public string url { get; set; }
             public string token { get; set; }
         }
+
         public class DetailUrl
         {
             public string imageUrl { get; set; }

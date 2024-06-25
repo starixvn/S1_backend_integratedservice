@@ -3,41 +3,6 @@
 /// </summary>
 namespace ThirdPartyWager.Service.Model
 {
-    public class SkywindConfig
-    {
-        public string ApiUrl { get; set; }
-        public string SecretKey { get; set; }
-        public string Username { get; set; }
-        public string Password { get; set; }
-        public string MerchId { get; set; }
-        public string MerchPwd { get; set; }
-        public SkywindConfig(Dictionary<string, string> inputs)
-        {
-            ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"])
-                ? inputs["ApiUrl"]
-                : throw new Exception();
-
-            SecretKey = inputs.ContainsKey("SecretKey") && !string.IsNullOrEmpty(inputs["SecretKey"])
-                ? inputs["SecretKey"]
-                : string.Empty;
-
-            Username = inputs.ContainsKey("Username") && !string.IsNullOrEmpty(inputs["Username"])
-                ? inputs["Username"]
-                : string.Empty;
-
-            Password = inputs.ContainsKey("Password") && !string.IsNullOrEmpty(inputs["Password"])
-                ? inputs["Password"]
-                : string.Empty;
-
-            MerchId = inputs.ContainsKey("MerchId") && !string.IsNullOrEmpty(inputs["MerchId"])
-                ? inputs["MerchId"]
-                : string.Empty;
-
-            MerchPwd = inputs.ContainsKey("MerchPwd") && !string.IsNullOrEmpty(inputs["MerchPwd"])
-                ? inputs["MerchPwd"]
-                : string.Empty;
-        }
-    }
     public class WagerSkywindModel
     {
         public bool finished { get; set; }
