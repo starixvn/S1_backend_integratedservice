@@ -1,48 +1,31 @@
 ﻿using System.Text.RegularExpressions;
-
 using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public class WagerSkywindBLL
     {
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ILogger<WagerSkywindBLL> _logger;
         private readonly ApiSkywindBLL _apiSkywindBLL;
-        private const int TpId = (int)Tp.Skywind;
-        private Dictionary<string, string> liveaCasino;
-        private Dictionary<string, string> fishing;
+        private readonly Dictionary<int, SkywindConfig> _siteConfigDic;
 
         public WagerSkywindBLL(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<WagerSkywindBLL>>();
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _apiSkywindBLL = provider.GetRequiredService<ApiSkywindBLL>();
-            liveaCasino = new Dictionary<string, string>();
-            fishing = new Dictionary<string, string>();
-            liveaCasino.Add("sw_ro_a01bac", "sw_ro_a01bac");
-            liveaCasino.Add("sw_ro_a01bac_nc", "sw_ro_a01bac_nc");
-            liveaCasino.Add("sw_ro_a04bac", "sw_ro_a04bac");
-            liveaCasino.Add("sw_ro_a04bac_nc", "sw_ro_a04bac_nc");
-            liveaCasino.Add("sw_ro_a07bac", "sw_ro_a07bac");
-            liveaCasino.Add("sw_ro_a07bac_nc", "sw_ro_a07bac_nc");
-            liveaCasino.Add("sw_ro_a01ro", "sw_ro_a01ro");
-            liveaCasino.Add("sw_ro_a03ro", "sw_ro_a03ro");
-            liveaCasino.Add("sw_live_erol_atom", "sw_live_erol_atom");
-            fishing.Add("sw_or", "sw_or");
-            fishing.Add("sw_fj", "sw_fj");
-            fishing.Add("sw_cashdaha", "sw_cashdaha");
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SkywindConfig>(Tp.Skywind.ToString());
         }
 
-        public async Task<bool> GetWagersAsync(int tpId, string apiUrl, string secretKey, string username, string password, string startTime, string endTime)
+        public async Task<bool> GetWagersAsync(int siteId, string startTime, string endTime)
         {
             var msg = "FATAL_ERROR";
             try
             {
-                var dataWager = await _apiSkywindBLL.GetBetListByTime(apiUrl, secretKey, username, password, startTime, endTime);
+                var setting = _siteConfigDic[siteId];
+                var dataWager = await _apiSkywindBLL.GetBetListByTime(setting, startTime, endTime);
 
                 foreach (var bet in dataWager)
                 {
@@ -90,7 +73,6 @@ namespace ThirdPartyWager.Service.BLL
             }
             catch (Exception ex)
             {
-                msg = "FATAL_ERROR";
                 _logger.LogError(ex, $"GetWagersAsync {msg}\r\n{ex.Message}");
                 return false;
             }
@@ -101,7 +83,7 @@ namespace ThirdPartyWager.Service.BLL
             try
             {
                 // get api info
-                var setting = _thirdPartyBLL.GetThirdPartyBySite(TpId, siteId);
+                var setting = _siteConfigDic[siteId];
 
                 var checkList = await _apiSkywindBLL.GetUnsettleCheckList();
                 var doQuick = checkList.Count() == 1000;
@@ -111,7 +93,7 @@ namespace ThirdPartyWager.Service.BLL
                     {
                         string[] sArray = Regex.Split(chcek.TransId, "-", RegexOptions.IgnoreCase);
                         //Get wager data
-                        var bet = await _apiSkywindBLL.GetBetByTransId(setting["ApiUrl"], setting["SecretKey"], setting["Username"], setting["Password"], sArray[0]);
+                        var bet = await _apiSkywindBLL.GetBetByTransId(setting, sArray[0]);
                         if (bet != null)
                         {
                             var betSkywind = new BetSkywind()
@@ -143,7 +125,7 @@ namespace ThirdPartyWager.Service.BLL
                         }
                         else
                         {
-                            var thirdPartyBet = await _apiSkywindBLL.GetThirdPartyBetByTransId(setting["ApiUrl"], setting["SecretKey"], setting["Username"], setting["Password"], sArray[0]);
+                            var thirdPartyBet = await _apiSkywindBLL.GetThirdPartyBetByTransId(setting, sArray[0]);
                             if (thirdPartyBet.Any())
                             {
                                 var betSkywind = new BetSkywind()

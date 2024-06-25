@@ -1,5 +1,4 @@
 ﻿using Serilog.Context;
-
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
@@ -28,7 +27,6 @@ namespace ThirdPartyWager.Workers
             _wagerSkywindBLL = provider.GetRequiredService<WagerSkywindBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
-
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -63,8 +61,7 @@ namespace ThirdPartyWager.Workers
                     var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
                     foreach (var siteData in siteList)
                     {
-                        var setting = _thirdPartyBLL.GetThirdPartyBySite(tpId, siteData.SiteId);
-                        var result = await _wagerSkywindBLL.GetWagersAsync(tpId, setting["ApiUrl"], setting["SecretKey"], setting["Username"], setting["Password"], time.startTime, time.endTime);
+                        var result = await _wagerSkywindBLL.GetWagersAsync(siteData.SiteId, time.startTime, time.endTime);
                         if (!result)
                         {
                             SetTimer = false;

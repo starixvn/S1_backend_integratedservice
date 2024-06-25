@@ -3,7 +3,6 @@ using System.Web;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
-using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
@@ -22,9 +21,11 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Tp thisTp;
         private readonly ILogger<SkywindController> logger;
         private readonly IHostEnvironment environment;
+
         #endregion
 
         #region Constructors
+
         public SkywindController(IServiceProvider provider)
         {
             authBLL = provider.GetRequiredService<AuthBLL>();
@@ -36,6 +37,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             thisTp = Tp.Skywind;
             environment = provider.GetRequiredService<IHostEnvironment>();
         }
+
         #endregion
 
         #region model
@@ -89,6 +91,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string country { get; set; }
             public string game_group { get; set; }
         }
+
         #endregion
 
         #region Req
@@ -177,28 +180,13 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string merch_pwd { get; set; }
             public string ip { get; set; }
         }
-        #endregion
 
         #endregion
 
-        #region enum
-        public enum SkywindErrorCode
-        {
-            NoErrors = 0,
-            DuplicateTransaction = 1,
-            MerchantInternalError = -1,
-            PlayerNotFound = -2,
-            GameTokenExpired = -3,
-            PlayerIsSuspended = -301,
-            BetLimitWasExceeded = -302,
-            InsufficientBalance = -4,
-            InsufficientFreeBetsBalance = -5,
-            InvalidFreeBet = -6,
-            TransactionNotFound = -7,
-        }
         #endregion
 
         #region
+
         [Route("[controller]/api/validate_ticket")]
         [HttpPost]
         public ValidateTicketResp ValidateTicket(ValidateTicketReq req)
@@ -395,6 +383,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             return result;
         }
+
         [Route("[controller]/api/credit")]
         [HttpPost]
         public CreditResp Credit(CreditReq req)
@@ -546,8 +535,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             return result;
         }
+
         #endregion
-
-
     }
 }
