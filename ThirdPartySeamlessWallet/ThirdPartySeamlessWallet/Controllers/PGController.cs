@@ -1432,6 +1432,31 @@ namespace ThirdPartySeamlessWallet.Controllers
             return resp;
         }
 
+        [Route("[controller]/GetUserBalanceV2")]
+        [HttpPost]
+        public Resp GetBalanceV2(string trace_id, [FromForm] Dictionary<string, string> reqq)
+        {
+            string logName = $"{thisTp}_GetBalanceV2";
+            Resp resp = new Resp();
+            resp.error = new Error
+            {
+                code = "1034",
+                message = "Invalid request."
+            };
+
+            var getBalanceReq = JsonConvert.DeserializeObject<GetBalanceReq>(JsonConvert.SerializeObject(reqq));
+            var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, getBalanceReq.PlayerName, gameType);
+
+            BalanceData respData = new BalanceData();
+            resp.data = respData;
+            respData.currency_code = tpCustBalance.TpCurrencyId;
+            respData.balance_amount = tpCustBalance.Balance;
+            respData.updated_time = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+            resp.error = null;
+            log2File.Info($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+            return resp;
+        }
+
         /*****************************************************************/
 
     }
