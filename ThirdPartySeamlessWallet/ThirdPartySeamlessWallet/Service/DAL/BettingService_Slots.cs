@@ -309,69 +309,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public int PlaceBetRNG_PG_V2(TpCustInfo tpCustInfo, BettingDataRNG_PG bettingDataRNG_PG, out decimal afterAmount)
-        {
-            int bonusId = 0;
-            int gameType = (int)GameType.PG_RNG;
-
-            afterAmount = 0;
-            using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
-            using var trans = conn.BeginTransaction();
-            var result = 0;
-
-            bettingDataRNG_PG.TransferAmount *= -1;
-            bettingDataRNG_PG.UpdatedTime /= 1000;
-            bettingDataRNG_PG.CreateTime /= 1000;
-            var p = new DynamicParameters(bettingDataRNG_PG);
-            p.Add("BetAmount", bettingDataRNG_PG.TransferAmount);
-            p.Add("WinAmount", 0);
-            try
-            {
-                result = _mainDbClient.Execute("Service_BettransRng_PG_Ins_V3", p, conn, trans);
-
-                if (result > 0 && bettingDataRNG_PG.TransferAmount != 0)
-                {
-                    result = PlaceBetV2(
-                        tpCustInfo, 
-                        bettingDataRNG_PG.TransferAmount, 
-                        (int)Tp.PG, bettingDataRNG_PG.ParentBetId, 
-                        gameType, 
-                        bettingDataRNG_PG.TransactionId, 
-                        out afterAmount, 
-                        ref bonusId, 
-                        out _, 
-                        conn, 
-                        trans,
-                        "",
-                        AllowNegative.Allow
-                   );
-                }
-
-                if (result > 0)
-                {
-                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
-                }
-                else
-                {
-                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
-                }
-            }
-            catch (MySqlException mySqlEx)
-            {
-                if (mySqlEx.Number == 1062)/*Duplicate for key 'PRIMARY'*/
-                {
-                    result = -1;
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return result;
-        }
-
         #region Joker
         public int PlaceBetRNG_Joker(TpCustInfo tpCustInfo, BettingDataRNG_Joker bettingDataRNG_Joker, out decimal afterAmount)
         {
