@@ -49,6 +49,7 @@
         Skywind = 43,
         SimplePlay = 44,
         CryptoSports = 45,
+        Yeebet = 46,
         BG = 47,
         TFG = 48,
         Endorphina = 49,
