@@ -1,23 +1,24 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL;
 
 public class WagerYeebetBLL
 {
-    private readonly ThirdPartyBLL _thirdPartyBLL;
     private readonly ApiYeebetBLL _apiYeebetBLL;
     private readonly WagerYeebetService _wagerYeebetService;
     private readonly ILogger<WagerYeebetBLL> _logger;
     private readonly int size = 1000; //預設一次撈1000筆資料
+    private readonly Dictionary<int, YeebetConfig> _siteConfigDic;
 
     public WagerYeebetBLL(IServiceProvider provider)
     {
-        _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         _apiYeebetBLL = provider.GetRequiredService<ApiYeebetBLL>();
         _wagerYeebetService = provider.GetRequiredService<WagerYeebetService>();
         _logger = provider.GetRequiredService<ILogger<WagerYeebetBLL>>();
+        _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<YeebetConfig>(Tp.Yeebet.ToString());
     }
 
     public async Task<(bool isSuccess, bool isContinue)> GetWagersAsync(int tpId, int siteId, string tpCurrencyId)
@@ -27,9 +28,10 @@ public class WagerYeebetBLL
         try
         {
             // get tp info for api
-            var setting = _thirdPartyBLL.GetThirdPartyBySite(tpId, siteId);
+            var config = _siteConfigDic[siteId];
+            var currencyData = config.CurrencyData[tpCurrencyId];
 
-            if (!GetAppIdAndKey(setting, $"{siteId}_{tpCurrencyId}", out string appid, out string key))
+            if (!GetAppIdAndKey(currencyData, out string appid, out string key))
             {
                 msg = "THIRD_PARTY_SETTING_ERROR";
                 _logger.LogError($"{msg}");
@@ -37,7 +39,7 @@ public class WagerYeebetBLL
             }
 
             // get history bets
-            var getResult = await _apiYeebetBLL.Getbets(setting["ApiUrl"], appid, size, key);
+            var getResult = await _apiYeebetBLL.Getbets(config.ApiUrl, appid, size, key);
 
             if (getResult == null || getResult.result != 0)
             {
@@ -72,7 +74,7 @@ public class WagerYeebetBLL
             }
 
             // remove wager
-            var removeResult = await _apiYeebetBLL.Removebets(setting["ApiUrl"], appid, string.Join(",", wagerIds), key);
+            var removeResult = await _apiYeebetBLL.Removebets(config.ApiUrl, appid, string.Join(",", wagerIds), key);
 
             if (removeResult.result != 0)
             {
@@ -93,24 +95,23 @@ public class WagerYeebetBLL
         }
     }
 
-    private bool GetAppIdAndKey(Dictionary<string, string> setting, string siteIdAndtpCurrencyId, out string appid, out string key)
+    private bool GetAppIdAndKey(CurrencyDataYeebet setting, out string appid, out string key)
     {
         appid = string.Empty;
         key = string.Empty;
-        if (!setting.ContainsKey($"ApiAppId_{siteIdAndtpCurrencyId}")
-            || string.IsNullOrWhiteSpace(setting[$"ApiAppId_{siteIdAndtpCurrencyId}"]))
+        if (string.IsNullOrWhiteSpace(setting.ApiAppId))
         {
             _logger.LogError($"ApiAppId is invaild.");
             return false;
         }
-        appid = setting[$"ApiAppId_{siteIdAndtpCurrencyId}"];
-        if (!setting.ContainsKey($"ApiSecretKey_{siteIdAndtpCurrencyId}")
-            || string.IsNullOrWhiteSpace(setting[$"ApiSecretKey_{siteIdAndtpCurrencyId}"]))
+        if (string.IsNullOrWhiteSpace(setting.ApiSecretKey))
         {
             _logger.LogError($"ApiSecretKey is invaild.");
             return false;
         }
-        key = setting[$"ApiSecretKey_{siteIdAndtpCurrencyId}"];
+
+        appid = setting.ApiAppId;
+        key = setting.ApiSecretKey;
         return true;
     }
 }
