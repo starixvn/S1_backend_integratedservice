@@ -121,6 +121,7 @@ namespace ThirdParty.EBet
                         + $"username={tpCustInfo.TpUserName}"
                         + $"&accessToken={HttpUtility.UrlEncode(key)}"
                         + $"&language={TpLangId}"
+                        + $"&category=LIVE"
                         + $"{mobileParam}"
                         + $"{funParam}"
             };
