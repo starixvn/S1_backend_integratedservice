@@ -608,7 +608,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     _log2File.Error($"{JsonConvert.SerializeObject(refundReq)}\r\n{JsonConvert.SerializeObject(getRefundResp)}", logName);
                     return getRefundResp;
                 }
-                refundReq.account = record.First().account;
+
                 refundReq.amount = record.First().amount;
                 refundReq.roundid = record.First().roundid;
 
@@ -770,7 +770,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 _log2File.Error($"{JsonConvert.SerializeObject(debitReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
-            
+
             // check gametype
             var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, debitReq.gamecode);
             if (gameType == GameType.CQ9_WCC)
@@ -878,7 +878,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 _log2File.Error($"{JsonConvert.SerializeObject(getCreditReq)}\r\n{JsonConvert.SerializeObject(apiResponse)}", logName);
                 return apiResponse;
             }
-            
+
             // check gametype
             var gameType = _thirdPartyBLL.GetGameType((int)_thisTp, creditReq.gamecode);
             if (gameType == GameType.CQ9_WCC)
@@ -1382,7 +1382,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         tpAfterAmount = tpAfterAmountWCC;
                         break;
                 }
-                
+
                 if (result > 0)
                 {
                     var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, rollinReq.account, (int)gameType);
