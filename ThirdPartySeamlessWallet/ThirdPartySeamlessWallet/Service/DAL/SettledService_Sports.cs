@@ -479,7 +479,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             };
         }
 
-        public IEnumerable<SBSWUnsettle> GetSBSWUnsettleList(int LimitCount = 1000)
+        public IEnumerable<SBSWUnsettle> GetSBSWUnsettleList(int LimitCount = 5000)
         {
             return _mainDbClient.Query<SBSWUnsettle>("Service_SBSW_TpUnsettle_Get", parameters: new { LimitCount });
         }
