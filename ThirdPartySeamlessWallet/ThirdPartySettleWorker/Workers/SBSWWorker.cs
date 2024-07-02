@@ -12,6 +12,7 @@ using ThirdPartySeamlessWallet.Service.Model.Options;
 using ThirdPartySeamlessWallet.Service.Model.SBSW;
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
+using System.Diagnostics;
 
 namespace ThirdPartySettleWorker.Workers
 {
@@ -53,7 +54,12 @@ namespace ThirdPartySettleWorker.Workers
 
             try
             {
+                var lgsw1 = Stopwatch.StartNew();
+                lgsw1.Start();
                 var tpUnsettleList = _settledBLL.GetSBSWUnsettleList();
+                lgsw1.Stop();
+                _logger.LogWarning($"GetSBSWUnsettleList Count: {tpUnsettleList.Count()} ({lgsw1.Elapsed})");
+
                 if (!tpUnsettleList.Any())
                 {
                     throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
@@ -63,7 +69,6 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(1);
                 }
-
                 foreach (var tpUnsettle in tpUnsettleList.OrderBy(x => x.TransId))
                 {
                     LogContext.PushProperty("TransId", tpUnsettle.TransId);
@@ -74,15 +79,21 @@ namespace ThirdPartySettleWorker.Workers
                     try
                     {
                         // 1.取得Wager資料
+                        var lgsw2 = Stopwatch.StartNew();
+                        lgsw2.Start();
                         var tpBetRecordDetail = _settledBLL.GetTpBetRecordDetail((int)Tp.SBSW, (int)tpUnsettle.GameType, tpUnsettle.TransId, tpUnsettle.PartitionTime);
                         var wagerData = GetWagerData(tpBetRecordDetail);
-                        settleFlowLog.AppendLine($"1.Get Wager Data:");
+                        lgsw2.Stop();
+                        settleFlowLog.AppendLine($"1.Get Wager Data: {lgsw2.Elapsed}");
                         settleFlowLog.AppendLine(JsonConvert.SerializeObject(wagerData));
                         settleFlowLog.AppendLine($"===================================================");
 
                         // 2.取得Settle資料
+                        var lgsw3 = Stopwatch.StartNew();
+                        lgsw3.Start();
                         var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleSBSW>("Service_Bettrans_SBSW_Settle_Get", new { txId = tpUnsettle.TransId }, DataBase.Main);
-                        settleFlowLog.AppendLine($"2.Get Settle Data:");
+                        lgsw3.Stop();
+                        settleFlowLog.AppendLine($"2.Get Settle Data: {lgsw3.Elapsed}");
                         settleFlowLog.AppendLine(JsonConvert.SerializeObject(settleData));
                         settleFlowLog.AppendLine($"===================================================");
 
@@ -97,9 +108,12 @@ namespace ThirdPartySettleWorker.Workers
                             parameters = new DynamicParameters(new { settleData.FirstOrDefault()?.refId });
                         }
 
+                        var lgsw4 = Stopwatch.StartNew();
+                        lgsw4.Start();
                         var betData = _tpUnSettledBLL.GetTpUnsettleData<BetSBSW>(getBettransSp, parameters, DataBase.Main);
-                        settleFlowLog.AppendLine($"3.Get Bet Data:");
-                        settleFlowLog.AppendLine(JsonConvert.SerializeObject(betData));
+                        lgsw4.Stop();
+                        settleFlowLog.AppendLine($"3.Get Bet Data: {lgsw4.Elapsed}");
+                        settleFlowLog.AppendLine($"getBettransSp: {getBettransSp}");
                         settleFlowLog.AppendLine($"===================================================");
 
                         // 取不到下注資料，直接跳過這筆
@@ -117,14 +131,22 @@ namespace ThirdPartySettleWorker.Workers
                         }
 
                         // 取得相關設定資料
+                        var lgsw5 = Stopwatch.StartNew();
+                        lgsw5.Start();
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, wagerData.vendor_member_id);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
+                        lgsw5.Stop();
+                        settleFlowLog.AppendLine($"3A.GetTpCustInfoWithCache & GetTpCurrency: {lgsw5.Elapsed}");
+                        settleFlowLog.AppendLine($"{tpUnsettle.TransId} getBettransSp: {getBettransSp}");
+                        settleFlowLog.AppendLine($"===================================================");
                         if (!_tpGameTypeConfig.TryGetValue((int)tpUnsettle.GameType, out var tpGameTypeData))
                         {
                             throw new SBSWException(ReturnCode.InvalidParameters, $"GameType:{(int)tpUnsettle.GameType} not supported.");
                         }
 
                         // 匯率轉換
+                        var lgsw6 = Stopwatch.StartNew();
+                        lgsw6.Start();
                         wagerData.stake *= tpCurrency.ExchangeRate;
                         wagerData.winlost_amount *= tpCurrency.ExchangeRate;
 
@@ -155,13 +177,16 @@ namespace ThirdPartySettleWorker.Workers
                             TicketKey = betData.FirstOrDefault()?.baStatus ?? 0
 
                         };
-                        settleFlowLog.AppendLine($"4.Set Default BetRecordInfo:");
+                        lgsw6.Stop();
+                        settleFlowLog.AppendLine($"4.Set Default BetRecordInfo: {lgsw6.Elapsed}");
                         settleFlowLog.AppendLine(JsonConvert.SerializeObject(betRecordInfo));
                         settleFlowLog.AppendLine($"===================================================");
 
                         // 5.處理沒有收到SettleData的狀況
                         if (!settleData.Any())
                         {
+                            var lgsw7 = Stopwatch.StartNew();
+                            lgsw7.Start();
                             settleFlowLog.AppendLine($"{tpUnsettle.TransId} Settle Data is empty,");
 
                             // 下注單有被Cancel
@@ -203,9 +228,14 @@ namespace ThirdPartySettleWorker.Workers
                                     settleFlowLog.AppendLine($"{tpUnsettle.TransId} Execute UnSettled or Tip.");
                                 }
                             }
+                            lgsw7.Stop();
+                            settleFlowLog.AppendLine($"4A.None SettleData : {lgsw7.Elapsed}");
+                            settleFlowLog.AppendLine($"===================================================");
                         }
 
                         // 6.下注金額與Wager比對結算金額
+                        var lgsw8 = Stopwatch.StartNew();
+                        lgsw8.Start();
                         if (betData.Sum(x => x.betAmount) == wagerData.stake || tpUnsettle.GameType == GameType.SBSW_Vgaming)
                         {
                             betRecordInfo.WinlostAmount = wagerData.winlost_amount;
@@ -237,12 +267,17 @@ namespace ThirdPartySettleWorker.Workers
                             settleFlowLog.AppendLine($"{tpUnsettle.TransId} betAmount is not equal to stake, continue next TransId.");
                             continue;
                         }
+                        lgsw8.Stop();
+                        settleFlowLog.AppendLine($"4B.Amount Check : {lgsw8.Elapsed}");
+                        settleFlowLog.AppendLine($"===================================================");
 
                         settleFlowLog.AppendLine($"===================================================");
                         settleFlowLog.AppendLine($"5.Ready BetRecordInfo: {JsonConvert.SerializeObject(betRecordInfo)}");
                         settleFlowLog.AppendLine(JsonConvert.SerializeObject(betRecordInfo));
                         settleFlowLog.AppendLine($"===================================================");
 
+                        var lgsw9 = Stopwatch.StartNew();
+                        lgsw9.Start();
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, (TpCategory)tpCategoryId, GetTpSeamlessBonusType.ByTransId);
                         if (result == 1)
                         {
@@ -251,7 +286,12 @@ namespace ThirdPartySettleWorker.Workers
                                 _tpUnSettledBLL.SetTpUnsettle(Tp, tpUnsettle.GameType, tpUnsettle.TransId, true);
                             });
                         }
+                        lgsw9.Stop();
+                        settleFlowLog.AppendLine($"5A.Execute Settled Function Done: {lgsw9.Elapsed}");
+                        settleFlowLog.AppendLine($"===================================================");
+
                         settleFlowLog.AppendLine($"6.Settled Result is {(result == 1 ? "Success" : "Fail")}");
+
                     }
                     catch (Exception ex)
                     {
