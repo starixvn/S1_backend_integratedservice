@@ -113,6 +113,7 @@ namespace ThirdPartySettleWorker.Workers
                         var betData = _tpUnSettledBLL.GetTpUnsettleData<BetSBSW>(getBettransSp, parameters, DataBase.Main);
                         lgsw4.Stop();
                         settleFlowLog.AppendLine($"3.Get Bet Data: {lgsw4.Elapsed}");
+                        settleFlowLog.AppendLine(JsonConvert.SerializeObject(betData));
                         settleFlowLog.AppendLine($"getBettransSp: {getBettransSp}");
                         settleFlowLog.AppendLine($"===================================================");
 
