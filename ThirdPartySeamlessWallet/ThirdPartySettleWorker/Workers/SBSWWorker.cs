@@ -138,7 +138,6 @@ namespace ThirdPartySettleWorker.Workers
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
                         lgsw5.Stop();
                         settleFlowLog.AppendLine($"3A.GetTpCustInfoWithCache & GetTpCurrency: {lgsw5.Elapsed}");
-                        settleFlowLog.AppendLine($"{tpUnsettle.TransId} getBettransSp: {getBettransSp}");
                         settleFlowLog.AppendLine($"===================================================");
                         if (!_tpGameTypeConfig.TryGetValue((int)tpUnsettle.GameType, out var tpGameTypeData))
                         {
