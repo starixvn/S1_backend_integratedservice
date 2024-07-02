@@ -49,7 +49,7 @@ namespace ThirdPartySettleWorker.Workers
         {
             LogContext.PushProperty("TP", _tpName);
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-            var dueTimeSpan = TimeSpan.FromSeconds(10);
+            var dueTimeSpan = TimeSpan.FromSeconds(3);
 
             try
             {
@@ -61,7 +61,7 @@ namespace ThirdPartySettleWorker.Workers
 
                 if (tpUnsettleList.Count() == 1000)
                 {
-                    dueTimeSpan = TimeSpan.FromSeconds(5);
+                    dueTimeSpan = TimeSpan.FromSeconds(1);
                 }
 
                 foreach (var tpUnsettle in tpUnsettleList.OrderBy(x => x.TransId))
