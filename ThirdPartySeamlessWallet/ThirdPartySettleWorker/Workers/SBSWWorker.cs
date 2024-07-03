@@ -65,7 +65,7 @@ namespace ThirdPartySettleWorker.Workers
                     throw new UnsettleNotFoundException($"{_tpName} no unsettle data.");
                 }
 
-                if (tpUnsettleList.Count() == 1000)
+                if (tpUnsettleList.Count() >= 1000)
                 {
                     dueTimeSpan = TimeSpan.FromSeconds(1);
                 }
