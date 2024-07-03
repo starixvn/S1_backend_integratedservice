@@ -185,16 +185,22 @@ namespace ThirdPartySettleWorker.Workers
                         // 5.處理沒有收到SettleData的狀況
                         if (!settleData.Any())
                         {
-                            var lgsw7 = Stopwatch.StartNew();
-                            lgsw7.Start();
+
                             settleFlowLog.AppendLine($"{tpUnsettle.TransId} Settle Data is empty,");
 
                             // 下注單有被Cancel
                             if (betData.Any(x => x.TicketType == (int)SBSWTransType.CancelBet))
                             {
+                                var lgsw7 = Stopwatch.StartNew();
+                                lgsw7.Start();
+
                                 // 走共用流判斷ValidBet、SettlementType、TicketStatus
                                 CalculateAvailableBet(wagerData, betRecordInfo);
                                 settleFlowLog.AppendLine($"{tpUnsettle.TransId} is cancel bet.");
+
+                                lgsw7.Stop();
+                                settleFlowLog.AppendLine($"4A.CancelBet : {lgsw7.Elapsed}");
+                                settleFlowLog.AppendLine($"===================================================");
                             }
                             else
                             {
@@ -207,8 +213,14 @@ namespace ThirdPartySettleWorker.Workers
                                     continue;
                                 }
 
+                                var lgsw10 = Stopwatch.StartNew();
+                                lgsw10.Start();
+
                                 // 拿TpBetRecord判斷，判斷要執行Settle流程，還是等待API收到Settle後才執行
                                 var tpBetRecord = _settledBLL.GetSBSWTpBetRecord((int)Tp.SBSW, tpUnsettle.TransId, (int)tpUnsettle.GameType);
+
+                                lgsw10.Stop();
+                                settleFlowLog.AppendLine($"4B.GetSBSWTpBetRecord : {lgsw10.Elapsed}");
 
                                 // Wager的注單狀態已經更新，但我方API還沒收到做Settle              
                                 if (tpBetRecord != null)
@@ -228,16 +240,14 @@ namespace ThirdPartySettleWorker.Workers
                                     settleFlowLog.AppendLine($"{tpUnsettle.TransId} Execute UnSettled or Tip.");
                                 }
                             }
-                            lgsw7.Stop();
-                            settleFlowLog.AppendLine($"4A.None SettleData : {lgsw7.Elapsed}");
-                            settleFlowLog.AppendLine($"===================================================");
                         }
 
                         // 6.下注金額與Wager比對結算金額
-                        var lgsw8 = Stopwatch.StartNew();
-                        lgsw8.Start();
                         if (betData.Sum(x => x.betAmount) == wagerData.stake || tpUnsettle.GameType == GameType.SBSW_Vgaming)
                         {
+                            var lgsw8 = Stopwatch.StartNew();
+                            lgsw8.Start();
+
                             betRecordInfo.WinlostAmount = wagerData.winlost_amount;
                             // 走共用流判斷ValidBet、SettlementType、TicketStatus
                             CalculateAvailableBet(wagerData, betRecordInfo);
@@ -260,6 +270,9 @@ namespace ThirdPartySettleWorker.Workers
                                 betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
                                 betRecordInfo.TicketKey = 0;  //主播打賞不記BA
                             }
+
+                            lgsw8.Stop();
+                            settleFlowLog.AppendLine($"4C.Amount Check : {lgsw8.Elapsed}");
                         }
                         else
                         {
@@ -267,9 +280,6 @@ namespace ThirdPartySettleWorker.Workers
                             settleFlowLog.AppendLine($"{tpUnsettle.TransId} betAmount is not equal to stake, continue next TransId.");
                             continue;
                         }
-                        lgsw8.Stop();
-                        settleFlowLog.AppendLine($"4B.Amount Check : {lgsw8.Elapsed}");
-                        settleFlowLog.AppendLine($"===================================================");
 
                         settleFlowLog.AppendLine($"===================================================");
                         settleFlowLog.AppendLine($"5.Ready BetRecordInfo: {JsonConvert.SerializeObject(betRecordInfo)}");
