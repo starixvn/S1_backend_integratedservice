@@ -436,7 +436,6 @@ namespace ThirdParty.SG
                 },
             };
 
-            var a = JsonConvert.SerializeObject(p);
             var result = HttpPost(
                 config.ApiUrl+ "/createLoyalFreeSpin",
                 JsonConvert.SerializeObject(p),
