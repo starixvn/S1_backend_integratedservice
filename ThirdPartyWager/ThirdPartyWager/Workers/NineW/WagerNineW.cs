@@ -31,7 +31,7 @@ namespace ThirdPartyWager.Workers
             _nineWService = provider.GetRequiredService<NineWBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         }
-        
+
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             DoGetDomain();
@@ -49,7 +49,7 @@ namespace ThirdPartyWager.Workers
         {
             await _nineWService.QueryDomain();
         }
-        
+
         private async void DoSettle(object state)
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
@@ -256,13 +256,13 @@ namespace ThirdPartyWager.Workers
             _financeTimer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
-        
+
         private async void DoGetDomain(object state)
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var nextTimeSpan = TimeSpan.FromHours(1);
-            
+
             try
             {
                 await _nineWService.QueryDomain();
@@ -277,5 +277,6 @@ namespace ThirdPartyWager.Workers
                 _getDomainTimer.Change(nextTimeSpan, TimeSpan.Zero);
             }
         }
+
     }
 }
