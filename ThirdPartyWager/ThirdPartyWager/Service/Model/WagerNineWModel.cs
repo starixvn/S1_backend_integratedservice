@@ -5,21 +5,13 @@ namespace ThirdPartyWager.Service.Model.NineW
     public class NineWConfig
     {
         public string ApiUrl { get; set; }
-
-        public string WagerUrl { get; set; }
-
-        public string OldApiUrl { get; set; }
-
+        public string DomainUrl { get; set; }
         [JsonProperty("website")]
-
         public string WebSite { get; set; }
-
         [JsonProperty("cert")]
         public string Cert { get; set; }
-
         [JsonProperty("agent")]
         public string Agent { get; set; }
-
         public Dictionary<string, CurrencyDataNineW> CurrencyData { get; set; }
     }
 
@@ -415,5 +407,22 @@ namespace ThirdPartyWager.Service.Model.NineW
         public decimal? matchAmount { get; set; }
         public decimal? unMatchAmount { get; set; }
     }
+    
+    public class QueryDomainResponse
+    {
+        public string status { get; set; }
+          
+        [JsonProperty("privateDomains")]
+        public List<DomainModel> PrivateDomains { get; set; }
 
+        [JsonProperty("domains")]
+        public List<DomainModel> Domains { get; set; }
+    }
+
+    public class DomainModel
+    {
+        public string domain { get; set; }
+        public int priority { get; set; }
+    }
+    
 }

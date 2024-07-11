@@ -5,10 +5,10 @@ namespace ThirdParty.NineW
 {
     internal class NineWConfig : TpSiteConfig
     {
-        public string OldApiUrl { get; set; }
+        public string DomainUrl { get; set; }
+        public string ExchangeUrl { get; set; }
 
         [JsonProperty("website")]
-
         public string WebSite { get; set; }
 
         [JsonProperty("cert")]
@@ -24,5 +24,11 @@ namespace ThirdParty.NineW
     {
         [JsonProperty("agent")]
         public string Agent { get; set; }
+    }
+    
+    public class Domain
+    {
+        public string ApiUrl { get; set; }
+        public string ExchangeUrl { get; set; }
     }
 }
