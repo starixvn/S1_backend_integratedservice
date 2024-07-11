@@ -14,12 +14,14 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Common _common;
         private readonly MySqlClient _wagerDbClient;
         private readonly int _tpId = (int)Tp.NineW;
+        private readonly string _tpName = Tp.NineW.ToString();
         private readonly NineWConfig _siteConfig;
         private readonly FincanceService _fincanceService;
         private readonly IEnumerable<TpCurrency> _currencyList;
         private readonly int _timeZone = 8;
         private readonly List<int> _reportType = new() { 0, 2, 3, 7 };
-        private string _domain ;
+        private string _domain;
+        private readonly Log2File _log2File;
 
         public NineWBLL(IServiceProvider provider)
         {
@@ -30,8 +32,9 @@ namespace ThirdPartyWager.Service.BLL
             _fincanceService = provider.GetRequiredService<FincanceService>();
             _currencyList = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(_tpId);
             _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<NineWConfig>(Tp.NineW.ToString());
+            _log2File = provider.GetRequiredService<Log2File>();
         }
-        
+
         public async Task<bool> GetWagersAsync(string startTime, string endTime)
         {
             try
@@ -71,7 +74,19 @@ namespace ThirdPartyWager.Service.BLL
             {
                 var result = await QueryReSettleSummaryTransactionAsync(_siteConfig, startTime, endTime);
                 var tasks = result.Select(item => Task.Run(() => InsertWager(item))).ToArray();
+
+                // update resettledDate to TpReport9W
+                foreach (var row in result)
+                {
+                    if (row.resettledDate > new DateTime(1970, 1, 1))
+                    {
+                        //_ = await UpdateReport(row);
+                        _logger.LogError($"TpReport9W update userId: {row.userId}, eventId: {row.eventId}, marketId: {row.marketId}, resettledDate: {row.resettledDate}");
+                    }
+                }
+
                 await Task.WhenAll(tasks);
+
                 return true;
             }
             catch (Exception ex)
@@ -122,7 +137,7 @@ namespace ThirdPartyWager.Service.BLL
             var result = new List<SettleBet>();
             var agents = GetAgents();
             var wagerUrl = $"{_domain}/{config.WebSite}/querySettleBetHistory";
-            
+
             foreach (var type in _reportType)
             {
                 var page = 1;
@@ -139,9 +154,13 @@ namespace ThirdPartyWager.Service.BLL
                         { "pageNumber", page.ToString() },
                         { "reportType", type.ToString() }
                     });
+                    var pReq = httpContent.ReadAsStringAsync().Result;
+                    _log2File.InsertRequestLog(_tpName, wagerUrl, pReq, "1");
+
                     var response = await _httpHelper.GetClient().PostAsync(wagerUrl, httpContent);
                     if (!response.IsSuccessStatusCode)
                     {
+                        _log2File.InsertResponseLog(_tpName, wagerUrl, pReq, response.ReasonPhrase);
                         throw new Exception($"StatusCode:{response.StatusCode} | Reason:{response.ReasonPhrase}");
                     }
 
@@ -165,7 +184,7 @@ namespace ThirdPartyWager.Service.BLL
             var result = new List<SettleBet>();
             var apiUrl = $"{_domain}/{config.WebSite}/queryReSettleSummaryTransaction";
             var agents = GetAgents();
-            
+
             foreach (var type in _reportType)
             {
                 var page = 1;
@@ -184,9 +203,13 @@ namespace ThirdPartyWager.Service.BLL
                         { "pageNumber", page.ToString() },
                         { "reportType", type.ToString() }
                     });
+                    var pReq = httpContent.ReadAsStringAsync().Result;
+                    _log2File.InsertRequestLog(_tpName, apiUrl, pReq, "1");
+
                     var response = await _httpHelper.GetClient().PostAsync(apiUrl, httpContent);
                     if (!response.IsSuccessStatusCode)
                     {
+                        _log2File.InsertResponseLog(_tpName, apiUrl, pReq, response.ReasonPhrase);
                         throw new Exception($"StatusCode:{response.StatusCode} | Reason:{response.ReasonPhrase}");
                     }
 
@@ -230,9 +253,13 @@ namespace ThirdPartyWager.Service.BLL
                         { "pageNumber", page.ToString() },
                         { "reportType", type.ToString() }
                     });
+                    var pReq = httpContent.ReadAsStringAsync().Result;
+                    _log2File.InsertRequestLog(_tpName, apiUrl, pReq, "1");
+
                     var response = await _httpHelper.GetClient().PostAsync(apiUrl, httpContent);
                     if (!response.IsSuccessStatusCode)
                     {
+                        _log2File.InsertResponseLog(_tpName, apiUrl, pReq, response.ReasonPhrase);
                         throw new Exception($"StatusCode:{response.StatusCode} | Reason:{response.ReasonPhrase}");
                     }
 
@@ -280,9 +307,13 @@ namespace ThirdPartyWager.Service.BLL
                             { "timeZone", "1"},
                             { "reportType", type.ToString() }
                         });
+                        var pReq = httpContent.ReadAsStringAsync().Result;
+                        _log2File.InsertRequestLog(_tpName, apiUrl, pReq, "1");
+
                         var response = await _httpHelper.GetClient().PostAsync(apiUrl, httpContent);
                         if (!response.IsSuccessStatusCode)
                         {
+                            _log2File.InsertResponseLog(_tpName, apiUrl, pReq, response.ReasonPhrase);
                             throw new Exception($"StatusCode:{response.StatusCode} | Reason:{response.ReasonPhrase}");
                         }
 
@@ -324,14 +355,14 @@ namespace ThirdPartyWager.Service.BLL
             }
             return result;
         }
-        
+
         private async Task<List<SummaryTransaction>> QuerySummaryTransactionAsync(NineWConfig config, DateTime date)
         {
             var result = new List<SummaryTransaction>();
             var range = date.DateToTimeRange(_timeZone);
             var apiUrl = $"{_domain}/{config.WebSite}/querySummaryTransaction";
             var agents = GetAgents();
-            
+
             foreach (var type in _reportType)
             {
                 var page = 1;
@@ -348,9 +379,13 @@ namespace ThirdPartyWager.Service.BLL
                         { "pageNumber", page.ToString() },
                         { "reportType", type.ToString() }
                     });
+                    var pReq = httpContent.ReadAsStringAsync().Result;
+                    _log2File.InsertRequestLog(_tpName, apiUrl, pReq, "1");
+
                     var response = await _httpHelper.GetClient().PostAsync(apiUrl, httpContent);
                     if (!response.IsSuccessStatusCode)
                     {
+                        _log2File.InsertResponseLog(_tpName, apiUrl, pReq, response.ReasonPhrase);
                         throw new Exception($"StatusCode:{response.StatusCode} | Reason:{response.ReasonPhrase}");
                     }
 
@@ -381,6 +416,11 @@ namespace ThirdPartyWager.Service.BLL
             return _wagerDbClient.ExecuteAsync("Service_TpWager9W_Ins", bet);
         }
 
+        private Task<int> UpdateReport(SettleBet bet)
+        {
+            return _wagerDbClient.ExecuteAsync("Service_TpReport9W_Set", bet);
+        }
+
         private Task<int> InsertReport(SummaryTransaction data)
         {
             return _wagerDbClient.ExecuteAsync("Service_TpReport9W_Ins", data);
@@ -395,7 +435,7 @@ namespace ThirdPartyWager.Service.BLL
             }
             return data;
         }
-  
+
         public async Task QueryDomain()
         {
             var apiUrl = $"{_siteConfig.DomainUrl}/{_siteConfig.WebSite}/queryDomain";
@@ -403,11 +443,11 @@ namespace ThirdPartyWager.Service.BLL
             {
                 { "cert", _siteConfig.Cert }
             });
-            
+
             var response = await _httpHelper.GetClient().PostAsync(apiUrl, httpContent);
             var json = response.Content.ReadAsStringAsync().Result;
             var result = _common.FromJson<QueryDomainResponse>(json);
-            
+
             if (result.status == "1")
             {
                 var url = $"{_siteConfig.ApiUrl}.{result.Domains?.FirstOrDefault(x => x.priority == 1)?.domain}/api/apiWallet";
