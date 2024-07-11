@@ -77,6 +77,7 @@ namespace ThirdPartyWager.Service.Model.NineW
         }
         private DateTime? _betPlaced { get; set; }
         public DateTime matchSettledDate { get; set; } = new DateTime(1970, 1, 1);
+        public DateTime resettledDate { get; set; } = new DateTime(1970, 1, 1);
         public string marketName { get; set; } = string.Empty;
         public string selectionName { get; set; } = string.Empty;
         public string matchType { get; set; } = string.Empty;
