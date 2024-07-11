@@ -22,7 +22,7 @@ public class GiftInfoService
         { 
             _TpId = tpid 
         });
-        return _reportDbClient.Query<GiftInfo>("Service_GiftList_Get",p);
+        return _reportDbClient.Query<GiftInfo>("Service_GiftList_Get_V2", p);
     }
 
     public IEnumerable<WorkerPeriodTask> GetWorkList(string workerName)
@@ -43,5 +43,18 @@ public class GiftInfoService
             _WorkerName = workerName
         });
         return _mainDbClient.Execute("Service_WorkerPeriod_TaskDone_Set",p);
+    }
+
+    public int SetTpBonusCode(int siteId, int tpId,string gameId,string bonusCode, DateTime expirationDate)
+    {
+        var p = new DynamicParameters(new
+        {
+            _SiteId = siteId,
+            _TpId = tpId,
+            _GameId = gameId,
+            _BonusCode = bonusCode,
+            _ExpirationDate = expirationDate
+        });
+        return _mainDbClient.Execute("Service_TpBonusCode_Set", p);
     }
 }

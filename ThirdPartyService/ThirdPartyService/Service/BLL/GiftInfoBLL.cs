@@ -28,4 +28,15 @@ public class GiftInfoBLL
     {
         return _giftInfoService.SetTaskDone(periodTaskSiteId, periodTaskCurrencyId, workerName);
     }
+
+    public int SetTpBonusCode(int tpId, int siteId, Dictionary<string, string> inputs)
+    {
+        var gameId = inputs["GameId"];
+        var bonusCode = inputs["BonusCode"];
+        var expirationDate = inputs.ContainsKey("ExpirationDay") && int.TryParse(inputs["ExpirationDay"], out int expirationDays)
+            ? DateTimeOffset.Now.AddDays(expirationDays).UtcDateTime
+            : DateTimeOffset.Now.AddDays(30).UtcDateTime;
+
+        return _giftInfoService.SetTpBonusCode(siteId,tpId,gameId,bonusCode, expirationDate);
+    }
 }
