@@ -5931,7 +5931,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public SettleData_Skywind GetSettle_TpWager_Skywind(string transId)
         {
-            return _wagerDbClient.QueryFirst<SettleData_Skywind>("Service_TpWager_Skywind_Settle_Get", new { TransId = transId });
+            return _wagerDbClient.QueryFirst<SettleData_Skywind>("Service_TpWager_Skywind_Settle_Get_V2", new { TransId = transId });
         }
 
         #endregion

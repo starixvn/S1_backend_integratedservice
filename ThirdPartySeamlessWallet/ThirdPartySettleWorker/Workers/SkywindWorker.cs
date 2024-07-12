@@ -96,6 +96,8 @@ namespace ThirdPartySettleWorker.Workers
                         wager.debit *= tpCurrency.ExchangeRate;
                         wager.Stake *= tpCurrency.ExchangeRate;
                         wager.WinLostAmount *= tpCurrency.ExchangeRate;
+                        wager.ProgressiveBet *= tpCurrency.ExchangeRate;
+                        wager.ProgressiveWin *= tpCurrency.ExchangeRate;
                         #endregion
 
                         if (betData.Sum(x => x.amount) == wager.debit || betData.Sum(x => x.amount) == wager.Stake)
@@ -119,6 +121,8 @@ namespace ThirdPartySettleWorker.Workers
                                 SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, gameCode),
                                 TicketStatus = winLostAmount > 0 ? TicketStatus.Win : winLostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost,
                                 GameID = gameCode,
+                                ProgressiveBet = wager.ProgressiveBet,
+                                ProgressiveWin = wager.ProgressiveWin,
                             };
                             var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Slots);
 
