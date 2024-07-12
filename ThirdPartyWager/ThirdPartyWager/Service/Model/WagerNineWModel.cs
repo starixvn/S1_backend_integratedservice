@@ -132,6 +132,7 @@ namespace ThirdPartyWager.Service.Model.NineW
 
             //將ReSettleBet欄位對應至SettleBet
             matchSettledDate = reSettleBet.resettledDate;
+            resettledDate = reSettleBet.resettledDate;
             profitLoss = reSettleBet.profitLoss;
             matchStake = reSettleBet.stakeTotal;
             oddsType = reSettleBet.oddsType;
