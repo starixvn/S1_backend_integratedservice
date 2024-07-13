@@ -49,7 +49,7 @@ namespace ThirdPartySettleWorker.Workers
             var dueTimeSpan = TimeSpan.FromMinutes(1);
             try
             {
-                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType, 2000);
                 if (!tpUnsettleList.Any())
                 {
                     throw new UnsettleNotFoundException($"{gameType} no unsettle data.");
