@@ -69,18 +69,24 @@ namespace ThirdPartySettleWorker.Workers
                     throw new UnsettleNotFoundException($"{gameType} no unsettle data.");
                 }
 
-                forContinue = tpUnsettleList.Count() == 200;
+                forContinue = tpUnsettleList.Count() > 200;
                 foreach (var transId in tpUnsettleList.OrderBy(x => x.TransId).Select(tpUnsettle => tpUnsettle.TransId))
                 {
                     try
                     {
                         var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getBettransSp, new { TransId = transId }, DataBase.Main).FirstOrDefault();
                         var tpWagerData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getWagerSp, new { TransId = transId }, DataBase.Wager).FirstOrDefault();
-                        if (tpWagerData == null) continue;
+
+                        if (tpWagerData == null)
+                        {
+                            tpWagerData.GameId = String.Empty;
+                            tpWagerData.WinLostAmount = 0;
+                        }
+
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
 
-                        if (!IsBettransSameAsTpWager(settleData, tpWagerData, tpCurrency))
+                        if (tpWagerData != null && !IsBettransSameAsTpWager(settleData, tpWagerData, tpCurrency))
                         {
                             _logger.LogWarning($"transId: {transId} is not equal " +
                                              $"settle: {JsonConvert.SerializeObject(settleData)} " +
@@ -88,7 +94,7 @@ namespace ThirdPartySettleWorker.Workers
                             continue;
                         }
 
-                        var settlementType = SetSettlementType((TicketStatus)settleData.TicketStatus);// 判斷 TicketStatus，因為可能重新結算
+                        var settlementType = (tpWagerData == null) ? SettlementType.UnSettled : SetSettlementType((TicketStatus)settleData.TicketStatus);// 判斷 TicketStatus，因為可能重新結算
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
@@ -101,7 +107,7 @@ namespace ThirdPartySettleWorker.Workers
                             SettledTime = settleData.SettleTime,
                             TransTime = settleData.TransTime,
                             SettlementType = settlementType,
-                            TicketStatus = (TicketStatus)settleData.TicketStatus,
+                            TicketStatus = settlementType == SettlementType.UnSettled ? TicketStatus.UnSettled: (TicketStatus)settleData.TicketStatus,
                             GameID = tpWagerData.GameId,
                         };
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
