@@ -80,8 +80,8 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     if (row.resettledDate > new DateTime(1970, 1, 1))
                     {
-                        //_ = await UpdateReport(row);
-                        _logger.LogError($"TpReport9W update userId: {row.userId}, eventId: {row.eventId}, marketId: {row.marketId}, resettledDate: {row.resettledDate}");
+                        _ = await UpdateReport(row);
+                        //_logger.LogError($"TpReport9W update userId: {row.userId}, eventId: {row.eventId}, marketId: {row.marketId}, resettledDate: {row.resettledDate}");
                     }
                 }
 
