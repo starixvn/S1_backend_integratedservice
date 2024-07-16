@@ -1420,6 +1420,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (result > 0)
                         {
+                            _tpUnsettleService.InsertTpUnsettle(Tp.Sexy, GameType.Sexy_LiveCasino, item.platformTxId, trans);
                             _mainDbClient.CommitAndDisposeConnection(conn, trans);
                         }
                         else

@@ -1187,5 +1187,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return TransferType.PlaceBet;
             }
         }
+
     }
 }

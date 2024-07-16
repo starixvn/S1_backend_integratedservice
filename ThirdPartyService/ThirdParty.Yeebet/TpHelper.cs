@@ -1,7 +1,9 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -14,22 +16,70 @@ namespace ThirdParty.Yeebet
     {
         private readonly Dictionary<string, string> _gameNameList = new()
         { { "4", "Baccarat" }, { "5", "Roulette" }, { "10", "Dragon Tiger" } };
+
         private readonly Dictionary<int, string> _PokerDic = new()
-        { {  0, "NoCard" },
-          {  1, "[D A]" }, {  2, "[C A]" },{  3, "[H A]" },{  4, "[S A]" },
-          {  5, "[D 2]" }, {  6, "[C 2]" },{  7, "[H 2]" },{  8, "[S 2]" },
-          {  9, "[D 3]" }, { 10, "[C 3]" },{ 11, "[H 3]" },{ 12, "[S 3]" },
-          { 13, "[D 4]" }, { 14, "[C 4]" },{ 15, "[H 4]" },{ 16, "[S 4]" },
-          { 17, "[D 5]" }, { 18, "[C 5]" },{ 19, "[H 5]" },{ 20, "[S 5]" },
-          { 21, "[D 6]" }, { 22, "[C 6]" },{ 23, "[H 6]" },{ 24, "[S 6]" },
-          { 25, "[D 7]" }, { 26, "[C 7]" },{ 27, "[H 7]" },{ 28, "[S 7]" },
-          { 29, "[D 8]" }, { 30, "[C 8]" },{ 31, "[H 8]" },{ 32, "[S 8]" },
-          { 33, "[D 9]" }, { 34, "[C 9]" },{ 35, "[H 9]" },{ 36, "[S 9]" },
-          { 37, "[D10]" }, { 38, "[C10]" },{ 39, "[H10]" },{ 40, "[S10]" },
-          { 41, "[D J]" }, { 42, "[C J]" },{ 43, "[H J]" },{ 44, "[S J]" },
-          { 45, "[D Q]" }, { 46, "[C Q]" },{ 47, "[H Q]" },{ 48, "[S Q]" },
-          { 49, "[D K]" }, { 50, "[C K]" },{ 51, "[H K]" },{ 52, "[S K]" }
+        {
+            { 0, "NoCard" },
+            { 1, "[D A]" },
+            { 2, "[C A]" },
+            { 3, "[H A]" },
+            { 4, "[S A]" },
+            { 5, "[D 2]" },
+            { 6, "[C 2]" },
+            { 7, "[H 2]" },
+            { 8, "[S 2]" },
+            { 9, "[D 3]" },
+            { 10, "[C 3]" },
+            { 11, "[H 3]" },
+            { 12, "[S 3]" },
+            { 13, "[D 4]" },
+            { 14, "[C 4]" },
+            { 15, "[H 4]" },
+            { 16, "[S 4]" },
+            { 17, "[D 5]" },
+            { 18, "[C 5]" },
+            { 19, "[H 5]" },
+            { 20, "[S 5]" },
+            { 21, "[D 6]" },
+            { 22, "[C 6]" },
+            { 23, "[H 6]" },
+            { 24, "[S 6]" },
+            { 25, "[D 7]" },
+            { 26, "[C 7]" },
+            { 27, "[H 7]" },
+            { 28, "[S 7]" },
+            { 29, "[D 8]" },
+            { 30, "[C 8]" },
+            { 31, "[H 8]" },
+            { 32, "[S 8]" },
+            { 33, "[D 9]" },
+            { 34, "[C 9]" },
+            { 35, "[H 9]" },
+            { 36, "[S 9]" },
+            { 37, "[D10]" },
+            { 38, "[C10]" },
+            { 39, "[H10]" },
+            { 40, "[S10]" },
+            { 41, "[D J]" },
+            { 42, "[C J]" },
+            { 43, "[H J]" },
+            { 44, "[S J]" },
+            { 45, "[D Q]" },
+            { 46, "[C Q]" },
+            { 47, "[H Q]" },
+            { 48, "[S Q]" },
+            { 49, "[D K]" },
+            { 50, "[C K]" },
+            { 51, "[H K]" },
+            { 52, "[S K]" }
         };
+
+        private readonly Dictionary<int, YeebetConfig> _siteConfigDic;
+
+        public TpHelper(IServiceProvider provider)
+        {
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<YeebetConfig>(TpEnum.Yeebet.ToString());
+        }
 
         #region Model
 
@@ -57,18 +107,21 @@ namespace ThirdParty.Yeebet
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            ApiResult oApiResult = new ApiResult();
-            oApiResult.ErrorCode = ErrorCode.Success;
+            ApiResult oApiResult = new()
+            {
+                ErrorCode = ErrorCode.Success
+            };
             return oApiResult;
         }
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string word = $"{tpCustInfo.SiteId}_{tpCustInfo.TpCurrencyId}";
-            string currency = tpCustInfo.TpCurrencyId;
-            string apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-            string apiAppId = inputs.ContainsKey($"ApiAppId_{word}") && !string.IsNullOrEmpty(inputs[$"ApiAppId_{word}"]) ? inputs[$"ApiAppId_{word}"] : throw new Exception($"ApiAppId_{word}");
-            string secretKey = inputs.ContainsKey($"ApiSecretKey_{word}") && !string.IsNullOrEmpty(inputs[$"ApiSecretKey_{word}"]) ? inputs[$"ApiSecretKey_{word}"] : throw new Exception($"ApiSecretKey_{word}");
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+            var currencyData = config.CurrencyData[tpCustInfo.TpCurrencyId];
+
+            string apiUrl = config.ApiUrl;
+            string apiAppId = currencyData.ApiAppId;
+            string secretKey = currencyData.ApiSecretKey;
             var homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
             apiUrl = $"{apiUrl}api/login";
 
@@ -76,7 +129,7 @@ namespace ThirdParty.Yeebet
             {
                 appid = apiAppId,
                 clienttype = (int)AppType.Desktop,
-                currency = currency,
+                currency = tpCustInfo.TpCurrencyId,
                 iscreate = 1,
                 language = int.Parse(TpLangId),
                 nickname = tpCustInfo.TpUserName,
@@ -136,8 +189,10 @@ namespace ThirdParty.Yeebet
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
-            oApiResult.ErrorCode = ErrorCode.Fail;
+            ApiResult<UserBalance> oApiResult = new()
+            {
+                ErrorCode = ErrorCode.Fail
+            };
             return oApiResult;
         }
 
@@ -232,7 +287,7 @@ namespace ThirdParty.Yeebet
         /// <param name="gameid"></param>
         /// <param name="bettype"></param>
         /// <returns></returns>
-        private string ConvertBetType(string gametype, string bettype)
+        private static string ConvertBetType(string gametype, string bettype)
         {
             if (gametype != "5")
                 return "Default";
@@ -250,6 +305,7 @@ namespace ThirdParty.Yeebet
                 default: return "Default";
             }
         }
+
         /// <summary>
         /// 參考tp文件 3.5 Game Result Code
         /// </summary>

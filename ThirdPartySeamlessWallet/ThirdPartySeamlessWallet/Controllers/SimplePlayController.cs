@@ -24,6 +24,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly int _thisTp;
         private readonly int _gameType = 0;
         private readonly string _tpName = Tp.SimplePlay.ToString();
+        private readonly SimplePlayConfig _siteConfig;
 
         public SimplePlayController(IServiceProvider provider)
         {
@@ -36,6 +37,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             _log2File = provider.GetRequiredService<Log2File>();
             _thisTp = (int)Tp.SimplePlay;
             _gameType = (int)GameType.SimplePlay_RNG;
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SimplePlayConfig>(_tpName);
         }
 
         #region Request
@@ -448,8 +450,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             var Content = await reader.ReadToEndAsync();
             var content = HttpUtility.UrlDecode(Content);
 
-            var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting(_thisTp);
-            var uriQuery = _tools.DESDecrypt(content, thirdPartySetting.TpSetting["EncrypKey"]);
+            var config = _siteConfig;
+            var uriQuery = _tools.DESDecrypt(content, config.EncryptKey);
             Dictionary<string, string> p = QueryHelpers.ParseQuery(uriQuery).ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
             _log2File.Info($"{JsonConvert.SerializeObject(p)}", "SimplePlay_RequsetDecrypt");
             return p;
