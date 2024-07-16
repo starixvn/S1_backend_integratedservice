@@ -51,7 +51,7 @@
     {
         public string url { get; set; }
     }
-    
+
     public class AMBConfig
     {
         public string PokerAgent { get; set; }

@@ -227,8 +227,8 @@ namespace ThirdParty.AP
                         UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("sessionEndTime", DateTime.MinValue),
                         Stake = (decimal)wagerDetail.GetValueOrDefault("stake") * tpCurrency.ExchangeRate,
                         WinlostAmount = ((decimal)wagerDetail.GetValueOrDefault("won") - (decimal)wagerDetail.GetValueOrDefault("stake")) * tpCurrency.ExchangeRate,
-                        GameCode = GetGameNameOfMini(inputs, GameId),
-                        GameName = GetGameName(GetGameNameOfMini(inputs, GameId)),
+                        GameCode = GetGameNameOfMini(Config, GameId),
+                        GameName = GetGameName(GetGameNameOfMini(Config, GameId)),
                     },
                     _ => throw new NotImplementedException()
                 };
@@ -286,12 +286,13 @@ namespace ThirdParty.AP
             var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWagerRng_AP_Mini_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
             if (wagerDetail != null && wagerDetail.Count > 0)
             {
+                var Config = _siteConfigDic[tpCustInfo.SiteId];
                 var GameId = wagerDetail.GetValueOrDefault("gameId")?.ToString();
 
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
-                    GameID = GetGameNameOfMini(inputs, GameId),
-                    Game = GetGameName(GetGameNameOfMini(inputs, GameId)),
+                    GameID = GetGameNameOfMini(Config, GameId),
+                    Game = GetGameName(GetGameNameOfMini(Config, GameId)),
                     RefNo = wagerDetail.GetValueOrDefault("transactionId")?.ToString(),
                     Title = tpGameType.TypeName,
                     MatchID = wagerDetail.GetValueOrDefault("sessionId")?.ToString(),
@@ -383,10 +384,17 @@ namespace ThirdParty.AP
             return dic.TryGetValue("en", out string result) ? result : string.Empty;
         }
 
-        private static string GetGameNameOfMini(Dictionary<string, string> inputs, string GameId)
+        private static string GetGameNameOfMini(APConfig config, string GameId)
         {
-            var flip = inputs.ToDictionary(x => x.Value, x => x.Key);
-            string GameName = flip.ContainsKey(GameId) && !string.IsNullOrEmpty(flip[GameId]) ? flip[GameId].Split("_")[1] : "";
+            var GameName = "";
+            if (config.MiniGame_CardRacing == GameId)
+            {
+                GameName = "CardRacing";
+            }
+            else if (config.MiniGame_Crash == GameId)
+            {
+                GameName = "Crash";
+            }
             return GameName;
         }
 

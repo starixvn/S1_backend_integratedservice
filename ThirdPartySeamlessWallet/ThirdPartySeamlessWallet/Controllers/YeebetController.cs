@@ -1,15 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-
 using Newtonsoft.Json;
-
 using NuGet.Protocol;
-
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 
 namespace ThirdPartySeamlessWallet.Controllers;
 
@@ -19,11 +15,10 @@ public class YeebetController : ControllerBase
     #region Fields
 
     private readonly Tp thisTp;
-
-    private readonly ThirdPartyBLL _thirdPartyBLL;
     private readonly TpCustInfoBLL _tpCustInfoBll;
     private readonly IYeebetBLL _yeebetBll;
     private readonly Tools _tools;
+    private readonly Dictionary<int, YeebetConfig> _siteConfigDic;
 
     #endregion
 
@@ -32,11 +27,10 @@ public class YeebetController : ControllerBase
     public YeebetController(IServiceProvider provider)
     {
         thisTp = Tp.Yeebet;
-
-        _thirdPartyBLL = provider.GetService<ThirdPartyBLL>();
         _tpCustInfoBll = provider.GetService<TpCustInfoBLL>();
         _yeebetBll = provider.GetService<IYeebetBLL>();
         _tools = provider.GetService<Tools>();
+        _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<YeebetConfig>(thisTp.ToString());
     }
 
     #endregion
@@ -50,7 +44,6 @@ public class YeebetController : ControllerBase
     [HttpGet]
     [Route("[controller]/ping")]
     public string PingTest() => "Ping Ok.";
-
 
     /// <summary>
     /// 2.8.2 商户用户金额查询接口（/api/balance）
@@ -143,20 +136,18 @@ public class YeebetController : ControllerBase
         if (request.ContainsKey("errmsg"))
             request["errmsg"] = request["errmsg"].Replace(" ", "+");
 
-        var word = $"{tpCustInfo.SiteId}_{tpCustInfo.TpCurrencyId}";
-
         string content = string.Join("&",
             request
             .Where(x => x.Key != "bets" && x.Key != "sign")
             .OrderBy(x => x.Key)
             .Select(kp => $"{kp.Key}={kp.Value}").ToArray());
 
-        // Check appid
-        var setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(_thirdPartyBLL.GetThirdPartyBySite((int)thisTp, tpCustInfo.SiteId).Setting);
-        string seamlessAppid = setting.ContainsKey($"SeamlessAppId_{word}") && !string.IsNullOrEmpty(setting[$"SeamlessAppId_{word}"])
-            ? setting[$"SeamlessAppId_{word}"]
-            : throw new YeebetException(YeebetErrorCode.SystemError, $"SeamlessAppId_{word} is Invaild.");
+        var config = _siteConfigDic[tpCustInfo.SiteId];
+        var currencyData = config.CurrencyData[tpCustInfo.TpCurrencyId];
+        string seamlessAppid = currencyData.SeamlessAppId;
+        string secretKey = currencyData.SeamlessSecretKey;
 
+        // Check appid
         if (seamlessAppid != appid)
         {
             message = "request.appid is invaild.";
@@ -169,10 +160,6 @@ public class YeebetController : ControllerBase
             message = "request.sign not found.";
             return false;
         }
-
-        string secretKey = setting.ContainsKey($"SeamlessSecretKey_{word}") && !string.IsNullOrEmpty(setting[$"SeamlessSecretKey_{word}"])
-            ? setting[$"SeamlessSecretKey_{word}"]
-            : throw new YeebetException(YeebetErrorCode.SystemError, $"SeamlessSecretKey_{word} is Invaild.");
 
         var result = _tools.ToMD5($"{content}&key={secretKey}").ToLower();
         if (result != request["sign"])
