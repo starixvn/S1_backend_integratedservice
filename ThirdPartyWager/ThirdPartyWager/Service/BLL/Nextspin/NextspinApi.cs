@@ -4,14 +4,15 @@ using Newtonsoft.Json;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace ThirdPartyWager.Service.BLL
 {
     public interface INextspinApi
     {
-        Task<NextspinBetHistory> GetBetHistory(string beginDate, string endDate, int page, NextspinSetting setting);
-        Task<NextspinProfitLoss> RetrieveProfitLoss(string beginDate, string endDate, int pageIndex, NextspinSetting setting);
+        Task<NextspinBetHistory> GetBetHistory(string beginDate, string endDate, int page, NextspinConfig config);
+        Task<NextspinProfitLoss> RetrieveProfitLoss(string beginDate, string endDate, int pageIndex, NextspinConfig config);
     }
 
     public class NextspinApi : INextspinApi
@@ -28,10 +29,10 @@ namespace ThirdPartyWager.Service.BLL
             _log2File = provider.GetRequiredService<Log2File>();
         }
 
-        public async Task<NextspinBetHistory> GetBetHistory(string beginDate, string endDate, int page, NextspinSetting setting)
+        public async Task<NextspinBetHistory> GetBetHistory(string beginDate, string endDate, int page, NextspinConfig config)
         {
-            var merchantCode = setting.MerchantCode;
-            var apiUrl = setting.ApiUrl;
+            var merchantCode = config.MerchantCode;
+            var apiUrl = config.ApiUrl;
             var request = new
             {
                 merchantCode,
@@ -79,10 +80,10 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        public async Task<NextspinProfitLoss> RetrieveProfitLoss(string beginDate, string endDate, int pageIndex, NextspinSetting setting)
+        public async Task<NextspinProfitLoss> RetrieveProfitLoss(string beginDate, string endDate, int pageIndex, NextspinConfig config)
         {
-            var merchantCode = setting.Agent;
-            var apiUrl = setting.ApiUrl;
+            var merchantCode = config.Agent;
+            var apiUrl = config.ApiUrl;
             var request = new
             {
                 beginDate,
