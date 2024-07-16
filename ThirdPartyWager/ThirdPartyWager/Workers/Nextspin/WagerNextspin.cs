@@ -37,7 +37,7 @@ namespace ThirdPartyWager.Workers
             LogContext.PushProperty("Tp", Tp.Nextspin.ToString());
             var doQuickly = false;
             var tpType = WagerTimerType.Wager;
-            const int dataRangeMins = 60; //查詢區間15分鐘內的資料
+            const int dataRangeMins = 15; //查詢區間15分鐘內的資料
             const int intervalMins = 1;   //每次查詢間隔1分鐘
             const int intervalSec = 5;    //doQuickly 每次查詢間隔5秒
             try
