@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 
 using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -14,12 +15,21 @@ namespace ThirdParty.Nextspin
     {
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
         private readonly ILogger<TpHelper> _logger;
-
+        private readonly Dictionary<int, NextspinConfig> _siteNextspinConfig;
         public TpHelper(IServiceProvider provider)
         {
             _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.Nextspin).ToDictionary(d => d.AppId, d => d.Name);
             _logger = provider.GetRequiredService<ILogger<TpHelper>>();
+            _siteNextspinConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<NextspinConfig>(TpEnum.Nextspin.ToString());
         }
+        public class NextspinConfig : TpSiteConfig
+        {
+            public string Agent { get; set; }
+            public string LaunchUrl { get; set; }
+            public string SecretKey { get; set; }
+            public string MerchantCode { get; set; }
+        }
+
         #region NotImplemented
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -45,10 +55,11 @@ namespace ThirdParty.Nextspin
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var merchantCode = GetInputValue(inputs, "MerchantCode");
-            var launchUrl = GetInputValue(inputs, "LaunchUrl");
+            var config = _siteNextspinConfig[tpCustInfo.SiteId];
+            var merchantCode = config.MerchantCode;
+            var launchUrl = config.LaunchUrl;
             var gameCode = GetInputValue(inputs, "gameId");
-            var apiUrl = GetInputValue(inputs, "ApiUrl");
+            var apiUrl = config.ApiUrl;
 
             try
             {
@@ -88,9 +99,10 @@ namespace ThirdParty.Nextspin
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var merchantCode = GetInputValue(inputs, "MerchantCode");
-            var launchUrl = GetInputValue(inputs, "LaunchUrl");
-            var secretKey = GetInputValue(inputs, "SecretKey");
+            var config = _siteNextspinConfig[tpCustInfo.SiteId];
+            var merchantCode = config.MerchantCode;
+            var launchUrl = config.LaunchUrl;
+            var secretKey = config.SecretKey;
             launchUrl = launchUrl.Replace("lobby", "gameapi");
 
             var secret = $"{getBetDetail.TransId}|{secretKey}";
