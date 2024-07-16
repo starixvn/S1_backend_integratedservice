@@ -18,10 +18,8 @@ public class YeebetBLL : IYeebetBLL
     private readonly ThirdPartyBLL _thirdPartyBLL;
     private readonly TpCustInfoBLL _tpCustInfoBLL;
     private readonly ILogger<YeebetBLL> _logger;
-
     private readonly BettingService _bettingService;
     private readonly SettledService _settledService;
-
     private readonly MySqlClient _mainDbClient;
 
     public YeebetBLL(IServiceProvider provider)
@@ -29,14 +27,11 @@ public class YeebetBLL : IYeebetBLL
         ThirdParty = Tp.Yeebet;
         GameType = GameType.Yeebet_LiveCasino;
         TpCategory = TpCategory.LiveCasino;
-
         _tpCustInfoBLL = provider.GetService<TpCustInfoBLL>();
         _thirdPartyBLL = provider.GetService<ThirdPartyBLL>();
         _logger = provider.GetService<ILogger<YeebetBLL>>();
-
         _bettingService = provider.GetService<BettingService>();
         _settledService = provider.GetRequiredService<SettledService>();
-
         _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
     }
 

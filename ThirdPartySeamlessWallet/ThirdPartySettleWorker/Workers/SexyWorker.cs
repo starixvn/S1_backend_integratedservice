@@ -86,6 +86,12 @@ namespace ThirdPartySettleWorker.Workers
                             GameID = settleData.GameId
                         };
 
+                        // check refund
+                        if (betRecordInfo.TicketStatus == TicketStatus.Refund)
+                        {
+                            betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
+                        }
+
                         _ = _settledBLL.Settled(tpCustInfo, betRecordInfo, category);
 
                         Task.Run(() =>

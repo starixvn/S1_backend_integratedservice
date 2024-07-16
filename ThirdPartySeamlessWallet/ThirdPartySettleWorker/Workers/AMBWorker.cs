@@ -77,7 +77,7 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var unsettleData = _partitionService.GetUnsettleDataList<SettleData>(bettransGet, tpUnsettle).FirstOrDefault();
+                        var unsettleData = _partitionService.GetUnsettleDataList<SettleDataRNG_AMB>(bettransGet, tpUnsettle).FirstOrDefault();
                         if (unsettleData == null)
                         {
                             _logger.LogWarning($"{logName}:bettrans not found ({gametype})\r\n{JsonConvert.SerializeObject(tpUnsettle)}");
@@ -98,6 +98,12 @@ namespace ThirdPartySettleWorker.Workers
                             wager.Stake *= tpCurrency.ExchangeRate;
                             wager.WinLostAmount *= tpCurrency.ExchangeRate;
                             wager.ValidBet *= tpCurrency.ExchangeRate;
+                        }
+
+                        if(string.Equals(unsettleData.Categories, "fishing", StringComparison.OrdinalIgnoreCase))
+                        {
+                            unsettleData.Stake = unsettleData.Bet;
+                            unsettleData.WinLostAmount = unsettleData.WinLost;
                         }
 
                         if (wager.Stake != unsettleData.Stake || wager.WinLostAmount != unsettleData.WinLostAmount)

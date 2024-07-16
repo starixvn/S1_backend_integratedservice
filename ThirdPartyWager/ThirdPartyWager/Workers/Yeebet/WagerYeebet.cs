@@ -1,7 +1,5 @@
 ﻿using System.Text.Json;
-
 using Serilog.Context;
-
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -13,7 +11,6 @@ public class WagerYeebet : BackgroundService
     private readonly WagerYeebetBLL _wagerYeebetBLL;
     private readonly CommonBLL _commonBLL;
     private readonly ThirdPartyBLL _thirdPartyBLL;
-
     private readonly int tpId = (int)Tp.Yeebet;
     private Timer _timer;
 

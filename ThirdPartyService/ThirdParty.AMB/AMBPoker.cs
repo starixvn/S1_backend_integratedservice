@@ -47,7 +47,7 @@ namespace ThirdParty.AMB
             }
         }
 
-        public override CommonResponse LaunchGame(string tpUserName, string gameId, string homeUrl, bool isFun,string tpLangId,
+        public override CommonResponse LaunchGame(string tpUserName, string gameId, string homeUrl, bool isFun, string tpLangId,
             Func<string, string, string, Dictionary<string, string>, int, string> callback)
         {
             var apiUrl = $"{Config.PokerApiUrl}/seamless/launch";
@@ -84,7 +84,7 @@ namespace ThirdParty.AMB
             }
         }
 
-        public override GameReportResponse GetRoundResult(string tpUserName, string roundId, string gameId, Func<string, string, string, Dictionary<string, string>, int, string> callback)
+        public override GameReportResponse GetRoundResult(string tpUserName, string roundId, string gameId, string product, string type, Func<string, string, string, Dictionary<string, string>, int, string> callback)
         {
             var apiUrl = $"{Config.PokerApiUrl}/seamless/report";
             var param = new

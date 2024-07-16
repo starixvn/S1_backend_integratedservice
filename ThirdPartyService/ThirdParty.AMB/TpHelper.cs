@@ -13,12 +13,12 @@ namespace ThirdParty.AMB
     public class TpHelper : ThirdPartyHelperBase
     {
         private readonly AMBConfig _siteAMBConfig;
-        
+
         public TpHelper(IServiceProvider provider)
         {
             _siteAMBConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AMBConfig>(TpEnum.AMB.ToString());
         }
-        
+
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -101,6 +101,8 @@ namespace ThirdParty.AMB
             var tpGameType = (TpGameType)getBetDetail.TpGameTypeOption.Type;
             var roundId = "";
             var gameId = "";
+            var product = "";
+            var type = "";
             switch (tpGameType)
             {
                 case TpGameType.AMB_Poker:
@@ -108,10 +110,11 @@ namespace ThirdParty.AMB
                     break;
                 case TpGameType.AMB_RNG:
                     {
-                        var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_AMB_Detail_Get",
-                            new { YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId }, DataBase.Report);
-                        roundId = getBetDetail.TransId;
-                        gameId = detailList?.FirstOrDefault().GetValueOrDefault("gameId")?.ToString();
+                        var wagerDetail = TpBetRecordProvider.DbQuery("Service_TpWagerRng_AMB_Detail_Get", new { _roundid = getBetDetail.TransId }, DataBase.Wager);
+                        type = wagerDetail?.FirstOrDefault().GetValueOrDefault("categories")?.ToString();
+                        roundId = wagerDetail?.FirstOrDefault().GetValueOrDefault("transactionId")?.ToString();
+                        gameId = wagerDetail?.FirstOrDefault().GetValueOrDefault("gameId")?.ToString();
+                        product = wagerDetail?.FirstOrDefault().GetValueOrDefault("product")?.ToString();
                         break;
                     }
                 default:
@@ -119,7 +122,7 @@ namespace ThirdParty.AMB
             }
 
             var amb = AMBFactory.Create(tpGameType, _siteAMBConfig, tpCustInfo.TpCurrencyId);
-            var gameReport = amb.GetRoundResult(tpCustInfo.TpUserName, roundId, gameId, HttpPost);
+            var gameReport = amb.GetRoundResult(tpCustInfo.TpUserName, roundId, gameId, product, type, HttpPost);
             if (gameReport.status.code != 0)
             {
                 throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {gameReport.status.code} | {gameReport.status.message}");
@@ -221,8 +224,8 @@ namespace ThirdParty.AMB
                 return tpCustInfo.TpCurrencyId;
             return "THB";
         }
-        
-        private ApiResult AMB_CreateMember(TpGameType gameType, AMBConfig inputs , string tpCurrencyId, string tpUserName)
+
+        private ApiResult AMB_CreateMember(TpGameType gameType, AMBConfig inputs, string tpCurrencyId, string tpUserName)
         {
             var game = AMBFactory.Create(gameType, inputs, tpCurrencyId);
             var gameResult = game.CreateMember(tpUserName, HttpPost);
@@ -236,8 +239,8 @@ namespace ThirdParty.AMB
                     RawErrorCode = gameResult.status.code.ToString()
                 };
             }
-            
-            return new ApiResult{ErrorCode = ErrorCode.Success}; // 表示成功
+
+            return new ApiResult { ErrorCode = ErrorCode.Success }; // 表示成功
         }
     }
 }
