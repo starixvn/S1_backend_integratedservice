@@ -16,7 +16,7 @@ public class GiftInfoService
         _reportDbClient = serviceProvider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Report);
     }
 
-    public IEnumerable<GiftInfo> GetGiftList(int tpid)
+    public IEnumerable<GiftInfo> GetGiftList(string tpid)
     {
         var p = new DynamicParameters(new 
         { 
@@ -45,7 +45,7 @@ public class GiftInfoService
         return _mainDbClient.Execute("Service_WorkerPeriod_TaskDone_Set",p);
     }
 
-    public int SetTpBonusCode(int siteId, int tpId,string gameId,string bonusCode, DateTime expirationDate)
+    public int SetTpBonusCode(int siteId, int tpId,string gameId,string TpBonusCodeId,string bonusCode, DateTime expirationDate)
     {
         var p = new DynamicParameters(new
         {
@@ -53,6 +53,7 @@ public class GiftInfoService
             _TpId = tpId,
             _GameId = gameId,
             _BonusCode = bonusCode,
+            _TpBonusCodeId = TpBonusCodeId,
             _ExpirationDate = expirationDate
         });
         return _mainDbClient.Execute("Service_TpBonusCode_Set", p);

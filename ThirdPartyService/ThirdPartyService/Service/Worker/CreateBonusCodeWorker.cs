@@ -14,12 +14,14 @@ namespace ThirdPartyService.Service.Worker
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private Timer _timerCreatePPBonusCode;
         private readonly string WorkerName = "CreateBonusCode";
+        private readonly int[] _numbers;
 
         public CreateBonusCodeWorker(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<CreateBonusCodeWorker>>();
             _giftInfoBLL = provider.GetRequiredService<GiftInfoBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _numbers = new int[] { 5, 10 };//提供創建的三方Id
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -36,7 +38,7 @@ namespace ThirdPartyService.Service.Worker
             try
             {
                 var workList = _giftInfoBLL.GetWorkList(WorkerName);
-                var giftList = _giftInfoBLL.GetGiftList((int)TpEnum.PP).Where(x => x.GiftType == GiftTypeEnum.FreeSpin);
+                var giftList = _giftInfoBLL.GetGiftList(_numbers).Where(x => x.GiftType == GiftTypeEnum.FreeSpin);
 
                 foreach (var periodTask in workList)
                 {
@@ -64,10 +66,18 @@ namespace ThirdPartyService.Service.Worker
                         };
                         var result = _thirdPartyBLL.CreateBonusCode(p);
 
-                        _logger.LogInformation(result.ErrorCode == 0
-                            ? $"GiftId:{item.GiftId}，BonusCode:{bonusCode} Create Success"
-                            : $"GiftId:{item.GiftId}，BonusCode:{bonusCode} Create Fail，{result.RawMessage}");
+                        if (result.ErrorCode == 0)
+                        {
+                            _giftInfoBLL.SetTpBonusCode(item.TpId, item.SiteId, inputs, result.Message);
+                            _logger.LogInformation($"GiftId:{item.GiftId}，BonusCode:{bonusCode} Create Success");
+                        }
+                        else
+                        {
+                            _logger.LogInformation($"GiftId:{item.GiftId}，BonusCode:{bonusCode} Create Fail，{result.RawMessage}");
+                        }
+
                     }
+                    
                     _giftInfoBLL.SetTaskDone(periodTask.SiteId, periodTask.CurrencyId, WorkerName);
                 }
             }

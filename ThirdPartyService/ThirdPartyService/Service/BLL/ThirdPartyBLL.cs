@@ -1273,7 +1273,7 @@ namespace ThirdPartyService.Service.BLL
 
             if (apiResult.ErrorCode == 0)
             {
-                _giftInfoBLL.SetTpBonusCode(createBonusCode.TpId, createBonusCode.SiteId,inputs);
+                _giftInfoBLL.SetTpBonusCode(createBonusCode.TpId, createBonusCode.SiteId,inputs,apiResult.Message);
             }
 
             return apiResult;

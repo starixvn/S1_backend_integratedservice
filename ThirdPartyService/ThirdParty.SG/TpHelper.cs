@@ -344,12 +344,15 @@ namespace ThirdParty.SG
             {
                 merchantCode = config.merchantCode,
                 promotionCode = "B-FS02",
-                promotionId = inputs["bonusCode"],
+                promotionId = int.Parse(inputs["TpBonusCodeId"]),
                 serialNo = Guid.NewGuid().ToString(),
-                playerList = new
+                playerList = new[]
                 {
-                    merchantCode = config.merchantCode,
-                    accId = tpCustInfo.TpUserName
+                    new
+                    {
+                        merchantCode = config.merchantCode,
+                        acctId = tpCustInfo.TpUserName
+                    }
                 }
             };
 
@@ -454,6 +457,7 @@ namespace ThirdParty.SG
             if (json.Code == 0)
             {
                 oApiResult.ErrorCode = ErrorCode.Success;
+                oApiResult.Message = json.PromotionId;
             }
             else
             {

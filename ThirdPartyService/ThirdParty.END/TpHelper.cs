@@ -230,6 +230,7 @@ namespace ThirdParty.END
 
         public override ApiResult AddPrizeToPlayer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
+            throw new NotImplementedException();
             var oApiResult = new ApiResult();
             var tpConfig = new TpConfig(inputs);
 
@@ -238,6 +239,7 @@ namespace ThirdParty.END
         }
         public override ApiResult CreateBonusCode(int siteId, Dictionary<string, string> inputs)
         {
+            throw new NotImplementedException();
             var oApiResult = new ApiResult();
             var tpConfig = new TpConfig(inputs);
 
