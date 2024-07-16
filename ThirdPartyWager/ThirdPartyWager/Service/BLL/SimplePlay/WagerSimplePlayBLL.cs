@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -19,6 +18,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly int _tpId = (int)Tp.SimplePlay;
         private readonly int _timeZone = 8;
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
+
 
         public WagerSimplePlayBLL(IServiceProvider provider)
         {
@@ -76,10 +76,10 @@ namespace ThirdPartyWager.Service.BLL
             try
             {
                 // get api info
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
+                var setting = string.Empty;
 
                 // get wager
-                var dataWager = await _apiSimplePlayBLL.GetBetListByTime(setting, wagerTime.startTime, wagerTime.endTime);
+                var dataWager = await _apiSimplePlayBLL.GetBetListByTime(wagerTime.startTime, wagerTime.endTime);
 
                 // error condition
                 var errorCode = dataWager.GetAllBetDetailsForTimeIntervalResponse?.ErrorMsgId ?? dataWager.APIResponse.ErrorMsgId;
@@ -175,7 +175,7 @@ namespace ThirdPartyWager.Service.BLL
             return (lastTime == null) ? DateTime.Now.AddHours(-7) : lastTime.StartTime.AddSeconds(vary);
         }
 
-        private bool CheckQuick(DateTime workTime, int excess)
+        private static bool CheckQuick(DateTime workTime, int excess)
         {
             var diff = DateTime.Now - workTime;
             return DateTime.Now > workTime && diff.TotalMinutes > excess;
