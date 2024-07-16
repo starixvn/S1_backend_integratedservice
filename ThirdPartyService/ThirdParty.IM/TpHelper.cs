@@ -22,7 +22,6 @@ namespace ThirdParty.IM
         };
 
         private readonly Dictionary<int, IMConfig> _siteIMConfig;
-        private readonly Dictionary<int, SPRIBEConfig> _siteSPRIBEConfig;
         #endregion
 
         private const string ContentType = "application/json";
@@ -37,23 +36,19 @@ namespace ThirdParty.IM
             }
 
             _siteIMConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<IMConfig>(TpEnum.IM.ToString());
-            _siteSPRIBEConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SPRIBEConfig>(TpEnum.SPRIBE.ToString());
         }
 
-        public class IMSPRIBEConfig : TpSiteConfig
+        public class IMConfig : TpSiteConfig 
         {
             public string Key { get; set; }
             public string Prefix { get; set; }
             public string MerchantName { get; set; }
         }
-        public class IMConfig : IMSPRIBEConfig { }
-        public class SPRIBEConfig : IMSPRIBEConfig { }
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var apiUrl = $"{inputs["ApiUrl"]}/Player/Register";
-
-            IMSPRIBEConfig config = tpCustInfo.TpId == (int)TpEnum.IM ? _siteIMConfig[tpCustInfo.TpId] : _siteSPRIBEConfig[tpCustInfo.TpId];
+            var config = _siteIMConfig[tpCustInfo.SiteId];
+            var apiUrl = $"{config.ApiUrl}/Player/Register";
 
             var signUp = new RegisterModel
             {
@@ -86,13 +81,12 @@ namespace ThirdParty.IM
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var apiUrl = appType == AppType.Desktop ? $"{inputs["ApiUrl"]}/Game/NewLaunchGame" : $"{inputs["ApiUrl"]}/Game/NewLaunchMobileGame";
+            var config = _siteIMConfig[tpCustInfo.SiteId];
+            var apiUrl = appType == AppType.Desktop ? $"{config.ApiUrl}/Game/NewLaunchGame" : $"{config.ApiUrl}/Game/NewLaunchMobileGame";
             var playerName = tpCustInfo.TpUserName;
 
             var tpGameType = inputs.ContainsKey("tpGameType") && !string.IsNullOrEmpty(inputs["tpGameType"]) ? Convert.ToInt32(inputs["tpGameType"]) : (int)TpGameType.IM_Sports;
             var productWallet = _productWallet[(TpGameType)tpGameType];
-
-            IMSPRIBEConfig config = inputs["tpId"] == ((int)TpEnum.IM).ToString() ? _siteIMConfig[tpCustInfo.SiteId] : _siteSPRIBEConfig[tpCustInfo.SiteId];
 
             var signUp = new LaunchGameModel
             {
