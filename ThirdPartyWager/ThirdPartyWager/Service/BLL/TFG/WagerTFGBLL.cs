@@ -2,6 +2,7 @@
 
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -83,13 +84,12 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        public async Task<(bool Success, bool DoQuick)> UnsettleCheck()
+        public async Task<(bool Success, bool DoQuick)> UnsettleCheck(TFGConfig config)
         {
             try
             {
                 string msg;
-                var setting = _thirdPartyBLL.GetThirdPartySetting(48);
-                var apiUrl = setting["ApiUrl"];
+                var apiUrl = config.ApiUrl;
                 var checkList = await _wagerTFGService.GetUnsettleCheckList();
                 _logger.LogInformation($"TFG Unsettle Count:{checkList.Count()}");
                 var doQuick = checkList.Count() == 1000;
@@ -102,9 +102,9 @@ namespace ThirdPartyWager.Service.BLL
 
                         //當初config檔的人民幣跟三方取名不同，這邊做轉換
                         var currency = bettrans.currency == "RMB" ? "CNY" : bettrans.currency;
-                        if (bettrans != null && setting.ContainsKey($"PrivateToken_{currency}"))
+                        if (bettrans != null && config.CurrencyData.ContainsKey(currency))
                         {
-                            var dataWager = await _apiTFGBLL.GetBetTransactionById(apiUrl, setting[$"PrivateToken_{currency}"], chcek.TransId);
+                            var dataWager = await _apiTFGBLL.GetBetTransactionById(apiUrl, config.CurrencyData[currency].PrivateToken, chcek.TransId);
                             if (dataWager != null)
                             {
                                 foreach (var wager in dataWager.results)
