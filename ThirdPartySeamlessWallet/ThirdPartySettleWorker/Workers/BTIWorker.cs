@@ -83,11 +83,10 @@ namespace ThirdPartySettleWorker.Workers
                         var stake = unsettledList.First().DebitAmount;
                         // 派彩總金額，使用Credit的Amout，會有一筆所以用Sum
                         var payout = unsettledList.Sum(i => i.CreditAmount);
-                        // 計算有效下注
-                        var validBet = CaculateValidBetAmount(unsettledList, debitList);
+                        // 計算有效下注 & 注單狀態是否取消(creditcustomer)
+                        var validBet = CaculateValidBetAmount(unsettledList, debitList, out bool isCanceled);
                         // 注單狀態是否完成
                         var isClosed = unsettledList.Any(i => i.CurrentStatus.Equals("Closed", StringComparison.OrdinalIgnoreCase));
-
                         //未結算預設值
                         var winlostAmount = 0m;
                         var settlementType = SettlementType.UnSettled;
@@ -102,10 +101,11 @@ namespace ThirdPartySettleWorker.Workers
                         }
 
                         //Reserve.TicketStatus = 3就是下注失敗退款
-                        if (unsettledList.Any(i => i.TicketStatus == (int)TicketStatus.Refund))
+                        if (unsettledList.Any(i => i.TicketStatus == (int)TicketStatus.Refund) || isCanceled)
                         {
                             settlementType = SettlementType.SettledForInvalid;
                             ticketStatus = TicketStatus.Refund;
+                            winlostAmount = 0;
                         }
 
                         //下注流程異常，debit沒有資料，unsettledList的TicketStatus未更新，需要手動處理
@@ -171,9 +171,10 @@ namespace ThirdPartySettleWorker.Workers
             }
         }
 
-        private decimal CaculateValidBetAmount(IEnumerable<BTISettleData> settleList, IEnumerable<BTIDebitData> debitList)
+        private decimal CaculateValidBetAmount(IEnumerable<BTISettleData> settleList, IEnumerable<BTIDebitData> debitList, out bool isCanceled)
         {
             var validBetAmount = 0m;
+             isCanceled = false;
 
             foreach (var debit in debitList)
             {
@@ -194,6 +195,12 @@ namespace ThirdPartySettleWorker.Workers
                     "Draw" or "Canceled" or "Cashout" => 0m,
                     _ => 0m,
                 };
+
+                // 檢查最後是否取消
+                if (settleStatus.Equals("Canceled", StringComparison.OrdinalIgnoreCase))
+                {
+                    isCanceled = true;
+                }
             }
 
             return validBetAmount;
