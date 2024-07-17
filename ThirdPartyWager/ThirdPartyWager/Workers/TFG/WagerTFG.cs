@@ -4,6 +4,7 @@ using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Workers
 {
@@ -23,20 +24,18 @@ namespace ThirdPartyWager.Workers
         private int quick = 0;
         private readonly int timeZone = 0;
         private readonly WagerTFGBLL _wagerTFGBLL;
+        private readonly Dictionary<int, TFGConfig> _siteConfigDic;
 
         public WagerTFG(
-            ILogger<WagerTFG> logger,
-            CommonBLL commonBLL,
-            ThirdPartyBLL thirdPartyBLL,
-            DateTimeHelper dateTimeHelper,
-            WagerTFGBLL wagerTFGBLL
+            IServiceProvider provider
         )
         {
-            _logger = logger;
-            _commonBLL = commonBLL;
-            _thirdPartyBLL = thirdPartyBLL;
-            _dateTimeHelper = dateTimeHelper;
-            _wagerTFGBLL = wagerTFGBLL;
+            _logger = provider.GetRequiredService<ILogger<WagerTFG>>();
+            _commonBLL = provider.GetRequiredService<CommonBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _wagerTFGBLL = provider.GetRequiredService<WagerTFGBLL>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<TFGConfig>(Tp.TFG.ToString());
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -52,10 +51,11 @@ namespace ThirdPartyWager.Workers
             try
             {
                 var TpCurrencyList = _commonBLL.GetTpCurrencyList((int)Tp.TFG);
-                var setting = _thirdPartyBLL.GetThirdPartySetting((int)Tp.TFG);
+                var config = _siteConfigDic[0];
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(tpId, tpType);
-                var apiurl = setting["ApiUrl"];
+                var apiurl = config.ApiUrl;
                 var SetTimer = true;
+
                 DateTime timerTime;
                 int last;
                 if (dataTpTimer == null)
@@ -73,9 +73,9 @@ namespace ThirdPartyWager.Workers
                     var time = _dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-ddTHH:mm:ss.fffZ", timerTime);
                     foreach (var TpCurrency in TpCurrencyList)
                     {
-                        if (setting.ContainsKey($"PrivateToken_{TpCurrency.TpCurrencyId}"))
+                        if (config.CurrencyData.ContainsKey(TpCurrency.TpCurrencyId))
                         {
-                            var result = await _wagerTFGBLL.GetWagersAsync(apiurl, setting[$"PrivateToken_{TpCurrency.TpCurrencyId}"], time.startTime, time.endTime);
+                            var result = await _wagerTFGBLL.GetWagersAsync(apiurl, config.CurrencyData[TpCurrency.TpCurrencyId].PrivateToken, time.startTime, time.endTime);
                             if (!result)
                             {
                                 SetTimer = false;
