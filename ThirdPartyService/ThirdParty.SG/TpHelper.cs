@@ -334,5 +334,156 @@ namespace ThirdParty.SG
                 _ => gameCode,
             };
         }
+        public override ApiResult AddPrizeToPlayer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var oApiResult = new ApiResult();
+            var config = _siteConfig;
+            var apiURL = config.ApiUrl;
+
+            var p = new
+            {
+                merchantCode = config.merchantCode,
+                promotionCode = "B-FS02",
+                promotionId = int.Parse(inputs["TpBonusCodeId"]),
+                serialNo = Guid.NewGuid().ToString(),
+                playerList = new[]
+                {
+                    new
+                    {
+                        merchantCode = config.merchantCode,
+                        acctId = tpCustInfo.TpUserName
+                    }
+                }
+            };
+
+            var a = JsonConvert.SerializeObject(p);
+            var result = HttpPost(
+                config.ApiUrl + "/refillLoyalFreeSpinPlayer",
+                JsonConvert.SerializeObject(p),
+                "application/json"
+            );
+
+            if (!IsJSON(result))
+            {
+                oApiResult.RawMessage = "No Result";
+                oApiResult.RawErrorCode = "1";
+                oApiResult.ErrorCode = ErrorCode.Fail;
+                return oApiResult;
+            }
+
+            var json = JsonConvert.DeserializeObject<LoyalFreeSpinResponse>(result);
+            if (json.Code == 0)
+            {
+                oApiResult.ErrorCode = ErrorCode.Success;
+            }
+            else
+            {
+                oApiResult.ErrorCode = ErrorCode.Fail;
+                oApiResult.RawMessage = json.Msg;
+                oApiResult.RawErrorCode = json.Code.ToString();
+            }
+
+            return oApiResult;
+        }
+        public override ApiResult CreateBonusCode(int siteId, Dictionary<string, string> inputs)
+        {
+            var oApiResult = new ApiResult();
+            var config = _siteConfig;
+            var apiURL = config.ApiUrl;
+            var startDate = DateTime.Now.AddHours(2).ToString("yyyyMMdd'T'HH0000");//加兩小時為三方限制，建立後要等一下才能開始使用
+            // 判斷 inputs["ExpirationDay"] 是否有值，若沒指定則預設30天
+            var expirationDate = inputs.ContainsKey("ExpirationDay") && int.TryParse(inputs["ExpirationDay"], out int expirationDays)
+                ? DateTimeOffset.Now.AddDays(expirationDays).ToString("yyyyMMdd'T'HH5959")
+                : DateTimeOffset.Now.AddDays(30).ToString("yyyyMMdd'T'HH5959");
+            var gameId = inputs["GameId"];
+            var currency = inputs["Currency"];
+            var round = int.Parse(inputs["Round"]);
+            var betCost = GetBetScales(config, gameId, currency);
+
+            if (betCost.Code != 0)
+            {
+                oApiResult.RawMessage = "betCost error";
+                oApiResult.RawErrorCode = "1";
+                oApiResult.ErrorCode = ErrorCode.Fail;
+                return oApiResult;
+            }
+
+            var p = new
+            {
+                beginDate = startDate,
+                endDate = expirationDate,
+                merchantCode = config.merchantCode,
+                currency = inputs["Currency"],
+                promotionCode = "B-FS02",
+                freeSpinName = inputs["BonusCode"],
+                gameList = new[]
+                {
+                    new
+                    {
+                        gameCode = gameId,
+                        gameCount = round,
+                        betCost = betCost.BetCosts.BetCostList.FirstOrDefault(p => p.GameCode ==gameId).BetCostList.Min()//最小下注額
+                    }
+                },
+                playerList = new object[] { },
+                showTotalSpins = round,
+                bufferTime = 30,
+                serialNo = Guid.NewGuid().ToString(),
+                siteIds = "",
+                downlineList = new[]
+                {
+                    new
+                    {
+                        merchantCode = config.merchantCode
+                    }
+                },
+            };
+
+            var result = HttpPost(
+                config.ApiUrl+ "/createLoyalFreeSpin",
+                JsonConvert.SerializeObject(p),
+                "application/json"
+            );
+
+            if (!IsJSON(result))
+            {
+                oApiResult.RawMessage = "Create No Result";
+                oApiResult.RawErrorCode = "1";
+                oApiResult.ErrorCode = ErrorCode.Fail;
+                return oApiResult;
+            }
+
+            var json = JsonConvert.DeserializeObject<LoyalFreeSpinResponse>(result);
+            if (json.Code == 0)
+            {
+                oApiResult.ErrorCode = ErrorCode.Success;
+                oApiResult.Message = json.PromotionId;
+            }
+            else
+            {
+                oApiResult.ErrorCode = ErrorCode.Fail;
+                oApiResult.RawMessage = json.Msg;
+                oApiResult.RawErrorCode = json.Code.ToString();
+            }
+            return oApiResult;
+        }
+        private BetCostResponse GetBetScales(SGConfig config, string gameId, string currency)
+        {
+            var p = new
+            {
+                serialNo = Guid.NewGuid().ToString(),
+                merchantCode = config.merchantCode,
+                currency = currency,
+                gameCode = gameId
+            };
+
+            var data = HttpPost(
+                config.ApiUrl + "/getBetCost",
+                JsonConvert.SerializeObject(p),
+                "application/json"
+            );
+
+            return JsonConvert.DeserializeObject<BetCostResponse>(data);
+        }
     }
 }

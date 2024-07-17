@@ -7,19 +7,21 @@ using ThirdPartyService.Service.BLL;
 using ThirdPartyService.Service.Model;
 namespace ThirdPartyService.Service.Worker
 {
-    public class CreatePPBonusCodeWorker : BackgroundService
+    public class CreateBonusCodeWorker : BackgroundService
     {
-        private readonly ILogger<CreatePPBonusCodeWorker> _logger;
+        private readonly ILogger<CreateBonusCodeWorker> _logger;
         private readonly GiftInfoBLL _giftInfoBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private Timer _timerCreatePPBonusCode;
-        private readonly string WorkerName = "CreatePPBonusCode";
+        private readonly string WorkerName = "CreateBonusCode";
+        private readonly int[] _numbers;
 
-        public CreatePPBonusCodeWorker(IServiceProvider provider)
+        public CreateBonusCodeWorker(IServiceProvider provider)
         {
-            _logger = provider.GetRequiredService<ILogger<CreatePPBonusCodeWorker>>();
+            _logger = provider.GetRequiredService<ILogger<CreateBonusCodeWorker>>();
             _giftInfoBLL = provider.GetRequiredService<GiftInfoBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _numbers = new int[] { 5, 10 };//提供創建的三方Id
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -36,7 +38,7 @@ namespace ThirdPartyService.Service.Worker
             try
             {
                 var workList = _giftInfoBLL.GetWorkList(WorkerName);
-                var giftList = _giftInfoBLL.GetGiftList((int)TpEnum.PP).Where(x => x.GiftType == GiftTypeEnum.FreeSpin);
+                var giftList = _giftInfoBLL.GetGiftList(_numbers).Where(x => x.GiftType == GiftTypeEnum.FreeSpin);
 
                 foreach (var periodTask in workList)
                 {
@@ -50,7 +52,7 @@ namespace ThirdPartyService.Service.Worker
                         var bonusCode = BonusCodeRule(item);
                         var inputs = new Dictionary<string, string>
                         {
-                            { "GameId", "vs20olympnova88" },
+                            { "GameId", item.GameId },
                             { "BonusCode", bonusCode },
                             { "Round", item.Round.ToString() },
                             { "Currency", item.TpCurrencyId },
@@ -58,16 +60,24 @@ namespace ThirdPartyService.Service.Worker
                         };
                         var p = new CreateBonusCode()
                         {
-                            TpId = 5,//PP
+                            TpId = item.TpId,
                             SiteId = item.SiteId,
                             inputs = inputs
                         };
                         var result = _thirdPartyBLL.CreateBonusCode(p);
 
-                        _logger.LogInformation(result.ErrorCode == 0
-                            ? $"GiftId:{item.GiftId}，BonusCode:{bonusCode} Create Success"
-                            : $"GiftId:{item.GiftId}，BonusCode:{bonusCode} Create Fail，{result.RawMessage}");
+                        if (result.ErrorCode == 0)
+                        {
+                            _giftInfoBLL.SetTpBonusCode(item.TpId, item.SiteId, inputs, result.Message);
+                            _logger.LogInformation($"GiftId:{item.GiftId}，BonusCode:{bonusCode} Create Success");
+                        }
+                        else
+                        {
+                            _logger.LogInformation($"GiftId:{item.GiftId}，BonusCode:{bonusCode} Create Fail，{result.RawMessage}");
+                        }
+
                     }
+                    
                     _giftInfoBLL.SetTaskDone(periodTask.SiteId, periodTask.CurrencyId, WorkerName);
                 }
             }
@@ -94,9 +104,9 @@ namespace ThirdPartyService.Service.Worker
 
         private static string BonusCodeRule(GiftInfo giftInfo)
         {
-            //BonusCode規則。ex.PP2FREESPIN100FORNOVA8820240306
+            //BonusCode規則。ex.52FREESPIN100FORNOVA8820240306
             //排程預先建立隔一日的bonuscode
-            var bonusCode = $"PP{giftInfo.CurrencyId}FREESPIN{giftInfo.Round}FOR{giftInfo.SiteName.ToUpper()}{DateTime.UtcNow.AddDays(1).ToString("yyyyMMdd")}";
+            var bonusCode = $"{giftInfo.TpId}{giftInfo.CurrencyId}FREESPIN{giftInfo.Round}FOR{giftInfo.SiteName.ToUpper()}{DateTime.UtcNow.AddDays(1).ToString("yyyyMMdd")}";
             return bonusCode;
         }
 

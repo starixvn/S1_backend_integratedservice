@@ -20,6 +20,8 @@ public class GiftInfo
     public GiftTypeEnum GiftType { get; set; }
 
     public int Round { get; set; }
+    public int TpId { get; set; }
+    public string GameId { get; set; }
 }
 
 public class WorkerPeriodTask

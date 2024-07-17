@@ -1,7 +1,7 @@
-﻿using System.Security.Policy;
+﻿using Newtonsoft.Json;
 using ThirdPartyService.Service.DAL;
 using ThirdPartyService.Service.Model;
-using static ThirdParty.EBet.TpHelper;
+
 
 namespace ThirdPartyService.Service.BLL;
 
@@ -14,9 +14,9 @@ public class GiftInfoBLL
         _giftInfoService = giftInfoService;
     }
 
-    public IEnumerable<GiftInfo> GetGiftList(int tpId)
+    public IEnumerable<GiftInfo> GetGiftList(int[] tpId)
     {
-        return _giftInfoService.GetGiftList(tpId);
+        return _giftInfoService.GetGiftList(JsonConvert.SerializeObject(tpId));
     }
 
     public IEnumerable<WorkerPeriodTask> GetWorkList(string workerName)
@@ -27,5 +27,16 @@ public class GiftInfoBLL
     public int SetTaskDone(int periodTaskSiteId, int periodTaskCurrencyId, string workerName)
     {
         return _giftInfoService.SetTaskDone(periodTaskSiteId, periodTaskCurrencyId, workerName);
+    }
+
+    public int SetTpBonusCode(int tpId, int siteId, Dictionary<string, string> inputs,string TpBonusCodeId)
+    {
+        var gameId = inputs["GameId"];
+        var bonusCode = inputs["BonusCode"];
+        var expirationDate = inputs.ContainsKey("ExpirationDay") && int.TryParse(inputs["ExpirationDay"], out int expirationDays)
+            ? DateTimeOffset.Now.AddDays(expirationDays).UtcDateTime
+            : DateTimeOffset.Now.AddDays(30).UtcDateTime;
+
+        return _giftInfoService.SetTpBonusCode(siteId,tpId,gameId,TpBonusCodeId,bonusCode, expirationDate);
     }
 }

@@ -32,6 +32,7 @@ namespace ThirdPartyService.Service.BLL
         private readonly TpCustBalanceService _tpCustBalanceService;
         private readonly TpTransferInfo _tpTransferInfo;
         private readonly CacheHelper _cacheHelper;
+        private readonly GiftInfoBLL _giftInfoBLL;
         private readonly IReadOnlyDictionary<int, TpListOption> _TpList;
         private readonly Dictionary<int, TpGameTypeOption> _tpGameTypeConfig;
         private readonly IReadOnlyDictionary<int, CurrencyOption> _currencyList;
@@ -69,6 +70,7 @@ namespace ThirdPartyService.Service.BLL
             _tpCustBalanceService = provider.GetRequiredService<TpCustBalanceService>();
             _tpTransferInfo = provider.GetRequiredService<TpTransferInfo>();
             _cacheHelper = provider.GetRequiredService<CacheHelper>();
+            _giftInfoBLL = provider.GetRequiredService<GiftInfoBLL>();
 
             ThirdPartyHelperBase.AuthProvider = provider.GetRequiredService<AuthBLL>();
             ThirdPartyHelperBase.ServerInfoProvider = provider.GetRequiredService<ServerInfoBLL>();
@@ -1268,6 +1270,11 @@ namespace ThirdPartyService.Service.BLL
             }
 
             apiResult = tpHelper.CreateBonusCode(createBonusCode.SiteId, inputs);
+
+            if (apiResult.ErrorCode == 0)
+            {
+                _giftInfoBLL.SetTpBonusCode(createBonusCode.TpId, createBonusCode.SiteId,inputs,apiResult.Message);
+            }
 
             return apiResult;
         }
