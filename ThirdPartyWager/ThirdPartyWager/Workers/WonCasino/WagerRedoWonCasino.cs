@@ -64,11 +64,12 @@ namespace ThirdPartyWager.Workers
                     dataTpTimer.StartTime = dataTpTimer.StartTime.AddSeconds(1);
                 }
 
-                quick = CheckQuick(dataTpTimer.StartTime, 120);
-                var cvTime = DateTimeOffset.Now.AddHours(-1).ToOffset(new TimeSpan(_timeZone, 0, 0)).DateTime;
-                if (dataTpTimer.StartTime <= cvTime)
+                quick = CheckQuick(dataTpTimer.StartTime, 100);
+                var cvTime = DateTimeOffset.Now.AddHours(-1).ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
+                var time = _dateTimeHelper.GetTimeByMinute(_iRangMins - 1, _timeZone, _timeFormat, dataTpTimer.StartTime);
+
+                if (time.endUnix <= cvTime)
                 {
-                    var time = _dateTimeHelper.GetTimeByMinute(_iRangMins - 1, _timeZone, _timeFormat, dataTpTimer.StartTime);
                     var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
 
                     foreach (var site in siteList)

@@ -56,7 +56,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         //result = walletService.SetBalance(tpCustInfo.CustId, tpCustInfo.SiteId, tpCustInfo.UserName, settledDataRNG_GPI.jackpot_win ?? 0, (int)Tp.GPI, TransType.Settled, $"Jackpot: {Math.Abs(settledDataRNG_GPI.jackpot_win ?? 0).ToString("#,##0.##")}", settledDataRNG_GPI.trx_id, out afterAmount, conn, trans);
                         result = PayoutV2(tpCustInfo, settledDataRNG_GPI.jackpot_win ?? 0, (int)Tp.GPI, settledDataRNG_GPI.round_id, gameType, TpCategory.Slots, settledDataRNG_GPI.trx_id, TransType.Prize, null, out afterAmount, $"Jackpot", out bonusId, conn, trans);
                     }
-                    
+
                     if (result > 0)
                     {
                         _mainDbClient.CommitAndDisposeConnection(conn, trans);
@@ -65,7 +65,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                     }
-                    
+
                 }
             }
             catch (MySqlException mySqlEx)
@@ -2233,7 +2233,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         balance = afterAmount,
                         Actions = "rollin",
                         TicketStatus = ticketStatus,
-                        TicketType = (int) BettransType.Payout,
+                        TicketType = (int)BettransType.Payout,
                         SettleFlag = settleFlag
                     });
 
@@ -2243,7 +2243,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         result = _tpUnsettleService.InsertTpUnsettle(Tp.CQ9, gameType, rollinDataFish_CQ9.roundid, trans);
                     }
-                    
+
                     if (result > 0)
                     {
                         _mainDbClient.CommitAndDisposeConnection(conn, trans);
@@ -2274,7 +2274,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public SettleDataRNG_CQ9 GetUnsettledListRNG_CQ9(string transId)
         {
-            return _mainDbClient.QueryFirst<SettleDataRNG_CQ9>("Service_BettransRng_CQ9_Unsettle_Get_V3", new DynamicParameters( new { TransId = transId }));
+            return _mainDbClient.QueryFirst<SettleDataRNG_CQ9>("Service_BettransRng_CQ9_Unsettle_Get_V3", new DynamicParameters(new { TransId = transId }));
         }
 
         public int SetSettleFlagRNG_CQ9(string roundid, int SettleFlag)
@@ -2289,7 +2289,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public SettleDataRNG_CQ9 GetUnsettledListFish_CQ9(string transId)
         {
-            return _mainDbClient.QueryFirst<SettleDataRNG_CQ9>("Service_BettransFish_CQ9_Unsettle_Get_V3", new DynamicParameters( new { TransId = transId }));
+            return _mainDbClient.QueryFirst<SettleDataRNG_CQ9>("Service_BettransFish_CQ9_Unsettle_Get_V3", new DynamicParameters(new { TransId = transId }));
         }
 
         public int SetSettleFlagFish_CQ9(string roundid, int SettleFlag)
@@ -2297,10 +2297,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = _mainDbClient.Execute("Service_BettransFish_CQ9_Settle_Set", commandType: CommandType.StoredProcedure, new { roundid = roundid, SettleFlag = SettleFlag });
             return result;
         }
-         
+
         public SettleDataRNG_CQ9 GetUnsettledListWCC_CQ9(string transId)
         {
-            return _mainDbClient.QueryFirst<SettleDataRNG_CQ9>("Service_BettransCF_CQ9_Unsettle_Get", new DynamicParameters( new { TransId = transId }));
+            return _mainDbClient.QueryFirst<SettleDataRNG_CQ9>("Service_BettransCF_CQ9_Unsettle_Get", new DynamicParameters(new { TransId = transId }));
         }
 
         public int SetSettleFlagWCC_CQ9(string roundid, int SettleFlag)
@@ -2327,7 +2327,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     return data;
                 }
             }
-            
+
             if (data == null || data.Count() == 0)
             {
                 data = _mainDbClient.Query<Record_CQ9>("Service_BettransCF_CQ9_Get", commandType: CommandType.StoredProcedure, new { mtcode = mtcode });
@@ -3008,7 +3008,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 // 已結束局
                 if (bettrans.Any(a => a.Completed))
                 {
-                    logger.LogError($"{cancelDataRng_MG.betId} is completed");
+                    logger.LogError($"{cancelDataRng_MG.betId} is completed(txnId)");
+                    return new MGCancelResult() { Result = 1 };
+                }
+
+                // 檢查該局是否已經結算
+                var isCompleted = await _mainDbClient.QueryFirstOrDefaultAsync<bool>("Service_BettransRng_MG_Check", trans, new { cancelDataRng_MG.betId });
+                if (isCompleted)
+                {
+                    logger.LogError($"{cancelDataRng_MG.betId} is completed(betId)");
                     return new MGCancelResult() { Result = 1 };
                 }
 
@@ -5926,7 +5934,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public SettleData_Skywind GetSettle_TpWager_Skywind(string transId)
         {
-            return _wagerDbClient.QueryFirst<SettleData_Skywind>("Service_TpWager_Skywind_Settle_Get", new { TransId = transId });
+            return _wagerDbClient.QueryFirst<SettleData_Skywind>("Service_TpWager_Skywind_Settle_Get_V2", new { TransId = transId });
         }
 
         #endregion

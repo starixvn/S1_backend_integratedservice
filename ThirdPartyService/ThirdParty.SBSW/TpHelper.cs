@@ -45,7 +45,7 @@ namespace ThirdParty.SBSW
             };
             var dicP = FromJson<Dictionary<string, string>>(ToJson(input));
             var postdata = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}"))}";
-            var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded");
+            var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded", timeOutTime: 3);
 
             var oApiResult = new ApiResult();
             if (IsJSON(result))
@@ -138,7 +138,7 @@ namespace ThirdParty.SBSW
             string postdata = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}").ToArray())}";
 
             var ApiUrl = $"{config.ApiUrl}/KickUser";
-            var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded");
+            var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded", timeOutTime: 3);
 
             ApiResult apiResult = new ApiResult();
             if (IsJSON(result))
@@ -187,7 +187,7 @@ namespace ThirdParty.SBSW
             var postData = $"{string.Join("&", props.Select(kp => $"{kp.Name}={kp.GetValue(req)}"))}";
 
             var apiUrl = $"{config.ApiUrl}/SetMemberBetSetting";
-            var result = HttpPost(apiUrl, postData, "application/x-www-form-urlencoded");
+            var result = HttpPost(apiUrl, postData, "application/x-www-form-urlencoded", timeOutTime: 3);
 
             var oApiResult = new ApiResult();
             if (IsJSON(result))
@@ -217,7 +217,7 @@ namespace ThirdParty.SBSW
         {
             var apiUrl = $"{config.ApiUrl}/GetSabaUrl";
             var sParam = $"vendor_id={config.VendorId}&vendor_member_id={tpUserName}&platform={platform}";
-            var json = HttpPost(apiUrl, sParam, ContentType);
+            var json = HttpPost(apiUrl, sParam, ContentType, timeOutTime: 3);
             var result = FromJson<LoginResult>(json);
             return result;
         }
@@ -507,7 +507,7 @@ namespace ThirdParty.SBSW
             {
                 var apiUrl = $"{config.ApiUrl}/GetGameDetail";
                 var sParam = $"vendor_id={config.VendorId}&match_ids={matchid}";
-                var json = HttpPost(apiUrl, sParam, ContentType);
+                var json = HttpPost(apiUrl, sParam, ContentType, timeOutTime: 3);
                 var result = FromJson<GetGameDetailResult>(json);
                 return result;
             }

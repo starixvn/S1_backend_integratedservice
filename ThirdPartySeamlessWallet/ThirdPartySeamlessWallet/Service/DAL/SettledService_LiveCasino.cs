@@ -1420,6 +1420,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                         if (result > 0)
                         {
+                            _tpUnsettleService.InsertTpUnsettle(Tp.Sexy, GameType.Sexy_LiveCasino, item.platformTxId, trans);
                             _mainDbClient.CommitAndDisposeConnection(conn, trans);
                         }
                         else
@@ -3085,7 +3086,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 // 已結束局
                 if (bettrans.Any(a => a.Completed))
                 {
-                    logger.LogError($"{cancelDataRng_MG.betId} is completed");
+                    logger.LogError($"{cancelDataRng_MG.betId} is completed(txnId)");
+                    return new MGCancelResult() { Result = 1 };
+                }
+                // 檢查該局是否已經結算
+                var checkBetId = _partitionService.Query<BettingDataRNG_MG>(partitionTime, "Service_BettransLC_MG_Check", new { cancelDataRng_MG.betId });
+                if (checkBetId.Any())
+                {
+                    logger.LogError($"{cancelDataRng_MG.betId} is completed(betId)");
                     return new MGCancelResult() { Result = 1 };
                 }
 
