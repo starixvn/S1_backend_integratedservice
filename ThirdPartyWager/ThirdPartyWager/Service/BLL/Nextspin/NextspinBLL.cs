@@ -1,6 +1,7 @@
 ﻿using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -17,6 +18,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly IWagerNextspinService _wagerService;
         private readonly ILogger<NextspinBLL> _logger;
         private readonly List<int> _siteList;
+        private readonly Dictionary<int, NextspinConfig> _siteConfigDic;
 
         public NextspinBLL(IServiceProvider provider)
         {
@@ -26,6 +28,7 @@ namespace ThirdPartyWager.Service.BLL
             _apiNextspinBll = provider.GetRequiredService<INextspinApi>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _siteList = _commonBLL.GetSiteByTpGameType((int)GameType.Nextspin_RNG).ToList();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<NextspinConfig>(Tp.Nextspin.ToString());
         }
 
         public async Task<bool> GetWagersAsync(string startTime, string endTime)
@@ -34,25 +37,25 @@ namespace ThirdPartyWager.Service.BLL
             {
                 foreach (var siteId in _siteList)
                 {
-                    var setting = _thirdPartyBLL.GetThirdPartyBySite<NextspinSetting>((int)Tp.Nextspin, siteId);
-
-                    var page = 1;
-                    int count;
-                    do
+                    if (_siteConfigDic.TryGetValue(siteId, out var config))
                     {
-                        var betHistory = await _apiNextspinBll.GetBetHistory(startTime, endTime, page, setting);
-
-                        if (betHistory == null) return false;
-
-                        count = betHistory.PageCount - page;
-                        if (betHistory.List != null && betHistory.List.Count > 0)
+                        var page = 1;
+                        int count;
+                        do
                         {
-                            var result = await _wagerService.InsertWager(betHistory.List);
-                            page++;
-                        }
-                    }
-                    while (count > 0);
+                            var betHistory = await _apiNextspinBll.GetBetHistory(startTime, endTime, page, config);
 
+                            if (betHistory == null) return false;
+
+                            count = betHistory.PageCount - page;
+                            if (betHistory.List != null && betHistory.List.Count > 0)
+                            {
+                                var result = await _wagerService.InsertWager(betHistory.List);
+                                page++;
+                            }
+                        }
+                        while (count > 0);
+                    }
                 }
                 return true;
             }

@@ -15,11 +15,11 @@ namespace ThirdParty.AG
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly AGConfig _siteAGConfig;
+        private readonly Dictionary<int, AGConfig> _siteAGConfig;
         private readonly ILogger<TpHelper> _logger;
         public TpHelper(IServiceProvider provider)
         {
-            _siteAGConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AGConfig>(TpEnum.AG.ToString());
+            _siteAGConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<AGConfig>(TpEnum.AG.ToString());
             _logger = provider.GetRequiredService<ILogger<TpHelper>>();
         }
         
@@ -84,9 +84,10 @@ namespace ThirdParty.AG
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var actype = tpCustInfo.IsTest ? "0" : "1";
-            var cagent = _siteAGConfig.cagent; 
-            var apiUrl = _siteAGConfig.ApiUrl; 
-            var Md5key = _siteAGConfig.Md5Key; 
+            var config = _siteAGConfig[tpCustInfo.SiteId];
+            var cagent = config.cagent; 
+            var apiUrl = config.ApiUrl; 
+            var Md5key = config.Md5Key; 
                 
             string _oddtype = null;
             oddsTypeDic.TryGetValue(tpCustInfo.TpCurrencyId, out _oddtype);
@@ -94,7 +95,7 @@ namespace ThirdParty.AG
 
             string sParams = $"cagent={cagent}/\\\\/loginname={tpCustInfo.TpUserName}/\\\\/method=lg/\\\\/actype={actype}/\\\\/password={tpCustInfo.TpPwd}/\\\\/oddtype={oddtype}/\\\\/cur={tpCustInfo.TpCurrencyId}";
             _logger.LogInformation(sParams);
-            string eParams = DESEncrypt(sParams, _siteAGConfig.DesKey);
+            string eParams = DESEncrypt(sParams, config.DesKey);
             string oMD5 = $"{eParams}{Md5key}";
             string postParams = $"params={eParams}&key={ToMD5(oMD5).ToLower()}";
 
@@ -164,11 +165,12 @@ namespace ThirdParty.AG
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             var actype = tpCustInfo.IsTest ? "0" : "1";
-            var cagent = _siteAGConfig.cagent;
-            var data_cagent = _siteAGConfig.data_cagent;
-            var GameUrl = _siteAGConfig.GameUrl;
-            var Md5key = _siteAGConfig.Md5Key;
-            var SessionUrl = _siteAGConfig.SessionUrl;
+            var config = _siteAGConfig[tpCustInfo.SiteId];
+            var cagent = config.cagent;
+            var data_cagent = config.data_cagent;
+            var GameUrl = config.GameUrl;
+            var Md5key = config.Md5Key;
+            var SessionUrl = config.SessionUrl;
             
             string _oddtype = null;
             oddsTypeDic.TryGetValue(tpCustInfo.TpCurrencyId, out _oddtype);
@@ -209,10 +211,10 @@ namespace ThirdParty.AG
             // parameter handle
             long sTimestemp = GetTimestemp1();
 
-            string dm = "www.nova88.net";
-            if (inputs.ContainsKey("host"))
+            string dm = string.Empty;
+            if (inputs.ContainsKey("homeUrl"))
             {
-                dm = inputs["host"];
+                dm = inputs["homeUrl"];
             }
 
             var langId = langIdDic.TryGetValue(TpLangId, out int _langId) ? _langId : 3;
@@ -225,7 +227,7 @@ namespace ThirdParty.AG
             }
 
             // encrypt
-            string eParams = DESEncrypt(sParams, _siteAGConfig.DesKey);
+            string eParams = DESEncrypt(sParams, config.DesKey);
             string oMD5 = $"{eParams}{Md5key}";
             postParams = $"params={eParams}&key={ToMD5(oMD5).ToLower()}";
 

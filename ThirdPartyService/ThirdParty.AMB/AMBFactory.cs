@@ -5,7 +5,7 @@ using ThirdPartyCore.Model.enums;
 namespace ThirdParty.AMB
 {
     public static class AMBFactory
-    { 
+    {
         public static AMB Create(TpGameType gameType, AMBConfig inputs, string tpCurrency)
         {
             return gameType switch
@@ -24,10 +24,10 @@ namespace ThirdParty.AMB
         public abstract GameListResponse GetGameList(Func<string, string, string, Dictionary<string, string>, int, string> callback);
         public abstract CommonResponse CreateMember(string tpUserName, Func<string, string, string, Dictionary<string, string>, int, string> callback);
 
-        public abstract CommonResponse LaunchGame(string tpUserName, string gameId, string homeUrl, bool isFun,string tpLangId,
+        public abstract CommonResponse LaunchGame(string tpUserName, string gameId, string homeUrl, bool isFun, string tpLangId,
             Func<string, string, string, Dictionary<string, string>, int, string> callback);
 
-        public abstract GameReportResponse GetRoundResult(string tpUserName, string roundId, string gameId,
+        public abstract GameReportResponse GetRoundResult(string tpUserName, string roundId, string gameId, string product, string type,
             Func<string, string, string, Dictionary<string, string>, int, string> callback);
 
         protected string HMACSHA512(string input, string key)

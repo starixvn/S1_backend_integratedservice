@@ -1,5 +1,4 @@
 ﻿using Serilog.Context;
-
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
@@ -13,6 +12,7 @@ namespace ThirdPartyWager.Workers
         private readonly NineWBLL _nineWService;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly DateTimeHelper _dateTimeHelper;
+        private Timer _getDomainTimer;
         private Timer _settleTimer;
         private Timer _settleTimerByDate;
         private Timer _reSttleTimer;
@@ -31,8 +31,11 @@ namespace ThirdPartyWager.Workers
             _nineWService = provider.GetRequiredService<NineWBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         }
+
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            DoGetDomain();
+            _getDomainTimer = new Timer(DoGetDomain, null, TimeSpan.FromMinutes(1), TimeSpan.Zero);
             _settleTimer = new Timer(DoSettle, null, TimeSpan.FromSeconds(1), TimeSpan.Zero);
             _settleTimerByDate = new Timer(DoSettleByDate, null, TimeSpan.FromSeconds(3), TimeSpan.Zero);
             _reSttleTimer = new Timer(DoReSettle, null, TimeSpan.FromMinutes(2), TimeSpan.Zero);
@@ -40,6 +43,11 @@ namespace ThirdPartyWager.Workers
             _financeTimer = new Timer(DoTpDailySummary, null, TimeSpan.FromSeconds(7), TimeSpan.Zero);
 
             return Task.CompletedTask;
+        }
+
+        private async void DoGetDomain()
+        {
+            await _nineWService.QueryDomain();
         }
 
         private async void DoSettle(object state)
@@ -248,5 +256,27 @@ namespace ThirdPartyWager.Workers
             _financeTimer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
+
+        private async void DoGetDomain(object state)
+        {
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
+            var nextTimeSpan = TimeSpan.FromHours(1);
+
+            try
+            {
+                await _nineWService.QueryDomain();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "WagerNineW.DoTpDailySummary.Exception");
+                nextTimeSpan = TimeSpan.FromMinutes(10);
+            }
+            finally
+            {
+                _getDomainTimer.Change(nextTimeSpan, TimeSpan.Zero);
+            }
+        }
+
     }
 }

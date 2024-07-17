@@ -187,10 +187,8 @@ namespace ThirdParty.AMB
             }
         }
 
-        public override GameReportResponse GetRoundResult(string tpUserName, string roundId, string gameId, Func<string, string, string, Dictionary<string, string>, int, string> callback)
+        public override GameReportResponse GetRoundResult(string tpUserName, string roundId, string gameId, string product, string type, Func<string, string, string, Dictionary<string, string>, int, string> callback)
         {
-            var games = GetGameList(callback);
-            var game = games.data.SingleOrDefault(a => a.prefix.Trim() == gameId.Trim());
             var apiUrl = $"{SlotCurrencyConfig.SlotApiUrl}/seamless/result";
             var param = new
             {
@@ -198,8 +196,8 @@ namespace ThirdParty.AMB
                 agent = SlotCurrencyConfig.Agent,
                 username = tpUserName,
                 language = "en",
-                provider = game.partner.ToLower(),
-                type = game.type
+                provider = product.ToUpper(),
+                type = type
             };
             var jsonParam = JsonConvert.SerializeObject(param);
             var header = new Dictionary<string, string>
