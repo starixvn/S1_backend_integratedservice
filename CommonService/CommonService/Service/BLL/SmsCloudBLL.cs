@@ -49,6 +49,7 @@ namespace CommonService.Service.BLL
             var smsMessage = MakeSmsContext(custInfo, otpNum);
             var oTpLog = new OTPLog
             {
+                SiteId = custInfo.SiteId,
                 OTPStatus = (int)OTPStatus.Fail,
                 OTPType = (int)OtpType.SMS,
                 OTPProvider = OTPProvider.SmsCloud.ToString(),
@@ -57,9 +58,9 @@ namespace CommonService.Service.BLL
                 UserName = custInfo.UserName,
                 PhoneNo = phoneNo,
                 Content = smsMessage,
-                OTPNum = otpNum
+                OTPNum = otpNum,
+                Request_id = Guid.NewGuid().ToString()
             };
-            oTpLog.Request_id = Guid.NewGuid().ToString();
 
             try
             {

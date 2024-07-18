@@ -10,5 +10,5 @@ public enum FaceBookPixel
     firstDepositArrival = 6,
     Purchase = 7,
     redeposit = 8,
-    startTrial = 9
+    StartTrial = 9
 }

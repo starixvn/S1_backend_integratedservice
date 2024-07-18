@@ -39,6 +39,12 @@
         public string InputOTP { get; set; }
     }
 
+    public class SignUpVerifyOTPReq
+    {
+        public string AreaPhoneNo { get; set; }
+        public string InputOTP { get; set; }
+    }
+    
     public class SKYLineSMSResult
     {
         public int status { get; set; }
@@ -87,6 +93,7 @@
 
     public class OTPLog
     {
+        public int SiteId { get; set; }
         public int CurrencyId { get; set; }
         public int OTPType { get; set; }
         public int CustId { get; set; }

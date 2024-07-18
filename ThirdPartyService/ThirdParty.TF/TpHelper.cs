@@ -1,7 +1,9 @@
 ﻿using System.Text;
 using System.Web;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -12,8 +14,21 @@ namespace ThirdParty.TFG
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        public TpHelper()
+        private readonly Dictionary<int, TFGConfig> _siteConfig;
+        public TpHelper(IServiceProvider provider)
         {
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<TFGConfig>(TpEnum.TFG.ToString());
+        }
+        public class TFGConfig : TpSiteConfig
+        {
+            public string RetrieveUrl { get; set; }
+            public Dictionary<string, CurrencyDataTFG> CurrencyData { get; set; }
+        }
+        public class CurrencyDataTFG
+        {
+            public string PartnerId { get; set; }
+            public string PublicToken { get; set; }
+            public string PrivateToken { get; set; }
         }
         public class GameURL
         {
@@ -136,8 +151,9 @@ namespace ThirdParty.TFG
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string RetrieveUrl = inputs.ContainsKey("RetrieveUrl") && !string.IsNullOrEmpty(inputs["RetrieveUrl"]) ? inputs["RetrieveUrl"] : throw new Exception();
-            string PublicToken = inputs.ContainsKey($"PublicToken_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"PublicToken_{tpCustInfo.TpCurrencyId}"]) ? inputs[$"PublicToken_{tpCustInfo.TpCurrencyId}"] : throw new Exception();
+            var config = _siteConfig[tpCustInfo.SiteId];
+            string RetrieveUrl = config.RetrieveUrl;
+            string PublicToken = config.CurrencyData[tpCustInfo.TpCurrencyId].PublicToken;
 
             #region token
             var key = ApplyToken(tpCustInfo);
@@ -172,8 +188,9 @@ namespace ThirdParty.TFG
         }
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception();
-            string PrivateToken = inputs.ContainsKey($"PrivateToken_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(inputs[$"PrivateToken_{tpCustInfo.TpCurrencyId}"]) ? inputs[$"PrivateToken_{tpCustInfo.TpCurrencyId}"] : throw new Exception();
+            var config = _siteConfig[tpCustInfo.SiteId];
+            string ApiUrl = config.ApiUrl;
+            string PrivateToken = config.CurrencyData[tpCustInfo.TpCurrencyId].PrivateToken;
 
             string url = $"https://{ApiUrl}/api/v2/bet-transaction/";
             string getParams = $"id={getBetDetail.TransId}";
