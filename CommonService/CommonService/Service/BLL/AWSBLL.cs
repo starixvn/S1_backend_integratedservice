@@ -50,6 +50,7 @@ namespace CommonService.Service.BLL
 
             var oTpLog = new OTPLog
             {
+                SiteId = custInfo.SiteId,
                 OTPStatus = (int)OTPStatus.Fail,
                 OTPType = (int)OtpType.SMS,
                 OTPProvider = OTPProvider.AWS.ToString(),

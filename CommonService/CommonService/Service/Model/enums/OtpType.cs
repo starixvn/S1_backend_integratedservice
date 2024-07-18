@@ -2,8 +2,9 @@
 {
     public enum OtpType
     {
-        SMS,
-        Email
+        SMS = 0,
+        Email = 1,
+        SignUp = 2
     }
 
 }
