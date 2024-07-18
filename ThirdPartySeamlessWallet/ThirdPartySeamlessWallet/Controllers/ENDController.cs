@@ -25,6 +25,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly int _thisTp;
         private readonly string _tpName = Tp.Endorphina.ToString();
         private readonly int _gameType = (int)GameType.Endorphina_RNG;
+        private readonly Dictionary<int, ENDConfig> _siteConfig;
 
         public ENDController(IServiceProvider provider)
         {
@@ -37,6 +38,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             _log2File = provider.GetRequiredService<Log2File>();
             _environment = provider.GetRequiredService<IHostEnvironment>();
             _thisTp = (int)Tp.Endorphina;
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<ENDConfig>(Tp.Endorphina.ToString());
+        }
+        public class ENDConfig : TpSiteConfig
+        {
+            public string FunGameUrl { get; set; }
+            public string NodeId { get; set; }
+            public string EdemoId { get; set; }
+            public string SecretKey { get; set; }
         }
 
         #region ErrorCode
@@ -150,9 +159,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return errorResponse;
                 }
 
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting(_thisTp);
-                var secretKey = thirdPartySetting.TpSetting["SecretKey"];
-                var nodeId = Convert.ToInt32(thirdPartySetting.TpSetting["NodeId"]);
+                var config = _siteConfig[1];
+                var secretKey = config.SecretKey;
+                var nodeId = Convert.ToInt32(config.NodeId);
 
                 CheckResp response = new()
                 {
@@ -609,8 +618,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         private bool CheckSign(string sign, string request, string logName)
         {
-            var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting(_thisTp);
-            var secretKey = thirdPartySetting.TpSetting["SecretKey"];
+            var config = _siteConfig[1];
+            var secretKey = config.SecretKey;
 
             var sortParam = SortParam(request, secretKey);
             var encryptSign = EncryptSha1(sortParam).ToLower();
