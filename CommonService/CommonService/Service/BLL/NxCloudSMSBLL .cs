@@ -64,6 +64,7 @@ namespace CommonService.Service.BLL
             var smsMessage = MakeSMSContext(custInfo, OTPNum, PhoneNo);
             var oTPLog = new OTPLog
             {
+                SiteId = custInfo.SiteId,
                 OTPStatus = (int)OTPStatus.Fail,
                 OTPType = (int)OtpType.SMS,
                 OTPProvider = OTPProvider.NxCloud.ToString(),

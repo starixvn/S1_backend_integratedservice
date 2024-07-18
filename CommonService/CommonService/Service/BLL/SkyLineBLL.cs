@@ -49,6 +49,7 @@ namespace CommonService.Service.BLL
             };
             var oTPLog = new OTPLog
             {
+                SiteId = custInfo.SiteId,
                 OTPStatus = (int)OTPStatus.Fail,
                 OTPType = (int)OtpType.SMS,
                 OTPProvider = OTPProvider.SkyLine.ToString(),
@@ -161,6 +162,7 @@ namespace CommonService.Service.BLL
             
             var oTPLog = new OTPLog
             {
+                SiteId = custInfo.SiteId,
                 OTPStatus = (int)OTPStatus.Fail,
                 OTPType = (int)OtpType.SMS,
                 OTPProvider = OTPProvider.SkyLine.ToString(),

@@ -1,47 +1,28 @@
 ﻿using System.Web;
 using System.Xml.Serialization;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
-
 namespace ThirdParty.SimplePlay
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        #region SimplePlay Configs Setting
-
-        private class TpConfig
-        {
-            public string ApiUrl { get; set; }
-
-            public string SecretKey { get; set; }
-
-            public string EncryptKey { get; set; }
-
-            public string Md5Key { get; set; }
-
-
-            public TpConfig(Dictionary<string, string> inputs)
-            {
-                ApiUrl = inputs.GetValueOrDefault("ApiUrl") ?? throw new Exception("ApiUrl");
-                SecretKey = inputs.GetValueOrDefault("SecretKey") ?? throw new Exception("SecretKey");
-                EncryptKey = inputs.GetValueOrDefault("EncrypKey") ?? throw new Exception("EncrypKey");
-                Md5Key = inputs.GetValueOrDefault("MD5Key") ?? throw new Exception("MD5Key");
-            }
-        }
 
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
+        private readonly SimplePlayConfig _siteConfig;
 
-        public TpHelper()
+        public TpHelper(IServiceProvider provider)
         {
             _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.SimplePlay).ToDictionary(d => d.AppId, d => d.Name);
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SimplePlayConfig>(TpEnum.SimplePlay.ToString());
         }
-        #endregion
 
         #region Response
 
@@ -73,7 +54,7 @@ namespace ThirdParty.SimplePlay
 
         #endregion
 
-        private string Time
+        private static string Time
         {
             get
             {
@@ -91,7 +72,7 @@ namespace ThirdParty.SimplePlay
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x");
-            ApiResult oApiResult = new ApiResult
+            ApiResult oApiResult = new()
             {
                 ErrorCode = ErrorCode.Success
             };
@@ -100,7 +81,7 @@ namespace ThirdParty.SimplePlay
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>
+            ApiResult<UserBalance> oApiResult = new()
             {
                 ErrorCode = ErrorCode.Fail
             };
@@ -114,7 +95,7 @@ namespace ThirdParty.SimplePlay
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var tpConfig = new TpConfig(inputs);
+            var config = _siteConfig;
             string gameId = inputs.GetValueOrDefault("gameId") ?? throw new Exception("gameId");
             string fun = inputs.GetValueOrDefault("fun") ?? "0";
             string homeUrl = inputs.GetValueOrDefault("homeUrl") ?? "";
@@ -124,18 +105,18 @@ namespace ThirdParty.SimplePlay
             string queryString;
             if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
             {
-                queryString = $"method=LoginRequestForFun&Key={tpConfig.SecretKey}&Amount=10000&CurrencyType=IDR&Time={time}&GameCode={gameId}&Lang={TpLangId}&Mobile={mobile}";
+                queryString = $"method=LoginRequestForFun&Key={config.SecretKey}&Amount=10000&CurrencyType=IDR&Time={time}&GameCode={gameId}&Lang={TpLangId}&Mobile={mobile}";
             }
             else
             {
-                queryString = $"method=LoginRequest&Key={tpConfig.SecretKey}&Time={time}&Username={tpCustInfo.TpUserName}&CurrencyType={tpCustInfo.TpCurrencyId}&GameCode={gameId}&Lang={TpLangId}&Mobile={mobile}";
+                queryString = $"method=LoginRequest&Key={config.SecretKey}&Time={time}&Username={tpCustInfo.TpUserName}&CurrencyType={tpCustInfo.TpCurrencyId}&GameCode={gameId}&Lang={TpLangId}&Mobile={mobile}";
             }
 
             ApiResult oApiResult = new ApiResult();
-            var q = HttpUtility.UrlEncode(DESEncryptSA(queryString, tpConfig.EncryptKey));
-            var s = ToMD5(queryString + tpConfig.Md5Key + time + tpConfig.SecretKey).ToLower();
+            var q = HttpUtility.UrlEncode(DESEncryptSA(queryString, config.EncryptKey));
+            var s = ToMD5(queryString + config.MD5Key + time + config.SecretKey).ToLower();
             var postData = "q=" + q + "&s=" + s;
-            var result = HttpPost(tpConfig.ApiUrl, postData, "application/x-www-form-urlencoded");
+            var result = HttpPost(config.ApiUrl, postData, "application/x-www-form-urlencoded");
             if (IsXML(result))
             {
                 var xml = (fun.Equals("1", StringComparison.OrdinalIgnoreCase)) ? XMLDeserialize<LoginFunResult>(result) : XMLDeserialize<LoginResult>(result);
@@ -168,19 +149,19 @@ namespace ThirdParty.SimplePlay
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var tpConfig = new TpConfig(inputs);
+            var config = _siteConfig;
             var time = Time;
             var method = "GetSlotDetailsURL";
 
             var split = getBetDetail.TransId.Split("_");
             var gameid = split[0];
 
-            var queryString = $"method={method}&Key={tpConfig.SecretKey}&Time={time}&GameID={gameid}";
-            var q = HttpUtility.UrlEncode(DESEncryptSA(queryString, tpConfig.EncryptKey));
-            var s = ToMD5(queryString + tpConfig.Md5Key + time + tpConfig.SecretKey).ToLower();
+            var queryString = $"method={method}&Key={config.SecretKey}&Time={time}&GameID={gameid}";
+            var q = HttpUtility.UrlEncode(DESEncryptSA(queryString, config.EncryptKey));
+            var s = ToMD5(queryString + config.MD5Key + time + config.SecretKey).ToLower();
             var postData = "q=" + q + "&s=" + s;
 
-            var result = HttpPost(tpConfig.ApiUrl, postData, "application/x-www-form-urlencoded");
+            var result = HttpPost(config.ApiUrl, postData, "application/x-www-form-urlencoded");
             if (!IsXML(result))
             {
                 throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found.");
@@ -254,7 +235,7 @@ namespace ThirdParty.SimplePlay
             return (dic != null) ? dic.TryGetValue("en", out var result) ? result : string.Empty : string.Empty;
         }
 
-        private DeviceType GetDeviceType(string platform, string betSource)
+        private static DeviceType GetDeviceType(string platform, string betSource)
         {
             DeviceType deviceType;
             switch (betSource)

@@ -9,5 +9,6 @@ public enum FaceBookPixel
     withdraw = 5,
     firstDepositArrival = 6,
     Purchase = 7,
-    redeposit = 8
+    redeposit = 8,
+    StartTrial = 9
 }

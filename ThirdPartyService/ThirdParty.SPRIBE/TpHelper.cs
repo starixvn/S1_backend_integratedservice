@@ -23,7 +23,14 @@ namespace ThirdParty.SPRIBE
         {
             {TpGameType.SPRIBE_RNG, (int)ProductWallet.SPRIBE},
         };
+        public class SPRIBEConfig : TpSiteConfig
+        {
+            public string Key { get; set; }
+            public string Prefix { get; set; }
+            public string MerchantName { get; set; }
+        }
 
+        private readonly Dictionary<int, SPRIBEConfig> _siteSPRIBEConfig;
         #endregion
 
         #region Response
@@ -56,15 +63,17 @@ namespace ThirdParty.SPRIBE
             {
                 _proxy = new WebProxy(tokyoProxyConfig.ProxyHost, tokyoProxyConfig.ProxyPort);
             }
+            _siteSPRIBEConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SPRIBEConfig>(TpEnum.SPRIBE.ToString());
         }
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var apiUrl = $"{inputs["ApiUrl"]}/Player/Register";
+            var config = _siteSPRIBEConfig[tpCustInfo.SiteId];
+            var apiUrl = $"{config.ApiUrl}/Player/Register";
 
             var signUp = new
             {
-                MerchantCode = inputs["Key"],
+                MerchantCode = config.Key,
                 PlayerId = tpCustInfo.TpUserName,
                 Currency = tpCustInfo.TpCurrencyId,
                 Password = tpCustInfo.TpPwd
@@ -93,20 +102,21 @@ namespace ThirdParty.SPRIBE
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var apiUrl = appType == AppType.Desktop ? $"{inputs["ApiUrl"]}/Game/NewLaunchGame" : $"{inputs["ApiUrl"]}/Game/NewLaunchMobileGame";
+            var config = _siteSPRIBEConfig[tpCustInfo.SiteId];
+            var apiUrl = appType == AppType.Desktop ? $"{config.ApiUrl}/Game/NewLaunchGame" : $"{config.ApiUrl}/Game/NewLaunchMobileGame";
             var productWallet = _productWallet[TpGameType.SPRIBE_RNG];
             var fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
 
             var playerName = tpCustInfo.TpUserName;
             if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
             {
-                apiUrl = appType == AppType.Desktop ? $"{inputs["ApiUrl"]}/Game/LaunchFreeGame" : $"{inputs["ApiUrl"]}/Game/LaunchFreeMobileGame";
+                apiUrl = appType == AppType.Desktop ? $"{config.ApiUrl}/Game/LaunchFreeGame" : $"{config.ApiUrl}/Game/LaunchFreeMobileGame";
                 playerName = null;
             }
 
             var signUp = new
             {
-                MerchantCode = inputs["Key"],
+                MerchantCode = config.Key,
                 PlayerId = playerName,
                 GameCode = inputs["gameId"],
                 Language = TpLangId,

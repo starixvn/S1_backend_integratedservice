@@ -23,6 +23,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Tp _thisTp;
         private readonly ILogger<TFGController> _logger;
         private readonly ITFGBLL _tfgbLL;
+        private readonly Dictionary<int, TFGConfig> _siteConfig;
         #endregion
 
         #region Constructors
@@ -34,8 +35,21 @@ namespace ThirdPartySeamlessWallet.Controllers
             _logger = provider.GetRequiredService<ILogger<TFGController>>();
             _thisTp = Tp.TFG;
             _tfgbLL = tfgbll;
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<TFGConfig>(Tp.TFG.ToString());
         }
         #endregion
+
+        public class TFGConfig : TpSiteConfig
+        {
+            public string RetrieveUrl { get; set; }
+            public Dictionary<string, CurrencyDataTFG> CurrencyData { get; set; }
+        }
+        public class CurrencyDataTFG
+        {
+            public string PartnerId { get; set; }
+            public string PublicToken { get; set; }
+            public string PrivateToken { get; set; }
+        }
 
         #region Action
         [Route("[controller]/token/validate")]
@@ -88,9 +102,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 Request.Headers.TryGetValue("Authorization", out var authorization);
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)_thisTp);
                 var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, req.loginName);
-                var privateToken = thirdPartySetting.TpSetting[$"PrivateToken_{tpCustInfo.TpCurrencyId}"];
+                var config = _siteConfig[tpCustInfo.SiteId];
+                var privateToken = config.CurrencyData[tpCustInfo.TpCurrencyId].PrivateToken;
                 if (privateToken != authorization)
                 {
                     _logger.LogError($"privateToken:{privateToken}\r\nauthorization{authorization}");
@@ -124,9 +138,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             try
             {
                 Request.Headers.TryGetValue("Authorization", out var authorization);
-                var thirdPartySetting = _thirdPartyBLL.GetThirdPartySetting((int)_thisTp);
                 var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, req.loginName);
-                var privateToken = thirdPartySetting.TpSetting[$"PrivateToken_{tpCustInfo.TpCurrencyId}"];
+                var config = _siteConfig[tpCustInfo.SiteId];
+                var privateToken = config.CurrencyData[tpCustInfo.TpCurrencyId].PrivateToken;
                 if (privateToken != authorization)
                 {
                     _logger.LogError($"privateToken:{privateToken}\r\nauthorization{authorization}");

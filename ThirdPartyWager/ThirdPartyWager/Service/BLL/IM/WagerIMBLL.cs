@@ -2,6 +2,8 @@ using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace ThirdPartyWager.Service.BLL;
 
@@ -47,7 +49,7 @@ public class WagerIMBLL
         };
     }
 
-    public async Task<int> ExecWagerWorker(TpListModel siteData, int type)
+    public async Task<int> ExecWagerWorker(IMConfig config, TpListModel siteData, int type)
     {
         var siteId = siteData.SiteId;
         var quick = false;
@@ -74,7 +76,7 @@ public class WagerIMBLL
             if (time.startUnix >= cvTime)
                 continue;
 
-            var result = await GetWagersAsync(time, siteData, productWallet);
+            var result = await GetWagersAsync(time, siteData, productWallet, config);
             if (result)
                 _thirdPartyBll.SetThirdPartyTimerByReference(TpId, type, time.endUnix, gameType, siteId.ToString());
         }
@@ -84,7 +86,7 @@ public class WagerIMBLL
 
     #region Private
 
-    private async Task<bool> GetWagersAsync(TimeCast wagerTime, TpListModel tpInfo, IMProductWalletEnum productWallet)
+    private async Task<bool> GetWagersAsync(TimeCast wagerTime, TpListModel tpInfo, IMProductWalletEnum productWallet, IMConfig config)
     {
         const string workerName = "IM_GetWagers";
         string msg;
@@ -92,10 +94,10 @@ public class WagerIMBLL
         {
             var param = new GetBetListByTimeParam
             {
-                Setting = tpInfo.SettingDic,
+                Setting = config,
                 ProductWallet = productWallet,
                 StartTime = wagerTime.startTime,
-                EndTime = wagerTime.endTime
+                EndTime = wagerTime.endTime,
             };
 
             var success = await _getWagersHandlerMapper[productWallet].Invoke(param);

@@ -2,6 +2,7 @@
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -18,22 +19,23 @@ namespace ThirdPartyWager.Service.BLL
         private readonly FincanceService _fincanceService;
         private readonly IEnumerable<TpCurrency> _tpCurrencyList;
         private readonly ILogger<NextspinFinancBLL> _logger;
+        private readonly Dictionary<int, NextspinConfig> _siteConfigDic;
 
-
-        public NextspinFinancBLL(ThirdPartyBLL thirdPartyBLL, INextspinApi nextspinApi, CommonBLL commonBLL, FincanceService fincanceService, ILogger<NextspinFinancBLL> logger)
+        public NextspinFinancBLL(IServiceProvider provider)
         {
-            _thirdPartyBLL = thirdPartyBLL;
-            _apiNextspinBll = nextspinApi;
-            _commonBLL = commonBLL;
-            _fincanceService = fincanceService;
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _apiNextspinBll = provider.GetRequiredService<INextspinApi>();
+            _commonBLL = provider.GetRequiredService<CommonBLL>();
+            _fincanceService = provider.GetRequiredService<FincanceService>();
             _tpCurrencyList = _commonBLL.GetTpCurrencyList((int)Tp.Nextspin);
-            _logger = logger;
+            _logger = provider.GetRequiredService<ILogger<NextspinFinancBLL>>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<NextspinConfig>(Tp.Nextspin.ToString());
         }
 
         public async Task<int> ExecReportAsync(int tpId, TimeCast reportTime)
         {
-            var setting = _thirdPartyBLL.GetThirdPartyBySite<NextspinSetting>((int)Tp.Nextspin, 1);
-            var profitLoss = await _apiNextspinBll.RetrieveProfitLoss(reportTime.startTime, reportTime.endTime, 1, setting);
+            var config = _siteConfigDic[1];
+            var profitLoss = await _apiNextspinBll.RetrieveProfitLoss(reportTime.startTime, reportTime.endTime, 1, config);
             if (profitLoss == null)
                 return -1;
 
