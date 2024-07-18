@@ -41,10 +41,10 @@ namespace ThirdPartyWager.Workers
                 var siteList = _thirdPartyBLL.GetTpListByTpId(TpId);
                 foreach (var siteData in siteList)
                 {
-                    var _setting = _siteConfigDic[siteData.SiteId];
-
-                    if (_setting == null) continue;
-                    sec = await _wagerIMBLL.ExecWagerWorker(_setting, siteData, TpType);
+                    if (_siteConfigDic.TryGetValue(siteData.SiteId, out var _setting))
+                    {
+                        sec = await _wagerIMBLL.ExecWagerWorker(_setting, siteData, TpType);
+                    }
                 }
             }
             catch (Exception ex)
