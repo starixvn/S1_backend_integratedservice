@@ -21,6 +21,7 @@ namespace ThirdParty.IM
             { TpGameType.IM_ESports, (int)ProductWallet.ESportsbull },
         };
 
+        private readonly Dictionary<int, IMConfig> _siteIMConfig;
         #endregion
 
         private const string ContentType = "application/json";
@@ -33,15 +34,25 @@ namespace ThirdParty.IM
             {
                 _proxy = new WebProxy(tokyoProxyConfig.ProxyHost, tokyoProxyConfig.ProxyPort);
             }
+
+            _siteIMConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<IMConfig>(TpEnum.IM.ToString());
+        }
+
+        public class IMConfig : TpSiteConfig 
+        {
+            public string Key { get; set; }
+            public string Prefix { get; set; }
+            public string MerchantName { get; set; }
         }
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var apiUrl = $"{inputs["ApiUrl"]}/Player/Register";
+            var config = _siteIMConfig[tpCustInfo.SiteId];
+            var apiUrl = $"{config.ApiUrl}/Player/Register";
 
             var signUp = new RegisterModel
             {
-                MerchantCode = inputs["Key"],
+                MerchantCode = config.Key,
                 PlayerId = tpCustInfo.TpUserName,
                 Currency = tpCustInfo.TpCurrencyId,
                 Password = tpCustInfo.TpPwd
@@ -70,7 +81,8 @@ namespace ThirdParty.IM
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var apiUrl = appType == AppType.Desktop ? $"{inputs["ApiUrl"]}/Game/NewLaunchGame" : $"{inputs["ApiUrl"]}/Game/NewLaunchMobileGame";
+            var config = _siteIMConfig[tpCustInfo.SiteId];
+            var apiUrl = appType == AppType.Desktop ? $"{config.ApiUrl}/Game/NewLaunchGame" : $"{config.ApiUrl}/Game/NewLaunchMobileGame";
             var playerName = tpCustInfo.TpUserName;
 
             var tpGameType = inputs.ContainsKey("tpGameType") && !string.IsNullOrEmpty(inputs["tpGameType"]) ? Convert.ToInt32(inputs["tpGameType"]) : (int)TpGameType.IM_Sports;
@@ -78,7 +90,7 @@ namespace ThirdParty.IM
 
             var signUp = new LaunchGameModel
             {
-                MerchantCode = inputs["Key"],
+                MerchantCode = config.Key,
                 PlayerId = playerName,
                 GameCode = inputs["gameId"],
                 Language = TpLangId,
