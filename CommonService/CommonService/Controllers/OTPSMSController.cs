@@ -2,7 +2,6 @@
 using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
-
 using Microsoft.AspNetCore.Mvc;
 
 namespace CommonService.Controllers
@@ -17,10 +16,10 @@ namespace CommonService.Controllers
         private readonly OTPSMSBLL _oTPSMSBLL;
         private readonly Tools _tools;
         private readonly ICacheHelper _redisHelper;
-
         private readonly SkyLineBLL _skyLineBLL;
         private readonly Dictionary<OTPProvider, Func<OTPRequestObject, Task<ApiResult>>> _requestHandler;
-
+        private readonly IEnumerable<ServerInfo> _serverInfo;
+       
         public OTPSMSController(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<OTPSMSController>>();
@@ -29,7 +28,7 @@ namespace CommonService.Controllers
             _oTPSMSBLL = provider.GetRequiredService<OTPSMSBLL>();
             _tools = provider.GetRequiredService<Tools>();
             _redisHelper = provider.GetRequiredService<ICacheHelper>();
-
+            _serverInfo = provider.GetRequiredService<IEnumerable<ServerInfo>>();
             _skyLineBLL = provider.GetRequiredService<SkyLineBLL>();
             _requestHandler = new Dictionary<OTPProvider, Func<OTPRequestObject, Task<ApiResult>>>()
             {
@@ -76,7 +75,7 @@ namespace CommonService.Controllers
                 CustInfoProfile = custInfo,
                 OTPNum = _tools.GetRandomNumString(6)
             };
-            var otpProvider = GetSupportOTP(custInfo);
+            var otpProvider = GetSupportOTP(custInfo.SiteId ,custInfo.AreaCode ,null ,custInfo.CustId);
             var otpProviderResult = await _requestHandler[otpProvider].Invoke(request);
             if (otpProviderResult.ErrorCode != ErrorCode.Success)
             {
@@ -90,6 +89,60 @@ namespace CommonService.Controllers
             return _oTPSMSBLL.OTPVerifyinfoInsAsync(req.CustId, request.OTPNum);
         }
 
+        [HttpPost]
+        public async Task<ApiResult<SendOTPSMSResult>> SendSignUpOTPSMSAsync(SignUpOTPRequest req)
+        {
+            // check PhoneNo
+            if (string.IsNullOrEmpty(req.PhoneNo) || string.IsNullOrEmpty(req.AreaCode))
+            {
+                return new ApiResult<SendOTPSMSResult>()
+                {
+                    ErrorCode = ErrorCode.InvalidParameter
+                };
+            }
+
+            var areaPhoneNo = $"{req.AreaCode}{req.PhoneNo}";
+            var siteName = _serverInfo.FirstOrDefault(x => x.SiteId == req.SiteId)?.SiteName;
+            
+            // check OTP        
+            var apiResult = _oTPSMSBLL.GetSignUpOTPVerifyInfo(areaPhoneNo);
+            if (apiResult.ErrorCode == 0)
+            {
+                return apiResult;
+            }
+            
+            // for singUp Info
+            var signUpInfo = new CustInfoProfile
+            {
+                SiteId = req.SiteId,
+                SiteName = siteName,
+                UserName = "",
+                CurrencyId = req.CurrencyId,
+                UserLang = req.UserLang,
+                AreaCode = req.AreaCode,
+                PhoneNo = req.PhoneNo,
+            };
+            
+            var request = new OTPRequestObject
+            {
+                CustInfoProfile = signUpInfo,
+                OTPNum = _tools.GetRandomNumString(6)
+            };
+            var otpProvider = GetSupportOTP(req.SiteId ,req.AreaCode ,req.PhoneNo );
+            var otpProviderResult = await _requestHandler[otpProvider].Invoke(request);
+            
+            if (otpProviderResult.ErrorCode != ErrorCode.Success)
+            {
+                return new ApiResult<SendOTPSMSResult>()
+                {
+                    ErrorCode = otpProviderResult.ErrorCode,
+                    Message = otpProviderResult.Message
+                };
+            }
+            
+            return _oTPSMSBLL.SignUpOTPVerifyinfoInsAsync(areaPhoneNo, request.OTPNum);
+        }
+        
         [HttpPost]
         public ApiResult VerifyOTP(VerifyOTPReq verifyOTPReq)
         {
@@ -128,6 +181,42 @@ namespace CommonService.Controllers
             return apiResult;
         }
 
+        [HttpPost]
+        public ApiResult SignUpVerifyOTP(SignUpVerifyOTPReq req)
+        {
+            var apiResult = new ApiResult();
+
+            try
+            {
+                _logger.LogInformation($"PhoneNo: {req.AreaPhoneNo}\r\nInput: {req.InputOTP}");
+
+                if (req.InputOTP.Length >= 10)
+                {
+                    apiResult.ErrorCode = ErrorCode.Fail;
+                    return apiResult;
+                }
+
+                var getOtpVerifyResult = _oTPSMSBLL.GetSignUpOTPVerifyInfo(req.AreaPhoneNo);
+
+                if (getOtpVerifyResult.ErrorCode == 0)
+                {
+                    apiResult = _oTPSMSBLL.SignUpVerifyOTP(req);
+                }
+                else
+                {
+                    apiResult.ErrorCode = getOtpVerifyResult.ErrorCode;
+                }
+            }
+            catch (Exception ex)
+            {
+                var msg = $"SignUpVerifyOTP || {ex.Message}";
+                apiResult.RawMessage = msg;
+                _logger.LogError(ex, msg);
+            }
+
+            return apiResult;
+        }
+            
         [HttpPost]
         public ApiResult<SendOTPSMSResult> GetOTPVerifyInfo(RequestObject req)
         {
@@ -184,20 +273,21 @@ namespace CommonService.Controllers
             return apiResult;
         }
 
-        private OTPProvider GetSupportOTP(CustInfoProfile custInfo)
+        private OTPProvider GetSupportOTP(int siteId, string areaCode , string phoneNo, int custId = 0)
         {
             try
             {
                 // 依Site取得簡訊設定
-                var sMSSupport = _supportOTPConfig[custInfo.SiteId].SMSSupport;
+                var sMSSupport = _supportOTPConfig[siteId].SMSSupport;
                 // 使用電話國碼取得簡訊供應商支援列表
-                var otpProviderList = sMSSupport.TryGetValue(custInfo.AreaCode, out var areaSupportOTP) ? areaSupportOTP : sMSSupport["Default"];
+                var otpProviderList = sMSSupport.TryGetValue(areaCode, out var areaSupportOTP) ? areaSupportOTP : sMSSupport["Default"];
                 
                 // 先使用第一個當預設值
                 var result = otpProviderList[0];
 
                 // 檢查玩家之前發送紀錄
-                var key = $"UserGetSupportOTP:{custInfo.CustId}";
+                
+                var key = custId == 0 ? $"UserGetSupportOTP:{areaCode}:{phoneNo}" : $"UserGetSupportOTP:{custId}";
                 var alreadyTryProviderList = _redisHelper.GetListByRange<string>(key, 0, -1);
 
                 // 比對發送紀錄與簡訊供應商支援列表，發送過就換下一間

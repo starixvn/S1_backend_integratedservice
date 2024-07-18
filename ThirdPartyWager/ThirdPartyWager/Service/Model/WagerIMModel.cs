@@ -1,10 +1,11 @@
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.Model;
 
 public class GetBetListByTimeParam
 {
-    public IDictionary<string, string> Setting { get; set; }
+    public IMSPRIBEConfig Setting { get; set; }
     public string StartTime { get; set; }
     public string EndTime { get; set; }
     public int Page { get; set; }
