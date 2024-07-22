@@ -46,6 +46,7 @@
         HB = 40,
         SBSW = 41,
         SBO = 42,
+        Skywind = 43,
         SimplePlay = 44,
         CryptoSports = 45,
         Yeebet = 46,
