@@ -111,4 +111,11 @@ namespace ThirdPartySeamlessWallet.Service.Model
     {
         public decimal CancelBet { get; set; }
     }
+
+    public class PlayTechConfig : TpSiteConfig
+    {
+        public string BrandId { get; set; }
+        public string BrandName { get; set; }
+        public string SecretKey { get; set; }
+    }
 }
