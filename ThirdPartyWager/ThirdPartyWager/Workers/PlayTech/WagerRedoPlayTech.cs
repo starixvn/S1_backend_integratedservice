@@ -43,13 +43,13 @@ namespace ThirdPartyWager.Workers
                 var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
                 foreach (var siteData in siteList)
                 {
-                    var _setting = _siteConfigDic[siteData.SiteId];
-                    if (_setting == null) continue;
-
-                    var res = await _wagerPlayTechBLL.ExecWagerRedoWorker(siteData, tpType, timeRange, _setting);
-                    if (res == true)
+                    if (_siteConfigDic.TryGetValue(siteData.SiteId, out var _setting))
                     {
-                        quick = true;
+                        var res = await _wagerPlayTechBLL.ExecWagerRedoWorker(siteData, tpType, timeRange, _setting);
+                        if (res)
+                        {
+                            quick = true;
+                        }
                     }
                 }
             }
