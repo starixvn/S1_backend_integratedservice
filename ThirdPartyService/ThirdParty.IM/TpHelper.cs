@@ -284,7 +284,7 @@ namespace ThirdParty.IM
                     IP = string.Empty,
                     Odds = detailSportModel?.Odds ?? 0,
                     OddsTypeEnum = GetOddsType(wagerDetail.GetValueOrDefault("OddsType")?.ToString()),
-                    Live = detailSportModel?.Market,
+                    Live = detailSportModel?.Market ?? String.Empty,
                 },
                 TpCategory.Esports => new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
                 {
@@ -300,7 +300,7 @@ namespace ThirdParty.IM
                     IP = string.Empty,
                     Odds = decimal.TryParse(detailESportModel?.Odds, out var odds) ? odds : 0,
                     OddsTypeEnum = GetOddsType(wagerDetail.GetValueOrDefault("OddsType")?.ToString()),
-                    Live = detailESportModel?.MarketType,
+                    Live = detailESportModel?.MarketType ?? String.Empty,
                 }
             };
 
