@@ -79,27 +79,29 @@ namespace ThirdPartyWager.Service.BLL
             var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
             foreach (var site in siteList)
             {
-                var config = _siteConfigDic[site.SiteId];
-                var getWagerSummary = await _apiPlayTechBLL.GetBetSummaryByTime(config, reportTime.startTime, reportTime.endTime);
-                if (getWagerSummary.error != "0")
+                if (_siteConfigDic.TryGetValue(site.SiteId, out var config))
                 {
-                    var msg = "THIRD_PARTY_ERROR";
-                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                    SystemException systemException = new($"{msg} - GetReport({tpId})");
-                    throw systemException;
-                }
+                    var getWagerSummary = await _apiPlayTechBLL.GetBetSummaryByTime(config, reportTime.startTime, reportTime.endTime);
+                    if (getWagerSummary.error != "0")
+                    {
+                        var msg = "THIRD_PARTY_ERROR";
+                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                        SystemException systemException = new($"{msg} - GetReport({tpId})");
+                        throw systemException;
+                    }
 
-                if (getWagerSummary.error == "0" && getWagerSummary.data.Count == 0)
-                {
-                    var msg = "NO_DATA";
-                    _logger.LogInformation($"{msg}\r\nsiteId={site.SiteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                    continue;
-                }
+                    if (getWagerSummary.error == "0" && getWagerSummary.data.Count == 0)
+                    {
+                        var msg = "NO_DATA";
+                        _logger.LogInformation($"{msg}\r\nsiteId={site.SiteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                        continue;
+                    }
 
-                foreach (var item in getWagerSummary.data)
-                {
-                    reportData.Add(item);
-                }
+                    foreach (var item in getWagerSummary.data)
+                    {
+                        reportData.Add(item);
+                    }
+                }              
             }
 
             return reportData;
