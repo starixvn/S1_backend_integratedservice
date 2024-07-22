@@ -1,5 +1,4 @@
 ﻿using System.Xml.Linq;
-
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model
@@ -216,6 +215,5 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         public string BodyData { get; set; }
     }
-
 
 }
