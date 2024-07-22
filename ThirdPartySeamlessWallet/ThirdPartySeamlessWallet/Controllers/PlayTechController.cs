@@ -24,10 +24,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly string _tpName = Tp.PlayTech.ToString();
         // 通常是一直重试直到成功, 但是由于我们每月会对账,所以到第二个月初如果还有没有完结的话会转入手工处置
         private readonly int _partitionCheckDay = 15;
+        private readonly Dictionary<int, PlayTechConfig> _siteConfigDic;
 
         Dictionary<string, string> _specialCurrency = new Dictionary<string, string>() {
             {"BRL","Playtech_N" },
         };
+
 
         public PlayTechController(IServiceProvider provider)
         {
@@ -39,6 +41,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             _tools = provider.GetRequiredService<Tools>();
             _log2File = provider.GetRequiredService<Log2File>();
             _thisTp = (int)Tp.PlayTech;
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<PlayTechConfig>(Tp.PlayTech.ToString());
         }
 
         #region ErrorCode
@@ -665,10 +668,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 return false;
             }
-            var thirdPartySetting = _thirdPartyBLL.GetThirdPartyBySite(_thisTp, serverInfo.SiteId);
+
+            var config = _siteConfigDic[serverInfo.SiteId];
             var dict = _tools.FromJson<Dictionary<string, dynamic>>(request);
             var dicP = ExceptHashAndSort(dict);
-            var encryptHash = EncryptString(dicP + thirdPartySetting.TpSetting["SecretKey"]);
+            var encryptHash = EncryptString(dicP + config.SecretKey);
             if (hash == encryptHash)
             {
                 return true;

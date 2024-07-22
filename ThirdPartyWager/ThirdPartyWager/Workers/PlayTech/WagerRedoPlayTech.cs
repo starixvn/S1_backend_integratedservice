@@ -1,6 +1,7 @@
 ﻿using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Workers
 {
@@ -9,6 +10,7 @@ namespace ThirdPartyWager.Workers
         private readonly ILogger<WagerRedoPlayTech> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly WagerPlayTechBLL _wagerPlayTechBLL;
+        private readonly Dictionary<int, PlayTechConfig> _siteConfigDic;
 
         private Timer timer;
         private readonly int tpType = (int)WagerTimerType.RedoWager;
@@ -23,6 +25,7 @@ namespace ThirdPartyWager.Workers
             _logger = provider.GetRequiredService<ILogger<WagerRedoPlayTech>>();
             _wagerPlayTechBLL = provider.GetRequiredService<WagerPlayTechBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<PlayTechConfig>(Tp.PlayTech.ToString());
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -40,10 +43,13 @@ namespace ThirdPartyWager.Workers
                 var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
                 foreach (var siteData in siteList)
                 {
-                    var res = await _wagerPlayTechBLL.ExecWagerRedoWorker(siteData, tpType, timeRange);
-                    if (res == true)
+                    if (_siteConfigDic.TryGetValue(siteData.SiteId, out var _setting))
                     {
-                        quick = true;
+                        var res = await _wagerPlayTechBLL.ExecWagerRedoWorker(siteData, tpType, timeRange, _setting);
+                        if (res)
+                        {
+                            quick = true;
+                        }
                     }
                 }
             }
