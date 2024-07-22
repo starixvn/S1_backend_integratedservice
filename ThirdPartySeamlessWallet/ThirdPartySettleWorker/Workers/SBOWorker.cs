@@ -77,12 +77,6 @@ namespace ThirdPartySettleWorker.Workers
                         var settleData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getBettransSp, new { TransId = transId }, DataBase.Main).FirstOrDefault();
                         var tpWagerData = _tpUnSettledBLL.GetTpUnsettleData<SettleData>(getWagerSp, new { TransId = transId }, DataBase.Wager).FirstOrDefault();
 
-                        if (tpWagerData == null)
-                        {
-                            tpWagerData.GameId = String.Empty;
-                            tpWagerData.WinLostAmount = 0;
-                        }
-
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
 
@@ -107,9 +101,10 @@ namespace ThirdPartySettleWorker.Workers
                             SettledTime = settleData.SettleTime,
                             TransTime = settleData.TransTime,
                             SettlementType = settlementType,
-                            TicketStatus = settlementType == SettlementType.UnSettled ? TicketStatus.UnSettled: (TicketStatus)settleData.TicketStatus,
-                            GameID = tpWagerData.GameId,
+                            TicketStatus = settlementType == SettlementType.UnSettled ? TicketStatus.UnSettled : (TicketStatus)settleData.TicketStatus,
+                            GameID = settlementType == SettlementType.UnSettled ? String.Empty : tpWagerData.GameId,
                         };
+
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)
                         {
