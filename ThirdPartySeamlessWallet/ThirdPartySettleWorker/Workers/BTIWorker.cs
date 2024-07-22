@@ -114,6 +114,9 @@ namespace ThirdPartySettleWorker.Workers
                             continue;
                         }
 
+                        // 判斷settletime
+                        var settleTime = GetSettleTime(unsettledList);
+
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
@@ -123,7 +126,7 @@ namespace ThirdPartySettleWorker.Workers
                             TransId = transId,
                             GameType = gameType,
                             TpUserName = tpUserName,
-                            SettledTime = unsettledList.Max(i => i.SettleTime),
+                            SettledTime = settleTime,
                             TransTime = unsettledList.Min(i => i.TransTime),
                             SettlementType = settlementType,
                             TicketStatus = ticketStatus,
@@ -174,7 +177,7 @@ namespace ThirdPartySettleWorker.Workers
         private decimal CaculateValidBetAmount(IEnumerable<BTISettleData> settleList, IEnumerable<BTIDebitData> debitList, out bool isCanceled)
         {
             var validBetAmount = 0m;
-             isCanceled = false;
+            isCanceled = false;
 
             foreach (var debit in debitList)
             {
@@ -223,6 +226,38 @@ namespace ThirdPartySettleWorker.Workers
             {
                 return string.Empty;
             }
+        }
+
+        private long GetSettleTime(IEnumerable<BTISettleData> settleList)
+        {
+            // 您可以用Bet節點內的OldStatus跟NewStatus是否有變動來確認，您可以取有變動最新一筆的BetSettledDate
+            var settleTime = settleList.Max(i => i.SettleTime);
+            if (settleList.Count() > 1)
+            {
+                foreach (var settle in settleList.OrderBy(i => i.seq_num))
+                {
+                    var bodayData = XDocument.Parse(settle.BodyData);
+                    foreach (XElement item in bodayData.Descendants("Bet"))
+                    {
+                        // 目前僅先處理comob bet，其他先跳過
+                        if (item.Attribute("BetTypeID").Value != "2")
+                        {
+                            continue;
+                        }
+
+                        if (item.Attribute("OldStatus").Value == item.Attribute("NewStatus").Value)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            settleTime = new DateTimeOffset(DateTime.Parse(item.Attribute("BetSettledDate").Value), new TimeSpan(0, 0, 0)).ToUnixTimeSeconds();
+                        }
+                    }
+                }
+            }
+
+            return settleTime;
         }
     }
 }
