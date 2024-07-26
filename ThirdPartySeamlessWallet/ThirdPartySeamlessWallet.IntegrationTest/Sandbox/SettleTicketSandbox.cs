@@ -251,6 +251,12 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             return _mySqlClient.Query<BonusStatus>(sqlScript, CommandType.Text).FirstOrDefault();
         }
 
+        public BonusStatus SetCustWithdrawalLimit(int custId, decimal withdrawalLimit, decimal turnOver)
+        {
+            var sqlScript = @$"UPDATE CustWithdrawalLimit SET WithdrawalLimit={withdrawalLimit},TurnOver={turnOver} WHERE CustId='{custId}';";
+            return _mySqlClient.Query<BonusStatus>(sqlScript, CommandType.Text).FirstOrDefault();
+        }
+
         public CustTransSummary GetCustTransSummary(int custId)
         {
             var sqlScript = @$"SELECT * FROM CustTransSummary WHERE CustId='{custId}';";
