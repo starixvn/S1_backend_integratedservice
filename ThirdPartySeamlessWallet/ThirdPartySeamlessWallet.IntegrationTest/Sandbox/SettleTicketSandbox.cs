@@ -179,6 +179,16 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             return _mySqlClient.Query<BonusStatus>(sqlScript, CommandType.Text).FirstOrDefault();
         }
 
+        public BonusStatus ResetBonus(int bonusId, decimal bonusAmount, decimal rollover, decimal turnover)
+        {
+            var sqlScript =
+                @$"UPDATE CustBonusWinLoss SET Winnings=0,Losses=0 WHERE BonusId='{bonusId}';" +
+                @$"UPDATE BonusInfo SET Status=1 WHERE BonusId='{bonusId}';" +
+                @$"UPDATE CustBonus SET Bonus= {bonusAmount}, Status=1 WHERE BonusId='{bonusId}';" +
+                @$"UPDATE CustBonusRollover SET Turnover = {turnover}, Rollover = {rollover}, Status=1 WHERE BonusId='{bonusId}';";
+            return _mySqlClient.Query<BonusStatus>(sqlScript, CommandType.Text).FirstOrDefault();
+        }
+
         public BonusStatus SetBonusStatus(int bonusId, int status)
         {
             var sqlScript =                

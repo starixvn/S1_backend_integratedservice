@@ -2,6 +2,8 @@
 
 using FluentAssertions;
 
+using K4os.Compression.LZ4.Internal;
+
 using NUnit.Framework;
 
 using ThirdPartySeamlessWallet.IntegrationTest.SandBox;
@@ -448,7 +450,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
         [TestCase("UnSettled", 5, SettlementType.UnSettled, 10, SettlementType.SettledForValid, -10, Description = "UnSettled結算，扣回上次結算金額")]
 
         [TestCase("Re-Settled", 50, SettlementType.SettledForValid, 100, SettlementType.SettledForValid, -50, Description = "ReSettled結算，計算兩次差異金額")]
-        [TestCase("Re-Settled", 30, SettlementType.SettledForValid, 10, SettlementType.SettledForValid, 20, Description = "ReSettled結算，計算兩次差異金額")]
+        [TestCase("Re-Settled", 30, SettlementType.SettledForValid, 10, SettlementType.SettledForValid, 20, Description = "ReSettled結算，計算兩次差異金額")]                
         public void BonusRollOver_Test(string memo, decimal stake, SettlementType settlementType, decimal? lastStake, SettlementType lastSettlementType, decimal? expected)
         {
             var transId = $"test-{DateTime.UtcNow.Ticks}";
@@ -563,6 +565,63 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
             // 檢查CustBonusRollover的Turnover正確
             var assertCustBonusRollover = _settleTicketSandbox.GetCustBonusRollover(betRecord.BonusId);
             assertCustBonusRollover.Turnover.Should().Be(custBonusRollover.Turnover + 0);
+        }
+
+        [TestCase(30, 50, 20, Description = "UnSettled結算，但第一次新增部分流水，第二次結算只能扣回第一次的流水金額")]
+        [TestCase(30, 50, 10, Description = "UnSettled結算，但第一次新增部分流水，第二次結算只能扣回第一次的流水金額")]
+        public void BonusRollOver_UnSettled_Turnover_Check_Test(decimal stake, decimal lastStake, decimal expected)
+        {
+            var transId = $"test-{DateTime.UtcNow.Ticks}";
+            var betRecord = new BetRecordInfo()
+            {
+                TicketStatus = TicketStatus.UnSettled,
+                SettlementType = SettlementType.UnSettled,
+                Stake = stake,
+                ValidBet = stake,
+                WinlostAmount = -100,
+                TransId = transId,
+                TpId = 41,
+                GameType = GameType.SBSW_Sports,
+                BonusId = 100,
+            };
+
+            var refBetRecord = new BetRecordInfo()
+            {
+                TicketStatus = TicketStatus.Win,
+                SettlementType = SettlementType.SettledForValid,
+                Stake = lastStake,
+                ValidBet = lastStake,
+                WinlostAmount = -100,
+                TransId = transId,
+                TpId = 41,
+                GameType = GameType.SBSW_Sports,
+                BonusId = 100,
+            };
+
+            // 初始化Bonus，指定剩餘Bonus turnover
+            var bonusAmount = lastStake * 2;
+            var rollover = lastStake * 5;
+            var turnover = rollover - expected; //設定turnover差多少達到rollover目標
+            _settleTicketSandbox.ResetBonus(betRecord.BonusId, bonusAmount, rollover, turnover);
+            var custBonusRollover = _settleTicketSandbox.GetCustBonusRollover(betRecord.BonusId);          
+
+            // 需要先新增第一次的流水紀錄，第一次只拿到10
+            _settleTicketSandbox.CreateTurnOverLog(expected, 2, _tpCustInfo, betRecord);
+
+           
+            var SettleTicket = _settleTicketSandbox.CreateSettleTicket(_tpCustInfo, betRecord, refBetRecord);
+            SettleTicket.SetBonusRollOver();
+            _settleTicketSandbox.Commit();
+
+
+            // 檢查TurnOverLog的紀錄有增加
+            var lastTurnover = expected * -1;
+            var turnOverLog = _settleTicketSandbox.GetLastTurnOverLog(transId);       
+            turnOverLog.ChangeTurnOver.Should().Be(lastTurnover);
+
+            // 檢查CustBonusRollover的Turnover正確
+            var assertCustBonusRollover = _settleTicketSandbox.GetCustBonusRollover(betRecord.BonusId);
+            assertCustBonusRollover.Turnover.Should().Be(custBonusRollover.Turnover + lastTurnover);
         }
 
         #endregion
@@ -884,8 +943,6 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
         }
 
         #endregion
-
-
 
     }
 }
