@@ -73,7 +73,7 @@ namespace ThirdPartyWager.Service.BLL
             var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
             foreach (var site in siteList)
             {
-                if(site.TicketKey != 1)
+                if(site.TicketKey == 0)
                 {
                     continue;
                 }
