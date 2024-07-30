@@ -13,7 +13,6 @@ namespace ThirdPartyWager.Workers
         private readonly FinanceCQ9BLL _financeCQ9BLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly FincanceService _fincanceService;
-        private readonly Dictionary<string, string> _siteConfig;
         private readonly int _tpId = (int)Tp.CQ9;
         private readonly string _tpName = Tp.CQ9.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
@@ -26,7 +25,6 @@ namespace ThirdPartyWager.Workers
             _financeCQ9BLL = provider.GetRequiredService<FinanceCQ9BLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _fincanceService = provider.GetRequiredService<FincanceService>();
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(Tp.CQ9.ToString());
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -73,9 +71,6 @@ namespace ThirdPartyWager.Workers
             var quick = false;
             try
             {
-                // get setting
-                var setting = _siteConfig;
-
                 // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
 
@@ -93,7 +88,7 @@ namespace ThirdPartyWager.Workers
 
                 // report
                 DateTime reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);
-                var reportData = await _financeCQ9BLL.GetReport(_tpId, setting, reportTime);
+                var reportData = await _financeCQ9BLL.GetReport(_tpId, null, reportTime);
                 int result;
                 if (reportData.Count > 0)
                 {
