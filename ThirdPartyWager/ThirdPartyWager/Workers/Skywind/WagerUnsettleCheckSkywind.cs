@@ -1,5 +1,4 @@
 ﻿using Serilog.Context;
-
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -13,6 +12,7 @@ namespace ThirdPartyWager.Workers
         private Timer _timer;
         private readonly string _tpName = Tp.Skywind.ToString();
         private readonly int _tpId = (int)Tp.Skywind;
+
         public WagerUnsettleCheckSkywind(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<WagerUnsettleCheckSkywind>>();
