@@ -21,7 +21,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Tp _thisTp;
         private readonly string _tpGameName;
         private readonly IHostEnvironment _environment;
-        private readonly Dictionary<string, string> _siteConfig;
+        private readonly Dictionary<string, string> _defaultConfig; // SiteConfig的SiteId=0
+        private readonly Dictionary<string, Dictionary<string, string>> _siteNameConfigs;
 
         public CQ9Controller(IServiceProvider provider)
         {
@@ -33,8 +34,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             _environment = provider.GetRequiredService<IHostEnvironment>();
             _thisTp = Tp.CQ9;
             _tpGameName = "CQ9";
-            // 取共用，設定依機器分為(nova、aiking)
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(_thisTp.ToString());
+            // defaultConfig給原本NOVA、GOAL、BWING的商號使用
+            _defaultConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(_thisTp.ToString());
+            // 新增商號使用指定siteName
+            _siteNameConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<Dictionary<string, string>>(_thisTp.ToString());
         }
 
         public class Payload
@@ -207,7 +210,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpGet]
         [Route("[controller]/player/check/{account}")]
-        public CheckPlayerResp CheckPlayer(string account, [FromQuery] GetHeader getHeader)
+        [Route("[controller]/{sitename}/player/check/{account}")]
+        public CheckPlayerResp CheckPlayer(string account, [FromQuery] GetHeader getHeader, string sitename = "")
         {
             string logName = $"{_tpGameName}_CheckPlayer";
             CheckPlayerResp checkPlayerResp = new()
@@ -228,7 +232,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             // check key
             var tokenCurrency = GetTokenCurrency(HttpUtility.UrlDecode(getHeader.wtoken));
-            if (!CheckToken(HttpUtility.UrlDecode(getHeader.wtoken), tokenCurrency))
+            if (!CheckToken(HttpUtility.UrlDecode(getHeader.wtoken), tokenCurrency, sitename))
             {
                 checkPlayerResp.status.code = "1100";
                 checkPlayerResp.status.message = "Error : wtoken";
@@ -261,7 +265,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpGet]
         [Route("[controller]/transaction/balance/{account}")]
-        public GetApiResp Balance(string account, string gamecode, [FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getBalanceReq)
+        [Route("[controller]/{sitename}/transaction/balance/{account}")]
+        public GetApiResp Balance(string account, string gamecode, [FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getBalanceReq, string sitename = "")
         {
             string logName = $"{_tpGameName}_Balance";
             _log2File.Info($"account={account}\r\nwtoken={wtoken}\r\n{gamecode}", logName);
@@ -310,7 +315,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/transaction/game/bet")]
-        public GetApiResp Bet([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getBetReq)
+        [Route("[controller]/{sitename}/transaction/game/bet")]
+        public GetApiResp Bet([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getBetReq, string sitename = "")
         {
             string logName = $"{_tpGameName}_Bet";
             var json = JsonConvert.SerializeObject(getBetReq);
@@ -365,7 +371,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             // check key
             var tokenCurrency = GetTokenCurrency(wtoken);
-            if (!CheckToken(wtoken, tokenCurrency))
+            if (!CheckToken(wtoken, tokenCurrency, sitename))
             {
                 getBetResp.status.code = "1100";
                 getBetResp.status.message = "Error : wtoken";
@@ -432,7 +438,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/transaction/game/endround")]
-        public GetApiResp EndRound([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getEndRoundReq)
+        [Route("[controller]/{sitename}/transaction/game/endround")]
+        public GetApiResp EndRound([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getEndRoundReq, string sitename = "")
         {
             var result = 0;
             string logName = $"{_tpGameName}_EndRound";
@@ -469,7 +476,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 // check key
                 var tokenCurrency = GetTokenCurrency(wtoken);
-                if (!CheckToken(wtoken, tokenCurrency))
+                if (!CheckToken(wtoken, tokenCurrency, sitename))
                 {
                     getEndRoundResp.status.code = "1100";
                     getEndRoundResp.status.message = "Error : wtoken";
@@ -557,7 +564,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/transaction/game/refund")]
-        public GetApiResp Refund([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getRefundReq)
+        [Route("[controller]/{sitename}/transaction/game/refund")]
+        public GetApiResp Refund([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getRefundReq, string sitename = "") 
         {
             string logName = $"{_tpGameName}_Refund";
             var json = JsonConvert.SerializeObject(getRefundReq);
@@ -581,7 +589,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             // check key
             var tokenCurrency = GetTokenCurrency(wtoken);
-            if (!CheckToken(wtoken, tokenCurrency))
+            if (!CheckToken(wtoken, tokenCurrency, sitename))
             {
                 getRefundResp.status.code = "1100";
                 getRefundResp.status.message = "Error : wtoken";
@@ -639,7 +647,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpGet]
         [Route("[controller]/transaction/record/{mtcode}")]
-        public GetRecordResp Record(string mtcode, [FromHeader(Name = "wtoken")] string wtoken)
+        [Route("[controller]/{sitename}/transaction/record/{mtcode}")]
+        public GetRecordResp Record(string mtcode, [FromHeader(Name = "wtoken")] string wtoken, string sitename = "")
         {
             string logName = $"{_tpGameName}_Record";
             _log2File.Info($"mtcode={mtcode}\r\nwtoken={wtoken}", logName);
@@ -660,7 +669,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             // check key
             var tokenCurrency = GetTokenCurrency(wtoken);
-            if (!CheckToken(wtoken, tokenCurrency))
+            if (!CheckToken(wtoken, tokenCurrency, sitename))
             {
                 getRecordResp.status.code = "1100";
                 getRecordResp.status.message = "Error : wtoken";
@@ -719,7 +728,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/transaction/game/debit")]
-        public GetApiResp Debit([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getDebitReq)
+        [Route("[controller]/{sitename}/transaction/game/debit")]
+        public GetApiResp Debit([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getDebitReq, string sitename = "")
         {
             string logName = $"{_tpGameName}_Debit";
             var json = JsonConvert.SerializeObject(getDebitReq);
@@ -763,7 +773,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             // check key
             var tokenCurrency = GetTokenCurrency(wtoken);
-            if (!CheckToken(wtoken, tokenCurrency))
+            if (!CheckToken(wtoken, tokenCurrency, sitename))
             {
                 apiResponse.status.code = "1100";
                 apiResponse.status.message = "Error : wtoken";
@@ -827,7 +837,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/transaction/game/credit")]
-        public GetApiResp Credit([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getCreditReq)
+        [Route("[controller]/{sitename}/transaction/game/credit")]
+        public GetApiResp Credit([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getCreditReq, string sitename = "")
         {
             string logName = $"{_tpGameName}_Credit";
             var json = JsonConvert.SerializeObject(getCreditReq);
@@ -871,7 +882,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             // check key
             var tokenCurrency = GetTokenCurrency(wtoken);
-            if (!CheckToken(wtoken, tokenCurrency))
+            if (!CheckToken(wtoken, tokenCurrency, sitename))
             {
                 apiResponse.status.code = "1100";
                 apiResponse.status.message = "Error : wtoken";
@@ -929,7 +940,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/transaction/user/payoff")]
-        public GetApiResp Payoff([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getPayoffReq)
+        [Route("[controller]/{sitename}/transaction/user/payoff")]
+        public GetApiResp Payoff([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getPayoffReq, string sitename = "")
         {
             string logName = $"{_tpGameName}_Payoff";
             var json = JsonConvert.SerializeObject(getPayoffReq);
@@ -973,7 +985,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             // check key
             var tokenCurrency = GetTokenCurrency(wtoken);
-            if (!CheckToken(wtoken, tokenCurrency))
+            if (!CheckToken(wtoken, tokenCurrency, sitename))
             {
                 apiResponse.status.code = "1100";
                 apiResponse.status.message = "Error : wtoken";
@@ -1021,7 +1033,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/transaction/game/rollout")]
-        public GetApiResp Rollout([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getRolloutReq)
+        [Route("[controller]/{sitename}/transaction/game/rollout")]
+        public GetApiResp Rollout([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getRolloutReq, string sitename = "")
         {
             string logName = $"{_tpGameName}_Rollout";
             var validGameTypes = new[] { GameType.CQ9_Fish, GameType.CQ9_WCC };
@@ -1079,7 +1092,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             // check key
             var tokenCurrency = GetTokenCurrency(wtoken);
-            if (!CheckToken(wtoken, tokenCurrency))
+            if (!CheckToken(wtoken, tokenCurrency, sitename))
             {
                 apiResponse.status.code = "1100";
                 apiResponse.status.message = "Error : wtoken";
@@ -1158,7 +1171,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/transaction/game/takeall")]
-        public GetTakeAllResp TakeAll([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getTakeAllReq)
+        [Route("[controller]/{sitename}/transaction/game/takeall")]
+        public GetTakeAllResp TakeAll([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getTakeAllReq, string sitename = "")
         {
             string logName = $"{_tpGameName}_TakeAll";
             var json = JsonConvert.SerializeObject(getTakeAllReq);
@@ -1193,7 +1207,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             // check key
             var tokenCurrency = GetTokenCurrency(wtoken);
-            if (!CheckToken(wtoken, tokenCurrency))
+            if (!CheckToken(wtoken, tokenCurrency, sitename))
             {
                 apiResponse.status.code = "1100";
                 apiResponse.status.message = "Error : wtoken";
@@ -1282,7 +1296,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/transaction/game/rollin")]
-        public GetApiResp Rollin([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getRollinReq)
+        [Route("[controller]/{sitename}/transaction/game/rollin")]
+        public GetApiResp Rollin([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getRollinReq, string sitename = "")
         {
             string logName = $"{_tpGameName}_Rollin";
             var validGameTypes = new[] { GameType.CQ9_Fish, GameType.CQ9_WCC };
@@ -1351,7 +1366,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             // check key
             var tokenCurrency = GetTokenCurrency(wtoken);
-            if (!CheckToken(wtoken, tokenCurrency))
+            if (!CheckToken(wtoken, tokenCurrency, sitename))
             {
                 apiResponse.status.code = "1100";
                 apiResponse.status.message = "Error : wtoken";
@@ -1421,7 +1436,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpPost]
         [HttpGet]
         [Route("[controller]/{path1?}/{path2?}/{path3?}/{path4?}")]
-        public GetApiResp NotFound([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getReq)
+        [Route("[controller]/{sitename}/{path1?}/{path2?}/{path3?}/{path4?}")]
+        public GetApiResp NotFound([FromHeader(Name = "wtoken")] string wtoken, [FromForm] Dictionary<string, string> getReq, string sitename = "")
         {
             string logName = $"{_tpGameName}_NotFound";
             var json = JsonConvert.SerializeObject(getReq);
@@ -1491,14 +1507,25 @@ namespace ThirdPartySeamlessWallet.Controllers
             return converted;
         }
 
-        private bool CheckToken(string wtoken, string tokenCurrency)
+        private bool CheckToken(string wtoken, string tokenCurrency, string sitename)
         {
-            var token = _siteConfig[$"API_Token_{tokenCurrency}"];
+            var config = GetSiteConfig(sitename);
+            var token = config[$"API_Token_{tokenCurrency}"];
             if (token == wtoken)
             {
                 return true;
             }
             return false;
+        }
+
+        private Dictionary<string, string> GetSiteConfig(string siteName)
+        {
+            if (siteName == "")
+            {
+                return _defaultConfig;
+            }
+
+            return _siteNameConfigs.TryGetValue(siteName,out var result) ? result : _defaultConfig;
         }
     }
 }
