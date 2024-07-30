@@ -1133,7 +1133,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public SettleData_SG GetSettle_TpWagerRng_SG(string TransId)
         {
-            return _wagerDbClient.QueryFirst<SettleData_SG>("Service_TpWagerRng_SG_Settle_Get", new { TransId = TransId });
+            return _wagerDbClient.QueryFirst<SettleData_SG>("Service_TpWagerRng_SG_Settle_Get_V2", new { TransId = TransId });
         }
 
         #endregion
