@@ -1,6 +1,5 @@
 ﻿using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers
@@ -9,23 +8,18 @@ namespace ThirdPartyWager.Workers
     {
         private Timer _timer;
         private readonly ILogger<WagerRedoWM> _logger;
-        private readonly WagerRedoWMBLL _wagerRedoWMBLL;
+        private readonly WagerWMBLL _wagerWMBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _intervalMins = 60;
         private readonly int _tpId = (int)Tp.WM;
         private readonly string _tpName = Tp.WM.ToString();
         private readonly int _tpType = (int)WagerTimerType.RedoWager;
-        private int _quick = 0;
-        private readonly int _timeZone = 8;
-        private readonly string _timeFormat = "yyyyMMddHHmmss";
 
         public WagerRedoWM(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<WagerRedoWM>>();
-            _wagerRedoWMBLL = provider.GetRequiredService<WagerRedoWMBLL>();
+            _wagerWMBLL = provider.GetRequiredService<WagerWMBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -34,34 +28,44 @@ namespace ThirdPartyWager.Workers
             return Task.CompletedTask;
         }
 
-        private async void DoTask(object state)
+        private void DoTask(object state)
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
 
+            var quick = false;
+            var failed = 0;
             try
             {
-                var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
-                int last = _intervalMins;
-                DateTime timerTime = (dataTpTimer == null) ? DateTime.Now.AddMinutes(-2 * _intervalMins) : dataTpTimer.StartTime.AddSeconds(1);
-
-                var time = _dateTimeHelper.GetTimeByHour(last, _timeZone, _timeFormat, timerTime);
-                var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
-                if (time.endUnix < cvTime)
+                var tasks = new List<Task>();
+                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+                foreach (var site in siteList)
                 {
-                    var result = await _wagerRedoWMBLL.RedoWagersAsync(time.startTime, time.endTime, time.startUnix, time.endUnix);
-                    if (result)
+                    if (site.TicketKey == 0)
                     {
-                        _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, time.endUnix);
+                        continue;
                     }
-                }
 
-                var ts = DateTime.Now - timerTime;
-                var diffMin = (int)ts.TotalMinutes;
-                if (diffMin >= 120)
-                {
-                    _quick = 1;
+                    var siteId = site.SiteId;
+                    tasks.Add(Task.Run(() =>
+                    {
+                        try
+                        {
+                            var res = _wagerWMBLL.ExecWagerRedoWorker(siteId, _tpType, _intervalMins);
+                            if (res.Result == true)
+                            {
+                                quick = true;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, ex.Message);
+                            Interlocked.Increment(ref failed);
+                        }
+                    }));
                 }
+                var t = Task.WhenAll(tasks);
+                t.Wait();
             }
             catch (Exception ex)
             {
@@ -69,7 +73,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                var dueTimeSpan = (_quick == 1) ? TimeSpan.FromSeconds(120) : TimeSpan.FromMinutes(28);
+                var dueTimeSpan = quick ? TimeSpan.FromSeconds(120) : TimeSpan.FromMinutes(28);
                 _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
