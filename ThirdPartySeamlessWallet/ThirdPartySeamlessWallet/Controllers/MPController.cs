@@ -22,6 +22,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Log2File _log2File;
         private readonly Tools _tools;
         private readonly Tp _thisTp;
+        private readonly Dictionary<string, MPConfig> _siteConfigDic;
         private readonly MPConfig _siteConfig;
 
         public MPController(IServiceProvider provider, ILogger<MPController> logger)
@@ -34,7 +35,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tools = provider.GetRequiredService<Tools>();
             _thisTp = Tp.MP;
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<MPConfig>(_thisTp.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<MPConfig>(Tp.MP.ToString());
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<MPConfig>(Tp.MP.ToString());
         }
 
         #region HttpStatusCode
@@ -92,7 +94,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpGet]
         [Route("[controller]/getBalance1")]
-        public dynamic GetBalance1([FromQuery] Dictionary<string, string> getReq)
+        [Route("[controller]/{sitename}/getBalance1")]
+        public dynamic GetBalance1([FromQuery] Dictionary<string, string> getReq, [FromRoute] string sitename = "")
         {
             Response.StatusCode = (int)Error.ERROR;
             var Fatal = new
@@ -105,8 +108,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             var apiReq = JsonConvert.DeserializeObject<ApiReq>(Content);
             var encrypt = apiReq.param;
 
-            string Agent = _siteConfig.Agent;
-            string Deskey = _siteConfig.Deskey;
+            var config = string.IsNullOrWhiteSpace(sitename) ? _siteConfig : _siteConfigDic[sitename];
+
+            string Agent = config.Agent;
+            string Deskey = config.Deskey;
 
             string sResult;
             var check = CheckAuthorization(encrypt, Deskey, Agent, true);
@@ -143,7 +148,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/withdraw")]
-        public async Task<dynamic> WithdrawAsync([FromQuery] Dictionary<string, string> getReq)
+        [Route("[controller]/{sitename}/withdraw")]
+        public async Task<dynamic> WithdrawAsync([FromQuery] Dictionary<string, string> getReq, [FromRoute] string sitename = "")
         {
             Response.StatusCode = (int)Error.ERROR;
             var Fatal = new
@@ -157,8 +163,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var encrypt = await reader.ReadToEndAsync();
 
-            string Agent = _siteConfig.Agent;
-            string Deskey = _siteConfig.Deskey;
+            var config = string.IsNullOrWhiteSpace(sitename) ? _siteConfig : _siteConfigDic[sitename];
+
+            string Agent = config.Agent;
+            string Deskey = config.Deskey;
 
             var check = CheckAuthorization(encrypt, Deskey, Agent, true);
             if (check.StatusCode != (int)Error.OK)
@@ -234,7 +242,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/deposit")]
-        public async Task<dynamic> DepositAsync([FromQuery] Dictionary<string, string> getReq)
+        [Route("[controller]/{sitename}/deposit")]
+        public async Task<dynamic> DepositAsync([FromQuery] Dictionary<string, string> getReq, [FromRoute] string sitename = "")
         {
             Response.StatusCode = (int)Error.ERROR;
             var Fatal = new
@@ -248,8 +257,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var encrypt = await reader.ReadToEndAsync();
 
-            string Agent = _siteConfig.Agent;
-            string Deskey = _siteConfig.Deskey;
+            var config = string.IsNullOrWhiteSpace(sitename) ? _siteConfig : _siteConfigDic[sitename];
+
+            string Agent = config.Agent;
+            string Deskey = config.Deskey;
 
             var check = CheckAuthorization(encrypt, Deskey, Agent, false);
             if (check.StatusCode != (int)Error.OK)
@@ -325,7 +336,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/cancel")]
-        public async Task<dynamic> CancelAsync([FromQuery] Dictionary<string, string> getReq)
+        [Route("[controller]/{sitename}/cancel")]
+        public async Task<dynamic> CancelAsync([FromQuery] Dictionary<string, string> getReq, [FromRoute] string sitename = "")
         {
             Response.StatusCode = (int)Error.ERROR;
             var Fatal = new
@@ -339,8 +351,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var encrypt = await reader.ReadToEndAsync();
 
-            string Agent = _siteConfig.Agent;
-            string Deskey = _siteConfig.Deskey;
+            var config = string.IsNullOrWhiteSpace(sitename) ? _siteConfig : _siteConfigDic[sitename];
+
+            string Agent = config.Agent;
+            string Deskey = config.Deskey;
 
             var check = CheckAuthorization(encrypt, Deskey, Agent, false);
             if (check.StatusCode != (int)Error.OK)

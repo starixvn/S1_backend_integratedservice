@@ -14,7 +14,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly TpUnsettleService _tpUnsettleService;
         private readonly ILogger<WagerMPBLL> _logger;
-        private readonly MPConfig _siteConfig;
+        private readonly Dictionary<int, MPConfig> _siteConfigDic;
 
         private readonly int _tpId = (int)Tp.MP;
         private readonly string _tpName = Tp.MP.ToString();
@@ -59,7 +59,7 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<WagerMPBLL>>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<MPConfig>(_tpName);
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MPConfig>(Tp.MP.ToString());
         }
 
         public async Task<bool> ExecWagerWorker(int type, int timeRange)
@@ -107,94 +107,100 @@ namespace ThirdPartyWager.Service.BLL
         private async Task<bool> GetWagersAsync(long startUnix, long endUnix, bool compare = false, int total = 0)
         {
             string msg;
+            bool isSuccess = true;
             try
             {
-                var setting = _siteConfig;
-
-                // get wager
-                var dataWager = await _apiMPBLL.GetBetListByTime(setting, startUnix, endUnix);
-
-                // error condition
-                var errorCode = dataWager.d.code;
-                var totalNum = dataWager.d.count;
-
-                if (errorCode != 0 && errorCode != 16)
+                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+                foreach (var siteData in siteList)
                 {
-                    msg = "THIRD_PARTY_ERROR";
-                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                    return false;
-                }
-
-
-                if (compare && totalNum == total)
-                {
-                    msg = "MATCH";
-                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                    return true;
-                }
-
-                if (errorCode == 16 || (errorCode == 0 && dataWager.d.count == 0))
-                {
-                    msg = "NO_DATA";
-                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
-                    return true;
-                }
-
-                var field = new List<string>();
-                for (var i = 0; i < dataWager.d.count; i++)
-                {
-                    var keyValuePairs = new Dictionary<string, dynamic>
+                    if (_siteConfigDic.TryGetValue(siteData.SiteId, out var _setting))
                     {
-                        { "GameID", dataWager.d.list.GameID[i] },
-                        { "Accounts", dataWager.d.list.Accounts[i] },
-                        { "ServerID", dataWager.d.list.ServerID[i] },
-                        { "KindID", dataWager.d.list.KindID[i] },
-                        { "TableID", dataWager.d.list.TableID[i] },
-                        { "ChairID", dataWager.d.list.ChairID[i] },
-                        { "UserCount", dataWager.d.list.UserCount[i] },
-                        { "CellScore", dataWager.d.list.CellScore[i] },
-                        { "AllBet", dataWager.d.list.AllBet[i] },
-                        { "Profit", dataWager.d.list.Profit[i] },
-                        { "Revenue", dataWager.d.list.Revenue[i] },
-                        { "GameStartTime", dataWager.d.list.GameStartTime[i] },
-                        { "GameEndTime", dataWager.d.list.GameEndTime[i] },
-                        { "CardValue", dataWager.d.list.CardValue[i] },
-                        { "ChannelID", dataWager.d.list.ChannelID[i] },
-                        { "LineCode", dataWager.d.list.LineCode[i] }
-                    };
-                    field.Add(JsonConvert.SerializeObject(keyValuePairs));
-                }
+                        // get wager
+                        var dataWager = await _apiMPBLL.GetBetListByTime(_setting, startUnix, endUnix);
 
-                foreach (var item in field)
-                {
+                        // error condition
+                        var errorCode = dataWager.d.code;
+                        var totalNum = dataWager.d.count;
 
-                    var bet = JsonConvert.DeserializeObject<Bet_MP>(item);
-                    try
-                    {
-                        bet.GameType = _gameTypeList.ContainsKey(bet.KindID) ? (int)_gameTypeList[bet.KindID] : 0;
-                        var result = await _wagerMPService.InsertWager(bet);
-
-                        if (result > 0)
+                        if (errorCode != 0 && errorCode != 16)
                         {
-                            _tpUnsettleService.InsertTpUnsettle(Tp.MP, (GameType)bet.GameType, bet.GameID);
+                            msg = "THIRD_PARTY_ERROR";
+                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                            isSuccess = false;
+                        }
+
+
+                        if (compare && totalNum == total)
+                        {
+                            msg = "MATCH";
+                            _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                            continue;
+                        }
+
+                        if (errorCode == 16 || (errorCode == 0 && dataWager.d.count == 0))
+                        {
+                            msg = "NO_DATA";
+                            _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                            continue;
+                        }
+
+                        var field = new List<string>();
+                        for (var i = 0; i < dataWager.d.count; i++)
+                        {
+                            var keyValuePairs = new Dictionary<string, dynamic>
+                            {
+                                { "GameID", dataWager.d.list.GameID[i] },
+                                { "Accounts", dataWager.d.list.Accounts[i] },
+                                { "ServerID", dataWager.d.list.ServerID[i] },
+                                { "KindID", dataWager.d.list.KindID[i] },
+                                { "TableID", dataWager.d.list.TableID[i] },
+                                { "ChairID", dataWager.d.list.ChairID[i] },
+                                { "UserCount", dataWager.d.list.UserCount[i] },
+                                { "CellScore", dataWager.d.list.CellScore[i] },
+                                { "AllBet", dataWager.d.list.AllBet[i] },
+                                { "Profit", dataWager.d.list.Profit[i] },
+                                { "Revenue", dataWager.d.list.Revenue[i] },
+                                { "GameStartTime", dataWager.d.list.GameStartTime[i] },
+                                { "GameEndTime", dataWager.d.list.GameEndTime[i] },
+                                { "CardValue", dataWager.d.list.CardValue[i] },
+                                { "ChannelID", dataWager.d.list.ChannelID[i] },
+                                { "LineCode", dataWager.d.list.LineCode[i] }
+                            };
+                            field.Add(JsonConvert.SerializeObject(keyValuePairs));
+                        }
+
+                        foreach (var item in field)
+                        {
+
+                            var bet = JsonConvert.DeserializeObject<Bet_MP>(item);
+                            try
+                            {
+                                bet.GameType = _gameTypeList.ContainsKey(bet.KindID) ? (int)_gameTypeList[bet.KindID] : 0;
+                                var result = await _wagerMPService.InsertWager(bet);
+
+                                if (result > 0)
+                                {
+                                    _tpUnsettleService.InsertTpUnsettle(Tp.MP, (GameType)bet.GameType, bet.GameID);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                msg = $"INSERT_WAGER(WAGERID: {bet.GameID} )";
+                                _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
+                                isSuccess = false;
+                            }
+                        }
+
+                        msg = "FINISH";
+                        _logger.LogInformation($"GetWagersAsync {msg}\r\n{startUnix} ~ {endUnix}");
+                        if (compare)
+                        {
+                            // after rewrite go check next time
+                            isSuccess = false;
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        msg = $"INSERT_WAGER(WAGERID: {bet.GameID} )";
-                        _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
-                        return false;
-                    }
                 }
-
-                msg = "FINISH";
-                _logger.LogInformation($"GetWagersAsync {msg}\r\n{startUnix} ~ {endUnix}");
-                if (compare)
-                {
-                    // after rewrite go check next time
-                    return false;
-                }
-                return true;
+                return isSuccess;
             }
             catch (Exception ex)
             {
