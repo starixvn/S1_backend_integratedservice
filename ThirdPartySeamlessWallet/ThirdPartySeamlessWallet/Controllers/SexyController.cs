@@ -20,7 +20,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly SettledBLL _settledBLL;
         private readonly Tp _thisTp;
         private readonly int _gameType = 0;
-        private readonly Dictionary<string, string> _siteConfig;
+        private readonly Dictionary<string, string> _defaultConfig; // SiteConfig的SiteId=0
+        private readonly Dictionary<string, Dictionary<string, string>> _siteNameConfigs;
 
         public SexyController(IServiceProvider provider)
         {
@@ -32,8 +33,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             _environment = provider.GetRequiredService<IHostEnvironment>();
             _thisTp = Tp.Sexy;
             _gameType = (int)GameType.Sexy_LiveCasino;
-            // 取共用，設定依機器分為(nova、aiking)
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(_thisTp.ToString());
+            // defaultConfig給原本NOVA、GOAL、BWING的商號使用
+            _defaultConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(_thisTp.ToString());
+            // 新增商號使用指定siteName
+            _siteNameConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<Dictionary<string, string>>(_thisTp.ToString());
         }
 
         #region Request
@@ -93,13 +96,14 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         #endregion
 
-        [Route("[controller]/[action]")]
+        [Route("[controller]/{sitename}/[action]")]
         [HttpPost]
-        public PromotionResp Promotion([FromForm] PromotionReq req)
+        public PromotionResp Promotion([FromForm] PromotionReq req, string sitename = "")
         {
             PromotionResp resp = new PromotionResp();
 
-            string key = GetSha1($"{_siteConfig["cert"]}{new DateTimeOffset(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, 0)).ToUnixTimeMilliseconds()}");
+            var config = GetSiteConfig(sitename);
+            string key = GetSha1($"{config["cert"]}{new DateTimeOffset(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, 0)).ToUnixTimeMilliseconds()}");
 
             if (!req.key.Equals(key, StringComparison.OrdinalIgnoreCase))
             {
@@ -162,16 +166,16 @@ namespace ThirdPartySeamlessWallet.Controllers
             return hash;
         }
 
-        [Route("[controller]/V2")]
+        [Route("[controller]/{sitename}/V2")]
         [HttpPost]
-        public dynamic SeamlessWalletV2(string site, [FromForm] Req req)
+        public dynamic SeamlessWalletV2(string site, [FromForm] Req req, string sitename = "")
         {
             string logName = $"{_thisTp}";
             _log2File.Info(JsonConvert.SerializeObject(req), logName);
 
             GetSeamlessWalletResp resp = new();
-
-            if (req.key != _siteConfig["cert2"])
+            var config = GetSiteConfig(sitename);
+            if (req.key != config["cert2"])
             {
                 resp.status = "9999";
                 resp.desc = "fail";
@@ -561,6 +565,16 @@ namespace ThirdPartySeamlessWallet.Controllers
         private static string GetCurrentGameTime()
         {
             return new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd'T'HH:mm:ss.fffK");
+        }
+
+        private Dictionary<string, string> GetSiteConfig(string siteName)
+        {
+            if (siteName == "")
+            {
+                return _defaultConfig;
+            }
+
+            return _siteNameConfigs.TryGetValue(siteName, out var result) ? result : _defaultConfig;
         }
     }
 }
