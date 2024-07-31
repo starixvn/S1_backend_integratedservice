@@ -80,11 +80,18 @@ namespace ThirdPartyWager.Service.Library
         }
         public T FromJson<T>(string jsonString)
         {
-            if (!string.IsNullOrEmpty(jsonString))
+            try
             {
-                return JsonConvert.DeserializeObject<T>(jsonString);
+                if (!string.IsNullOrEmpty(jsonString))
+                {
+                    return JsonConvert.DeserializeObject<T>(jsonString);
+                }
+                else
+                {
+                    return default(T);
+                }
             }
-            else
+            catch (Exception)
             {
                 return default(T);
             }
