@@ -39,7 +39,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Log2File _log2File;
         private readonly Tools _tools;
         private readonly Tp _thisTp;
-        private readonly V8Config _config;
+        private readonly Dictionary<string, V8Config> _siteConfig;
 
         public V8Controller(IServiceProvider provider)
         {
@@ -48,7 +48,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             _v8BLL = provider.GetRequiredService<V8BLL>();
             _tools = provider.GetRequiredService<Tools>();
             _thisTp = Tp.V8;
-            _config = provider.GetRequiredService<ConfigBLL>().GetConfigValue<V8Config>((Tp.V8).ToString());
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<V8Config>((Tp.V8).ToString());
         }
 
         [HttpGet]
@@ -164,7 +164,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return getApiResponse;
                 }
 
-                getReq.agent = GetAgentByCurrency(getReq.currency);
+                //getReq.agent = GetAgentByCurrency(getReq.currency);
                 getReq.s = (int)SubTypeOfV8.CancelBet;
                 getReq.key = EncryptKey(getReq.timestamp, getReq.agent);
 
@@ -233,8 +233,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                var currencyData = _config.CurrencyData.Values.ToList();
-                var deskey = currencyData.Find(x => x.Agent == agent).Deskey;
+                var deskey = _siteConfig.Select(x => x.Value).SelectMany(y=> y.CurrencyData.Values).ToList().Find(x=>x.Agent == agent).Deskey;
                 param = _tools.AesDecrypt(HttpUtility.UrlEncode(getReq), deskey);
 
                 _logger.LogInformation(param);
@@ -249,8 +248,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         private bool CheckKey(string key, long timestamp, string agent)
         {
-            var currencyData = _config.CurrencyData.Values.ToList();
-            var md5key = currencyData.Find(x => x.Agent == agent).Md5key;
+            var md5key = _siteConfig.Select(x => x.Value).SelectMany(y => y.CurrencyData.Values).ToList().Find(x => x.Agent == agent).Md5key;
 
             var encryptKey = _tools.ToMD5($"{agent}{timestamp}{md5key}").ToLower();
             if (key.ToLower() == encryptKey)
@@ -264,19 +262,18 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         private string EncryptKey(long timestamp, string agent)
         {
-            var currencyData = _config.CurrencyData.Values.ToList();
-            var md5key = currencyData.Find(x => x.Agent == agent).Md5key;
+            var md5key = _siteConfig.Select(x => x.Value).SelectMany(y => y.CurrencyData.Values).ToList().Find(x => x.Agent == agent).Md5key;
 
             return _tools.ToMD5($"{agent}{timestamp}{md5key}").ToLower();
         }
 
-        private string GetAgentByCurrency(string currency)
-        {
-            var currencyAgentData = _config.CurrencyData[currency.ToUpper()];
-            var agent = currencyAgentData.Agent;
+        //private string GetAgentByCurrency(string currency)
+        //{
+        //    var currencyAgentData = _config.CurrencyData[currency.ToUpper()];
+        //    var agent = currencyAgentData.Agent;
 
-            return agent;
-        }
+        //    return agent;
+        //}
 
     }
 }

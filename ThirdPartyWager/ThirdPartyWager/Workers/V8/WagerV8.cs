@@ -3,6 +3,8 @@
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
+using System.Linq;
 
 namespace ThirdPartyWager.Workers
 {
@@ -18,12 +20,16 @@ namespace ThirdPartyWager.Workers
         private readonly int runTime = 120;  // in seconds
         private readonly string _tpName = Tp.V8.ToString();
         private readonly int tpId = (int)Tp.V8;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly Dictionary<int, V8Config> _siteConfigDic;
 
         public WagerV8(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<WagerV8>>();
             _wagerV8BLL = provider.GetRequiredService<WagerV8BLL>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<V8Config>(Tp.V8.ToString());
         }
 
 
@@ -41,11 +47,18 @@ namespace ThirdPartyWager.Workers
             var quick = false;
             try
             {
+                var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
                 var TpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
-                foreach (var item in TpCurrencyList)
+                foreach (var siteId in siteList)
                 {
-                    quick = await _wagerV8BLL.ExecWagerWorker(tpType, timeRange, item.TpCurrencyId);
-                    if (!isFast && quick) isFast = true;
+                    if (_siteConfigDic.TryGetValue(siteId.SiteId, out var config))
+                    {
+                        foreach (var item in TpCurrencyList.Where(item => config.CurrencyData.ContainsKey(item.TpCurrencyId)))
+                        {
+                            quick = await _wagerV8BLL.ExecWagerWorker(config, tpType, timeRange, item.TpCurrencyId);
+                            if (!isFast && quick) isFast = true;
+                        }
+                    }
                 }
             }
             catch (Exception ex)
