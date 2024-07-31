@@ -13,7 +13,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly WagerV8Service _wagerV8Service;
         private readonly ILogger<WagerV8BLL> _logger;
         private readonly DateTimeHelper _dateTimeHelper;
-        private readonly V8Config _config;
 
         private readonly int _tpId = (int)Tp.V8;
         private readonly int _timeZone = 0;
@@ -26,10 +25,9 @@ namespace ThirdPartyWager.Service.BLL
             _wagerV8Service = provider.GetRequiredService<WagerV8Service>();
             _logger = provider.GetRequiredService<ILogger<WagerV8BLL>>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
-            _config = provider.GetRequiredService<ConfigBLL>().GetConfigValue<V8Config>(Tp.V8.ToString());
         }
 
-        public async Task<bool> ExecWagerWorker(int type, int timeRange, string tpCurrencyId)
+        public async Task<bool> ExecWagerWorker(V8Config config, int type, int timeRange, string tpCurrencyId)
         {
             var wokerTime = GetWorkerTime(type, -180);
             var quick = CheckQuick(wokerTime, 5);
@@ -39,7 +37,7 @@ namespace ThirdPartyWager.Service.BLL
             if (time.endUnix < cvTime)
             {
 
-                var result = await GetWagersAsync(time, tpCurrencyId);
+                var result = await GetWagersAsync(config, time, tpCurrencyId);
                 if (result)
                 {
                     _thirdPartyBLL.SetThirdPartyTimer(_tpId, type, time.endUnix);
@@ -49,7 +47,7 @@ namespace ThirdPartyWager.Service.BLL
             return quick;
         }
 
-        public async Task<bool> ExecWagerRedoWorker(int type, int timeRange, string tpCurrencyId)
+        public async Task<bool> ExecWagerRedoWorker(V8Config config, int type, int timeRange, string tpCurrencyId)
         {
             var wokerTime = GetRedoWorkerTime(type, 1, tpCurrencyId);
             var quick = CheckQuick(wokerTime, 100);
@@ -58,7 +56,7 @@ namespace ThirdPartyWager.Service.BLL
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
             {
-                var result = await GetWagersAsync(time, tpCurrencyId, true);
+                var result = await GetWagersAsync(config, time, tpCurrencyId, true);
                 if (result)
                 {
                     _thirdPartyBLL.SetThirdPartyTimerByCurrency(_tpId, type, time.endUnix, tpCurrencyId);
@@ -74,15 +72,15 @@ namespace ThirdPartyWager.Service.BLL
             return quick;
         }
 
-        public async Task<bool> GetWagersAsync(TimeCast wagerTime, string tpCurrencyId, bool compare = false)
+        public async Task<bool> GetWagersAsync(V8Config config , TimeCast wagerTime, string tpCurrencyId, bool compare = false)
         {
             var msg = "FATAL_ERROR";
             var workerName = compare ? "GetRedoWagersAsync" : "GetWagersAsync";
             try
             {
-                var agent = Convert.ToInt32(_config.CurrencyData[tpCurrencyId].Agent);
+                var agent = Convert.ToInt32(config.CurrencyData[tpCurrencyId].Agent);
                 // get wager
-                var dataWager = await _apiV8BLL.GetBetListByTimeV2(_config, wagerTime.startUnix, wagerTime.endUnix, tpCurrencyId);
+                var dataWager = await _apiV8BLL.GetBetListByTimeV2(config, wagerTime.startUnix, wagerTime.endUnix, tpCurrencyId);
 
                 // error condition
                 var errorCode = dataWager.d.code;
