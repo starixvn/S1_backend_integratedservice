@@ -14,6 +14,8 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiSexyBLL _apiSexyBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = 0;
+        private readonly Dictionary<int, Dictionary<string, string>> _siteConfigDic;
+
 
         public FinanceSexyBLL(IServiceProvider provider)
         {
@@ -22,6 +24,7 @@ namespace ThirdPartyWager.Service.BLL
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _apiSexyBLL = provider.GetRequiredService<ApiSexyBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(Tp.Sexy.ToString());
         }
 
         public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
@@ -69,27 +72,35 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
         {
             var reportData = new List<dynamic>();
-
-            CurrencyStats_Sexy getWagerSummary = await _apiSexyBLL.GetBetSummaryByTime(setting, reportTime.startTime, reportTime.endTime);
-
-            if (getWagerSummary.status != "0000")
+            var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+            foreach (var site in siteList)
             {
-                var msg = "THIRD_PARTY_ERROR";
-                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
-                throw systemException;
-            }
+                if (site.TicketKey == 0)
+                {
+                    continue;
+                }
 
-            if (getWagerSummary.status == "0000" && !getWagerSummary.transactions.Any())
-            {
-                var msg = "NO_DATA";
-                _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                return reportData;
-            }
+                setting = _siteConfigDic[site.SiteId];
+                CurrencyStats_Sexy getWagerSummary = await _apiSexyBLL.GetBetSummaryByTime(setting, reportTime.startTime, reportTime.endTime);
 
-            foreach (var item in getWagerSummary.transactions)
-            {
-                reportData.Add(item);
+                if (getWagerSummary.status != "0000")
+                {
+                    var msg = "THIRD_PARTY_ERROR";
+                    _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                    continue;
+                }
+
+                if (getWagerSummary.status == "0000" && !getWagerSummary.transactions.Any())
+                {
+                    var msg = "NO_DATA";
+                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                    continue;
+                }
+
+                foreach (var item in getWagerSummary.transactions)
+                {
+                    reportData.Add(item);
+                }
             }
             return reportData;
         }
