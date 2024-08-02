@@ -96,6 +96,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         #endregion
 
+        [Route("[controller]/[action]")]
         [Route("[controller]/{sitename}/[action]")]
         [HttpPost]
         public PromotionResp Promotion([FromForm] PromotionReq req, string sitename = "")
@@ -166,6 +167,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             return hash;
         }
 
+        [Route("[controller]/V2")]
         [Route("[controller]/{sitename}/V2")]
         [HttpPost]
         public dynamic SeamlessWalletV2(string site, [FromForm] Req req, string sitename = "")
