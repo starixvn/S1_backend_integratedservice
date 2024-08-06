@@ -12,7 +12,7 @@ namespace ThirdPartyService.Service.Worker
         private readonly ILogger<CreateBonusCodeWorker> _logger;
         private readonly GiftInfoBLL _giftInfoBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private Timer _timerCreatePPBonusCode;
+        private Timer _timerCreateBonusCode;
         private readonly string WorkerName = "CreateBonusCode";
         private readonly int[] _numbers;
 
@@ -26,11 +26,11 @@ namespace ThirdPartyService.Service.Worker
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _timerCreatePPBonusCode = new Timer(DoCreatePPBonusCodeTaskAsync, null, TimeSpan.Zero, TimeSpan.Zero);
+            _timerCreateBonusCode = new Timer(DoCreateBonusCodeTaskAsync, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
-        private void DoCreatePPBonusCodeTaskAsync(object state)
+        private void DoCreateBonusCodeTaskAsync(object state)
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             _logger.LogInformation($"{WorkerName} start");
@@ -96,7 +96,7 @@ namespace ThirdPartyService.Service.Worker
                 }
 
                 // 設定定時器
-                _timerCreatePPBonusCode.Change(dueTimeSpan, TimeSpan.Zero);
+                _timerCreateBonusCode.Change(dueTimeSpan, TimeSpan.Zero);
                 _logger.LogInformation($"{WorkerName} End");
             }
 
