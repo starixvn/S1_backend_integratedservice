@@ -14,14 +14,14 @@ namespace ThirdPartyService.Service.Worker
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private Timer _timerCreateBonusCode;
         private readonly string WorkerName = "CreateBonusCode";
-        private readonly int[] _numbers;
+        private readonly int[] _tpProvider;
 
         public CreateBonusCodeWorker(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<CreateBonusCodeWorker>>();
             _giftInfoBLL = provider.GetRequiredService<GiftInfoBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _numbers = new int[] { 5, 10 };//提供創建的三方Id
+            _tpProvider = new int[] { 5, 10 };//提供創建的三方Id
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -38,7 +38,7 @@ namespace ThirdPartyService.Service.Worker
             try
             {
                 var workList = _giftInfoBLL.GetWorkList(WorkerName);
-                var giftList = _giftInfoBLL.GetGiftList(_numbers).Where(x => x.GiftType == GiftTypeEnum.FreeSpin);
+                var giftList = _giftInfoBLL.GetGiftList(_tpProvider).Where(x => x.GiftType == GiftTypeEnum.FreeSpin);
 
                 foreach (var periodTask in workList)
                 {
