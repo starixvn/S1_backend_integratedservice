@@ -68,7 +68,6 @@
         NTConnect = 62,
         GA = 63,
         WonCasino = 64,
-        Marbles = 65
     }
 
     public enum TpGameType
@@ -165,6 +164,5 @@
         NTConnect_Lottery = 114,
         GA_CockFighting = 115,
         WonCasino_LiveCasino = 116,
-        Marbles_Lottery = 118
     }
 }
