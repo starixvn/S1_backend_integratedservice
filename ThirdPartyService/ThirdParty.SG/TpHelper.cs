@@ -390,11 +390,11 @@ namespace ThirdParty.SG
             var oApiResult = new ApiResult();
             var config = _siteConfig;
             var apiURL = config.ApiUrl;
-            var startDate = DateTimeOffset.Now.AddHours(2).ToString("yyyyMMdd'T'HH0000");//加兩小時為三方限制，建立後要等一下才能開始使用
+            var startDate = DateTime.Now.AddHours(2).ToString("yyyyMMdd'T'HH0000");//加兩小時為三方限制，建立後要等一下才能開始使用
             // 判斷 inputs["ExpirationDay"] 是否有值，若沒指定則預設30天
             var expirationDate = inputs.ContainsKey("ExpirationDay") && int.TryParse(inputs["ExpirationDay"], out int expirationDays)
-                ? DateTimeOffset.Now.AddDays(expirationDays).ToString("yyyyMMdd'T'HH5959")
-                : DateTimeOffset.Now.AddDays(30).ToString("yyyyMMdd'T'HH5959");
+                ? DateTime.Now.AddDays(expirationDays).ToString("yyyyMMdd'T'HH5959")
+                : DateTime.Now.AddDays(30).ToString("yyyyMMdd'T'HH5959");
             var gameId = inputs["GameId"];
             var currency = inputs["Currency"];
             var round = int.Parse(inputs["Round"]);
