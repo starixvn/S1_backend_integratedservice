@@ -91,7 +91,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 gameType = GameType.PP_LiveCasino;
 
                 // Spaceman 
-                if (tempGameId == 1302)
+                if (tempGameId == 1301 || tempGameId == 1302)
                 {
                     gameType = GameType.PP_RNG;
                 }
@@ -185,7 +185,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.PP_LiveCasino;
 
                         // Spaceman 
-                        if (tempGameId == 1302)
+                        if (tempGameId == 1301 || tempGameId == 1302)
                         {
                             gameType = GameType.PP_RNG;
                         }

@@ -34,7 +34,15 @@ namespace ThirdPartyWager.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            DoGetDomain();
+            try
+            {
+                DoGetDomain();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, ex.Message);
+            }
+            
             _getDomainTimer = new Timer(DoGetDomain, null, TimeSpan.FromMinutes(1), TimeSpan.Zero);
             _settleTimer = new Timer(DoSettle, null, TimeSpan.FromSeconds(1), TimeSpan.Zero);
             _settleTimerByDate = new Timer(DoSettleByDate, null, TimeSpan.FromSeconds(3), TimeSpan.Zero);

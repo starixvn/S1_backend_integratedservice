@@ -63,7 +63,7 @@ namespace ThirdPartySettleWorker.Workers
 
             try
             {
-                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
+                var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType, 5000);
                 if (!tpUnsettleList.Any())
                 {
                     throw new UnsettleNotFoundException($"{_tpName} {gameType} no unsettle data.");
@@ -89,6 +89,8 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             LogContext.PushProperty("TP", _tpName);
                             _logger.LogWarning($"{logName}:wager not found ({gameType})\r\n{JsonConvert.SerializeObject(unsettled)}");
+                            //單沒拉到先更新成-1避免卡住
+                            _tpUnSettledBLL.SetTpUnsettle(Tp, gameType, unsettled.TransId, false);
                             continue;
                         }
 
