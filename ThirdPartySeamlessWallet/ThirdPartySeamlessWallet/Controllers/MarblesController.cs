@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Org.BouncyCastle.Crypto.Tls;
-using System.Security.Principal;
+using Newtonsoft.Json;
+using System.Security.Cryptography;
+using System.Text;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
@@ -31,6 +32,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string MerchantCode { get; set; }
             public string AgentKey { get; set; }
         }
+        public class MarblesRequest
+        {
+            [JsonProperty("params")]
+            public string Params { get; set; }
+        }
         public class VerifyRequest
         {
             public string traceId { get; set; }
@@ -48,10 +54,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string money { get; set; }
             public string account { get; set; }
         }
-        [Route("[controller]/api/verifySession")]
-        public VerifyResponse Verify(VerifyRequest request)
+        [HttpPost]
+        [Route("MBS/verifySession")]
+        public VerifyResponse Verify([FromBody] MarblesRequest request)
         {
-            if (!_authBLL.AuthenticateByTpToken(request.playerSession, out TpCustInfoAuth tpCustInfoAuth))
+            var config = _siteConfigDic[1];
+            var verifyJson = decodeAESMD5(request.Params, config.AgentKey);
+            var verifyData = JsonConvert.DeserializeObject<VerifyRequest>(verifyJson);
+            if (_authBLL.AuthenticateByTpToken(verifyData.playerSession, out TpCustInfoAuth tpCustInfoAuth))
             {
                 return new VerifyResponse()
                 {
@@ -59,7 +69,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     msg = "Success",
                     data = new VerifyResponseData()
                     {
-                        traceId = request.traceId,
+                        traceId = verifyData.traceId,
                         money = _tpCustInfoBLL.GetBalance((int)_thisTp, tpCustInfoAuth.TpUserName, _gameType).ToString(),
                         account = tpCustInfoAuth.TpUserName
                     }
@@ -73,6 +83,42 @@ namespace ThirdPartySeamlessWallet.Controllers
                     msg = "Fail",
                 };
             }
+        }
+
+        private string decodeAESMD5(string encStr, string Key)
+        {
+            byte[] keyArray = getMd5(Key);
+            byte[] toEncryptArray = hexStrToBytes(encStr);
+            RijndaelManaged rDel = new RijndaelManaged(); rDel.Key = keyArray;
+            rDel.Mode = CipherMode.ECB;
+            rDel.Padding = PaddingMode.PKCS7;
+            ICryptoTransform cTransform = rDel.CreateDecryptor();
+            byte[] resultArray =
+            cTransform.TransformFinalBlock(toEncryptArray, 0,
+            toEncryptArray.Length);
+            return UTF8Encoding.UTF8.GetString(resultArray);
+
+        }
+        private byte[] hexStrToBytes(string hexString)
+        {
+            byte[] bytes = new byte[hexString.Length / 2];
+            for (var x = 0; x < bytes.Length; x++)
+            {
+                var i = Convert.ToInt32(hexString.Substring(x * 2, 2), 16);
+                bytes[x] = (byte)i;
+            }
+            return bytes;
+        }
+        private byte[] getMd5(String keyString)
+        {
+            MD5 md5 = MD5.Create();
+            byte[] buffer =
+            Encoding.GetEncoding("UTF-8").GetBytes(keyString);
+            byte[] MD5Buffer = md5.ComputeHash(buffer);
+            byte[] rawKey = new byte[32];
+            Array.Copy(MD5Buffer, 0, rawKey, 0, 16);
+            Array.Copy(MD5Buffer, 0, rawKey, 16, 16);
+            return rawKey;
         }
     }
 }
