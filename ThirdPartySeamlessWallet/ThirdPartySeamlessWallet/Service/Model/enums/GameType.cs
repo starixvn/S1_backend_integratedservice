@@ -104,6 +104,7 @@
         GA_CockFighting = 115,
         WonCasino_LiveCasino = 116,
         CQ9_WCC = 117,
+        Marbles_Lottery = 118
     }
 
 }
