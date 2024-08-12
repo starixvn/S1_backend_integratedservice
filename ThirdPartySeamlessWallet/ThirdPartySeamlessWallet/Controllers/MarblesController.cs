@@ -42,10 +42,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string traceId { get; set; }
             public string playerSession { get; set; }
         }
-        public class VerifyResponse
+        public class MarblesResponse
         {
             public string code { get; set; }
             public string msg { get; set; }
+        }
+
+        public class VerifyResponse : MarblesResponse
+        {
             public VerifyResponseData data { get; set; }
         }
         public class VerifyResponseData
@@ -53,6 +57,24 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string traceId { get; set; }
             public string money { get; set; }
             public string account { get; set; }
+        }
+        public class GetBalanceRequest
+        {
+            public string traceId { get; set; }
+            public string lineCode { get; set; }
+            public string agent { get; set; }
+            public string account { get; set; }
+        }
+        public class GetBalanceResponse : MarblesResponse
+        {
+            public GetBalanceResponseData data { get; set; }
+        }
+        public class GetBalanceResponseData
+        {
+            public string traceId { get; set; }
+            public string money { get; set; }
+            public string account { get; set; }
+            public string currency { get; set; }
         }
         [HttpPost]
         [Route("MBS/verifySession")]
@@ -80,7 +102,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     data = new VerifyResponseData()
                     {
                         traceId = verifyData.traceId,
-                        money = _tpCustInfoBLL.GetBalance((int)_thisTp, tpCustInfoAuth.TpUserName, _gameType).ToString(),
+                        money = _tpCustInfoBLL.GetBalance((int)_thisTp, tpCustInfoAuth.TpUserName, _gameType).Balance.ToString(),
                         account = tpCustInfoAuth.TpUserName
                     }
                 };
@@ -88,6 +110,50 @@ namespace ThirdPartySeamlessWallet.Controllers
             else
             {
                 return new VerifyResponse()
+                {
+                    code = "-1",
+                    msg = "Fail",
+                };
+            }
+        }
+
+        [HttpPost]
+        [Route("MBS/getBalance")]
+        public GetBalanceResponse GetBalance([FromForm] Dictionary<string, string> request)
+        {
+            var config = _siteConfigDic[1];
+            if (!request.ContainsKey("params"))
+            {
+                return new GetBalanceResponse()
+                {
+                    code = "-1",
+                    msg = "Fail",
+                };
+            }
+
+            MarblesRequest marblesRequest = JsonConvert.DeserializeObject<MarblesRequest>(JsonConvert.SerializeObject(request));
+            var getBalanceJson = decodeAESMD5(marblesRequest.Params, config.AgentKey);
+            var getBalanceData = JsonConvert.DeserializeObject<GetBalanceRequest>(getBalanceJson);
+            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, GetTpUserName(getBalanceData.account), _gameType);
+
+            if (tpCustBalance != null)
+            {
+                return new GetBalanceResponse()
+                {
+                    code = "0",
+                    msg = "Success",
+                    data = new GetBalanceResponseData()
+                    {
+                        traceId = getBalanceData.traceId,
+                        money = tpCustBalance.Balance.ToString(),
+                        account = getBalanceData.account,
+                        currency = tpCustBalance.TpCurrencyId
+                    }
+                };
+            }
+            else
+            {
+                return new GetBalanceResponse()
                 {
                     code = "-1",
                     msg = "Fail",
@@ -129,6 +195,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             Array.Copy(MD5Buffer, 0, rawKey, 0, 16);
             Array.Copy(MD5Buffer, 0, rawKey, 16, 16);
             return rawKey;
+        }
+        private string GetTpUserName(string marblesAccount)
+        {
+            return marblesAccount.Substring(6);
         }
     }
 }
