@@ -1,6 +1,7 @@
 using CommonService;
 using CommonService.Extensions;
 using Serilog;
+using Serilog.Events;
 using Serilog.Exceptions;
 using Serilog.Formatting.Json;
 
@@ -10,21 +11,35 @@ var remoteUrls = builder.Configuration.GetSection("ConfigService").Get<string[]>
 remoteUrls = builder.Configuration.CheckLocalConfig(builder.Environment, args, remoteUrls);
 builder.Configuration.AddRemoteJsonConfig(remoteUrls);
 
-var excludesMessage = builder.Configuration.GetSection("ExcludesMessage").Get<string[]>();
-var excludesApiEndpoints = builder.Configuration.GetSection("ExcludesApiEndpoint").Get<string[]>();
 builder.Host.UseSerilog((context, Configuration) =>
 {
     Configuration
         .ReadFrom.Configuration(builder.Configuration)
         .Enrich.FromLogContext()
-        .Filter.ByExcluding(c =>
-            c.Properties.Any(p =>
-                excludesApiEndpoints.Any(item => p.Value.ToString().Contains(item))
-                || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item))))
+        .Filter.ByExcluding(FilterLog)
         .Enrich.WithExceptionDetails();
-
     OverrideLoggerWriteToLFile(Configuration);
 });
+
+var startup = new Startup(builder.Configuration);
+startup.ConfigureServices(builder.Services);
+
+var app = builder.Build();
+startup.Configure(app, builder.Environment);
+
+app.Run();
+return;
+
+bool FilterLog(LogEvent logEvent)
+{
+    var excludesMessage = builder.Configuration.GetSection("ExcludesMessage").Get<string[]>();
+    var excludesApiEndpoints = builder.Configuration.GetSection("ExcludesApiEndpoint").Get<string[]>();
+
+    return logEvent.Properties.Any(p =>
+        excludesApiEndpoints.Any(endpoint => p.Value.ToString()!.Contains(endpoint)) ||
+        excludesMessage.Any(message => logEvent.MessageTemplate.ToString()!.Contains(message)) ||
+        (p.Key == "SourceContext" && p.Value.ToString()!.Contains("Microsoft.AspNetCore.Hosting.Diagnostics")));
+}
 
 void OverrideLoggerWriteToLFile(LoggerConfiguration configuration)
 {
@@ -42,11 +57,3 @@ void OverrideLoggerWriteToLFile(LoggerConfiguration configuration)
             fileSizeLimitBytes: 10485760,
             rollOnFileSizeLimit: true);
 }
-
-var startup = new Startup(builder.Configuration);
-startup.ConfigureServices(builder.Services);
-
-var app = builder.Build();
-startup.Configure(app, builder.Environment);
-
-app.Run();
