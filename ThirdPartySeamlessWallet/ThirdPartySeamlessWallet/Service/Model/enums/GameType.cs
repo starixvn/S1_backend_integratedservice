@@ -104,6 +104,11 @@
         GA_CockFighting = 115,
         WonCasino_LiveCasino = 116,
         CQ9_WCC = 117,
+        Marbles_Lottery = 118,
+        SabaPlay_Poker = 119,
+        UuSlots_RNG = 120,
+        Live22_RNG = 121,
+        FastSpin_RNG = 122,
     }
 
 }
