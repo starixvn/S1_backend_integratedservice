@@ -1152,9 +1152,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #endregion
 
-        #region MaxGame
+        #region MaxGame, SabaPlay, UuSlots, Live22, FastSpin
 
-        public int PayoutPK_MaxGame(TpCustInfo tpCustInfo, PayoutData_MaxGame payoutData_MaxGame, out decimal afterAmount)
+        public int PayoutPK_MaxGame(TpCustInfo tpCustInfo, PayoutData_MaxGame payoutData_MaxGame, int tpId, int gameType, WalletKind walletKind, TpCategory tpCategory, SpNameListOfMaxGame spName, out decimal afterAmount)
         {
             afterAmount = 0;
             var result = 0;
@@ -1168,14 +1168,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 foreach (var betDataSet in payoutData_MaxGame.Payload.BetDataSet)
                 {
+                    int bonusId = 0;
                     var partitionTime = DateTimeOffset.FromUnixTimeSeconds(betDataSet.SettleDateUnix).DateTime;
                     // 檢查是否有下注該round
-                    var bettrans = _partitionService.Query<BettransData_MaxGame>(partitionTime, "Service_BettransPK_MaxGame_TicketNo_Get", new { TicketNo = betDataSet.TicketNo });
+                    var bettrans = _partitionService.Query<BettransData_MaxGame>(partitionTime, spName.GetTicketNo, new { TicketNo = betDataSet.TicketNo });
                     if (!bettrans.Any(i => i.TicketType == BettransType.Bet))
                     {
                         return -2;
                     }
 
+                    var roundId = string.IsNullOrEmpty(betDataSet.ResultId) ? "" : betDataSet.ResultId;
                     var p = new DynamicParameters(new
                     {
                         Seq = payoutData_MaxGame.Seq,
@@ -1199,6 +1201,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         BonusId = "",
                         BonusName = "",
                         PrizeName = "",
+                        ResultId = roundId,
+                        OtherBetInfo = "{}",
+                        FreeBet = false,
+                        FreeSpin = false,
+                        ContributionAmount = 0,
+                        ContributionRate = 0,
                         SettleDateUnix = betDataSet.SettleDateUnix,
                         TicketType = (int)BettransType.Payout,
                         TicketStatus = (int)TicketStatus.UnSettled,
@@ -1206,7 +1214,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     });
 
                     p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
-                    result = _partitionService.Execute(partitionTime, "Service_BettransPK_MaxGame_Ins_V2", p, trans);
+                    result = _partitionService.Execute(partitionTime, spName.InsertBettrans, p, trans);
 
                     // 檢查差額: 使用ActualStake當作該局的實際扣款金額，如果跟前面收到的PlaceBet下注金額加總後不符合，需要進行Refund
                     var placeBetActualStake = bettrans.Where(i => i.TicketType == BettransType.Bet).Sum(i => i.ActualStake);
@@ -1216,62 +1224,134 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         // 差額:扣款
                         if (diffActualStake < 0)
                         {
-                            result = walletService.SetBalance(
-                                tpCustInfo.CustId,
-                                tpCustInfo.SiteId,
-                                tpCustInfo.UserName,
-                                Math.Abs(diffActualStake) * -1,
-                                (int)Tp.MaxGame,
-                                TransType.Wagers,
-                                $"Stake : {Math.Abs(diffActualStake):#,##0.##} {betDataSet.ActualStake}",
-                                betDataSet.TicketNo,
-                                out afterAmount,
-                                conn,
-                                trans,
-                                AllowNegative.Allow
-                            );
+                            if (walletKind == WalletKind.BonusWallet)
+                            {
+                                result = PayoutV2(
+                                    tpCustInfo,
+                                    Math.Abs(diffActualStake) * -1,
+                                    tpId,
+                                    betDataSet.TicketNo,
+                                    gameType,
+                                    tpCategory,
+                                    betDataSet.TicketNo,
+                                    TransType.Wagers,
+                                    null,
+                                    out afterAmount,
+                                    $"Stake",
+                                    out bonusId,
+                                    conn,
+                                    trans,
+                                    AllowNegative.Allow
+                                );
+                            }
+                            else
+                            {
+                                result = walletService.SetBalance(
+                                    tpCustInfo.CustId,
+                                    tpCustInfo.SiteId,
+                                    tpCustInfo.UserName,
+                                    Math.Abs(diffActualStake) * -1,
+                                    tpId,
+                                    TransType.Wagers,
+                                    $"Stake : {Math.Abs(diffActualStake):#,##0.##} {betDataSet.ActualStake}",
+                                    betDataSet.TicketNo,
+                                    out afterAmount,
+                                    conn,
+                                    trans,
+                                    AllowNegative.Allow
+                                );
+                            }
+
                         }
                         // 差額:退款
                         if (diffActualStake > 0)
                         {
-                            result = walletService.SetBalance(
-                                tpCustInfo.CustId,
-                                tpCustInfo.SiteId,
-                                tpCustInfo.UserName,
-                                Math.Abs(diffActualStake),
-                                (int)Tp.MaxGame,
-                                TransType.Refunds,
-                                $"Refund: {Math.Abs(diffActualStake):#,##0.##}",
-                                betDataSet.TicketNo,
-                                out afterAmount,
-                                conn,
-                                trans,
-                                AllowNegative.Allow
-                            );
+                            if (walletKind == WalletKind.BonusWallet)
+                            {
+                                result = PayoutV2(
+                                    tpCustInfo,
+                                    Math.Abs(diffActualStake),
+                                    tpId,
+                                    betDataSet.TicketNo,
+                                    gameType,
+                                    tpCategory,
+                                    betDataSet.TicketNo,
+                                    TransType.Refunds,
+                                    null,
+                                    out afterAmount,
+                                    $"Refund",
+                                    out bonusId,
+                                    conn,
+                                    trans,
+                                    AllowNegative.Allow
+                                );
+                            }
+                            else
+                            {
+                                result = walletService.SetBalance(
+                                    tpCustInfo.CustId,
+                                    tpCustInfo.SiteId,
+                                    tpCustInfo.UserName,
+                                    Math.Abs(diffActualStake),
+                                    tpId,
+                                    TransType.Refunds,
+                                    $"Refund: {Math.Abs(diffActualStake):#,##0.##}",
+                                    betDataSet.TicketNo,
+                                    out afterAmount,
+                                    conn,
+                                    trans,
+                                    AllowNegative.Allow
+                                );
+                            }
                         }
                     }
 
                     // 注單派彩
                     if (result > 0 && betDataSet.Payout != 0)
                     {
-                        result = walletService.SetBalance(
-                            tpCustInfo.CustId,
-                            tpCustInfo.SiteId,
-                            tpCustInfo.UserName,
-                            betDataSet.Payout,
-                            (int)Tp.MaxGame,
-                            TransType.Payout,
-                            $"Payout: {betDataSet.Payout:#,##0.##}",
-                            betDataSet.TicketNo,
-                            out afterAmount,
-                            conn,
-                            trans,
-                            AllowNegative.Allow
-                        );
+                        if (walletKind == WalletKind.BonusWallet)
+                        {
+                            result = PayoutV2(
+                                tpCustInfo,
+                                betDataSet.Payout,
+                                tpId,
+                                betDataSet.TicketNo,
+                                gameType,
+                                tpCategory,
+                                betDataSet.TicketNo,
+                                TransType.Payout,
+                                null,
+                                out afterAmount,
+                                $"Payout",
+                                out bonusId,
+                                conn,
+                                trans,
+                                AllowNegative.Allow
+                            );
+                        }
+                        else
+                        {
+                            result = walletService.SetBalance(
+                                tpCustInfo.CustId,
+                                tpCustInfo.SiteId,
+                                tpCustInfo.UserName,
+                                betDataSet.Payout,
+                                tpId,
+                                TransType.Payout,
+                                $"Payout: {betDataSet.Payout:#,##0.##}",
+                                betDataSet.TicketNo,
+                                out afterAmount,
+                                conn,
+                                trans,
+                                AllowNegative.Allow
+                            );
+                        }
+
                     }
+
                     if (result > 0)
                     {
-                        result = _tpUnsettleService.InsertTpUnsettle(Tp.MaxGame, GameType.MaxGame_Poker, betDataSet.TicketNo, trans, partitionTime);
+                        result = _tpUnsettleService.InsertTpUnsettle((Tp)tpId, (GameType)gameType, betDataSet.TicketNo, trans, partitionTime);
                     }
 
                     if (result > 0)
@@ -1287,7 +1367,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     Seq = payoutData_MaxGame.Seq,
                     Payload = JsonConvert.SerializeObject(payoutData_MaxGame.Payload)
                 });
-                var req = _partitionService.Execute(ts, "Service_BettransPK_MaxGame_Payload_Ins", payload, trans);
+                var req = _partitionService.Execute(ts, spName.InsertPayload, payload, trans);
 
                 if (req > 0 && result > 0 && cnt != 0 && cnt == payoutData_MaxGame.Payload.BetDataSet.Count)
                 {
@@ -1312,7 +1392,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public int CancelBetPK_MaxGame(TpCustInfo tpCustInfo, CancelBetData_MaxGame cancelBetData_MaxGame, out decimal afterAmount)
+        public int CancelBetPK_MaxGame(TpCustInfo tpCustInfo, CancelBetData_MaxGame cancelBetData_MaxGame, int tpId, int gameType, WalletKind walletKind, TpCategory tpCategory, SpNameListOfMaxGame spName, out decimal afterAmount)
         {
             afterAmount = 0;
             int result = 0;
@@ -1329,6 +1409,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 var unix = ((DateTimeOffset)ts).ToUnixTimeSeconds();
                 foreach (var betDataSet in cancelBetData_MaxGame.Payload.BetDataSet)
                 {
+                    int bonusId = 0;
                     var p = new DynamicParameters(new
                     {
                         Seq = cancelBetData_MaxGame.Seq,
@@ -1352,6 +1433,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         BonusId = "",
                         BonusName = "",
                         PrizeName = "",
+                        ResultId = "",
+                        OtherBetInfo = "{}",
+                        FreeBet = false,
+                        FreeSpin = false,
+                        ContributionAmount = 0,
+                        ContributionRate = 0,
                         SettleDateUnix = unix,
                         TicketType = (int)BettransType.CancelBet,
                         TicketStatus = (int)TicketStatus.Refund,
@@ -1359,34 +1446,57 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     });
 
                     // 檢查是否有下注
-                    var bettrans = _partitionService.Query<BettransData_MaxGame>(partitionTime, "Service_BettransPK_MaxGame_TicketNo_Get", new { TicketNo = betDataSet.TicketNo });
+                    var bettrans = _partitionService.Query<BettransData_MaxGame>(partitionTime, spName.GetTicketNo, new { TicketNo = betDataSet.TicketNo });
                     if (!bettrans.Any(i => i.TicketType == BettransType.Bet))
                     {
                         // insert cancel
                         p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
-                        result = _partitionService.Execute(partitionTime, "Service_BettransPK_MaxGame_Ins_V2", p, trans);
+                        result = _partitionService.Execute(partitionTime, spName.InsertBettrans, p, trans);
                     }
                     else
                     {
                         // VoidGame就是以TicketNo將整局的PlaceBet 注單取消並退款
                         var placeBetActualStake = bettrans.Where(i => i.TicketType == BettransType.Bet).Sum(i => i.ActualStake);
-                        result = _partitionService.Execute(partitionTime, "Service_BettransPK_MaxGame_CancelBet_Set", p, trans);
+                        result = _partitionService.Execute(partitionTime, spName.SetCancelBet, p, trans);
                         if (result > 0 && placeBetActualStake != 0)
                         {
-                            result = walletService.SetBalance(
-                                tpCustInfo.CustId,
-                                tpCustInfo.SiteId,
-                                tpCustInfo.UserName,
-                                Math.Abs(placeBetActualStake),
-                                (int)Tp.MaxGame,
-                                TransType.Refunds,
-                                $"Cancel: {Math.Abs(placeBetActualStake):#,##0.##}",
-                                betDataSet.TicketNo,
-                                out afterAmount,
-                                conn,
-                                trans,
-                                AllowNegative.Allow
-                            );
+                            if (walletKind == WalletKind.BonusWallet)
+                            {
+                                result = PayoutV2(
+                                    tpCustInfo,
+                                    Math.Abs(placeBetActualStake),
+                                    tpId,
+                                    betDataSet.TicketNo,
+                                    gameType,
+                                    tpCategory,
+                                    betDataSet.TicketNo,
+                                    TransType.Refunds,
+                                    null,
+                                    out _,
+                                    "CancelBet",
+                                    out bonusId,
+                                    conn,
+                                    trans,
+                                    AllowNegative.Allow
+                                );
+                            }
+                            else
+                            {
+                                result = walletService.SetBalance(
+                                    tpCustInfo.CustId,
+                                    tpCustInfo.SiteId,
+                                    tpCustInfo.UserName,
+                                    Math.Abs(placeBetActualStake),
+                                    tpId,
+                                    TransType.Refunds,
+                                    $"Cancel: {Math.Abs(placeBetActualStake):#,##0.##}",
+                                    betDataSet.TicketNo,
+                                    out afterAmount,
+                                    conn,
+                                    trans,
+                                    AllowNegative.Allow
+                                );
+                            }
                         }
                     }
 
@@ -1401,7 +1511,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     Seq = cancelBetData_MaxGame.Seq,
                     Payload = JsonConvert.SerializeObject(cancelBetData_MaxGame.Payload)
                 });
-                var req = _partitionService.Execute(partitionTime, "Service_BettransPK_MaxGame_Payload_Ins", payload, trans);
+                var req = _partitionService.Execute(partitionTime, spName.InsertPayload, payload, trans);
 
                 if (req > 0 && result > 0 && cnt != 0 && cnt == cancelBetData_MaxGame.Payload.BetDataSet.Count)
                 {
@@ -1426,7 +1536,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public int BonusPK_MaxGame(TpCustInfo tpCustInfo, BonusData_MaxGame bonusData_MaxGame, out decimal afterAmount, out string refNo)
+        public int BonusPK_MaxGame(TpCustInfo tpCustInfo, BonusData_MaxGame bonusData_MaxGame, int tpId, int gameType, WalletKind walletKind, TpCategory tpCategory, SpNameListOfMaxGame spName, out decimal afterAmount, out string refNo)
         {
             afterAmount = 0;
             var result = 0;
@@ -1441,9 +1551,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 foreach (var betDataSet in bonusData_MaxGame.Payload.BetDataSet)
                 {
+                    int bonusId = 0;
                     var partitionTime = DateTimeOffset.FromUnixTimeSeconds(betDataSet.SettleDateUnix).DateTime;
                     // 檢查是否重複
-                    var bettrans = _partitionService.Query<BettransData_MaxGame>(partitionTime, "Service_BettransPK_MaxGame_TicketNo_Get", new { TicketNo = betDataSet.TicketNo });
+                    var bettrans = _partitionService.Query<BettransData_MaxGame>(partitionTime, spName.GetTicketNo, new { TicketNo = betDataSet.TicketNo });
                     if (bettrans.Any(i => i.TicketType == BettransType.Bonus && i.Seq == bonusData_MaxGame.Seq))
                     {
                         return -1;
@@ -1472,6 +1583,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         BonusId = betDataSet.BonusId,
                         BonusName = betDataSet.BonusName,
                         PrizeName = betDataSet.PrizeName,
+                        ResultId = "",
+                        OtherBetInfo = "{}",
+                        FreeBet = false,
+                        FreeSpin = false,
+                        ContributionAmount = 0,
+                        ContributionRate = 0,
                         SettleDateUnix = betDataSet.SettleDateUnix,
                         TicketType = (int)BettransType.Bonus,
                         TicketStatus = (int)TicketStatus.UnSettled,
@@ -1479,27 +1596,50 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     });
 
                     p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
-                    result = _partitionService.Execute(partitionTime, "Service_BettransPK_MaxGame_Ins_V2", p, trans);
+                    result = _partitionService.Execute(partitionTime, spName.InsertBettrans, p, trans);
                     if (result > 0 && betDataSet.Payout != 0)
                     {
-                        result = walletService.SetBalance(
-                            tpCustInfo.CustId,
-                            tpCustInfo.SiteId,
-                            tpCustInfo.UserName,
-                            betDataSet.Payout,
-                            (int)Tp.MaxGame,
-                            TransType.Payout,
-                            $"Payout: {betDataSet.Payout:#,##0.##}",
-                            betDataSet.TicketNo,
-                            out afterAmount,
-                            conn,
-                            trans,
-                            AllowNegative.Allow
-                        );
+                        if (walletKind == WalletKind.BonusWallet)
+                        {
+                            result = PayoutV2(
+                                tpCustInfo,
+                                betDataSet.Payout,
+                                tpId,
+                                betDataSet.TicketNo,
+                                gameType,
+                                tpCategory,
+                                betDataSet.TicketNo,
+                                TransType.Payout,
+                                null,
+                                out afterAmount,
+                                "Payout",
+                                out bonusId,
+                                conn,
+                                trans,
+                                AllowNegative.Allow
+                            );
+                        }
+                        else
+                        {
+                            result = walletService.SetBalance(
+                                tpCustInfo.CustId,
+                                tpCustInfo.SiteId,
+                                tpCustInfo.UserName,
+                                betDataSet.Payout,
+                                tpId,
+                                TransType.Payout,
+                                $"Payout: {betDataSet.Payout:#,##0.##}",
+                                betDataSet.TicketNo,
+                                out afterAmount,
+                                conn,
+                                trans,
+                                AllowNegative.Allow
+                            );
+                        }
                     }
                     if (result > 0)
                     {
-                        result = _tpUnsettleService.InsertTpUnsettle(Tp.MaxGame, GameType.MaxGame_Poker, betDataSet.TicketNo, trans, partitionTime);
+                        result = _tpUnsettleService.InsertTpUnsettle((Tp)tpId, (GameType)gameType, betDataSet.TicketNo, trans, partitionTime);
                     }
 
                     if (result > 0)
@@ -1516,9 +1656,164 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     Seq = bonusData_MaxGame.Seq,
                     Payload = JsonConvert.SerializeObject(bonusData_MaxGame.Payload)
                 });
-                var req = _partitionService.Execute(ts, "Service_BettransPK_MaxGame_Payload_Ins", payload, trans);
+                var req = _partitionService.Execute(ts, spName.InsertPayload, payload, trans);
 
                 if (req > 0 && result > 0 && cnt != 0 && cnt == bonusData_MaxGame.Payload.BetDataSet.Count)
+                {
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    return result;
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                result = 0;
+                logger.LogError(mySqlEx.Message);
+                _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+                throw;
+            }
+
+            _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+            return result;
+        }
+
+        public int FreeSpinPK_MaxGame(TpCustInfo tpCustInfo, FreeSpinData_MaxGame freeSpinData_MaxGame, int tpId, int gameType, WalletKind walletKind, TpCategory tpCategory, SpNameListOfMaxGame spName, out decimal afterAmount, out List<BetDataSetList_MaxGame> refData)
+        {
+            afterAmount = 0;
+            var result = 0;
+            var cnt = 0;
+            refData = new List<BetDataSetList_MaxGame>();
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            /*
+             FreeSpin的設計是一些特殊廠商，每一次的畫面都會是一個獨立的TicketNo，需要直接給錢的功能
+             Stake & ActualStake & NetStake 都會為0 , Payout為該局的贏
+             */
+            try
+            {
+                foreach (var betDataSet in freeSpinData_MaxGame.Payload.BetDataSet)
+                {
+                    int bonusId = 0;
+                    var partitionTime = DateTimeOffset.FromUnixTimeSeconds(betDataSet.SettleDateUnix).DateTime;
+                    // 檢查是否重複
+                    var bettrans = _partitionService.Query<BettransData_MaxGame>(partitionTime, spName.GetTicketNo, new { TicketNo = betDataSet.TicketNo });
+                    if (bettrans.Any(i => i.TicketType == BettransType.Payout && i.Seq == freeSpinData_MaxGame.Seq && i.GameRoundId == betDataSet.GameRoundId))
+                    {
+                        // GameRoundId都會不同
+                        return -1;
+                    }
+
+                    var p = new DynamicParameters(new
+                    {
+                        Seq = freeSpinData_MaxGame.Seq,
+                        OperatorCustId = freeSpinData_MaxGame.Payload.OperatorCustId,
+                        GameType = freeSpinData_MaxGame.Payload.GameType,
+                        IpAddress = "",
+                        SettleDate = betDataSet.SettleDate,
+                        TicketNo = betDataSet.TicketNo,
+                        GameId = betDataSet.GameId,
+                        GameRoundId = betDataSet.GameRoundId,
+                        TransactionId = string.IsNullOrEmpty(betDataSet.TransactionId) ? "" : betDataSet.TransactionId,
+                        Stake = 0m,
+                        ActualStake = 0m,
+                        NetStake = 0m,
+                        Payout = betDataSet.Payout,
+                        Odds = 0m,
+                        BetChoice = "",
+                        TableCode = "",
+                        GameResult = "",
+                        CurrencyISO = "",
+                        BonusId = "",
+                        BonusName = "",
+                        PrizeName = "",
+                        ResultId = "",
+                        OtherBetInfo = "{}",
+                        FreeBet = false,
+                        FreeSpin = false,
+                        ContributionAmount = 0,
+                        ContributionRate = 0,
+                        SettleDateUnix = betDataSet.SettleDateUnix,
+                        TicketType = (int)BettransType.Payout,
+                        TicketStatus = (int)TicketStatus.UnSettled,
+                        SettleFlag = (int)SettleFlag.EndGame
+                    });
+
+                    p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
+                    result = _partitionService.Execute(partitionTime, spName.InsertBettrans, p, trans);
+                    if (result > 0 && betDataSet.Payout != 0)
+                    {
+                        if (walletKind == WalletKind.BonusWallet)
+                        {
+                            result = PayoutV2(
+                                tpCustInfo,
+                                betDataSet.Payout,
+                                tpId,
+                                betDataSet.TicketNo,
+                                gameType,
+                                tpCategory,
+                                betDataSet.TicketNo,
+                                TransType.Payout,
+                                null,
+                                out afterAmount,
+                                "FreeSpin",
+                                out bonusId,
+                                conn,
+                                trans,
+                                AllowNegative.Allow
+                            );
+                        }
+                        else
+                        {
+                            result = walletService.SetBalance(
+                                tpCustInfo.CustId,
+                                tpCustInfo.SiteId,
+                                tpCustInfo.UserName,
+                                betDataSet.Payout,
+                                tpId,
+                                TransType.Payout,
+                                $"FreeSpin: {betDataSet.Payout:#,##0.##}",
+                                betDataSet.TicketNo,
+                                out afterAmount,
+                                conn,
+                                trans,
+                                AllowNegative.Allow
+                            );
+                        }
+                    }
+                    if (result > 0)
+                    {
+                        result = _tpUnsettleService.InsertTpUnsettle((Tp)tpId, (GameType)gameType, betDataSet.TicketNo, trans, partitionTime);
+                    }
+
+                    if (result > 0)
+                    {
+                        var refNo = p.Get<long>("SQ").ToString();
+                        refData.Add(new BetDataSetList_MaxGame
+                        {
+                            TicketNo = betDataSet.TicketNo,
+                            RefNo = refNo,
+                        });
+
+                        cnt++;
+                    }
+                }
+
+                DateTime.TryParse(freeSpinData_MaxGame.Timestamp, out DateTime ts);
+                var payload = new DynamicParameters(new
+                {
+                    Timestamp = freeSpinData_MaxGame.Timestamp,
+                    Seq = freeSpinData_MaxGame.Seq,
+                    Payload = JsonConvert.SerializeObject(freeSpinData_MaxGame.Payload)
+                });
+                var req = _partitionService.Execute(ts, spName.InsertPayload, payload, trans);
+
+                if (req > 0 && result > 0 && cnt != 0 && cnt == freeSpinData_MaxGame.Payload.BetDataSet.Count)
                 {
                     _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     return result;
