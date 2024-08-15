@@ -161,6 +161,23 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
         }
 
+        [HttpPost]
+        [Route("MBS/transferInOut")]
+        public VerifyResponse Bet([FromForm] Dictionary<string, string> request)
+        {
+            var config = _siteConfigDic[1];
+            if (!request.ContainsKey("params"))
+            {
+                return new VerifyResponse()
+                {
+                    code = "-1",
+                    msg = "Fail",
+                };
+            }
+        }
+
+
+
         private string decodeAESMD5(string encStr, string Key)
         {
             byte[] keyArray = getMd5(Key);
