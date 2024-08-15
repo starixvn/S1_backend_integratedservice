@@ -57,7 +57,7 @@ namespace ThirdPartyWager.Service.BLL
                             euro_odds = wager.euro_odds == null ? 0 : wager.euro_odds,
                             member_odds = wager.member_odds,
                             member_odds_style = wager.member_odds_style,
-                            request_source = wager.request_source,
+                            request_source = string.IsNullOrEmpty(wager.request_source) ? string.Empty : wager.request_source,
                             tickets = wager.is_combo ? JsonConvert.SerializeObject(wager.tickets) : "{}"
                         };
 
@@ -136,7 +136,7 @@ namespace ThirdPartyWager.Service.BLL
                                             euro_odds = wager.euro_odds == null ? 0 : wager.euro_odds,
                                             member_odds = wager.member_odds,
                                             member_odds_style = wager.member_odds_style,
-                                            request_source = wager.request_source,
+                                            request_source = string.IsNullOrEmpty(wager.request_source) ? string.Empty : wager.request_source,
                                             tickets = wager.is_combo ? JsonConvert.SerializeObject(wager.tickets) : "{}"
                                         };
 
