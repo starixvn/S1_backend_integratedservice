@@ -30,6 +30,8 @@ startup.Configure(app, builder.Environment);
 app.Run();
 return;
 
+#region log Setting
+
 bool FilterLog(LogEvent logEvent)
 {
     var excludesMessage = builder.Configuration.GetSection("ExcludesMessage").Get<string[]>();
@@ -57,3 +59,5 @@ void OverrideLoggerWriteToLFile(LoggerConfiguration configuration)
             fileSizeLimitBytes: 10485760,
             rollOnFileSizeLimit: true);
 }
+
+#endregion
