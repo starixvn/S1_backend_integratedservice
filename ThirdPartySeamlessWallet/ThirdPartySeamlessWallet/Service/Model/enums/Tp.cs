@@ -65,7 +65,8 @@
         NTConnect = 62,
         GA = 63,
         WonCasino = 64,
-        Marbles = 65
+        Marbles = 65,
+        DragonGaming = 70
     }
 
 }

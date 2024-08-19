@@ -140,6 +140,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThirdParty.WonCasino", "Thi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.Marbles", "ThirdParty.Marbles\ThirdParty.Marbles.csproj", "{9635AC81-FF01-4901-85F7-D1F825F36D5B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.DragonGaming", "ThirdParty.DragonGaming\ThirdParty.DragonGaming.csproj", "{ACC8CCAB-12D0-4400-A299-C86FA419923C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -406,6 +408,10 @@ Global
 		{9635AC81-FF01-4901-85F7-D1F825F36D5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9635AC81-FF01-4901-85F7-D1F825F36D5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9635AC81-FF01-4901-85F7-D1F825F36D5B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ACC8CCAB-12D0-4400-A299-C86FA419923C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ACC8CCAB-12D0-4400-A299-C86FA419923C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ACC8CCAB-12D0-4400-A299-C86FA419923C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ACC8CCAB-12D0-4400-A299-C86FA419923C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -473,6 +479,7 @@ Global
 		{D8F15454-35EA-4686-8E54-348BCA389DCC} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{13A4920A-7A5A-4547-A214-D686194504E2} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{9635AC81-FF01-4901-85F7-D1F825F36D5B} = {54887B85-B528-486C-A102-3E5FF55C1282}
+		{ACC8CCAB-12D0-4400-A299-C86FA419923C} = {54887B85-B528-486C-A102-3E5FF55C1282}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {88130080-DA6F-45D5-BA4E-3A91181A0592}
