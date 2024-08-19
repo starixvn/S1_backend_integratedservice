@@ -20,7 +20,6 @@ public class MockSsessionResponse
         status = 0;
         account_id = "DNova88_127591";
         username = "DNova88_127591";
-        country = "";
         token = token;
         balance = 1000;
         currency = "THB";
@@ -48,7 +47,6 @@ public class MockBalanceResponse
     {
         status = 0;
         account_id = "DNova88_127591";
-        country = "";
         token = token;
         balance = 1000;
         currency = "THB";
