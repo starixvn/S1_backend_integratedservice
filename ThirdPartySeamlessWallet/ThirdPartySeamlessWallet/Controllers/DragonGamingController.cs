@@ -6,6 +6,7 @@ using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model;
 using NuGet.Protocol;
+using System.Text;
 
 namespace ThirdPartySeamlessWallet.Controllers;
 
@@ -16,6 +17,8 @@ public class DragonGamingController
     private readonly Tp thisTp;
     private readonly TpCustInfoBLL _tpCustInfoBll;
     private readonly IYeebetBLL _yeebetBll;
+    private readonly AuthBLL _authBll;
+    private readonly ThirdPartyBLL _thirdPartyBll;
     private readonly Tools _tools;
     private readonly Dictionary<int, YeebetConfig> _siteConfigDic;
 
@@ -27,6 +30,8 @@ public class DragonGamingController
     {
         thisTp = Tp.DragonGaming;
         _tpCustInfoBll = provider.GetService<TpCustInfoBLL>();
+        _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
+        _authBll = provider.GetRequiredService<AuthBLL>();
         _tools = provider.GetService<Tools>();
         _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<YeebetConfig>(thisTp.ToString());
     }
@@ -49,9 +54,30 @@ public class DragonGamingController
     /// <returns></returns>
     [HttpGet]
     [Route("[controller]/get_session")]
-    public async Task<MockSsessionResponse> GetSessionAsync(SsessionRequest request)
+    public SsessionResponse GetSession(CommonTokenRequest request)
     {
-        return new MockSsessionResponse(request.token);
+        var dicP = JsonConvert.DeserializeObject<Dictionary<string, string>>(JsonConvert.SerializeObject(request)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
+
+        var (token, gameCode) = GetToken(request.token);
+
+        if (_authBll.Authenticate(token, out TpCustInfoAuth tpCustInfoAuth))
+        {
+            var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
+            if (tpCheck == null || tpCheck.Locked)
+            {
+                return new SsessionResponse(tpCustInfoAuth.TpUserName, token);
+            }
+            else
+            {
+                var gameType = (int)_thirdPartyBll.GetGameType((int)thisTp, gameCode);
+                var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, gameType);
+                return new SsessionResponse(tpCustInfoAuth.TpUserName, token, tpCustBalance.Balance, tpCustBalance.TpCurrencyId);
+            }
+        }
+        else
+        {
+            return new SsessionResponse(token);
+        }
     }
 
 
@@ -61,9 +87,14 @@ public class DragonGamingController
     /// <returns></returns>
     [HttpGet]
     [Route("[controller]/get_balance")]
-    public async Task<MockBalanceResponse> GetBalanceAsync(BalanceRequest request)
+    public BalanceResponse GetBalance(BalanceRequest request)
     {
-        return new MockBalanceResponse(request.token);
+        var dicP = JsonConvert.DeserializeObject<Dictionary<string, string>>(JsonConvert.SerializeObject(request)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
+
+        var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)thisTp, request.account_id);
+        var gameType = _tpCustInfoBll.GetCustGotoGameType(tpCustInfo.CustId, (int)thisTp);
+        var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)thisTp, request.account_id, gameType);
+        return new BalanceResponse(request.account_id, request.token, tpCustBalance.Balance, tpCustBalance.TpCurrencyId);
     }
 
     /// <summary>
@@ -126,6 +157,20 @@ public class DragonGamingController
     #endregion
 
     #region Private Methods
+
+    private static (string Token, string gameCode) GetToken(string token)
+    {
+        try
+        {
+            var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(token));
+            var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+            return (sessionKeyArr[0], sessionKeyArr[1]);
+        }
+        catch
+        {
+            return (null, null);
+        }
+    }
 
     private bool CheckAppidAndSign(string appid, Dictionary<string, string> request, out string message)
     {
