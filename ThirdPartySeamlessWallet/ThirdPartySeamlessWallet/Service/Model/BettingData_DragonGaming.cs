@@ -82,14 +82,14 @@ public class SsessionResponse : CommonResponse
         currency = "";
     }
 
-    public SsessionResponse(string tpUserName, string token, decimal balance, string currency)
+    public SsessionResponse(string tpUserName, string reqToken, decimal custBalance, string tpCurrency)
     {
         status = 0;
         account_id = tpUserName;
         username = tpUserName;
-        token = token;
-        balance = Math.Floor(balance);
-        currency = currency;
+        token = reqToken;
+        balance = (int)custBalance;
+        currency = tpCurrency;
     }
 }
 
@@ -98,13 +98,13 @@ public class BalanceResponse : CommonResponse
     public int bonus_amount { get; set; }
 
 
-    public BalanceResponse(string tpUserName, string token, decimal balance, string currency)
+    public BalanceResponse(string tpUserName, string reqToken, decimal custBalance, string tpCurrency)
     {
         status = 0;
         account_id = tpUserName;
-        token = token;
-        balance = Math.Floor(balance);
-        currency = currency;
+        token = reqToken;
+        balance = (int)custBalance;
+        currency = tpCurrency;
         bonus_amount = 0;
     }
 }
