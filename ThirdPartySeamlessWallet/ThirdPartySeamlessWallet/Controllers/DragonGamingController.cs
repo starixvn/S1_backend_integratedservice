@@ -10,7 +10,8 @@ using System.Text;
 
 namespace ThirdPartySeamlessWallet.Controllers;
 
-public class DragonGamingController
+[ApiController]
+public class DragonGamingController : ControllerBase
 {
     #region Fields
 
