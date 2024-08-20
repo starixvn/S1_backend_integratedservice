@@ -52,7 +52,7 @@ public class DragonGamingController
     /// GetSession API
     /// </summary>
     /// <returns></returns>
-    [HttpGet]
+    [HttpPost]
     [Route("[controller]/get_session")]
     public SsessionResponse GetSession(CommonTokenRequest request)
     {
@@ -85,7 +85,7 @@ public class DragonGamingController
     /// GetBalance API
     /// </summary>
     /// <returns></returns>
-    [HttpGet]
+    [HttpPost]
     [Route("[controller]/get_balance")]
     public BalanceResponse GetBalance(BalanceRequest request)
     {
