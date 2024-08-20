@@ -22,6 +22,7 @@ public class DragonGamingController : ControllerBase
     private readonly ThirdPartyBLL _thirdPartyBll;
     private readonly Tools _tools;
     private readonly Dictionary<int, YeebetConfig> _siteConfigDic;
+    private readonly Log2File _log2File;
 
     #endregion
 
@@ -34,6 +35,7 @@ public class DragonGamingController : ControllerBase
         _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
         _authBll = provider.GetRequiredService<AuthBLL>();
         _tools = provider.GetService<Tools>();
+        _log2File = provider.GetService<Log2File>();
         _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<YeebetConfig>(thisTp.ToString());
     }
 
@@ -57,6 +59,8 @@ public class DragonGamingController : ControllerBase
     [Route("[controller]/get_session")]
     public SsessionResponse GetSession(CommonTokenRequest request)
     {
+        var logName = $"{thisTp}_GetSession";
+        _log2File.Info(JsonConvert.SerializeObject(request), logName);
         var dicP = JsonConvert.DeserializeObject<Dictionary<string, string>>(JsonConvert.SerializeObject(request)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
 
         var (token, gameCode) = GetToken(request.token);
@@ -70,8 +74,7 @@ public class DragonGamingController : ControllerBase
             }
             else
             {
-                var gameType = (int)_thirdPartyBll.GetGameType((int)thisTp, gameCode);
-                var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, gameType);
+                var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName);
                 return new SsessionResponse(tpCustInfoAuth.TpUserName, token, tpCustBalance.Balance, tpCustBalance.TpCurrencyId);
             }
         }
@@ -81,7 +84,6 @@ public class DragonGamingController : ControllerBase
         }
     }
 
-
     /// <summary>
     /// GetBalance API
     /// </summary>
@@ -90,11 +92,11 @@ public class DragonGamingController : ControllerBase
     [Route("[controller]/get_balance")]
     public BalanceResponse GetBalance(BalanceRequest request)
     {
+        var logName = $"{thisTp}_GetBalance";
         var dicP = JsonConvert.DeserializeObject<Dictionary<string, string>>(JsonConvert.SerializeObject(request)).OrderBy(kp => kp.Key).ToDictionary(kp => kp.Key, kp => kp.Value);
 
         var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)thisTp, request.account_id);
-        var gameType = _tpCustInfoBll.GetCustGotoGameType(tpCustInfo.CustId, (int)thisTp);
-        var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)thisTp, request.account_id, gameType);
+        var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)thisTp, tpCustInfo.TpUserName);
         return new BalanceResponse(request.account_id, request.token, tpCustBalance.Balance, tpCustBalance.TpCurrencyId);
     }
 
