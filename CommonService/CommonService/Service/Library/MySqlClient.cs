@@ -69,22 +69,20 @@ public sealed class MySqlClient
             var command = new CommandDefinition(sql, parameters, // 使用 CommandDefinition 不讓 Dapper 用預設值建立
                 commandType: CommandType.StoredProcedure,
                 flags: CommandFlags.NoCache);
-            result = connection.Query<T>(command).ToList();
+            result = connection.Query<T>(command);
             connection.Close();
             connection.Dispose();
-            return result;
         }
         catch (Exception e)
         {
             _logger.LogError(e, sql);
             throw;
         }
-        finally
-        {
-            LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
-            _logger.LogDebug($"{sql} {sw.Elapsed:c}");
-        }
-        
+
+        LogContext.PushProperty("ElapsedMilliseconds", sw.Elapsed.TotalMilliseconds);
+        _logger.LogDebug($"{sql} {sw.Elapsed:c}");
+        return result.ToList();
+
     }
 
     public int Execute(string name, object parameters)
