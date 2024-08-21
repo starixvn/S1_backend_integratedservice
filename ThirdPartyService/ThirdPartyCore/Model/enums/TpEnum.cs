@@ -69,6 +69,10 @@
         GA = 63,
         WonCasino = 64,
         Marbles = 65,
+        SabaPlay = 66,
+        UuSlots = 67,
+        Live22 = 68,
+        FastSpin = 69,
         DragonGaming = 70
     }
 
@@ -167,6 +171,10 @@
         GA_CockFighting = 115,
         WonCasino_LiveCasino = 116,
         Marbles_Lottery = 118,
+        SabaPlay_Poker = 119,
+        UuSlots_RNG = 120,
+        Live22_RNG = 121,
+        FastSpin_RNG = 122,
         DragonGaming_RNG = 123
     }
 }
