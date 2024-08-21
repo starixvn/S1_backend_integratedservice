@@ -286,19 +286,26 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     gameType = GameType.PlayTech_RNG;
                     var casinoPlayTech = GetGameCasinoWithCache(tpId);
                     /*
-                     * ¹ï©ó BRL ³f¹ô
-                     * ¥²¶·¨Ï¥Î PTN ¹CÀ¸¥N½X¤~¯à¦s¨ú¹CÀ¸
-                     * ´ú¸ÕÀô¹Ò©M¥¿¦¡Àô¹Ò¨Ï¥Îªº¹CÀ¸µ{¦¡½X¤£¦P
+                     * ï¿½ï¿½ï¿½ BRL ï¿½fï¿½ï¿½
+                     * ï¿½ï¿½ï¿½ï¿½ï¿½Ï¥ï¿½ PTN ï¿½Cï¿½ï¿½ï¿½Nï¿½Xï¿½~ï¿½ï¿½sï¿½ï¿½ï¿½Cï¿½ï¿½
+                     * ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò©Mï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò¨Ï¥Îªï¿½ï¿½Cï¿½ï¿½ï¿½{ï¿½ï¿½ï¿½Xï¿½ï¿½ï¿½P
                      */
                     if (gameId.StartsWith("ptn_", StringComparison.OrdinalIgnoreCase))
                     {
-                        // ¥h°£ptn_¡A¤ñ¹ï­ìgameid¬O§_¦s¦b
+                        // ï¿½hï¿½ï¿½ptn_ï¿½Aï¿½ï¿½ï¿½ï¿½gameidï¿½Oï¿½_ï¿½sï¿½b
                         gameId = gameId.Substring(4);
                     }
                     var checkPlayTech = casinoPlayTech.FirstOrDefault(x => x.GameId == gameId);
                     if (checkPlayTech == null)
                     {
                         gameType = GameType.PlayTech_LiveCasino;
+                    }
+                    break;
+                case (int)Tp.DragonGaming:
+                    gameType = GameType.DragonGaming_RNG;
+                    if (string.Equals(gameId, "slots", StringComparison.OrdinalIgnoreCase))
+                    {
+                        gameType = GameType.DragonGaming_RNG;
                     }
                     break;
                 default:
