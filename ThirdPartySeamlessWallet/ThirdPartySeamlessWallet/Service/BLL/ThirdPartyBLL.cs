@@ -316,6 +316,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 case (int)Tp.FastSpin:
                     gameType = GameType.FastSpin_RNG;
                     break;
+                case (int)Tp.DragonGaming:
+                    gameType = GameType.DragonGaming_RNG;
+                    if (string.Equals(gameId, "slots", StringComparison.OrdinalIgnoreCase))
+                    {
+                        gameType = GameType.DragonGaming_RNG;
+                    }
+                    break;
                 default:
                     break;
             }

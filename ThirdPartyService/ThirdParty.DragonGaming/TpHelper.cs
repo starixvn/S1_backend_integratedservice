@@ -51,12 +51,13 @@ public class TpHelper : ThirdPartyHelperBase
             currency = tpCustInfo.TpCurrencyId
         };
 
+        var tpGameType = GetGameType(gameType);
         var loginRequest = new GameLaunchRequest
         {
             api_key = apiKey,
-            session_id = isFun ? "0000" : GetSession(tpCustInfo),
+            session_id = isFun ? "0000" : GetSession(tpCustInfo, tpGameType),
             privoder = Enum.GetName(typeof(TpEnum), Tp)?.ToLower() ?? string.Empty,
-            game_type = GetGameType(gameType),
+            game_type = gametype,
             game_id = gameCode,
             platform = IsDesktop(appType),
             language = TpLangId,
@@ -156,10 +157,10 @@ public class TpHelper : ThirdPartyHelperBase
         }
     }
 
-    private string GetSession(TpCustInfo tpCustInfo)
+    private string GetSession(TpCustInfo tpCustInfo, string tpGameType)
     {
         var token = ApplyToken(tpCustInfo);
-        var sessionKeyArr = new[] { token, tpCustInfo.TpUserName };
+        var sessionKeyArr = new[] { token, tpCustInfo.TpUserName, tpGameType };
         var bytes = Encoding.ASCII.GetBytes(ToJson(sessionKeyArr));
         var sessionKey = Convert.ToBase64String(bytes);
 
