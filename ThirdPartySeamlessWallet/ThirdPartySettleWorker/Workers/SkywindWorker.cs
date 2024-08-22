@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using Newtonsoft.Json;
 using Serilog.Context;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
@@ -86,7 +87,7 @@ namespace ThirdPartySettleWorker.Workers
                         //Get all Bettrans data
                         var UnsettleData = _partitionService.GetUnsettleDataList<SettleDataRNG_Skywind>("Service_Bettrans_Skywind_Unsettle_Get", tpUnsettle);
                         var settleData = UnsettleData.Where(i => i.TicketType == (int)BettransType.EndRound);
-                        var betData = UnsettleData.Where(i => i.TicketType == (int)BettransType.Bet);
+                        var betData = UnsettleData.Where(i => i.TicketType == (int)BettransType.Bet && i.TicketStatus != (int)TicketStatus.Refund);
                         var tpUserName = settleData.FirstOrDefault().custid;
                         var gameId = settleData.FirstOrDefault().gameid;
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
@@ -133,6 +134,10 @@ namespace ThirdPartySettleWorker.Workers
                                     _tpUnSettledBLL.SetSettleFlag("Service_Bettrans_Skywind_Settle_Set", Tp, gametype, $"{tpUnsettle.TransId}-{gameId}", tpUnsettle.TransId, true, DataBase.Wager);
                                 });
                             }
+                        }
+                        else
+                        {
+                            _logger.LogWarning($"{logName}:amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(UnsettleData)}");
                         }
                     }
                     catch (Exception ex1)
