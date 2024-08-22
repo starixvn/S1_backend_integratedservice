@@ -172,6 +172,11 @@ public class BettingData_DragonGaming
     public Boolean isfreespins { get; set; }
     public int TicketType { get; set; }
 
+    public BettingData_DragonGaming()
+    {
+        
+    }
+
     public BettingData_DragonGaming(DebitRequest_DragonGaming request, int ticketType)
     {
         account_id = request.account_id;
