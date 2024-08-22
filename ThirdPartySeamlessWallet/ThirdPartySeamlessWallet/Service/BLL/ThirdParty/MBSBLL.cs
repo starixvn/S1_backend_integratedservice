@@ -123,7 +123,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             var mbsSettleResponse = new MBSTransferInOutResponse()
             {
                 code = "-1",
-                msg = "Fail"
+                msg = "Fail",
+                resultBets = new List<MBSResultBet>()
             };
             
             try
