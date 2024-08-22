@@ -7373,6 +7373,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
+
             try
             {
                 var partitionTime = DateTime.UtcNow;
@@ -7418,7 +7419,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
-                    var check = _partitionService.Query<BettingData_Amigo>(partitionTime, GetSpName, new { roundId = refundData.round_id });
+                    var check = _partitionService.Query<BettingData_Amigo>(partitionTime, GetSpName, new { refundData.round_id });
                     if (!check.Any() || !check.Any(x => x.TicketType == (int)BettransType.CancelBet))
                     {
                         var cancelInsert = _partitionService.Execute(partitionTime, InsSpName, p, trans);
@@ -7458,7 +7459,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         public int PayoutRNG_DragonGaming(TpCustInfo tpCustInfo, BettingData_DragonGaming payoutData, out decimal afterAmount)
         {
+            int bonusId = 0;
+            int result = 0;
             afterAmount = 0;
+
             var tpId = Tp.DragonGaming;
             var tpGameType = GameType.DragonGaming_RNG;
             var tpCategory = TpCategory.Slots;
@@ -7468,7 +7472,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
-            int result;
+
             try
             {
                 var partitionTime = DateTime.UtcNow;
@@ -7476,7 +7480,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("SettleFlag", (int)SettleFlag.EndGame);
                 p.Add("TicketStatus", (int)TicketStatus.UnSettled);
 
-                var check = _partitionService.Query<BettingData_Amigo>(partitionTime, GetSpName, new { roundId = payoutData.round_id });
+                var check = _partitionService.Query<BettingData_Amigo>(partitionTime, GetSpName, new { payoutData.round_id });
                 if (!check.Any())
                 {
                     // no bet or cancel data
@@ -7486,8 +7490,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
                 if (result > 0)
                 {
-                    int bonusId = 0;
-
                     if (payoutData.amount != 0)
                     {
                         result = PayoutV2(

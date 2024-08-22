@@ -1,8 +1,4 @@
-﻿using NuGet.Common;
-using System.Net.Sockets;
-using ThirdPartySeamlessWallet.Service.Model.enums;
-
-namespace ThirdPartySeamlessWallet.Service.Model;
+﻿namespace ThirdPartySeamlessWallet.Service.Model;
 
 #region request
 
@@ -179,7 +175,7 @@ public class BettingData_DragonGaming
     public BettingData_DragonGaming(DebitRequest_DragonGaming request, int ticketType)
     {
         account_id = request.account_id;
-        amount = request.amount / 100;
+        amount = request.amount / 100m;
         amount_type = request.amount_type;
         currency = request.currency;
         game_id = request.game_id;
@@ -197,7 +193,7 @@ public class BettingData_DragonGaming
     public BettingData_DragonGaming(CreditRequest_DragonGaming request, int ticketType)
     {
         account_id = request.account_id;
-        amount = request.amount / 100;
+        amount = request.amount / 100m;
         amount_type = request.amount_type;
         currency = request.currency;
         game_id = request.game_id;
@@ -208,7 +204,7 @@ public class BettingData_DragonGaming
         game_name = request.game_name;
         note = request.note;
 
-        bonus_id = request.bonus_id;
+        bonus_id = request.bonus_id ?? "";
         round_end_state = request.round_end_state;
         isfreespins = request.isfreespins;
 
@@ -218,7 +214,7 @@ public class BettingData_DragonGaming
     public BettingData_DragonGaming(RefundRequest_DragonGaming request, int ticketType)
     {
         account_id = request.account_id;
-        amount = request.amount / 100;
+        amount = request.amount / 100m;
         amount_type = request.amount_type;
         currency = request.currency;
         game_id = request.game_id;
