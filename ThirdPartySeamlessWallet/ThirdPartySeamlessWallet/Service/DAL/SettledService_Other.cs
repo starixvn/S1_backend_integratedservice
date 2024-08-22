@@ -2086,5 +2086,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         
         #endregion
+        
+        #region Marbles_Lottery
+        
+        public int SettleLT_Marbles(TpCustInfo tpCustInfo, MBSBetSettleData  settledDataLT_Marbles, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            afterAmount = 10000;
+            var result = 1;
+            return result;
+        }
+        
+        #endregion
     }
 }

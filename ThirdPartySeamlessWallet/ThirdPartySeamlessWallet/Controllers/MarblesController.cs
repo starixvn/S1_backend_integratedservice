@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System.Security.Cryptography;
 using System.Text;
 using ThirdPartySeamlessWallet.Service.BLL;
+using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -17,8 +18,11 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly int _gameType;
         private readonly Log2File _log2File;
         private readonly Dictionary<int, MarblesConfig> _siteConfigDic;
+        private readonly IMBSBLL _IMBSBLL;
+        
         public MarblesController(IServiceProvider provider)
         {
+            _IMBSBLL = provider.GetRequiredService<IMBSBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _authBLL = provider.GetRequiredService<AuthBLL>();
             _log2File = provider.GetRequiredService<Log2File>();
@@ -26,67 +30,19 @@ namespace ThirdPartySeamlessWallet.Controllers
             _gameType = (int)GameType.Marbles_Lottery;
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MarblesConfig>(Tp.Marbles.ToString());
         }
-        public class MarblesConfig : TpSiteConfig
-        {
-            public string MerchantId { get; set; }
-            public string MerchantCode { get; set; }
-            public string AgentKey { get; set; }
-        }
-        public class MarblesRequest
-        {
-            [JsonProperty("params")]
-            public string Params { get; set; }
-        }
-        public class VerifyRequest
-        {
-            public string traceId { get; set; }
-            public string playerSession { get; set; }
-        }
-        public class MarblesResponse
-        {
-            public string code { get; set; }
-            public string msg { get; set; }
-        }
-
-        public class VerifyResponse : MarblesResponse
-        {
-            public VerifyResponseData data { get; set; }
-        }
-        public class VerifyResponseData
-        {
-            public string traceId { get; set; }
-            public string money { get; set; }
-            public string account { get; set; }
-        }
-        public class GetBalanceRequest
-        {
-            public string traceId { get; set; }
-            public string lineCode { get; set; }
-            public string agent { get; set; }
-            public string account { get; set; }
-        }
-        public class GetBalanceResponse : MarblesResponse
-        {
-            public GetBalanceResponseData data { get; set; }
-        }
-        public class GetBalanceResponseData
-        {
-            public string traceId { get; set; }
-            public string money { get; set; }
-            public string account { get; set; }
-            public string currency { get; set; }
-        }
+        
         [HttpPost]
         [Route("MBS/verifySession")]
-        public VerifyResponse Verify([FromForm] Dictionary<string, string> request)
+        public VerifyResponse<VerifyResponseData> Verify([FromForm] Dictionary<string, string> request)
         {
             var config = _siteConfigDic[1];
             if (!request.ContainsKey("params"))
             {
-                return new VerifyResponse()
+                return new VerifyResponse<VerifyResponseData>
                 {
                     code = "-1",
                     msg = "Fail",
+                    data = null
                 };
             }
 
@@ -95,36 +51,40 @@ namespace ThirdPartySeamlessWallet.Controllers
             var verifyData = JsonConvert.DeserializeObject<VerifyRequest>(verifyJson);
             if (_authBLL.Authenticate(verifyData.playerSession, out TpCustInfoAuth tpCustInfoAuth))
             {
-                return new VerifyResponse()
+                var resultData = new VerifyResponseData()
+                {
+                    traceId = verifyData.traceId,
+                    money = _tpCustInfoBLL.GetBalance((int)_thisTp, tpCustInfoAuth.TpUserName, _gameType).Balance
+                        .ToString(),
+                    account = tpCustInfoAuth.TpUserName
+                };
+                
+                return new VerifyResponse<VerifyResponseData>()
                 {
                     code = "0",
                     msg = "Success",
-                    data = new VerifyResponseData()
-                    {
-                        traceId = verifyData.traceId,
-                        money = _tpCustInfoBLL.GetBalance((int)_thisTp, tpCustInfoAuth.TpUserName, _gameType).Balance.ToString(),
-                        account = tpCustInfoAuth.TpUserName
-                    }
+                    data = resultData
                 };
             }
             else
             {
-                return new VerifyResponse()
+                return new VerifyResponse<VerifyResponseData>
                 {
                     code = "-1",
                     msg = "Fail",
+                    data = null,
                 };
             }
         }
 
         [HttpPost]
         [Route("MBS/getBalance")]
-        public GetBalanceResponse GetBalance([FromForm] Dictionary<string, string> request)
+        public MBSGetBalanceResponse GetBalance([FromForm] Dictionary<string, string> request)
         {
             var config = _siteConfigDic[1];
             if (!request.ContainsKey("params"))
             {
-                return new GetBalanceResponse()
+                return new MBSGetBalanceResponse()
                 {
                     code = "-1",
                     msg = "Fail",
@@ -133,16 +93,16 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             MarblesRequest marblesRequest = JsonConvert.DeserializeObject<MarblesRequest>(JsonConvert.SerializeObject(request));
             var getBalanceJson = decodeAESMD5(marblesRequest.Params, config.AgentKey);
-            var getBalanceData = JsonConvert.DeserializeObject<GetBalanceRequest>(getBalanceJson);
+            var getBalanceData = JsonConvert.DeserializeObject<MBSGetBalanceRequest>(getBalanceJson);
             var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, GetTpUserName(getBalanceData.account), _gameType);
 
             if (tpCustBalance != null)
             {
-                return new GetBalanceResponse()
+                return new MBSGetBalanceResponse()
                 {
                     code = "0",
                     msg = "Success",
-                    data = new GetBalanceResponseData()
+                    data = new MBSGetBalanceResponseData()
                     {
                         traceId = getBalanceData.traceId,
                         money = tpCustBalance.Balance.ToString(),
@@ -153,7 +113,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             else
             {
-                return new GetBalanceResponse()
+                return new MBSGetBalanceResponse()
                 {
                     code = "-1",
                     msg = "Fail",
@@ -161,6 +121,54 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
         }
 
+        [HttpPost]
+        [Route("MBS/transferInOut")]
+        public VerifyResponse<MBSTransferInOutResponse> TransferInOut([FromForm] Dictionary<string, string> request)
+        {
+            var config = _siteConfigDic[1];
+            if (!request.ContainsKey("params"))
+            {
+                return new VerifyResponse<MBSTransferInOutResponse>()
+                {
+                    code = "-1",
+                    msg = "Fail",
+                    data = null
+                };
+            }
+
+            var result = new MBSTransferInOutResponse();
+            
+            var marblesRequest = JsonConvert.DeserializeObject<MarblesRequest>(JsonConvert.SerializeObject(request));
+            var transferInOutJson = decodeAESMD5(marblesRequest.Params, config.AgentKey);
+            var transferInOutData = JsonConvert.DeserializeObject<MBSTransferInOutRequest>(transferInOutJson);
+
+            result = transferInOutData.type switch
+            {
+                1 => _IMBSBLL.Bet(transferInOutData),
+                2 => _IMBSBLL.Settle(transferInOutData),
+                _ => result
+            };
+
+            if (result.resultBets is { Count: >= 0 })
+            {
+                return new VerifyResponse<MBSTransferInOutResponse>()
+                {
+                    code = "0",
+                    msg = "Success",
+                    data = result
+                };
+            }
+
+            return new VerifyResponse<MBSTransferInOutResponse>()
+            {
+                code = "-1",
+                msg = "Fail",
+                data = null
+            };
+        }
+
+
+        #region Private
         private string decodeAESMD5(string encStr, string Key)
         {
             byte[] keyArray = getMd5(Key);
@@ -200,5 +208,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             return marblesAccount.Substring(7);
         }
+        
+        #endregion
     }
 }
