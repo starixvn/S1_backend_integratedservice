@@ -1,4 +1,5 @@
-﻿using System.Net.Sockets;
+﻿using NuGet.Common;
+using System.Net.Sockets;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Service.Model;
@@ -57,7 +58,15 @@ public class CommonResponse_DragonGaming
     public string account_id { get; set; }
     public string country { get; set; }
     public string token { get; set; }
-    public int balance { get; set; }
+
+    private int _balance;
+
+    public int balance
+    {
+        get => _balance;
+        set => _balance = value * 100;
+    }
+
     public string currency { get; set; }
     public string message { get; set; }
 }
@@ -66,36 +75,36 @@ public class SsessionResponse_DragonGaming : CommonResponse_DragonGaming
 {
     public string username { get; set; }
 
-    public SsessionResponse_DragonGaming(string token, string msg)
+    public SsessionResponse_DragonGaming(string token, string message)
     {
         status = -1;
         account_id = "";
         username = "";
-        token = token;
+        this.token = token;
         balance = 0;
         currency = "";
-        message = msg;
+        this.message = message;
     }
 
-    public SsessionResponse_DragonGaming(string tpUserName, string token, string msg)
+    public SsessionResponse_DragonGaming(string tpUserName, string token, string message)
     {
         status = -2;
         account_id = tpUserName;
         username = tpUserName;
-        token = token;
+        this.token = token;
         balance = 0;
         currency = "";
-        message = msg;
+        this.message = message;
     }
 
-    public SsessionResponse_DragonGaming(string tpUserName, string reqToken, decimal custBalance, string tpCurrency)
+    public SsessionResponse_DragonGaming(string tpUserName, string token, decimal custBalance, string currency)
     {
         status = 0;
         account_id = tpUserName;
         username = tpUserName;
-        token = reqToken;
+        this.token = token;
         balance = (int)custBalance;
-        currency = tpCurrency;
+        this.currency = currency;
         message = "Success.";
     }
 }
@@ -104,21 +113,21 @@ public class BalanceResponse_DragonGaming : CommonResponse_DragonGaming
 {
     public int bonus_amount { get; set; }
 
-    public BalanceResponse_DragonGaming(string reqToken, string msg)
+    public BalanceResponse_DragonGaming(string reqToken, string message)
     {
         status = -1;
         token = reqToken;
         bonus_amount = 0;
-        message = msg;
+        this.message = message;
     }
 
-    public BalanceResponse_DragonGaming(string tpUserName, string reqToken, decimal custBalance, string tpCurrency)
+    public BalanceResponse_DragonGaming(string tpUserName, string reqToken, decimal custBalance, string currency)
     {
         status = 0;
         account_id = tpUserName;
         token = reqToken;
         balance = (int)custBalance;
-        currency = tpCurrency;
+        this.currency = currency;
         bonus_amount = 0;
         message = "Success.";
     }
@@ -127,21 +136,21 @@ public class BalanceResponse_DragonGaming : CommonResponse_DragonGaming
 public class DebitCreditRefundResponse_DragonGaming : BalanceResponse_DragonGaming
 {
 
-    public DebitCreditRefundResponse_DragonGaming(string reqToken, string msg) : base(reqToken, msg)
+    public DebitCreditRefundResponse_DragonGaming(string reqToken, string message) : base(reqToken, message)
     {
     }
 
-    public DebitCreditRefundResponse_DragonGaming(string tpUserName, string reqToken, string tpCurrency, string transaction_id, string msg) : base(reqToken, msg)
+    public DebitCreditRefundResponse_DragonGaming(string tpUserName, string reqToken, string currency, string transaction_id, string message) : base(reqToken, message)
     {
         status = -2;
         account_id = tpUserName;
-        currency = tpCurrency;
-        transaction_id = transaction_id;
+        this.currency = currency;
+        this.transaction_id = transaction_id;
     }
 
-    public DebitCreditRefundResponse_DragonGaming(string tpUserName, string reqToken, decimal custBalance, string tpCurrency, string transaction_id) : base(tpUserName, reqToken, custBalance, tpCurrency)
+    public DebitCreditRefundResponse_DragonGaming(string tpUserName, string reqToken, decimal custBalance, string currency, string transaction_id) : base(tpUserName, reqToken, custBalance, currency)
     {
-        transaction_id = transaction_id;
+        this.transaction_id = transaction_id;
     }
 
     public string transaction_id { get; set; }
@@ -170,7 +179,7 @@ public class BettingData_DragonGaming
     public BettingData_DragonGaming(DebitRequest_DragonGaming request, int ticketType)
     {
         account_id = request.account_id;
-        amount = request.amount;
+        amount = request.amount / 100;
         amount_type = request.amount_type;
         currency = request.currency;
         game_id = request.game_id;
@@ -188,7 +197,7 @@ public class BettingData_DragonGaming
     public BettingData_DragonGaming(CreditRequest_DragonGaming request, int ticketType)
     {
         account_id = request.account_id;
-        amount = request.amount;
+        amount = request.amount / 100;
         amount_type = request.amount_type;
         currency = request.currency;
         game_id = request.game_id;
@@ -209,7 +218,7 @@ public class BettingData_DragonGaming
     public BettingData_DragonGaming(RefundRequest_DragonGaming request, int ticketType)
     {
         account_id = request.account_id;
-        amount = request.amount;
+        amount = request.amount / 100;
         amount_type = request.amount_type;
         currency = request.currency;
         game_id = request.game_id;
