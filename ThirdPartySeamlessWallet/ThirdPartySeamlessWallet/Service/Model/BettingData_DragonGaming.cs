@@ -175,7 +175,7 @@ public class BettingData_DragonGaming
     public BettingData_DragonGaming(DebitRequest_DragonGaming request, int ticketType)
     {
         account_id = request.account_id;
-        amount = request.amount / 100m;
+        amount = request.amount / 100m * -1;
         amount_type = request.amount_type;
         currency = request.currency;
         game_id = request.game_id;
