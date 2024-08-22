@@ -2274,14 +2274,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                var partitionTime = DateTime.UtcNow;
-
-                bettingData.amount *= -1;
                 var p = new DynamicParameters(bettingData);
-                p.Add("TicketStatus", (int)TicketStatus.UnSettled);
-                p.Add("SettleFlag", (int)SettleFlag.Running);
 
-                result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
+                result = _mainDbClient.Execute(InsSpName, p, conn, trans);
                 if (result > 0 && bettingData.amount != 0)
                 {
                     // bonuscode bet 無須異動額度

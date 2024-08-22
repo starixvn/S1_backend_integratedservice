@@ -7376,13 +7376,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                var partitionTime = DateTime.UtcNow;
-
                 var p = new DynamicParameters(refundData);
-                p.Add("TicketStatus", (int)TicketStatus.Refund);
-                p.Add("SettleFlag", (int)SettleFlag.Settled);
 
-                result = _partitionService.Execute(partitionTime, SetSpName, p, trans);
+                result = _mainDbClient.Execute(SetSpName, new { refundData.round_id }, conn, trans);
                 if (result > 0)
                 {
                     if (refundData.amount != 0)
@@ -7392,7 +7388,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             tpCustInfo,
                             Math.Abs(refundData.amount),
                             (int)tpId,
-                               refundData.round_id,
+                            refundData.round_id,
                             (int)tpGameType,
                             tpCategory,
                             refundData.round_id,
@@ -7419,10 +7415,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
-                    var check = _partitionService.Query<BettingData_Amigo>(partitionTime, GetSpName, new { refundData.round_id });
-                    if (!check.Any() || !check.Any(x => x.TicketType == (int)BettransType.CancelBet))
+                    var check = _mainDbClient.QueryFirst<BettingData_DragonGaming>(GetSpName, trans, new { refundData.round_id });
+                    if (check is null && check.TicketType != (int)BettransType.CancelBet)
                     {
-                        var cancelInsert = _partitionService.Execute(partitionTime, InsSpName, p, trans);
+                        var cancelInsert = _mainDbClient.Execute(InsSpName, p, conn, trans);
                         if (cancelInsert > 0)
                         {
                             // insert cancel record
@@ -7431,8 +7427,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         }
                     }
 
-                    var subChk = check.Where(x => x.TicketType == 2);
-                    if (subChk.Any())
+                    if (check.TicketType == (int)BettransType.CancelBet)
                     {
                         // had cancel
                         _mainDbClient.RollbackAndDisposeConnection(conn, trans);
@@ -7475,19 +7470,16 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             try
             {
-                var partitionTime = DateTime.UtcNow;
                 var p = new DynamicParameters(payoutData);
-                p.Add("SettleFlag", (int)SettleFlag.EndGame);
-                p.Add("TicketStatus", (int)TicketStatus.UnSettled);
 
-                var check = _partitionService.Query<BettingData_Amigo>(partitionTime, GetSpName, new { payoutData.round_id });
-                if (!check.Any())
+                var check = _mainDbClient.QueryFirst<BettingData_DragonGaming>(GetSpName, trans, new { payoutData.round_id });
+                if (check is null)
                 {
                     // no bet or cancel data
                     return -2;
                 }
 
-                result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
+                result = _mainDbClient.Execute(InsSpName, p, conn, trans);
                 if (result > 0)
                 {
                     if (payoutData.amount != 0)
@@ -7510,9 +7502,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         );
                     }
 
-                    if (result > 0)
+                    if (result > 0 && payoutData.round_end_state)
                     {
-                        result = _tpUnsettleService.InsertTpUnsettle(tpId, tpGameType, payoutData.round_id, trans, partitionTime);
+                        result = _tpUnsettleService.InsertTpUnsettle(tpId, tpGameType, payoutData.round_id, trans);
                     }
 
                     if (result > 0)
