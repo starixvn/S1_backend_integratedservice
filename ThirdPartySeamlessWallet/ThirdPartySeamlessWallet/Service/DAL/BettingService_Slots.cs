@@ -2286,7 +2286,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         (int)tpId,
                         bettingData.round_id,
                         (int)tpGameType,
-                        bettingData.round_id,
+                        bettingData.transaction_id,
                         out afterAmount,
                         ref bonusId,
                         out _,
