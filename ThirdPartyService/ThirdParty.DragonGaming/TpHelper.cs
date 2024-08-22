@@ -57,7 +57,7 @@ public class TpHelper : ThirdPartyHelperBase
             api_key = apiKey,
             session_id = isFun ? "0000" : GetSession(tpCustInfo, tpGameType),
             privoder = Enum.GetName(typeof(TpEnum), Tp)?.ToLower() ?? string.Empty,
-            game_type = gametype,
+            game_type = tpGameType,
             game_id = gameCode,
             platform = IsDesktop(appType),
             language = TpLangId,

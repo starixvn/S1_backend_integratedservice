@@ -3,6 +3,7 @@ using Org.BouncyCastle.Crypto.Tls;
 using System.Text;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
+using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.MaxGame;
@@ -132,12 +133,55 @@ public class DragonGamingBLL : IDragonGamingBLL
 
     public async Task<DebitCreditRefundResponse_DragonGaming> Credit(CreditRequest_DragonGaming request)
     {
-        throw new NotImplementedException();
+        var (token, tpUserName, tpGameType) = GetToken(request.token);
+        var gameType = _thirdPartyBll.GetGameType((int)thisTp, tpGameType);
+        var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)thisTp, request.account_id);
+
+        int result = Payout(request, tpCustInfo,out decimal tpAffterAmount);
+        if (result > 0)
+        {
+            if (tpAffterAmount == 0)
+            {
+                var tpCustBalance = _tpCustInfoBll.GetBalance((int)thisTp, tpCustInfo.TpUserName, (int)gameType);
+                tpAffterAmount = tpCustBalance.Balance;
+            }
+        }
+        else if (result == -1)
+        {
+            var tpCustBalance = _tpCustInfoBll.GetBalance((int)thisTp, tpCustInfo.TpUserName, (int)gameType);
+            return new DebitCreditRefundResponse_DragonGaming(tpCustInfo.TpUserName, request.token, tpCustInfo.TpCurrencyId, request.transaction_id, "Dupiicate Request.");
+        }
+        else if (result == -2)
+        {
+            var tpCustBalance = _tpCustInfoBll.GetBalance((int)thisTp, tpCustInfo.TpUserName, (int)gameType);
+            return new DebitCreditRefundResponse_DragonGaming(tpCustInfo.TpUserName, request.token, tpCustInfo.TpCurrencyId, request.transaction_id, "Trans Fail.");
+        }
+
+        return new DebitCreditRefundResponse_DragonGaming(tpCustInfo.TpUserName, request.token, tpAffterAmount, tpCustInfo.TpCurrencyId, request.transaction_id);
     }
 
     public async Task<DebitCreditRefundResponse_DragonGaming> Refund(RefundRequest_DragonGaming request)
     {
-        throw new NotImplementedException();
+        var (token, tpUserName, tpGameType) = GetToken(request.token);
+        var gameType = _thirdPartyBll.GetGameType((int)thisTp, tpGameType);
+        var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)thisTp, request.account_id);
+
+        int result = CancelBet(request, tpCustInfo,  out decimal tpAffterAmount);
+        if (result > 0)
+        {
+            if (tpAffterAmount == 0)
+            {
+                var tpCustBalance = _tpCustInfoBll.GetBalance((int)thisTp, tpCustInfo.TpUserName, (int)gameType);
+                tpAffterAmount = tpCustBalance.Balance;
+            }
+        }
+        else if (result == -1)
+        {
+            var tpCustBalance = _tpCustInfoBll.GetBalance((int)thisTp, tpCustInfo.TpUserName, (int)gameType);
+            return new DebitCreditRefundResponse_DragonGaming(tpCustInfo.TpUserName, request.token, tpCustInfo.TpCurrencyId, request.transaction_id, "Dupiicate Request.");
+        }
+
+        return new DebitCreditRefundResponse_DragonGaming(tpCustInfo.TpUserName, request.token, tpAffterAmount, tpCustInfo.TpCurrencyId, request.transaction_id);
     }
 
     #region Private Method
