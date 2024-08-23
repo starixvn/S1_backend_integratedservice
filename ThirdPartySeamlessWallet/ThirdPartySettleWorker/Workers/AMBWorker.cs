@@ -100,7 +100,13 @@ namespace ThirdPartySettleWorker.Workers
                             wager.ValidBet *= tpCurrency.ExchangeRate;
                         }
 
-                        if(string.Equals(unsettleData.Categories, "fishing", StringComparison.OrdinalIgnoreCase))
+                        if (string.Equals(unsettleData.Categories, "fishing", StringComparison.OrdinalIgnoreCase))
+                        {
+                            unsettleData.Stake = unsettleData.Bet;
+                            unsettleData.WinLostAmount = unsettleData.WinLost;
+                        }
+
+                        if (string.Equals(unsettleData.Categories, "slot", StringComparison.OrdinalIgnoreCase) && unsettleData.Stake == 0m && unsettleData.WinLost == 0m && unsettleData.Bet > 0)
                         {
                             unsettleData.Stake = unsettleData.Bet;
                             unsettleData.WinLostAmount = unsettleData.WinLost;
