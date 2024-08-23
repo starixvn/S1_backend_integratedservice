@@ -106,7 +106,7 @@ namespace ThirdPartySettleWorker.Workers
                             unsettleData.WinLostAmount = unsettleData.WinLost;
                         }
 
-                        if (string.Equals(unsettleData.Categories, "slot", StringComparison.OrdinalIgnoreCase) && unsettleData.Stake == 0m && unsettleData.WinLost == 0m && unsettleData.Bet > 0)
+                        if (string.Equals(unsettleData.Categories, "slot", StringComparison.OrdinalIgnoreCase) && unsettleData.Stake == 0m && unsettleData.WinLostAmount == 0m && unsettleData.Bet > 0)
                         {
                             unsettleData.Stake = unsettleData.Bet;
                             unsettleData.WinLostAmount = unsettleData.WinLost;
@@ -114,7 +114,7 @@ namespace ThirdPartySettleWorker.Workers
 
                         if (wager.Stake != unsettleData.Stake || wager.WinLostAmount != unsettleData.WinLostAmount)
                         {
-                            _logger.LogWarning($"{logName}:amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(tpUnsettle)}");
+                            _logger.LogError($"{logName}:amount not match\r\n{JsonConvert.SerializeObject(wager)}\r\n{JsonConvert.SerializeObject(unsettleData)}");
                             continue;
                         }
 
