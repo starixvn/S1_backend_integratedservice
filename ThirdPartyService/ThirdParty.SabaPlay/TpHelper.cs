@@ -136,7 +136,7 @@ namespace ThirdParty.SabaPlay
                     OperatorCustId = tpCustInfo.TpUserName,
                     TicketNo = getBetDetail.TransId,
                     SettleDate = time,
-                    Language = "en",
+                    Language = "en-US",
                     AgentInfo = new
                     {
                         AgentKey = tpCustInfo.TpCurrencyId
