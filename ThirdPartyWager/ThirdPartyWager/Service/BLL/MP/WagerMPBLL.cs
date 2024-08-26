@@ -125,7 +125,7 @@ namespace ThirdPartyWager.Service.BLL
                         if (errorCode != 0 && errorCode != 16)
                         {
                             msg = "THIRD_PARTY_ERROR";
-                            _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                            _logger.LogError($"SiteId:{siteData.SiteId} startUnix:{startUnix} endUnix:{endUnix} \r\n{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                             isSuccess = false;
                         }
 
@@ -133,14 +133,14 @@ namespace ThirdPartyWager.Service.BLL
                         if (compare && totalNum == total)
                         {
                             msg = "MATCH";
-                            _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                            _logger.LogInformation($"SiteId:{siteData.SiteId} startUnix:{startUnix} endUnix:{endUnix} \r\n{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                             continue;
                         }
 
                         if (errorCode == 16 || (errorCode == 0 && dataWager.d.count == 0))
                         {
                             msg = "NO_DATA";
-                            _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                            _logger.LogInformation($"SiteId:{siteData.SiteId} startUnix:{startUnix} endUnix:{endUnix} \r\n{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                             continue;
                         }
 
