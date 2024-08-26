@@ -2123,8 +2123,36 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     return -2;
                 }
                 
+                var p = new DynamicParameters(new
+                {
+                    transNo = settledDataLT_Marbles.transNo,
+                    gameNo = settledDataLT_Marbles.gameNo,
+                    account =  settledDataLT_Marbles.account,
+                    currency =  settledDataLT_Marbles.currency,
+                    agent =  settledDataLT_Marbles.agent,
+                    lineCode =  settledDataLT_Marbles.lineCode,
+                    gameCode =  settledDataLT_Marbles.gameCode,
+                    gameInfo =  settledDataLT_Marbles.gameInfo,
+                    bet =  settledDataLT_Marbles.bet,
+                    effecBet =  settledDataLT_Marbles.effecBet,
+                    commission =  settledDataLT_Marbles.commission,
+                    profit =  settledDataLT_Marbles.profit,
+                    ueffecBet =  settledDataLT_Marbles.ueffecBet,
+                    ubet =  settledDataLT_Marbles.ubet,
+                    uprofit =  settledDataLT_Marbles.uprofit,
+                    TicketType =  settledDataLT_Marbles.TicketType,
+                    TicketStatus =  settledDataLT_Marbles.TicketStatus,
+                    SettleFlag =  (int)SettleFlag.EndGame,
+                    startTimeUnix =  settledDataLT_Marbles.startTime,
+                    endTimeUnix =  settledDataLT_Marbles.endTime, 
+                    startTime = DateTimeOffset.FromUnixTimeMilliseconds(settledDataLT_Marbles.startTime).UtcDateTime,
+                    endTime = DateTimeOffset.FromUnixTimeMilliseconds(settledDataLT_Marbles.endTime).UtcDateTime 
+                });
+
+                result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
                 
-                if (settledDataLT_Marbles.profit > 0)
+
+                if (result > 0)
                 {
                     result = PayoutV2(
                         tpCustInfo,
@@ -2143,37 +2171,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         trans,
                         AllowNegative.Allow
                     );
-                }
-
-                if (result > 0)
-                {
-                    var p = new DynamicParameters(new
-                    {
-                        transNo = settledDataLT_Marbles.transNo,
-                        gameNo = settledDataLT_Marbles.gameNo,
-                        account =  settledDataLT_Marbles.account,
-                        currency =  settledDataLT_Marbles.currency,
-                        agent =  settledDataLT_Marbles.agent,
-                        lineCode =  settledDataLT_Marbles.lineCode,
-                        gameCode =  settledDataLT_Marbles.gameCode,
-                        gameInfo =  settledDataLT_Marbles.gameInfo,
-                        bet =  settledDataLT_Marbles.bet,
-                        effecBet =  settledDataLT_Marbles.effecBet,
-                        commission =  settledDataLT_Marbles.commission,
-                        profit =  settledDataLT_Marbles.profit,
-                        ueffecBet =  settledDataLT_Marbles.ueffecBet,
-                        ubet =  settledDataLT_Marbles.ubet,
-                        uprofit =  settledDataLT_Marbles.uprofit,
-                        TicketType =  settledDataLT_Marbles.TicketType,
-                        TicketStatus =  settledDataLT_Marbles.TicketStatus,
-                        SettleFlag =  (int)SettleFlag.EndGame,
-                        startTimeUnix =  settledDataLT_Marbles.startTime,
-                        endTimeUnix =  settledDataLT_Marbles.endTime, 
-                        startTime = DateTimeOffset.FromUnixTimeMilliseconds(settledDataLT_Marbles.startTime).UtcDateTime,
-                        endTime = DateTimeOffset.FromUnixTimeMilliseconds(settledDataLT_Marbles.endTime).UtcDateTime 
-                    });
-
-                    result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
                     
                     if (result > 0)
                     {
