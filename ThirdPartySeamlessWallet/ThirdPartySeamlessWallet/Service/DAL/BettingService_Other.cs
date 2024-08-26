@@ -1054,7 +1054,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 _ = DateTime.TryParse(DateTimeOffset.FromUnixTimeMilliseconds(bettingDataLT_Marbles.startTime).ToString("o"), out var partitionTime);
                 // 檢查是否重複
                 var bettrans = _partitionService.Query<BettransMBSDto>(partitionTime, CheckSpName,
-                    new { transNo = bettingDataLT_Marbles.transNo, account = tpCustInfo.TpUserName });
+                    new { gameNo = bettingDataLT_Marbles.gameNo, account = tpCustInfo.TpUserName });
                 if (bettrans.Any(i => i.TicketType == (int)BettransType.Bet && i.transNo == bettingDataLT_Marbles.transNo))
                 {
                     return -1;
