@@ -185,7 +185,6 @@ namespace ThirdParty.MaxGame
             }
 
             var GameId = detailList.GetFirstStringValue("GameId");
-            var TicketNo = detailList.GetFirstStringValue("TicketNo");
             var GameRoundId = detailList.GetFirstStringValue("GameRoundId");
             var IpAddress = detailList.GetFirstStringValue("IpAddress");
 
@@ -193,9 +192,9 @@ namespace ThirdParty.MaxGame
             {
                 GameID = GameId,
                 Game = GameId,
-                RefNo = TicketNo,
+                RefNo = GameRoundId,
                 Title = tpGameType.TypeName,
-                MatchID = GameRoundId,
+                MatchID = string.Empty,
                 BetType = string.Empty,
                 BetChoice = string.Empty,
                 Result = string.Empty,
