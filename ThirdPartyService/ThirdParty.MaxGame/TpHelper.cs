@@ -136,7 +136,7 @@ namespace ThirdParty.MaxGame
                     OperatorCustId = tpCustInfo.TpUserName,
                     TicketNo = getBetDetail.TransId,
                     SettleDate = time,
-                    Language = "en"
+                    Language = "en-US"
                 }
             };
 

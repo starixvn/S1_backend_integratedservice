@@ -149,7 +149,7 @@ namespace ThirdParty.UuSlots
                     TicketNo = getBetDetail.TransId,
                     SettleDate = time,
                     ResultId = resultId,
-                    Language = "en",
+                    Language = "en-US",
                     AgentInfo = new
                     {
                         AgentKey = tpCustInfo.TpCurrencyId
