@@ -80,6 +80,14 @@ namespace ThirdPartySettleWorker.Workers
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, settleData.Account);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
 
+                        // tpWager還沒拉單回來，但已收到結算資料，先跳過此筆等待下次結算
+                        if (tpWagerData == null && settleData.TicketStatus != (int)TicketStatus.UnSettled)
+                        {
+                            _logger.LogWarning($"transId: {transId} wait tpWagerData.");
+                            continue;
+                        }
+
+                        // 比對bettrans跟wager資料的交易金額
                         if (tpWagerData != null && !IsBettransSameAsTpWager(settleData, tpWagerData, tpCurrency))
                         {
                             _logger.LogWarning($"transId: {transId} is not equal " +

@@ -13,7 +13,7 @@
     <PackageReference Include="Serilog.AspNetCore" Version="6.0.1" />
     <PackageReference Include="Serilog.Exceptions" Version="8.3.0" />
   </ItemGroup>
-	
+
   <ItemGroup>
     <ProjectReference Include="..\ThirdParty.9W\ThirdParty.NineW.csproj" />
     <ProjectReference Include="..\ThirdParty.AG\ThirdParty.AG.csproj" />
