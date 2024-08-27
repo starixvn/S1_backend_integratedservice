@@ -450,7 +450,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
                 Memo = memo, 
                 RefTransId = BetRecord.TransId
             };
-            return _mainDbClient.Execute("Common_WinLostAmount_Set", _trans, p);
+            return _mainDbClient.Execute("Common_WinLostAmount_Set_V2", _trans, p);
         }
 
         private int SetBonusWinLost(decimal winnings, decimal losses, string memo)
@@ -524,7 +524,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
             });
 
             p.Add("BonusId", value: BetRecord.BonusId, dbType: DbType.Int32, direction: ParameterDirection.InputOutput);
-            return _mainDbClient.Execute("Service_RolloverTurnover_Set_V3", _trans, p);
+            return _mainDbClient.Execute("Service_RolloverTurnover_Set_V4", _trans, p);
         }
 
         private decimal GetUseBonus(GetTpSeamlessBonusType getTpSeamlessBonusType)
@@ -560,7 +560,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
                 Memo = memo, 
                 RefTransId = BetRecord.TransId,
             };
-            return _mainDbClient.Execute("Common_WithdrawalLimitTurnOver_Set", _trans, p);
+            return _mainDbClient.Execute("Common_WithdrawalLimitTurnOver_Set_V2", _trans, p);
         }
 
         private int SetEffectiveBetSum(decimal stake)
