@@ -14,12 +14,17 @@ namespace CommonService.Service.Model.enums
 
         public string Token { get; set; }
     }
+    public enum CRMEvent
+    {
+        Register_successful,
+        Deposit_successful
+    }
     public class CRMRequest
     {
-        public string Event { get; set; }
+        public CRMEvent Event { get; set; }
         public int CustId { get; set; }
-        public bool EventNativeMobile { get; set; }
         public int SiteId { get; set; }
+        public decimal OrderAmount { get; set; }
     }
 
     public class CRMEventData
@@ -45,19 +50,7 @@ namespace CommonService.Service.Model.enums
 
     public class Context
     {
-        [JsonProperty("event_device_type")]
-        public string EventDeviceType { get; set; }
-
-        [JsonProperty("event_native_mobile")]
-        public bool EventNativeMobile { get; set; }
-
-        [JsonProperty("event_platform")]
-        public string EventPlatform { get; set; }
-
-        [JsonProperty("event_os")]
-        public string EventOs { get; set; }
-
         [JsonProperty("order_amount")]
-        public int OrderAmount { get; set; }
+        public decimal OrderAmount { get; set; }
     }
 }

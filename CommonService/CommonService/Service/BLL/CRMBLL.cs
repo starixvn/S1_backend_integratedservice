@@ -1,4 +1,5 @@
-﻿using CommonService.Service.Library;
+﻿using Amazon.Runtime.Internal.Transform;
+using CommonService.Service.Library;
 using CommonService.Service.Model;
 using CommonService.Service.Model.enums;
 using Newtonsoft.Json;
@@ -25,22 +26,23 @@ namespace CommonService.Service.BLL
             var apiResult = new ApiResult();
             try
             {
-                var header = new Dictionary<string, string> {
-                    { "X-Optimove-Signature-Version", "1"},
-                    { "X-Optimove-Signature-Content", "application/json"}
-                };
                 var config = _cRMConfig[request.SiteId];
                 var para = new CRMEventData()
                 {
                     Tenant = config.TenantID,
-                    Event = request.Event,
+                    Event = request.Event.ToString(),
                     Customer = request.CustId.ToString(),
                     Timestamp = DateTime.Now,
                     Visitor = String.Empty,
                     Context = new Context()
                     {
-                        EventNativeMobile = request.EventNativeMobile,
+                        OrderAmount = request.OrderAmount,
                     }
+                };
+                var signature = GenerateHash(config.Token, para);
+                var header = new Dictionary<string, string> {
+                    { "X-Optimove-Signature-Version", "1"},
+                    { "X-Optimove-Signature-Content", signature }
                 };
 
                 var result = await _httpHelper.HttpPost1Async(config.ApiUrl, header, JsonConvert.SerializeObject(para), "application/json");
