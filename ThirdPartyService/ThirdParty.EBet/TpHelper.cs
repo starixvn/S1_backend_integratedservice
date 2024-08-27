@@ -1,7 +1,6 @@
 ﻿using System.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
@@ -79,51 +78,37 @@ namespace ThirdParty.EBet
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var domainUrl = string.Empty;
-            var key = string.Empty;
-            var funParam = string.Empty;
-            var mobileParam = string.Empty;
             var currency = tpCustInfo.TpCurrencyId;
-
             var currencyConfig = GetCurrencyConfig(currency);
             if (currencyConfig == null)
                 throw new Exception($"CurrencyId {currency} is not found");
             var apiUrl = _siteEBetConfig.ApiUrl;
             var channelId = currencyConfig.ChannelId.ToString();
             var privateKey = currencyConfig.PrivateKey;
-
-            domainUrl = GetUrlForLogin(tpCustInfo.TpCurrencyId, apiUrl, channelId, privateKey, out var launchUrl)
-                      ? launchUrl
-                      : string.Empty;
+            var clientIp = inputs["ClientIP"];
+            var category = "Live";
+            var uiMode = appType != AppType.Desktop ? "mobile" : "auto";
+            
+            var fun = inputs.ContainsKey("fun") && !string.IsNullOrWhiteSpace(inputs["fun"]) ? inputs["fun"] : "0";
+            var isDemo = fun.Equals("1", StringComparison.OrdinalIgnoreCase); 
+            
+            var key = ApplyToken(tpCustInfo);
+            var sessionToken = HttpUtility.UrlEncode(key);
+            
+            var domainUrl = GetUrlForLogin(tpCustInfo.TpUserName, apiUrl, channelId, clientIp,isDemo, sessionToken ,TpLangId, category, uiMode, privateKey, out var launchUrl)
+                ? launchUrl
+                : string.Empty;
 
             if (string.IsNullOrWhiteSpace(domainUrl))
             {
                 //launchUrl沒有拿到資料，則用db的GameUrl
                 domainUrl = currencyConfig.GameUrl;
             }
-
-            string fun = inputs.ContainsKey("fun") && !string.IsNullOrWhiteSpace(inputs["fun"])
-                       ? inputs["fun"]
-                       : "0";
-
-            key = ApplyToken(tpCustInfo);
-
-            if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
-                funParam = "&mode=trial";
-
-            if (appType != AppType.Desktop)
-                mobileParam = "&orientation=1";
-
+            
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Success,
-                Message = $"{domainUrl}?"
-                        + $"username={tpCustInfo.TpUserName}"
-                        + $"&accessToken={HttpUtility.UrlEncode(key)}"
-                        + $"&language={TpLangId}"
-                        + $"&category=LIVE"
-                        + $"{mobileParam}"
-                        + $"{funParam}"
+                Message = domainUrl
             };
         }
 
@@ -223,12 +208,18 @@ namespace ThirdParty.EBet
         {
             return gameCode switch
             {
+                "0" => "WEH Live",
                 "1" => "Baccarat",
                 "2" => "Dragon Tiger",
                 "3" => "Roulette",
                 "4" => "Sic Bo(Dice)",
                 "5" => "Slot",
                 "8" => "BullBull",
+                "9" => "Win Three Cards",
+                "10" => "GOF Baccarat",
+                "11" => "GOF Roulette",
+                "12" => "GOF Sic-bo",
+                "13" => "FanTan",
                 "23" => "Fortune Wheel",
                 "24" => "Black Jack",
                 "25" => "Live Black Jack",
@@ -244,25 +235,29 @@ namespace ThirdParty.EBet
 
         #region Login Step
 
-        private bool GetUrlForLogin(string currency, string apiUrl, string channelId, string privateKey, out string launchUrl)
+        private bool GetUrlForLogin(string userName, string apiUrl, string channelId, string clientIP, bool isDemo, string sessionToken, string language, string category, string uiMode ,string privateKey, out string launchUrl)
         {
             launchUrl = string.Empty;
             try
             {
                 var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
-                var signature = RSA($"{channelId}{timestamp}", privateKey);
-                int china = 0;
+                var signature = RSA($"{userName}{timestamp}", privateKey);
 
                 var param = new
                 {
                     channelId,
                     timestamp,
                     signature,
-                    currency,
-                    china
+                    clientIP,
+                    isDemo,
+                    userName,
+                    sessionToken,
+                    language,
+                    category,
+                    uiMode
                 };
                 
-                var url = $"{apiUrl}/api/launchUrl";
+                var url = $"{apiUrl}/api/playerlaunch";
                 var result = HttpPost(url, ToJson(param), "application/json");
 
                 if (!IsJSON(result))

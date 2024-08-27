@@ -53,6 +53,17 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string nickname { get; set; }
         }
 
+        public class ValidateResp
+        {
+            public int status { get; set; }
+            public string seqNo { get; set; }
+            public string username { get; set; }
+            public long timestamp { get; set; }
+            public string currency { get; set; }
+            public decimal money { get; set; }
+            public string nickname { get; set; }
+        }
+        
         public class GetBalanceResp
         {
             public string username { get; set; }
@@ -149,6 +160,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         #endregion
 
         [HttpPost]
+        //2024-10-28 關閉
         public GetRegisterLoginResp registerOrLogin(RegisterLoginData_EBet registerLoginReq)
         {
             string logName = $"{thisTp}_Register_Login";
@@ -213,6 +225,76 @@ namespace ThirdPartySeamlessWallet.Controllers
             return getRegisterLoginResp;
         }
 
+        [HttpPost]
+        public ValidateResp validate(Validate_EBet validateReq)
+        {
+            var logName = $"{thisTp}_Validate";
+
+            var validateResp = new ValidateResp
+            {
+                status = 500
+            };
+            
+            // check signature
+            if (string.IsNullOrEmpty(validateReq.signature))
+            {
+                validateResp.status = 4026;
+                log2File.Error($"{JsonConvert.SerializeObject(validateReq)}\r\n{JsonConvert.SerializeObject(validateResp)}", logName);
+                return validateResp;
+            }
+
+            var auth = authBLL.Authenticate(HttpUtility.UrlDecode(validateReq.sessionToken), out TpCustInfoAuth tpCustInfoAuth);
+            
+            try
+            {
+                if (auth)
+                {
+                    var sign = $"{validateReq.timestamp}";
+                    var privateKey = _siteEBetConfig.Currency.FirstOrDefault(x => x.CurrencyId == tpCustInfoAuth.TpCurrencyId)?.PrivateKey;
+                    var check = VerifySignature(sign, validateReq.signature, privateKey);
+                    if (!check)
+                    {
+                        validateResp.status = 4026;
+                        log2File.Error($"{JsonConvert.SerializeObject(validateReq)}\r\n{JsonConvert.SerializeObject(validateResp)}", logName);
+                        return validateResp;
+                    }
+                    
+                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
+                    if (tpCheck == null || tpCheck.Locked)
+                    {
+                        validateResp.status = 4037;
+                        log2File.Error($"{JsonConvert.SerializeObject(validateReq)}\r\n{JsonConvert.SerializeObject(validateResp)}", logName);
+                        return validateResp;
+                    }
+
+                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, gameType);
+                    
+                    validateResp.status = 200;
+                    validateResp.seqNo = validateReq.seqNo;
+                    validateResp.username = tpCustInfoAuth.UserName;
+                    validateResp.currency = tpCustInfoAuth.TpCurrencyId;
+                    validateResp.nickname = tpCustInfoAuth.UserName;
+                    validateResp.money = tpCustBalance.Balance;
+                    validateResp.timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
+                }
+                else
+                {
+                    validateResp.status = 410;
+                    log2File.Error($"{JsonConvert.SerializeObject(validateReq)}\r\n{JsonConvert.SerializeObject(validateResp)}", logName);
+                    return validateResp;
+                }
+            }
+            catch (Exception ex)
+            {
+                validateResp.status = 500;
+                log2File.Error($"{JsonConvert.SerializeObject(validateReq)}\r\n{JsonConvert.SerializeObject(validateResp)}\r\n{ex}", logName, ex);
+                return validateResp;
+            }
+
+            log2File.Info($"{JsonConvert.SerializeObject(validateReq)}\r\n{JsonConvert.SerializeObject(validateResp)}", logName);
+            return validateResp;
+        }
+        
         [HttpPost]
         public GetBalanceResp syncCredit(SyncCreditData_EBet syncCreditReq)
         {
@@ -647,12 +729,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         private static bool VerifySignature(string dataToSign, string signedData, string publicKey)
         {
             var encoder = new UTF8Encoding();
-            using var RSAalg = new RSACryptoServiceProvider();
-            RSAParameters priKey = RSAalg.ExportParameters(true);
-            RSAalg.ImportParameters(priKey);
-            RSAalg.FromXmlString(publicKey);
-            byte[] plaintext = encoder.GetBytes(dataToSign);
-            return RSAalg.VerifyData(plaintext, CryptoConfig.MapNameToOID("MD5"), Convert.FromBase64String(signedData));
+            using var rsAalg = new RSACryptoServiceProvider();
+            var priKey = rsAalg.ExportParameters(true);
+            rsAalg.ImportParameters(priKey);
+            rsAalg.FromXmlString(publicKey);
+            var plaintext = encoder.GetBytes(dataToSign);
+            return rsAalg.VerifyData(plaintext, CryptoConfig.MapNameToOID("MD5"), Convert.FromBase64String(signedData));
         }
     }
 }
