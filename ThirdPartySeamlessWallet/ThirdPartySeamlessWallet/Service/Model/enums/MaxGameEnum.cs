@@ -114,6 +114,28 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         OpSideUnderMaintenance = 5003,
         [Description("DB error")]
         OpSideDbError = 5004,
+        [Description("Invalid AccessKey")]
+        InvalidAccessKey = 7000,
+        [Description("Invalid AccessToken")]
+        InvalidAccessToken = 7001,
+        [Description("Parameter Incorrect")]
+        ParameterIncorrect = 7002,
+        [Description("Wallet Operator Not Found")]
+        WalletOperatorNotFound = 7003,
+        [Description("Game Vendor Not Found")]
+        GameVendorNotFound = 7004,
+        [Description("Game Not Found")]
+        GameNotFound = 7005,
+        [Description("Setting Not Found")]
+        SettingNotFound = 7006,
+        [Description("Redis Exception")]
+        RedisException = 7007,
+        [Description("Ticket Not Exist")]
+        TicketNotExist = 7008,
+        [Description("Agent Setting Not Found")]
+        AgentSettingNotFound = 7009,
+        [Description("Exception Undefined")]
+        ExceptionUndefined = 7999,
     }
 
     #endregion

@@ -286,13 +286,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     gameType = GameType.PlayTech_RNG;
                     var casinoPlayTech = GetGameCasinoWithCache(tpId);
                     /*
-                     * ��� BRL �f��
-                     * �����ϥ� PTN �C���N�X�~��s���C��
-                     * ������ҩM������ҨϥΪ��C���{���X���P
+                     * 對於 BRL 貨幣
+                     * 必須使用 PTN 遊戲代碼才能存取遊戲
+                     * 測試環境和正式環境使用的遊戲程式碼不同
                      */
                     if (gameId.StartsWith("ptn_", StringComparison.OrdinalIgnoreCase))
                     {
-                        // �h��ptn_�A����gameid�O�_�s�b
+                        // 去除ptn_，比對原gameid是否存在
                         gameId = gameId.Substring(4);
                     }
                     var checkPlayTech = casinoPlayTech.FirstOrDefault(x => x.GameId == gameId);
@@ -300,6 +300,21 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     {
                         gameType = GameType.PlayTech_LiveCasino;
                     }
+                    break;
+                case (int)Tp.MaxGame:
+                    gameType = GameType.MaxGame_Poker;
+                    break;
+                case (int)Tp.SabaPlay:
+                    gameType = GameType.SabaPlay_Poker;
+                    break;
+                case (int)Tp.UuSlots:
+                    gameType = GameType.UuSlots_RNG;
+                    break;
+                case (int)Tp.Live22:
+                    gameType = GameType.Live22_RNG;
+                    break;
+                case (int)Tp.FastSpin:
+                    gameType = GameType.FastSpin_RNG;
                     break;
                 case (int)Tp.DragonGaming:
                     gameType = GameType.DragonGaming_RNG;

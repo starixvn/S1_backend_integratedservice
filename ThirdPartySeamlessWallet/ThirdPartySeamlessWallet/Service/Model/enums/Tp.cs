@@ -65,6 +65,11 @@
         NTConnect = 62,
         GA = 63,
         WonCasino = 64,
+        Marbles = 65,
+        SabaPlay = 66,
+        UuSlots = 67,
+        Live22 = 68,
+        FastSpin = 69,
         DragonGaming = 70
     }
 
