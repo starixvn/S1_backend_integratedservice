@@ -64,6 +64,7 @@
         NTConnect = 62,
         GA = 63,
         WonCasino = 64,
+        Marbles = 65,
     }
     public enum GameType
     {
@@ -112,6 +113,7 @@
         NTConnect_Games = 114,
         GA_CockFighting = 115,
         WonCasino_LiveCasino = 116,
+        Marbles_Lottery = 118,
     }
     public enum SettlementType
     {
