@@ -488,9 +488,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #endregion
 
-        #region MaxGame
+        #region MaxGame, SabaPlay, UuSlots, Live22, FastSpin
 
-        public int PlaceBetPK_MaxGame(TpCustInfo tpCustInfo, BettingData_MaxGame bettingData_MaxGame, out decimal afterAmount, out List<BetDataSetList_MaxGame> refData)
+        public int PlaceBetPK_MaxGame(TpCustInfo tpCustInfo, BettingData_MaxGame bettingData_MaxGame, int tpId, int gameType, WalletKind walletKind, SpNameListOfMaxGame spName, out decimal afterAmount, out List<BetDataSetList_MaxGame> refData)
         {
             afterAmount = 0;
             var result = 0;
@@ -505,20 +505,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 foreach (var betDataSet in bettingData_MaxGame.Payload.BetDataSet)
                 {
+                    int bonusId = 0;
                     DateTime.TryParse(bettingData_MaxGame.Timestamp, out DateTime partitionTime);
                     // 檢查是否重複
-                    var bettrans = _partitionService.Query<BettransData_MaxGame>(partitionTime, "Service_BettransPK_MaxGame_TicketNo_Get", new { TicketNo = betDataSet.TicketNo });
+                    var bettrans = _partitionService.Query<BettransData_MaxGame>(partitionTime, spName.GetTicketNo, new { TicketNo = betDataSet.TicketNo });
                     if (bettrans.Any(i => i.TicketType == BettransType.Bet && i.Seq == bettingData_MaxGame.Seq))
                     {
                         return -1;
                     }
 
+                    var otherBetInfo = betDataSet.OtherBetInfo == null ? "{}" : JsonConvert.SerializeObject(betDataSet.OtherBetInfo);
                     var p = new DynamicParameters(new
                     {
                         Seq = bettingData_MaxGame.Seq,
                         OperatorCustId = bettingData_MaxGame.Payload.OperatorCustId,
                         GameType = bettingData_MaxGame.Payload.GameType,
-                        IpAddress = bettingData_MaxGame.Payload.IpAddress,
+                        IpAddress = string.IsNullOrEmpty(bettingData_MaxGame.Payload.IpAddress) ? "" : bettingData_MaxGame.Payload.IpAddress,
                         SettleDate = new DateTime(1970, 1, 1),
                         TicketNo = betDataSet.TicketNo,
                         GameId = betDataSet.GameId,
@@ -536,29 +538,54 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         BonusId = "",
                         BonusName = "",
                         PrizeName = "",
+                        ResultId = "",
+                        OtherBetInfo = otherBetInfo,
+                        FreeBet = betDataSet.OtherBetInfo == null ? false : betDataSet.OtherBetInfo.FreeBet,
+                        FreeSpin = betDataSet.OtherBetInfo == null ? false : betDataSet.OtherBetInfo.FreeSpin,
+                        ContributionAmount = betDataSet.OtherBetInfo == null ? 0 : betDataSet.OtherBetInfo.ContributionAmount,
+                        ContributionRate = betDataSet.OtherBetInfo == null ? 0 : betDataSet.OtherBetInfo.ContributionRate,
                         SettleDateUnix = 0,
                         TicketType = (int)BettransType.Bet,
                         TicketStatus = (int)TicketStatus.UnSettled,
                         SettleFlag = (int)SettleFlag.Running
                     });
                     p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
-                    result = _partitionService.Execute(partitionTime, "Service_BettransPK_MaxGame_Ins_V2", p, trans);
+                    result = _partitionService.Execute(partitionTime, spName.InsertBettrans, p, trans);
 
                     if (result > 0 && betDataSet.ActualStake != 0)
                     {
-                        result = _walletService.SetBalance(
-                            tpCustInfo.CustId,
-                            tpCustInfo.SiteId,
-                            tpCustInfo.UserName,
-                            Math.Abs(betDataSet.ActualStake) * -1,
-                            (int)Tp.MaxGame,
-                            TransType.Wagers,
-                            $"Stake: {betDataSet.ActualStake:#,##0.##}",
-                            betDataSet.TicketNo,
-                            out afterAmount,
-                            conn,
-                            trans
-                        );
+                        if (walletKind == WalletKind.BonusWallet)
+                        {
+                            result = PlaceBet(
+                                tpCustInfo,
+                                Math.Abs(betDataSet.ActualStake) * -1,
+                                tpId,
+                                betDataSet.TicketNo,
+                                gameType,
+                                betDataSet.TicketNo,
+                                out afterAmount,
+                                ref bonusId,
+                                out _,
+                                conn,
+                                trans
+                            );
+                        }
+                        else
+                        {
+                            result = _walletService.SetBalance(
+                                tpCustInfo.CustId,
+                                tpCustInfo.SiteId,
+                                tpCustInfo.UserName,
+                                Math.Abs(betDataSet.ActualStake) * -1,
+                                tpId,
+                                TransType.Wagers,
+                                $"Stake: {betDataSet.ActualStake:#,##0.##}",
+                                betDataSet.TicketNo,
+                                out afterAmount,
+                                conn,
+                                trans
+                            );
+                        }
                     }
 
                     if (result > 0)
@@ -581,7 +608,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     Seq = bettingData_MaxGame.Seq,
                     Payload = JsonConvert.SerializeObject(bettingData_MaxGame.Payload)
                 });
-                var req = _partitionService.Execute(ts, "Service_BettransPK_MaxGame_Payload_Ins", payload, trans);
+                var req = _partitionService.Execute(ts, spName.InsertPayload, payload, trans);
 
                 if (req > 0 && result > 0 && cnt != 0 && cnt == bettingData_MaxGame.Payload.BetDataSet.Count)
                 {

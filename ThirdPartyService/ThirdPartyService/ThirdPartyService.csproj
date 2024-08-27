@@ -13,7 +13,7 @@
     <PackageReference Include="Serilog.AspNetCore" Version="6.0.1" />
     <PackageReference Include="Serilog.Exceptions" Version="8.3.0" />
   </ItemGroup>
-	
+
   <ItemGroup>
     <ProjectReference Include="..\ThirdParty.9W\ThirdParty.NineW.csproj" />
     <ProjectReference Include="..\ThirdParty.AG\ThirdParty.AG.csproj" />
@@ -32,6 +32,7 @@
     <ProjectReference Include="..\ThirdParty.END\ThirdParty.END.csproj" />
     <ProjectReference Include="..\ThirdParty.EVO\ThirdParty.EVO.csproj" />
     <ProjectReference Include="..\ThirdParty.FaChai\ThirdParty.FaChai.csproj" />
+    <ProjectReference Include="..\ThirdParty.FastSpin\ThirdParty.FastSpin.csproj" />
     <ProjectReference Include="..\ThirdParty.GA\ThirdParty.GA.csproj" />
     <ProjectReference Include="..\ThirdParty.GPI\ThirdParty.GPI.csproj" />
     <ProjectReference Include="..\ThirdParty.HB\ThirdParty.HB.csproj" />
@@ -42,6 +43,7 @@
     <ProjectReference Include="..\ThirdParty.Joker\ThirdParty.Joker.csproj" />
     <ProjectReference Include="..\ThirdParty.Kiss918\ThirdParty.Kiss918.csproj" />
     <ProjectReference Include="..\ThirdParty.KM\ThirdParty.KM.csproj" />
+    <ProjectReference Include="..\ThirdParty.Live22\ThirdParty.Live22.csproj" />
     <ProjectReference Include="..\ThirdParty.MaxGame\ThirdParty.MaxGame.csproj" />
     <ProjectReference Include="..\ThirdParty.MP\ThirdParty.MP.csproj" />
     <ProjectReference Include="..\ThirdParty.N2Live\ThirdParty.N2Live.csproj" />
@@ -58,6 +60,7 @@
     <ProjectReference Include="..\ThirdParty.PNG\ThirdParty.PNG.csproj" />
     <ProjectReference Include="..\ThirdParty.PP\ThirdParty.PP.csproj" />
     <ProjectReference Include="..\ThirdParty.RedTiger\ThirdParty.RedTiger.csproj" />
+    <ProjectReference Include="..\ThirdParty.SabaPlay\ThirdParty.SabaPlay.csproj" />
     <ProjectReference Include="..\ThirdParty.SA\ThirdParty.SA.csproj" />
     <ProjectReference Include="..\ThirdParty.SBO\ThirdParty.SBO.csproj" />
     <ProjectReference Include="..\ThirdParty.SBSW\ThirdParty.SBSW.csproj" />
@@ -67,6 +70,7 @@
     <ProjectReference Include="..\ThirdParty.SPRIBE\ThirdParty.SPRIBE.csproj" />
     <ProjectReference Include="..\ThirdParty.TCG\ThirdParty.TCG.csproj" />
     <ProjectReference Include="..\ThirdParty.TF\ThirdParty.TFG.csproj" />
+    <ProjectReference Include="..\ThirdParty.UuSlots\ThirdParty.UuSlots.csproj" />
     <ProjectReference Include="..\ThirdParty.V8\ThirdParty.V8.csproj" />
     <ProjectReference Include="..\ThirdParty.WM\ThirdParty.WM.csproj" />
     <ProjectReference Include="..\ThirdParty.Yeebet\ThirdParty.Yeebet.csproj" />
