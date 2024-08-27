@@ -476,7 +476,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Skywind, req.cust_id);
                 var gameType = tpCustInfoBLL.GetCustGotoGameType(tpCustInfo.CustId, (int)Tp.Skywind);
                 var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, req.cust_id);
-                if (tpCheck == null || tpCheck.Token != req.cust_session_id)
+                if (tpCheck == null)
                 {
                     result.error_code = (int)SkywindErrorCode.PlayerNotFound;
                     logger.LogError($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(result)}\r\n TpUserName:{req.cust_id}");

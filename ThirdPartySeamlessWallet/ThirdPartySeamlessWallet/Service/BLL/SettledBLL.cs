@@ -2562,7 +2562,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int CancelBet_Skywind(TpCustInfo tpCustInfo, CancelBetData_Skywind cancelBetData_Skywind, int gameType, out decimal afterAmount)
         {
-            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.AP, tpCustInfo.CurrencyId);
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.Skywind, tpCustInfo.CurrencyId);
 
 
             var result = settledService.CancelBet_Skywind(tpCustInfo, cancelBetData_Skywind, gameType, out afterAmount);
