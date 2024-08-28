@@ -119,7 +119,7 @@ public class TpHelper : ThirdPartyHelperBase
             language = "en",
         };
 
-        var result = HttpPost($"{apiUrl}/games/game-launch/", ToJson(loginRequest), ContentType);
+        var result = HttpPost($"{apiUrl}/games/game-round-history/", ToJson(loginRequest), ContentType);
 
         if (!IsJSON(result))
             throw new BetDetailNotFoundException($"{getBetDetail.TransId} get bet detail fail. {JsonConvert.SerializeObject(result)}");
