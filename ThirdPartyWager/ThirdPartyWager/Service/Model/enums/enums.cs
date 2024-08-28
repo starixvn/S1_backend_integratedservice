@@ -64,6 +64,7 @@
         NTConnect = 62,
         GA = 63,
         WonCasino = 64,
+        DragonGaming = 70
     }
     public enum GameType
     {
@@ -112,6 +113,7 @@
         NTConnect_Games = 114,
         GA_CockFighting = 115,
         WonCasino_LiveCasino = 116,
+        DragonGaming_RNG = 123
     }
     public enum SettlementType
     {
@@ -165,7 +167,7 @@
         UserReport = 7,//用戶報表
         UnSettle = 8,//未結算注單
     }
-    
+
     public enum WorkerType
     {
         MainWager = 1,                  //使用TicketKey固定持續拉單
