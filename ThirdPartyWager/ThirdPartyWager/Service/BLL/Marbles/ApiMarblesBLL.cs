@@ -18,7 +18,7 @@ namespace ThirdPartyWager.Service.BLL
             _log2File = provider.GetRequiredService<Log2File>();
         }
 
-        public async Task<MBSHandleResponse> GetMarblesWagerAsync(int siteId,MarblesConfig setting, long startTime, long endTime, int page = 1)
+        public async Task<MBSHandleResponse> GetMarblesWagerAsync(MarblesConfig setting, long startTime, long endTime, int page = 1)
         {
             var handleApiUrl = $"{setting.ApiUrl}/gapi/api/handle/";
             var startTimeUnix = startTime * 1000;
@@ -32,7 +32,7 @@ namespace ThirdPartyWager.Service.BLL
                 startDate = startTimeUnix.ToString(),
                 endDate = endTimeUnix.ToString(),
                 page = page.ToString(),
-                pageSize = 5000.ToString(),
+                pageSize = 5000.ToString(), // 直接拉最多 TP有建議五分鐘拉一次
                 mode = 1.ToString() // 1: Dev 2: Prod
             };
             var sParam = encodeAESMD5(System.Text.Json.JsonSerializer.Serialize(request), setting.AgentKey);
@@ -42,7 +42,6 @@ namespace ThirdPartyWager.Service.BLL
             {
                 @params = sParam
             };
-            
             
             var r = await DoHttpClientAsync(handleApiUrl, insertRequest);
             var result = JsonConvert.DeserializeObject<MBSHandleResponse>(r);
@@ -89,20 +88,7 @@ namespace ThirdPartyWager.Service.BLL
             Array.Copy(MD5Buffer, 0, rawKey, 16, 16);
             return rawKey;
         }
-        private string decodeAESMD5(string encStr, string Key)
-        {
-            byte[] keyArray = getMd5(Key);
-            byte[] toEncryptArray = hexStrToBytes(encStr);
-            RijndaelManaged rDel = new RijndaelManaged(); rDel.Key = keyArray;
-            rDel.Mode = CipherMode.ECB;
-            rDel.Padding = PaddingMode.PKCS7;
-            ICryptoTransform cTransform = rDel.CreateDecryptor();
-            byte[] resultArray =
-            cTransform.TransformFinalBlock(toEncryptArray, 0,
-            toEncryptArray.Length);
-            return UTF8Encoding.UTF8.GetString(resultArray);
-
-        }
+        
         private byte[] hexStrToBytes(string hexString)
         {
             byte[] bytes = new byte[hexString.Length / 2];
