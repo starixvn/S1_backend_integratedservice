@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using System.Text.Json;
 using System.Security.Cryptography;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
@@ -8,6 +7,8 @@ using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 using Newtonsoft.Json;
 using System.Text;
+using ThirdPartyCore.Extensions;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 
 namespace ThirdParty.Marbles
 {
@@ -65,6 +66,71 @@ namespace ThirdParty.Marbles
             return oApiResult;
         }
         
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            //Marbles無注單明細API 拿Bettrans
+            var getSpName = "Service_BettransLT_Marbles_Detail_Get";
+            var db = DataBase.Wager;
+
+            TpCurrency tpCurrency = new()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+            
+            var YYYYMM = getBetDetail.SettledTime.GetPartitionKey();
+            var detailList = TpBetRecordProvider.DbQuery(getSpName, new { YYYYMM, TransId = getBetDetail.TransId }, DataBase.Main);
+            if (!detailList.Any())
+            {
+                return null;
+            }
+            
+            var getDetail = detailList.LastOrDefault();
+            var detail = ToJson(detailList);
+            
+            return new LotteryDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                Detail = detail,
+                TpCurrency = tpCurrency,
+                RefTransId = getBetDetail.TransId,
+                TpUserName = getDetail.GetValueOrDefault("account")?.ToString(),
+                UTCBetTime = DateTime.Parse(getDetail.GetValueOrDefault("startTime")?.ToString()).ToUniversalTime(),
+                UTCSettledTime = DateTime.Parse(getDetail.GetValueOrDefault("endTime")?.ToString()).ToUniversalTime(),
+                Stake = Math.Abs((decimal)getDetail.GetValueOrDefault("bet")),
+                WinlostAmount = (decimal)getDetail.GetValueOrDefault("profit") -  Math.Abs((decimal)getDetail.GetValueOrDefault("bet"))
+            };
+        }
+        
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
+            var detailList = TpBetRecordProvider.DbQuery("Service_BettransLT_Marbles_Detail_Get", new { YYYYMM, TransId = betRecordInfo.TransId }, DataBase.Main);
+            if (!detailList.Any())
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+            
+            var getDetail = detailList.LastOrDefault();
+
+            var GameId = getDetail.GetValueOrDefault("gameCode").ToString();
+            var GameRoundId = getDetail.GetValueOrDefault("gameNo").ToString();
+
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = GameId,
+                Game = GameId,
+                RefNo = GameRoundId,
+                Title = tpGameType.TypeName,
+                MatchID = GameRoundId,
+                BetType = string.Empty,
+                BetChoice = string.Empty,
+                Result = string.Empty,
+                DeviceType = DeviceType.None,
+                IP = string.Empty
+            };
+        }
+        
         #region UnUse
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -75,18 +141,8 @@ namespace ThirdParty.Marbles
         {
             throw new NotImplementedException();
         }
-
-        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {
-            throw new NotImplementedException();
-        }
-
+        
         public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
         }
