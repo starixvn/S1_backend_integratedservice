@@ -1,13 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using System;
-using System.Security.AccessControl;
 using System.Text;
-using System.Text.Json.Nodes;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.DragonGaming;
@@ -96,7 +94,47 @@ public class TpHelper : ThirdPartyHelperBase
 
     public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
     {
-        throw new NotImplementedException();
+        var config = _siteConfigDic[tpCustInfo.SiteId];
+        var apiKey = config["ApiKey"];
+        var apiUrl = config["ApiUrl"];
+
+        var detail = TpBetRecordProvider.DbQuery("Service_Bettrans_DragonGaming_BetDetailParam_Get", new { _TransId = getBetDetail.TransId }, DataBase.Report);
+
+        var tpCurrency = new TpCurrency()
+        {
+            ExchangeRate = tpCustInfo.ExchangeRate,
+            TpCurrencyId = tpCustInfo.TpCurrencyId,
+        };
+
+        var gameId = detail.FirstOrDefault()?.GetValueOrDefault("game_id")?.ToString();
+        var playerId = detail.FirstOrDefault()?.GetValueOrDefault("account_id")?.ToString();
+        var roundId = detail.FirstOrDefault()?.GetValueOrDefault("round_id")?.ToString();
+        var url = $"{apiUrl}/games/game-round-history/";
+        var loginRequest = new GameRoundHistoryRequest
+        {
+            api_key = apiKey,
+            game_id = gameId,
+            player_id = playerId,
+            round_id = roundId,
+            language = "en",
+        };
+
+        var result = HttpPost($"{apiUrl}/games/game-launch/", ToJson(loginRequest), ContentType);
+
+        if (!IsJSON(result))
+            throw new BetDetailNotFoundException($"{getBetDetail.TransId} get bet detail fail. {JsonConvert.SerializeObject(result)}");
+
+        var json = JsonConvert.DeserializeObject<GameRoundHistoryResponse>(result);
+
+        if (json is null || json.result is null || string.IsNullOrWhiteSpace(json.result.round_info))
+            throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {JsonConvert.SerializeObject(result)}");
+
+        return new BaseDetail(getBetDetail.TpGameTypeOption)
+        {
+            TransId = getBetDetail.TransId,
+            DetailUrl = json.result.round_info,
+            TpCurrency = tpCurrency
+        };
     }
 
     public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)

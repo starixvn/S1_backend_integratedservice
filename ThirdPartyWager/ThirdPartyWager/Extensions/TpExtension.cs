@@ -59,10 +59,11 @@ namespace ThirdPartyWager.Extensions
                 { Tp.BNG, AddBNG},
                 { Tp.HaoLong, AddHL},
                 { Tp.NLC, AddNLC},
-                { Tp.NTConnect, AddNTConnect },        
+                { Tp.NTConnect, AddNTConnect },
                 { Tp.GA, AddGA},
                 { Tp.WonCasino, AddWonCasino},
                 { Tp.Marbles, AddMarbles},
+                //{ Tp.DragonGaming, AddDragonGaming},
             };
         }
         private IServiceCollection AddSA(IServiceCollection services)
@@ -366,7 +367,7 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<FinanceAMBBLL>();
             services.AddSingleton<WagerAMBBLL>();
             services.AddSingleton<WagerAMBService>();
-            
+
             services.AddHostedService<FinanceAMB>();
             services.AddHostedService<WagerAMB>();
             services.AddHostedService<WagerRedoAMB>();
@@ -701,7 +702,7 @@ namespace ThirdPartyWager.Extensions
 
             return services;
         }
-                    
+
         private IServiceCollection AddNTConnect(IServiceCollection services)
         {
             services.AddSingleton<WagerNTConnectService>();
@@ -712,7 +713,7 @@ namespace ThirdPartyWager.Extensions
 
             services.AddHostedService<WagerNTConnect>();
             services.AddHostedService<FinanceNTConnect>();
-            
+
             return services;
         }
 
@@ -730,7 +731,8 @@ namespace ThirdPartyWager.Extensions
 
             return services;
         }
-        
+
+
         private IServiceCollection AddMarbles(IServiceCollection services)
         {
             services.AddSingleton<WagerMarblesService>();
@@ -742,6 +744,20 @@ namespace ThirdPartyWager.Extensions
             services.AddHostedService<WagerMarbles>();
             //services.AddHostedService<WagerRedoMarbles>();
             services.AddHostedService<FinanceMarbles>();
+            return services;
+        }
+
+        private IServiceCollection AddDragonGaming(IServiceCollection services)
+        {
+            services.AddSingleton<WagerDragonGamingService>();
+
+            services.AddSingleton<WagerDragonGamingBLL>();
+            services.AddSingleton<FinanceDragonGamingBLL>();
+            services.AddSingleton<ApiDragonGamingBLL>();
+
+            services.AddHostedService<WagerDragonGaming>();
+            services.AddHostedService<WagerRedoDragonGaming>();
+            services.AddHostedService<FinanceDragonGaming>();
 
             return services;
         }

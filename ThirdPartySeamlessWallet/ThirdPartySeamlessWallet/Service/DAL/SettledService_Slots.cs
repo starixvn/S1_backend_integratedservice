@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Diagnostics;
 using System.Globalization;
 
 using Dapper;
@@ -7377,11 +7378,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 var p = new DynamicParameters(refundData);
+                var check = _mainDbClient.QueryFirst<BettingData_DragonGaming>(GetSpName, trans, new { refundData.round_id, TicketType = (int)BettransType.Bet });
 
-                result = _mainDbClient.Execute(SetSpName, new { refundData.round_id }, conn, trans);
-                if (result > 0)
+                if (check is not null)
                 {
-                    if (refundData.amount != 0)
+                    result = _mainDbClient.Execute(SetSpName, new { refundData.round_id }, conn, trans);
+
+                    if (result > 0 && refundData.amount != 0)
                     {
                         // bonuscode bet/refund 無須異動額度
                         result = PayoutV2(
@@ -7415,25 +7418,24 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
-                    var check = _mainDbClient.QueryFirst<BettingData_DragonGaming>(GetSpName, trans, new { refundData.round_id });
-                    if (check is null && check.TicketType != (int)BettransType.CancelBet)
-                    {
-                        var cancelInsert = _mainDbClient.Execute(InsSpName, p, conn, trans);
-                        if (cancelInsert > 0)
-                        {
-                            // insert cancel record
-                            _mainDbClient.CommitAndDisposeConnection(conn, trans);
-                            return 1;
-                        }
-                    }
+                    var cancelcheck = _mainDbClient.QueryFirst<BettingData_DragonGaming>(GetSpName, trans, new { refundData.round_id, TicketType = (int)BettransType.CancelBet });
 
-                    if (check.TicketType == (int)BettransType.CancelBet)
+                    if (cancelcheck is not null)
                     {
                         // had cancel
                         _mainDbClient.RollbackAndDisposeConnection(conn, trans);
-                        return -1;
+                        return 1;
+                    }
+
+                    var cancelInsertResult = _mainDbClient.Execute(InsSpName, p, conn, trans);
+                    if (cancelInsertResult > 0)
+                    {
+                        // insert cancel record
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                        return cancelInsertResult;
                     }
                 }
+
             }
             catch (MySqlException mySqlEx)
             {
@@ -7472,7 +7474,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 var p = new DynamicParameters(payoutData);
 
-                var check = _mainDbClient.QueryFirst<BettingData_DragonGaming>(GetSpName, trans, new { payoutData.round_id });
+                var check = _mainDbClient.QueryFirst<BettingData_DragonGaming>(GetSpName, trans, new { payoutData.round_id, TicketType = (int)BettransType.Bet });
+
                 if (check is null)
                 {
                     // no bet or cancel data

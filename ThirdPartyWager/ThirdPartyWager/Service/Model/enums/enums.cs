@@ -65,6 +65,7 @@
         GA = 63,
         WonCasino = 64,
         Marbles = 65,
+        DragonGaming = 70
     }
     public enum GameType
     {
@@ -114,6 +115,7 @@
         GA_CockFighting = 115,
         WonCasino_LiveCasino = 116,
         Marbles_Lottery = 118,
+        DragonGaming_RNG = 123
     }
     public enum SettlementType
     {
@@ -167,7 +169,7 @@
         UserReport = 7,//用戶報表
         UnSettle = 8,//未結算注單
     }
-    
+
     public enum WorkerType
     {
         MainWager = 1,                  //使用TicketKey固定持續拉單
