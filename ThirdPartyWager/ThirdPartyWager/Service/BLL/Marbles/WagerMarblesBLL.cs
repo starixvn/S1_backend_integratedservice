@@ -28,7 +28,7 @@ namespace ThirdPartyWager.Service.BLL
 
             while (page <= totalPage)
             {
-                var wagerList = await _apiMarbleBLL.GetMarblesWagerAsync(1, setting, startTime, endTime, page);
+                var wagerList = await _apiMarbleBLL.GetMarblesWagerAsync(setting, startTime, endTime, page);
                 //结果信息(0成功，不是0都失败)
                 if (wagerList.code != "0")
                 {
@@ -47,7 +47,7 @@ namespace ThirdPartyWager.Service.BLL
                         {
                             var result = await _wagerMarblesService.InsertWager(wager);
                 
-                            //根據Marbles 結尾有-1的才是結算單 結算單再丟TpUnSettle
+                            //根據Marbles說法 結尾有-1的才是結算單 結算單再丟TpUnSettle
                             if (wager.transNo.EndsWith("-1"))
                             {
                                 _ = _tpUnsettleService.InsertTpUnsettle(Tp.Marbles, GameType.Marbles_Lottery, wager.gameNo);

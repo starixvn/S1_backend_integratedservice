@@ -116,7 +116,8 @@ builder.Services
     .AddHostedService<FastSpinWorker>()
     .AddHostedService<NTConnectWorker>()
     .AddHostedService<GAWorker>()
-    .AddHostedService<WonCasinoWorker>();
+    .AddHostedService<WonCasinoWorker>()
+    .AddHostedService<MarblesWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);

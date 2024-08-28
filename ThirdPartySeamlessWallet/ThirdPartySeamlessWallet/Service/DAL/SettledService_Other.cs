@@ -2151,7 +2151,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 result = _partitionService.Execute(partitionTime, InsSpName, p, trans);
                 
-
                 if (result > 0)
                 {
                     result = PayoutV2(
@@ -2171,11 +2170,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         trans,
                         AllowNegative.Allow
                     );
-                    
-                    if (result > 0)
-                    {
-                        result = _tpUnsettleService.InsertTpUnsettle(tpId, tpGameType, settledDataLT_Marbles.gameNo, trans);
-                    }
 
                     if (result > 0)
                     {
