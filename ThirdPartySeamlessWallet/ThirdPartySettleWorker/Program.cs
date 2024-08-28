@@ -117,7 +117,8 @@ builder.Services
     .AddHostedService<NTConnectWorker>()
     .AddHostedService<GAWorker>()
     .AddHostedService<WonCasinoWorker>()
-    .AddHostedService<MarblesWorker>();
+    .AddHostedService<MarblesWorker>()
+    .AddHostedService<DragonGamingWorker>();
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
