@@ -1,5 +1,6 @@
 ﻿namespace ThirdParty.DragonGaming;
 
+#region Login Action
 internal class GameLaunchRequest
 {
     public string api_key { get; set; }
@@ -34,4 +35,15 @@ internal class GameLaunchResponse
 internal class GameLaunchResult
 {
     public string launch_url { get; set; }
+}
+
+#endregion
+
+internal class GameRoundHistoryRequest
+{
+    public string api_key { get; set; }
+    public string game_id { get; set; }
+    public string player_id { get; set; }
+    public string round_id { get; set; }
+    public string language { get; set; }
 }
