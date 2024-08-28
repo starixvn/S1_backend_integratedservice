@@ -59,9 +59,9 @@ public class CommonResponse_DragonGaming
     public string country { get; set; }
     public string token { get; set; }
 
-    private int _balance;
+    private long _balance;
 
-    public int balance
+    public long balance
     {
         get => _balance;
         set => _balance = value * 100;
@@ -123,7 +123,7 @@ public class BalanceResponse_DragonGaming : CommonResponse_DragonGaming
         : base(errorCode, token)
     {
         account_id = tpUserName;
-        this.balance = (int)balance;
+        this.balance = (long)balance;
         this.currency = currency;
         bonus_amount = 0;
     }
