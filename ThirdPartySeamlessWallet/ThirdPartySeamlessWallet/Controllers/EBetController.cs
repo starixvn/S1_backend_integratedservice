@@ -363,9 +363,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getBetResp;
             }
 
-            var result = 0;
             try
             {
+                int result;
                 switch (getBetReq.type)
                 {
                     case 1:
@@ -373,7 +373,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                         // 1: bet、27: pre-bet
                         logName = $"{logName}_Bet";
                         var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getBetReq.username);
-                        if (tpCheck == null || tpCheck.Locked)
+                        if (tpCheck == null )
+                        {
+                            getBetResp.status = 410;
+                            getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                            return getBetResp;
+                        }
+
+                        if (tpCheck.Locked)
                         {
                             getBetResp.status = 4037;
                             getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -381,13 +389,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                             return getBetResp;
                         }
 
-                        if (tpCheck.Token != HttpUtility.UrlDecode(getBetReq.sessionToken))
-                        {
-                            getBetResp.status = 410;
-                            getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
-                            return getBetResp;
-                        }
                         /*
                          * type 11測試: 該情境 type 27成功 並且 type 1是失敗的
                         if (getBetReq.type == 1)
@@ -398,6 +399,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             return getBetResp;
                         }
                         */
+                        
                         result = bettingBLL.PlaceBetLC_EBet(getBetReq, out decimal tpAffterAmount);
                         if (result > 0)
                         {
