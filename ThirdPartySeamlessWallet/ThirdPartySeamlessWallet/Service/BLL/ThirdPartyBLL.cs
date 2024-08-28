@@ -91,7 +91,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                 gameType = GameType.PP_LiveCasino;
 
                 // Spaceman 
-                if (tempGameId == 1302)
+                if (tempGameId == 1301 || tempGameId == 1302)
                 {
                     gameType = GameType.PP_RNG;
                 }
@@ -185,7 +185,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.PP_LiveCasino;
 
                         // Spaceman 
-                        if (tempGameId == 1302)
+                        if (tempGameId == 1301 || tempGameId == 1302)
                         {
                             gameType = GameType.PP_RNG;
                         }
@@ -286,13 +286,13 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     gameType = GameType.PlayTech_RNG;
                     var casinoPlayTech = GetGameCasinoWithCache(tpId);
                     /*
-                     * ¹ï©ó BRL ³f¹ô
-                     * ¥²¶·¨Ï¥Î PTN ¹CÀ¸¥N½X¤~¯à¦s¨ú¹CÀ¸
-                     * ´ú¸ÕÀô¹Ò©M¥¿¦¡Àô¹Ò¨Ï¥Îªº¹CÀ¸µ{¦¡½X¤£¦P
+                     * å°æ–¼ BRL è²¨å¹£
+                     * å¿…é ˆä½¿ç”¨ PTN éŠæˆ²ä»£ç¢¼æ‰èƒ½å­˜å–éŠæˆ²
+                     * æ¸¬è©¦ç’°å¢ƒå’Œæ­£å¼ç’°å¢ƒä½¿ç”¨çš„éŠæˆ²ç¨‹å¼ç¢¼ä¸åŒ
                      */
                     if (gameId.StartsWith("ptn_", StringComparison.OrdinalIgnoreCase))
                     {
-                        // ¥h°£ptn_¡A¤ñ¹ï­ìgameid¬O§_¦s¦b
+                        // åŽ»é™¤ptn_ï¼Œæ¯”å°åŽŸgameidæ˜¯å¦å­˜åœ¨
                         gameId = gameId.Substring(4);
                     }
                     var checkPlayTech = casinoPlayTech.FirstOrDefault(x => x.GameId == gameId);
@@ -300,6 +300,21 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     {
                         gameType = GameType.PlayTech_LiveCasino;
                     }
+                    break;
+                case (int)Tp.MaxGame:
+                    gameType = GameType.MaxGame_Poker;
+                    break;
+                case (int)Tp.SabaPlay:
+                    gameType = GameType.SabaPlay_Poker;
+                    break;
+                case (int)Tp.UuSlots:
+                    gameType = GameType.UuSlots_RNG;
+                    break;
+                case (int)Tp.Live22:
+                    gameType = GameType.Live22_RNG;
+                    break;
+                case (int)Tp.FastSpin:
+                    gameType = GameType.FastSpin_RNG;
                     break;
                 default:
                     break;

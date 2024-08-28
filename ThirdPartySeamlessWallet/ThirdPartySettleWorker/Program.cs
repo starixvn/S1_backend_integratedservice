@@ -110,6 +110,10 @@ builder.Services
     .AddHostedService<BNGWorker>()
     .AddHostedService<HLWorker>()
     .AddHostedService<MaxGameWorker>()
+    .AddHostedService<SabaPlayWorker>()
+    .AddHostedService<UuSlotsWorker>()
+    .AddHostedService<Live22Worker>()
+    .AddHostedService<FastSpinWorker>()
     .AddHostedService<NTConnectWorker>()
     .AddHostedService<GAWorker>()
     .AddHostedService<WonCasinoWorker>();
