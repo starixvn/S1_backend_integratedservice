@@ -1168,12 +1168,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
 
                 var result = _mainDbClient.Execute("Service_BettransLottery_TCG_CancelReserve_Set", trans, p);
-               
-                // 先取回下注的ref_no
-                var bet_ref_no = _mainDbClient.QueryFirst<string>("Service_BettransLottery_TCG_ReferenceNo_Get", new { TpUserName = data.username, OrderNum = data.order_no });
                 
                 if (result > 0 && data.amount != 0)
                 {
+                    // 先取回下注的ref_no
+                    var bet_ref_no = _mainDbClient.QueryFirst<string>("Service_BettransLottery_TCG_ReferenceNo_Get", new { TpUserName = data.username, OrderNum = data.order_no });
+
                     result = PayoutV2(
                         tpCustInfo: tpCustInfo,
                         amount: data.amount,
@@ -1192,8 +1192,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         AllowNegative.Allow);
                 }
                 
-                _tpUnSettledBLL.InsertTpUnsettle(Tp.TCG, gameType, bet_ref_no);
-
                 if (result > 0)
                 {
                     await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
