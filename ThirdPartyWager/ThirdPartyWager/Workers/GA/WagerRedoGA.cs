@@ -22,7 +22,7 @@ namespace ThirdPartyWager.Workers
         private readonly int timeZone = 0;
         private readonly int iRangMins = 30;
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
-        private readonly int intervalMins = 5;
+        private readonly int intervalMins = 1;
 
         public WagerRedoGA(IServiceProvider provider)
         {
