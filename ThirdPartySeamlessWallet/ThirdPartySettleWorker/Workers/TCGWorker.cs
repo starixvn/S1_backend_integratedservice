@@ -129,7 +129,8 @@ namespace ThirdPartySettleWorker.Workers
                             var checkCancelData = _tpUnSettledBLL.GetTpUnsettleData<TCGCancelCheckData>("Service_BettransLottery_TCG_CancelCheck", 
                                 new { TpUserName = unsettled.Account, unsettled.OrderNum }, DataBase.Main)?.FirstOrDefault();
 
-                            if (checkCancelData.TicketType == (int) BettransType.CancelBet &&
+                            if (checkCancelData is not null &&
+                                checkCancelData.TicketType == (int) BettransType.CancelBet &&
                                 checkCancelData.TicketStatus == (int) TicketStatus.Refund)
                             {
                                 settlementType = SettlementType.SettledForInvalid;
