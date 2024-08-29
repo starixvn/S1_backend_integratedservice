@@ -70,21 +70,10 @@ namespace ThirdPartyWager.Workers
                 if (time.endUnix <= cvTime)
                 {
                     var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
-
-                    foreach (var site in siteList)
-                    {
-                        var _setting = _siteConfigDic[site.SiteId];
-
-                        if (_setting == null) continue;
-
-                        result = await _wagerMarblesBLL.GetWagerAsync(_setting, time.startUnix, time.endUnix);
-
-                        if (result < 0)
-                        {
-                            //第三方因素或Insert失敗回傳為-1，直接進break不再更新時間。
-                            break;
-                        }
-                    }
+                    
+                    var _setting = _siteConfigDic[1];
+                    
+                    result = await _wagerMarblesBLL.GetWagerAsync(_setting, time.startUnix, time.endUnix);
 
                     if (result > 0)
                     {
