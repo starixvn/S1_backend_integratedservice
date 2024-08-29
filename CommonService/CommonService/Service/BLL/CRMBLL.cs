@@ -32,11 +32,11 @@ namespace CommonService.Service.BLL
                     Tenant = config.TenantID,
                     Event = request.Event.ToString(),
                     Customer = request.CustId.ToString(),
-                    Timestamp = DateTime.Now,
+                    Timestamp = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
                     Visitor = String.Empty,
                     Context = new Context()
                     {
-                        OrderAmount = request.OrderAmount,
+                        order_amount = request.OrderAmount,
                     }
                 };
                 var signature = GenerateHash(config.Token, para);

@@ -17,7 +17,7 @@ namespace CommonService.Service.Model.enums
     public enum CRMEvent
     {
         Register_successful,
-        Deposit_successful
+        deposit_successful
     }
     public class CRMRequest
     {
@@ -45,12 +45,15 @@ namespace CommonService.Service.Model.enums
         public string Customer { get; set; }
 
         [JsonProperty("timestamp")]
-        public DateTime Timestamp { get; set; }
+        public string Timestamp { get; set; }
     }
 
     public class Context
     {
-        [JsonProperty("order_amount")]
-        public decimal OrderAmount { get; set; }
+        public decimal order_amount { get; set; }
+        public string event_device_type { get; set; } = string.Empty;
+        public bool event_native_mobile { get; set; }
+        public string event_platform { get; set; } = string.Empty;
+        public string event_os { get; set; } = string.Empty;
     }
 }
