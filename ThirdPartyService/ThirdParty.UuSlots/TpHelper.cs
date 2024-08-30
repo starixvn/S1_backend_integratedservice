@@ -181,7 +181,7 @@ namespace ThirdParty.UuSlots
                 {
                     return new BaseDetail(getBetDetail.TpGameTypeOption)
                     {
-                        TransId = getBetDetail.TransId,
+                        TransId = $"{getBetDetail.TransId} ({resultId})",
                         DetailUrl = json.Payload.ReturnUrl,
                         TpCurrency = tpCurrency,
                     };
