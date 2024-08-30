@@ -108,7 +108,7 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<FinanceDGBLL>();
 
             services.AddHostedService<WagerDG>();
-            services.AddHostedService<WagerRedoDG>();
+            //services.AddHostedService<WagerRedoDG>();
             services.AddHostedService<FinanceDG>();
 
             return services;
