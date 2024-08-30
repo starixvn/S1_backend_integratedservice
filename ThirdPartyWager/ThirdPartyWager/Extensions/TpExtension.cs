@@ -63,7 +63,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.GA, AddGA},
                 { Tp.WonCasino, AddWonCasino},
                 { Tp.Marbles, AddMarbles},
-                //{ Tp.DragonGaming, AddDragonGaming},
+                { Tp.DragonGaming, AddDragonGaming},
             };
         }
         private IServiceCollection AddSA(IServiceCollection services)

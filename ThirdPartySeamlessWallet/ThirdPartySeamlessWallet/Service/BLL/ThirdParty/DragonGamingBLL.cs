@@ -1,12 +1,9 @@
 ﻿using Newtonsoft.Json;
-using Org.BouncyCastle.Crypto.Tls;
 using System.Text;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
-using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
-using ThirdPartySeamlessWallet.Service.Model.MaxGame;
 
 namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 
@@ -302,7 +299,7 @@ public class DragonGamingBLL : IDragonGamingBLL
             refundData.amount *= tpCurrency.ExchangeRate;
         }
 
-        var result = _settledService.CancelBetRNG_DragonGaming(tpCustInfo, refundData, out afterAmount);
+        var result = _settledService.CancelBetRNG_DragonGaming(tpCustInfo, refundData, request.original_transaction_id, out afterAmount);
         if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
         {
             afterAmount /= tpCurrency.ExchangeRate;

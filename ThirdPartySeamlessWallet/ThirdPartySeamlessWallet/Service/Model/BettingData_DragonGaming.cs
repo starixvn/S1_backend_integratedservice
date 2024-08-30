@@ -155,7 +155,6 @@ public class BettingData_DragonGaming
     public string currency { get; set; } = "";
     public int game_id { get; set; }
     public string transaction_id { get; set; } = "";
-    public string original_transaction_id { get; set; } = "";
     public string round_id { get; set; } = "";
     public string game_type { get; set; } = "";
     public string game_name { get; set; } = "";
@@ -218,7 +217,6 @@ public class BettingData_DragonGaming
         game_id = request.game_id;
 
         transaction_id = request.transaction_id;
-        original_transaction_id = request.original_transaction_id;
         round_id = request.round_id.ToString();
         game_type = request.game_type;
         game_name = request.game_name;

@@ -13,9 +13,9 @@ namespace ThirdPartyWager.Service.DAL
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
         }
 
-        public Task<int> InsertWager(WonCasinoDetailData data)
+        public Task<int> InsertWager(WagerDragonGamingModel data)
         {
-            return _wagerDbClient.ExecuteAsync("Service_TpWager_WonCasino_Ins", new DynamicParameters(data));
+            return _wagerDbClient.ExecuteAsync("Service_TpWager_DragonGaming_Ins", new DynamicParameters(data));
         }
     }
 }

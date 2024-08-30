@@ -3,31 +3,33 @@ using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Workers
 {
     public class WagerRedoDragonGaming : BackgroundService
     {
         private readonly int _tpId = (int)Tp.DragonGaming;
-        private readonly int _tpType = (int)WagerTimerType.RedoWager;
         private readonly string _tpName = Tp.DragonGaming.ToString();
-        private Timer _timer;
-        private readonly Dictionary<string, string> _setting;
-        private readonly WagerBNGBLL _wagerBNGBLL;
-        private readonly DateTimeHelper _dateTimeHelper;
+        private readonly int _tpType = (int)WagerTimerType.RedoWager;
+
+        private readonly WagerDragonGamingBLL _wagerDragonGamingBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly DateTimeHelper _dateTimeHelper;
+        private readonly Dictionary<int, DragonGamingConfig> _siteConfigDic;
         private readonly ILogger<WagerRedoDragonGaming> _logger;
+
+        private Timer _timer;
         private readonly int timeZone = 0;
         private readonly int iRangMins = 15;
-        private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
         private readonly int intervalMins = 5;
 
         public WagerRedoDragonGaming(IServiceProvider provider)
         {
-            _setting = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(Tp.DragonGaming.ToString());
-            _wagerBNGBLL = provider.GetRequiredService<WagerBNGBLL>();
-            _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _wagerDragonGamingBLL = provider.GetRequiredService<WagerDragonGamingBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<DragonGamingConfig>(Tp.DragonGaming.ToString());
             _logger = provider.GetRequiredService<ILogger<WagerRedoDragonGaming>>();
         }
 
@@ -62,10 +64,18 @@ namespace ThirdPartyWager.Workers
 
                 if (dataTpTimer.StartTime <= nowDateTime.AddHours(-2).AddMinutes(-15))
                 {
-                    var time = _dateTimeHelper.GetTimeByMinute(iRangMins - 1, timeZone, _timeFormat, dataTpTimer.StartTime);
-                    await _wagerBNGBLL.GetWagerAsync(_setting, time.startTime, time.endTime);
+                    var time = _dateTimeHelper.GetTimeByMinute(iRangMins - 1, timeZone, "yyyy-MM-dd HH:mm:ss", dataTpTimer.StartTime);
+                    var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+                    foreach (var siteInfo in siteList)
+                    {
+                        var _setting = _siteConfigDic[siteInfo.SiteId];
+                        if (_setting == null) continue;
+
+                        await _wagerDragonGamingBLL.GetWagerAsync(_setting, time.startTime.ToString(), time.endTime.ToString());
+                    }
 
                     _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, time.endUnix);
+
                 }
             }
             catch (Exception ex)

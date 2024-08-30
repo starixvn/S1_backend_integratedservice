@@ -2,6 +2,7 @@
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Workers
 {
@@ -9,19 +10,25 @@ namespace ThirdPartyWager.Workers
     {
         private readonly int _tpId = (int)Tp.DragonGaming;
         private readonly string _tpName = Tp.DragonGaming.ToString();
-        private Timer _timer;
-        private readonly Dictionary<string, string> _setting;
+        private readonly int _tpType = (int)WagerTimerType.Wager;
+
         private readonly WagerDragonGamingBLL _wagerDragonGamingBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly DateTimeHelper _dateTimeHelper;
+        private readonly Dictionary<int, DragonGamingConfig> _siteConfigDic;
         private readonly ILogger<WagerDragonGaming> _logger;
+
+        private Timer _timer;
+        private bool isFast = false;
         private readonly int timeZone = 0;
         private readonly int iRangMins = 15;
-        private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
+
         public WagerDragonGaming(IServiceProvider provider)
         {
-            _setting = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(Tp.DragonGaming.ToString());
             _wagerDragonGamingBLL = provider.GetRequiredService<WagerDragonGamingBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<DragonGamingConfig>(Tp.DragonGaming.ToString());
             _logger = provider.GetRequiredService<ILogger<WagerDragonGaming>>();
         }
 
@@ -35,11 +42,30 @@ namespace ThirdPartyWager.Workers
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
+            var nowTime = DateTime.Now;
             try
             {
-                var time = _dateTimeHelper.GetTimeByMinuteRevert(iRangMins, timeZone, _timeFormat, DateTime.UtcNow);
+                var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
 
-                //await _wagerDragonGamingBLL.GetWagerAsync(_setting, time.startTime, time.endTime);
+                var timerTime = dataTpTimer?.StartTime ?? nowTime.AddMinutes(-(iRangMins - 1));
+                var last = (dataTpTimer == null) ? iRangMins - 1 : iRangMins;
+
+                var time = _dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
+
+                isFast = false;
+                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+
+                foreach (var siteInfo in siteList)
+                {
+                    var _setting = _siteConfigDic[siteInfo.SiteId];
+                    if (_setting == null) continue;
+
+                    await _wagerDragonGamingBLL.GetWagerAsync(_setting, time.startTime.ToString(), time.endTime.ToString());
+                }
+
+                _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, time.endUnix);
+
+                isFast = CheckQuick(dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now.AddMinutes(-10), 20);
             }
             catch (Exception ex)
             {
@@ -47,9 +73,15 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                var dueTimeSpan = TimeSpan.FromMinutes(1);
+                var dueTimeSpan = isFast ? TimeSpan.FromSeconds(15) : TimeSpan.FromSeconds(60);
                 _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
+        }
+
+        private bool CheckQuick(DateTime workTime, int delayTime)
+        {
+            var diff = DateTime.Now - workTime;
+            return DateTime.Now > workTime && diff.TotalMinutes > delayTime;
         }
     }
 }
