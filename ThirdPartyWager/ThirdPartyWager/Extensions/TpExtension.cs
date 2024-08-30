@@ -62,7 +62,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.NTConnect, AddNTConnect },
                 { Tp.GA, AddGA},
                 { Tp.WonCasino, AddWonCasino},
-                //{ Tp.DragonGaming, AddDragonGaming},
+                { Tp.DragonGaming, AddDragonGaming},
             };
         }
         private IServiceCollection AddSA(IServiceCollection services)

@@ -7,10 +7,10 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class FinanceDragonGamingBLL : ITpReportBLL
     {
+        private readonly int _timeZone = 0;
+
         private readonly CommonBLL _commonBLL;
         private readonly DateTimeHelper _dateTimeHelper;
-        private readonly int _timeZone = 0;
-        private readonly int _tpId = (int)Tp.WonCasino;
         public FinanceDragonGamingBLL(IServiceProvider provider)
         {
             _commonBLL = provider.GetRequiredService<CommonBLL>();
@@ -45,7 +45,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
         {
             var reportData = new List<dynamic>();
-            var result = await _commonBLL.GetWagerSummary("Finance_TpWager_WonCasino_Summary_Get", reportTime.startUnix, reportTime.endUnix);
+            var result = await _commonBLL.GetWagerSummary("Finance_TpWager_DragonGaming_Summary_Get", reportTime.startUnix, reportTime.endUnix);
             reportData.AddRange(result);
             return reportData;
         }

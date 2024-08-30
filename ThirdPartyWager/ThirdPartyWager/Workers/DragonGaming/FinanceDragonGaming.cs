@@ -8,23 +8,26 @@ namespace ThirdPartyWager.Workers
 {
     public class FinanceDragonGaming : BackgroundService
     {
-        private readonly ILogger<FinanceDragonGaming> _logger;
-        private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly FinanceBNGBLL _financeBNGBLL;
-        private readonly FincanceService _financeService;
         private readonly int _tpId = (int)Tp.DragonGaming;
         private readonly string _tpName = Tp.DragonGaming.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
-        private readonly int _beyond = 2;
+
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly FinanceDragonGamingBLL _financeDragonGamingBLL;
+        private readonly FincanceService _financeService;
+        private readonly ILogger<FinanceDragonGaming> _logger;
+
         private Timer timer;
+        private readonly int _beyond = 2;
 
         public FinanceDragonGaming(IServiceProvider provider)
         {
-            _logger = provider.GetRequiredService<ILogger<FinanceDragonGaming>>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _financeBNGBLL = provider.GetRequiredService<FinanceBNGBLL>();
+            _financeDragonGamingBLL = provider.GetRequiredService<FinanceDragonGamingBLL>();
             _financeService = provider.GetRequiredService<FincanceService>();
+            _logger = provider.GetRequiredService<ILogger<FinanceDragonGaming>>();
         }
+
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             timer = new Timer(DoReport, null, TimeSpan.Zero, TimeSpan.Zero);
@@ -81,16 +84,16 @@ namespace ThirdPartyWager.Workers
 
                 // get time 
                 var day = 0;
-                var reportTime = _financeBNGBLL.GetReportTime(execTime.StartTime, day);
+                var reportTime = _financeDragonGamingBLL.GetReportTime(execTime.StartTime, day);
 
                 // report
                 var reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);
-                var reportData = await _financeBNGBLL.GetReport(_tpId, null, reportTime);
+                var reportData = await _financeDragonGamingBLL.GetReport(_tpId, null, reportTime);
                 int result;
                 if (reportData.Count > 0)
                 {
                     // process
-                    var dailyData = _financeBNGBLL.DealReport(_tpId, reportDate, reportData);
+                    var dailyData = _financeDragonGamingBLL.DealReport(_tpId, reportDate, reportData);
 
                     // write
                     result = _financeService.SetFinanceTpDailySummary(dailyData);
