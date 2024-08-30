@@ -7491,26 +7491,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     if (payoutData.amount != 0)
                     {
-                        result = _mainDbClient.Execute(InsSpName, p, conn, trans);
-                        if (result > 0 && payoutData.amount != 0)
-                        {
-                            result = PayoutV2(
-                            tpCustInfo,
-                            Math.Abs(payoutData.amount),
-                            (int)tpId,
-                            payoutData.round_id,
-                            (int)tpGameType,
-                            tpCategory,
-                            payoutData.round_id,
-                            TransType.Payout,
-                            null,
-                            out afterAmount,
-                            $"Payout",
-                            out bonusId,
-                            conn,
-                            trans
-                            );
-                        }
+                        result = PayoutV2(
+                        tpCustInfo,
+                        Math.Abs(payoutData.amount),
+                        (int)tpId,
+                        payoutData.round_id,
+                        (int)tpGameType,
+                        tpCategory,
+                        payoutData.round_id,
+                        TransType.Payout,
+                        null,
+                        out afterAmount,
+                        $"Payout",
+                        out bonusId,
+                        conn,
+                        trans
+                        );
                     }
 
                     if (result > 0 && payoutData.round_end_state)
