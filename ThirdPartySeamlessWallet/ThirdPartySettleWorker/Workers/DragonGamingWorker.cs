@@ -148,7 +148,7 @@ namespace ThirdPartySettleWorker.Workers
         private void SetSettleFlag(string bettransSet, GameType gametype, BetRecordInfo betRecordInfo)
         {
             _ = _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, betRecordInfo.TransId, true);
-            _ = _settledBLL.SetSettleFlagOfMonthlyBettrans(bettransSet, betRecordInfo);
+            _ = _settledBLL.SetSettleFlag_DragonGaming(betRecordInfo.TransId);
         }
     }
 }

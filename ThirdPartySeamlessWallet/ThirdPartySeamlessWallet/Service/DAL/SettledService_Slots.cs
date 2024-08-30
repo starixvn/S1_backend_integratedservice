@@ -7358,7 +7358,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region DragonGaming
 
-        public int CancelBetRNG_DragonGaming(TpCustInfo tpCustInfo, BettingData_DragonGaming refundData, string original_transaction_id, out decimal afterAmount)
+        public int CancelBetRNG_DragonGaming(TpCustInfo tpCustInfo, BettingData_DragonGaming refundData,string originalTransactionId, out decimal afterAmount)
         {
             int bonusId = 0;
             int result = 0;
@@ -7378,9 +7378,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 var p = new DynamicParameters(refundData);
-                p.Add("SettleFlag", (int)SettleFlag.EndGame);
+                p.Add("SettleFlag", (int)SettleFlag.Settled);
 
-                var check = _mainDbClient.QueryFirst<BettingData_DragonGaming>(GetSpName, trans, new { refundData.round_id, TicketType = (int)BettransType.Bet, transaction_id = original_transaction_id });
+                var check = _mainDbClient.QueryFirst<BettingData_DragonGaming>(GetSpName, trans, new { refundData.round_id, TicketType = (int)BettransType.Bet, transaction_id = originalTransactionId });
 
                 if (check is not null)
                 {
@@ -7420,7 +7420,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
-                    var cancelcheck = _mainDbClient.QueryFirst<BettingData_DragonGaming>(GetSpName, trans, new { refundData.round_id, TicketType = (int)BettransType.CancelBet, transaction_id = original_transaction_id });
+                    var cancelcheck = _mainDbClient.QueryFirst<BettingData_DragonGaming>(GetSpName, trans, new { refundData.round_id, TicketType = (int)BettransType.CancelBet, transaction_id = originalTransactionId });
 
                     if (cancelcheck is not null)
                     {
@@ -7535,6 +7535,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             }
 
             return result;
+        }
+
+        public int SetSettleFlag_DragonGaming(string transId)
+        {
+            return _mainDbClient.Execute("Service_BettransRng_DragonGaming_Settle_Set", commandType: CommandType.StoredProcedure, new { TransId = transId });
         }
 
         #endregion

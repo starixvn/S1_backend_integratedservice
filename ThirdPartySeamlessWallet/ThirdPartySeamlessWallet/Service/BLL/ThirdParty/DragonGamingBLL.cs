@@ -292,7 +292,7 @@ public class DragonGamingBLL : IDragonGamingBLL
             refundData.amount *= tpCurrency.ExchangeRate;
         }
 
-        var result = _settledService.CancelBetRNG_DragonGaming(tpCustInfo, refundData, request.original_transaction_id, out afterAmount);
+        var result = _settledService.CancelBetRNG_DragonGaming(tpCustInfo, refundData,request.original_transaction_id, out afterAmount);
         if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
         {
             afterAmount /= tpCurrency.ExchangeRate;
