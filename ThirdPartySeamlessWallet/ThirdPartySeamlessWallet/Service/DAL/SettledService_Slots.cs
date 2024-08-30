@@ -7358,7 +7358,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region DragonGaming
 
-        public int CancelBetRNG_DragonGaming(TpCustInfo tpCustInfo, BettingData_DragonGaming refundData, out decimal afterAmount)
+        public int CancelBetRNG_DragonGaming(TpCustInfo tpCustInfo, BettingData_DragonGaming refundData, string original_transaction_id, out decimal afterAmount)
         {
             int bonusId = 0;
             int result = 0;
@@ -7369,7 +7369,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var tpCategory = TpCategory.Slots;
             var SetSpName = "Service_BettransRng_DragonGaming_CancelBet_Set";
             var InsSpName = "Service_BettransRng_DragonGaming_Ins";
-            var GetSpName = "Service_BettransRng_DragonGaming_Get";
+            var GetSpName = "Service_BettransRng_DragonGaming_Cancel_Exist_Get";
 
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
@@ -7378,7 +7378,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 var p = new DynamicParameters(refundData);
-                var check = _mainDbClient.QueryFirst<BettingData_DragonGaming>(GetSpName, trans, new { refundData.round_id, TicketType = (int)BettransType.Bet });
+                p.Add("SettleFlag", (int)SettleFlag.EndGame);
+
+                var check = _mainDbClient.QueryFirst<BettingData_DragonGaming>(GetSpName, trans, new { refundData.round_id, TicketType = (int)BettransType.Bet, transaction_id = original_transaction_id });
 
                 if (check is not null)
                 {
@@ -7418,7 +7420,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
-                    var cancelcheck = _mainDbClient.QueryFirst<BettingData_DragonGaming>(GetSpName, trans, new { refundData.round_id, TicketType = (int)BettransType.CancelBet });
+                    var cancelcheck = _mainDbClient.QueryFirst<BettingData_DragonGaming>(GetSpName, trans, new { refundData.round_id, TicketType = (int)BettransType.CancelBet, transaction_id = original_transaction_id });
 
                     if (cancelcheck is not null)
                     {
@@ -7464,7 +7466,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var tpGameType = GameType.DragonGaming_RNG;
             var tpCategory = TpCategory.Slots;
             var InsSpName = "Service_BettransRng_DragonGaming_Ins";
-            var GetSpName = "Service_BettransRng_DragonGaming_Get";
+            var GetSpName = "Service_BettransRng_DragonGaming_Exist_Get";
 
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
@@ -7473,8 +7475,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 var p = new DynamicParameters(payoutData);
+                p.Add("SettleFlag", (int)SettleFlag.EndGame);
 
-                var check = _mainDbClient.QueryFirst<BettingData_DragonGaming>(GetSpName, trans, new { payoutData.round_id, TicketType = (int)BettransType.Bet });
+                var check = _mainDbClient.QueryFirst<BettingData_DragonGaming>(GetSpName, trans, new { payoutData.round_id });
 
                 if (check is null)
                 {

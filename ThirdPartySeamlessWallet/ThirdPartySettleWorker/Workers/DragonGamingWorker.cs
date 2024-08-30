@@ -53,6 +53,7 @@ namespace ThirdPartySettleWorker.Workers
             var isError = false;
             var gametype = (GameType)state;
             var bettransGet = "Service_BettransRng_DragonGaming_Settle_Get";
+            var bettransSet = "Service_BettransRng_DragonGaming_Settle_Set";
             string logName = $"Settle_DragonGaming";
 
             try
@@ -99,13 +100,13 @@ namespace ThirdPartySettleWorker.Workers
                             SettledTime = settledTime,
                             TransTime = transTime,
                             SettlementType = SettlementType.SettledForValid,
-                            GameID = gameId,
+                            GameID = gameId
                         };
 
                         var result = _settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
                         if (result == 1)
                         {
-                            SetSettleFlag(gametype, betRecordInfo);
+                            SetSettleFlag(bettransSet, gametype, betRecordInfo);
                         }
                     }
                     catch (Exception ex1)
@@ -144,9 +145,10 @@ namespace ThirdPartySettleWorker.Workers
             }
         }
 
-        private void SetSettleFlag( GameType gametype, BetRecordInfo betRecordInfo)
+        private void SetSettleFlag(string bettransSet, GameType gametype, BetRecordInfo betRecordInfo)
         {
             _ = _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, betRecordInfo.TransId, true);
+            _ = _settledBLL.SetSettleFlagOfMonthlyBettrans(bettransSet, betRecordInfo);
         }
     }
 }

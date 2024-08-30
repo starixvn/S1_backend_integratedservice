@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System.Text;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
+using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyCore.Model.Exceptions;
@@ -98,7 +99,7 @@ public class TpHelper : ThirdPartyHelperBase
         var apiKey = config["ApiKey"];
         var apiUrl = config["ApiUrl"];
 
-        var detail = TpBetRecordProvider.DbQuery("Service_Bettrans_DragonGaming_BetDetailParam_Get", new { _TransId = getBetDetail.TransId }, DataBase.Report);
+        var detail = TpBetRecordProvider.DbQuery("Service_BettransRng_DragonGaming_BetDetail_Get", new { _TransId = getBetDetail.TransId }, DataBase.Report);
 
         var tpCurrency = new TpCurrency()
         {
@@ -144,7 +145,25 @@ public class TpHelper : ThirdPartyHelperBase
 
     public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
     {
-        throw new NotImplementedException();
+        var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransRng_DragonGaming_Detail_Get", new { betRecordInfo.TransId }, DataBase.Main);
+        if (detail == null)
+        {
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+        }
+
+        return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+        {
+            GameID = detail.GetStringValue("game_id"),
+            Game = tpGameType.TypeName,
+            RefNo = detail.GetStringValue("round_id"),
+            Title = tpGameType.TypeName,
+            MatchID = betRecordInfo.TransId,
+            BetType = string.Empty,
+            BetChoice = string.Empty,
+            Result = string.Empty,
+            DeviceType = DeviceType.None,
+            IP = string.Empty
+        };
     }
 
     #region Transfer Methods

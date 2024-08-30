@@ -2,7 +2,6 @@
 using System.Globalization;
 
 using Dapper;
-using Google.Protobuf.WellKnownTypes;
 using MySql.Data.MySqlClient;
 
 using Newtonsoft.Json;
@@ -2265,7 +2264,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             var tpId = Tp.DragonGaming;
             var tpGameType = GameType.DragonGaming_RNG;
-            var tpCategory = TpCategory.Slots;
             var InsSpName = "Service_BettransRng_DragonGaming_Ins";
 
             using var conn = _mainDbClient.GetMySqlConnection();
@@ -2275,6 +2273,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             try
             {
                 var p = new DynamicParameters(bettingData);
+                p.Add("SettleFlag", (int)SettleFlag.Running);
 
                 result = _mainDbClient.Execute(InsSpName, p, conn, trans);
                 if (result > 0 && bettingData.amount != 0)
