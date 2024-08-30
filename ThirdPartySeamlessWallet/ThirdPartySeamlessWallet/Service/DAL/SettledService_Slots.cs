@@ -7396,7 +7396,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             refundData.round_id,
                             (int)tpGameType,
                             tpCategory,
-                            refundData.transaction_id,
+                            refundData.round_id,
                             TransType.Refunds,
                             null,
                             out _,
@@ -7486,18 +7486,22 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
 
                 result = _mainDbClient.Execute(InsSpName, p, conn, trans);
+
                 if (result > 0)
                 {
                     if (payoutData.amount != 0)
                     {
-                        result = PayoutV2(
+                        result = _mainDbClient.Execute(InsSpName, p, conn, trans);
+                        if (result > 0 && payoutData.amount != 0)
+                        {
+                            result = PayoutV2(
                             tpCustInfo,
                             Math.Abs(payoutData.amount),
                             (int)tpId,
                             payoutData.round_id,
                             (int)tpGameType,
                             tpCategory,
-                            payoutData.transaction_id,
+                            payoutData.round_id,
                             TransType.Payout,
                             null,
                             out afterAmount,
@@ -7505,7 +7509,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                             out bonusId,
                             conn,
                             trans
-                        );
+                            );
+                        }
                     }
 
                     if (result > 0 && payoutData.round_end_state)

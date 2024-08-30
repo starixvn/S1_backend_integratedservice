@@ -142,14 +142,7 @@ public class DragonGamingBLL : IDragonGamingBLL
             int result = 0;
             decimal tpAffterAmount = 0m;
 
-            if (request.amount is 0)
-            {
-                result = 1;
-            }
-            else
-            {
-                result = Payout(request, tpCustInfo, out tpAffterAmount);
-            }
+            result = Payout(request, tpCustInfo, out tpAffterAmount);
 
             if (result > 0)
             {
