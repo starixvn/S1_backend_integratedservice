@@ -78,7 +78,17 @@ public class TpHelper : ThirdPartyHelperBase
 
         var json = JsonConvert.DeserializeObject<GameLaunchResponse>(result);
 
-        if (json is null || json.result is null || string.IsNullOrWhiteSpace(json.result.launch_url))
+        if (json?.error_detail is not null)
+        {
+            return new ApiResult()
+            {
+                ErrorCode = ErrorCode.Fail,
+                RawErrorCode = "-1",
+                RawMessage = JsonConvert.SerializeObject(json.error_detail),
+            };
+        }
+
+        if (json is null || json?.result is null || string.IsNullOrWhiteSpace(json?.result?.launch_url))
             return new ApiResult()
             {
                 ErrorCode = ErrorCode.Fail,
@@ -126,6 +136,11 @@ public class TpHelper : ThirdPartyHelperBase
             throw new BetDetailNotFoundException($"{getBetDetail.TransId} get bet detail fail. {JsonConvert.SerializeObject(result)}");
 
         var json = JsonConvert.DeserializeObject<GameRoundHistoryResponse>(result);
+
+        if (json?.error_detail is not null)
+        {
+            throw new BetDetailNotFoundException($"{getBetDetail.TransId} get bet detail error. {JsonConvert.SerializeObject(json.error_detail)}");
+        }
 
         if (json is null || json.result is null || string.IsNullOrWhiteSpace(json.result.round_info))
             throw new BetDetailNotFoundException($"{getBetDetail.TransId} bet detail not found. {JsonConvert.SerializeObject(result)}");

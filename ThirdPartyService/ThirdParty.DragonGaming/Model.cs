@@ -1,5 +1,12 @@
 ﻿namespace ThirdParty.DragonGaming;
 
+internal class CommonResponse_ErrorDetail
+{
+    public int? id { get; set; }
+    public string code { get; set; }
+    public string message { get; set; }
+}
+
 #region Login
 internal class GameLaunchRequest
 {
@@ -29,6 +36,8 @@ internal class GameLaunchContext
 
 internal class GameLaunchResponse
 {
+    public int? error { get; set; }
+    public CommonResponse_ErrorDetail error_detail { get; set; }
     public GameLaunchResult result { get; set; }
 }
 
@@ -52,6 +61,8 @@ internal class GameRoundHistoryRequest
 
 internal class GameRoundHistoryResponse
 {
+    public int? error { get; set; }
+    public CommonResponse_ErrorDetail error_detail { get; set; }
     public GameRoundHistoryResult result { get; set; }
 }
 
