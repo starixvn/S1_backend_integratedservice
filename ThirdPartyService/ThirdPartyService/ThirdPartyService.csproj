@@ -55,6 +55,7 @@
     <ProjectReference Include="..\ThirdParty.MG\ThirdParty.MG.csproj" />
     <ProjectReference Include="..\ThirdParty.OneGaming\ThirdParty.OneGaming.csproj" />
     <ProjectReference Include="..\ThirdParty.Pegasus\ThirdParty.Pegasus.csproj" />
+    <ProjectReference Include="..\ThirdParty.PG2\ThirdParty.PG2.csproj" />
     <ProjectReference Include="..\ThirdParty.PG\ThirdParty.PG.csproj" />
     <ProjectReference Include="..\ThirdParty.PlayTech\ThirdParty.PlayTech.csproj" />
     <ProjectReference Include="..\ThirdParty.PNG\ThirdParty.PNG.csproj" />
