@@ -55,7 +55,7 @@ namespace ThirdPartyWager.Workers
                     {
                         foreach (var item in TpCurrencyList.Where(item => config.CurrencyData.ContainsKey(item.TpCurrencyId)))
                         {
-                            quick = await _wagerV8BLL.ExecWagerWorker(config, tpType, timeRange, item.TpCurrencyId);
+                            quick = await _wagerV8BLL.ExecWagerWorker(config, tpType, timeRange, item.TpCurrencyId, siteId.SiteId);
                             if (!isFast && quick) isFast = true;
                         }
                     }
