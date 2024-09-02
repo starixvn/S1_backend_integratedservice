@@ -173,7 +173,7 @@ namespace ThirdParty.Live22
                 {
                     return new BaseDetail(getBetDetail.TpGameTypeOption)
                     {
-                        TransId = getBetDetail.TransId,
+                        TransId = $"{getBetDetail.TransId} ({resultId})",
                         DetailUrl = json.Payload.ReturnUrl,
                         TpCurrency = tpCurrency,
                     };

@@ -179,6 +179,25 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             return _mySqlClient.Query<BonusStatus>(sqlScript, CommandType.Text).FirstOrDefault();
         }
 
+        public BonusStatus ResetBonus(int bonusId, decimal bonusAmount, decimal rollover, decimal turnover)
+        {
+            var sqlScript =
+                @$"UPDATE CustBonusWinLoss SET Winnings=0,Losses=0 WHERE BonusId='{bonusId}';" +
+                @$"UPDATE BonusInfo SET Status=1 WHERE BonusId='{bonusId}';" +
+                @$"UPDATE CustBonus SET Bonus= {bonusAmount}, Status=1 WHERE BonusId='{bonusId}';" +
+                @$"UPDATE CustBonusRollover SET Turnover = {turnover}, Rollover = {rollover}, Status=1 WHERE BonusId='{bonusId}';";
+            return _mySqlClient.Query<BonusStatus>(sqlScript, CommandType.Text).FirstOrDefault();
+        }
+
+        public BonusStatus SetBonusStatus(int bonusId, int status)
+        {
+            var sqlScript =                
+                @$"UPDATE BonusInfo SET Status={status} WHERE BonusId='{bonusId}';" +
+                @$"UPDATE CustBonus SET Status={status} WHERE BonusId='{bonusId}';" +
+                @$"UPDATE CustBonusRollover SET Turnover = 0, Status={status} WHERE BonusId='{bonusId}';";
+            return _mySqlClient.Query<BonusStatus>(sqlScript, CommandType.Text).FirstOrDefault();
+        }
+
         /// <summary>
         /// 取回最後一筆BonusLog紀錄
         /// </summary>
@@ -197,10 +216,27 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             return _mySqlClient.Query<FinancialLog>(sqlScript, CommandType.Text).FirstOrDefault();
         }
 
-        public TurnOverLog GetTurnOverLog(string transId)
+        public int CreateTurnOverLog(decimal turnOver, int turnOverType, TpCustInfo tpCustInfo, BetRecordInfo betRecord)
+        {
+            var mainType = turnOver > 0 ? 1 : 2;
+            var sqlScript =
+                @$"INSERT INTO TurnOverLog_{DateTime.Now:yyyyMM} 
+                (TurnOverType, CustId, UserName, SiteId, TpId, GameType, MainType, ChangeTurnOver, BeforeTurnOver, AfterTurnOver, Memo, BonusId, RefTransId) VALUES 
+                ({turnOverType}, {tpCustInfo.CustId}, '{tpCustInfo.UserName}', {tpCustInfo.SiteId}, {betRecord.TpId}, {(int)betRecord.GameType}, {mainType}, {turnOver}, 0, 0, 'test', {betRecord.BonusId}, '{betRecord.TransId}');";
+            var insert = _mySqlClient.Execute(sqlScript, CommandType.Text);
+            return insert;
+        }
+
+        public TurnOverLog GetLastTurnOverLog(string transId)
+        {
+            var sqlScript = @$"SELECT * FROM TurnOverLog_{DateTime.Now:yyyyMM} WHERE RefTransId='{transId}' order by Id desc;";
+            return _mySqlClient.Query<TurnOverLog>(sqlScript, CommandType.Text).FirstOrDefault();
+        }
+
+        public IEnumerable<TurnOverLog> GetTurnOverLogList(string transId)
         {
             var sqlScript = @$"SELECT * FROM TurnOverLog_{DateTime.Now:yyyyMM} WHERE RefTransId='{transId}';";
-            return _mySqlClient.Query<TurnOverLog>(sqlScript, CommandType.Text).FirstOrDefault();
+            return _mySqlClient.Query<TurnOverLog>(sqlScript, CommandType.Text);
         }
 
         public CustWithdrawalLimit GetCustWithdrawalLimit(int custId)
@@ -212,6 +248,12 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         public BonusStatus ResetCustWithdrawalLimit(int custId)
         {
             var sqlScript = @$"UPDATE CustWithdrawalLimit SET WithdrawalLimit=100000,TurnOver=10000 WHERE CustId='{custId}';";
+            return _mySqlClient.Query<BonusStatus>(sqlScript, CommandType.Text).FirstOrDefault();
+        }
+
+        public BonusStatus SetCustWithdrawalLimit(int custId, decimal withdrawalLimit, decimal turnOver)
+        {
+            var sqlScript = @$"UPDATE CustWithdrawalLimit SET WithdrawalLimit={withdrawalLimit},TurnOver={turnOver} WHERE CustId='{custId}';";
             return _mySqlClient.Query<BonusStatus>(sqlScript, CommandType.Text).FirstOrDefault();
         }
 

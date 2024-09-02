@@ -13,6 +13,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiSGBLL _apiSGBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = 8;
+        private readonly Dictionary<int, SGConfig> _siteConfigDic;
 
 
         public FinanceSGBLL(IServiceProvider provider)
@@ -22,6 +23,7 @@ namespace ThirdPartyWager.Service.BLL
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _apiSGBLL = provider.GetRequiredService<ApiSGBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SGConfig>(Tp.SG.ToString());
         }
 
         public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
@@ -36,6 +38,15 @@ namespace ThirdPartyWager.Service.BLL
             var _currencyId = tpCurrencyList.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
 
             var getReportData = JsonConvert.DeserializeObject<List<CurrencyStatsData_SG>>(JsonConvert.SerializeObject(reportData));
+            var data = getReportData.GroupBy(i => i.currency).Select(g => new
+            {
+                Currency = g.Key,
+                betAmt = g.Sum(s => s.betAmt),
+                winLoss = g.Sum(s => s.winLoss),
+                bonusAmt = g.Sum(s => s.bonusAmt),
+                jackpotAmount = g.Sum(s => s.jackpotAmount),
+                jpWin = g.Sum(s => s.jpWin),
+            });
 
             foreach (var item in getReportData)
             {
@@ -59,27 +70,39 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
         {
             var reportData = new List<dynamic>();
-            CurrencyStats_SG getWagerSummary = await _apiSGBLL.GetBetSummaryByTime(setting, reportTime.startTime, reportTime.endTime);
+            var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+            foreach (var site in siteList)
+            {
+                if(site.TicketKey == 0)
+                {
+                    continue;
+                }
 
-            // error condition
-            var errorCode = getWagerSummary.code;
-            if (errorCode != 0)
-            {
-                var msg = "THIRD_PARTY_ERROR";
-                _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
-                throw systemException;
-            }
-            if (errorCode == 0 && getWagerSummary.resultCount == 0)
-            {
-                var msg = "NO_DATA";
-                _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                return reportData;
-            }
+                // 分Site取得TpList
+                setting = _siteConfigDic[site.SiteId];
 
-            foreach (var item in getWagerSummary.list)
-            {
-                reportData.Add(item);
+                CurrencyStats_SG getWagerSummary = await _apiSGBLL.GetBetSummaryByTime(setting, reportTime.startTime, reportTime.endTime);
+
+                // error condition
+                var errorCode = getWagerSummary.code;
+                if (errorCode != 0)
+                {
+                    var msg = "THIRD_PARTY_ERROR";
+                    _logger.LogError($"{msg}\r\nSiteId={site.SiteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                    SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
+                    throw systemException;
+                }
+                if (errorCode == 0 && getWagerSummary.resultCount == 0)
+                {
+                    var msg = "NO_DATA";
+                    _logger.LogInformation($"{msg}\r\nSiteId={site.SiteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                    return reportData;
+                }
+
+                foreach (var item in getWagerSummary.list)
+                {
+                    reportData.Add(item);
+                }
             }
 
             return reportData;

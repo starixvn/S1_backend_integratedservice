@@ -18,7 +18,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly SettledBLL _settledBLL;
         private readonly Tp _thisTp;
         private readonly int _gameType = 0;
-        private readonly WMConfig _siteConfig;
+        private readonly Dictionary<int, WMConfig> _siteConfigDic;
 
         public WMController(IServiceProvider provider)
         {
@@ -30,7 +30,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             _environment = provider.GetRequiredService<IHostEnvironment>();
             _thisTp = Tp.WM;
             _gameType = (int)GameType.WM_LiveCasino;
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<WMConfig>(_thisTp.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<WMConfig>(_thisTp.ToString());
         }
 
         #region Request
@@ -99,9 +99,18 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return resp;
             }
 
-            var getTpCurrency = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getReq.user, _gameType);
-            string currency = getTpCurrency.TpCurrencyId;
-            if (getReq.signature != _siteConfig.CurrencyData[currency].signature)
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, getReq.user);
+            if (tpCustInfo.SiteId == 0)
+            {
+                resp.errorCode = 10303;
+                resp.errorMessage = "signature error (SiteId)";
+                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(resp)}", $"{_thisTp}_signature");
+                return resp;
+            }
+
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+            string currency = tpCustInfo.TpCurrencyId;
+            if (getReq.signature != config.CurrencyData[currency].signature)
             {
                 resp.errorCode = 10303;
                 resp.errorMessage = "signature error";

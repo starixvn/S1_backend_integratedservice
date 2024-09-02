@@ -91,7 +91,13 @@ namespace ThirdParty.UuSlots
 
         #endregion
 
-        
+        public class BettransData_UuSlot
+        {
+            public string TicketNo { get; set; }
+            public string GameRoundId { get; set; }
+            public string ResultId { get; set; }
+            public int TicketType { get; set; }
+        }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -175,7 +181,7 @@ namespace ThirdParty.UuSlots
                 {
                     return new BaseDetail(getBetDetail.TpGameTypeOption)
                     {
-                        TransId = getBetDetail.TransId,
+                        TransId = $"{getBetDetail.TransId} ({resultId})",
                         DetailUrl = json.Payload.ReturnUrl,
                         TpCurrency = tpCurrency,
                     };
@@ -206,6 +212,8 @@ namespace ThirdParty.UuSlots
             var GameId = detailList.GetFirstStringValue("GameId");
             var GameRoundId = detailList.GetFirstStringValue("GameRoundId");
             var IpAddress = detailList.GetFirstStringValue("IpAddress");
+            var details = JsonConvert.DeserializeObject<IList<BettransData_UuSlot>>(JsonConvert.SerializeObject(detailList));
+            var resultId = details.Where(i => i.TicketType == 4).FirstOrDefault()?.ResultId;
 
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
@@ -213,7 +221,7 @@ namespace ThirdParty.UuSlots
                 Game = GameId,
                 RefNo = GameRoundId,
                 Title = tpGameType.TypeName,
-                MatchID = string.Empty,
+                MatchID = resultId,
                 BetType = string.Empty,
                 BetChoice = string.Empty,
                 Result = string.Empty,

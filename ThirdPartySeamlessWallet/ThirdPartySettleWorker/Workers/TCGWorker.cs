@@ -81,13 +81,17 @@ namespace ThirdPartySettleWorker.Workers
                     try
                     {
                         var unsettled = _tpUnSettledBLL.GetTpUnsettleData<TCGSettleData>(getSP, new { TransId = transId }, DataBase.Wager).FirstOrDefault();
-                        var isClosed = unsettled.betStatus != 0;
+                        var isSettle = unsettled.betStatus != 0;
 
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
                         var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
                         var referenceNo = string.Empty;
 
-                        if (isClosed)
+                        var settlementType = SettlementType.UnSettled;
+                        decimal winLostAmount = 0;
+                        var ticketStatus = TicketStatus.UnSettled;
+                        
+                        if (isSettle)
                         {
                             //cancel update success
                             if ((gameType == GameType.TCG_SEA_Lottery && unsettled.betStatus == 3)
@@ -98,23 +102,41 @@ namespace ThirdPartySettleWorker.Workers
                             }
 
                             //settle amount check
-                            var chcekData = _tpUnSettledBLL.GetTpUnsettleData<TCGCheckData>("Service_BettransLottery_TCG_Check",
+                            var checkData = _tpUnSettledBLL.GetTpUnsettleData<TCGCheckData>("Service_BettransLottery_TCG_Check",
                                new { TpUserName = unsettled.Account, unsettled.OrderNum }, DataBase.Main)?.FirstOrDefault();
-                            if (chcekData == null)
+                            if (checkData == null)
                             {
                                 _logger.LogWarning($"TCG Bettrans empty || TransId : {transId}  OrderNum: {unsettled.OrderNum}");
                                 continue;
                             }
 
-                            var payout = Math.Round(chcekData.Payout / tpCurrency.ExchangeRate, 2, MidpointRounding.AwayFromZero);
-                            var stake = Math.Round(chcekData.Stake / tpCurrency.ExchangeRate, 2, MidpointRounding.AwayFromZero);
-                            if (unsettled.Stake != Math.Round(chcekData.Stake / tpCurrency.ExchangeRate, 2, MidpointRounding.AwayFromZero)
+                            var payout = Math.Round(checkData.Payout / tpCurrency.ExchangeRate, 2, MidpointRounding.AwayFromZero);
+                            var stake = Math.Round(checkData.Stake / tpCurrency.ExchangeRate, 2, MidpointRounding.AwayFromZero);
+                            if (unsettled.Stake != Math.Round(checkData.Stake / tpCurrency.ExchangeRate, 2, MidpointRounding.AwayFromZero)
                                 || unsettled.WinLostAmount != (payout - stake))
                             {
                                 _logger.LogWarning($"TCG settle amount check fail || TransId : {transId}  OrderNum: {unsettled.OrderNum}");
                                 continue;
                             }
                             referenceNo = _mainDbClient.QueryFirst<string>("Service_BettransLottery_TCG_ReferenceNo_Get", new { TpUserName = unsettled.Account, unsettled.OrderNum });
+                            
+                            settlementType = SettlementType.SettledForValid;
+                            winLostAmount = unsettled.WinLostAmount;
+                            ticketStatus = winLostAmount > 0 ? TicketStatus.Win : TicketStatus.Lost;
+                        }
+                        else
+                        {
+                            var checkCancelData = _tpUnSettledBLL.GetTpUnsettleData<TCGCancelCheckData>("Service_BettransLottery_TCG_CancelCheck", 
+                                new { TpUserName = unsettled.Account, unsettled.OrderNum }, DataBase.Main)?.FirstOrDefault();
+
+                            if (checkCancelData is not null &&
+                                checkCancelData.TicketType == (int) BettransType.CancelBet &&
+                                checkCancelData.TicketStatus == (int) TicketStatus.Refund)
+                            {
+                                settlementType = SettlementType.SettledForInvalid;
+                                ticketStatus = TicketStatus.Refund;
+                                isSettle = true;
+                            }
                         }
 
                         if (tpCurrency.ExchangeRate > 0)
@@ -129,20 +151,21 @@ namespace ThirdPartySettleWorker.Workers
                             TpId = (int)Tp,
                             Stake = unsettled.Stake,
                             ValidBet = unsettled.ValidBet,
-                            WinlostAmount = isClosed ? unsettled.WinLostAmount : 0,
+                            WinlostAmount = winLostAmount,
                             TransId = unsettled.TransId,
                             GameType = gameType,
                             TpUserName = unsettled.Account,
                             SettledTime = unsettled.SettleTime,
                             TransTime = DateTimeOffset.FromUnixTimeSeconds(unsettled.TransTime).AddHours(-8).ToUnixTimeSeconds(),
-                            SettlementType = isClosed ? SettlementType.SettledForValid : SettlementType.UnSettled,
+                            SettlementType = settlementType,
                             GameID = unsettled.GameId,
-                            ReferenceNo = referenceNo
+                            ReferenceNo = referenceNo,
+                            TicketStatus = ticketStatus
                         };
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)
                         {
-                            if (isClosed)
+                            if (isSettle)
                             {
                                 _tpUnSettledBLL.SetSettleFlag(setSP,
                                 new
@@ -182,5 +205,11 @@ namespace ThirdPartySettleWorker.Workers
     {
         public decimal Stake { get; set; }
         public decimal Payout { get; set; }
+    }
+    
+    public class TCGCancelCheckData
+    {
+        public int TicketType { get; set; }
+        public int TicketStatus { get; set; }
     }
 }
