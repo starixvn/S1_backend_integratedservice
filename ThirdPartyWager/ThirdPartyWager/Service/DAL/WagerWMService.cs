@@ -1,30 +1,26 @@
-﻿using Dapper;
-using Microsoft.Extensions.Configuration;
-using MySql.Data.MySqlClient;
-using System.Data;
+﻿using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Service.DAL
 {
     public class WagerWMService
     {
-        private readonly IConfiguration configuration;
+        private readonly MySqlClient _wagerDbClient;
 
-        public WagerWMService(IConfiguration configuration)
+        public WagerWMService(IServiceProvider provider)
         {
-            this.configuration = configuration;
+            _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
         }
 
         public int InsertWager(BetWM bet)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.Execute("Service_TpWagerWM_Ins_V2", bet, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.Execute("Service_TpWagerWM_Ins_V2", bet);
         }
 
-        public WagerWMTotal GetWagerTotal(long beginTime, long endTime, string currency)
+        public WagerWMTotal GetWagerTotal(long beginTime, long endTime, string currency, int siteId)
         {
-            using var conn = new MySqlConnection(configuration.GetConnectionString("ConnectionStringWager"));
-            return conn.QueryFirstOrDefault<WagerWMTotal>("Service_TpWagerWM_Total_Get", new { BeginTime = beginTime, EndTime = endTime, Currency = currency }, commandType: CommandType.StoredProcedure);
+            return _wagerDbClient.QueryFirst<WagerWMTotal>("Service_TpWagerWM_Total_Get_V2", new { BeginTime = beginTime, EndTime = endTime, Currency = currency, SiteId = siteId });
         }
     }
 }
