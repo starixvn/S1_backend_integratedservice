@@ -259,7 +259,6 @@ namespace ThirdPartyWager.Extensions
 
             services.AddSingleton<WagerWMBLL>();
             services.AddSingleton<ApiWMBLL>();
-            services.AddSingleton<WagerRedoWMBLL>();
             services.AddSingleton<FinanceWMBLL>();
 
             services.AddHostedService<WagerWM>();
