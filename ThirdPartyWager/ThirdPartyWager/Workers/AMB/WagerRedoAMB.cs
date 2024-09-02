@@ -9,16 +9,16 @@ namespace ThirdPartyWager.Workers
         private readonly string _tpName = Tp.AMB.ToString();
         private Timer _timer;
         private readonly WagerAMBBLL _wagerAMBBLL;
-        private readonly ILogger<WagerGA> _logger;
+        private readonly ILogger<WagerRedoAMB> _logger;
         private readonly int timeRange = 9; //in minutes
-        private readonly int quickTime = 5; // in minutes
+        private readonly int quickTime = 2; // in minutes
         private readonly int runTime = 5; // in minutes
         private readonly int tpType = (int)WagerTimerType.RedoWager;
 
         public WagerRedoAMB(IServiceProvider provider)
         {
             _wagerAMBBLL = provider.GetRequiredService<WagerAMBBLL>();
-            _logger = provider.GetRequiredService<ILogger<WagerGA>>();
+            _logger = provider.GetRequiredService<ILogger<WagerRedoAMB>>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)

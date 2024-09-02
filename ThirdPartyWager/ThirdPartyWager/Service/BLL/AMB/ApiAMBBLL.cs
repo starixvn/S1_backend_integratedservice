@@ -14,7 +14,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Log2File _log2File;
         private readonly ILogger<ApiAMBBLL> _logger;
         private readonly string _tpName = Tp.AMB.ToString();
-        private readonly AMBConfig _siteAMBConfig;
+        private readonly Dictionary<int, AMBConfig> _siteConfigDic;
 
         public ApiAMBBLL(IServiceProvider provider)
         {
@@ -22,12 +22,12 @@ namespace ThirdPartyWager.Service.BLL
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<ApiAMBBLL>>();
-            _siteAMBConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AMBConfig>(_tpName);
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<AMBConfig>(_tpName);
         }
 
-        public async Task<Wager_AMB> GetBetListByTime(string startTime, string endTime, string currency, int gameType)
+        public async Task<Wager_AMB> GetBetListByTime(string startTime, string endTime, string currency, int gameType, int siteId)
         {
-            var settingByGameType = GetTpListByGameType(currency, gameType);
+            var settingByGameType = GetTpListByGameType(currency, gameType, siteId);
             var apiUrl = settingByGameType["ApiUrl"];
             var agent = settingByGameType["Agent"];
             var secretKey = settingByGameType["SecretKey"];
@@ -42,8 +42,8 @@ namespace ThirdPartyWager.Service.BLL
                 endDate = endTime,
                 limit = 1000,
             };
-            // sleep 12 sec
-            Thread.Sleep(12000);
+            // sleep 10 sec
+            Thread.Sleep(10000);
             var sParam = JsonConvert.SerializeObject(param);
 
             // request
@@ -53,9 +53,9 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task<CurrencyStats_AMB> GetBetSummaryByTime(string currency, int gameType, string startTime, string endTime, int perPage, int page)
+        public async Task<CurrencyStats_AMB> GetBetSummaryByTime(string currency, int gameType, string startTime, string endTime, int perPage, int page, int siteId)
         {
-            var settingByGameType = GetTpListByGameType(currency, gameType);
+            var settingByGameType = GetTpListByGameType(currency, gameType, siteId);
             var apiUrl = settingByGameType["ApiUrl"];
             var agent = settingByGameType["Agent"];
             var secretKey = settingByGameType["SecretKey"];
@@ -71,8 +71,8 @@ namespace ThirdPartyWager.Service.BLL
                 limit = perPage,
                 page = page
             };
-            // sleep 12 sec
-            Thread.Sleep(12000);
+            // sleep 10 sec
+            Thread.Sleep(10000);
             var sParam = JsonConvert.SerializeObject(param);
 
             // request
@@ -81,28 +81,32 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        private Dictionary<string, string> GetTpListByGameType(string currency, int gameType)
+        private Dictionary<string, string> GetTpListByGameType(string currency, int gameType, int siteList)
         {
             var result = new Dictionary<string, string>();
+            var config = _siteConfigDic[siteList];
 
             switch (gameType)
             {
                 case (int)GameType.AMB_Poker:
+                    var pokerCurrencyData = config.PokerCurrencyData[currency];
+
                     result = new Dictionary<string, string>
                     {
-                        { "ApiUrl", _siteAMBConfig.PokerApiUrl },
-                        { "Agent", _siteAMBConfig.PokerAgent },
-                        { "SecretKey", _siteAMBConfig.PokerSecretKey },
+                        { "ApiUrl", pokerCurrencyData.ApiUrl },
+                        { "Agent", pokerCurrencyData.Agent },
+                        { "SecretKey", pokerCurrencyData.SecretKey },
                         { "HeaderKey", "x-amb-signature" }
                     };
                     break;
                 case (int)GameType.AMB_RNG:
-                    var slotCurrencyConfig = _siteAMBConfig.SlotCurrencyAgent.FirstOrDefault(x => x.CurrencyId == currency);
+                    var slotCurrencyData = config.SlotCurrencyData[currency];
+
                     result = new Dictionary<string, string>
                     {
-                        { "ApiUrl", slotCurrencyConfig.SlotApiUrl },
-                        { "Agent", slotCurrencyConfig.Agent },
-                        { "SecretKey", slotCurrencyConfig.SecretKey },
+                        { "ApiUrl", slotCurrencyData.ApiUrl },
+                        { "Agent", slotCurrencyData.Agent },
+                        { "SecretKey", slotCurrencyData.SecretKey },
                         { "HeaderKey", "x-ambslot-signature" }
                     };
                     break;
