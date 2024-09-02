@@ -162,6 +162,11 @@ namespace ThirdPartyWager.Service.BLL
             return _mainDbClient.QueryAsync<SkywindUnsettleCheck>("Service_Skywind_Unsettle_Check", null);
         }
 
+        public SkywindUnsettleCustInfo GetUnsettleSiteIdByTransId(string YYYYMM,string TransId)
+        {
+            return _mainDbClient.QueryFirst<SkywindUnsettleCustInfo>("Service_Skywind_Unsettle_SiteId_Get", new { YYYYMM = YYYYMM, TransId = TransId });
+        }
+
         private async Task<JwtToken> GetJwtTokenAsync(string apiUrl, string username, string password, string secretKey)
         {
             string url = $"{apiUrl}/login";

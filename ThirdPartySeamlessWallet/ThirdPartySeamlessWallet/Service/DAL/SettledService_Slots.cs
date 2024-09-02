@@ -5860,9 +5860,15 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     _mainDbClient.RollbackAndDisposeConnection(conn, trans);
                 }
             }
-            catch (Exception ex)
+            catch (MySqlException mySqlEx)
             {
-                logger.LogError(ex, ex.Message);
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+
+                logger.LogError(mySqlEx, mySqlEx.Message);
                 throw;
             }
 

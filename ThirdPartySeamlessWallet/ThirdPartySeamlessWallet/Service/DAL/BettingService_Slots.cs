@@ -1730,24 +1730,38 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
             using var trans = conn.BeginTransaction();
+
             var result = 0;
-            result = _partitionService.Execute(partitionTime, "Service_Bettrans_Skywind_Ins", bettingData_Skywind, trans);
-
-            if (result > 0 && bettingData_Skywind.amount != 0)
+            try
             {
-                var TransId = $"{bettingData_Skywind.round_id}-{bettingData_Skywind.game_id}";
-                result = PlaceBet(tpCustInfo, Math.Abs(bettingData_Skywind.amount) * -1, (int)Tp.Skywind, TransId, gameType, TransId, out afterAmount, ref bonusId, out _, conn, trans);
-            }
+                result = _partitionService.Execute(partitionTime, "Service_Bettrans_Skywind_Ins", bettingData_Skywind, trans);
 
-            if (result > 0)
-            {
-                _mainDbClient.CommitAndDisposeConnection(conn, trans);
-            }
-            else
-            {
-                _mainDbClient.RollbackAndDisposeConnection(conn, trans);
-            }
+                if (result > 0 && bettingData_Skywind.amount != 0)
+                {
+                    var TransId = $"{bettingData_Skywind.round_id}-{bettingData_Skywind.game_id}";
+                    result = PlaceBet(tpCustInfo, Math.Abs(bettingData_Skywind.amount) * -1, (int)Tp.Skywind, TransId, gameType, TransId, out afterAmount, ref bonusId, out _, conn, trans);
+                }
 
+                if (result > 0)
+                {
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+
+                _logger.LogError(mySqlEx, mySqlEx.Message);
+                throw;
+            }
             return result;
         }
         #endregion
