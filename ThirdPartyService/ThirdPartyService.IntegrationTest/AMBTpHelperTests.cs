@@ -61,13 +61,13 @@ namespace ThirdParty.AMB.Tests
             _provider = services.BuildServiceProvider();
         }
 
-        
+
         [SetUp]
         public void Setup()
         {
             //Arrange
             _tpHelper = new TpHelper(_provider);
-            
+
             //THB
             _tpCustInfo = new TpCustInfo()
             {
@@ -83,7 +83,7 @@ namespace ThirdParty.AMB.Tests
                 Status = 1,
                 CStatus = 1,
             };
-            
+
             //Anthoer
             // _tpCustInfo = new TpCustInfo()
             // {
@@ -99,38 +99,36 @@ namespace ThirdParty.AMB.Tests
             //     Status = 1,
             //     CStatus = 1,
             // };
-            
-            _inputs = new AMBConfig()
+            _inputs = new AMBConfig();
+            _inputs.PokerCurrencyData.Add("THB", new CurrencyDataAMB
             {
-                PokerAgent = "nova88thbuataa",
-                PokerApiUrl = "https://api-uat.ambpoker-api.com",
-                PokerSecretKey = "89659806ccc97ecb456e97755cb0c0f4",
-                SlotCurrencyAgent = new List<SlotCurrencyAgent>
-                {
-                    new()
-                    {
-                        CurrencyId = "CNY",
-                        Agent = "nova88cnytestaa",
-                        SlotApiUrl = "https://uat.ambslot-api.com",
-                        SecretKey = "7ad72d245fd206c470cb1d819d2497a2"
-                    },
-                    new()
-                    {
-                        CurrencyId = "THB",
-                        Agent = "nova88thbtestaa",
-                        SlotApiUrl = "https://uat.ambslot-api.com",
-                        SecretKey = "1b15232c9933c8d031a68a98d14a2333"
-                    },
-                    new()
-                    {
-                        CurrencyId = "USD",
-                        Agent = "nova88usd2testaa",
-                        SlotApiUrl = "https://uat.ambslot-api.com",
-                        SecretKey = "f7f4b07890fe30516cf11e643d44cc74"
-                    }
-                }
-            };
-            
+                CurrencyId = "THB",
+                Agent = "nova88thbuataa",
+                ApiUrl = "https://api-uat.ambpoker-api.com",
+                SecretKey = "89659806ccc97ecb456e97755cb0c0f4",
+            });
+            _inputs.SlotCurrencyData.Add("USD", new CurrencyDataAMB
+            {
+                CurrencyId = "USD",
+                Agent = "nova88usdtestaa",
+                ApiUrl = "https://uat.ambslot-api.com",
+                SecretKey = "f7f4b07890fe30516cf11e643d44cc74",
+            });
+            _inputs.SlotCurrencyData.Add("THB", new CurrencyDataAMB
+            {
+                CurrencyId = "THB",
+                Agent = "nova88thbtestaa",
+                ApiUrl = "https://uat.ambslot-api.com",
+                SecretKey = "1b15232c9933c8d031a68a98d14a2333",
+            });
+            _inputs.SlotCurrencyData.Add("CNY", new CurrencyDataAMB
+            {
+                CurrencyId = "CNY",
+                Agent = "nova88cnytestaa",
+                ApiUrl = "https://uat.ambslot-api.com",
+                SecretKey = "7ad72d245fd206c470cb1d819d2497a2",
+            });
+
             _loginDic = new Dictionary<string, string>
             {
                 { "tpGameType", "76" },
@@ -170,7 +168,7 @@ namespace ThirdParty.AMB.Tests
             //Assert
             actual.ErrorCode.Should().Be(ErrorCode.Success);
         }
-        
+
         // 更新為新的方式後不可能沒設定 先註解
         // [Test]
         // public void CreateMemberButNoSetting()

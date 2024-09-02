@@ -129,13 +129,16 @@ namespace ThirdPartySeamlessWallet.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("[controller]/ping")]
-        public string PingTest() => "Ping Ok.";
+        public string PingTest()
+        {
+            return "Ping Ok.";
+        }
 
         #region AMB Poker Actions
 
         [HttpPost]
         [Route("[controller]/balance")]
-        public async Task<dynamic> balanceAsync()
+        public async Task<dynamic> BalanceAsync()
         {
             string logName = $"{thisTp}_balance";
 
@@ -145,7 +148,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             BalanceReq getReq = JsonConvert.DeserializeObject<BalanceReq>(Content);
 
-            BalanceResp getApiResponse = new BalanceResp();
+            BalanceResp getApiResponse = new();
             getApiResponse.status.code = 999;
             getApiResponse.status.message = "Service not available";
 
@@ -174,7 +177,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/bet")]
-        public async Task<dynamic> betAsync()
+        public async Task<dynamic> BetAsync()
         {
             string logName = $"{thisTp}_bet";
 
@@ -184,7 +187,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             BettingDataPK_AMB getReq = JsonConvert.DeserializeObject<BettingDataPK_AMB>(Content);
 
-            BetResp getApiResponse = new BetResp();
+            BetResp getApiResponse = new();
             getApiResponse.status.code = 999;
             getApiResponse.status.message = "Service not available";
 
@@ -206,7 +209,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.status.message = "Success";
                     getApiResponse.data.username = getReq.username;
                     getApiResponse.data.wallet.balance = tpAffterAmount;
-                    getApiResponse.data.wallet.lastUpdate = getCurrentGameTime();
+                    getApiResponse.data.wallet.lastUpdate = GetCurrentGameTime();
                     getApiResponse.data.balance.before = tpAffterAmount + getReq.amount;
                     getApiResponse.data.balance.after = tpAffterAmount;
                     getApiResponse.data.refId = getReq.refId;
@@ -238,7 +241,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/cancel")]
-        public async Task<dynamic> cancelAsync()
+        public async Task<dynamic> CancelAsync()
         {
             string logName = $"{thisTp}_cancel";
 
@@ -248,7 +251,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             CancelDataPK_AMB getReq = JsonConvert.DeserializeObject<CancelDataPK_AMB>(Content);
 
-            BetResp getApiResponse = new BetResp();
+            BetResp getApiResponse = new();
             getApiResponse.status.code = 999;
             getApiResponse.status.message = "Service not available";
 
@@ -261,7 +264,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.status.message = "Success";
                     getApiResponse.data.username = getReq.username;
                     getApiResponse.data.wallet.balance = tpAffterAmount;
-                    getApiResponse.data.wallet.lastUpdate = getCurrentGameTime();
+                    getApiResponse.data.wallet.lastUpdate = GetCurrentGameTime();
                     getApiResponse.data.balance.before = tpAffterAmount + getReq.amount;
                     getApiResponse.data.balance.after = tpAffterAmount;
                     getApiResponse.data.refId = getReq.refId;
@@ -290,7 +293,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/payout")]
-        public async Task<dynamic> payoutAsync()
+        public async Task<dynamic> PayoutAsync()
         {
             string logName = $"{thisTp}_payout";
 
@@ -300,7 +303,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             PayoutDataPK_AMB getReq = JsonConvert.DeserializeObject<PayoutDataPK_AMB>(Content);
 
-            BetResp getApiResponse = new BetResp();
+            BetResp getApiResponse = new();
             getApiResponse.status.code = 999;
             getApiResponse.status.message = "Service not available";
 
@@ -324,7 +327,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.status.message = "Success";
                     getApiResponse.data.username = getReq.username;
                     getApiResponse.data.wallet.balance = tpAffterAmount;
-                    getApiResponse.data.wallet.lastUpdate = getCurrentGameTime();
+                    getApiResponse.data.wallet.lastUpdate = GetCurrentGameTime();
                     getApiResponse.data.balance.before = tpAffterAmount - getReq.amount;
                     getApiResponse.data.balance.after = tpAffterAmount;
                     getApiResponse.data.refId = getReq.refId;
@@ -353,7 +356,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/void")]
-        public async Task<dynamic> voidAsync()
+        public async Task<dynamic> VoidAsync()
         {
             string logName = $"{thisTp}_void";
 
@@ -363,7 +366,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             VoidDataPK_AMB getReq = JsonConvert.DeserializeObject<VoidDataPK_AMB>(Content);
 
-            BetResp getApiResponse = new BetResp();
+            BetResp getApiResponse = new();
             getApiResponse.status.code = 999;
             getApiResponse.status.message = "Service not available";
 
@@ -376,7 +379,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     getApiResponse.status.message = "Success";
                     getApiResponse.data.username = getReq.username;
                     getApiResponse.data.wallet.balance = tpAffterAmount;
-                    getApiResponse.data.wallet.lastUpdate = getCurrentGameTime();
+                    getApiResponse.data.wallet.lastUpdate = GetCurrentGameTime();
                     getApiResponse.data.balance.before = tpAffterAmount + getReq.amount;
                     getApiResponse.data.balance.after = tpAffterAmount;
                     getApiResponse.data.refId = getReq.refId;
@@ -479,7 +482,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         #endregion
 
-        private string getCurrentGameTime()
+        private static string GetCurrentGameTime()
         {
             var currentAt = new DateTimeOffset(DateTime.Now);
             return currentAt.ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd'T'HH:mm:ss.fffZ");

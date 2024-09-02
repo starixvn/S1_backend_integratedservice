@@ -3,33 +3,37 @@ using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL;
 
 public class WagerAMBBLL
 {
+    private readonly ILogger<WagerAMBBLL> _logger;
     private readonly int _tpId = (int)Tp.AMB;
+    private readonly string _tpName = Tp.AMB.ToString();
     private readonly DateTimeHelper _dateTimeHelper;
     private readonly ApiAMBBLL _apiAMBBLL;
     private readonly WagerAMBService _wagerAMBService;
     private readonly ThirdPartyBLL _thirdPartyBLL;
-    private readonly ILogger<WagerAMBBLL> _logger;
     private readonly CommonBLL _commonBLL;
     private readonly TpUnsettleService _tpUnsettleService;
     private readonly IEnumerable<TpCurrency> _tpCurrencyList;
     private readonly int _timeZone = 8;
     private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
+    private readonly Dictionary<int, AMBConfig> _siteConfigDic;
 
     public WagerAMBBLL(IServiceProvider provider)
     {
+        _logger = provider.GetRequiredService<ILogger<WagerAMBBLL>>();
         _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         _apiAMBBLL = provider.GetRequiredService<ApiAMBBLL>();
         _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         _commonBLL = provider.GetRequiredService<CommonBLL>();
         _wagerAMBService = provider.GetRequiredService<WagerAMBService>();
-        _logger = provider.GetRequiredService<ILogger<WagerAMBBLL>>();
         _tpUnsettleService = provider.GetRequiredService<TpUnsettleService>();
-        _tpCurrencyList = _commonBLL.GetTpCurrencyList(_tpId);
+        _tpCurrencyList = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(_tpId);
+        _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<AMBConfig>(_tpName);
     }
 
     public async Task<bool> ExecWagerWorker(int type, int timeRange)
@@ -81,47 +85,63 @@ public class WagerAMBBLL
             (int)GameType.AMB_RNG
         };
 
-        foreach (var gameType in ambGameTypeList)
-        {
-            foreach (var item in _tpCurrencyList)
-            {
-                var currency = item.TpCurrencyId;
-                try
-                {
-                    if (gameType == (int)GameType.AMB_Poker && (currency == "USD" || currency == "CNY"))
-                    {
-                        continue;
-                    }
+        var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId).Where(x => x.TicketKey == 1);
+        var serverList = _commonBLL.GetSiteList();
 
-                    var getWager = await _apiAMBBLL.GetBetListByTime(startTime, endTime, currency, gameType);
-                    if (getWager.status.code != 0)
+        foreach (var site in siteList)
+        {
+            var _setting = _siteConfigDic[site.SiteId];
+            if (_setting == null) continue;
+
+            foreach (var gameType in ambGameTypeList)
+            {
+                var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(serverList.First(x => x.SiteId == site.SiteId).CurrencyList);
+                foreach (var item in _tpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
+                {
+                    var currency = item.TpCurrencyId;
+                    try
                     {
-                        msg = "THIRD_PARTY_ERROR";
-                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(getWager)}");
+                        if (gameType == (int)GameType.AMB_Poker && !_setting.PokerCurrencyData.ContainsKey(item.TpCurrencyId))
+                        {
+                            continue;
+                        }
+
+                        if (gameType == (int)GameType.AMB_RNG && !_setting.SlotCurrencyData.ContainsKey(item.TpCurrencyId))
+                        {
+                            continue;
+                        }
+
+                        Thread.Sleep(5000);
+                        var getWager = await _apiAMBBLL.GetBetListByTime(startTime, endTime, currency, gameType, site.SiteId);
+                        if (getWager.status.code != 0)
+                        {
+                            msg = "THIRD_PARTY_ERROR";
+                            _logger.LogError($"{workerName} {msg}\r\nGameType:{(GameType)gameType}, SiteId:{site.SiteId}, Currency:{currency}\r\n{JsonConvert.SerializeObject(getWager)}");
+                            return false;
+                        }
+
+                        if (getWager.data.totalRecords == 0 || getWager.data.result == null)
+                        {
+                            msg = "NO_DATA";
+                            _logger.LogInformation($"{workerName} {msg}\r\nGameType:{(GameType)gameType}, SiteId:{site.SiteId}, Currency:{currency}\r\n{JsonConvert.SerializeObject(getWager)}");
+                            continue;
+                        }
+
+                        var allBetRecords = getWager.data.result
+                            .SelectMany(user => user.result)
+                            .ToList();
+
+                        foreach (var wager in allBetRecords)
+                        {
+                            var result = InsertNewAMBWager(wager, gameType);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        msg = "FATAL_ERROR";
+                        _logger.LogError(ex, $"{workerName} {msg}\r\nGameType={gameType}, SiteId={site.SiteId}, Currency={currency}\r\n{ex.Message}");
                         return false;
                     }
-
-                    if (getWager.data.totalRecords == 0 || getWager.data.result == null)
-                    {
-                        msg = "NO_DATA";
-                        _logger.LogInformation($"AMB GetWager:{msg}\r\nGameType:{(GameType)gameType},Currency:{currency}\r\n{JsonConvert.SerializeObject(getWager)}");
-                        continue;
-                    }
-
-                    var allBetRecords = getWager.data.result
-                        .SelectMany(user => user.result)
-                        .ToList();
-
-                    foreach (var wager in allBetRecords)
-                    {
-                        var result = InsertNewAMBWager(wager, gameType);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    msg = "FATAL_ERROR";
-                    _logger.LogError(ex, $"{workerName} {msg}\r\ngameType={gameType}\r\ncurrency={currency}\r\n{ex.Message}");
-                    return false;
                 }
             }
         }
@@ -155,7 +175,7 @@ public class WagerAMBBLL
         return (lastTime == null) ? DateTime.Now.AddHours(-1) : lastTime.StartTime.AddSeconds(vary);
     }
 
-    private bool CheckQuick(DateTime workTime, int excess)
+    private static bool CheckQuick(DateTime workTime, int excess)
     {
         var diff = DateTime.Now - workTime;
         return DateTime.Now > workTime && diff.TotalMinutes > excess;
