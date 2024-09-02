@@ -15,12 +15,12 @@ namespace ThirdParty.SG
     public class TpHelper : ThirdPartyHelperBase
     {
         private readonly IReadOnlyDictionary<string, string> _GameNameList;
-        private readonly SGConfig _siteConfig;
+        private readonly Dictionary<int, SGConfig> _siteConfigDic;
 
         public TpHelper(IServiceProvider provider)
         {
             _GameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.SG).ToDictionary(d => d.GameId, d => d.Name);
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SGConfig>(TpEnum.SG.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SGConfig>(TpEnum.SG.ToString());
         }
 
         #region Response
@@ -61,7 +61,7 @@ namespace ThirdParty.SG
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var config = _siteConfig;
+            var config = _siteConfigDic[tpCustInfo.SiteId];
 
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
@@ -261,7 +261,7 @@ namespace ThirdParty.SG
             var DefaultTpCurrencyId = ServerInfoProvider.GetDefaultTpCurrencyIdByTpId(SiteId, (int)TpEnum.SG);
             var currency = (DefaultTpCurrencyId != null) ? DefaultTpCurrencyId.TpCurrencyId : "";
 
-            var config = _siteConfig;
+            var config = _siteConfigDic[SiteId];
 
             var Login = new
             {
