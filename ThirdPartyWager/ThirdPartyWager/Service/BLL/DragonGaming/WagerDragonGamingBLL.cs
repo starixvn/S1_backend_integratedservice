@@ -19,7 +19,7 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetService<ILogger<WagerDragonGamingBLL>>();
         }
 
-        public async Task<bool> GetWagerAsync(DragonGamingConfig setting, string startTime, string endTime)
+        public async Task<bool> GetWagerAsync(DragonGamingConfig setting, string startTime, string endTime, string workerTypeName)
         {
             string msg;
 
@@ -27,14 +27,14 @@ namespace ThirdPartyWager.Service.BLL
 
             if (result.HasError)
             {
-                msg = $"DragonGaming_GetWagerAsync_THIRD_PARTY_ERROR";
+                msg = $"DragonGaming_{workerTypeName}_GetWagerAsync_THIRD_PARTY_ERROR";
                 _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(result)}");
                 return false;
             }
 
             if (result.result.game_history.data.Count == 0)
             {
-                msg = $"DragonGaming_GetWagerAsync_THIRD_PARTY_NO_DATA";
+                msg = $"DragonGaming_{workerTypeName}_GetWagerAsync_THIRD_PARTY_NO_DATA";
                 _logger.LogWarning($"{msg}\r\n{JsonConvert.SerializeObject(result)}");
                 return true;
             }
@@ -49,11 +49,11 @@ namespace ThirdPartyWager.Service.BLL
                 }
                 catch (Exception ex)
                 {
-                    return LogAndReturnFailure(wager, ex);
+                    return LogAndReturnFailure(wager, workerTypeName, ex);
                 }
             }
 
-            _logger.LogInformation($"DragonGaming_GetWagerAsync_SUCCESS, COUNT={data.Count()}");
+            _logger.LogInformation($"DragonGaming_{workerTypeName}_GetWagerAsync_SUCCESS, COUNT={data.Count()}");
 
             return true;
         }
@@ -86,9 +86,9 @@ namespace ThirdPartyWager.Service.BLL
             return convertDataList;
         }
 
-        private bool LogAndReturnFailure(GameHistoryData data, Exception ex = null)
+        private bool LogAndReturnFailure(GameHistoryData data, string workerTypeName, Exception ex = null)
         {
-            string msg = $"INSERT_WAGER(playerId: {data.PlayerID}, roundid: {data.RoundID}, gameid: {data.GameID} )";
+            string msg = $"DragonGaming_{workerTypeName}_INSERT_WAGER(playerId: {data.PlayerID}, roundid: {data.RoundID}, gameid: {data.GameID} )";
             if (ex == null)
             {
                 _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(data)}\r\nresult = -1");

@@ -10,7 +10,8 @@ namespace ThirdPartyWager.Workers
     {
         private readonly int _tpId = (int)Tp.DragonGaming;
         private readonly string _tpName = Tp.DragonGaming.ToString();
-        private readonly int _tpType = (int)WagerTimerType.Wager;
+        private readonly int _workerType = (int)WagerTimerType.Wager;
+        private readonly string _workerTypeName = WagerTimerType.Wager.ToString();
 
         private readonly WagerDragonGamingBLL _wagerDragonGamingBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
@@ -45,7 +46,7 @@ namespace ThirdPartyWager.Workers
             var nowTime = DateTime.Now;
             try
             {
-                var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
+                var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _workerType);
 
                 var timerTime = dataTpTimer?.StartTime ?? nowTime.AddMinutes(-(iRangMins - 1));
                 var last = (dataTpTimer == null) ? iRangMins - 1 : iRangMins;
@@ -60,16 +61,16 @@ namespace ThirdPartyWager.Workers
                     var _setting = _siteConfigDic[siteInfo.SiteId];
                     if (_setting == null) continue;
 
-                    await _wagerDragonGamingBLL.GetWagerAsync(_setting, time.startTime.ToString(), time.endTime.ToString());
+                    await _wagerDragonGamingBLL.GetWagerAsync(_setting, time.startTime.ToString(), time.endTime.ToString(), _workerTypeName.ToString());
                 }
 
-                _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, time.endUnix);
+                _thirdPartyBLL.SetThirdPartyTimer(_tpId, _workerType, time.endUnix);
 
                 isFast = CheckQuick(dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now.AddMinutes(-10), 20);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, $"{_tpName}_{_workerTypeName}:{ex.Message}");
             }
             finally
             {
