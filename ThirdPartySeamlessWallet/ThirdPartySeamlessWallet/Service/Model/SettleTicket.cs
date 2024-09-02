@@ -450,7 +450,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
                 Memo = memo, 
                 RefTransId = BetRecord.TransId
             };
-            return _mainDbClient.Execute("Common_WinLostAmount_Set", _trans, p);
+            return _mainDbClient.Execute("Common_WinLostAmount_Set_V2", _trans, p);
         }
 
         private int SetBonusWinLost(decimal winnings, decimal losses, string memo)
@@ -512,6 +512,34 @@ namespace ThirdPartySeamlessWallet.Service.Model
                 return 0;
             }
 
+            // 扣回流水要先檢查前面是否有新增過才可以扣回
+            if (turnOver < 0)
+            {
+                var check = new
+                {
+                    BetRecord.BonusId,
+                    TpCustInfo.CustId,
+                    TpCustInfo.SiteId,
+                    RefTransId = BetRecord.TransId,
+                };
+
+                // 1.Check CustBonusRollover: Status in (0,1,2,5)，Bonus is running
+                // 2.Check TurnOverLog: Type = 2 & ChangeTurnOver > 0
+                var refTurnOver = _mainDbClient.QueryFirst<decimal>("Service_RolloverTurnover_Check", _trans, check);
+
+                if (refTurnOver == 0)
+                {
+                    return 0;
+                }
+
+                // 扣回的流水比上一次發的流水還多，使用上一次領到的流水扣回
+                var checkTurnOver = refTurnOver + turnOver;
+                if (checkTurnOver < 0)
+                {
+                    turnOver = refTurnOver * -1;
+                }
+            }
+
             var p = new DynamicParameters(new {
                 BetRecord.TpId, 
                 GameType = (int)BetRecord.GameType, 
@@ -524,7 +552,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
             });
 
             p.Add("BonusId", value: BetRecord.BonusId, dbType: DbType.Int32, direction: ParameterDirection.InputOutput);
-            return _mainDbClient.Execute("Service_RolloverTurnover_Set_V3", _trans, p);
+            return _mainDbClient.Execute("Service_RolloverTurnover_Set_V4", _trans, p);
         }
 
         private decimal GetUseBonus(GetTpSeamlessBonusType getTpSeamlessBonusType)
@@ -550,6 +578,32 @@ namespace ThirdPartySeamlessWallet.Service.Model
                 return 0;
             }
 
+            // 扣回流水要先檢查前面是否有新增過才可以扣回
+            if (turnOver < 0)
+            {
+                var check = new
+                {
+                    TpCustInfo.CustId,
+                    TpCustInfo.SiteId,
+                    RefTransId = BetRecord.TransId,
+                };
+
+                // 1.Check TurnOverLog: Type = 1 & ChangeTurnOver > 0
+                var refTurnOver = _mainDbClient.QueryFirst<decimal>("Service_WithdrawalLimitTurnOver_Check", _trans, check);
+
+                if (refTurnOver == 0)
+                {
+                    return 0;
+                }
+
+                // 扣回的流水比上一次發的流水還多，使用上一次領到的流水扣回
+                var checkTurnOver = refTurnOver + turnOver;
+                if (checkTurnOver < 0)
+                {
+                    turnOver = refTurnOver * -1;
+                }
+            }
+
             var p = new { 
                 BetRecord.TpId, 
                 GameType = (int)BetRecord.GameType,
@@ -560,7 +614,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
                 Memo = memo, 
                 RefTransId = BetRecord.TransId,
             };
-            return _mainDbClient.Execute("Common_WithdrawalLimitTurnOver_Set", _trans, p);
+            return _mainDbClient.Execute("Common_WithdrawalLimitTurnOver_Set_V2", _trans, p);
         }
 
         private int SetEffectiveBetSum(decimal stake)

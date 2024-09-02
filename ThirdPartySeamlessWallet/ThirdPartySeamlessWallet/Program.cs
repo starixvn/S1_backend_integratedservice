@@ -7,7 +7,7 @@ using ThirdPartySeamlessWallet.Core.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var remoteUrls = builder.Configuration.GetSection("ConfigService").Get<string[]>();
+var remoteUrls = GetRemoteUrls();
 remoteUrls = builder.Configuration.CheckLocalConfig(builder.Environment, args, remoteUrls);
 builder.Configuration.AddRemoteJsonConfig(remoteUrls);
 
@@ -29,6 +29,19 @@ builder.Host.UseSerilog((context, Configuration) =>
     OverrideLoggerWriteToLFile(Configuration);
 });
 
+var startup = new Startup(builder.Configuration);
+startup.ConfigureServices(builder.Services);
+
+var app = builder.Build();
+startup.Configure(app, builder.Environment);
+
+const int minWorkers = 96;
+const int minIOCPs = 4;
+ThreadPool.SetMinThreads(minWorkers, minIOCPs);
+
+app.Run();
+return;
+
 void OverrideLoggerWriteToLFile(LoggerConfiguration configuration)
 {
     const string cashSiteBrand = "Nova";
@@ -47,14 +60,12 @@ void OverrideLoggerWriteToLFile(LoggerConfiguration configuration)
             restrictedToMinimumLevel: LogEventLevel.Information);
 }
 
-var startup = new Startup(builder.Configuration);
-startup.ConfigureServices(builder.Services);
+string[] GetRemoteUrls()
+{
+    // 如果有 Runtime Environment Variable 優先使用
+    // 沒有則使用預設 AppSetting
+    return Environment.GetEnvironmentVariable("ConfigServiceUrl") is null
+        ? builder.Configuration.GetSection("ConfigService").Get<string[]>()
+        : new List<string>() { Environment.GetEnvironmentVariable("ConfigServiceUrl") }.ToArray();
+}
 
-var app = builder.Build();
-startup.Configure(app, builder.Environment);
-
-const int minWorkers = 96;
-const int minIOCPs = 4;
-ThreadPool.SetMinThreads(minWorkers, minIOCPs);
-
-app.Run();
