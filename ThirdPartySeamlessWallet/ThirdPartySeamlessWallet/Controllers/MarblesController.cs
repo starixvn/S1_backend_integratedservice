@@ -16,7 +16,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly AuthBLL _authBLL;
         private readonly Tp _thisTp;
         private readonly int _gameType;
-        private readonly Log2File _log2File;
         private readonly Dictionary<int, MarblesConfig> _siteConfigDic;
         private readonly IMBSBLL _IMBSBLL;
         
@@ -25,7 +24,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             _IMBSBLL = provider.GetRequiredService<IMBSBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _authBLL = provider.GetRequiredService<AuthBLL>();
-            _log2File = provider.GetRequiredService<Log2File>();
             _thisTp = Tp.Marbles;
             _gameType = (int)GameType.Marbles_Lottery;
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MarblesConfig>(Tp.Marbles.ToString());
