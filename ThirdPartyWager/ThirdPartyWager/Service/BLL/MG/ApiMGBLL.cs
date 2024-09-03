@@ -15,7 +15,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly IConfiguration _configuration;
         private readonly HttpClient _client;
         private readonly string _tpName = Tp.MG.ToString();
-        private readonly MGConfig _siteConfig;
+        private readonly Dictionary<int, MGConfig> _siteConfigDic;
 
         public ApiMGBLL(IServiceProvider provider, IConfiguration configuration)
         {
@@ -24,14 +24,14 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<ApiMGBLL>>();
             _log2File = provider.GetRequiredService<Log2File>();
             _client = httpHelper.GetClientWithHandler(CreateHandler());
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<MGConfig>(_tpName);
-
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MGConfig>(_tpName);
         }
 
-        public async Task<List<MGFailedTransactions>> GetFailedTransactionsAsync(string token, string currencyId)
+        public async Task<List<MGFailedTransactions>> GetFailedTransactionsAsync(string token, string currencyId, int siteId)
         {
-            var apiUrl = _siteConfig.ApiUrl;
-            var currencyData = _siteConfig.CurrencyData[currencyId];
+            var config = _siteConfigDic[siteId];
+            var apiUrl = config.ApiUrl;
+            var currencyData = config.CurrencyData[currencyId];
 
             try
             {
@@ -52,10 +52,11 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        public async Task UpdateFailedTransactionToResolvedState(string token, string txnId, string currencyId)
+        public async Task UpdateFailedTransactionToResolvedState(string token, string txnId, string currencyId, int siteId)
         {
-            var apiUrl = _siteConfig.ApiUrl;
-            var currencyData = _siteConfig.CurrencyData[currencyId];
+            var config = _siteConfigDic[siteId];
+            var apiUrl = config.ApiUrl;
+            var currencyData = config.CurrencyData[currencyId];
 
             try
             {
@@ -69,12 +70,13 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        public async Task<string> GetToken(string tpCurrencyId)
+        public async Task<string> GetToken(string tpCurrencyId, int siteId)
         {
             try
             {
-                var tokenUrl = _siteConfig.TokenUrl;
-                var currencyData = _siteConfig.CurrencyData[tpCurrencyId];
+                var config = _siteConfigDic[siteId];
+                var tokenUrl = config.TokenUrl;
+                var currencyData = config.CurrencyData[tpCurrencyId];
 
                 var httpContent = new FormUrlEncodedContent(new Dictionary<string, string>
                 {
@@ -94,12 +96,13 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        public async Task<IEnumerable<MGPlayerGameAnalysis>> GetPlayerGameAnalysisAsync(string token, string currencyId, DateTime date)
+        public async Task<IEnumerable<MGPlayerGameAnalysis>> GetPlayerGameAnalysisAsync(string token, string currencyId, int siteId, DateTime date)
         {
             try
             {
-                var apiUrl = _siteConfig.ApiUrl;
-                var currencyData = _siteConfig.CurrencyData[currencyId];
+                var config = _siteConfigDic[siteId];
+                var apiUrl = config.ApiUrl;
+                var currencyData = config.CurrencyData[currencyId];
 
                 var url = $"{apiUrl}/agents/{currencyData.AgentCode}/reports/playerGameAnalysis";
                 var parameters = new
@@ -126,12 +129,13 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        public async Task<IEnumerable<MGFortuneRewards>> GetFortuneRewardsAsync(string token, string currencyId, DateTime date)
+        public async Task<IEnumerable<MGFortuneRewards>> GetFortuneRewardsAsync(string token, string currencyId, int siteId, DateTime date)
         {
             try
             {
-                var apiUrl = _siteConfig.ApiUrl;
-                var currencyData = _siteConfig.CurrencyData[currencyId];
+                var config = _siteConfigDic[siteId];
+                var apiUrl = config.ApiUrl;
+                var currencyData = config.CurrencyData[currencyId];
 
                 var url = $"{apiUrl}/agents/{currencyData.AgentCode}/reports/fortuneRewards";
                 var parameters = new
