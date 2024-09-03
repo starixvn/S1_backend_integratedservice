@@ -56,8 +56,15 @@ namespace ThirdPartyWager.Service.Model
     }
     public class SkywindUnsettleCheck
     {
+        public string YYYYMM { get; set; }
         public string TransId { get; set; }
     }
+
+    public class SkywindUnsettleCustInfo
+    {
+        public int SiteId { get; set; }
+    }
+
     public class WagerSkywindThridPartyModel
     {
         public string extTrxId { get; set; }
