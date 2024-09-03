@@ -34,15 +34,11 @@ namespace ThirdPartyWager.Workers
             var nextTimeSpan = TimeSpan.FromMinutes(intervalMinutes);
             try
             {
-                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
-                foreach (var site in siteList)
-                {
-                    var (isSuccess, doQuick) = await _wagerSkywindBLL.UnsettleCheck(site.SiteId);
+                var (isSuccess, doQuick) = await _wagerSkywindBLL.UnsettleCheck();
 
-                    if (doQuick)
-                    {
-                        nextTimeSpan = TimeSpan.FromMinutes(1);
-                    }
+                if (doQuick)
+                {
+                    nextTimeSpan = TimeSpan.FromMinutes(1);
                 }
             }
             catch (Exception ex)
