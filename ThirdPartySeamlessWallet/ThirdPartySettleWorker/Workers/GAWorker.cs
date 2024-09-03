@@ -123,7 +123,7 @@ namespace ThirdPartySettleWorker.Workers
                             {
                                 betDataBet = betData.Find(x => x.type == (int)GAType.Bet).bet_amount;
                                 decimal anteAmount = betData.Find(x => x.type == (int)GAType.Bet).ante_amount;
-                                var payoutData = betData.Where(x => (x.type == (int)GAType.TicketWinnings) || (x.type == (int)GAType.TicketLoss) || (x.type == (int)GAType.TicketDraw)).OrderBy(x => x.unix_settled_date_time).FirstOrDefault();
+                                var payoutData = betData.Where(x => (x.type == (int)GAType.TicketWinnings) || (x.type == (int)GAType.TicketLoss) || (x.type == (int)GAType.TicketDraw)).OrderByDescending(x => x.unix_settled_date_time).FirstOrDefault();
                                 betDataWin = payoutData.amount;
 
                                 var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
