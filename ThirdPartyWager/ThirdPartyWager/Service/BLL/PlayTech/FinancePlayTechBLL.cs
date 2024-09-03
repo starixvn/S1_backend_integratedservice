@@ -81,6 +81,12 @@ namespace ThirdPartyWager.Service.BLL
             {
                 if (_siteConfigDic.TryGetValue(site.SiteId, out var config))
                 {
+                    if (config == null)
+                    {
+                        _logger.LogError($"siteId={site.SiteId},siteConfigDic=null");
+                        continue;
+                    }
+
                     var getWagerSummary = await _apiPlayTechBLL.GetBetSummaryByTime(config, reportTime.startTime, reportTime.endTime);
                     if (getWagerSummary.error != "0")
                     {

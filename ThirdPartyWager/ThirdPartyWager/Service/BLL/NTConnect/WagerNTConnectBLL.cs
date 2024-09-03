@@ -35,6 +35,12 @@ namespace ThirdPartyWager.Service.BLL
                 var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
                 foreach (var site in siteList)
                 {
+                    if (site.TicketKey == 0)
+                    {
+                        _logger.LogError($"SiteId={site.SiteId}, no execute");
+                        continue;
+                    }
+
                     var siteConfig = _siteConfigDic[site.SiteId];
                     var apiUrl = siteConfig.ApiUrl;
                     foreach (var currencyKey in siteConfig.CurrencyList)

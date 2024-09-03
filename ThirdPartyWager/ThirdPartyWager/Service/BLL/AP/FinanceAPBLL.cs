@@ -69,6 +69,12 @@ namespace ThirdPartyWager.Service.BLL
             var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
             foreach (var siteData in siteList)
             {
+                if (siteData.TicketKey == 0)
+                {
+                    _logger.LogError($"SiteId={siteData.SiteId}, no execute");
+                    continue;
+                }
+
                 // 分Site取得TpList
                 setting = _siteConfigDic[siteData.SiteId];
 
@@ -81,7 +87,7 @@ namespace ThirdPartyWager.Service.BLL
                             if (getWagerSummary.ErrorCode != 0)
                             {
                                 var msg = "THIRD_PARTY_ERROR";
-                                _logger.LogError($"{msg}\r\nSiteId=\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                                _logger.LogError($"{msg}\r\nSiteId={siteData.SiteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
                                 SystemException systemException = new($"{msg} - GetReport({tpId})");
                                 throw systemException;
                             }
@@ -103,7 +109,7 @@ namespace ThirdPartyWager.Service.BLL
                             if (getWagerSummaryOfMini == null || getWagerSummaryOfMini.httpStatus != 0)
                             {
                                 var msg = "THIRD_PARTY_ERROR";
-                                _logger.LogError($"{msg}\r\nSiteId=\r\n{JsonConvert.SerializeObject(getWagerSummaryOfMini)}");
+                                _logger.LogError($"{msg}\r\nSiteId={siteData.SiteId}\r\n{JsonConvert.SerializeObject(getWagerSummaryOfMini)}");
                                 SystemException systemException = new($"{msg} - GetReport({tpId})");
                                 throw systemException;
                             }

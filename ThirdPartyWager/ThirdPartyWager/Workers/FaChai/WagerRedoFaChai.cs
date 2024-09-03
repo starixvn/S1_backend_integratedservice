@@ -70,6 +70,12 @@ namespace ThirdPartyWager.Workers
                     var time = _dateTimeHelper.GetTimeByMinute(iRangMins - 1, timeZone, _timeFormat, dataTpTimer.StartTime);
                     foreach (var siteData in siteList)
                     {
+                        if (siteData.TicketKey == 0)
+                        {
+                            _logger.LogError($"SiteId={siteData.SiteId}, no execute");
+                            continue;
+                        }
+
                         foreach (var currency in TpCurrencyList)
                         {
                             var result = await _wagerFaChaiBLL.GetWagerRedoAsync(_siteConfigDic[siteData.SiteId], time.startTime, time.endTime, currency);

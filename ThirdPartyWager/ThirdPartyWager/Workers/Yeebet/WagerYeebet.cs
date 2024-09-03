@@ -39,6 +39,12 @@ public class WagerYeebet : BackgroundService
             var TpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
             foreach (var siteInfo in siteList)
             {
+                if (siteInfo.TicketKey == 0)
+                {
+                    _logger.LogError($"SiteId={siteInfo.SiteId}, no execute");
+                    continue;
+                }
+
                 var currencyList = JsonSerializer.Deserialize<IEnumerable<int>>(serverList.First(x => x.SiteId == siteInfo.SiteId).CurrencyList);
                 foreach (var item in TpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
                 {

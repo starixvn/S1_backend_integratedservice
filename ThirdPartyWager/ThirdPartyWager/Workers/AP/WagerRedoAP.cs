@@ -41,6 +41,12 @@ namespace ThirdPartyWager.Workers
                 var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
                 foreach (var site in siteList)
                 {
+                    if (site.TicketKey == 0)
+                    {
+                        _logger.LogError($"SiteId={site.SiteId}, no execute");
+                        continue;
+                    }
+
                     var siteId = site.SiteId;
                     var res = await _wagerAPBLL.ExecWagerRedoWorker(siteId, tpType, timeRange);
                     if (res == true)

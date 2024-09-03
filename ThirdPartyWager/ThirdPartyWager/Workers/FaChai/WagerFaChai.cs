@@ -46,7 +46,13 @@ namespace ThirdPartyWager.Workers
                 var time = _dateTimeHelper.GetTimeByMinuteRevert(iRangMins, timeZone, _timeFormat, DateTime.UtcNow);
                 foreach (var siteData in siteList)
                 {
-                    foreach(var currency in TpCurrencyList)
+                    if (siteData.TicketKey == 0)
+                    {
+                        _logger.LogError($"SiteId={siteData.SiteId}, no execute");
+                        continue;
+                    }
+
+                    foreach (var currency in TpCurrencyList)
                     {
                         await _wagerFaChaiBLL.GetWagerAsync(_siteConfigDic[siteData.SiteId], time.startTime, time.endTime, currency);
                     }

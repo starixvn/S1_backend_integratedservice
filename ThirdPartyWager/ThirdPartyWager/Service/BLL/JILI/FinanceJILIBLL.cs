@@ -68,6 +68,12 @@ namespace ThirdPartyWager.Service.BLL
             var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
             foreach (var siteData in siteList)
             {
+                if (siteData.TicketKey == 0)
+                {
+                    _logger.LogError($"SiteId={siteData.SiteId}, no execute");
+                    continue;
+                }
+
                 // 分Site取得SiteConfig
                 setting = _siteConfigDic[siteData.SiteId];
 

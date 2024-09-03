@@ -33,10 +33,12 @@ namespace ThirdPartyWager.Service.BLL
             var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
             foreach (var siteData in siteList)
             {
-                if (siteData.SiteId == 1)
+                if (siteData.TicketKey == 0)
                 {
+                    _logger.LogError($"SiteId={siteData.SiteId}, no execute");
                     continue;
                 }
+
                 // 分Site取得TpList
                 var sboSetting = _siteConfigDic[siteData.SiteId];
 

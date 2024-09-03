@@ -68,6 +68,12 @@ namespace ThirdPartyWager.Workers
                     var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
                     foreach (var site in siteList)
                     {
+                        if (site.TicketKey == 0)
+                        {
+                            _logger.LogError($"SiteId={site.SiteId}, no execute");
+                            continue;
+                        }
+
                         var _setting = _siteConfigDic[site.SiteId];
 
                         if (_setting == null) continue;

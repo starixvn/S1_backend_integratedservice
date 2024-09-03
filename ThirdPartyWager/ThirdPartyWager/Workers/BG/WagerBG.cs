@@ -54,6 +54,12 @@ public class WagerBG : BackgroundService
             var quick = false;
             foreach (var siteInfo in siteList)
             {
+                if (siteInfo.TicketKey == 0)
+                {
+                    _logger.LogError($"SiteId={siteInfo.SiteId}, no execute");
+                    continue;
+                }
+
                 var _setting = _siteConfigDic[siteInfo.SiteId];
                 if (_setting == null) continue;
 

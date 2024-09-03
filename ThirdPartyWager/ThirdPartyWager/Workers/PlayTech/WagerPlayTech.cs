@@ -44,6 +44,12 @@ namespace ThirdPartyWager.Workers
                 var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
                 foreach (var siteData in siteList)
                 {
+                    if (siteData.TicketKey == 0)
+                    {
+                        _logger.LogError($"SiteId={siteData.SiteId}, no execute");
+                        continue;
+                    }
+
                     if (_siteConfigDic.TryGetValue(siteData.SiteId, out var _setting))
                     {
                         var res = await _wagerPlayTechBLL.ExecWagerWorker(siteData, tpType, timeRange, _setting);

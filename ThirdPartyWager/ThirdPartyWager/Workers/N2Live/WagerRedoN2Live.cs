@@ -48,6 +48,12 @@ namespace ThirdPartyWager.Workers
                 var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
                 foreach (var siteData in siteList)
                 {
+                    if (siteData.TicketKey == 0)
+                    {
+                        _logger.LogError($"SiteId={siteData.SiteId}, no execute");
+                        continue;
+                    }
+
                     var setting = _siteConfigDic[siteData.SiteId];
                     var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, tpType, siteData.SiteId);
                     DateTime timerTime;
