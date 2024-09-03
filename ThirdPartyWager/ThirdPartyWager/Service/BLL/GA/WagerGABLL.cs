@@ -19,26 +19,39 @@ namespace ThirdPartyWager.Service.BLL
         public async Task GetWagerAsync(GAConfig setting, string startTime, string endTime)
         {
             string msg;
-            var wagerList = await _apiGABLL.GetRecordListAsync(setting, startTime, endTime);
+            var page = 1;
+            var totalPage = 1;
 
-            if (wagerList?.Any() ?? false)
+            while (page <= totalPage)
             {
-                foreach (var item in wagerList)
+                var wagerList = await _apiGABLL.GetRecordListAsync(setting, startTime, endTime, page);
+
+                if (wagerList?.Any() ?? false)
                 {
-                    try
+                    //GA一次最多只能撈32筆
+                    if (wagerList.Count == 32)
+                        totalPage++;
+
+                    foreach (var item in wagerList)
                     {
-                        if(item.settled_date_time != null)
+                        try
                         {
-                            await _wagerGAService.InsertWager(item);
+                            if (item.settled_date_time != null)
+                            {
+                                await _wagerGAService.InsertWager(item);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            msg = $"INSERT_WAGER(sid: {item.sid}, status: {item.status} )";
+                            _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(item)}\r\n{ex.Message}");
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        msg = $"INSERT_WAGER(sid: {item.sid}, status: {item.status} )";
-                        _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(item)}\r\n{ex.Message}");
-                    }
                 }
+
+                page++;
             }
+
         }
     }
 }
