@@ -13,11 +13,11 @@ namespace ThirdParty.MG
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly MGConfig _siteConfig;
+        private readonly Dictionary<int, MGConfig> _siteConfigDic;
 
         public TpHelper(IServiceProvider provider)
         {
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<MGConfig>(TpEnum.MG.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MGConfig>(TpEnum.MG.ToString());
         }
 
         #region Response
@@ -43,13 +43,13 @@ namespace ThirdParty.MG
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             string currency = tpCustInfo.TpCurrencyId;
-            var config = _siteConfig;
-            var currencyData = _siteConfig.CurrencyData[currency];
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+            var currencyData = config.CurrencyData[currency];
 
             string ApiUrl = config.ApiUrl;
             string AgentCode = currencyData.AgentCode;
 
-            var token = GetToken(tpCustInfo.TpCurrencyId);
+            var token = GetToken(tpCustInfo.TpCurrencyId, tpCustInfo.SiteId);
             try
             {
                 var header = new Dictionary<string, string>()
@@ -87,12 +87,12 @@ namespace ThirdParty.MG
             var homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
 
             string currency = tpCustInfo.TpCurrencyId;
-            var config = _siteConfig;
-            var currencyData = _siteConfig.CurrencyData[currency];
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+            var currencyData = config.CurrencyData[currency];
 
             string ApiUrl = config.ApiUrl;
             string AgentCode = currencyData.AgentCode;
-            var token = GetToken(tpCustInfo.TpCurrencyId);
+            var token = GetToken(tpCustInfo.TpCurrencyId, tpCustInfo.SiteId);
 
             try
             {
@@ -165,12 +165,12 @@ namespace ThirdParty.MG
             try
             {
                 string currency = tpCustInfo.TpCurrencyId;
-                var config = _siteConfig;
-                var currencyData = _siteConfig.CurrencyData[currency];
+                var config = _siteConfigDic[tpCustInfo.SiteId];
+                var currencyData = config.CurrencyData[currency];
 
                 string ApiUrl = config.ApiUrl;
                 string AgentCode = currencyData.AgentCode;
-                var token = GetToken(tpCustInfo.TpCurrencyId);
+                var token = GetToken(tpCustInfo.TpCurrencyId, tpCustInfo.SiteId);
 
                 var url = $"{ApiUrl}/agents/{AgentCode}/players/{tpCustInfo.TpUserName}/betVisualizers";
                 var sParam = $"betId={getBetDetail.TransId}&utcOffset=0&langCode=en-US";
@@ -257,10 +257,10 @@ namespace ThirdParty.MG
             return DeviceType.None;
         }
 
-        private string GetToken(string tpCurrencyId)
+        private string GetToken(string tpCurrencyId, int siteId)
         {
-            var config = _siteConfig;
-            var currencyData = _siteConfig.CurrencyData[tpCurrencyId];
+            var config = _siteConfigDic[siteId];
+            var currencyData = config.CurrencyData[tpCurrencyId];
 
             string TokenUrl = config.TokenUrl;
             string AgentCode = currencyData.AgentCode;
