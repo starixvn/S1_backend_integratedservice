@@ -1,7 +1,5 @@
 ﻿using Newtonsoft.Json;
-
 using Serilog.Context;
-
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model;
@@ -35,10 +33,10 @@ namespace ThirdPartyWager.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            // _timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
-            // _unSettleTimer = new Timer(DoUnsettle, null, TimeSpan.Zero, TimeSpan.Zero);
-             _cancelTimer = new Timer(DoCancel, null, TimeSpan.Zero, TimeSpan.Zero);
-            // _redoTimer = new Timer(DoRedo, null, TimeSpan.Zero, TimeSpan.Zero);
+            _timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
+            _unSettleTimer = new Timer(DoUnsettle, null, TimeSpan.Zero, TimeSpan.Zero);
+            _cancelTimer = new Timer(DoCancel, null, TimeSpan.Zero, TimeSpan.Zero);
+            _redoTimer = new Timer(DoRedo, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
         private void DoTask(object state)
