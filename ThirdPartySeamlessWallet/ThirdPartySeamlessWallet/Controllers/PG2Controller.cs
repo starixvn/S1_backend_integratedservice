@@ -28,9 +28,9 @@ public class PG2Controller : ControllerBase
     /// <returns></returns>
     [HttpPost]
     [Route("[controller]/seamless/balance")]
-    public async Task<Response_PG2> GetBalanceAsync(CommonRequest_PG2 request)
+    public Response_PG2 GetBalanceAsync(CommonRequest_PG2 request)
     {
-        return await _PG2Bll.GetBalance(request);
+        return _PG2Bll.GetBalance(request);
     }
 
     /// <summary>
@@ -39,7 +39,7 @@ public class PG2Controller : ControllerBase
     /// <returns></returns>
     [HttpPost]
     [Route("[controller]/seamless/bet")]
-    public async Task<Response_PG2> BetAsync(BetRequest_PG2 request)
+    public async Task<BetResponse_PG2> BetAsync(BetRequest_PG2 request)
     {
         return await _PG2Bll.Bet(request);
     }

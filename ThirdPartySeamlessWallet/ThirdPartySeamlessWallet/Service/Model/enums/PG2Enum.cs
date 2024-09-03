@@ -27,3 +27,9 @@ public enum PG2ErrorCode
     [Description("Response error via axios timeout")]
     ResponseTimeout = 1601
 }
+
+public enum BettransRng_PG2TypeEnum
+{
+    FromBet = 1,
+    FromPayout = 4
+}
