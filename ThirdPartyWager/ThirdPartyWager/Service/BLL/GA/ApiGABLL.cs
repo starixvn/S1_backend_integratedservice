@@ -17,11 +17,12 @@ namespace ThirdPartyWager.Service.BLL
             _log2File = provider.GetRequiredService<Log2File>();
         }
 
-        public async Task<List<GATickets>> GetRecordListAsync(GAConfig setting, string startTime, string endTime)
+        public async Task<List<GATickets>> GetRecordListAsync(GAConfig setting, string startTime, string endTime, int page)
         {
             var startDate = DateTime.Parse(startTime).ToString("yyyy-MM-ddTHH:mm:ssZ");
             var endDate = DateTime.Parse(endTime).ToString("yyyy-MM-ddTHH:mm:ssZ");
-            var param = $"from_modified_date_time={startDate}&to_modified_date_time={endDate}";
+            //GA一次最多只能拉32筆
+            var param = $"from_modified_date_time={startDate}&to_modified_date_time={endDate}&page={page}&page_size=32";
             var tmpUrl = $"{setting.ApiUrl}/api/v1/tickets/";
             var url = $"{tmpUrl}?{param}";
 
