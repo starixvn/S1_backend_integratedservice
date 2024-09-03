@@ -61,7 +61,8 @@ namespace ThirdPartySettleWorker.Workers
             var type = gameType == GameType.TCG_SEA_Lottery ? "SEA" : "VN";
             var getSP = $"Service_TpWagerTCG_{type}_Unsettle_Get_V2";
             var setSP = $"Service_TpWagerTCG_{type}_Settle_Set_V2";
-
+            var setCancelSP = $"Service_TpWagerTCG_{type}_Cancel_Get";
+            
             try
             {
                 var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
@@ -126,6 +127,17 @@ namespace ThirdPartySettleWorker.Workers
                         }
                         else
                         {
+                            if (gameType == GameType.TCG_VN_Lottery)
+                            {
+                                var checkWagerCancelData = _tpUnSettledBLL.GetTpUnsettleData<TCGCancelWagerData>(setCancelSP, 
+                                    new { TpUserName = unsettled.Account, unsettled.OrderNum }, DataBase.Wager)?.FirstOrDefault();
+                                if (checkWagerCancelData is null || checkWagerCancelData.PlanBetAmount != unsettled.ValidBet)
+                                {
+                                    _logger.LogWarning($"TCG cancel stake check fail || TransId : {transId}  OrderNum: {unsettled.OrderNum}");
+                                    continue;
+                                }
+                            }
+                            
                             var checkCancelData = _tpUnSettledBLL.GetTpUnsettleData<TCGCancelCheckData>("Service_BettransLottery_TCG_CancelCheck", 
                                 new { TpUserName = unsettled.Account, unsettled.OrderNum }, DataBase.Main)?.FirstOrDefault();
 
@@ -211,5 +223,13 @@ namespace ThirdPartySettleWorker.Workers
     {
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
+    }
+    
+    public class TCGCancelWagerData
+    {
+        public string OrderNum { get; set; }
+        public string Username { get; set; }
+        public decimal PlanBetAmount { get; set; }
+        public int CancelType { get; set; }
     }
 }
