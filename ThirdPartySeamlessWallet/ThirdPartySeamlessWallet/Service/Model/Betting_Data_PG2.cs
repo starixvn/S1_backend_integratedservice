@@ -84,18 +84,6 @@ public class Response_PG2
 {
     public Status_PG2 status { get; set; }
     public BalanceData_PG2 data { get; set; }
-
-    public Response_PG2(PG2ErrorCode code, string message)
-    {
-        status.code = code;
-        status.message = message;
-    }
-    public Response_PG2(PG2ErrorCode code, string message, decimal balance)
-    {
-        status.code = code;
-        status.message = message;
-        data.balance = balance;
-    }
 }
 
 public class BetResponse_PG2

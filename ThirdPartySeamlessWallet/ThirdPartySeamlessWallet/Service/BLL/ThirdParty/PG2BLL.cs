@@ -47,28 +47,44 @@ public class PG2BLL : IPG2BLL
 
         if (!CheckRequestForGetBalance(request, out message))
         {
-            return new Response_PG2(PG2ErrorCode.InvalidRequest, message);
+            return new Response_PG2()
+            {
+                status = new Status_PG2() { code = PG2ErrorCode.InvalidRequest, message = message }
+            };
         }
 
         var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)thisTp, request.UserName, (int)GameType);
         if (tpCustBalance == null)
         {
             _logger.LogError($"GetBalance Fail: balance not found.");
-            return new Response_PG2(PG2ErrorCode.ServiceNotAvailable, $"GetBalance Fail: balance not found.");
+            return new Response_PG2()
+            {
+                status = new Status_PG2() { code = PG2ErrorCode.ServiceNotAvailable, message = message }
+            };
         }
 
 
         if (!CheckAgentId(request.Agent,request.UserName))
         {
-            return new Response_PG2(PG2ErrorCode.InvalidAgent, "Invalid agent id");
+            return new Response_PG2()
+            {
+                status = new Status_PG2() { code = PG2ErrorCode.InvalidAgent, message = message }
+            };
         }
 
         if (!CheckThirdPartyForGetBalance(request.UserName, out message))
         {
-            return new Response_PG2(PG2ErrorCode.ServiceNotAvailable, message);
+            return new Response_PG2()
+            {
+                status = new Status_PG2() { code = PG2ErrorCode.ServiceNotAvailable, message = message }
+            };
         }
 
-        return new Response_PG2(PG2ErrorCode.Success, message,tpCustBalance.Balance);
+        return new Response_PG2()
+        {
+            status = new Status_PG2() { code = PG2ErrorCode.Success, message = message },
+            data = new BalanceData_PG2() { balance = tpCustBalance.Balance }
+        };
     }
 
     public async Task<BetResponse_PG2> Bet(BetRequest_PG2 request)
