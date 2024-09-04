@@ -21,6 +21,13 @@ public class PG2Controller : ControllerBase
     }
 
     #endregion
+    /// <summary>
+    /// 測試API有通
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("[controller]/ping")]
+    public string PingTest() => "Ping Ok.";
 
     /// <summary>
     /// GetBalance API
