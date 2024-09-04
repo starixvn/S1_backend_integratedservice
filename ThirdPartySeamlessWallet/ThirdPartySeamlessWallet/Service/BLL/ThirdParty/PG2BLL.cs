@@ -82,7 +82,7 @@ public class PG2BLL : IPG2BLL
 
         return new Response_PG2()
         {
-            status = new Status_PG2() { code = PG2ErrorCode.Success, message = message },
+            status = new Status_PG2() { code = PG2ErrorCode.Success, message = "Success" },
             data = new BalanceData_PG2() { balance = tpCustBalance.Balance }
         };
     }
