@@ -41,7 +41,7 @@ namespace ThirdPartyWager.Workers
             var isFast = false;
             try
             {
-                var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+                var siteList = _thirdPartyBLL.GetTpListByTpId(tpId).Where(x => x.TicketKey == 1); ;
                 var TpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
                 foreach (var siteId in siteList)
                 {
