@@ -6,20 +6,27 @@ namespace CommonService.Service.Model
 
     public class FaceBookPixelConfig
     {
-        public int Status { get; set; }
         public string ApiUrl { get; set; }
 
+        public List<FaceBookPixelKey> Key { get; set; }
+        
+    }
+
+    public class FaceBookPixelKey
+    {
+        public int Status { get; set; }
         public string Token { get; set; }
 
         public string PixelId { get; set; }
     }
-
+    
     #endregion
 
     #region Request
 
     public class PixelRequest
     {
+        public int SiteId { get; set; }
         public int CustId { get; set; }
         public int CurrencyId { get; set; }
         public decimal Value { get; set; }

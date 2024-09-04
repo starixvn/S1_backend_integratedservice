@@ -29,6 +29,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
     public class Payload_GetBalanceReq_MaxGame
     {
         public string OperatorCustId { get; set; }
+        public string GameType { get; set; }
         public string WalletSideToken { get; set; }
     }
 
@@ -59,6 +60,15 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
         public decimal Odds { get; set; }
         public string BetChoice { get; set; }
         public string TableCode { get; set; }
+        public OtherBetInfo_PlaceBetReq_MaxGame OtherBetInfo { get; set; }
+    }
+
+    public class OtherBetInfo_PlaceBetReq_MaxGame
+    {
+        public bool FreeBet { get; set; }
+        public bool FreeSpin { get; set; }
+        public decimal ContributionAmount { get; set; }
+        public decimal ContributionRate { get; set; }
     }
 
     public class PayoutData_MaxGame
@@ -86,6 +96,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
         public decimal Payout { get; set; }
         public decimal Odds { get; set; }
         public string GameResult { get; set; }
+        public string ResultId { get; set; }
         public DateTime SettleDate { get; set; }
         public long SettleDateUnix
         {
@@ -155,11 +166,54 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
         }
     }
 
+    public class FreeSpinData_MaxGame
+    {
+        public string Timestamp { get; set; }
+        public string Seq { get; set; }
+        public Payload_FreeSpinReq_MaxGame Payload { get; set; }
+    }
+
+    public class Payload_FreeSpinReq_MaxGame
+    {
+        public string OperatorCustId { get; set; }
+        public string GameType { get; set; }
+        public string IpAddress { get; set; }
+        public List<BetDataSet_FreeSpinReq_MaxGame> BetDataSet { get; set; }
+    }
+
+    public class BetDataSet_FreeSpinReq_MaxGame
+    {
+        public string TicketNo { get; set; }
+        public string GameId { get; set; }
+        public string GameRoundId { get; set; }
+        public string TransactionId { get; set; }
+        public decimal Stake { get; set; }
+        public decimal ActualStake { get; set; }
+        public decimal NetStake { get; set; }
+        public decimal Payout { get; set; }
+        public DateTime SettleDate { get; set; }
+        public long SettleDateUnix
+        {
+            get
+            {
+                return new DateTimeOffset(SettleDate, new TimeSpan(-4, 0, 0)).ToUnixTimeSeconds();
+            }
+        }
+    }
+
     public class MaxGameConfig : TpSiteConfig
     {
         public string OperatorPwd { get; set; }
         public string OperatorKey { get; set; }
         public string GameType { get; set; }
+    }
+
+    public class SpNameListOfMaxGame
+    {
+        public string GetTicketNo { get; set; }
+        public string InsertBettrans { get; set; }
+        public string InsertPayload { get; set; }
+        public string SetCancelBet { get; set; }
     }
 
     public class BettransData_MaxGame
@@ -338,7 +392,6 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
         public List<BetDataSetList_MaxGame> BetDataSet { get; set; }
     }
 
-
     public class EndGameResp : BaseResp
     {
         public EndGameResp(ErrorCodeOfMaxGame errorCode, string seq) : base(errorCode, seq)
@@ -397,5 +450,33 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
             }
         }
         public string RefNo { get; set; }
+    }
+
+    public class FreeSpinResp : BaseResp
+    {
+        public FreeSpinResp(ErrorCodeOfMaxGame errorCode, string seq) : base(errorCode, seq)
+        {
+        }
+
+        public Payload_FreeSpinResp Payload { get; set; }
+    }
+
+    public class Payload_FreeSpinResp
+    {
+        private decimal _Balance = 0m;
+        public string OperatorCustId { get; set; }
+        public decimal Balance
+        {
+            get
+            {
+                _ = decimal.TryParse(_Balance.ToString("N2"), out _Balance);
+                return _Balance;
+            }
+            set
+            {
+                _Balance = value;
+            }
+        }
+        public List<BetDataSetList_MaxGame> BetDataSet { get; set; }
     }
 }

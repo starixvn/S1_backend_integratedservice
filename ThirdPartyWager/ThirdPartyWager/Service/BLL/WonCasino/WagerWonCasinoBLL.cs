@@ -50,6 +50,9 @@ namespace ThirdPartyWager.Service.BLL
                         {
                             try
                             {
+                                if (string.IsNullOrEmpty(wager.gameresult)) {
+                                    wager.gameresult = "";
+                                }
                                 var result = await _wagerWonCasinoService.InsertWager(wager);
                                 
                                 if (result >= 1)

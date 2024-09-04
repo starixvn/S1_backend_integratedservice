@@ -1,10 +1,17 @@
-﻿using FluentAssertions;
+﻿using ExpectedObjects;
+
+using FluentAssertions;
 
 using NUnit.Framework;
 
+using ThirdPartySeamlessWallet.IntegrationTest.Models;
 using ThirdPartySeamlessWallet.IntegrationTest.SandBox;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+
+using TpSeamlessBonus = ThirdPartySeamlessWallet.Service.Model.TpSeamlessBonus;
+
+
 
 namespace ThirdPartySeamlessWallet.IntegrationTest
 {
@@ -446,7 +453,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
         [TestCase("UnSettled", 5, SettlementType.UnSettled, 10, SettlementType.SettledForValid, -10, Description = "UnSettled結算，扣回上次結算金額")]
 
         [TestCase("Re-Settled", 50, SettlementType.SettledForValid, 100, SettlementType.SettledForValid, -50, Description = "ReSettled結算，計算兩次差異金額")]
-        [TestCase("Re-Settled", 30, SettlementType.SettledForValid, 10, SettlementType.SettledForValid, 20, Description = "ReSettled結算，計算兩次差異金額")]
+        [TestCase("Re-Settled", 30, SettlementType.SettledForValid, 10, SettlementType.SettledForValid, 20, Description = "ReSettled結算，計算兩次差異金額")]                
         public void BonusRollOver_Test(string memo, decimal stake, SettlementType settlementType, decimal? lastStake, SettlementType lastSettlementType, decimal? expected)
         {
             var transId = $"test-{DateTime.UtcNow.Ticks}";
@@ -480,6 +487,12 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
                 };
             }
 
+
+            if (memo == "Re-Settled" || memo == "UnSettled")
+            {
+                // 需要先新增第一次的流水紀錄
+                _settleTicketSandbox.CreateTurnOverLog(refBetRecord.ValidBet.Value, 2, _tpCustInfo, betRecord);
+            }
             // 初始化Bonus，指定剩餘Bonus金額
             _settleTicketSandbox.ResetBonusStatusAndBonusAmount(betRecord.BonusId, 100);
 
@@ -489,7 +502,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
             SettleTicket.SetBonusRollOver();
             _settleTicketSandbox.Commit();
 
-            var turnOverLog = _settleTicketSandbox.GetTurnOverLog(transId);
+            var turnOverLog = _settleTicketSandbox.GetLastTurnOverLog(transId);
             if (expected.HasValue)
             {
                 // 檢查CustBonusRollover的Turnover正確
@@ -504,6 +517,114 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
             {
                 turnOverLog.Should().Be(expected);
             }
+        }
+
+        [Test(Description = "UnSettled結算，但第一次沒有新增流水，第二次結算不可以扣回")]
+        public void BonusRollOver_Fullfill_UnSettled_Check_Test()
+        {
+            var transId = $"test-{DateTime.UtcNow.Ticks}";
+            var betRecord = new BetRecordInfo()
+            {
+                TicketStatus = TicketStatus.UnSettled,
+                SettlementType = SettlementType.UnSettled,
+                Stake = 100,
+                ValidBet = 100,
+                WinlostAmount = -100,
+                TransId = transId,
+                TpId = 41,
+                GameType = GameType.SBSW_Sports,
+                BonusId = 100,
+            };
+
+            var refBetRecord = new BetRecordInfo()
+            {
+                TicketStatus = TicketStatus.Win,
+                SettlementType = SettlementType.SettledForValid,
+                Stake = 100,
+                ValidBet = 100,
+                WinlostAmount = -100,
+                TransId = transId,
+                TpId = 41,
+                GameType = GameType.SBSW_Sports,
+                BonusId = 100,
+            };
+
+
+            // 將Bonus狀態改成fullfill
+            _settleTicketSandbox.SetBonusStatus(betRecord.BonusId, 4);
+
+            var custBonusRollover = _settleTicketSandbox.GetCustBonusRollover(betRecord.BonusId);
+
+
+            var SettleTicket = _settleTicketSandbox.CreateSettleTicket(_tpCustInfo, betRecord, refBetRecord);
+            SettleTicket.SetBonusRollOver();
+            _settleTicketSandbox.Commit();
+
+
+            // 檢查TurnOverLog的紀錄沒有增加     
+            var turnOverLog = _settleTicketSandbox.GetLastTurnOverLog(transId);
+            turnOverLog.Should().Be(null);
+
+            // 檢查CustBonusRollover的Turnover正確
+            var assertCustBonusRollover = _settleTicketSandbox.GetCustBonusRollover(betRecord.BonusId);
+            assertCustBonusRollover.Turnover.Should().Be(custBonusRollover.Turnover + 0);
+        }
+
+        [TestCase(30, 50, 20, Description = "UnSettled結算，但第一次新增部分流水，第二次結算只能扣回第一次的流水金額")]
+        [TestCase(30, 50, 10, Description = "UnSettled結算，但第一次新增部分流水，第二次結算只能扣回第一次的流水金額")]
+        public void BonusRollOver_UnSettled_Turnover_Check_Test(decimal stake, decimal lastStake, decimal expected)
+        {
+            var transId = $"test-{DateTime.UtcNow.Ticks}";
+            var betRecord = new BetRecordInfo()
+            {
+                TicketStatus = TicketStatus.UnSettled,
+                SettlementType = SettlementType.UnSettled,
+                Stake = stake,
+                ValidBet = stake,
+                WinlostAmount = -100,
+                TransId = transId,
+                TpId = 41,
+                GameType = GameType.SBSW_Sports,
+                BonusId = 100,
+            };
+
+            var refBetRecord = new BetRecordInfo()
+            {
+                TicketStatus = TicketStatus.Win,
+                SettlementType = SettlementType.SettledForValid,
+                Stake = lastStake,
+                ValidBet = lastStake,
+                WinlostAmount = -100,
+                TransId = transId,
+                TpId = 41,
+                GameType = GameType.SBSW_Sports,
+                BonusId = 100,
+            };
+
+            // 初始化Bonus，指定剩餘Bonus turnover
+            var bonusAmount = lastStake * 2;
+            var rollover = lastStake * 5;
+            var turnover = rollover - expected; //設定turnover差多少達到rollover目標
+            _settleTicketSandbox.ResetBonus(betRecord.BonusId, bonusAmount, rollover, turnover);
+            var custBonusRollover = _settleTicketSandbox.GetCustBonusRollover(betRecord.BonusId);          
+
+            // 需要先新增第一次的流水紀錄，第一次只拿到10
+            _settleTicketSandbox.CreateTurnOverLog(expected, 2, _tpCustInfo, betRecord);
+
+           
+            var SettleTicket = _settleTicketSandbox.CreateSettleTicket(_tpCustInfo, betRecord, refBetRecord);
+            SettleTicket.SetBonusRollOver();
+            _settleTicketSandbox.Commit();
+
+
+            // 檢查TurnOverLog的紀錄有增加
+            var lastTurnover = expected * -1;
+            var turnOverLog = _settleTicketSandbox.GetLastTurnOverLog(transId);       
+            turnOverLog.ChangeTurnOver.Should().Be(lastTurnover);
+
+            // 檢查CustBonusRollover的Turnover正確
+            var assertCustBonusRollover = _settleTicketSandbox.GetCustBonusRollover(betRecord.BonusId);
+            assertCustBonusRollover.Turnover.Should().Be(custBonusRollover.Turnover + lastTurnover);
         }
 
         #endregion
@@ -525,7 +646,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
         [TestCase("UnSettled", 10, TicketStatus.UnSettled, 30, TicketStatus.Win, -30, Description = "UnSettled結算")]
         [TestCase("UnSettled", 10, TicketStatus.UnSettled, 30, TicketStatus.Draw, -30, Description = "UnSettled結算")]
 
-        [TestCase("Re-Settled", -50, TicketStatus.Lost, -40, TicketStatus.Lost, -10, Description = "Re-Settled結算")]
+        [TestCase("Re-Settled", 50, TicketStatus.Lost, 40, TicketStatus.Lost, 10, Description = "Re-Settled結算")]
         [TestCase("Re-Settled", 60, TicketStatus.Win, 40, TicketStatus.Win, 20, Description = "Re-Settled結算")]
         [TestCase("Re-Settled", 30, TicketStatus.Draw, 20, TicketStatus.Draw, 10, Description = "Re-Settled結算")]
         public void WithdrawalLimitAndEffectiveBet_Test(string memo, decimal stake, TicketStatus ticketStatus, decimal? lastStake, TicketStatus lastTicketStatus, decimal? expected)
@@ -560,6 +681,12 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
             }
 
             _settleTicketSandbox.ResetCustWithdrawalLimit(_tpCustInfo.CustId);
+            if (memo == "Re-Settled" || memo == "UnSettled")
+            {
+                // 需要先新增第一次的流水紀錄
+                _settleTicketSandbox.CreateTurnOverLog(refBetRecord.ValidBet.Value, 1, _tpCustInfo, betRecord);
+            }
+
 
             var custWithdrawalLimit = _settleTicketSandbox.GetCustWithdrawalLimit(_tpCustInfo.CustId);
             var custTransSummary = _settleTicketSandbox.GetCustTransSummary(_tpCustInfo.CustId);
@@ -570,7 +697,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
 
 
             // 檢查TurnOverLog的紀錄有增加
-            var turnOverLog = _settleTicketSandbox.GetTurnOverLog(transId);
+            var turnOverLog = _settleTicketSandbox.GetLastTurnOverLog(transId);
             if (expected.HasValue)
             {
                 // 檢查CustWithdrawalLimit的Turnover正確
@@ -651,7 +778,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
 
 
             // 檢查TurnOverLog的紀錄有增加
-            var turnOverLog = _settleTicketSandbox.GetTurnOverLog(transId);
+            var turnOverLog = _settleTicketSandbox.GetLastTurnOverLog(transId);
             if (expected.HasValue)
             {
                 // 檢查CustWithdrawalLimit的Turnover正確
@@ -667,6 +794,105 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
             }
         }
 
+        [Test(Description = "UnSettled結算，但第一次沒有新增流水，第二次結算不可以扣回")]
+        public void WithdrawalLimit_Fullfill_UnSettled_Check_Test()
+        {
+            var transId = $"test-{DateTime.UtcNow.Ticks}";
+            var betRecord = new BetRecordInfo()
+            {
+                TicketStatus = TicketStatus.UnSettled,
+                SettlementType = SettlementType.UnSettled,
+                Stake = 100,
+                ValidBet = 100,
+                WinlostAmount = -100,
+                TransId = transId,
+                TpId = 41,
+                GameType = GameType.SBSW_Sports,
+            };
+
+            var refBetRecord = new BetRecordInfo()
+            {
+                TicketStatus = TicketStatus.Win,
+                SettlementType = SettlementType.SettledForValid,
+                Stake = 100,
+                ValidBet = 100,
+                WinlostAmount = -100,
+                TransId = transId,
+                TpId = 41,
+                GameType = GameType.SBSW_Sports,
+            };
+
+            //直接設定提款限額已沖滿
+            _settleTicketSandbox.SetCustWithdrawalLimit(_tpCustInfo.CustId, 100,100);
+
+            var custWithdrawalLimit = _settleTicketSandbox.GetCustWithdrawalLimit(_tpCustInfo.CustId);
+
+            var SettleTicket = _settleTicketSandbox.CreateSettleTicket(_tpCustInfo, betRecord, refBetRecord);
+            SettleTicket.SetWithdrawalLimitAndEffectiveBet(GetTpSeamlessBonusType.ByTransId);
+            _settleTicketSandbox.Commit();
+
+
+            // 檢查TurnOverLog的紀錄沒有增加     
+            var turnOverLog = _settleTicketSandbox.GetLastTurnOverLog(transId);
+            turnOverLog.Should().Be(null);
+
+            // 檢查CustWithdrawalLimit的Turnover正確
+            var assertCustWithdrawalLimit = _settleTicketSandbox.GetCustWithdrawalLimit(_tpCustInfo.CustId);
+            assertCustWithdrawalLimit.TurnOver.Should().Be(custWithdrawalLimit.TurnOver + 0);
+        }
+
+        [TestCase(30, 50, 20, Description = "UnSettled結算，但第一次新增部分流水，第二次結算只能扣回第一次的流水金額")]
+        public void WithdrawalLimit_UnSettled_Turnover_Check_Test(decimal stake, decimal lastStake, decimal expected)
+        {
+            var transId = $"test-{DateTime.UtcNow.Ticks}";
+            var betRecord = new BetRecordInfo()
+            {
+                TicketStatus = TicketStatus.UnSettled,
+                SettlementType = SettlementType.UnSettled,
+                Stake = stake,
+                ValidBet = stake,
+                WinlostAmount = -100,
+                TransId = transId,
+                TpId = 41,
+                GameType = GameType.SBSW_Sports,
+            };
+
+            var refBetRecord = new BetRecordInfo()
+            {
+                TicketStatus = TicketStatus.Win,
+                SettlementType = SettlementType.SettledForValid,
+                Stake = lastStake,
+                ValidBet = lastStake,
+                WinlostAmount = -100,
+                TransId = transId,
+                TpId = 41,
+                GameType = GameType.SBSW_Sports,
+            };
+
+            // 需要先新增第一次的流水紀錄
+            _settleTicketSandbox.CreateTurnOverLog(expected, 1, _tpCustInfo, betRecord);
+
+            //設定withdrawalLimit、turnover
+            var withdrawalLimit = lastStake * 2;
+            var turnover = withdrawalLimit - expected; //設定turnover差多少達到rollover目標
+            _settleTicketSandbox.SetCustWithdrawalLimit(_tpCustInfo.CustId, withdrawalLimit, turnover);
+
+            var custWithdrawalLimit = _settleTicketSandbox.GetCustWithdrawalLimit(_tpCustInfo.CustId);
+
+            var SettleTicket = _settleTicketSandbox.CreateSettleTicket(_tpCustInfo, betRecord, refBetRecord);
+            SettleTicket.SetWithdrawalLimitAndEffectiveBet(GetTpSeamlessBonusType.ByTransId);
+            _settleTicketSandbox.Commit();
+
+
+            // 檢查TurnOverLog的紀錄沒有增加     
+            var lastTurnover = expected * -1;
+            var turnOverLog = _settleTicketSandbox.GetLastTurnOverLog(transId);
+            turnOverLog.ChangeTurnOver.Should().Be(lastTurnover);
+
+            // 檢查CustWithdrawalLimit的Turnover正確
+            var assertCustWithdrawalLimit = _settleTicketSandbox.GetCustWithdrawalLimit(_tpCustInfo.CustId);
+            assertCustWithdrawalLimit.TurnOver.Should().Be(custWithdrawalLimit.TurnOver + lastTurnover);
+        }
 
         #endregion
 
@@ -825,5 +1051,6 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
         }
 
         #endregion
+
     }
 }

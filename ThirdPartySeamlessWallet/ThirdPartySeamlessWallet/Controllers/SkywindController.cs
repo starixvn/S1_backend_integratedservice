@@ -368,17 +368,27 @@ namespace ThirdPartySeamlessWallet.Controllers
                     distribution_type = req.distribution_type,
                 };
 
-                if (bettingBLL.PlaceBet_Skywind(tpCustInfo, betReq, gameType, out decimal tpAffterAmount) > 0)
+                var PlacebetResult = bettingBLL.PlaceBet_Skywind(tpCustInfo, betReq, gameType, out decimal tpAffterAmount);
+                if (PlacebetResult > 0)
                 {
                     result.balance = Math.Truncate(tpAffterAmount);
                     result.error_code = (int)SkywindErrorCode.NoErrors;
                     result.trx_id = req.trx_id;
+                    logger.LogInformation($"{JsonConvert.SerializeObject(result)}\r\nPlacebetResult:{PlacebetResult}");
+                }
+                else if (PlacebetResult == -1)
+                {
+                    result.balance = tpCustInfoBLL.GetBalance((int)thisTp, req.cust_id, gameType).Balance;
+                    result.error_code = (int)SkywindErrorCode.DuplicateTransaction;
+                    result.trx_id = req.trx_id;
+                    logger.LogInformation($"{JsonConvert.SerializeObject(result)}\r\nPlacebetResult:{PlacebetResult}");
                 }
                 else
                 {
                     result.balance = Math.Truncate(tpAffterAmount);
                     result.error_code = (int)SkywindErrorCode.MerchantInternalError;
                     result.trx_id = req.trx_id;
+                    logger.LogError($"{JsonConvert.SerializeObject(result)}\r\nPlacebetResult:{PlacebetResult}");
                 }
             }
             return result;
@@ -476,7 +486,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var tpCustInfo = tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp.Skywind, req.cust_id);
                 var gameType = tpCustInfoBLL.GetCustGotoGameType(tpCustInfo.CustId, (int)Tp.Skywind);
                 var tpCheck = thirdPartyBLL.ThirdPartyCheck((int)thisTp, req.cust_id);
-                if (tpCheck == null || tpCheck.Token != req.cust_session_id)
+                if (tpCheck == null)
                 {
                     result.error_code = (int)SkywindErrorCode.PlayerNotFound;
                     logger.LogError($"{JsonConvert.SerializeObject(req)}\r\n{JsonConvert.SerializeObject(result)}\r\n TpUserName:{req.cust_id}");

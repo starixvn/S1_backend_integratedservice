@@ -58,7 +58,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 _log2File.Error($"{ex.Message}", logName, ex);
             }
 
-            _logger.LogInformation("6");
             return new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
         }
 
@@ -179,7 +178,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/{sitename}/Bonus")]
         public async Task<dynamic> Bonus(string sitename)
         {
-            // Bonus 的部分MaxGame不支援 (如要使用要請測試)
+            // 尚未支援 (如要使用要請測試)
             string logName = $"{_thisTp}_Bonus";
 
             try
@@ -195,6 +194,35 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
 
                 return _maxGameBLL.Bonus(content);
+            }
+            catch (Exception ex)
+            {
+                _log2File.Error($"{ex.Message}", logName, ex);
+            }
+
+            return new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
+        }
+
+        [HttpPost]
+        [Route("[controller]/{sitename}/FreeSpin")]
+        public async Task<dynamic> FreeSpin(string sitename)
+        {
+            // 尚未支援 (如要使用要請測試)
+            string logName = $"{_thisTp}_FreeSpin";
+
+            try
+            {
+                using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+                string content = await reader.ReadToEndAsync();
+
+                var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
+                if (!verifyHeader)
+                {
+                    var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
+                    return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
+                }
+
+                return _maxGameBLL.FreeSpin(content);
             }
             catch (Exception ex)
             {

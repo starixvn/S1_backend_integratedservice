@@ -53,7 +53,7 @@ namespace ThirdPartyWager.Service.BLL
                 using var client = _httpHelper.GetClientWithHandler(CreateHandler());
                 client.DefaultRequestHeaders.Add("API", "getBetHistory");
                 client.DefaultRequestHeaders.Add("DataType", "JSON");
-                _log2File.InsertRequestLog(_tpName, apiUrl, $"{json}\r\n{JsonConvert.SerializeObject(client.DefaultRequestHeaders)}", "1");
+                _log2File.InsertRequestLog(_tpName, apiUrl, $"{JsonConvert.SerializeObject(client.DefaultRequestHeaders)}", "1");
 
                 var httpResponseMessage = await client.PostAsync(apiUrl, stringContent);
 
@@ -64,6 +64,7 @@ namespace ThirdPartyWager.Service.BLL
                     _log2File.InsertResponseLog(_tpName, apiUrl, json, httpResponseMessage.Content.ReadAsStringAsync().Result);
                     return null;
                 }
+
                 var nextspinBetHistory = JsonConvert.DeserializeObject<NextspinBetHistory>(content);
                 if (nextspinBetHistory.Code != 0)
                 {

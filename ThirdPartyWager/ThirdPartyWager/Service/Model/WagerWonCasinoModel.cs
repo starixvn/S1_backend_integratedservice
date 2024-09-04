@@ -17,7 +17,7 @@
         public decimal gameid { get; set; }
         public int gameroundid { get; set; }
         public int gameroundno { get; set; } = 0;
-        public string gameresult { get; set; }
+        public string gameresult { get; set; } = "";
         public int state { get; set; }
         public int bettype { get; set; }
         public string betpoint { get; set; }

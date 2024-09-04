@@ -61,6 +61,12 @@ namespace ThirdPartyWager.Workers
                     var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
                     foreach (var siteData in siteList)
                     {
+                        if (siteData.TicketKey == 0)
+                        {
+                            _logger.LogError($"SiteId={siteData.SiteId}, no execute");
+                            continue;
+                        }
+
                         var result = await _wagerSkywindBLL.GetWagersAsync(siteData.SiteId, time.startTime, time.endTime);
                         if (!result)
                         {
