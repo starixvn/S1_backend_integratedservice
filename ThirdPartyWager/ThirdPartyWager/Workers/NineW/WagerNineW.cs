@@ -12,6 +12,7 @@ namespace ThirdPartyWager.Workers
         private readonly NineWBLL _nineWService;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly DateTimeHelper _dateTimeHelper;
+        private readonly IWebHostEnvironment _env;
         private Timer _getDomainTimer;
         private Timer _settleTimer;
         private Timer _settleTimerByDate;
@@ -30,6 +31,7 @@ namespace ThirdPartyWager.Workers
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _nineWService = provider.GetRequiredService<NineWBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _env = provider.GetRequiredService<IWebHostEnvironment>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -60,6 +62,10 @@ namespace ThirdPartyWager.Workers
 
         private async void DoSettle(object state)
         {
+            if (!_env.IsProduction())
+            {
+                return;
+            }
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var timerType = (int)WagerTimerType.Wager;
@@ -99,6 +105,10 @@ namespace ThirdPartyWager.Workers
 
         private async void DoSettleByDate(object state)
         {
+            if (!_env.IsProduction())
+            {
+                return;
+            }
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var timerType = (int)WagerTimerType.RedoWager;
@@ -140,6 +150,10 @@ namespace ThirdPartyWager.Workers
 
         private async void DoReSettle(object state)
         {
+            if (!_env.IsProduction())
+            {
+                return;
+            }
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var timerType = (int)WagerTimerType.ReSettle;
@@ -181,6 +195,10 @@ namespace ThirdPartyWager.Workers
 
         private async void GetReportByDate(object state)
         {
+            if (!_env.IsProduction())
+            {
+                return;
+            }
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var timerType = (int)WagerTimerType.UserReport;
@@ -219,6 +237,10 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTpDailySummary(object state)
         {
+            if (!_env.IsProduction())
+            {
+                return;
+            }
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var timerType = (int)WagerTimerType.Finance;
@@ -270,6 +292,11 @@ namespace ThirdPartyWager.Workers
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var nextTimeSpan = TimeSpan.FromHours(1);
+            
+            if (!_env.IsProduction())
+            {
+                return;
+            }
 
             try
             {

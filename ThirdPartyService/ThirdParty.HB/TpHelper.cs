@@ -1,10 +1,8 @@
-﻿using System.Diagnostics.Metrics;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using System.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-
 using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
@@ -17,14 +15,14 @@ namespace ThirdParty.HB
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly HBConfig _siteConfig;
+        private readonly Dictionary<int, HBConfig> _siteConfigDic;
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
         private readonly ILogger<TpHelper> _logger;
 
         public TpHelper(IServiceProvider provider)
         {
             _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.HB).ToDictionary(d => d.AppId, d => d.Name);
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<HBConfig>(TpEnum.HB.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<HBConfig>(TpEnum.HB.ToString());
             _logger = provider.GetRequiredService<ILogger<TpHelper>>();
         }
 
@@ -38,14 +36,15 @@ namespace ThirdParty.HB
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var brandId = _siteConfig.BrandId;
-            var launchUrl = _siteConfig.LaunchUrl;
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+            var brandId = config.BrandId;
+            var launchUrl = config.LaunchUrl;
 
             try
             {
                 // 透過三方api取得LaunchUrl
                 var tpCountryCode = TpCustInfoProvider.GetTpCurrencyCodeByCurrencyId((int)TpEnum.HB, tpCustInfo.TpCurrencyId);
-                launchUrl = GetLaunchUrl(launchUrl, _siteConfig, tpCountryCode.CountryCode);
+                launchUrl = GetLaunchUrl(launchUrl, config, tpCountryCode.CountryCode);
             }
             catch (Exception ex)
             {
@@ -103,9 +102,10 @@ namespace ThirdParty.HB
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var brandId = _siteConfig.BrandId;
-            var url = _siteConfig.LaunchUrl;
-            var apiKey = _siteConfig.APIKey;
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+            var brandId = config.BrandId;
+            var url = config.LaunchUrl;
+            var apiKey = config.APIKey;
 
             var idx = url.LastIndexOf('/');
             var gameHistory = url[..idx];
@@ -188,7 +188,8 @@ namespace ThirdParty.HB
 
         private string GetLaunchUrl(string launchUrl, HBConfig config, string tpCountryCode)
         {
-            var parameters = JsonConvert.SerializeObject(new {
+            var parameters = JsonConvert.SerializeObject(new
+            {
                 config.BrandId,
                 Country = tpCountryCode
             });
