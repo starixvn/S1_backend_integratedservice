@@ -12,7 +12,7 @@ namespace ThirdParty.Sexy
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly Dictionary<string, string> _siteConfig;
+        private readonly Dictionary<int, Dictionary<string, string>> _siteIdConfigDic;
 
         private readonly Dictionary<int, string> ErrorMassage = new Dictionary<int, string>()
         {
@@ -51,8 +51,8 @@ namespace ThirdParty.Sexy
         };
 
         public TpHelper(IServiceProvider provider)
-        {
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(TpEnum.Sexy.ToString());
+        {            
+            _siteIdConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(TpEnum.Sexy.ToString());
         }
 
         private class SignupResponse
@@ -118,7 +118,8 @@ namespace ThirdParty.Sexy
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var config = new SexyConfig(inputs, _siteConfig, tpCustInfo.SiteId, tpCustInfo.TpCurrencyId);
+            var siteConfig = _siteIdConfigDic[tpCustInfo.SiteId];
+            var config = new SexyConfig(inputs, siteConfig, tpCustInfo.SiteId, tpCustInfo.TpCurrencyId);
             var apiUrl = $"{config.ApiUrl}/wallet/createMember";
             tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x").ToLower();
 
@@ -187,12 +188,13 @@ namespace ThirdParty.Sexy
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
+            var siteConfig = _siteIdConfigDic[tpCustInfo.SiteId];
             var lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : "LobbyUrl";
-            var platform = _siteConfig.GetValueOrDefault("Platform") ?? throw new Exception("Platform");
-            var gameType = _siteConfig.GetValueOrDefault("GameType") ?? throw new Exception("GameType");
-            var specialBetLimit = _siteConfig.GetValueOrDefault("SpecialBetLimit") ?? null;
+            var platform = siteConfig.GetValueOrDefault("Platform") ?? throw new Exception("Platform");
+            var gameType = siteConfig.GetValueOrDefault("GameType") ?? throw new Exception("GameType");
+            var specialBetLimit = siteConfig.GetValueOrDefault("SpecialBetLimit") ?? null;
 
-            var config = new SexyConfig(inputs, _siteConfig, tpCustInfo.SiteId, tpCustInfo.TpCurrencyId);
+            var config = new SexyConfig(inputs, siteConfig, tpCustInfo.SiteId, tpCustInfo.TpCurrencyId);
             var apiUrl = $"{config.ApiUrl}/wallet/doLoginAndLaunchGame";
 
             if (specialBetLimit != null)
@@ -201,9 +203,9 @@ namespace ThirdParty.Sexy
                 if (specialBetLimitData.Any(x => x.CustId == tpCustInfo.CustId))
                 {
                     var specialBetLimitCustId = specialBetLimitData.First(x => x.CustId == tpCustInfo.CustId);
-                    _siteConfig[$"BetLimitId{tpCustInfo.TpCurrencyId}"] = specialBetLimitCustId.BetLimitId;
-                    _siteConfig[$"BetLimitId2{tpCustInfo.TpCurrencyId}"] = "";
-                    config = new SexyConfig(inputs, _siteConfig, tpCustInfo.SiteId, tpCustInfo.TpCurrencyId);
+                    siteConfig[$"BetLimitId{tpCustInfo.TpCurrencyId}"] = specialBetLimitCustId.BetLimitId;
+                    siteConfig[$"BetLimitId2{tpCustInfo.TpCurrencyId}"] = "";
+                    config = new SexyConfig(inputs, siteConfig, tpCustInfo.SiteId, tpCustInfo.TpCurrencyId);
                 }
             }
 
@@ -274,12 +276,13 @@ namespace ThirdParty.Sexy
         {
             try
             {
-                var config = new SexyConfig(inputs, _siteConfig, tpCustInfo.SiteId);
+                var siteConfig = _siteIdConfigDic[tpCustInfo.SiteId];
+                var config = new SexyConfig(inputs, siteConfig, tpCustInfo.SiteId);
                 var apiUrl = config.ApiUrl;
                 var cert = config.Cert;
                 var agentId = config.AgentId;
                 //var platform = inputs.GetValueOrDefault("Platform") ?? throw new Exception();
-                var platform = _siteConfig.GetValueOrDefault("Platform") ?? throw new Exception("Platform");
+                var platform = siteConfig.GetValueOrDefault("Platform") ?? throw new Exception("Platform");
 
                 var url = $"{apiUrl}/wallet/getTransactionHistoryResult";
                 var sParam = $"cert={cert}&agentId={agentId}&userId={tpCustInfo.TpUserName}&platformTxId={getBetDetail.TransId}&platform={platform}";

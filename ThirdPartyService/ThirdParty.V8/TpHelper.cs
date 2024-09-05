@@ -13,10 +13,10 @@ namespace ThirdParty.V8
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly V8Config _config;
+        private readonly Dictionary<int, V8Config> _siteConfig;
         public TpHelper(IServiceProvider provider)
         {
-            _config = provider.GetRequiredService<ConfigBLL>().GetConfigValue<V8Config>((TpEnum.V8).ToString());
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<V8Config>(TpEnum.V8.ToString());
         }
 
         Dictionary<int, string> ErrorMassage = new Dictionary<int, string>()
@@ -260,10 +260,11 @@ namespace ThirdParty.V8
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string ApiUrl = _config.ApiUrl;
-            string Agent = _config.CurrencyData[tpCustInfo.TpCurrencyId].Agent;
-            string Deskey = _config.CurrencyData[tpCustInfo.TpCurrencyId].Deskey;
-            string Md5key = _config.CurrencyData[tpCustInfo.TpCurrencyId].Md5key;
+            var tpConfig = _siteConfig[tpCustInfo.SiteId];
+            string ApiUrl = tpConfig.ApiUrl;
+            string Agent = tpConfig.CurrencyData[tpCustInfo.TpCurrencyId].Agent;
+            string Deskey = tpConfig.CurrencyData[tpCustInfo.TpCurrencyId].Deskey;
+            string Md5key = tpConfig.CurrencyData[tpCustInfo.TpCurrencyId].Md5key;
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
 
             var current = new DateTimeOffset(DateTime.UtcNow);
