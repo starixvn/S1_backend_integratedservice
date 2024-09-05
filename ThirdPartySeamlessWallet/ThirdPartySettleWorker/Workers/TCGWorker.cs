@@ -127,27 +127,40 @@ namespace ThirdPartySettleWorker.Workers
                         }
                         else
                         {
+                            var checkCancelData = _tpUnSettledBLL.GetTpUnsettleData<TCGCancelCheckData>("Service_BettransLottery_TCG_CancelCheck", 
+                                new { TpUserName = unsettled.Account, unsettled.OrderNum }, DataBase.Main)?.FirstOrDefault();
+                            
                             if (gameType == GameType.TCG_VN_Lottery)
                             {
                                 var checkWagerCancelData = _tpUnSettledBLL.GetTpUnsettleData<TCGCancelWagerData>(setCancelSP, 
                                     new { TpUserName = unsettled.Account, unsettled.OrderNum }, DataBase.Wager)?.FirstOrDefault();
-                                if (checkWagerCancelData is null || checkWagerCancelData.PlanBetAmount != unsettled.ValidBet)
+                                
+                                if (checkWagerCancelData is not null && checkWagerCancelData.PlanBetAmount != unsettled.ValidBet)
                                 {
                                     _logger.LogWarning($"TCG cancel stake check fail || TransId : {transId}  OrderNum: {unsettled.OrderNum}");
                                     continue;
                                 }
+                                
+                                if (checkCancelData is not null &&
+                                    checkWagerCancelData is not null &&
+                                    checkCancelData.TicketType == (int) BettransType.CancelBet &&
+                                    checkCancelData.TicketStatus == (int) TicketStatus.Refund)
+                                {
+                                    settlementType = SettlementType.SettledForInvalid;
+                                    ticketStatus = TicketStatus.Refund;
+                                    isSettle = true;
+                                }
                             }
-                            
-                            var checkCancelData = _tpUnSettledBLL.GetTpUnsettleData<TCGCancelCheckData>("Service_BettransLottery_TCG_CancelCheck", 
-                                new { TpUserName = unsettled.Account, unsettled.OrderNum }, DataBase.Main)?.FirstOrDefault();
-
-                            if (checkCancelData is not null &&
-                                checkCancelData.TicketType == (int) BettransType.CancelBet &&
-                                checkCancelData.TicketStatus == (int) TicketStatus.Refund)
+                            else
                             {
-                                settlementType = SettlementType.SettledForInvalid;
-                                ticketStatus = TicketStatus.Refund;
-                                isSettle = true;
+                                if (checkCancelData is not null &&
+                                    checkCancelData.TicketType == (int) BettransType.CancelBet &&
+                                    checkCancelData.TicketStatus == (int) TicketStatus.Refund)
+                                {
+                                    settlementType = SettlementType.SettledForInvalid;
+                                    ticketStatus = TicketStatus.Refund;
+                                    isSettle = true;
+                                }
                             }
                         }
 
