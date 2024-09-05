@@ -2277,7 +2277,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
             var result = PlaceBet(tpCustInfo,
-                data.bet == 0 ? data.amount : data.bet,
+                data.betAmount == 0 ? data.amount : data.betAmount,
                 (int)Tp.PG2,
                 data.roundId,  //TpTransId
                 (int)GameType.PG2_RNG,

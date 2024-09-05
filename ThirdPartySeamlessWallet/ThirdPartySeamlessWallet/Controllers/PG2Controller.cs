@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.Model;
 
@@ -35,7 +34,7 @@ public class PG2Controller : ControllerBase
     /// <returns></returns>
     [HttpPost]
     [Route("[controller]/seamless/balance")]
-    public Response_PG2 GetBalanceAsync(CommonRequest_PG2 request)
+    public BalanceResponse_PG2 GetBalanceAsync(CommonRequest_PG2 request)
     {
         return _PG2Bll.GetBalance(request);
     }
@@ -49,5 +48,38 @@ public class PG2Controller : ControllerBase
     public async Task<BetResponse_PG2> BetAsync(BetRequest_PG2 request)
     {
         return await _PG2Bll.Bet(request);
+    }
+
+    /// <summary>
+    /// Slot派發彩金
+    /// </summary>
+    /// <returns></returns>
+    [HttpPost]
+    [Route("[controller]/seamless/payout")]
+    public async Task<PayoutResponse_PG2> PayoutAsync(PayoutRequest_PG2 request)
+    {
+        return await _PG2Bll.Payout(request);
+    }
+
+    /// <summary>
+    /// Slot取消下注
+    /// </summary>
+    /// <returns></returns>
+    [HttpPost]
+    [Route("[controller]/seamless/cancel")]
+    public async Task<CancelResponse_PG2> CancelAsync(CancelRequest_PG2 request)
+    {
+        return await _PG2Bll.Cancel(request);
+    }
+
+    /// <summary>
+    /// Slot取消下注
+    /// </summary>
+    /// <returns></returns>
+    [HttpPost]
+    [Route("[controller]/seamless/settlement")]
+    public async Task<SettleResponse_PG2> SlotSettleAsync(SettlementRequest_PG2 request)
+    {
+        return await _PG2Bll.Settlement(request);
     }
 }
