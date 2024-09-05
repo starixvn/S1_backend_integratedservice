@@ -1176,6 +1176,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     {
                         return -2;
                     }
+                    // 檢查是否有派彩過
+                    if (bettrans.Any(i => i.TicketType == BettransType.Payout))
+                    {
+                        return -1;
+                    }
 
                     var roundId = string.IsNullOrEmpty(betDataSet.ResultId) ? "" : betDataSet.ResultId;
                     var p = new DynamicParameters(new
