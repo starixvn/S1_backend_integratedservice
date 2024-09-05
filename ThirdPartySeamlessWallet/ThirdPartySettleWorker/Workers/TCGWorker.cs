@@ -135,7 +135,7 @@ namespace ThirdPartySettleWorker.Workers
                                 var checkWagerCancelData = _tpUnSettledBLL.GetTpUnsettleData<TCGCancelWagerData>(setCancelSP, 
                                     new { TpUserName = unsettled.Account, unsettled.OrderNum }, DataBase.Wager)?.FirstOrDefault();
                                 
-                                if (checkWagerCancelData is not null && checkWagerCancelData.PlanBetAmount != unsettled.ValidBet)
+                                if (checkWagerCancelData is not null && checkWagerCancelData.PlanBetAmount != unsettled.Stake)
                                 {
                                     _logger.LogWarning($"TCG cancel stake check fail || TransId : {transId}  OrderNum: {unsettled.OrderNum}");
                                     continue;
