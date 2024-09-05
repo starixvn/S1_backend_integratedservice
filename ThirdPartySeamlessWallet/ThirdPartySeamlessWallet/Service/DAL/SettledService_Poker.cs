@@ -1419,7 +1419,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         SettleDate = partitionTime,
                         TicketNo = betDataSet.TicketNo,
                         GameId = betDataSet.GameId,
-                        GameRoundId = betDataSet.GameRoundId,
+                        GameRoundId = string.IsNullOrEmpty(betDataSet.GameRoundId) ? "" : betDataSet.GameRoundId,
                         TransactionId = string.IsNullOrEmpty(betDataSet.TransactionId) ? "" : betDataSet.TransactionId,
                         Stake = 0m,
                         ActualStake = 0m,
