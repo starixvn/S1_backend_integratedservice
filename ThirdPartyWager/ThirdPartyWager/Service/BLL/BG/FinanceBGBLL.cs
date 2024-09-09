@@ -1,11 +1,8 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model.TpSiteConfig;
-using static Org.BouncyCastle.Math.EC.ECCurve;
-
 namespace ThirdPartyWager.Service.BLL;
 
 public class FinanceBGBLL : ITpReportBLL
