@@ -40,9 +40,15 @@ public class WagerBGBLL
             result = await GetWagersAsync(siteId, tpCurrencyId, time.startTime, time.endTime, type);
         else if (type == WagerTimerType.RedoWager)
         {
-            var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
+            var cvTime = DateTimeOffset.Now.AddMinutes(needQuickTime * -1).ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
+            {
                 result = await GetWagersAsync(siteId, tpCurrencyId, time.startTime, time.endTime, type, true);
+            }
+            else
+            {
+                result = false;
+            }
         }
 
         if (result)
