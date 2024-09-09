@@ -288,6 +288,10 @@ namespace ThirdPartyWager.Service.BLL
         {
             var result = new List<FincanceDailySummary>();
             var apiUrl = $"{_domain}/{config.WebSite}/countSummaryTransactionByHour";
+            if (string.IsNullOrEmpty(_domain) || _domain == "")
+            {
+                throw new Exception($"NineW CountSummaryTransactionByHourAsync fail. _domain is {_domain}.");
+            }
 
             foreach (var currency in _currencyList)
             {
@@ -361,6 +365,11 @@ namespace ThirdPartyWager.Service.BLL
             var result = new List<SummaryTransaction>();
             var range = date.DateToTimeRange(_timeZone);
             var apiUrl = $"{_domain}/{config.WebSite}/querySummaryTransaction";
+            if (string.IsNullOrEmpty(_domain) || _domain == "")
+            {
+                throw new Exception($"NineW QuerySummaryTransaction fail. _domain is {_domain}.");
+            }
+
             var agents = GetAgents();
 
             foreach (var type in _reportType)
