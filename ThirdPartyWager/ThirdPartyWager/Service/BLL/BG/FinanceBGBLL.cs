@@ -72,8 +72,11 @@ public class FinanceBGBLL : ITpReportBLL
 
             foreach (var item in tpCurrencyList)
             {
+                if (!_setting.CurrencyData.ContainsKey(item.TpCurrencyId))
+                {
+                    continue;
+                }
                 var currencyData = _setting.CurrencyData[item.TpCurrencyId];
-                if (currencyData == null) continue;
 
                 var prefixMsg = $"Finance {siteInfo.SiteId}_{item.TpCurrencyId}_";
                 var sn = currencyData.Sn;
