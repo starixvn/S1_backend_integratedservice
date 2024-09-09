@@ -59,8 +59,11 @@ public class WagerBG : BackgroundService
 
                 foreach (var item in TpCurrencyList)
                 {
+                    if (!_setting.CurrencyData.ContainsKey(item.TpCurrencyId))
+                    {
+                        continue;
+                    }
                     var currencyData = _setting.CurrencyData[item.TpCurrencyId];
-                    if (currencyData == null) continue;
 
                     quick = await _wagerBGBLL.ExecWagerWorker(siteInfo.SiteId, item.TpCurrencyId, tpType, timeRange, needQuickTime);
                     if (!isFast && quick) isFast = true;
