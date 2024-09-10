@@ -7402,6 +7402,17 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var result = _partitionService.Execute(partitionTime, "Service_BettransRng_PG2_Ins_V2", data, trans);
             return result != 0;
         }
+
+        public bool InsertUnsettle_PG2(DateTime partitionTime, string transactionId, MySqlTransaction trans)
+        {
+            var result = _tpUnsettleService.InsertTpUnsettle(Tp.PG2, GameType.PG2_RNG, transactionId, trans, partitionTime);
+
+            if (result == 0)
+            {
+                return false;
+            }
+            return true;
+        }
         #endregion
     }
 }

@@ -502,6 +502,23 @@ public class PG2BLL : IPG2BLL
             }
         }
 
+        if (data.isEndRound)
+        {
+            result = _settledService.InsertUnsettle_PG2(partitionTime, data.roundId, trans);
+            if (!result)
+            {
+                _logger.LogError($"InsertUnsettle_AMB failed {data.roundId}");
+                return new SettleResponse_PG2()
+                {
+                    status = new Status_PG2()
+                    {
+                        code = PG2ErrorCode.ServiceNotAvailable,
+                        message = PG2ErrorCode.ServiceNotAvailable.GetEnumDescription()
+                    }
+                };
+            }
+        }
+
         if (afterAmount == 0)
         {
             tpCustBalance = _tpCustInfoBll.GetBalance((int)thisTp, request.UserName, (int)GameType);
