@@ -46,7 +46,7 @@ namespace ThirdParty.Marbles
                 playerSession = token,
                 currency = tpCustInfo.TpCurrencyId
             };
-            var sParam = encodeAESMD5(System.Text.Json.JsonSerializer.Serialize(request), config.AgentKey);
+            var sParam = EncodeAESMD5(System.Text.Json.JsonSerializer.Serialize(request), config.AgentKey);
 
             var result = HttpPost($"{apiUrl}/gapi/api/game/", $"{{\"params\":\"{sParam}\"}}", "application/json");
 
@@ -70,7 +70,6 @@ namespace ThirdParty.Marbles
         {
             //Marbles無注單明細API 拿Bettrans
             var getSpName = "Service_BettransLT_Marbles_Detail_Get";
-            var db = DataBase.Wager;
 
             TpCurrency tpCurrency = new()
             {
@@ -139,7 +138,11 @@ namespace ThirdParty.Marbles
         
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var oApiResult = new ApiResult<UserBalance>
+            {
+                ErrorCode = ErrorCode.Fail
+            };
+            return oApiResult;
         }
         
         public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -156,9 +159,9 @@ namespace ThirdParty.Marbles
         
         #region Private
         
-        private string encodeAESMD5(string jsonStr, string Key)
+        private string EncodeAESMD5(string jsonStr, string Key)
         {
-            byte[] keyArray = getMd5(Key);
+            byte[] keyArray = GetMd5(Key);
             byte[] toEncryptArray = UTF8Encoding.UTF8.GetBytes(jsonStr);
             RijndaelManaged rDel = new RijndaelManaged();
             rDel.Key = keyArray;
@@ -168,9 +171,9 @@ namespace ThirdParty.Marbles
             byte[] resultArray =
             cTransform.TransformFinalBlock(toEncryptArray, 0,
             toEncryptArray.Length);
-            return byteToHexStr(resultArray);
+            return ByteToHexStr(resultArray);
         }
-        private string byteToHexStr(byte[] bytes)
+        private string ByteToHexStr(byte[] bytes)
         {
             string returnStr = "";
             if (bytes != null)
@@ -182,7 +185,7 @@ namespace ThirdParty.Marbles
             }
             return returnStr;
         }
-        private byte[] getMd5(String keyString)
+        private static  byte[] GetMd5(String keyString)
         {
             MD5 md5 = MD5.Create();
             byte[] buffer =
@@ -193,10 +196,10 @@ namespace ThirdParty.Marbles
             Array.Copy(MD5Buffer, 0, rawKey, 16, 16);
             return rawKey;
         }
-        private string decodeAESMD5(string encStr, string Key)
+        private static string DecodeAESMD5(string encStr, string Key)
         {
-            byte[] keyArray = getMd5(Key);
-            byte[] toEncryptArray = hexStrToBytes(encStr);
+            byte[] keyArray = GetMd5(Key);
+            byte[] toEncryptArray = HexStrToBytes(encStr);
             RijndaelManaged rDel = new RijndaelManaged(); rDel.Key = keyArray;
             rDel.Mode = CipherMode.ECB;
             rDel.Padding = PaddingMode.PKCS7;
@@ -207,7 +210,7 @@ namespace ThirdParty.Marbles
             return UTF8Encoding.UTF8.GetString(resultArray);
 
         }
-        private byte[] hexStrToBytes(string hexString)
+        private static byte[] HexStrToBytes(string hexString)
         {
             byte[] bytes = new byte[hexString.Length / 2];
             for (var x = 0; x < bytes.Length; x++)

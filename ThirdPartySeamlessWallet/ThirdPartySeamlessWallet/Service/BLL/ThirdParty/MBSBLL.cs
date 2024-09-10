@@ -16,6 +16,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly Log2File _log2File;
         private readonly Tp _thisTp;
         private readonly int _gameType = 0;
+        private readonly int _agentLength = 7;
 
         public MBSBLL(IServiceProvider provider)
         {
@@ -31,7 +32,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public MBSTransferInOutResponse Bet(MBSTransferInOutRequest requestData)
         {
             var logName = $"{_thisTp.ToString()}_Bet";
-            _log2File.Info(JsonConvert.SerializeObject(requestData), $"Marbles_Bet");
+            _log2File.Info(JsonConvert.SerializeObject(requestData), logName);
             var mbsBetResponse = new MBSTransferInOutResponse()
             {
                 code = "-1",
@@ -41,12 +42,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             
             try
             {
+                //Marbles 下注需要判断余额是否足够【批量处理】，如果失败全部回滚
+                var checkMarblesBet = CheckMarblesBet(requestData);
+                if (!checkMarblesBet)
+                {
+                    return mbsBetResponse;
+                }
+                
                 //Marbles 下多注會是批量下注 所以走foreach跑
                 foreach (var request in requestData.bets)
                 {
                     //名字會帶agent跟代理 先處理
-                    request.account = GetTpUserName(request.account);
-                    var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)Tp.Marbles, request.account);
+                    request.account = MarblesGetTpUserName(request.account);
+                    var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, request.account);
 
                     if (tpCheck == null)
                     {
@@ -119,7 +127,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public MBSTransferInOutResponse Settle(MBSTransferInOutRequest requestData)
         {
             var logName = $"{_thisTp.ToString()}_Settle";
-            _log2File.Info(JsonConvert.SerializeObject(requestData), $"Marbles_Settle");
+            _log2File.Info(JsonConvert.SerializeObject(requestData), logName);
             var mbsSettleResponse = new MBSTransferInOutResponse()
             {
                 code = "-1",
@@ -130,13 +138,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             try
             {
                 //派彩也是一起派 走foreach
+                //派彩【批量处理】，可以部分成功或者全部成功
+                //若失敗的直接如部分订单处理失败，无须返回对应的单条订单，我方直接判断缺失订单为失败处理
                 foreach (var request in requestData.bets)
                 {
-                    request.account = GetTpUserName(request.account);
+                    request.account = MarblesGetTpUserName(request.account);
                     var result = Settle_MBS(request, out var tpAfterAmount);
-                    if (result > 0 || result == -1)
+                    //成功才進，失敗的直接不寫入response，要不然Marbles會視為成功單
+                    if (result > 0)
                     {
-                        if (tpAfterAmount == 0 || result == -1)
+                        if (tpAfterAmount == 0)
                         { 
                             var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, request.account, _gameType);
                             tpAfterAmount = tpCustBalance.Balance;
@@ -167,7 +178,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             
         }
-        
+
+        public string MarblesGetTpUserName(string marblesAccount)
+        {
+            return marblesAccount.Substring(_agentLength);
+        }
+
         #region Exchange
 
         private int Bet_MBS(MBSBetSettleData bettingData_MBS, out decimal afterAmount)
@@ -248,10 +264,34 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         #endregion
         
         #region Private
-        
-        private string GetTpUserName(string marblesAccount)
+
+        private bool CheckMarblesBet(MBSTransferInOutRequest request)
         {
-            return marblesAccount.Substring(7);
+            var groupedBets = request.bets.GroupBy(b => MarblesGetTpUserName(b.account));
+            
+            foreach (var group in groupedBets)
+            {
+                var account = group.Key;
+                var totalBet = group.Sum(b => b.bet);
+                
+                var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, account);
+                var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)_thisTp, tpCustInfo.CurrencyId);
+                var custBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, account, _gameType);
+
+                if (tpCurrency.ExchangeRate != 0)
+                {
+                    totalBet *= tpCurrency.ExchangeRate;
+                    custBalance.Balance *= tpCurrency.ExchangeRate;
+                }
+                
+                if (custBalance.Balance < totalBet)
+                {
+                    return false;
+                }
+            }
+
+            // 如果所有帳戶的投注金額均符合餘額條件，返回 true
+            return true;
         }
         
         #endregion

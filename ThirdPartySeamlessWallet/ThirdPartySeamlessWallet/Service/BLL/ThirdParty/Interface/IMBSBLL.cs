@@ -6,5 +6,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface
     {
         MBSTransferInOutResponse Bet(MBSTransferInOutRequest requestData);
         MBSTransferInOutResponse Settle(MBSTransferInOutRequest requestData);
+        string MarblesGetTpUserName(string marblesAccount);
     }
 }
