@@ -22,6 +22,17 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string seqNo { get; set; }
         public string signature { get; set; }
     }
+    
+    public class Validate_EBet
+    {
+        public int channelId { get; set; }
+        public long timestamp { get; set; }
+        public string signature { get; set; }
+        public string Event { get; set; }
+        public string sessionToken { get; set; }
+        public string ip { get; set; }
+        public string seqNo { get; set; }
+    }
 
     public class SyncCreditData_EBet
     {
