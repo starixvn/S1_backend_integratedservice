@@ -53,6 +53,17 @@ namespace ThirdPartySeamlessWallet.Controllers
             public string nickname { get; set; }
         }
 
+        public class ValidateResp
+        {
+            public int status { get; set; }
+            public string seqNo { get; set; }
+            public string username { get; set; }
+            public long timestamp { get; set; }
+            public string currency { get; set; }
+            public decimal money { get; set; }
+            public string nickname { get; set; }
+        }
+        
         public class GetBalanceResp
         {
             public string username { get; set; }
@@ -149,6 +160,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         #endregion
 
         [HttpPost]
+        //2024-10-28 關閉
         public GetRegisterLoginResp registerOrLogin(RegisterLoginData_EBet registerLoginReq)
         {
             string logName = $"{thisTp}_Register_Login";
@@ -213,6 +225,76 @@ namespace ThirdPartySeamlessWallet.Controllers
             return getRegisterLoginResp;
         }
 
+        [HttpPost]
+        public ValidateResp validate(Validate_EBet validateReq)
+        {
+            var logName = $"{thisTp}_Validate";
+
+            var validateResp = new ValidateResp
+            {
+                status = 500
+            };
+            
+            // check signature
+            if (string.IsNullOrEmpty(validateReq.signature))
+            {
+                validateResp.status = 4026;
+                log2File.Error($"{JsonConvert.SerializeObject(validateReq)}\r\n{JsonConvert.SerializeObject(validateResp)}", logName);
+                return validateResp;
+            }
+
+            var auth = authBLL.Authenticate(HttpUtility.UrlDecode(validateReq.sessionToken), out TpCustInfoAuth tpCustInfoAuth);
+            
+            try
+            {
+                if (auth)
+                {
+                    var sign = $"{validateReq.timestamp}";
+                    var privateKey = _siteEBetConfig.Currency.FirstOrDefault(x => x.CurrencyId == tpCustInfoAuth.TpCurrencyId)?.PrivateKey;
+                    var check = VerifySignature(sign, validateReq.signature, privateKey);
+                    if (!check)
+                    {
+                        validateResp.status = 4026;
+                        log2File.Error($"{JsonConvert.SerializeObject(validateReq)}\r\n{JsonConvert.SerializeObject(validateResp)}", logName);
+                        return validateResp;
+                    }
+                    
+                    var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
+                    if (tpCheck == null || tpCheck.Locked)
+                    {
+                        validateResp.status = 4037;
+                        log2File.Error($"{JsonConvert.SerializeObject(validateReq)}\r\n{JsonConvert.SerializeObject(validateResp)}", logName);
+                        return validateResp;
+                    }
+
+                    var tpCustBalance = tpCustInfoBLL.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, gameType);
+                    
+                    validateResp.status = 200;
+                    validateResp.seqNo = validateReq.seqNo;
+                    validateResp.username = tpCustInfoAuth.UserName;
+                    validateResp.currency = tpCustInfoAuth.TpCurrencyId;
+                    validateResp.nickname = tpCustInfoAuth.UserName;
+                    validateResp.money = tpCustBalance.Balance;
+                    validateResp.timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
+                }
+                else
+                {
+                    validateResp.status = 410;
+                    log2File.Error($"{JsonConvert.SerializeObject(validateReq)}\r\n{JsonConvert.SerializeObject(validateResp)}", logName);
+                    return validateResp;
+                }
+            }
+            catch (Exception ex)
+            {
+                validateResp.status = 500;
+                log2File.Error($"{JsonConvert.SerializeObject(validateReq)}\r\n{JsonConvert.SerializeObject(validateResp)}\r\n{ex}", logName, ex);
+                return validateResp;
+            }
+
+            log2File.Info($"{JsonConvert.SerializeObject(validateReq)}\r\n{JsonConvert.SerializeObject(validateResp)}", logName);
+            return validateResp;
+        }
+        
         [HttpPost]
         public GetBalanceResp syncCredit(SyncCreditData_EBet syncCreditReq)
         {
@@ -281,9 +363,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return getBetResp;
             }
 
-            var result = 0;
             try
             {
+                int result;
                 switch (getBetReq.type)
                 {
                     case 1:
@@ -291,7 +373,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                         // 1: bet、27: pre-bet
                         logName = $"{logName}_Bet";
                         var tpCheck = thirdPartyBLL.ThirdPartyCheckWithCache((int)thisTp, getBetReq.username);
-                        if (tpCheck == null || tpCheck.Locked)
+                        if (tpCheck == null )
+                        {
+                            getBetResp.status = 410;
+                            getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
+                            return getBetResp;
+                        }
+
+                        if (tpCheck.Locked)
                         {
                             getBetResp.status = 4037;
                             getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
@@ -299,13 +389,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                             return getBetResp;
                         }
 
-                        if (tpCheck.Token != HttpUtility.UrlDecode(getBetReq.sessionToken))
-                        {
-                            getBetResp.status = 410;
-                            getBetResp.timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-                            log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBetResp)}", logName);
-                            return getBetResp;
-                        }
                         /*
                          * type 11測試: 該情境 type 27成功 並且 type 1是失敗的
                         if (getBetReq.type == 1)
@@ -316,6 +399,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             return getBetResp;
                         }
                         */
+                        
                         result = bettingBLL.PlaceBetLC_EBet(getBetReq, out decimal tpAffterAmount);
                         if (result > 0)
                         {
@@ -647,12 +731,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         private static bool VerifySignature(string dataToSign, string signedData, string publicKey)
         {
             var encoder = new UTF8Encoding();
-            using var RSAalg = new RSACryptoServiceProvider();
-            RSAParameters priKey = RSAalg.ExportParameters(true);
-            RSAalg.ImportParameters(priKey);
-            RSAalg.FromXmlString(publicKey);
-            byte[] plaintext = encoder.GetBytes(dataToSign);
-            return RSAalg.VerifyData(plaintext, CryptoConfig.MapNameToOID("MD5"), Convert.FromBase64String(signedData));
+            using var rsAalg = new RSACryptoServiceProvider();
+            var priKey = rsAalg.ExportParameters(true);
+            rsAalg.ImportParameters(priKey);
+            rsAalg.FromXmlString(publicKey);
+            var plaintext = encoder.GetBytes(dataToSign);
+            return rsAalg.VerifyData(plaintext, CryptoConfig.MapNameToOID("MD5"), Convert.FromBase64String(signedData));
         }
     }
 }
