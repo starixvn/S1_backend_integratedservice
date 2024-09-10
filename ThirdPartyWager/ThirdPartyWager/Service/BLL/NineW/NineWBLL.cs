@@ -63,7 +63,7 @@ namespace ThirdPartyWager.Service.BLL
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "NineW GetWagersAsync Exception.");
+                _logger.LogError(ex, "NineW GetUnsettleWagersAsync Exception.");
                 return false;
             }
         }
@@ -91,7 +91,7 @@ namespace ThirdPartyWager.Service.BLL
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "NineW GetWagersAsync Exception.");
+                _logger.LogError(ex, "NineW GetReSettleWagersAsync Exception.");
                 return false;
             }
         }
@@ -110,8 +110,8 @@ namespace ThirdPartyWager.Service.BLL
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "NineW GetReportAsync Exception.");
-                return false;
+                _logger.LogError(ex, $"NineW CountSummaryTransactionByHourAsync Exception. ({ex.Message})");
+                throw;
             }
         }
 
@@ -126,8 +126,8 @@ namespace ThirdPartyWager.Service.BLL
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "NineW GetReportAsync Exception.");
-                return false;
+                _logger.LogError(ex, $"NineW GetSummaryTransactionReportAsync Exception. ({ex.Message})");
+                throw;
             }
 
         }

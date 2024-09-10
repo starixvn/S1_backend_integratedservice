@@ -44,7 +44,7 @@ namespace ThirdPartyWager.Workers
             {
                 _logger.LogError(ex, ex.Message);
             }
-            
+
             _getDomainTimer = new Timer(DoGetDomain, null, TimeSpan.FromMinutes(1), TimeSpan.Zero);
             _settleTimer = new Timer(DoSettle, null, TimeSpan.FromSeconds(1), TimeSpan.Zero);
             _settleTimerByDate = new Timer(DoSettleByDate, null, TimeSpan.FromSeconds(3), TimeSpan.Zero);
@@ -199,6 +199,7 @@ namespace ThirdPartyWager.Workers
             {
                 return;
             }
+
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var timerType = (int)WagerTimerType.UserReport;
@@ -218,15 +219,15 @@ namespace ThirdPartyWager.Workers
                         _thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, timerType, new DateTimeOffset(date.AddHours(4)).ToUnixTimeSeconds(), tpType);
                     }
                 }
-
-                if ((int)DateTime.UtcNow.AddDays(-1).Subtract(date).TotalDays > intervalDays)
+                var checkDays = (int)DateTime.UtcNow.AddDays(-1).Subtract(date).TotalDays;
+                if (checkDays > intervalDays)
                 {
                     nextTimeSpan = TimeSpan.FromSeconds(1);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "WagerNineW.GetReportByDate.Exception");
+                _logger.LogError(ex, $"WagerNineW.GetReportByDate.Exception ({ex.Message})");
                 nextTimeSpan = TimeSpan.FromHours(1);
             }
             finally
@@ -241,6 +242,7 @@ namespace ThirdPartyWager.Workers
             {
                 return;
             }
+
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var timerType = (int)WagerTimerType.Finance;
@@ -261,14 +263,15 @@ namespace ThirdPartyWager.Workers
                     }
                 }
 
-                if ((int)DateTime.UtcNow.AddDays(-1).Subtract(date).TotalDays > intervalDays)
+                var checkDays = (int)DateTime.UtcNow.AddDays(-1).Subtract(date).TotalDays;
+                if (checkDays > intervalDays)
                 {
                     nextTimeSpan = TimeSpan.FromSeconds(3);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "WagerNineW.DoTpDailySummary.Exception");
+                _logger.LogError(ex, $"WagerNineW.DoTpDailySummary.Exception ({ex.Message})");
                 nextTimeSpan = TimeSpan.FromHours(1);
             }
             finally
@@ -292,7 +295,7 @@ namespace ThirdPartyWager.Workers
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var nextTimeSpan = TimeSpan.FromHours(1);
-            
+
             if (!_env.IsProduction())
             {
                 return;
