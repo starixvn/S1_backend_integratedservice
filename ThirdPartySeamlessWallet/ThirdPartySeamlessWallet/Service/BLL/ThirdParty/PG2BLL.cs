@@ -467,24 +467,23 @@ public class PG2BLL : IPG2BLL
             };
         }
 
-        //settle不需要算bet?
-        //if (data.betAmount != 0)
-        //{
-        //    result = _bettingService.SetBalance_PG2(tpCustInfo, data, out afterAmount, ref bonusId, conn, trans);
-        //    if (!result)
-        //    {
-        //        await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
-        //        _logger.LogError("PlaceBetV2 failed");
-        //        return new SettleResponse_PG2()
-        //        {
-        //            status = new Status_PG2()
-        //            {
-        //                code = PG2ErrorCode.BalanceInsufficient,
-        //                message = PG2ErrorCode.BalanceInsufficient.GetEnumDescription()
-        //            }
-        //        };
-        //    }
-        //}
+        if (data.betAmount != 0)
+        {
+            result = _bettingService.SetBalance_PG2(tpCustInfo, data, out afterAmount, ref bonusId, conn, trans);
+            if (!result)
+            {
+                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
+                _logger.LogError("PlaceBetV2 failed");
+                return new SettleResponse_PG2()
+                {
+                    status = new Status_PG2()
+                    {
+                        code = PG2ErrorCode.BalanceInsufficient,
+                        message = PG2ErrorCode.BalanceInsufficient.GetEnumDescription()
+                    }
+                };
+            }
+        }
 
         if (data.amount != 0)
         {
@@ -536,7 +535,7 @@ public class PG2BLL : IPG2BLL
         if (bonusId > 0)
         {
             _logger.LogInformation($"user {tpCustInfo.TpUserName} has bonus wallet bonusId:{bonusId} transId:{data.roundId}");
-            _settledService.UpdateTpBonusFlag((int)Tp.AMB, data.roundId, (int)GameType.AMB_RNG, TpCategory.Slots, out var custId, out bonusId);
+            _settledService.UpdateTpBonusFlag((int)Tp.PG2, data.roundId, (int)GameType.PG2_RNG, TpCategory.Slots, out var custId, out bonusId);
         }
         return new SettleResponse_PG2()
         {

@@ -7564,6 +7564,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
             var result = 0;
+            data.amount = data.amount + data.betAmount;//用winloss+bet反推payout
             if (bonusId > 0)
             {
                 result = PayoutWithBonusId(tpCustInfo, data.amount, (int)Tp.PG2, data.roundId, (int)GameType.PG2_RNG,
