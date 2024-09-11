@@ -427,7 +427,7 @@ public class PG2BLL : IPG2BLL
             refId = request.RefId,
             timestamp = partitionTime,
             isFeatureBuy = request.IsFeatureBuy,
-            betAmount = request.BetAmount,
+            betAmount = Math.Abs(request.BetAmount),
             isEndRound = request.IsEndRound,
             parentRoundId = request.ParentRoundId,
             isOnlyPayout = request.IsOnlyPayout,
@@ -466,23 +466,24 @@ public class PG2BLL : IPG2BLL
             };
         }
 
-        if (data.betAmount != 0)
-        {
-            result = _bettingService.SetBalance_PG2(tpCustInfo, data, out afterAmount, ref bonusId, conn, trans);
-            if (!result)
-            {
-                await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
-                _logger.LogError("PlaceBetV2 failed");
-                return new SettleResponse_PG2()
-                {
-                    status = new Status_PG2()
-                    {
-                        code = PG2ErrorCode.BalanceInsufficient,
-                        message = PG2ErrorCode.BalanceInsufficient.GetEnumDescription()
-                    }
-                };
-            }
-        }
+        //settle不需要算bet?
+        //if (data.betAmount != 0)
+        //{
+        //    result = _bettingService.SetBalance_PG2(tpCustInfo, data, out afterAmount, ref bonusId, conn, trans);
+        //    if (!result)
+        //    {
+        //        await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
+        //        _logger.LogError("PlaceBetV2 failed");
+        //        return new SettleResponse_PG2()
+        //        {
+        //            status = new Status_PG2()
+        //            {
+        //                code = PG2ErrorCode.BalanceInsufficient,
+        //                message = PG2ErrorCode.BalanceInsufficient.GetEnumDescription()
+        //            }
+        //        };
+        //    }
+        //}
 
         if (data.amount != 0)
         {
