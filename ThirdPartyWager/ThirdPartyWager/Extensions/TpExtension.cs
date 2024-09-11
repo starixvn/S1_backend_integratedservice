@@ -742,7 +742,7 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<ApiMarblesBLL>();
 
             services.AddHostedService<WagerMarbles>();
-            //services.AddHostedService<WagerRedoMarbles>();
+            services.AddHostedService<WagerRedoMarbles>();
             services.AddHostedService<FinanceMarbles>();
             return services;
         }

@@ -38,8 +38,8 @@ namespace ThirdPartyWager.Workers
             return Task.CompletedTask;
         }
         
-         private async void DoTask(object state)
-         {
+        private async void DoTask(object state)
+        { 
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var result = 0;
@@ -57,31 +57,24 @@ namespace ThirdPartyWager.Workers
                 if (timerTime < nowTime)
                 {
                     var time = _dateTimeHelper.GetTimeByMinute(last, timeZone, _timeFormat, timerTime);
-
-                    //現在只有Nova 除了Nova就先別動
                     var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
                     foreach (var site in siteList)
                     {
                         var _setting = _siteConfigDic[site.SiteId];
-
-                        if (_setting == null) continue;
-
-                        if (site.SiteId == 1)
-                        {
-                            result = await _wagerMarblesBLL.GetWagerAsync(_setting, time.startUnix, time.endUnix);
-                        }
+                        result = await _wagerMarblesBLL.GetWagerAsync(_setting, time.startUnix, time.endUnix);
 
                         if (result < 0)
                         {
-                            //第三方因素或Insert失敗回傳為-1，直接進break不再更新時間。
+                            //第三方因素或Insert失敗回傳為-1 直接進break 不再更新時間
                             break;
                         }
                     }
-
+                    
                     if (result > 0)
                     {
                         _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, time.endUnix);
                     }
+                    
                 }
                 
                 if ((int)DateTime.Now.Subtract(timerTime).TotalMinutes > 3)
@@ -106,6 +99,6 @@ namespace ThirdPartyWager.Workers
                     _timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
-         }
+        }
     }
 }

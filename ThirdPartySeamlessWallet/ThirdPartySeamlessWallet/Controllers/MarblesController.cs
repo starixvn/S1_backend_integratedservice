@@ -16,16 +16,15 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly AuthBLL _authBLL;
         private readonly Tp _thisTp;
         private readonly int _gameType;
-        private readonly Log2File _log2File;
         private readonly Dictionary<int, MarblesConfig> _siteConfigDic;
         private readonly IMBSBLL _IMBSBLL;
+        private readonly int _agentLength = 7;
         
         public MarblesController(IServiceProvider provider)
         {
             _IMBSBLL = provider.GetRequiredService<IMBSBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _authBLL = provider.GetRequiredService<AuthBLL>();
-            _log2File = provider.GetRequiredService<Log2File>();
             _thisTp = Tp.Marbles;
             _gameType = (int)GameType.Marbles_Lottery;
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MarblesConfig>(Tp.Marbles.ToString());
@@ -47,7 +46,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             MarblesRequest marblesRequest = JsonConvert.DeserializeObject<MarblesRequest>(JsonConvert.SerializeObject(request));
-            var verifyJson = decodeAESMD5(marblesRequest.Params, config.AgentKey);
+            var verifyJson = DecodeAESMD5(marblesRequest.Params, config.AgentKey);
             var verifyData = JsonConvert.DeserializeObject<VerifyRequest>(verifyJson);
             if (_authBLL.Authenticate(verifyData.playerSession, out TpCustInfoAuth tpCustInfoAuth))
             {
@@ -92,9 +91,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             MarblesRequest marblesRequest = JsonConvert.DeserializeObject<MarblesRequest>(JsonConvert.SerializeObject(request));
-            var getBalanceJson = decodeAESMD5(marblesRequest.Params, config.AgentKey);
+            var getBalanceJson = DecodeAESMD5(marblesRequest.Params, config.AgentKey);
             var getBalanceData = JsonConvert.DeserializeObject<MBSGetBalanceRequest>(getBalanceJson);
-            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, GetTpUserName(getBalanceData.account), _gameType);
+            var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, _IMBSBLL.MarblesGetTpUserName(getBalanceData.account), _gameType);
 
             if (tpCustBalance != null)
             {
@@ -139,7 +138,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             var result = new MBSTransferInOutResponse();
             
             var marblesRequest = JsonConvert.DeserializeObject<MarblesRequest>(JsonConvert.SerializeObject(request));
-            var transferInOutJson = decodeAESMD5(marblesRequest.Params, config.AgentKey);
+            var transferInOutJson = DecodeAESMD5(marblesRequest.Params, config.AgentKey);
             var transferInOutData = JsonConvert.DeserializeObject<MBSTransferInOutRequest>(transferInOutJson);
 
             result = transferInOutData.type switch
@@ -169,21 +168,20 @@ namespace ThirdPartySeamlessWallet.Controllers
 
 
         #region Private
-        private string decodeAESMD5(string encStr, string Key)
+        private static string DecodeAESMD5(string encStr, string Key)
         {
-            byte[] keyArray = getMd5(Key);
-            byte[] toEncryptArray = hexStrToBytes(encStr);
+            byte[] keyArray = GetMd5(Key);
+            byte[] toEncryptArray = HexStrToBytes(encStr);
             RijndaelManaged rDel = new RijndaelManaged(); rDel.Key = keyArray;
             rDel.Mode = CipherMode.ECB;
             rDel.Padding = PaddingMode.PKCS7;
             ICryptoTransform cTransform = rDel.CreateDecryptor();
             byte[] resultArray =
-            cTransform.TransformFinalBlock(toEncryptArray, 0,
-            toEncryptArray.Length);
+                cTransform.TransformFinalBlock(toEncryptArray, 0,
+                    toEncryptArray.Length);
             return UTF8Encoding.UTF8.GetString(resultArray);
-
         }
-        private byte[] hexStrToBytes(string hexString)
+        private static byte[] HexStrToBytes(string hexString)
         {
             byte[] bytes = new byte[hexString.Length / 2];
             for (var x = 0; x < bytes.Length; x++)
@@ -193,20 +191,16 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             return bytes;
         }
-        private byte[] getMd5(String keyString)
+        private static  byte[] GetMd5(String keyString)
         {
             MD5 md5 = MD5.Create();
             byte[] buffer =
-            Encoding.GetEncoding("UTF-8").GetBytes(keyString);
+                Encoding.GetEncoding("UTF-8").GetBytes(keyString);
             byte[] MD5Buffer = md5.ComputeHash(buffer);
             byte[] rawKey = new byte[32];
             Array.Copy(MD5Buffer, 0, rawKey, 0, 16);
             Array.Copy(MD5Buffer, 0, rawKey, 16, 16);
             return rawKey;
-        }
-        private string GetTpUserName(string marblesAccount)
-        {
-            return marblesAccount.Substring(7);
         }
         
         #endregion

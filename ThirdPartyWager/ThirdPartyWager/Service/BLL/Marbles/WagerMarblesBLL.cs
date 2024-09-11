@@ -46,6 +46,11 @@ namespace ThirdPartyWager.Service.BLL
                         try
                         {
                             var result = await _wagerMarblesService.InsertWager(wager);
+                            
+                            // if (result >= 1)
+                            // {
+                            //     _ = _tpUnsettleService.InsertTpUnsettle(Tp.Marbles, GameType.Marbles_Lottery, wager.gameNo);
+                            // }
                 
                             //根據Marbles說法 結尾有-1的才是結算單 結算單再丟TpUnSettle
                             if (wager.transNo.EndsWith("-1"))
