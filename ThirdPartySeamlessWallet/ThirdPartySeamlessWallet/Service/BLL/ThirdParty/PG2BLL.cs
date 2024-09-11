@@ -423,6 +423,7 @@ public class PG2BLL : IPG2BLL
             amount = request.Amount, //winlose
             product = request.Product,
             gameName = request.GameName,
+            category = request.Category,
             roundId = request.RoundId,
             refId = request.RefId,
             timestamp = partitionTime,
