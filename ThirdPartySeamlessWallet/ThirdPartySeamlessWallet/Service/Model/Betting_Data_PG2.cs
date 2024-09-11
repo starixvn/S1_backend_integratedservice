@@ -128,6 +128,8 @@ public class SettlementRequest_PG2 : CommonRequest_PG2
 
     [JsonProperty("gameName")]
     public string GameName { get; set; }
+    [JsonProperty("category")]
+    public string Category {  get; set; }
 
     [JsonProperty("roundId")]
     public string RoundId { get; set; }
