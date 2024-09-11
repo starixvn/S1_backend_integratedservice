@@ -57,16 +57,24 @@ namespace ThirdPartyWager.Workers
                 if (timerTime < nowTime)
                 {
                     var time = _dateTimeHelper.GetTimeByMinute(last, timeZone, _timeFormat, timerTime);
+                    var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+                    foreach (var site in siteList)
+                    {
+                        var _setting = _siteConfigDic[site.SiteId];
+                        result = await _wagerMarblesBLL.GetWagerAsync(_setting, time.startUnix, time.endUnix);
 
-                    //統一使用Nova 用TP名稱做分別
-                    var _setting = _siteConfigDic[1];
+                        if (result < 0)
+                        {
+                            //第三方因素或Insert失敗回傳為-1 直接進break 不再更新時間
+                            break;
+                        }
+                    }
                     
-                    result = await _wagerMarblesBLL.GetWagerAsync(_setting, time.startUnix, time.endUnix);
-
                     if (result > 0)
                     {
                         _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, time.endUnix);
                     }
+                    
                 }
                 
                 if ((int)DateTime.Now.Subtract(timerTime).TotalMinutes > 3)

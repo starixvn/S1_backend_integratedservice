@@ -44,31 +44,31 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 //Marbles 下注需要判断余额是否足够【批量处理】，如果失败全部回滚
                 var checkMarblesBet = CheckMarblesBet(requestData);
-                if (!checkMarblesBet)
+                
+                if (checkMarblesBet != 1)
                 {
-                    return mbsBetResponse;
+                    switch (checkMarblesBet)
+                    {
+                        case -1:
+                            mbsBetResponse.code = "-1";
+                            mbsBetResponse.msg = "Insufficient balance";
+                            return mbsBetResponse;
+                        case -2:
+                            mbsBetResponse.code = "-2";
+                            mbsBetResponse.msg = "User does not exist";
+                            return mbsBetResponse;
+                        case -3:
+                            mbsBetResponse.code = "-3";
+                            mbsBetResponse.msg = "User is prohibited";
+                            return mbsBetResponse;
+                        default:
+                            return mbsBetResponse;
+                    }
                 }
                 
                 //Marbles 下多注會是批量下注 所以走foreach跑
                 foreach (var request in requestData.bets)
                 {
-                    //名字會帶agent跟代理 先處理
-                    request.account = MarblesGetTpUserName(request.account);
-                    var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, request.account);
-
-                    if (tpCheck == null)
-                    {
-                        mbsBetResponse.code = "-2";
-                        mbsBetResponse.msg = "User does not exist";
-                        return mbsBetResponse;
-                    }
-
-                    if (tpCheck.Locked)
-                    {
-                        mbsBetResponse.code = "-3";
-                        mbsBetResponse.msg = "\"User is prohibited";
-                        return mbsBetResponse;
-                    }
                     
                     request.TicketType = (int)BettransType.Bet;
                     request.TicketStatus = (int)TicketStatus.UnSettled;
@@ -265,7 +265,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         
         #region Private
 
-        private bool CheckMarblesBet(MBSTransferInOutRequest request)
+        private int CheckMarblesBet(MBSTransferInOutRequest request)
         {
             var groupedBets = request.bets.GroupBy(b => MarblesGetTpUserName(b.account));
             
@@ -273,6 +273,20 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             {
                 var account = group.Key;
                 var totalBet = group.Sum(b => b.bet);
+                
+                //名字會帶agent跟代理 先處理
+                account = MarblesGetTpUserName(account);
+                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, account);
+
+                if (tpCheck == null)
+                {
+                    return -2;
+                }
+
+                if (tpCheck.Locked)
+                {
+                    return -3;
+                }
                 
                 var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, account);
                 var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)_thisTp, tpCustInfo.CurrencyId);
@@ -286,12 +300,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 
                 if (custBalance.Balance < totalBet)
                 {
-                    return false;
+                    return -1;
                 }
             }
 
-            // 如果所有帳戶的投注金額均符合餘額條件，返回 true
-            return true;
+            // 通過所有檢查回傳1
+            return 1;
         }
         
         #endregion
