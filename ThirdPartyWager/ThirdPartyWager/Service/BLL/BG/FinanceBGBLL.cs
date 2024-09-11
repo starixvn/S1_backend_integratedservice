@@ -67,16 +67,16 @@ public class FinanceBGBLL : ITpReportBLL
 
         foreach (var siteInfo in siteList)
         {
-            var _setting = _siteConfigDic[siteInfo.SiteId];
-            if (_setting == null) continue;
+            setting = _siteConfigDic[siteInfo.SiteId];
+            if (setting == null) continue;
 
             foreach (var item in tpCurrencyList)
             {
-                if (!_setting.CurrencyData.ContainsKey(item.TpCurrencyId))
+                if (!setting.CurrencyData.ContainsKey(item.TpCurrencyId))
                 {
                     continue;
                 }
-                var currencyData = _setting.CurrencyData[item.TpCurrencyId];
+                var currencyData = setting.CurrencyData[item.TpCurrencyId];
 
                 var prefixMsg = $"Finance {siteInfo.SiteId}_{item.TpCurrencyId}_";
                 var sn = currencyData.Sn;
@@ -84,7 +84,7 @@ public class FinanceBGBLL : ITpReportBLL
                 var agentLoginId = currencyData.AgentLoginId;
                 var secrectKey = currencyData.ApiSecretKey;
 
-                var getSummaryResult = await _apiBGBLL.OrderSum(setting["ApiUrl"], sn, secrectKey, agentLoginId, reportTime.startTime, reportTime.endTime);
+                var getSummaryResult = await _apiBGBLL.OrderSum(setting.ApiUrl, sn, secrectKey, agentLoginId, reportTime.startTime, reportTime.endTime);
                 if (getSummaryResult.error != null)
                 {
                     _logger.LogError($"{prefixMsg}THIRD_PARTY_ERROR\r\n{JsonConvert.SerializeObject(getSummaryResult)}");

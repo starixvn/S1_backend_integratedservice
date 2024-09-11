@@ -290,7 +290,7 @@ namespace ThirdPartyWager.Service.BLL
             var apiUrl = $"{_domain}/{config.WebSite}/countSummaryTransactionByHour";
             if (string.IsNullOrEmpty(_domain) || _domain == "")
             {
-                throw new Exception($"NineW CountSummaryTransactionByHourAsync fail. _domain is {_domain}.");
+                throw new Exception($"_domain is {_domain}");
             }
 
             foreach (var currency in _currencyList)
@@ -367,7 +367,7 @@ namespace ThirdPartyWager.Service.BLL
             var apiUrl = $"{_domain}/{config.WebSite}/querySummaryTransaction";
             if (string.IsNullOrEmpty(_domain) || _domain == "")
             {
-                throw new Exception($"NineW QuerySummaryTransaction fail. _domain is {_domain}.");
+                throw new Exception($"_domain is {_domain}");
             }
 
             var agents = GetAgents();

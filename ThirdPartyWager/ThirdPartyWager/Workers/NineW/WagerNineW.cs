@@ -205,6 +205,9 @@ namespace ThirdPartyWager.Workers
             var timerType = (int)WagerTimerType.UserReport;
             var intervalDays = 1;
             var nextTimeSpan = TimeSpan.FromHours(4);
+            var exec1 = 0;
+            var exec2 = 0;
+            var exec3 = 0;
             try
             {
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, timerType, tpType);
@@ -212,18 +215,22 @@ namespace ThirdPartyWager.Workers
                 var endTime = date.AddDays(1).AddMilliseconds(-1);
                 if (endTime < DateTime.UtcNow)
                 {
+                    exec1 = 1;
                     var summaryTransaction = _nineWService.GetSummaryTransactionReportAsync(date);//querySummaryTransaction
                     if (await summaryTransaction)
                     {
                         _logger.LogInformation($"NineW Get {date:yyyy-MM-dd} Report");
                         _thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, timerType, new DateTimeOffset(date.AddHours(4)).ToUnixTimeSeconds(), tpType);
+                        exec2 = 1;
                     }
                 }
-                var checkDays = (int)DateTime.UtcNow.AddDays(-1).Subtract(date).TotalDays;
+                var checkDays = DateTime.UtcNow.AddDays(-1).Subtract(date).TotalDays;
                 if (checkDays > intervalDays)
                 {
                     nextTimeSpan = TimeSpan.FromSeconds(1);
+                    exec3 = 1;
                 }
+                _logger.LogError($"GetReportByDate, UtcNow-1={DateTime.UtcNow.AddDays(-1)}, date={date}, checkDays={checkDays}, intervalDays={intervalDays}, exec1={exec1}, exec2={exec2}, exec3={exec3}");
             }
             catch (Exception ex)
             {
