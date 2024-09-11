@@ -34,6 +34,14 @@ public class BettingDataRNG_PG2
     public DateTime CreateTime { get; set; }
     public DateTime UpdateTime { get; set; }
 }
+
+public class SettleDataRNG_PG2 : SettleData
+{
+    public string Categories { get; set; }
+    public decimal Bet { get; set; }
+    public decimal WinLost { get; set; }
+    public decimal Turnover { get; set; }
+}
 #region request
 public class CommonRequest_PG2
 {

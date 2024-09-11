@@ -420,7 +420,7 @@ public class PG2BLL : IPG2BLL
             username = request.UserName,
             agent = request.Agent,
             type = request.Type,
-            amount = Math.Abs(request.Amount), //winlose
+            amount = request.Amount, //winlose
             product = request.Product,
             gameName = request.GameName,
             roundId = request.RoundId,
