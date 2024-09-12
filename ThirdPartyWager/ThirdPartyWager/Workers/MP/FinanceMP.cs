@@ -13,12 +13,12 @@ namespace ThirdPartyWager.Workers
         private readonly FinanceMPBLL _financeMPBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly FincanceService _fincanceService;
-        private readonly MPConfig _siteConfig;
         private readonly int _tpId = (int)Tp.MP;
         private readonly string _tpName = Tp.MP.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
         private readonly int _beyond = 2;
         private Timer timer;
+        private readonly Dictionary<int, MPConfig> _siteConfigDic;
 
         public FinanceMP(IServiceProvider provider)
         {
@@ -26,7 +26,7 @@ namespace ThirdPartyWager.Workers
             _financeMPBLL = provider.GetRequiredService<FinanceMPBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _fincanceService = provider.GetRequiredService<FincanceService>();
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<MPConfig>(_tpName);
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MPConfig>(Tp.MP.ToString());
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -73,54 +73,58 @@ namespace ThirdPartyWager.Workers
             var quick = false;
             try
             {
-                // get setting
-                var setting = _siteConfig;
-
-                // get timer
-                var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
-
-                // default time
-                var execTime = new ThirdPartyTimerModel()
+                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+                foreach (var siteData in siteList)
                 {
-                    TpId = _tpId,
-                    Type = _tpType,
-                    StartTime = (dataTpTimer == null) ? DateTime.UtcNow.AddDays(-2) : dataTpTimer.StartTime.AddSeconds(1),
-                };
+                    if (_siteConfigDic.TryGetValue(siteData.SiteId, out var _setting))
+                    {
+                        // get timer
+                        var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
 
-                // get time 
-                var day = 0;
-                TimeCast reportTime = _financeMPBLL.GetReportTime(execTime.StartTime, day);
+                        // default time
+                        var execTime = new ThirdPartyTimerModel()
+                        {
+                            TpId = _tpId,
+                            Type = _tpType,
+                            StartTime = (dataTpTimer == null) ? DateTime.UtcNow.AddDays(-2) : dataTpTimer.StartTime.AddSeconds(1),
+                        };
 
-                // report
-                DateTime reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);
-                var reportData = await _financeMPBLL.GetReport(_tpId, setting, reportTime);
-                int result;
-                if (reportData.Count > 0)
-                {
-                    // process
-                    var dailyData = _financeMPBLL.DealReport(_tpId, reportDate, reportData);
+                        // get time 
+                        var day = 0;
+                        TimeCast reportTime = _financeMPBLL.GetReportTime(execTime.StartTime, day);
 
-                    // write
-                    result = _fincanceService.SetFinanceTpDailySummary(dailyData);
-                }
-                else
-                {
-                    result = 1;
-                }
+                        // report
+                        DateTime reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);
+                        var reportData = await _financeMPBLL.GetReport(_tpId, _setting, reportTime);
+                        int result;
+                        if (reportData.Count > 0)
+                        {
+                            // process
+                            var dailyData = _financeMPBLL.DealReport(_tpId, reportDate, reportData);
 
-                // update timer
-                if (result > 0)
-                {
-                    _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, reportTime.endUnix);
-                }
+                            // write
+                            result = _fincanceService.SetFinanceTpDailySummary(dailyData);
+                        }
+                        else
+                        {
+                            result = 1;
+                        }
 
-                var diffDay = (int)(DateTime.Now.Date - reportDate.Date).TotalDays;
-                if (diffDay > _beyond)
-                {
-                    quick = true;
-                }
+                        // update timer
+                        if (result > 0)
+                        {
+                            _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, reportTime.endUnix);
+                        }
 
-                _logger.LogInformation($"{_tpName} Get {reportDate:yyyy-MM-dd} report");
+                        var diffDay = (int)(DateTime.Now.Date - reportDate.Date).TotalDays;
+                        if (diffDay > _beyond)
+                        {
+                            quick = true;
+                        }
+
+                        _logger.LogInformation($"{_tpName} Get {reportDate:yyyy-MM-dd} report");
+                    }
+                }              
                 return quick;
             }
             catch (Exception ex)

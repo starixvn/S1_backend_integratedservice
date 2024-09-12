@@ -46,7 +46,10 @@ namespace ThirdPartyWager.Service.BLL
             try
             {
                 var config = new TCGConfig(_setting, currency);
-                var result = await QuerySettleBetHistoryAsync<T>(config, batchTime, timerType);
+                var result = timerType == WagerTimerType.Cancel ? 
+                    await QueryCancelHistoryAsync<T>(config, batchTime) :
+                    await QuerySettleBetHistoryAsync<T>(config, batchTime, timerType) ;
+                
                 var tasks = result.Select(item => Task.Run(() => InsertWager(item))).ToArray();
                 await Task.WhenAll(tasks);
 
@@ -117,6 +120,34 @@ namespace ThirdPartyWager.Service.BLL
             return Task.FromResult(result);
         }
 
+        private Task<List<T>> QueryCancelHistoryAsync<T>(TCGConfig config, DateTimeOffset batchTime)
+        {
+            var result = new List<T>();
+            var reportType = config.WagerTypeList.Split(",").Where(i => i != string.Empty);
+            foreach (var type in reportType)
+            {
+                var page = 1;
+                var totalPage = 1;
+                while (page <= totalPage)
+                {
+                    var fileUrl = $"{config.WagerUrl}{type}/CANCELLED/{batchTime:yyyyMMdd}/{batchTime:yyyyMMddHHmm}_{page:0000}.json";
+                    var queryResult = DownloadFTPFile<T>(config, fileUrl);
+                    if (queryResult.Pass) // 回傳Pass = True先略過此次時間
+                    {
+                        return Task.FromResult(new List<T>());
+                    }
+
+                    if (queryResult.list.Count > 0)
+                    {
+                        result.AddRange(queryResult.list);
+                    }
+                    page++;
+                    totalPage = 1 + (queryResult.page.total / queryResult.page.pageSize);
+                }
+            }
+            return Task.FromResult(result);
+        }
+        
         private TCGQueryWagerObj<T> DownloadFTPFile<T>(TCGConfig config, string fileUrl)
         {
             try
@@ -178,7 +209,14 @@ namespace ThirdPartyWager.Service.BLL
 
         private Task<int> InsertWager<T>(T wager)
         {
-            var spName = typeof(T) == typeof(TCGSEAWagerData) ? "Service_TpWagerTCG_SEA_Ins" : "Service_TpWagerTCG_VN_Ins";
+            var spName = typeof(T).Name switch
+            {
+                nameof(TCGSEAWagerData) => "Service_TpWagerTCG_SEA_Ins",
+                nameof(TCGVNWagerData) => "Service_TpWagerTCG_VN_Ins",
+                nameof(TCGVNCancelWagerData) => "Service_TpWagerTCG_VN_Cancel_Ins",
+                _ => ""
+            };
+            
             return _wagerDbClient.ExecuteAsync(spName, new DynamicParameters(wager));
         }
 

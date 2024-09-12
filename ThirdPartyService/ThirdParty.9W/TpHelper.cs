@@ -121,6 +121,19 @@ namespace ThirdParty.NineW
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
+            if (IsDevelopment)
+            {
+                return new ApiResult<UserBalance>()
+                {
+                    ErrorCode = ErrorCode.Success,
+                    Message = "ok",
+                    Data = new UserBalance()
+                    {
+                        balance = 0m,
+                    }
+                };
+            }
+
             var domain = QueryDomain(_siteConfig);
             
             var apiUrl = $"{domain.ApiUrl}/{_siteConfig.WebSite}/getBalance";

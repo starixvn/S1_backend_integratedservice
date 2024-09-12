@@ -4,6 +4,7 @@ using Serilog.Context;
 
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Workers;
 
@@ -13,6 +14,7 @@ public class WagerRedoBG : BackgroundService
     private readonly WagerBGBLL _wagerBGBLL;
     private readonly CommonBLL _commonBLL;
     private readonly ThirdPartyBLL _thirdPartyBLL;
+    private readonly Dictionary<int, BGConfig> _siteConfigDic;
 
     private readonly int tpId = (int)Tp.BG;
     private bool isFast = false;
@@ -30,6 +32,7 @@ public class WagerRedoBG : BackgroundService
         _wagerBGBLL = provider.GetRequiredService<WagerBGBLL>();
         _commonBLL = provider.GetRequiredService<CommonBLL>();
         _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+        _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<BGConfig>(Tp.BG.ToString());
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -45,14 +48,21 @@ public class WagerRedoBG : BackgroundService
         try
         {
             var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
-            var serverList = _commonBLL.GetSiteList();
             var TpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
             var quick = false;
             foreach (var siteInfo in siteList)
             {
-                var currencyList = JsonSerializer.Deserialize<IEnumerable<int>>(serverList.First(x => x.SiteId == siteInfo.SiteId).CurrencyList);
-                foreach (var item in TpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
+                var _setting = _siteConfigDic[siteInfo.SiteId];
+                if (_setting == null) continue;
+
+                foreach (var item in TpCurrencyList)
                 {
+                    if (!_setting.CurrencyData.ContainsKey(item.TpCurrencyId))
+                    {
+                        continue;
+                    }
+                    var currencyData = _setting.CurrencyData[item.TpCurrencyId];
+
                     quick = await _wagerBGBLL.ExecWagerWorker(siteInfo.SiteId, item.TpCurrencyId, tpType, timeRange, needQuickTime);
                     if (!isFast && quick) isFast = true;
                 }

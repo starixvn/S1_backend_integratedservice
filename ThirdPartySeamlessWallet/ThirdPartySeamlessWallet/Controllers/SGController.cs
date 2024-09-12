@@ -21,7 +21,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly SettledBLL _settledBLL;
         private readonly Tp _thisTp;
         private readonly string _tpName = Tp.SG.ToString();
-        private readonly SGConfig _siteConfig;
+        private readonly Dictionary<int, SGConfig> _siteConfigDic;
 
         public SGController(IServiceProvider provider)
         {
@@ -32,7 +32,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _thisTp = Tp.SG;
             _log2File = provider.GetRequiredService<Log2File>();
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SGConfig>(_tpName);
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SGConfig>(_tpName);
         }
 
         #region Request
@@ -145,6 +145,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         else
                         {
+                            var config = GetConfig(tpCustInfoAuth.SiteId);
+                            if (string.IsNullOrEmpty(config.merchantCode))
+                            {
+                                authorizeResp.code = 10113;
+                                authorizeResp.msg = "Merchant Not Found";
+                                _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(authorizeResp)}", logName);
+                                return authorizeResp;
+                            }
+
                             var gameType = _thirdPartyBLL.GetGameType_SG(authorizeReq.gameCode);
                             _tpCustInfoBLL.SetCustGotoGame(tpCustInfoAuth.CustId, (int)_thisTp, (int)gameType);
                             var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, tpCustInfoAuth.TpUserName, (int)gameType);
@@ -155,7 +164,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                                 userName = tpCustInfoAuth.TpUserName,
                                 balance = tpCustBalance.Balance
                             };
-                            authorizeResp.merchantCode = _siteConfig.merchantCode;
+
+                            authorizeResp.merchantCode = config.merchantCode;
                             authorizeResp.serialNo = authorizeReq.serialNo;
                             authorizeResp.code = 0;
                             authorizeResp.msg = "Success";
@@ -210,6 +220,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                 else
                 {
                     var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, getBalanceReq.acctId);
+                    var config = GetConfig(tpCustInfo.SiteId);
+                    if (string.IsNullOrEmpty(config.merchantCode))
+                    {
+                        getBalanceResp.code = 10113;
+                        getBalanceResp.msg = "Merchant Not Found";
+                        _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(getBalanceResp)}", logName);
+                        return getBalanceResp;
+                    }
+
                     var gameType = _tpCustInfoBLL.GetCustGotoGameType(tpCustInfo.CustId, (int)_thisTp);
                     var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, getBalanceReq.acctId, gameType);
                     getBalanceResp.acctInfo = new AcctInfo
@@ -220,7 +239,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         balance = tpCustBalance.Balance
                     };
                     getBalanceResp.serialNo = getBalanceReq.serialNo;
-                    getBalanceResp.merchantCode = _siteConfig.merchantCode;
+                    getBalanceResp.merchantCode = config.merchantCode;
 
                     getBalanceResp.code = 0;
                     getBalanceResp.msg = "Success";
@@ -241,11 +260,21 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 logName = $"{_tpName}_{api}_{transferReq.type}";
 
+                var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, transferReq.acctId);
+                var config = GetConfig(tpCustInfo.SiteId);
+                if (string.IsNullOrEmpty(config.merchantCode))
+                {
+                    transferResp.code = 10113;
+                    transferResp.msg = "Merchant Not Found";
+                    _log2File.Error($"{Content}\r\n{JsonConvert.SerializeObject(transferResp)}", logName);
+                    return transferResp;
+                }
+
                 transferResp.acctId = transferReq.acctId;
                 transferResp.transferId = transferReq.transferId;
                 transferResp.merchantTxId = transferReq.transferId;
                 transferResp.serialNo = transferReq.serialNo;
-                transferResp.merchantCode = _siteConfig.merchantCode;
+                transferResp.merchantCode = config.merchantCode;
 
                 var gameType = _thirdPartyBLL.GetGameType_SG(transferReq.gameCode);
 
@@ -441,6 +470,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             return resp;
+        }
+
+        private SGConfig GetConfig(int siteId)
+        {
+            return _siteConfigDic[siteId];
         }
     }
 }

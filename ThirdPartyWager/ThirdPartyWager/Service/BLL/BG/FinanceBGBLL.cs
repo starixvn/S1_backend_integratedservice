@@ -3,6 +3,7 @@
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL;
 
@@ -14,6 +15,7 @@ public class FinanceBGBLL : ITpReportBLL
     private readonly ApiBGBLL _apiBGBLL;
     private readonly CommonBGBLL _commonBGBLL;
     private readonly DateTimeHelper _dateTimeHelper;
+    private readonly Dictionary<int, BGConfig> _siteConfigDic;
     private readonly int _timeZone = -4;
 
     public FinanceBGBLL(IServiceProvider provider)
@@ -24,6 +26,7 @@ public class FinanceBGBLL : ITpReportBLL
         _apiBGBLL = provider.GetRequiredService<ApiBGBLL>();
         _commonBGBLL = provider.GetRequiredService<CommonBGBLL>();
         _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+        _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<BGConfig>(Tp.BG.ToString());
     }
 
     public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
@@ -59,27 +62,29 @@ public class FinanceBGBLL : ITpReportBLL
     public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
     {
         var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
-        var serverList = _commonBLL.GetSiteList();
         var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
         var reportData = new List<dynamic>();
 
         foreach (var siteInfo in siteList)
         {
-            var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(serverList.First(x => x.SiteId == siteInfo.SiteId).CurrencyList);
-            foreach (var item in tpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
+            setting = _siteConfigDic[siteInfo.SiteId];
+            if (setting == null) continue;
+
+            foreach (var item in tpCurrencyList)
             {
-                var prefixMsg = $"Finance {siteInfo.SiteId}_{item.TpCurrencyId}_";
-                setting = _thirdPartyBLL.GetThirdPartyBySite(tpId, siteInfo.SiteId);
-
-                if (!_commonBGBLL.GetSnAndSecretKey(setting, item.TpCurrencyId,
-                    out string sn, out string secrectKey, out string secrectCode, out string agentLoginId, out string message))
+                if (!setting.CurrencyData.ContainsKey(item.TpCurrencyId))
                 {
-                    _logger.LogError($"{prefixMsg}THIRD_PARTY_SETTING_ERROR {message}");
-                    SystemException systemException = new SystemException($"{prefixMsg}THIRD_PARTY_ERROR - GetReport({tpId})");
-                    throw systemException;
+                    continue;
                 }
+                var currencyData = setting.CurrencyData[item.TpCurrencyId];
 
-                var getSummaryResult = await _apiBGBLL.OrderSum(setting["ApiUrl"], sn, secrectKey, agentLoginId, reportTime.startTime, reportTime.endTime);
+                var prefixMsg = $"Finance {siteInfo.SiteId}_{item.TpCurrencyId}_";
+                var sn = currencyData.Sn;
+                var secretCode = currencyData.AgentPassword;
+                var agentLoginId = currencyData.AgentLoginId;
+                var secrectKey = currencyData.ApiSecretKey;
+
+                var getSummaryResult = await _apiBGBLL.OrderSum(setting.ApiUrl, sn, secrectKey, agentLoginId, reportTime.startTime, reportTime.endTime);
                 if (getSummaryResult.error != null)
                 {
                     _logger.LogError($"{prefixMsg}THIRD_PARTY_ERROR\r\n{JsonConvert.SerializeObject(getSummaryResult)}");

@@ -13,11 +13,11 @@ namespace ThirdParty.MP
 {
     public class TpHelper : ThirdPartyHelperBase, IThirdPartyParticular
     {
-        private readonly MPConfig _siteConfig;
+        private readonly Dictionary<int, MPConfig> _siteConfig;
 
         public TpHelper(IServiceProvider provider)
         {
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<MPConfig>(TpEnum.MP.ToString());
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MPConfig>(TpEnum.MP.ToString());
         }
 
         #region ErrorCode
@@ -104,10 +104,11 @@ namespace ThirdParty.MP
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
-            string ApiUrl = _siteConfig.ApiUrl;
-            string Agent = _siteConfig.Agent;
-            string Deskey = _siteConfig.Deskey;
-            string Md5key = _siteConfig.Md5key;
+            var config = _siteConfig[tpCustInfo.SiteId];
+            string ApiUrl = config.ApiUrl;
+            string Agent = config.Agent;
+            string Deskey = config.Deskey;
+            string Md5key = config.Md5key;
 
             var current = new DateTimeOffset(DateTime.UtcNow);
             var timestamp = current.ToUnixTimeMilliseconds();
@@ -210,10 +211,11 @@ namespace ThirdParty.MP
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            string ApiUrl = _siteConfig.ApiUrl;
-            string Agent = _siteConfig.Agent;
-            string Deskey = _siteConfig.Deskey;
-            string Md5key = _siteConfig.Md5key;
+            var config = _siteConfig[tpCustInfo.SiteId];
+            string ApiUrl = config.ApiUrl;
+            string Agent = config.Agent;
+            string Deskey = config.Deskey;
+            string Md5key = config.Md5key;
             string gameId = inputs.GetValueOrDefault("gameId", "");
 
             var current = new DateTimeOffset(DateTime.UtcNow);
@@ -286,10 +288,11 @@ namespace ThirdParty.MP
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
-            string ApiUrl = _siteConfig.ApiUrl;
-            string Agent = _siteConfig.Agent;
-            string Deskey = _siteConfig.Deskey;
-            string Md5key = _siteConfig.Md5key;
+            var config = _siteConfig[tpCustInfo.SiteId];
+            string ApiUrl = config.ApiUrl;
+            string Agent = config.Agent;
+            string Deskey = config.Deskey;
+            string Md5key = config.Md5key;
 
             var current = new DateTimeOffset(DateTime.UtcNow);
             var timestamp = current.ToUnixTimeMilliseconds();
@@ -363,10 +366,11 @@ namespace ThirdParty.MP
 
         public ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string ApiUrl = _siteConfig.ApiUrl;
-            string Agent = _siteConfig.Agent;
-            string Deskey = _siteConfig.Deskey;
-            string Md5key = _siteConfig.Md5key;
+            var config = _siteConfig[tpCustInfo.SiteId];
+            string ApiUrl = config.ApiUrl;
+            string Agent = config.Agent;
+            string Deskey = config.Deskey;
+            string Md5key = config.Md5key;
 
             var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
 
@@ -419,10 +423,11 @@ namespace ThirdParty.MP
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            string WagerUrl = _siteConfig.WagerUrl;
-            string Agent = _siteConfig.Agent;
-            string Deskey = _siteConfig.Deskey;
-            string Md5key = _siteConfig.Md5key;
+            var config = _siteConfig[tpCustInfo.SiteId];
+            string WagerUrl = config.WagerUrl;
+            string Agent = config.Agent;
+            string Deskey = config.Deskey;
+            string Md5key = config.Md5key;
 
             var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();
 

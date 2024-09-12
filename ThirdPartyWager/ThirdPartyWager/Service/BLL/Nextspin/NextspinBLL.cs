@@ -1,4 +1,5 @@
-﻿using ThirdPartyWager.Service.DAL;
+﻿using Newtonsoft.Json;
+using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model.TpSiteConfig;
@@ -39,6 +40,12 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     if (_siteConfigDic.TryGetValue(siteId, out var config))
                     {
+                        if(config == null)
+                        {
+                            _logger.LogError($"siteId={siteId}, siteConfigDic config={JsonConvert.SerializeObject(config)}");
+                            continue;
+                        }
+
                         var page = 1;
                         int count;
                         do
