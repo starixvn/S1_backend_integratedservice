@@ -145,7 +145,28 @@ namespace ThirdParty.PG2
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_PG2_Detail_Get",
+                new { YYYYMM = getBetDetail.SettledTime.GetPartitionKey(), getBetDetail.TransId }, DataBase.Report);
+            var tpCurrency = new TpCurrency()
+            {
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
+            return new CasinoDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                Detail = ToJson(detailList),
+                TpCurrency = tpCurrency,
+                RefTransId = string.Empty,
+                TpUserName = detailList.FirstOrDefault()?.GetValueOrDefault("username")?.ToString(),
+                UTCBetTime = detailList.Min(i => (DateTime)i.GetValueOrDefault("timestamp", DateTime.MinValue)),
+                UTCSettledTime = detailList.Max(i => (DateTime)i.GetValueOrDefault("timestamp", DateTime.MinValue)),
+                Stake = detailList.Where(i => new[] { 1, 4, 10 }.Contains((sbyte)i.GetValueOrDefault("TicketType")))
+                    .Sum(i => Math.Abs((decimal)i.GetValueOrDefault("betAmount"))) * tpCurrency.ExchangeRate,
+                WinlostAmount = detailList.Sum(i => (decimal)i.GetValueOrDefault("amount")) * tpCurrency.ExchangeRate,
+                GameCode = detailList.FirstOrDefault()?.GetValueOrDefault("GameId")?.ToString(),
+                GameName = detailList.FirstOrDefault()?.GetValueOrDefault("gameName")?.ToString(),
+            };
         }
 
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo,
