@@ -37,8 +37,11 @@ namespace CommonService.Service.BLL
                     Context = new Context()
                     {
                         order_amount = request.OrderAmount,
+                        currency = request.Currency,
+                        siteId = request.SiteId,
                     }
                 };
+
                 var signature = GenerateHash(config.Token, para);
                 var header = new Dictionary<string, string> {
                     { "X-Optimove-Signature-Version", "1"},
