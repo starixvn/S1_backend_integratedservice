@@ -27,7 +27,7 @@ public class BettingDataRNG_PG2
     public bool isEndRound { get; set; }
     public string parentRoundId { get; set; }
 
-
+    public string GameId { get; set; }
     public BettransRng_PG2TypeEnum FromAPIType { get; set; }
     public BettransType TicketType { get; set; }
     public TicketStatus TicketStatus { get; set; }
