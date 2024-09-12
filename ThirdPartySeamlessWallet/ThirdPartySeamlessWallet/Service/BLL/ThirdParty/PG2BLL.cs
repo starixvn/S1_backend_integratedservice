@@ -505,7 +505,7 @@ public class PG2BLL : IPG2BLL
 
         if (data.isEndRound)
         {
-            result = _settledService.InsertUnsettle_PG2(partitionTime, data.roundId, trans);
+            result = _settledService.InsertUnsettle_PG2(partitionTime, data.parentRoundId, trans);
             if (!result)
             {
                 _logger.LogError($"InsertUnsettle_AMB failed {data.roundId}");

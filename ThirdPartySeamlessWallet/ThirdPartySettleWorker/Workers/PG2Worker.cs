@@ -36,7 +36,7 @@ public class PG2Worker : BackgroundService, ISettleWorker
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _timerRng = new Timer(DoSettleRng, GameType.AMB_RNG, TimeSpan.Zero, TimeSpan.Zero);
+        _timerRng = new Timer(DoSettleRng, GameType.PG2_RNG, TimeSpan.Zero, TimeSpan.Zero);
         return Task.CompletedTask;
     }
 
@@ -55,7 +55,7 @@ public class PG2Worker : BackgroundService, ISettleWorker
         var isError = false;
         var gametype = (GameType)state;
         var tpCategory = TpCategory.Slots;
-        //var logName = "Settle_AMB_RNG";
+        var logName = "Settle_PG2_RNG";
         var bettransGet = "Service_BettransRng_PG2_Settle_Get";
 
         try
@@ -69,7 +69,54 @@ public class PG2Worker : BackgroundService, ISettleWorker
 
             forContinue = unsettleList.Count == 200;
 
-            
+            foreach (var tpUnsettle in unsettleList)
+            {
+                try
+                {
+                    var unsettleData = _partitionService.GetUnsettleDataList<SettleDataRNG_PG2>(bettransGet, tpUnsettle).FirstOrDefault();
+                    if (unsettleData == null)
+                    {
+                        _logger.LogWarning($"{logName}:bettrans not found ({gametype})\r\n{JsonConvert.SerializeObject(tpUnsettle)}");
+                        continue;
+                    }
+
+                    var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettleData.Account);
+
+                    var betRecordInfo = new BetRecordInfo
+                    {
+                        TpId = (int)Tp,
+                        Stake = unsettleData.Stake,
+                        ValidBet = unsettleData.ValidBet,
+                        WinlostAmount = unsettleData.WinLostAmount,
+                        TransId = tpUnsettle.TransId,
+                        GameType = gametype,
+                        TpUserName = unsettleData.Account,
+                        SettledTime = unsettleData.SettleTime,
+                        TransTime = unsettleData.TransTime,
+                        SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, unsettleData.GameId),
+                        TicketStatus = SetTicketStatus(unsettleData.WinLostAmount),
+                        GameID = unsettleData.GameId,
+                    };
+
+                    var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
+                    if (result == 1)
+                    {
+                        Task.Run(() =>
+                        {
+                            _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, tpUnsettle.TransId, true);
+                        });
+                    }
+                }
+                catch (Exception ex1)
+                {
+                    Task.Run(() =>
+                    {
+                        _tpUnSettledBLL.SetTpUnsettle(Tp, gametype, tpUnsettle.TransId, false);
+                    });
+                    isError = true;
+                    _logger.LogError(ex1, $"TransId:{tpUnsettle.TransId} settle failed, exMessage:{ex1.Message}");
+                }
+            }
         }
         catch (UnsettleNotFoundException ex)
         {
@@ -94,5 +141,13 @@ public class PG2Worker : BackgroundService, ISettleWorker
 
             _timerRng?.Change(dueTimeSpan, TimeSpan.Zero);
         }
+    }
+    private static TicketStatus SetTicketStatus(decimal winLostAmount)
+    {
+        if (winLostAmount == 0) return TicketStatus.Draw;
+
+        if (winLostAmount > 0) return TicketStatus.Win;
+
+        return TicketStatus.Lost;
     }
 }
