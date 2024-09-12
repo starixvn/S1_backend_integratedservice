@@ -100,7 +100,7 @@ builder.Services
     .AddHostedService<GAWorker>()
     .AddHostedService<WonCasinoWorker>()
     .AddHostedService<MarblesWorker>()
-    .AddHostedService<DragonGamingWorker>(),
+    .AddHostedService<DragonGamingWorker>()
     .AddHostedService<PG2Worker>();
     
 
