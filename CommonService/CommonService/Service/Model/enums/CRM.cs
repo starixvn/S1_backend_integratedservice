@@ -16,7 +16,7 @@ namespace CommonService.Service.Model.enums
     }
     public enum CRMEvent
     {
-        Register_successful,
+        register_successful,
         deposit_successful
     }
     public class CRMRequest
