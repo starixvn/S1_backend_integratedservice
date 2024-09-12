@@ -25,7 +25,7 @@ namespace CommonService.Service.Model.enums
         public int CustId { get; set; }
         public int SiteId { get; set; }
         public decimal OrderAmount { get; set; }
-        public string Currency { get; set; }
+        public int CurrencyId { get; set; }
     }
 
     public class CRMEventData
@@ -56,7 +56,7 @@ namespace CommonService.Service.Model.enums
         public bool event_native_mobile { get; set; }
         public string event_platform { get; set; } = string.Empty;
         public string event_os { get; set; } = string.Empty;
-        public string currency { get; set; }
+        public int currencyId { get; set; }
         public int siteId { get; set; }
     }
 }
