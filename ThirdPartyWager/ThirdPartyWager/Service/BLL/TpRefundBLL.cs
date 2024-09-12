@@ -54,7 +54,7 @@ namespace ThirdPartyWager.Service.BLL
                 }
 
                 var pendingList = _bll.GetPendingList(gameType);
-                if (pendingList == null)
+                if (pendingList == null || pendingList.Count == 0)
                 {
                     return false;
                 }
