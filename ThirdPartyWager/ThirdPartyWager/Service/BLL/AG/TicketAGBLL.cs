@@ -13,7 +13,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ApiAGBLL _apiAGBLL;
         private readonly WagerAGService _wagerAGService;
         private readonly ILogger<TicketAGBLL> _logger;
-        private readonly AGConfig _siteAgConfig;
+        private readonly Dictionary<int, AGConfig> _siteConfigDic;
 
         public TicketAGBLL(IServiceProvider provider)
         {
@@ -21,7 +21,7 @@ namespace ThirdPartyWager.Service.BLL
             _apiAGBLL = provider.GetRequiredService<ApiAGBLL>();
             _wagerAGService = provider.GetRequiredService<WagerAGService>();
             _logger = provider.GetRequiredService<ILogger<TicketAGBLL>>();
-            _siteAgConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AGConfig>(Tp.AG.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<AGConfig>(Tp.AG.ToString());
         }
 
         // TpRefundWorker
@@ -34,10 +34,12 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<bool> CheckTicketStatusAsync(dynamic pending, int gameType)
         {
             LogContext.PushProperty("SystemJob", $"Auto-Dispatch");
+            // 取Site=0 共用網址
+            var config = _siteConfigDic[0];
             var func = "CheckTicketStatusAsync";
             var task = true;
 
-            var data = await _apiAGBLL.CheckTicketStatus(_siteAgConfig.CommonUrl, pending.transactionID);
+            var data = await _apiAGBLL.CheckTicketStatus(config.CommonUrl, pending.transactionID);
 
             string msg;
             if (data == null)
