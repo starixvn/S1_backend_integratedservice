@@ -1,8 +1,5 @@
-﻿using Microsoft.AspNetCore.DataProtection.KeyManagement;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using System.Net.Mime;
 using System.Security.Cryptography;
 using System.Text;
 using ThirdPartyCore;
@@ -10,7 +7,6 @@ using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-using ThirdPartyCore.Model.Exceptions;
 using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
@@ -172,7 +168,28 @@ namespace ThirdParty.PG2
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo,
             Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
+            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_PG2_Detail_Get",
+                new { YYYYMM, betRecordInfo.TransId }, DataBase.Report);
+
+            if (!detailList.Any())
+            {
+                return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
+            }
+
+            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            {
+                GameID = detailList.GetFirstStringValue("GameId"),
+                Game = detailList.GetFirstStringValue("gameName"),
+                RefNo = detailList.GetFirstStringValue("parentRounId"),
+                Title = tpGameType.TypeName,
+                MatchID = detailList.GetFirstStringValue("RounId"),
+                BetType = string.Empty,
+                BetChoice = string.Empty,
+                Result = string.Empty,
+                DeviceType = DeviceType.None,
+                IP = string.Empty,
+            };
         }
 
         private string HMACSHA512(string input, string key)
