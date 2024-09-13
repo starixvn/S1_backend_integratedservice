@@ -70,11 +70,11 @@ public class CommonResponse_DragonGaming
     }
 }
 
-public class SsessionResponse_DragonGaming : CommonResponse_DragonGaming
+public class SessionResponse_DragonGaming : CommonResponse_DragonGaming
 {
     public string username { get; set; }
 
-    public SsessionResponse_DragonGaming(ErrorCodeOfDragonGaming errorCode, string token)
+    public SessionResponse_DragonGaming(ErrorCodeOfDragonGaming errorCode, string token)
         : base(errorCode, token)
     {
         account_id = "";
@@ -83,7 +83,7 @@ public class SsessionResponse_DragonGaming : CommonResponse_DragonGaming
         currency = "";
     }
 
-    public SsessionResponse_DragonGaming(ErrorCodeOfDragonGaming errorCode, string token, string tpUserName)
+    public SessionResponse_DragonGaming(ErrorCodeOfDragonGaming errorCode, string token, string tpUserName)
         : base(errorCode, token)
     {
         account_id = tpUserName;
@@ -92,7 +92,7 @@ public class SsessionResponse_DragonGaming : CommonResponse_DragonGaming
         currency = "";
     }
 
-    public SsessionResponse_DragonGaming(ErrorCodeOfDragonGaming errorCode, string token, string tpUserName, decimal balance, string currency)
+    public SessionResponse_DragonGaming(ErrorCodeOfDragonGaming errorCode, string token, string tpUserName, decimal balance, string currency)
         : base(errorCode, token)
     {
         account_id = tpUserName;

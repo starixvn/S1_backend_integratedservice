@@ -38,7 +38,7 @@ public class DragonGamingController : ControllerBase
     /// <returns></returns>
     [HttpPost]
     [Route("[controller]/get_session")]
-    public async Task<SsessionResponse_DragonGaming> GetSessionAsync(SessionRequest_DragonGaming request)
+    public async Task<SessionResponse_DragonGaming> GetSessionAsync(SessionRequest_DragonGaming request)
     {
         return await _dragonGamingBll.GetSession(request);
     }
