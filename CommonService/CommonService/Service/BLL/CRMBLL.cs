@@ -26,6 +26,12 @@ namespace CommonService.Service.BLL
             var apiResult = new ApiResult();
             try
             {
+                if (request.SiteId is not 1 or 2 or 3)
+                {
+                    apiResult.ErrorCode = ErrorCode.Success;
+                    return apiResult;
+                }
+
                 var config = _cRMConfig[request.SiteId];
                 var para = new CRMEventData()
                 {
@@ -48,7 +54,7 @@ namespace CommonService.Service.BLL
                     { "X-Optimove-Signature-Content", signature }
                 };
 
-                var result = await _httpHelper.HttpPost1Async(config.ApiUrl, header, JsonConvert.SerializeObject(para), "application/json");
+                var result = await _httpHelper.HttpPost1Async(config.ApiUrl, header, JsonConvert.SerializeObject(para, Formatting.None), "application/json");
 
                 if (!result.IsSuccessStatusCode)
                 {
@@ -70,7 +76,7 @@ namespace CommonService.Service.BLL
         }
         private static string GenerateHash(string trackAndTriggerToken, object rawTextBody)
         {
-            string serializedBody = JsonConvert.SerializeObject(rawTextBody);
+            string serializedBody = JsonConvert.SerializeObject(rawTextBody, Formatting.None);
             byte[] encodedBody = Encoding.UTF8.GetBytes(serializedBody);
             byte[] tokenBytes = Encoding.UTF8.GetBytes(trackAndTriggerToken);
             using (var hmac = new HMACSHA256(tokenBytes))
