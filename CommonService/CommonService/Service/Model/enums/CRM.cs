@@ -61,5 +61,11 @@ namespace CommonService.Service.Model.enums
         public string event_os { get; set; } = string.Empty;
         public int currencyid { get; set; }
         public int siteid { get; set; }
+
+        public bool ShouldSerializeorder_amount()
+        {
+            // Return false if order_amount is 0, true otherwise
+            return order_amount != 0;
+        }
     }
 }
