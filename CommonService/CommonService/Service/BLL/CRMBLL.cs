@@ -37,8 +37,8 @@ namespace CommonService.Service.BLL
                     Context = new Context()
                     {
                         order_amount = request.OrderAmount,
-                        currencyId = request.CurrencyId,
-                        siteId = request.SiteId,
+                        currencyid = request.CurrencyId,
+                        siteid = request.SiteId,
                     }
                 };
 
