@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System.Globalization;
 
 namespace CommonService.Service.Model.enums
 {
@@ -54,6 +55,7 @@ namespace CommonService.Service.Model.enums
 
     public class Context
     {
+        [JsonConverter(typeof(DecimalJsonConverter))]
         public decimal order_amount { get; set; }
         public string event_device_type { get; set; } = string.Empty;
         public bool event_native_mobile { get; set; }
@@ -68,4 +70,23 @@ namespace CommonService.Service.Model.enums
             return order_amount != 0;
         }
     }
+
+    public class DecimalJsonConverter : JsonConverter<decimal>
+    {
+        public override void WriteJson(JsonWriter writer, decimal value, JsonSerializer serializer)
+        {
+            // Convert decimal to string and format it to remove trailing zeros after the decimal point
+            string decimalString = value % 1 == 0
+                ? value.ToString("0", CultureInfo.InvariantCulture)  // No decimal part if it's an integer
+                : value.ToString(CultureInfo.InvariantCulture);       // Keep decimal part if it's not an integer
+
+            writer.WriteValue(decimalString);
+        }
+
+        public override decimal ReadJson(JsonReader reader, Type objectType, decimal existingValue, bool hasExistingValue, JsonSerializer serializer)
+        {
+            return Convert.ToDecimal(reader.Value, CultureInfo.InvariantCulture);
+        }
+    }
+
 }
