@@ -1,5 +1,4 @@
-﻿using System;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace CommonService.Service.Model.enums
 {
@@ -16,8 +15,11 @@ namespace CommonService.Service.Model.enums
     }
     public enum CRMEvent
     {
-        register_successful,
-        deposit_successful
+        registration,
+        deposit_successful,
+        withdrawal_sucessful,
+        deposit_initiated,
+        withdrawal_initiated
     }
     public class CRMRequest
     {
@@ -26,6 +28,7 @@ namespace CommonService.Service.Model.enums
         public int SiteId { get; set; }
         public decimal OrderAmount { get; set; }
         public int CurrencyId { get; set; }
+        public string Environment { get; set; }
     }
 
     public class CRMEventData
@@ -56,7 +59,7 @@ namespace CommonService.Service.Model.enums
         public bool event_native_mobile { get; set; }
         public string event_platform { get; set; } = string.Empty;
         public string event_os { get; set; } = string.Empty;
-        public int currencyId { get; set; }
-        public int siteId { get; set; }
+        public int currencyid { get; set; }
+        public int siteid { get; set; }
     }
 }
