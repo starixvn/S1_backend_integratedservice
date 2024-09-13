@@ -17,6 +17,7 @@ namespace ThirdPartySettleWorker.Workers
         private readonly SettledBLL _settledBLL;
         private readonly TpUnSettledBLL _tpUnSettledBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly PartitionService _partitionService;
         private readonly ILogger<DragonGamingWorker> _logger;
         private readonly string _tpName;
@@ -26,6 +27,7 @@ namespace ThirdPartySettleWorker.Workers
             _settledBLL = provider.GetRequiredService<SettledBLL>();
             _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _logger = provider.GetRequiredService<ILogger<DragonGamingWorker>>();
             _partitionService = provider.GetRequiredService<PartitionService>();
             _tpName = Enum.GetName(typeof(Tp), Tp);
@@ -52,6 +54,7 @@ namespace ThirdPartySettleWorker.Workers
             var forContinue = false;
             var isError = false;
             var gametype = (GameType)state;
+            var tpCategory = TpCategory.Slots;
             var bettransGet = "Service_BettransRng_DragonGaming_Settle_Get";
             var bettransSet = "Service_BettransRng_DragonGaming_Settle_Set";
             string logName = $"Settle_DragonGaming";
@@ -99,11 +102,11 @@ namespace ThirdPartySettleWorker.Workers
                             TpUserName = tpUserName,
                             SettledTime = settledTime,
                             TransTime = transTime,
-                            SettlementType = SettlementType.SettledForValid,
-                            GameID = gameId
+                            SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, gameId),
+                            GameID = gameId,
                         };
 
-                        var result = _settledBLL.Settled_Without_Bonus(tpCustInfo, betRecordInfo);
+                        var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
                         if (result == 1)
                         {
                             SetSettleFlag(bettransSet, gametype, betRecordInfo);

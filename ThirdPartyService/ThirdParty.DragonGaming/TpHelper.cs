@@ -15,13 +15,11 @@ public class TpHelper : ThirdPartyHelperBase
 {
     private const string ContentType = "application/json";
     private const TpEnum Tp = TpEnum.DragonGaming;
-    private readonly Dictionary<int, Dictionary<string, string>> _siteConfigDic;
-    //private readonly IReadOnlyDictionary<string, string> _gameNameList;
+    private readonly Dictionary<int, DragonGamingConfig> _siteConfigDic;
 
     public TpHelper(IServiceProvider provider)
     {
-        _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(Tp.ToString());
-        //_gameNameList = ITpBetRecordProvider.GetGameCasinoList((int)TpEnum.Pegasus).ToDictionary(d => d.AppId, d => d.Name);
+        _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<DragonGamingConfig>(Tp.ToString());
     }
 
     public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -34,8 +32,8 @@ public class TpHelper : ThirdPartyHelperBase
     public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
     {
         var config = _siteConfigDic[tpCustInfo.SiteId];
-        var apiKey = config["ApiKey"];
-        var apiUrl = config["ApiUrl"];
+        var apiKey = config.ApiKey;
+        var apiUrl = config.ApiUrl;
         var fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
         var gameCode = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
         var homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
@@ -106,8 +104,8 @@ public class TpHelper : ThirdPartyHelperBase
     public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
     {
         var config = _siteConfigDic[tpCustInfo.SiteId];
-        var apiKey = config["ApiKey"];
-        var apiUrl = config["ApiUrl"];
+        var apiKey = config.ApiKey;
+        var apiUrl = config.ApiUrl;
 
         var detail = TpBetRecordProvider.DbQuery("Service_BettransRng_DragonGaming_BetDetail_Get", new { _TransId = getBetDetail.TransId }, DataBase.Report);
 
@@ -130,7 +128,7 @@ public class TpHelper : ThirdPartyHelperBase
             language = "en",
         };
 
-        var result = HttpPost($"{apiUrl}/games/game-round-history/", ToJson(loginRequest), ContentType);
+        var result = HttpPost(url, ToJson(loginRequest), ContentType);
 
         if (!IsJSON(result))
             throw new BetDetailNotFoundException($"{getBetDetail.TransId} get bet detail fail. {JsonConvert.SerializeObject(result)}");
@@ -195,7 +193,11 @@ public class TpHelper : ThirdPartyHelperBase
 
     public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
     {
-        throw new NotImplementedException();
+        ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>
+        {
+            ErrorCode = ErrorCode.Fail
+        };
+        return oApiResult;
     }
 
     #endregion

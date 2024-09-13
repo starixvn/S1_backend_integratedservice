@@ -23,13 +23,14 @@ namespace ThirdPartyWager.Workers
         private bool isFast = false;
         private readonly int timeZone = 0;
         private readonly int iRangMins = 15;
+        private readonly string timeFormat = "yyyy-MM-dd HH:mm:ss";
 
         public WagerDragonGaming(IServiceProvider provider)
         {
             _wagerDragonGamingBLL = provider.GetRequiredService<WagerDragonGamingBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
-            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<DragonGamingConfig>(Tp.DragonGaming.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<DragonGamingConfig>(_tpName);
             _logger = provider.GetRequiredService<ILogger<WagerDragonGaming>>();
         }
 
@@ -51,7 +52,7 @@ namespace ThirdPartyWager.Workers
                 var timerTime = dataTpTimer?.StartTime ?? nowTime.AddMinutes(-(iRangMins - 1));
                 var last = (dataTpTimer == null) ? iRangMins - 1 : iRangMins;
 
-                var time = _dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
+                var time = _dateTimeHelper.GetTimeByMinute(last, timeZone, timeFormat, timerTime);
 
                 isFast = false;
                 var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);

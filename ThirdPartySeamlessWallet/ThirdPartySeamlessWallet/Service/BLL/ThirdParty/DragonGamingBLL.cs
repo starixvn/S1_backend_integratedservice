@@ -36,7 +36,7 @@ public class DragonGamingBLL : IDragonGamingBLL
 
     #endregion
 
-    public async Task<SsessionResponse_DragonGaming> GetSession(SessionRequest_DragonGaming request)
+    public async Task<SessionResponse_DragonGaming> GetSession(SessionRequest_DragonGaming request)
     {
         try
         {
@@ -44,23 +44,23 @@ public class DragonGamingBLL : IDragonGamingBLL
 
             if (!_authBll.Authenticate(token, out TpCustInfoAuth tpCustInfoAuth))
             {
-                return new SsessionResponse_DragonGaming(ErrorCodeOfDragonGaming.PlayerInvalid, request.token);
+                return new SessionResponse_DragonGaming(ErrorCodeOfDragonGaming.PlayerInvalid, request.token);
             }
 
             var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)thisTp, tpCustInfoAuth.TpUserName);
             if (tpCheck == null || tpCheck.Locked)
             {
-                return new SsessionResponse_DragonGaming(ErrorCodeOfDragonGaming.PlayerFrozen, request.token, tpCustInfoAuth.TpUserName);
+                return new SessionResponse_DragonGaming(ErrorCodeOfDragonGaming.PlayerFrozen, request.token, tpCustInfoAuth.TpUserName);
             }
 
             var gameType = _thirdPartyBll.GetGameType((int)thisTp, tpGameType);
             var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)thisTp, tpCustInfoAuth.TpUserName, (int)gameType);
-            return new SsessionResponse_DragonGaming(ErrorCodeOfDragonGaming.Success, request.token, tpCustInfoAuth.TpUserName, tpCustBalance.Balance, tpCustBalance.TpCurrencyId);
+            return new SessionResponse_DragonGaming(ErrorCodeOfDragonGaming.Success, request.token, tpCustInfoAuth.TpUserName, tpCustBalance.Balance, tpCustBalance.TpCurrencyId);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, $"DragonGaming GetSession Exception:{ex.Message}");
-            return new SsessionResponse_DragonGaming(ErrorCodeOfDragonGaming.InternalError, request.token);
+            return new SessionResponse_DragonGaming(ErrorCodeOfDragonGaming.InternalError, request.token);
         }
     }
 

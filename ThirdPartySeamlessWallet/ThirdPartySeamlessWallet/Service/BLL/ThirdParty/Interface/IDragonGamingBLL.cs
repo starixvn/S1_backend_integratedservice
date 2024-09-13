@@ -4,7 +4,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 
 public interface IDragonGamingBLL
 {
-    Task<SsessionResponse_DragonGaming> GetSession(SessionRequest_DragonGaming request);
+    Task<SessionResponse_DragonGaming> GetSession(SessionRequest_DragonGaming request);
     Task<BalanceResponse_DragonGaming> GetBalance(BalanceRequest_DragonGaming request);
     Task<DebitCreditRefundResponse_DragonGaming> Debit(DebitRequest_DragonGaming request);
     Task<DebitCreditRefundResponse_DragonGaming> Credit(CreditRequest_DragonGaming request);
