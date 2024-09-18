@@ -70,14 +70,9 @@ namespace CommonService.Service.BLL
                         };
                         eventData.data.Add(data);
                     }
-                
-                    var parameters = new Dictionary<string, string>
-                    {
-                        { "data", JsonConvert.SerializeObject(eventData.data) },
-                        {"access_token",keyData.Token }
-                    };
                     
-                    await _httpHelper.HttpFromPostAsync(url, null, parameters, "application/x-www-form-urlencoded");
+                    await _httpHelper.HttpPost1Async(url, null, JsonConvert.SerializeObject(eventData), "application/json");
+                 
                 }
                 
                 apiResult.ErrorCode =  ErrorCode.Success;
