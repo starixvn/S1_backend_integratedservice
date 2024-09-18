@@ -26,7 +26,8 @@ namespace CommonService.Service.BLL
             var apiResult = new ApiResult();
             try
             {
-                if (request.SiteId is not 1 or 2 or 3)
+                //只有nova,goal,bwing的正式環境 需要送資料到CRM 其他一律返回成功
+                if ((request.SiteId is not 1 or 2 or 3) || (request.Environment is not "P"))
                 {
                     apiResult.ErrorCode = ErrorCode.Success;
                     return apiResult;

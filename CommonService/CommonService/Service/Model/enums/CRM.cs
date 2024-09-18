@@ -28,8 +28,8 @@ namespace CommonService.Service.Model.enums
         public int CustId { get; set; }
         public int SiteId { get; set; }
         public decimal OrderAmount { get; set; }
-        public int CurrencyId { get; set; }
-        public string Environment { get; set; }
+        public int CurrencyId { get; set; }        
+        public string Environment { get; set; }//P正式
     }
 
     public class CRMEventData
