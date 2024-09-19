@@ -74,7 +74,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
     public class MBSBetSettleData
     {
         public string agent { get; set; }
-        public string gameInfo { get; set; }
         public decimal ueffecBet { get; set; }
         public decimal ubet { get; set; }
         public decimal uprofit { get; set; }

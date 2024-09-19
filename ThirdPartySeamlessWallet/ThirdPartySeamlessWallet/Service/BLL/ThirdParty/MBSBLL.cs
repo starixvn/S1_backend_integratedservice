@@ -42,7 +42,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             
             try
             {
-                //Marbles 下多注會是批量下注 所以走foreach跑
+                //Marbles 可能會是批量下注 所以走foreach跑
                 foreach (var request in requestData.bets)
                 {
                     //名字會帶agent跟代理 先處理
@@ -129,7 +129,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             
             try
             {
-                //派彩也是一起派 走foreach
                 foreach (var request in requestData.bets)
                 {
                     request.account = GetTpUserName(request.account);
