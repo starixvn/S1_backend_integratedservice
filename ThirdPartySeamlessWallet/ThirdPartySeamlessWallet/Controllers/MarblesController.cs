@@ -56,20 +56,10 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
         [HttpPost]
         [Route("MBS/verifySession")]
-        public VerifyResponse Verify([FromForm] Dictionary<string, string> request)
+        public VerifyResponse Verify([FromBody] MarblesRequest request)
         {
             var config = _siteConfigDic[1];
-            if (!request.ContainsKey("params"))
-            {
-                return new VerifyResponse()
-                {
-                    code = "-1",
-                    msg = "Fail",
-                };
-            }
-
-            MarblesRequest marblesRequest = JsonConvert.DeserializeObject<MarblesRequest>(JsonConvert.SerializeObject(request));
-            var verifyJson = decodeAESMD5(marblesRequest.Params, config.AgentKey);
+            var verifyJson = decodeAESMD5(request.Params, config.AgentKey);
             var verifyData = JsonConvert.DeserializeObject<VerifyRequest>(verifyJson);
             if (_authBLL.AuthenticateByTpToken(verifyData.playerSession, out TpCustInfoAuth tpCustInfoAuth))
             {
