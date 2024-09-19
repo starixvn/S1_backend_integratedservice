@@ -13,6 +13,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly BettingService _bettingService;
         private readonly SettledService _settledService;
+        private readonly PartitionService _partitionService;
         private readonly Log2File _log2File;
         private readonly Tp _thisTp;
         private readonly int _gameType = 0;
@@ -25,6 +26,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _bettingService = provider.GetRequiredService<BettingService>();
             _settledService = provider.GetRequiredService<SettledService>();
+            _partitionService = provider.GetRequiredService<PartitionService>();
             _log2File = provider.GetRequiredService<Log2File>();
         }
         
