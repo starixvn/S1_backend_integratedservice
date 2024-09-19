@@ -108,34 +108,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
     
     #endregion
     
-    #region DAL
-
-    public class BettransMBSDto
-    {
-        public string transNo { get; set; }
-        public string gameNo { get; set; }
-        public string account { get; set; }
-        public string currency { get; set; }
-        public string agent { get; set; }
-        public string lineCode { get; set; }
-        public string gameCode { get; set; }
-        public string gameInfo { get; set; }
-        public decimal bet { get; set; }
-        public decimal effecBet { get; set; }
-        public decimal commission { get; set; }
-        public decimal profit { get; set; }
-        public decimal ueffecBet { get; set; }
-        public decimal ubet { get; set; }
-        public decimal uprofit { get; set; }
-        public int TicketType { get; set; }
-        public int TicketStatus { get; set; }
-        public int SettleFlag { get; set; }
-        public long startTimeUnix { get; set; }
-        public long endTimeUnix { get; set; } 
-        public DateTime startTime { get; set; }
-        public DateTime endTime { get; set; }
-    }
     
-    #endregion
     
 }
