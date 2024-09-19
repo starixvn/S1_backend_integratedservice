@@ -24,7 +24,6 @@ namespace ThirdParty.Marbles
             public string MerchantId { get; set; }
             public string MerchantCode { get; set; }
             public string AgentKey { get; set; }
-            public string AgentId { get; set; }
         }
 
         public class LoginRequest
@@ -257,7 +256,7 @@ namespace ThirdParty.Marbles
             {
                 handle = "305",
                 lineCode = config.MerchantCode,
-                agent = config.AgentId,
+                agent = config.MerchantId,
                 account = tpCustInfo.TpUserName,
                 ip = inputs["ClientIP"],
                 lang = TpLangId,
