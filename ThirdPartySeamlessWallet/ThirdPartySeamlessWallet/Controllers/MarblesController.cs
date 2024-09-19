@@ -198,7 +198,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
         private string GetTpUserName(string marblesAccount)
         {
-            return marblesAccount.Substring(7);
+            return marblesAccount.Substring(6);
         }
     }
 }
