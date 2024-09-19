@@ -45,7 +45,6 @@
     <ProjectReference Include="..\ThirdParty.Kiss918\ThirdParty.Kiss918.csproj" />
     <ProjectReference Include="..\ThirdParty.KM\ThirdParty.KM.csproj" />
     <ProjectReference Include="..\ThirdParty.Live22\ThirdParty.Live22.csproj" />
-    <ProjectReference Include="..\ThirdParty.Marbles\ThirdParty.Marbles.csproj" />
     <ProjectReference Include="..\ThirdParty.MaxGame\ThirdParty.MaxGame.csproj" />
     <ProjectReference Include="..\ThirdParty.MP\ThirdParty.MP.csproj" />
     <ProjectReference Include="..\ThirdParty.N2Live\ThirdParty.N2Live.csproj" />

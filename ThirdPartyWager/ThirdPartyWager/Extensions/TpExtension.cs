@@ -62,7 +62,6 @@ namespace ThirdPartyWager.Extensions
                 { Tp.NTConnect, AddNTConnect },
                 { Tp.GA, AddGA},
                 { Tp.WonCasino, AddWonCasino},
-                { Tp.Marbles, AddMarbles},
                 { Tp.DragonGaming, AddDragonGaming},
             };
         }
@@ -729,21 +728,6 @@ namespace ThirdPartyWager.Extensions
             services.AddHostedService<WagerRedoWonCasino>();
             services.AddHostedService<FinanceWonCasino>();
 
-            return services;
-        }
-
-
-        private IServiceCollection AddMarbles(IServiceCollection services)
-        {
-            services.AddSingleton<WagerMarblesService>();
-
-            services.AddSingleton<WagerMarblesBLL>();
-            services.AddSingleton<FinanceMarblesBLL>();
-            services.AddSingleton<ApiMarblesBLL>();
-
-            services.AddHostedService<WagerMarbles>();
-            services.AddHostedService<WagerRedoMarbles>();
-            services.AddHostedService<FinanceMarbles>();
             return services;
         }
 
