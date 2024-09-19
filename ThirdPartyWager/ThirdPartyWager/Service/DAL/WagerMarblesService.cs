@@ -9,7 +9,6 @@ namespace ThirdPartyWager.Service.DAL
     public class WagerMarblesService
     {
         private readonly MySqlClient _wagerDbClient;
-        private readonly int _agentLength = 7;
 
         public WagerMarblesService(IServiceProvider provider)
         {
@@ -18,36 +17,49 @@ namespace ThirdPartyWager.Service.DAL
 
         public async Task<int> InsertWager(MBSBetsData data)
         {
-            var p = new DynamicParameters(new
+            try
             {
-                transNo = data.transNo,
-                gameNo = data.gameNo,
-                account = GetTpUserName(data.account),
-                currency = data.currency,
-                agent = data.agent,
-                lineCode = data.lineCode,
-                gameCode = data.gameCode,
-                gameInfo = data.gameInfo ?? "NA",
-                bet = data.bet,
-                effecBet = data.effecBet,
-                commission = data.commission,
-                profit = data.profit,
-                transBefore = data.transBefore,
-                transAfter = data.transAfter,
-                status = data.status,
-                version = data.version,
-                startTimeUnix = data.startTime,
-                endTimeUnix = data.endTime,
-                startTime = DateTimeOffset.FromUnixTimeMilliseconds(data.startTime).UtcDateTime,
-                endTime = DateTimeOffset.FromUnixTimeMilliseconds(data.endTime).UtcDateTime
-            });
+                var p = new DynamicParameters(new
+                {
+                    transNo = data.transNo,
+                    gameNo = data.gameNo,
+                    account = GetTpUserName(data.account),
+                    currency = data.currency,
+                    agent = data.agent,
+                    lineCode = data.lineCode,
+                    gameCode = data.gameCode,
+                    gameInfo = data.gameInfo ?? "NA",
+                    bet = data.bet,
+                    effecBet = data.effecBet,
+                    commission = data.commission,
+                    profit = data.profit,
+                    transBefore = data.transBefore,
+                    transAfter = data.transAfter,
+                    status = data.status,
+                    version = data.version,
+                    startTimeUnix = data.startTime,
+                    endTimeUnix = data.endTime,
+                    startTime = DateTimeOffset.FromUnixTimeMilliseconds(data.startTime).UtcDateTime,
+                    endTime = DateTimeOffset.FromUnixTimeMilliseconds(data.endTime).UtcDateTime
+                });
 
-            return await _wagerDbClient.ExecuteAsync("Service_TpWager_Marbles_Ins", p);
+                return await _wagerDbClient.ExecuteAsync("Service_TpWager_Marbles_Ins", p);
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return 1;
+                }
+
+                throw;
+            }
         }
 
         private string GetTpUserName(string marblesAccount)
         {
-            return marblesAccount.Substring(_agentLength);
+            return marblesAccount.Substring(7);
         }
     }
 }

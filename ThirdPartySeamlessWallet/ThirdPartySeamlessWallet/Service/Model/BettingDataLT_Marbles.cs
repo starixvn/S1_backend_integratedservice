@@ -137,28 +137,6 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public DateTime endTime { get; set; }
     }
     
-    public class TpWagerMarblesModel
-    {
-        public string agent { get; set; }
-        public string lineCode { get; set; }
-        public string account { get; set; }
-        public string currency { get; set; }
-        public string transNo { get; set; }
-        public string gameNo { get; set; }
-        public string gameCode { get; set; }
-        public string gameInfo { get; set; }
-        public string version { get; set; }
-        public long startTime { get; set; }
-        public long endTime { get; set; }
-        public decimal bet { get; set; }
-        public decimal effecBet { get; set; }
-        public decimal profit { get; set; }
-        public decimal commission { get; set; }
-        public decimal transBefore { get; set; }
-        public decimal transAfter { get; set; }
-        public int status { get; set; }
-    }
-    
     #endregion
     
 }

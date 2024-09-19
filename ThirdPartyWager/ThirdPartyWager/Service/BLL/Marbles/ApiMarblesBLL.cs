@@ -9,13 +9,11 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class ApiMarblesBLL
     {
-        private readonly IHostEnvironment _environment;
         private readonly HttpHelper _httpHelper;
         private readonly Log2File _log2File;
         private readonly string _tpName = Tp.Marbles.ToString();
         public ApiMarblesBLL(IServiceProvider provider)
         {
-            _environment = provider.GetRequiredService<IHostEnvironment>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _log2File = provider.GetRequiredService<Log2File>();
         }
@@ -25,10 +23,6 @@ namespace ThirdPartyWager.Service.BLL
             var handleApiUrl = $"{setting.ApiUrl}/gapi/api/handle/";
             var startTimeUnix = startTime * 1000;
             var endTimeUnix = endTime * 1000;
-            var mode = 1;
-            // 1: Dev 2: Prod
-            mode = !_environment.IsProduction() ? 2 : 1; 
-            
             
             MarblesGetWagerRequest request = new()
             {
@@ -39,9 +33,9 @@ namespace ThirdPartyWager.Service.BLL
                 endDate = endTimeUnix.ToString(),
                 page = page.ToString(),
                 pageSize = 5000.ToString(), // 直接拉最多 TP有建議五分鐘拉一次
-                mode = mode.ToString() 
+                mode = 1.ToString() // 1: Dev 2: Prod
             };
-            var sParam = EncodeAESMD5(System.Text.Json.JsonSerializer.Serialize(request), setting.AgentKey);
+            var sParam = encodeAESMD5(System.Text.Json.JsonSerializer.Serialize(request), setting.AgentKey);
             _log2File.InsertRequestLog(_tpName, handleApiUrl, $"{JsonConvert.SerializeObject(request)}", "Marbles game encryption request");
 
             var insertRequest = new
@@ -57,9 +51,9 @@ namespace ThirdPartyWager.Service.BLL
 
         #region Private
         
-        private string EncodeAESMD5(string jsonStr, string Key)
+        private string encodeAESMD5(string jsonStr, string Key)
         {
-            byte[] keyArray = GetMd5(Key);
+            byte[] keyArray = getMd5(Key);
             byte[] toEncryptArray = UTF8Encoding.UTF8.GetBytes(jsonStr);
             RijndaelManaged rDel = new RijndaelManaged();
             rDel.Key = keyArray;
@@ -69,9 +63,9 @@ namespace ThirdPartyWager.Service.BLL
             byte[] resultArray =
             cTransform.TransformFinalBlock(toEncryptArray, 0,
             toEncryptArray.Length);
-            return ByteToHexStr(resultArray);
+            return byteToHexStr(resultArray);
         }
-        private string ByteToHexStr(byte[] bytes)
+        private string byteToHexStr(byte[] bytes)
         {
             string returnStr = "";
             if (bytes != null)
@@ -83,7 +77,7 @@ namespace ThirdPartyWager.Service.BLL
             }
             return returnStr;
         }
-        private byte[] GetMd5(String keyString)
+        private byte[] getMd5(String keyString)
         {
             MD5 md5 = MD5.Create();
             byte[] buffer =
@@ -95,7 +89,7 @@ namespace ThirdPartyWager.Service.BLL
             return rawKey;
         }
         
-        private byte[] HexStrToBytes(string hexString)
+        private byte[] hexStrToBytes(string hexString)
         {
             byte[] bytes = new byte[hexString.Length / 2];
             for (var x = 0; x < bytes.Length; x++)
