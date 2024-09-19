@@ -57,7 +57,6 @@ namespace ThirdPartySettleWorker.Workers
             var logName = $"Settle_Marbles";
             var getSP = $"Service_BettransLT_Marbles_Settle_Get";
             var setSP = $"Service_BettransLT_Marbles_Settle_Set";
-            var getWagerSP = $"Service_TpWager_WonCasino_Get";
             var dueTimeSpan = TimeSpan.FromMinutes(1);
             
             try
@@ -76,22 +75,11 @@ namespace ThirdPartySettleWorker.Workers
                     var getUnsettledList = _partitionService.GetUnsettleDataList<SettleData>(getSP, wager);
                     if(getUnsettledList == null || !getUnsettledList.Any())
                     {
-                        throw new UnsettleNotFoundException($"{_tpName} - Can fount TransId : {wager.TransId}.");
+                        throw new UnsettleNotFoundException($"{_tpName} - Marbles Can fount TransId : {wager.TransId}.");
                     }
                     try
                     {
                         var getSettleWager = wager.TransId + "-1";
-                        var transType = SettlementType.SettledForValid;
-                        //因為三方的Bettrans沒有狀態能確認
-                        //故目前先以是否有抓回注單作為判斷 一律先以未結算單下去做
-                        //若抓回來會再次寫入TpUnsettle 再次結算
-                        var tpWagerData = _tpUnSettledBLL.GetTpUnsettleData<TpWagerMarblesModel>(getWagerSP, new { TransId = wager.TransId }, DataBase.Wager);
-                        if (!tpWagerData.Any())
-                        {
-                            transType = SettlementType.UnSettled;
-                            getSettleWager = wager.TransId;
-                        }
-                        
                         var unsettled = getUnsettledList.FirstOrDefault(x => x.TransId == getSettleWager);
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, unsettled.Account);
                         
@@ -104,17 +92,16 @@ namespace ThirdPartySettleWorker.Workers
                             WinlostAmount = unsettled.WinLostAmount,
                             //前面拿結算資料 寫入資料的時候拿局號當作結算單
                             TransId = wager.TransId,
-                            GameType = gameType,    
+                            GameType = gameType,
                             SettledTime = unsettled.SettleTime / 1000,
                             TransTime = unsettled.TransTime / 1000,
-                            SettlementType = transType,
+                            SettlementType = SettlementType.SettledForValid,
                             GameID = unsettled.GameId,
                         };
 
                         if (betRecordInfo.SettlementType == SettlementType.SettledForInvalid)
                         {
                             betRecordInfo.TicketStatus = TicketStatus.Refund;
-                            betRecordInfo.SettlementType = SettlementType.SettledForInvalid;
                         }
 
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, tpCategory);
