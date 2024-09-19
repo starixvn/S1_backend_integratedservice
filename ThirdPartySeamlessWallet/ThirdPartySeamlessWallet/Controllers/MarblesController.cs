@@ -71,7 +71,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             MarblesRequest marblesRequest = JsonConvert.DeserializeObject<MarblesRequest>(JsonConvert.SerializeObject(request));
             var verifyJson = decodeAESMD5(marblesRequest.Params, config.AgentKey);
             var verifyData = JsonConvert.DeserializeObject<VerifyRequest>(verifyJson);
-            if (_authBLL.Authenticate(verifyData.playerSession, out TpCustInfoAuth tpCustInfoAuth))
+            if (_authBLL.AuthenticateByTpToken(verifyData.playerSession, out TpCustInfoAuth tpCustInfoAuth))
             {
                 return new VerifyResponse()
                 {
