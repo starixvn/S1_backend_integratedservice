@@ -38,8 +38,8 @@ namespace ThirdPartyWager.Workers
             return Task.CompletedTask;
         }
         
-        private async void DoTask(object state)
-        { 
+         private async void DoTask(object state)
+         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var result = 0;
@@ -58,10 +58,25 @@ namespace ThirdPartyWager.Workers
                 {
                     var time = _dateTimeHelper.GetTimeByMinute(last, timeZone, _timeFormat, timerTime);
 
-                    //統一使用Nova 用TP名稱做分別
-                    var _setting = _siteConfigDic[1];
-                    
-                    result = await _wagerMarblesBLL.GetWagerAsync(_setting, time.startUnix, time.endUnix);
+                    //現在只有Nova 除了Nova就先別動
+                    var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+                    foreach (var site in siteList)
+                    {
+                        var _setting = _siteConfigDic[site.SiteId];
+
+                        if (_setting == null) continue;
+
+                        if (site.SiteId == 1)
+                        {
+                            result = await _wagerMarblesBLL.GetWagerAsync(_setting, time.startUnix, time.endUnix);
+                        }
+
+                        if (result < 0)
+                        {
+                            //第三方因素或Insert失敗回傳為-1，直接進break不再更新時間。
+                            break;
+                        }
+                    }
 
                     if (result > 0)
                     {
@@ -91,6 +106,6 @@ namespace ThirdPartyWager.Workers
                     _timer.Change(dueTimeSpan, TimeSpan.Zero);
                 }
             }
-        }
+         }
     }
 }
