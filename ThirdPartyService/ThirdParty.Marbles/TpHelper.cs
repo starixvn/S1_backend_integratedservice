@@ -273,7 +273,7 @@ namespace ThirdParty.Marbles
             if (tpData.code == "0")
             {
                 oApiResult.ErrorCode = ErrorCode.Success;
-                oApiResult.Message = tpData.data.url;
+                oApiResult.Message = tpData.msg;
             }
             else
             {
