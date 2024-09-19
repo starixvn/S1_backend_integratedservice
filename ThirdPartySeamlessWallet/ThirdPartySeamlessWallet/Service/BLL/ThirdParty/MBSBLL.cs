@@ -33,7 +33,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public MBSTransferInOutResponse Bet(MBSTransferInOutRequest requestData)
         {
             var logName = $"{_thisTp.ToString()}_Bet";
-            _log2File.Info(JsonConvert.SerializeObject(requestData), $"Marbles_Bet");
             var mbsBetResponse = new MBSTransferInOutResponse()
             {
                 code = "-1",
@@ -121,7 +120,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         public MBSTransferInOutResponse Settle(MBSTransferInOutRequest requestData)
         {
             var logName = $"{_thisTp.ToString()}_Settle";
-            _log2File.Info(JsonConvert.SerializeObject(requestData), $"Marbles_Settle");
             var mbsSettleResponse = new MBSTransferInOutResponse()
             {
                 code = "-1",
@@ -167,7 +165,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 _log2File.Error($"{requestData}\r\n{JsonConvert.SerializeObject(mbsSettleResponse)}", logName, ex);
                 return mbsSettleResponse;
             }
-            
+
+            _log2File.Error($"result={mbsSettleResponse}", logName);
+            return mbsSettleResponse;
         }
         
         #region Exchange
