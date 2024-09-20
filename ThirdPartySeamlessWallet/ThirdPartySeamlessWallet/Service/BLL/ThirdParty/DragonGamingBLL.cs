@@ -91,7 +91,14 @@ public class DragonGamingBLL : IDragonGamingBLL
     {
         try
         {
+            #region Tiimeout Test
+
+            Thread.Sleep(300);
+            return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.InternalError, "Debit timeout test.");
+
+            #endregion
             var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)thisTp, request.account_id);
+
             if (tpCheck == null)
             {
                 return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.PlayerInvalid, request.token);
@@ -137,6 +144,12 @@ public class DragonGamingBLL : IDragonGamingBLL
     {
         try
         {
+            #region Tiimeout Test
+
+            Thread.Sleep(300);
+            return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.InternalError, "Credit timeout test.");
+
+            #endregion
             var gameType = GetGameType(request.game_type);
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)thisTp, request.account_id);
             int result = 0;
@@ -292,7 +305,7 @@ public class DragonGamingBLL : IDragonGamingBLL
             refundData.amount *= tpCurrency.ExchangeRate;
         }
 
-        var result = _settledService.CancelBetRNG_DragonGaming(tpCustInfo, refundData,request.original_transaction_id, out afterAmount);
+        var result = _settledService.CancelBetRNG_DragonGaming(tpCustInfo, refundData, request.original_transaction_id, out afterAmount);
         if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
         {
             afterAmount /= tpCurrency.ExchangeRate;
