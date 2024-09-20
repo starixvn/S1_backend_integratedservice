@@ -93,7 +93,7 @@ public class DragonGamingBLL : IDragonGamingBLL
         {
             #region Tiimeout Test
 
-            Thread.Sleep(300);
+            Thread.Sleep(5* 60 * 1000);
             return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.InternalError, "Debit timeout test.");
 
             #endregion
@@ -146,7 +146,7 @@ public class DragonGamingBLL : IDragonGamingBLL
         {
             #region Tiimeout Test
 
-            Thread.Sleep(300);
+            Thread.Sleep(5 * 60 * 1000);
             return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.InternalError, "Credit timeout test.");
 
             #endregion
