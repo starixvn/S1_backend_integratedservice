@@ -91,12 +91,6 @@ public class DragonGamingBLL : IDragonGamingBLL
     {
         try
         {
-            #region Tiimeout Test
-
-            Thread.Sleep(5* 60 * 1000);
-            return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.InternalError, "Debit timeout test.");
-
-            #endregion
             var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)thisTp, request.account_id);
 
             if (tpCheck == null)
