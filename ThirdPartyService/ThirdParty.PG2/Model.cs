@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using ThirdPartyCore.Model;
 namespace ThirdParty.PG2;
 
 
@@ -44,4 +45,15 @@ internal class GameLaunchResponse
 {
     public Status Status { get; set; }
     public Data Data { get; set; }
+}
+
+internal class PG2Config : TpSiteConfig
+{
+    public Dictionary<string, CurrencyDataPG2> CurrencyData { get; set; }
+}
+
+public class CurrencyDataPG2
+{
+    public string ApiKey { get; set; }
+    public string Agent { get; set; }
 }

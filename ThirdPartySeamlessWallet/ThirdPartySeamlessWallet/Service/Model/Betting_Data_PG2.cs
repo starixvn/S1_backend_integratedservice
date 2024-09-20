@@ -249,3 +249,14 @@ public class Balancemodel
     public decimal after { get; set; }
 }
 #endregion
+
+internal class PG2Config : TpSiteConfig
+{
+    public Dictionary<string, CurrencyDataPG2> CurrencyData { get; set; }
+}
+
+public class CurrencyDataPG2
+{
+    public string ApiKey { get; set; }
+    public string Agent { get; set; }
+}
