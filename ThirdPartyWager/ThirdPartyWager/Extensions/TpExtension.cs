@@ -59,6 +59,11 @@ namespace ThirdPartyWager.Extensions
                 { Tp.BNG, AddBNG},
                 { Tp.HaoLong, AddHL},
                 { Tp.NLC, AddNLC},
+                { Tp.MaxGame, AddMaxGame},
+                { Tp.SabaPlay, AddSabaPlay},
+                { Tp.UuSlots, AddUuSlots},
+                { Tp.Live22, AddLive22},
+                { Tp.FastSpin, AddFastSpin},
                 { Tp.NTConnect, AddNTConnect },
                 { Tp.GA, AddGA},
                 { Tp.WonCasino, AddWonCasino},
@@ -684,6 +689,61 @@ namespace ThirdPartyWager.Extensions
             services.AddHostedService<WagerRedoNLC>();
             services.AddHostedService<WagerUnsettleNLC>();
             services.AddHostedService<FinanceNLC>();
+
+            return services;
+        }
+
+        private IServiceCollection AddMaxGame(IServiceCollection services)
+        {
+            services.AddSingleton<WagerMaxGameService>();
+
+            services.AddSingleton<ApiMaxGameBLL>();
+            services.AddSingleton<TicketMaxGameBLL>();
+
+            services.AddHostedService<TicketMaxGame>();
+
+            return services;
+        }
+        private IServiceCollection AddSabaPlay(IServiceCollection services)
+        {
+            services.AddSingleton<WagerSabaPlayService>();
+
+            services.AddSingleton<TicketSabaPlayBLL>();
+
+            services.AddHostedService<TicketSabaPlay>();
+
+            return services;
+        }
+
+        private IServiceCollection AddUuSlots(IServiceCollection services)
+        {
+            services.AddSingleton<WagerUuSlotsService>();
+
+            services.AddSingleton<TicketUuSlotsBLL>();
+
+            services.AddHostedService<TicketUuSlots>();
+
+            return services;
+        }
+
+        private IServiceCollection AddLive22(IServiceCollection services)
+        {
+            services.AddSingleton<WagerLive22Service>();
+
+            services.AddSingleton<TicketLive22BLL>();
+
+            services.AddHostedService<TicketLive22>();
+
+            return services;
+        }
+
+        private IServiceCollection AddFastSpin(IServiceCollection services)
+        {
+            services.AddSingleton<WagerFastSpinService>();
+
+            services.AddSingleton<TicketFastSpinBLL>();
+
+            services.AddHostedService<TicketFastSpin>();
 
             return services;
         }

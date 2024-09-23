@@ -94,7 +94,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         public async Task<dynamic> PlaceBet(string sitename)
         {
             string logName = $"{_thisTp}_PlaceBet";
-
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
@@ -107,7 +106,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
                     return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
                 }
-
                 return _maxGameBLL.PlaceBet(content);
             }
             catch (Exception ex)
@@ -123,7 +121,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         public async Task<dynamic> EndGame(string sitename)
         {
             string logName = $"{_thisTp}_EndGame";
-
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
@@ -151,7 +148,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         public async Task<dynamic> VoidGame(string sitename)
         {
             string logName = $"{_thisTp}_VoidGame";
-
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
@@ -260,6 +256,5 @@ namespace ThirdPartySeamlessWallet.Controllers
             _log2File.Error($"CheckHeader Error\r\nHeader={oSign}\r\nencrypt={encrypt}", logName);
             return false;
         }
-
     }
 }
