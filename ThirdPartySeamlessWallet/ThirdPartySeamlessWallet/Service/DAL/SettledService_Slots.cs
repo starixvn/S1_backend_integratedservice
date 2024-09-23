@@ -7357,7 +7357,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region DragonGaming
 
-        public int CancelBetRNG_DragonGaming(TpCustInfo tpCustInfo, BettingData_DragonGaming refundData,string originalTransactionId, out decimal afterAmount)
+        public int CancelBetRNG_DragonGaming(TpCustInfo tpCustInfo, BettingData_DragonGaming refundData, string originalTransactionId, out decimal afterAmount)
         {
             int bonusId = 0;
             int result = 0;
@@ -7383,7 +7383,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (check is not null)
                 {
-                    result = _mainDbClient.Execute(SetSpName, new { refundData.round_id }, conn, trans);
+                    result = _mainDbClient.Execute(SetSpName, new { refundData.round_id, refundData.note }, conn, trans);
 
                     if (result > 0 && refundData.amount != 0)
                     {
