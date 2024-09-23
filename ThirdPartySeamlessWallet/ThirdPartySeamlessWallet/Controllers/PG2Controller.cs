@@ -51,7 +51,7 @@ public class PG2Controller : ControllerBase
     }
 
     /// <summary>
-    /// Slot派發彩金
+    /// Payout API
     /// </summary>
     /// <returns></returns>
     [HttpPost]
@@ -62,7 +62,7 @@ public class PG2Controller : ControllerBase
     }
 
     /// <summary>
-    /// Slot取消下注
+    /// Cancel API
     /// </summary>
     /// <returns></returns>
     [HttpPost]
@@ -73,7 +73,7 @@ public class PG2Controller : ControllerBase
     }
 
     /// <summary>
-    /// Slot取消下注
+    /// Settle API
     /// </summary>
     /// <returns></returns>
     [HttpPost]

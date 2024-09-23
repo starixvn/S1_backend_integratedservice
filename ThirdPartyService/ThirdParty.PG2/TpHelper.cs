@@ -14,23 +14,24 @@ namespace ThirdParty.PG2
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly Dictionary<int, Dictionary<string, string>> _siteConfigDic;
+        private readonly Dictionary<int, PG2Config> _siteConfigDic;
         private const TpEnum Tp = TpEnum.PG2;
         private const string ContentType = "application/json";
 
         public TpHelper(IServiceProvider provider)
         {
-            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(Tp.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<PG2Config>(Tp.ToString());
         }
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var config = _siteConfigDic[tpCustInfo.SiteId];
-            var apiUrl = config["api_url"];
-            var key = config["api_key"];
+            var apiUrl = config.ApiUrl;
+            var key = config.CurrencyData[tpCustInfo.TpCurrencyId].ApiKey;
+            var agent = config.CurrencyData[tpCustInfo.TpCurrencyId].Agent;
             var param = new
             {
                 username = tpCustInfo.TpUserName,
-                agent = config["agent"],
+                agent = agent,
             };
 
             var jsonParam = JsonConvert.SerializeObject(param);
@@ -69,9 +70,9 @@ namespace ThirdParty.PG2
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             var config = _siteConfigDic[tpCustInfo.SiteId];
-            var apiUrl = config["api_url"];
-            var key = config["api_key"];
-            var agent = config["agent"];
+            var apiUrl = config.ApiUrl;
+            var key = config.CurrencyData[tpCustInfo.TpCurrencyId].ApiKey;
+            var agent = config.CurrencyData[tpCustInfo.TpCurrencyId].Agent;
             var gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
             var homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
 
