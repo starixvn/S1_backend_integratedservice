@@ -112,20 +112,20 @@ public class DragonGamingBLL : IDragonGamingBLL
                     var tpCustBalance = _tpCustInfoBll.GetBalance((int)thisTp, tpCustInfo.TpUserName, (int)gameType);
                     tpAffterAmount = tpCustBalance.Balance;
                 }
-                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.Success, request.token, tpCustInfo.TpUserName, tpAffterAmount, tpCustInfo.TpCurrencyId, request.transaction_id);
+                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.Success, request.token, tpCustInfo.TpUserName, tpAffterAmount, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
             }
             else if (result == -1)
             {
                 var tpCustBalance = _tpCustInfoBll.GetBalance((int)thisTp, tpCustInfo.TpUserName, (int)gameType);
-                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.DuplicateSuccess, request.token, tpCustInfo.TpUserName, tpCustBalance.Balance, tpCustInfo.TpCurrencyId, request.transaction_id);
+                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.DuplicateSuccess, request.token, tpCustInfo.TpUserName, tpCustBalance.Balance, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
             }
             else if (tpAffterAmount < 0)
             {
                 var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)thisTp, tpCustInfo.TpUserName, (int)gameType);
-                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.Insufficient, request.token, tpCustInfo.TpUserName, tpCustBalance.Balance, tpCustInfo.TpCurrencyId, request.transaction_id);
+                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.Insufficient, request.token, tpCustInfo.TpUserName, tpCustBalance.Balance, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
             }
 
-            return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.DebitInternalError, request.token, tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId, request.transaction_id);
+            return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.DebitInternalError, request.token, tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
         }
         catch (Exception ex)
         {
@@ -161,20 +161,20 @@ public class DragonGamingBLL : IDragonGamingBLL
                     var tpCustBalance = _tpCustInfoBll.GetBalance((int)thisTp, tpCustInfo.TpUserName, (int)gameType);
                     tpAffterAmount = tpCustBalance.Balance;
                 }
-                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.Success, request.token, tpCustInfo.TpUserName, tpAffterAmount, tpCustInfo.TpCurrencyId, request.transaction_id);
+                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.Success, request.token, tpCustInfo.TpUserName, tpAffterAmount, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
             }
             else if (result == -1)
             {
                 var tpCustBalance = _tpCustInfoBll.GetBalance((int)thisTp, tpCustInfo.TpUserName, (int)gameType);
-                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.DuplicateSuccess, request.token, tpCustInfo.TpUserName, tpCustBalance.Balance, tpCustInfo.TpCurrencyId, request.transaction_id);
+                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.DuplicateSuccess, request.token, tpCustInfo.TpUserName, tpCustBalance.Balance, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
             }
             else if (result == -2)
             {
                 var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)thisTp, tpCustInfo.TpUserName, (int)gameType);
-                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.NoExistVaildBet, request.token, tpCustInfo.TpUserName, tpCustBalance.Balance, tpCustInfo.TpCurrencyId, request.transaction_id);
+                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.NoExistVaildBet, request.token, tpCustInfo.TpUserName, tpCustBalance.Balance, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
             }
 
-            return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.CreditInternalError, request.token, tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId, request.transaction_id);
+            return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.CreditInternalError, request.token, tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
         }
         catch (Exception ex)
         {
@@ -198,15 +198,15 @@ public class DragonGamingBLL : IDragonGamingBLL
                     var tpCustBalance = _tpCustInfoBll.GetBalance((int)thisTp, tpCustInfo.TpUserName, (int)gameType);
                     tpAffterAmount = tpCustBalance.Balance;
                 }
-                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.Success, request.token, tpCustInfo.TpUserName, tpAffterAmount, tpCustInfo.TpCurrencyId, request.transaction_id);
+                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.Success, request.token, tpCustInfo.TpUserName, tpAffterAmount, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
             }
             else if (result == -1)
             {
                 var tpCustBalance = _tpCustInfoBll.GetBalance((int)thisTp, tpCustInfo.TpUserName, (int)gameType);
-                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.DuplicateSuccess, request.token, tpCustInfo.TpUserName, tpCustBalance.Balance, tpCustInfo.TpCurrencyId, request.transaction_id);
+                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.DuplicateSuccess, request.token, tpCustInfo.TpUserName, tpCustBalance.Balance, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
             }
 
-            return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.RefundInternalError, request.token, tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId, request.transaction_id);
+            return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.RefundInternalError, request.token, tpCustInfo.TpUserName, tpCustInfo.TpCurrencyId, request.GetTransactionIdAsString());
         }
         catch (Exception ex)
         {
@@ -302,7 +302,7 @@ public class DragonGamingBLL : IDragonGamingBLL
             refundData.amount *= tpCurrency.ExchangeRate;
         }
 
-        var result = _settledService.CancelBetRNG_DragonGaming(tpCustInfo, refundData, request.original_transaction_id, out afterAmount);
+        var result = _settledService.CancelBetRNG_DragonGaming(tpCustInfo, refundData, request.GetOriginalTransactionIdAsString(), out afterAmount);
         if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
         {
             afterAmount /= tpCurrency.ExchangeRate;

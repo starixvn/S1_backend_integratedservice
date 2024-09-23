@@ -22,11 +22,16 @@ public class CommonDebitCreditRefundRequest_DragonGaming : BalanceRequest_Dragon
     public string amount_type { get; set; }
     public string currency { get; set; }
     public int game_id { get; set; }
-    public string transaction_id { get; set; }
+    public object transaction_id { get; set; }
     public int round_id { get; set; }
     public string game_type { get; set; }
     public string game_name { get; set; }
     public string note { get; set; }
+
+    public string GetTransactionIdAsString()
+    {
+        return transaction_id?.ToString();
+    }
 }
 
 public class DebitRequest_DragonGaming : CommonDebitCreditRefundRequest_DragonGaming
@@ -44,7 +49,12 @@ public class CreditRequest_DragonGaming : CommonDebitCreditRefundRequest_DragonG
 
 public class RefundRequest_DragonGaming : CommonDebitCreditRefundRequest_DragonGaming
 {
-    public string original_transaction_id { get; set; }
+    public object original_transaction_id { get; set; }
+
+    public string GetOriginalTransactionIdAsString()
+    {
+        return original_transaction_id?.ToString();
+    }
 }
 
 
@@ -177,7 +187,7 @@ public class BettingData_DragonGaming
         currency = request.currency;
         game_id = request.game_id;
 
-        transaction_id = request.transaction_id;
+        transaction_id = request.GetTransactionIdAsString();
         round_id = request.round_id.ToString();
         game_type = request.game_type;
         game_name = request.game_name;
@@ -195,7 +205,7 @@ public class BettingData_DragonGaming
         currency = request.currency;
         game_id = request.game_id;
 
-        transaction_id = request.transaction_id;
+        transaction_id = request.GetTransactionIdAsString();
         round_id = request.round_id.ToString();
         game_type = request.game_type;
         game_name = request.game_name;
@@ -216,7 +226,7 @@ public class BettingData_DragonGaming
         currency = request.currency;
         game_id = request.game_id;
 
-        transaction_id = request.transaction_id;
+        transaction_id = request.GetTransactionIdAsString();
         round_id = request.round_id.ToString();
         game_type = request.game_type;
         game_name = request.game_name;
