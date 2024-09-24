@@ -62,6 +62,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.NTConnect, AddNTConnect },        
                 { Tp.GA, AddGA},
                 { Tp.WonCasino, AddWonCasino},
+                { Tp.PG2, AddPG2}
             };
         }
         private IServiceCollection AddSA(IServiceCollection services)
@@ -727,6 +728,17 @@ namespace ThirdPartyWager.Extensions
             services.AddHostedService<WagerWonCasino>();
             services.AddHostedService<WagerRedoWonCasino>();
             services.AddHostedService<FinanceWonCasino>();
+
+            return services;
+        }
+
+        private IServiceCollection AddPG2(IServiceCollection services)
+        {
+            services.AddSingleton<WagerPG2Service>();
+            services.AddSingleton<ApiPG2BLL>();
+            services.AddSingleton<FinancePG2BLL>();
+
+            services.AddHostedService<FinancePG2>();
 
             return services;
         }

@@ -120,7 +120,11 @@ namespace ThirdParty.PG2
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            throw new NotImplementedException();
+            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>
+            {
+                ErrorCode = ErrorCode.Fail
+            };
+            return oApiResult;
         }
 
         public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID,

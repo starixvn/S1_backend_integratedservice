@@ -14,9 +14,7 @@ public class PG2BLL : IPG2BLL
     #region Fields
     public GameType GameType { get; set; }
     private readonly Tp _thisTp;
-    private readonly string _tpName = Tp.PG2.ToString();
     private readonly TpCustInfoBLL _tpCustInfoBll;
-    private readonly AuthBLL _authBll;
     private readonly ThirdPartyBLL _thirdPartyBll;
     private readonly BettingService _bettingService;
     private readonly SettledService _settledService;
@@ -34,7 +32,6 @@ public class PG2BLL : IPG2BLL
         GameType = GameType.PG2_RNG;
         _tpCustInfoBll = provider.GetService<TpCustInfoBLL>();
         _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
-        _authBll = provider.GetRequiredService<AuthBLL>();
         _bettingService = provider.GetService<BettingService>();
         _logger = provider.GetRequiredService<ILogger<PG2BLL>>();
         _settledService = provider.GetRequiredService<SettledService>();
