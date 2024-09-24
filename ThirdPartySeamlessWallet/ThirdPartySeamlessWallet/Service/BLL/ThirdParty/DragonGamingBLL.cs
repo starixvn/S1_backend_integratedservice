@@ -138,15 +138,6 @@ public class DragonGamingBLL : IDragonGamingBLL
     {
         try
         {
-            #region Tiimeout Test
-
-            if (request.amount > 0)
-            {
-                Thread.Sleep(5 * 60 * 1000);
-                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.InternalError, "Credit timeout test.");
-            }
-
-            #endregion
             var gameType = GetGameType(request.game_type);
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)thisTp, request.account_id);
             int result = 0;
