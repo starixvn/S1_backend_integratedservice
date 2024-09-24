@@ -74,14 +74,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                   var (custId, resultCode) = await _migrationBll.MigrationCustomerIns(request , agent ,allAgentId);
                   
-                  if (custId == -1)
-                  {
-                      resp.Message = "Duplicate SiteId and Username ";
-                      resp.ErrorCode = -1;
-                      return resp;
-                  }
-                  
-                  if (custId > 0)
+                  if (custId > 0 && resultCode == 0)
                   {
                       resp.CustId = custId;
                       resp.Message = "Successful ";
@@ -91,38 +84,43 @@ namespace ThirdPartySeamlessWallet.Controllers
                   {
                       resp.ErrorCode = resultCode;
                       resp.Message = string.Empty;
-                      var checkString = resultCode.ToString("D7");
-                      for (var i = 0; i < checkString.Length; i++)
+
+                      switch (resultCode)
                       {
-                          if (checkString[i] == '0')
-                          {
-                              switch (i)
-                              {
-                                  case 0:
-                                      resp.Message += "Error at table CustWithdrawalLimit; ";
-                                      break;
-                                  case 1:
-                                      resp.Message += "Error at table WithdrawalLimitLog; ";
-                                      break;
-                                  case 2:
-                                      resp.Message += "Error at table CustWallet; ";
-                                      break;
-                                  case 3:
-                                      resp.Message += "Error at table CustBankInfo; ";
-                                      break;
-                                  case 4:
-                                      resp.Message += "Error at table CustRegInfo; ";
-                                      break;
-                                  case 5:
-                                      resp.Message += "Error at table CustProfile; ";
-                                      break;
-                                  case 6:
-                                      resp.Message += "Error at table CustBackupPassword; ";
-                                      break;
-                              }
-                          }
+                          case -1 or -2:
+                              resp.Message += "Error at table Customer; ";
+                              break;
+                          case -3:
+                              resp.Message += "Error at table CustBackupPassword; ";
+                              break;
+                          case -4:
+                              resp.Message += "Error at table CustProfile; ";
+                              break;
+                          case -5:
+                              resp.Message += "Error at table CustRegInfo; ";
+                              break;
+                          case -6:
+                              resp.Message += "Error at table CustBankInfo; ";
+                              break;
+                          case -7:
+                              resp.Message += "Error at table CustWallet; ";
+                              break;
+                          case -8:
+                              resp.Message += "Error at table WithdrawalLimitLog; ";
+                              break;
+                          case -9:
+                              resp.Message += "Error at table CustWithdrawalLimit; ";
+                              break;
+                          case -10:
+                              resp.Message += "Error at table CustVip; ";
+                              break;
+                          case -11:
+                              resp.Message += "Error at table VipLevelLog; ";
+                              break;
+                          case -12:
+                              resp.Message += "Error at table CustTransSummary; ";
+                              break;
                       }
-                      
                   }
             }
             catch (Exception ex) 
