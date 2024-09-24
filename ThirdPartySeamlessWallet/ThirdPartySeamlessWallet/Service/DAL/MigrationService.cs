@@ -21,6 +21,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             {
                 _SiteId = request.SiteId,
                 _UserName = request.UserName,
+                _AccountName = request.AccountName,
                 _Userpwd = request.Userpwd,
                 _CurrencyId =request.CurrencyId,
                 _UserLang = request.UserLang,
@@ -41,7 +42,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 _SignupIp = request.SignupIp ?? "",
                 _Balance = request.Balance,
                 _WithdrawalLimit = request.WithdrawalLimit,
-                _FirstDepositTime = request.FirstDepositTime
+                _FirstDepositTime = request.FirstDepositTime,
+                _DepositSum = request.DepositSum,
+                _DepositCnt = request.DepositCnt,
+                _WithdrawlSum = request.WithdrawlSum,
+                _WithdrawlCnt = request.WithdrawlCnt,
+                _EffectiveBetSum = request.EffectiveBetSum,
+                _VipLevel = request.VipLevel == 0 ? 1 : request.VipLevel ,
             });
             p.Add("_CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
             p.Add("_ResultCode", dbType: DbType.Int32, direction: ParameterDirection.Output);

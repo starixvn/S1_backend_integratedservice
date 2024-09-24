@@ -17,6 +17,10 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// UserName aka login userName
         /// </summary>
         public string UserName { get; set; }
+        /// <summary>
+        /// Real Name
+        /// </summary>
+        public string AccountName{ get; set; }
         public string Userpwd { get; set; }
         public int CurrencyId { get; set; }
         /// <summary>
@@ -84,6 +88,34 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// UTC +0
         /// </summary>
         public DateTime FirstDepositTime { get; set; }
+        
+        #endregion
+
+        #region CustTransSummary
+        
+        /// <summary>
+        /// 歷史存款總額
+        /// </summary>
+        public decimal DepositSum { get; set; }
+        /// <summary>
+        /// 存款筆數
+        /// </summary>
+        public int DepositCnt { get; set; }
+        public decimal WithdrawlSum { get; set; }
+        public int WithdrawlCnt { get; set; }
+        /// <summary>
+        /// 歷史有效投注總額
+        /// </summary>
+        public decimal EffectiveBetSum { get; set; }
+
+        #endregion
+
+        #region CustVip
+        
+        /// <summary>
+        /// ex : 1.Black Tortois  2.Phoenix  3.Tiger
+        /// </summary>
+        public int VipLevel { get; set; }
         
         #endregion
         
