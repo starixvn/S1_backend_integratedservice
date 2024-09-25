@@ -15,7 +15,7 @@ public class Status_PG2
 
 public class CurrencyStatsData_PG2
 {
-    public int totalWinlose { get; set; }
+    public decimal totalWinlose { get; set; }
     public int totalPageAmount { get; set; }
     public IList<CurrencyStatsItem_PG2> transactions { get; set; }
 

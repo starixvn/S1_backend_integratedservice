@@ -1,6 +1,7 @@
 ﻿using System.Security.Policy;
 using System.Text;
 using Newtonsoft.Json;
+using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -15,6 +16,7 @@ public class ApiPG2BLL
     private readonly Log2File _log2File;
     private readonly ILogger<ApiPG2BLL> _logger;
     private readonly string _tpName = Tp.PG2.ToString();
+    private readonly WagerPG2Service _wagerPG2Service;
     private readonly Dictionary<int, PG2Config> _sitePG2Config;
 
     public ApiPG2BLL(IServiceProvider provider)
@@ -23,6 +25,7 @@ public class ApiPG2BLL
         _common = provider.GetRequiredService<Common>();
         _log2File = provider.GetRequiredService<Log2File>();
         _logger = provider.GetRequiredService<ILogger<ApiPG2BLL>>();
+        _wagerPG2Service = provider.GetRequiredService<WagerPG2Service>();
         _sitePG2Config = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<PG2Config>(_tpName);
     }
 
@@ -34,14 +37,14 @@ public class ApiPG2BLL
         var key = config.CurrencyData[currency].ApiKey;
         var agent = config.CurrencyData[currency].Agent;
         var url = $"{apiUrl}/seamless/report/date";
+        var userList = _wagerPG2Service.GetUserListByDate(reportTimeStartTime);
 
-        var test = new string[] { "dtuk555_651469" };
         var param = new
         {
             agent = agent,
             startDate = reportTimeStartTime,
             endDate = reportTimeEndTime,
-            userList = test, /*Array.Empty<string>(),*/
+            userList = userList,
             page = page,
             limit = perPage
         };
