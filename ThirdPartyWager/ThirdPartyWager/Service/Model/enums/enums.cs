@@ -64,7 +64,8 @@
         NTConnect = 62,
         GA = 63,
         WonCasino = 64,
-        DragonGaming = 70
+        DragonGaming = 70,
+        PG2 = 71
     }
     public enum GameType
     {
@@ -113,7 +114,8 @@
         NTConnect_Games = 114,
         GA_CockFighting = 115,
         WonCasino_LiveCasino = 116,
-        DragonGaming_RNG = 123
+        DragonGaming_RNG = 123,
+        PG2_RNG = 124,
     }
     public enum SettlementType
     {

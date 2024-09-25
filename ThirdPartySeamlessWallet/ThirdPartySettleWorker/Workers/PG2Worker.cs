@@ -19,7 +19,7 @@ public class PG2Worker : BackgroundService, ISettleWorker
     private readonly TpUnSettledBLL _tpUnSettledBLL;
     private readonly ThirdPartyBLL _thirdPartyBLL;
     private readonly TpCustInfoBLL _tpCustInfoBLL;
-    private readonly ILogger<AMBWorker> _logger;
+    private readonly ILogger<PG2Worker> _logger;
     private readonly string _tpName;
     private readonly PartitionService _partitionService;
 
@@ -29,7 +29,7 @@ public class PG2Worker : BackgroundService, ISettleWorker
         _tpUnSettledBLL = provider.GetRequiredService<TpUnSettledBLL>();
         _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
-        _logger = provider.GetRequiredService<ILogger<AMBWorker>>();
+        _logger = provider.GetRequiredService<ILogger<PG2Worker>>();
         _partitionService = provider.GetRequiredService<PartitionService>();
         _tpName = Enum.GetName(typeof(Tp), Tp);
     }
@@ -94,7 +94,6 @@ public class PG2Worker : BackgroundService, ISettleWorker
                         SettledTime = unsettleData.SettleTime,
                         TransTime = unsettleData.TransTime,
                         SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, unsettleData.GameId),
-                        TicketStatus = SetTicketStatus(unsettleData.WinLostAmount),
                         GameID = unsettleData.GameId,
                     };
 
