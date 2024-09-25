@@ -9,9 +9,12 @@ namespace ThirdPartyWager.Service.BLL
     {
         private readonly ILogger<WagerYGGBLL> _logger;
         private readonly HttpHelper _httpHelper;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly Common _common;
+        private readonly Tp _thisTp;
         private readonly MySqlClient _wagerDbClient;
         private readonly YGGConfig _siteConfig;
+        private readonly Dictionary<int, YGGConfig> _siteConfigDic;
 
         private const int SuccessCode = 0;
 
@@ -22,13 +25,16 @@ namespace ThirdPartyWager.Service.BLL
 
         public WagerYGGBLL(IServiceProvider provider)
         {
+            _thisTp = Tp.YGG; 
             _logger = provider.GetRequiredService<ILogger<WagerYGGBLL>>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _common = provider.GetRequiredService<Common>();
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<YGGConfig>(Tp.YGG.ToString());
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<YGGConfig>(_thisTp.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<YGGConfig>(_thisTp.ToString());
         }
-
+    
         /// <summary>
         ///  去第三方取得注單，寫入 DB
         /// </summary>
@@ -39,35 +45,46 @@ namespace ThirdPartyWager.Service.BLL
         {
             try
             {
-                await QueryBetRecordAsync(_siteConfig, startTime, endTime);
-                _jobRunCounter++;
-                if (_jobRunCounter != _JobCounterLimit) return true;
-
-                #region 補撈2天前的資料
-
-                var hours = -54; // Hans說做前54小時
-                const int addHours = 18;
-                while (hours < 0)
+                var siteList = _thirdPartyBLL.GetTpListByTpId((int)_thisTp);
+                foreach (var site in siteList)
                 {
-                    var redoStartTime = DateTime.Parse(endTime).AddHours(hours);
-                    var redoEndTime = redoStartTime.AddHours(addHours);
+                    if (site.TicketKey == 0)
+                    {
+                        continue;
+                    }
+                    // 分Site取得TpList
+                    var setting = _siteConfigDic[site.SiteId];
+                    
+                    await QueryBetRecordAsync(setting, startTime, endTime);
+                    _jobRunCounter++;
+                    if (_jobRunCounter != _JobCounterLimit) continue;
+                    
+                    #region 補撈2天前的資料
 
-                    await QueryBetRecordAsync(_siteConfig, redoStartTime.ToString(DateTimeFormat), redoEndTime.ToString(DateTimeFormat));
-                    hours += addHours;
+                    var hours = -54; // Hans說做前54小時
+                    const int addHours = 18;
+                    while (hours < 0)
+                    {
+                        var redoStartTime = DateTime.Parse(endTime).AddHours(hours);
+                        var redoEndTime = redoStartTime.AddHours(addHours);
+
+                        await QueryBetRecordAsync(setting, redoStartTime.ToString(DateTimeFormat), redoEndTime.ToString(DateTimeFormat));
+                        hours += addHours;
+                    }
+
+                    _jobRunCounter = 0; // 歸零
+
+                    #endregion
+
                 }
-
-                _jobRunCounter = 0; // 歸零
-
-                return true;
-
-                #endregion
-
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "YGG GetWagersAsync Exception.", ex.Message);
                 return false;
             }
+
+            return true;
         }
 
         private async Task QueryBetRecordAsync(YGGConfig config, string startTime, string endTime)
