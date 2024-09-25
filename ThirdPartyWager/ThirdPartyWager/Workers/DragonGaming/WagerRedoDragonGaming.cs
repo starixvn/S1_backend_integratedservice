@@ -69,6 +69,7 @@ namespace ThirdPartyWager.Workers
                     var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
                     foreach (var siteInfo in siteList)
                     {
+                        if (siteInfo.TicketKey == 0) continue;
                         var _setting = _siteConfigDic[siteInfo.SiteId];
                         if (_setting == null) continue;
 

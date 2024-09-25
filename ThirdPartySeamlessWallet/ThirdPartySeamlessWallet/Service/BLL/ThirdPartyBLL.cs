@@ -318,10 +318,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     break;
                 case (int)Tp.DragonGaming:
                     gameType = GameType.DragonGaming_RNG;
-                    if (string.Equals(gameId, "slots", StringComparison.OrdinalIgnoreCase))
-                    {
-                        gameType = GameType.DragonGaming_RNG;
-                    }
                     break;
                 default:
                     break;

@@ -167,7 +167,7 @@ public class TpHelper : ThirdPartyHelperBase
         return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
         {
             GameID = detail.GetStringValue("game_id"),
-            Game = tpGameType.TypeName,
+            Game = detail.GetStringValue("game_name"),
             RefNo = detail.GetStringValue("round_id"),
             Title = tpGameType.TypeName,
             MatchID = betRecordInfo.TransId,

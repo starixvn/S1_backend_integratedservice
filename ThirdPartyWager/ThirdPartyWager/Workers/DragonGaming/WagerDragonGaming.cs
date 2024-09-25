@@ -59,6 +59,8 @@ namespace ThirdPartyWager.Workers
 
                 foreach (var siteInfo in siteList)
                 {
+                    if (siteInfo.TicketKey == 0) continue;
+
                     var _setting = _siteConfigDic[siteInfo.SiteId];
                     if (_setting == null) continue;
 
