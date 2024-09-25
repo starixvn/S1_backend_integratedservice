@@ -49,7 +49,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string PhoneNo { get; set; }
         public string AreaCode { get; set; }
         public bool PhoneVerified { get; set; }
+        public DateTime? PhoneVerifiedTime { get; set; }
         public bool EmailVerified { get; set; }
+        public DateTime? EmailVerifiedTime { get; set; }
         /// <summary>
         /// {"City":"Ulu tiram","State":"Johor","Country":"Malaysia","PostCode":"81800","LineFirst":"52","LineSecond":"Jalan pelangi indah"}
         /// 非必填
@@ -87,7 +89,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// <summary>
         /// UTC +0
         /// </summary>
-        public DateTime FirstDepositTime { get; set; }
+        public DateTime? FirstDepositTime { get; set; }
         
         #endregion
 
