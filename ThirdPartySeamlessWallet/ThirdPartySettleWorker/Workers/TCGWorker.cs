@@ -169,6 +169,7 @@ namespace ThirdPartySettleWorker.Workers
                             unsettled.Stake *= tpCurrency.ExchangeRate;
                             unsettled.ValidBet *= tpCurrency.ExchangeRate;
                             unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
+                            winLostAmount *= tpCurrency.ExchangeRate;
                         }
 
                         var betRecordInfo = new BetRecordInfo
