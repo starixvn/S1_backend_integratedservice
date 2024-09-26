@@ -13,9 +13,9 @@ namespace ThirdPartyWager.Service.DAL
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
 
-        public IEnumerable<BettransData_MaxGame> GetPendingList()
+        public IEnumerable<BettransData_MaxGame> GetPendingList(TimeCast ticketTime)
         {
-            return _mainDbClient.Query<BettransData_MaxGame>("Service_BettransPK_MaxGame_Bet_Pending_Get");
+            return _mainDbClient.Query<BettransData_MaxGame>("Service_BettransPK_MaxGame_Bet_Pending_Get", parameters: new { _BeginTime = ticketTime.startUnix, _EndTime = ticketTime.endUnix });
         }
     }
 }

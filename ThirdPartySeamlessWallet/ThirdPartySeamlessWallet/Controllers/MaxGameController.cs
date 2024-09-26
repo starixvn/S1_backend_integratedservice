@@ -43,7 +43,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 string content = await reader.ReadToEndAsync();
-                
+
                 var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
@@ -125,7 +125,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 string content = await reader.ReadToEndAsync();
-                
+
                 var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
