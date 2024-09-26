@@ -13,7 +13,6 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Common _common;
         private readonly Tp _thisTp;
         private readonly MySqlClient _wagerDbClient;
-        private readonly YGGConfig _siteConfig;
         private readonly Dictionary<int, YGGConfig> _siteConfigDic;
 
         private const int SuccessCode = 0;
@@ -31,7 +30,6 @@ namespace ThirdPartyWager.Service.BLL
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _common = provider.GetRequiredService<Common>();
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<YGGConfig>(_thisTp.ToString());
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<YGGConfig>(_thisTp.ToString());
         }
     

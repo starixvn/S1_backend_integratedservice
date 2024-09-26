@@ -744,9 +744,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 }
                 else
                 {
-
                     var thirdPartySetting = _siteConfigDic[tpCustInfoAuth.SiteId];
-                    ;
                     var tpCustBalance =
                         _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, balanceReq.playerid, _gameType);
 
