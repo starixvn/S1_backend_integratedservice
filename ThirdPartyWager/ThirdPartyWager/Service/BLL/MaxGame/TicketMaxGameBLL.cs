@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Serilog.Context;
 using ThirdPartyWager.Service.DAL;
+using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model.TpSiteConfig;
@@ -17,6 +18,12 @@ namespace ThirdPartyWager.Service.BLL
         private readonly int _tpId = (int)Tp.MaxGame;
         private readonly string _tpName = Tp.MaxGame.ToString();
         private readonly IEnumerable<ServerInfo> _serverList;
+        private readonly DateTimeHelper _dateTimeHelper;
+        private readonly int _timeRange = 10;
+        private readonly int _timeZone = 0;
+        private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
+        private readonly int _delay = 3600;
+        private readonly int _delayTimeRange = 60;
 
         public TicketMaxGameBLL(IServiceProvider provider)
         {
@@ -26,11 +33,12 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<TicketMaxGameBLL>>();
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MaxGameConfig>(_tpName);
             _serverList = provider.GetRequiredService<CommonBLL>().GetSiteList();
+            _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         }
 
-        public IEnumerable<dynamic> GetPendingList(int gameType)
+        public IEnumerable<dynamic> GetPendingList(int gameType, TimeCast ticketTime)
         {
-            return _wagerMaxGameService.GetPendingList();
+            return _wagerMaxGameService.GetPendingList(ticketTime);
         }
 
         public async Task<bool> CheckTicketStatus(dynamic bettrans, int gameType)
@@ -68,17 +76,18 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     var type = data.Payload.Status;
                     var response = _apiMaxGameBLL.CallSeamlessApi(config, _tpName, siteName, bettrans, data).Result;
-                    if(response == null)
+                    if (response == null)
                     {
-                        task = false;
+                        task = true;
                         msg = $"{func} SEAMLESS_NULL (gameType={gameType}, type={type}, TicketNo={bettrans.TicketNo})";
                         _logger.LogError($"{msg}");
                         return task;
                     }
 
                     var result = JsonConvert.DeserializeObject<SeamlessMaxGameResponse>(response);
-                    if (result.ErrorCode != 0)
+                    if (result.ErrorCode != 0 && result.ErrorCode != 1009)
                     {
+                        // 排除1009重複req
                         task = false;
                         msg = $"{func} SEAMLESS_ERROR (gameType={gameType}, type={type}, TicketNo={bettrans.TicketNo})";
                         _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(result)}");
@@ -101,6 +110,26 @@ namespace ThirdPartyWager.Service.BLL
                 _logger.LogError($"Refund Not Match ({gameType}): {bettrans.TicketNo} {JsonConvert.SerializeObject(data)}");
             }
             return task;
+        }
+
+        public TimeCast GetTicketTime(DateTime startTime, int lockPeriod, out bool exec)
+        {
+            exec = true;
+            var ticketTime = _dateTimeHelper.GetTimeByMinute(_timeRange, _timeZone, _timeFormat, startTime);
+            var cvTime = DateTimeOffset.UtcNow.AddMinutes(lockPeriod).ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
+            if (ticketTime.endUnix > cvTime)
+            {
+                exec = false;
+            }
+            else
+            {
+                var diff = cvTime - ticketTime.endUnix;
+                if (diff >= _delay)
+                {
+                    ticketTime = _dateTimeHelper.GetTimeByMinute(_delayTimeRange, _timeZone, _timeFormat, startTime);
+                }
+            }
+            return ticketTime;
         }
     }
 }
