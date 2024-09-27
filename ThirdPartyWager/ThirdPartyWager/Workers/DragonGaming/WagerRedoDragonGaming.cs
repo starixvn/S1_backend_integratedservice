@@ -24,6 +24,7 @@ namespace ThirdPartyWager.Workers
         private readonly int timeZone = 0;
         private readonly int iRangMins = 15;
         private readonly int intervalMins = 5;
+        private readonly string timeFormat = "yyyy-MM-dd HH:mm:ss";
 
         public WagerRedoDragonGaming(IServiceProvider provider)
         {
@@ -65,7 +66,7 @@ namespace ThirdPartyWager.Workers
 
                 if (dataTpTimer.StartTime <= nowDateTime.AddHours(-2).AddMinutes(-15))
                 {
-                    var time = _dateTimeHelper.GetTimeByMinute(iRangMins - 1, timeZone, "yyyy-MM-dd HH:mm:ss", dataTpTimer.StartTime);
+                    var time = _dateTimeHelper.GetTimeByMinute(iRangMins - 1, timeZone, timeFormat, dataTpTimer.StartTime);
                     var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
                     foreach (var siteInfo in siteList)
                     {
