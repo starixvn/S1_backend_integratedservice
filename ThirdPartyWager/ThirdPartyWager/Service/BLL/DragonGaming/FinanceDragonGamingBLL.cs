@@ -45,7 +45,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
         {
             var reportData = new List<dynamic>();
-            var result = await _commonBLL.GetWagerSummary("Service_BettransRng_DragonGaming_Summary_Get", reportTime.startUnix, reportTime.endUnix);
+            var result = await _commonBLL.GetWagerSummary("Finance_BettransRng_DragonGaming_Summary_Get", reportTime.startUnix, reportTime.endUnix);
             reportData.AddRange(result);
             return reportData;
         }
