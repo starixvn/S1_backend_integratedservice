@@ -103,6 +103,8 @@ public class DragonGamingBLL : IDragonGamingBLL
             }
 
             var gameType = GetGameType(request.game_type);
+            if(gameType is GameType.None) 
+                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.GameTypeInvalid, request.token);
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)_thisTp, request.account_id);
             int result = PlaceBet(request, tpCustInfo, gameType, out decimal tpAffterAmount);
             if (result > 0)
@@ -139,6 +141,8 @@ public class DragonGamingBLL : IDragonGamingBLL
         try
         {
             var gameType = GetGameType(request.game_type);
+            if (gameType is GameType.None)
+                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.GameTypeInvalid, request.token);
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)_thisTp, request.account_id);
             int result = 0;
             decimal tpAffterAmount = 0m;
@@ -179,6 +183,8 @@ public class DragonGamingBLL : IDragonGamingBLL
         try
         {
             var gameType = GetGameType(request.game_type);
+            if (gameType is GameType.None)
+                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.GameTypeInvalid, request.token);
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)_thisTp, request.account_id);
 
             int result = CancelBet(request, tpCustInfo, out decimal tpAffterAmount);
@@ -225,7 +231,7 @@ public class DragonGamingBLL : IDragonGamingBLL
 
     private GameType GetGameType(string tpGameType)
     {
-        var gameType = GameType.DragonGaming_RNG;
+        var gameType = GameType.None;
         if (string.Equals(tpGameType, "slots", StringComparison.OrdinalIgnoreCase))
         {
             gameType = GameType.DragonGaming_RNG;

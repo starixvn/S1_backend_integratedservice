@@ -17,6 +17,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         PlayerInvalid = -4,
         [Description("Player is frozen/offline.")]
         PlayerFrozen = -6,
+        [Description("Internal server error.not allow game_type.")]
+        GameTypeInvalid = -10,
         [Description("Internal server error.Debit error.")]
         DebitInternalError = -100,
         [Description("Internal server error.Credit error.")]
