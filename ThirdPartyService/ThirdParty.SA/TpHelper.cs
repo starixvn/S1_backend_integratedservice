@@ -13,11 +13,11 @@ namespace ThirdParty.SA
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly SAConfig _siteConfig;
+        private readonly Dictionary<int, SAConfig> _siteConfigDic;
 
         public TpHelper(IServiceProvider provider)
         {
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SAConfig>(TpEnum.SA.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SAConfig>(TpEnum.SA.ToString());
         }
 
         [XmlRoot("APIResponse")]
@@ -103,7 +103,7 @@ namespace ThirdParty.SA
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var config = _siteConfig;
+            var config = _siteConfigDic[tpCustInfo.SiteId];
 
             tpCustInfo.TpUserName = tpCustInfo.TpUserName.Replace("_", "x");
             var input = new CreateMemberReq
@@ -159,7 +159,7 @@ namespace ThirdParty.SA
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string langid, Dictionary<string, string> inputs)
         {
-            var config = _siteConfig;
+            var config = _siteConfigDic[tpCustInfo.SiteId];
             if (string.IsNullOrEmpty(config.GameUrl)) throw new Exception("GameUrl Error");
 
             SetBetLimit(config, tpCustInfo, inputs);

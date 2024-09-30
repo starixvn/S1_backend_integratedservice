@@ -77,7 +77,7 @@ namespace ThirdPartyWager.Extensions
 
             services.AddSingleton<WagerSABLL>();
             services.AddSingleton<ApiSABLL>();
-            services.AddSingleton<WagerRedoSABLL>();
+            //services.AddSingleton<WagerRedoSABLL>();
             services.AddSingleton<FinanceSABLL>();
 
             services.AddHostedService<WagerSA>();
