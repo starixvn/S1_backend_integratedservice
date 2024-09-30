@@ -61,12 +61,18 @@
         BNG = 57,
         HaoLong = 58,
         NLC = 59,
+        MaxGame = 61,
         NTConnect = 62,
         GA = 63,
         WonCasino = 64,
+        SabaPlay = 66,
+        UuSlots = 67,
+        Live22 = 68,
+        FastSpin = 69,
         DragonGaming = 70,
         PG2 = 71
     }
+
     public enum GameType
     {
         Allbet_LiveCasino = 6,
@@ -111,9 +117,14 @@
         SG_Table = 109,
         HaoLong_4D = 110,
         NLC_RNG = 111,
+        MaxGame_Poker = 113,
         NTConnect_Games = 114,
         GA_CockFighting = 115,
         WonCasino_LiveCasino = 116,
+        SabaPlay_Poker = 119,
+        UuSlots_RNG = 120,
+        Live22_RNG = 121,
+        FastSpin_RNG = 122,
         DragonGaming_RNG = 123,
         PG2_RNG = 124,
     }
