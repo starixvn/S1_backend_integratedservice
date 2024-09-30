@@ -129,6 +129,30 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string Message { get; set; }
         public int ErrorCode { get; set; }
     }
+
+    public class MigrationAffiliateRequest
+    {
+        public int SiteId { get; set; }
+        /// <summary>
+        /// AffiliateCode 屬於誰的CustId
+        /// </summary>
+        public int CustId { get; set; }
+        public string AffiliateCode { get; set; }
+        public string AffiliateName { get; set; }
+        public string ParentAffiliate { get; set; }
+        public List<int> AffiliatedCustIdList { get; set; }
+    }
     
+    public class AffiliateCustList
+    {
+        public int CustId { get; set; }
+    }
+
+    
+    public class MigrationAffiliateResponse
+    {
+        public string Message { get; set; }
+        public int ErrorCode { get; set; }
+    }
 
 }
