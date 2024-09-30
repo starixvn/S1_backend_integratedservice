@@ -134,6 +134,22 @@ namespace ThirdPartySeamlessWallet.Controllers
                 ErrorCode = 9000
             };
             
+            _siteConfigDic.TryGetValue(request.SiteId , out var config);
+            if (config is null)
+            {
+                resp.Message = "SiteId Not Supported. ";
+                return resp;
+            }
+            
+            Request.Headers.TryGetValue("Authorization", out var authorization);
+            var sAuthorization = authorization.ToString();
+            
+            if (config.Key != sAuthorization)
+            {
+                resp.Message = "Authorization Error";
+                return resp;
+            }
+            
             try 
             {
                   var result = await _migrationBll.Service_MigrationAffiliate_Ins(request);
