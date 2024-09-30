@@ -27,9 +27,9 @@ namespace ThirdPartyWager.Service.DAL
             return _wagerDbClient.QueryFirst<WagerAGTotal>("Service_TpWagerAGTotal_Get", new DynamicParameters(new { BeginTime = beginTime, EndTime = endTime }));
         }
 
-        public IEnumerable<BettransDataAG> GetPendingList()
+        public IEnumerable<BettransDataAG> GetPendingList(TimeCast ticketTime)
         {
-            return _mainDbClient.Query<BettransDataAG>("Service_BettransLC_AGV2_Bet_Pending_Get");
+            return _mainDbClient.Query<BettransDataAG>("Service_BettransLC_AGV2_Bet_Pending_Get", parameters: new { _BeginTime = ticketTime.startUnix, _EndTime = ticketTime.endUnix });
         }
     }
 }

@@ -95,10 +95,12 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<ApiAGBLL>();
             //services.AddSingleton<WagerRedoAGBLL>();
             services.AddSingleton<FinanceAGBLL>();
+            services.AddSingleton<TicketAGBLL>();
 
             services.AddHostedService<WagerAG>();
             services.AddHostedService<WagerRedoAG>();
             services.AddHostedService<FinanceAG>();
+            services.AddHostedService<TicketAG>();
 
             return services;
         }
