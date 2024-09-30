@@ -25,10 +25,6 @@ namespace ThirdPartyWager.Service.BLL
                 // get bll
                 switch (gameType)
                 {
-                    case (int)GameType.AG_LiveCasino:
-                        tpId = (int)Tp.AG;
-                        _bll = new TicketAGBLL(_provider);
-                        break;
                     case (int)GameType.One789_Lottery:
                     case (int)GameType.One789_Lottery_789:
                     case (int)GameType.One789_LiveCasino:
