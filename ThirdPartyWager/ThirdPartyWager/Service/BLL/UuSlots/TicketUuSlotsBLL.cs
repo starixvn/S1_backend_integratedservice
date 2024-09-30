@@ -75,7 +75,7 @@ namespace ThirdPartyWager.Service.BLL
                 try
                 {
                     var type = data.Payload.Status;
-                    var response = _apiMaxGameBLL.CallSeamlessApi(config, _tpName, siteName, bettrans, data).Result;
+                    var response = await _apiMaxGameBLL.CallSeamlessApi(config, _tpName, siteName, bettrans, data);
                     if (response == null)
                     {
                         task = true;
