@@ -7,7 +7,6 @@ namespace ThirdPartyWager.Service.BLL
 {
     public class WagerRedoAGBLL
     {
-        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ApiAGBLL _apiAGBLL;
         private readonly WagerAGService _wagerAGService;
         private readonly ILogger<WagerAGBLL> _logger;
@@ -15,7 +14,6 @@ namespace ThirdPartyWager.Service.BLL
 
         public WagerRedoAGBLL(IServiceProvider provider)
         {
-            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _apiAGBLL = provider.GetRequiredService<ApiAGBLL>();
             _wagerAGService = provider.GetRequiredService<WagerAGService>();
             _logger = provider.GetRequiredService<ILogger<WagerAGBLL>>();
@@ -24,9 +22,7 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<bool> RedoWagersAsync(string startTime, string endTime, long startUnix, long endUnix)
         {
-            var msg = "FATAL_ERROR";
-            var guid = Guid.NewGuid().ToString();
-
+            string msg;
             try
             {
                 var wagerUrl = _siteAGConfigs.WagerUrl;
@@ -37,7 +33,7 @@ namespace ThirdPartyWager.Service.BLL
                 var getWagerCount = _wagerAGService.GetWagerTotal(startUnix, endUnix);
                 var wagerCount = getWagerCount.wagerCount;
 
-                var getWagerSummary = await _apiAGBLL.GetBetSummaryByTime(wagerUrl, hashKey, data_cagent, startTime, endTime, guid);
+                var getWagerSummary = await _apiAGBLL.GetBetSummaryByTime(wagerUrl, hashKey, data_cagent, startTime, endTime);
                 var arrSummary = getWagerSummary.result;
 
                 // error condition
@@ -87,7 +83,7 @@ namespace ThirdPartyWager.Service.BLL
                     fn = ed.ToString("yyyy-MM-dd HH:mm:ss");
                     while (page <= totalPage)
                     {
-                        var dataWager = await _apiAGBLL.GetBetListByTime(wagerUrl, hashKey, data_cagent, bg, fn, page, guid);
+                        var dataWager = await _apiAGBLL.GetBetListByTime(wagerUrl, hashKey, data_cagent, bg, fn, page);
                         var arrWager = dataWager.result;
 
                         // error condition
