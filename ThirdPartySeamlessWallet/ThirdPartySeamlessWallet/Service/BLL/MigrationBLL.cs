@@ -16,5 +16,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return await _migrationService.MigrationCustomerIns(request, agent, allAgent);
         }
+        
+        public async Task<bool> Service_MigrationAffiliate_Ins(MigrationAffiliateRequest request)
+        {
+            return await _migrationService.MigrationAffiliateIns(request);
+        }
     }
 }

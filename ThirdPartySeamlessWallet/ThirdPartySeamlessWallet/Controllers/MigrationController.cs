@@ -13,7 +13,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly MigrationBLL _migrationBll;
         private readonly Log2File _log2File;
         private readonly Dictionary<int, MigrationConfig> _siteConfigDic;
-        private const string LogName = "MigrationController";
         private readonly Dictionary<int, int> _agentIdList;
 
         public MigrationController(IServiceProvider provider)
@@ -106,18 +105,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                               resp.Message = "Error at table CustWallet; ";
                               break;
                           case -8:
-                              resp.Message = "Error at table WithdrawalLimitLog; ";
-                              break;
-                          case -9:
                               resp.Message = "Error at table CustWithdrawalLimit; ";
                               break;
-                          case -10:
+                          case -9:
                               resp.Message = "Error at table CustVip; ";
                               break;
-                          case -11:
-                              resp.Message = "Error at table VipLevelLog; ";
-                              break;
-                          case -12:
+                          case -10:
                               resp.Message = "Error at table CustTransSummary; ";
                               break;
                       }
@@ -125,10 +118,38 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex) 
             { 
-                 _log2File.Error($"{JsonConvert.SerializeObject(request)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", LogName, ex);
+                 _log2File.Error($"{JsonConvert.SerializeObject(request)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", "MigrationCustomer", ex);
             }
             
-            _log2File.Info($"{JsonConvert.SerializeObject(request)}\r\n{JsonConvert.SerializeObject(resp)}", LogName);
+            _log2File.Info($"{JsonConvert.SerializeObject(request)}\r\n{JsonConvert.SerializeObject(resp)}", "MigrationCustomer");
+            return resp;
+        }
+        
+        [HttpPost]
+        public async Task<MigrationAffiliateResponse> MigrationAffiliateAsync(MigrationAffiliateRequest request)
+        {
+            var resp = new MigrationAffiliateResponse
+            {
+                Message = "Unknown Error",
+                ErrorCode = 9000
+            };
+            
+            try 
+            {
+                  var result = await _migrationBll.Service_MigrationAffiliate_Ins(request);
+                  
+                  if (result)
+                  {
+                      resp.Message = "Successful";
+                      resp.ErrorCode = 0;
+                  }
+            }
+            catch (Exception ex) 
+            { 
+                 _log2File.Error($"{JsonConvert.SerializeObject(request)}\r\n{JsonConvert.SerializeObject(resp)}\r\n{ex}", "MigrationAffiliate", ex);
+            }
+            
+            _log2File.Info($"{JsonConvert.SerializeObject(request)}\r\n{JsonConvert.SerializeObject(resp)}", "MigrationAffiliate");
             return resp;
         }
     }

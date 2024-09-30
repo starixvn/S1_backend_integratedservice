@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using Dapper;
+using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
@@ -59,6 +60,25 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             var resultCode = p.Get<int>("_ResultCode");
             
             return ( custId ,resultCode);
+        }
+        
+        public async Task<bool> MigrationAffiliateIns(MigrationAffiliateRequest request)
+        {
+            var custIdList = request.AffiliatedCustIdList.Select(cust => new AffiliateCustList {CustId = cust}).ToList();
+
+            var p = new DynamicParameters(new
+            {
+                _SiteId = request.SiteId,
+                _CustId = request.CustId,
+                _AffiliateCode = request.AffiliateCode,
+                _AffiliateName = request.AffiliateName,
+                _ParentAffiliate =request.ParentAffiliate,
+                _AffiliatedCustIdList = JsonConvert.SerializeObject(custIdList)
+            });
+            
+            var result = _mainDbClient.Execute("Service_MigrationAffiliate_Ins", CommandType.StoredProcedure, p) > 0;
+            
+            return result;
         }
         
     }
