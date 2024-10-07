@@ -1,6 +1,5 @@
 ﻿using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers
@@ -11,20 +10,18 @@ namespace ThirdPartyWager.Workers
         private readonly ILogger<WagerSA> _logger;
         private readonly WagerSABLL _wagerSABLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
-        private readonly DateTimeHelper _dateTimeHelper;
-        private readonly int _intervalMins = 3;
-        private readonly int _iRangMins = 20;
+        private readonly int _timeRange = 20;//in minutes
+        private readonly int _quickTime = 45; // in seconds
+        private readonly int _runTime = 3; // in minutes
         private readonly int _tpId = (int)Tp.SA;
         private readonly string _tpName = Tp.SA.ToString();
         private readonly int _tpType = (int)WagerTimerType.Wager;
-        private readonly int _timeZone = 8;
 
         public WagerSA(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<WagerSA>>();
             _wagerSABLL = provider.GetRequiredService<WagerSABLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -33,32 +30,45 @@ namespace ThirdPartyWager.Workers
             return Task.CompletedTask;
         }
 
-        private async void DoTask(object state)
+        private void DoTask(object state)
         {
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
-            int quick = 0;
+
+            var quick = false;
+            var failed = 0;
+
             try
             {
-                var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
-                int last = _iRangMins - 1;
-                DateTime timerTime = (dataTpTimer == null) ? DateTime.Now.AddMinutes(-1 * last) : dataTpTimer.StartTime;
-
-                if (timerTime < DateTime.Now)
+                var tasks = new List<Task>();
+                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+                foreach (var site in siteList)
                 {
-                    var time = _dateTimeHelper.GetTimeByMinute(last, _timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
-                    var result = await _wagerSABLL.GetWagersAsync(_tpId, time.startTime, time.endTime);
-                    if (result)
+                    if (site.TicketKey == 0)
                     {
-                        _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, time.endUnix);
+                        continue;
                     }
+
+                    var siteId = site.SiteId;
+                    tasks.Add(Task.Run(() =>
+                    {
+                        try
+                        {
+                            var res = _wagerSABLL.ExecWagerWorker(siteId, _tpType, _timeRange);
+                            if (res.Result == true)
+                            {
+                                quick = true;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, ex.Message);
+                            Interlocked.Increment(ref failed);
+                        }
+                    }));
                 }
-                var ts = DateTime.Now - timerTime;
-                var diffMin = (int)ts.TotalMinutes;
-                if (diffMin > 5)
-                {
-                    quick = 1;
-                }
+                var t = Task.WhenAll(tasks);
+                t.Wait();
             }
             catch (Exception ex)
             {
@@ -66,10 +76,11 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                var dueTimeSpan = (quick == 1) ? TimeSpan.FromSeconds(45) : TimeSpan.FromMinutes(_intervalMins);
+                var dueTimeSpan = (quick) ? TimeSpan.FromSeconds(_quickTime) : TimeSpan.FromMinutes(_runTime);
                 _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
+
         public override Task StopAsync(CancellationToken cancellationToken)
         {
             _timer?.Change(Timeout.Infinite, 0);
