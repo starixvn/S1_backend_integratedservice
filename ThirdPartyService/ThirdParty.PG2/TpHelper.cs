@@ -43,19 +43,29 @@ namespace ThirdParty.PG2
             try
             {
                 var result = HttpPost($"{apiUrl}/seamless/create", jsonParam, ContentType, header);
-                var gameResult = JsonConvert.DeserializeObject<CommonResponse>(result);
 
-                if (gameResult.status.code != 0)
+                if (IsJSON(result))
                 {
-                    return new ApiResult
+                    var gameResult = JsonConvert.DeserializeObject<CommonResponse>(result);
+
+                    if (gameResult.status.code != 0)
                     {
-                        ErrorCode = ErrorCode.Fail,
-                        RawMessage = gameResult.status.message,
-                        RawErrorCode = gameResult.status.code.ToString()
-                    };
+                        return new ApiResult
+                        {
+                            ErrorCode = ErrorCode.Fail,
+                            RawMessage = gameResult.status.message,
+                            RawErrorCode = gameResult.status.code.ToString()
+                        };
+                    }
+
+                    return new ApiResult { ErrorCode = ErrorCode.Success }; // 表示成功
                 }
 
-                return new ApiResult { ErrorCode = ErrorCode.Success }; // 表示成功
+                return new ApiResult
+                {
+                    ErrorCode = ErrorCode.Fail,
+                    RawMessage = result
+                };
             }
             catch (Exception e)
             {
