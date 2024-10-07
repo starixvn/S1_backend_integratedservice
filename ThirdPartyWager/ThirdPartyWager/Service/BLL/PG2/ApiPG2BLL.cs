@@ -17,7 +17,6 @@ public class ApiPG2BLL
     private readonly ILogger<ApiPG2BLL> _logger;
     private readonly string _tpName = Tp.PG2.ToString();
     private readonly WagerPG2Service _wagerPG2Service;
-    private readonly Dictionary<int, PG2Config> _sitePG2Config;
 
     public ApiPG2BLL(IServiceProvider provider)
     {
@@ -26,16 +25,15 @@ public class ApiPG2BLL
         _log2File = provider.GetRequiredService<Log2File>();
         _logger = provider.GetRequiredService<ILogger<ApiPG2BLL>>();
         _wagerPG2Service = provider.GetRequiredService<WagerPG2Service>();
-        _sitePG2Config = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<PG2Config>(_tpName);
     }
 
-    public async Task<CurrencyStats_PG2> GetBetSummaryByDate(string currency, int gameType, string reportTimeStartTime,
+    public async Task<CurrencyStats_PG2> GetBetSummaryByDate(dynamic setting, string currency, int gameType, string reportTimeStartTime,
         string reportTimeEndTime, int perPage, int page)
     {
-        var config = _sitePG2Config[7]; //site
-        var apiUrl = config.ApiUrl;
-        var key = config.CurrencyData[currency].ApiKey;
-        var agent = config.CurrencyData[currency].Agent;
+        var apiUrl = setting.ApiUrl;
+        var key = setting.CurrencyData[currency].ApiKey;
+        var agent = setting.CurrencyData[currency].Agent;
+
         var url = $"{apiUrl}/seamless/report/date";
         var userList = _wagerPG2Service.GetUserListByDate(reportTimeStartTime);
 
@@ -49,7 +47,6 @@ public class ApiPG2BLL
             limit = perPage
         };
 
-        Thread.Sleep(12000);
         var sParam = JsonConvert.SerializeObject(param);
 
         // request

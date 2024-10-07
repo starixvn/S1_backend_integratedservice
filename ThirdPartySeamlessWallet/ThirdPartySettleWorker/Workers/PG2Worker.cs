@@ -141,12 +141,4 @@ public class PG2Worker : BackgroundService, ISettleWorker
             _timerRng?.Change(dueTimeSpan, TimeSpan.Zero);
         }
     }
-    private static TicketStatus SetTicketStatus(decimal winLostAmount)
-    {
-        if (winLostAmount == 0) return TicketStatus.Draw;
-
-        if (winLostAmount > 0) return TicketStatus.Win;
-
-        return TicketStatus.Lost;
-    }
 }

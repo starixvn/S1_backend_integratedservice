@@ -2,6 +2,7 @@
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL;
 
@@ -15,6 +16,8 @@ public class FinancePG2BLL : ITpReportBLL
     private readonly int _gameType = (int)GameType.PG2_RNG;
     private readonly int _tpId = (int)Tp.PG2;
     private readonly IEnumerable<TpCurrency> _tpCurrencyList;
+    private readonly ThirdPartyBLL _thirdPartyBLL;
+    private readonly Dictionary<int, PG2Config> _siteConfigDic;
 
     public FinancePG2BLL(IServiceProvider provider)
     {
@@ -23,6 +26,8 @@ public class FinancePG2BLL : ITpReportBLL
         _apiPG2BLL = provider.GetRequiredService<ApiPG2BLL>();
         _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         _tpCurrencyList = _commonBLL.GetTpCurrencyList(_tpId);
+        _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+        _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<PG2Config>(Tp.PG2.ToString());
     }
     public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
     {
@@ -64,39 +69,62 @@ public class FinancePG2BLL : ITpReportBLL
     public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
     {
         var reportData = new List<dynamic>();
+        var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
 
-        foreach (var item in _tpCurrencyList)
+        foreach (var site in siteList)
         {
-            var currency = item.TpCurrencyId;
-
-            var page = 1;
-            int totalPage = 1;
-            var perPage = 500;
-            while (page <= totalPage)
+            if (site.TicketKey == 0)
             {
-                CurrencyStats_PG2 getWagerSummary = await _apiPG2BLL.GetBetSummaryByDate(currency, _gameType, reportTime.startTime, reportTime.endTime, perPage, page);
-                if (getWagerSummary.status.code != 0)
-                {
-                    var msg = "THIRD_PARTY_ERROR";
-                    _logger.LogError($"{msg}\r\n{_gameType}\r\n{currency}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                    SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
-                    throw systemException;
-                }
+                continue;
+            }
 
-                if (getWagerSummary.status.code == 0 && getWagerSummary.data.transactions == null && getWagerSummary.data.totalPageAmount == 0)
+            // 分Site取得TpList
+            setting = _siteConfigDic[site.SiteId];
+
+            foreach (var item in _tpCurrencyList)
+            {
+                var currency = item.TpCurrencyId;
+
+                // 幣別apiKey有設定才會繼續做
+                var apiKey = default(dynamic);
+                try
                 {
-                    var msg = "NO_DATA";
-                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                    apiKey = setting.CurrencyData[currency].ApiKey; ;
+                }
+                catch
+                {
                     continue;
                 }
-                totalPage = (getWagerSummary.data.totalPageAmount / perPage) + 1;
 
-                foreach (var dataList in getWagerSummary.data.transactions)
+                var page = 1;
+                int totalPage = 1;
+                var perPage = 500;
+                while (page <= totalPage)
                 {
-                    dataList.TpCurrencyId = currency;
-                    reportData.Add(dataList); 
+                    CurrencyStats_PG2 getWagerSummary = await _apiPG2BLL.GetBetSummaryByDate(setting, currency, _gameType, reportTime.startTime, reportTime.endTime, perPage, page);
+                    if (getWagerSummary.status.code != 0)
+                    {
+                        var msg = "THIRD_PARTY_ERROR";
+                        _logger.LogError($"{msg}\r\n{_gameType}\r\n{currency}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                        SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
+                        throw systemException;
+                    }
+
+                    if (getWagerSummary.status.code == 0 && getWagerSummary.data.transactions == null && getWagerSummary.data.totalPageAmount == 0)
+                    {
+                        var msg = "NO_DATA";
+                        _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                        continue;
+                    }
+                    totalPage = (getWagerSummary.data.totalPageAmount / perPage) + 1;
+
+                    foreach (var dataList in getWagerSummary.data.transactions)
+                    {
+                        dataList.TpCurrencyId = currency;
+                        reportData.Add(dataList);
+                    }
+                    page++;
                 }
-                page++;
             }
         }
         return reportData;
