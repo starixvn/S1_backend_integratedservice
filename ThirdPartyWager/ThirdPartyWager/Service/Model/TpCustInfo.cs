@@ -8,5 +8,6 @@
         public string TpUserName { get; set; }
         public string TpPwd { set; get; }
         public int SiteId { set; get; }
+        public string TpCurrencyId { set; get; }
     }
 }
