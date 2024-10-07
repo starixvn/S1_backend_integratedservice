@@ -51,6 +51,7 @@ namespace CommonService
             services.AddSingleton<GaBLL>();
             services.AddSingleton<FaceBookPixelBLL>();
             services.AddSingleton<CurrencyService>();
+            services.AddSingleton<CRMBLL>();
             services.AddControllers();
 
             //OTP與SMS

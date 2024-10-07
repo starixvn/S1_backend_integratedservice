@@ -61,7 +61,8 @@ namespace ThirdPartySettleWorker.Workers
             var type = gameType == GameType.TCG_SEA_Lottery ? "SEA" : "VN";
             var getSP = $"Service_TpWagerTCG_{type}_Unsettle_Get_V2";
             var setSP = $"Service_TpWagerTCG_{type}_Settle_Set_V2";
-
+            var setCancelSP = $"Service_TpWagerTCG_{type}_Cancel_Get";
+            
             try
             {
                 var tpUnsettleList = _tpUnSettledBLL.GetTpUnsettleList(Tp, gameType);
@@ -128,14 +129,38 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             var checkCancelData = _tpUnSettledBLL.GetTpUnsettleData<TCGCancelCheckData>("Service_BettransLottery_TCG_CancelCheck", 
                                 new { TpUserName = unsettled.Account, unsettled.OrderNum }, DataBase.Main)?.FirstOrDefault();
-
-                            if (checkCancelData is not null &&
-                                checkCancelData.TicketType == (int) BettransType.CancelBet &&
-                                checkCancelData.TicketStatus == (int) TicketStatus.Refund)
+                            
+                            if (gameType == GameType.TCG_VN_Lottery)
                             {
-                                settlementType = SettlementType.SettledForInvalid;
-                                ticketStatus = TicketStatus.Refund;
-                                isSettle = true;
+                                var checkWagerCancelData = _tpUnSettledBLL.GetTpUnsettleData<TCGCancelWagerData>(setCancelSP, 
+                                    new { TpUserName = unsettled.Account, unsettled.OrderNum }, DataBase.Wager)?.FirstOrDefault();
+                                
+                                if (checkWagerCancelData is not null && checkWagerCancelData.PlanBetAmount != unsettled.Stake)
+                                {
+                                    _logger.LogWarning($"TCG cancel stake check fail || TransId : {transId}  OrderNum: {unsettled.OrderNum}");
+                                    continue;
+                                }
+                                
+                                if (checkCancelData is not null &&
+                                    checkWagerCancelData is not null &&
+                                    checkCancelData.TicketType == (int) BettransType.CancelBet &&
+                                    checkCancelData.TicketStatus == (int) TicketStatus.Refund)
+                                {
+                                    settlementType = SettlementType.SettledForInvalid;
+                                    ticketStatus = TicketStatus.Refund;
+                                    isSettle = true;
+                                }
+                            }
+                            else
+                            {
+                                if (checkCancelData is not null &&
+                                    checkCancelData.TicketType == (int) BettransType.CancelBet &&
+                                    checkCancelData.TicketStatus == (int) TicketStatus.Refund)
+                                {
+                                    settlementType = SettlementType.SettledForInvalid;
+                                    ticketStatus = TicketStatus.Refund;
+                                    isSettle = true;
+                                }
                             }
                         }
 
@@ -144,6 +169,7 @@ namespace ThirdPartySettleWorker.Workers
                             unsettled.Stake *= tpCurrency.ExchangeRate;
                             unsettled.ValidBet *= tpCurrency.ExchangeRate;
                             unsettled.WinLostAmount *= tpCurrency.ExchangeRate;
+                            winLostAmount *= tpCurrency.ExchangeRate;
                         }
 
                         var betRecordInfo = new BetRecordInfo
@@ -211,5 +237,13 @@ namespace ThirdPartySettleWorker.Workers
     {
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
+    }
+    
+    public class TCGCancelWagerData
+    {
+        public string OrderNum { get; set; }
+        public string Username { get; set; }
+        public decimal PlanBetAmount { get; set; }
+        public int CancelType { get; set; }
     }
 }

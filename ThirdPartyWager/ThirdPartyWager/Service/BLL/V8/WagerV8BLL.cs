@@ -13,11 +13,11 @@ namespace ThirdPartyWager.Service.BLL
         private readonly WagerV8Service _wagerV8Service;
         private readonly ILogger<WagerV8BLL> _logger;
         private readonly DateTimeHelper _dateTimeHelper;
-        private readonly V8Config _config;
 
         private readonly int _tpId = (int)Tp.V8;
         private readonly int _timeZone = 0;
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
+        private readonly int _gameType = 0; // 不會區分遊戲，只用來塞timer設定
 
         public WagerV8BLL(IServiceProvider provider)
         {
@@ -26,12 +26,11 @@ namespace ThirdPartyWager.Service.BLL
             _wagerV8Service = provider.GetRequiredService<WagerV8Service>();
             _logger = provider.GetRequiredService<ILogger<WagerV8BLL>>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
-            _config = provider.GetRequiredService<ConfigBLL>().GetConfigValue<V8Config>(Tp.V8.ToString());
         }
 
-        public async Task<bool> ExecWagerWorker(int type, int timeRange, string tpCurrencyId)
+        public async Task<bool> ExecWagerWorker(V8Config config, int type, int timeRange, string tpCurrencyId, int siteId)
         {
-            var wokerTime = GetWorkerTime(type, -180);
+            var wokerTime = GetWorkerTime(type, -180, $"{siteId.ToString()}-{tpCurrencyId}");
             var quick = CheckQuick(wokerTime, 5);
             TimeCast time = _dateTimeHelper.GetTimeByMinute(timeRange, _timeZone, _timeFormat, wokerTime);
 
@@ -39,29 +38,29 @@ namespace ThirdPartyWager.Service.BLL
             if (time.endUnix < cvTime)
             {
 
-                var result = await GetWagersAsync(time, tpCurrencyId);
+                var result = await GetWagersAsync(config, time, tpCurrencyId);
                 if (result)
                 {
-                    _thirdPartyBLL.SetThirdPartyTimer(_tpId, type, time.endUnix);
+                    _thirdPartyBLL.SetThirdPartyTimerByReference(_tpId, type, time.endUnix, _gameType, $"{siteId.ToString()}-{tpCurrencyId}");
                 }
             }
 
             return quick;
         }
 
-        public async Task<bool> ExecWagerRedoWorker(int type, int timeRange, string tpCurrencyId)
+        public async Task<bool> ExecWagerRedoWorker(V8Config config, int type, int timeRange, string tpCurrencyId, int siteId)
         {
-            var wokerTime = GetRedoWorkerTime(type, 1, tpCurrencyId);
+            var wokerTime = GetRedoWorkerTime(type, 1, $"{siteId.ToString()}-{tpCurrencyId}");
             var quick = CheckQuick(wokerTime, 100);
             var time = _dateTimeHelper.GetTimeByHour(timeRange, _timeZone, _timeFormat, wokerTime);
 
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
             {
-                var result = await GetWagersAsync(time, tpCurrencyId, true);
+                var result = await GetWagersAsync(config, time, tpCurrencyId, true);
                 if (result)
                 {
-                    _thirdPartyBLL.SetThirdPartyTimerByCurrency(_tpId, type, time.endUnix, tpCurrencyId);
+                    _thirdPartyBLL.SetThirdPartyTimerByReference(_tpId, type, time.endUnix, _gameType, $"{siteId.ToString()}-{tpCurrencyId}");
                 }
                 // 拉单过于频繁(两次拉单时间间隔必须大于 60 秒)
                 Thread.Sleep(67000);
@@ -74,15 +73,15 @@ namespace ThirdPartyWager.Service.BLL
             return quick;
         }
 
-        public async Task<bool> GetWagersAsync(TimeCast wagerTime, string tpCurrencyId, bool compare = false)
+        public async Task<bool> GetWagersAsync(V8Config config , TimeCast wagerTime, string tpCurrencyId, bool compare = false)
         {
             var msg = "FATAL_ERROR";
             var workerName = compare ? "GetRedoWagersAsync" : "GetWagersAsync";
             try
             {
-                var agent = Convert.ToInt32(_config.CurrencyData[tpCurrencyId].Agent);
+                var agent = Convert.ToInt32(config.CurrencyData[tpCurrencyId].Agent);
                 // get wager
-                var dataWager = await _apiV8BLL.GetBetListByTimeV2(_config, wagerTime.startUnix, wagerTime.endUnix, tpCurrencyId);
+                var dataWager = await _apiV8BLL.GetBetListByTimeV2(config, wagerTime.startUnix, wagerTime.endUnix, tpCurrencyId);
 
                 // error condition
                 var errorCode = dataWager.d.code;
@@ -180,15 +179,15 @@ namespace ThirdPartyWager.Service.BLL
             return wagerCnt == apiCnt;
         }
 
-        private DateTime GetWorkerTime(int type, int vary)
+        private DateTime GetWorkerTime(int type, int vary, string reference)
         {
-            var lastTime = _thirdPartyBLL.GetThirdPartyTimer(_tpId, type);
+            var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByReference(_tpId, type, _gameType, reference);
             return (lastTime == null) ? DateTime.Now.AddHours(-7) : lastTime.StartTime.AddSeconds(vary);
         }
 
-        private DateTime GetRedoWorkerTime(int type, int vary, string tpCurrencyId)
+        private DateTime GetRedoWorkerTime(int type, int vary, string reference)
         {
-            var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByCurrency(_tpId, type, tpCurrencyId);
+            var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByReference(_tpId, type, _gameType, reference);
             return (lastTime == null) ? DateTime.Now.AddHours(-3) : lastTime.StartTime.AddSeconds(vary);
         }
 

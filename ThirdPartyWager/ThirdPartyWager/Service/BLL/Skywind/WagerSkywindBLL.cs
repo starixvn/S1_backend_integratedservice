@@ -25,6 +25,7 @@ namespace ThirdPartyWager.Service.BLL
             try
             {
                 var setting = _siteConfigDic[siteId];
+
                 var dataWager = await _apiSkywindBLL.GetBetListByTime(setting, startTime, endTime);
 
                 foreach (var bet in dataWager)
@@ -78,13 +79,10 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        public async Task<(bool Success, bool DoQuick)> UnsettleCheck(int siteId)
+        public async Task<(bool Success, bool DoQuick)> UnsettleCheck()
         {
             try
             {
-                // get api info
-                var setting = _siteConfigDic[siteId];
-
                 var checkList = await _apiSkywindBLL.GetUnsettleCheckList();
                 var doQuick = checkList.Count() == 1000;
                 foreach (var chcek in checkList)
@@ -92,8 +90,19 @@ namespace ThirdPartyWager.Service.BLL
                     try
                     {
                         string[] sArray = Regex.Split(chcek.TransId, "-", RegexOptions.IgnoreCase);
+                        var roundId = sArray[0];
+                        var TicketSiteData = _apiSkywindBLL.GetUnsettleSiteIdByTransId(chcek.YYYYMM, chcek.TransId);
+
+                        if (TicketSiteData.SiteId == 0)
+                        {
+                            _logger.LogError($"SiteIdByTransId={TicketSiteData.SiteId},YYYYMM={chcek.YYYYMM},TransId={chcek.TransId}");
+                            continue;
+                        }
+
+                        // get api info
+                        var setting = _siteConfigDic[TicketSiteData.SiteId];
                         //Get wager data
-                        var bet = await _apiSkywindBLL.GetBetByTransId(setting, sArray[0]);
+                        var bet = await _apiSkywindBLL.GetBetByTransId(setting, roundId);
                         if (bet != null)
                         {
                             var betSkywind = new BetSkywind()

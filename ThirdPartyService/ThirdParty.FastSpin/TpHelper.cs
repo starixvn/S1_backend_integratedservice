@@ -91,6 +91,14 @@ namespace ThirdParty.FastSpin
 
         #endregion
 
+        public class BettransData_FastSpin
+        {
+            public string TicketNo { get; set; }
+            public string GameRoundId { get; set; }
+            public string ResultId { get; set; }
+            public int TicketType { get; set; }
+        }
+
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
             throw new NotImplementedException();
@@ -123,6 +131,18 @@ namespace ThirdParty.FastSpin
                 ExchangeRate = tpCustInfo.ExchangeRate,
                 TpCurrencyId = tpCustInfo.TpCurrencyId,
             };
+
+            var YYYYMM = getBetDetail.SettledTime.GetPartitionKey();
+            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_FastSpin_ResultId_Get", new { YYYYMM, TransId = getBetDetail.TransId }, DataBase.Main);
+            if (!detailList.Any() || detailList == null)
+            {
+                return new BaseDetail(getBetDetail.TpGameTypeOption)
+                {
+                    TransId = getBetDetail.TransId,
+                    TpCurrency = tpCurrency,
+                };
+            }
+            var resultId = detailList.FirstOrDefault()?.GetValueOrDefault("ResultId")?.ToString();
 
             var convert = new DateTimeOffset(getBetDetail.SettledTime);
             var time = convert.ToOffset(new TimeSpan(_utc, 0, 0)).ToString("yyyy/MM/dd HH:mm:ss");
@@ -160,7 +180,7 @@ namespace ThirdParty.FastSpin
                 {
                     return new BaseDetail(getBetDetail.TpGameTypeOption)
                     {
-                        TransId = getBetDetail.TransId,
+                        TransId = $"{getBetDetail.TransId} ({resultId})",
                         DetailUrl = json.Payload.ReturnUrl,
                         TpCurrency = tpCurrency,
                     };
@@ -191,6 +211,8 @@ namespace ThirdParty.FastSpin
             var GameId = detailList.GetFirstStringValue("GameId");
             var GameRoundId = detailList.GetFirstStringValue("GameRoundId");
             var IpAddress = detailList.GetFirstStringValue("IpAddress");
+            var details = JsonConvert.DeserializeObject<IList<BettransData_FastSpin>>(JsonConvert.SerializeObject(detailList));
+            var resultId = details.Where(i => i.TicketType == 4).FirstOrDefault()?.ResultId;
 
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
             {
@@ -198,7 +220,7 @@ namespace ThirdParty.FastSpin
                 Game = GameId,
                 RefNo = GameRoundId,
                 Title = tpGameType.TypeName,
-                MatchID = string.Empty,
+                MatchID = resultId,
                 BetType = string.Empty,
                 BetChoice = string.Empty,
                 Result = string.Empty,

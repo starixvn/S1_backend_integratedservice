@@ -13,11 +13,11 @@ namespace ThirdParty.WM
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly WMConfig _siteConfig;
+        private readonly Dictionary<int, WMConfig> _siteConfigDic;
 
         public TpHelper(IServiceProvider provider)
         {
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<WMConfig>(TpEnum.WM.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<WMConfig>(TpEnum.WM.ToString());
         }
 
         #region Request
@@ -63,8 +63,8 @@ namespace ThirdParty.WM
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             string currency = tpCustInfo.TpCurrencyId;
-            var config = _siteConfig;
-            var currencyData = _siteConfig.CurrencyData[currency];
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+            var currencyData = config.CurrencyData[currency];
 
             string ApiUrl = config.ApiUrl;
             string vendorId = currencyData.vendorId;
@@ -135,8 +135,8 @@ namespace ThirdParty.WM
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             string currency = tpCustInfo.TpCurrencyId;
-            var config = _siteConfig;
-            var currencyData = _siteConfig.CurrencyData[currency];
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+            var currencyData = config.CurrencyData[currency];
 
             string ApiUrl = config.ApiUrl;
             string vendorId = currencyData.vendorId;

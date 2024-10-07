@@ -1,5 +1,6 @@
 ﻿using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
+using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers
@@ -16,12 +17,16 @@ namespace ThirdPartyWager.Workers
         private readonly int runTime = 1; // in hours
         private readonly string _tpName = Tp.V8.ToString();
         private readonly int tpId = (int)Tp.V8;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly Dictionary<int, V8Config> _siteConfigDic;
 
         public WagerRedoV8(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<WagerRedoV8>>();
             _wagerV8BLL = provider.GetRequiredService<WagerV8BLL>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<V8Config>(Tp.V8.ToString());
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -36,12 +41,18 @@ namespace ThirdPartyWager.Workers
             var isFast = false;
             try
             {
+                var siteList = _thirdPartyBLL.GetTpListByTpId(tpId).Where(x => x.TicketKey == 1); ;
                 var TpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
-                foreach (var item in TpCurrencyList)
+                foreach (var siteId in siteList)
                 {
-                    _logger.LogWarning(item.TpCurrencyId);
-                    var quick = await _wagerV8BLL.ExecWagerRedoWorker(tpType, timeRange, item.TpCurrencyId);
-                    if (!isFast && quick) isFast = true;
+                    if (_siteConfigDic.TryGetValue(siteId.SiteId, out var config))
+                    {
+                        foreach (var item in TpCurrencyList.Where(item => config.CurrencyData.ContainsKey(item.TpCurrencyId)))
+                        {
+                            var quick = await _wagerV8BLL.ExecWagerRedoWorker(config, tpType, timeRange, item.TpCurrencyId, siteId.SiteId);
+                            if (!isFast && quick) isFast = true;
+                        }
+                    }
                 }
             }
             catch (Exception ex)

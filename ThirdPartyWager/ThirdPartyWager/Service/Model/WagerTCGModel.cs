@@ -236,6 +236,39 @@ namespace ThirdPartyWager.Service.Model
         }
     }
 
+    public class TCGVNCancelWagerData
+    {
+        public string orderDetailId { get; set; } = "";
+        public string gameCode { get; set; } = "";
+        public string numero { get; set; } = "";
+        public string orderNum { get; set; } = "";
+        public string username { get; set; } = "";
+        public string merchantCode { get; set; } = "";
+        public string gameGroupName { get; set; } = "";
+        public decimal planBetAmount { get; set; }
+        public string orderContentId { get; set; } = "";
+        public string cancelTime { get; set; } = "";
+        public int cancelType { get; set; }
+        public string bettingContent { get; set; } = "";
+        public string freezeTime { get; set; } = "";
+        public int multiple { get; set; }
+        public string bettingTime { get; set; } = "";
+        private string _playName { get; set; }
+        public string playName
+        {
+            get
+            {
+                return _playName ?? "";
+            }
+            set
+            {
+                _playName = value;
+            }
+        }
+        public string remark { get; set; } = "";
+        public string single { get; set; } = "";
+    }
+    
     public class TCGUnSettleObj
     {
         public int status { get; set; }

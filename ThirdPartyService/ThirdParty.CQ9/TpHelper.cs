@@ -14,13 +14,13 @@ namespace ThirdParty.CQ9
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly Dictionary<string, string> _siteConfig;
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
+        private readonly Dictionary<int, Dictionary<string, string>> configDic;
 
         public TpHelper(IServiceProvider provider)
         {
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(TpEnum.CQ9.ToString());
             _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.CQ9).ToDictionary(d => d.AppId, d => d.Name);
+            configDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(TpEnum.CQ9.ToString());
         }
 
         #region Request
@@ -81,9 +81,10 @@ namespace ThirdParty.CQ9
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var testHierarchyCustId = JsonConvert.DeserializeObject<List<long>>(_siteConfig["TestHierarchyCustId"]);
+            var config = configDic[tpCustInfo.SiteId];
+            var testHierarchyCustId = JsonConvert.DeserializeObject<List<long>>(config["TestHierarchyCustId"]);
 
-            string ApiUrl = _siteConfig.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(_siteConfig["ApiUrl"]) ? _siteConfig["ApiUrl"] : throw new Exception("ApiUrl");
+            string ApiUrl = config.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(config["ApiUrl"]) ? config["ApiUrl"] : throw new Exception("ApiUrl");
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
 
@@ -91,7 +92,7 @@ namespace ThirdParty.CQ9
 
             if (fun.Equals("1", StringComparison.OrdinalIgnoreCase))
             {
-                string FunGameUrl = _siteConfig.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(_siteConfig["FunGameUrl"]) ? _siteConfig["FunGameUrl"] : throw new Exception("FunGameUrl");
+                string FunGameUrl = config.ContainsKey("FunGameUrl") && !string.IsNullOrEmpty(config["FunGameUrl"]) ? config["FunGameUrl"] : throw new Exception("FunGameUrl");
 
                 if (!char.IsDigit(gameId[0]))
                 {
@@ -103,11 +104,11 @@ namespace ThirdParty.CQ9
             }
 
             var paramToken = $"API_Token_{tpCustInfo.TpCurrencyId}";
-            string API_Token = _siteConfig.ContainsKey($"{paramToken}") && !string.IsNullOrEmpty(_siteConfig[$"{paramToken}"]) ? _siteConfig[$"{paramToken}"] : throw new Exception($"{paramToken}");
+            string API_Token = config.ContainsKey($"{paramToken}") && !string.IsNullOrEmpty(config[$"{paramToken}"]) ? config[$"{paramToken}"] : throw new Exception($"{paramToken}");
 
             if (testHierarchyCustId.Contains(tpCustInfo.CustId))
             {
-                API_Token = _siteConfig.ContainsKey("API_Token_TEST") && !string.IsNullOrEmpty(_siteConfig["API_Token_TEST"]) ? _siteConfig["API_Token_TEST"] : throw new Exception("API_Token_TEST");
+                API_Token = config.ContainsKey("API_Token_TEST") && !string.IsNullOrEmpty(config["API_Token_TEST"]) ? config["API_Token_TEST"] : throw new Exception("API_Token_TEST");
             }
 
             // Header
@@ -168,13 +169,14 @@ namespace ThirdParty.CQ9
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var testHierarchyCustId = JsonConvert.DeserializeObject<List<long>>(_siteConfig["TestHierarchyCustId"]);
+            var config = configDic[tpCustInfo.SiteId];
+            var testHierarchyCustId = JsonConvert.DeserializeObject<List<long>>(config["TestHierarchyCustId"]);
 
-            var apiUrl = _siteConfig.GetValueOrDefault("ApiUrl") ?? throw new Exception("ApiUrl");
-            var token = _siteConfig.GetValueOrDefault($"API_Token_{tpCustInfo.TpCurrencyId}") ?? throw new Exception($"API_Token_{tpCustInfo.TpCurrencyId}");
+            var apiUrl = config.GetValueOrDefault("ApiUrl") ?? throw new Exception("ApiUrl");
+            var token = config.GetValueOrDefault($"API_Token_{tpCustInfo.TpCurrencyId}") ?? throw new Exception($"API_Token_{tpCustInfo.TpCurrencyId}");
             if (testHierarchyCustId.Contains(tpCustInfo.CustId))
             {
-                token = _siteConfig.GetValueOrDefault("API_Token_TEST") ?? throw new Exception("API_Token_TEST");
+                token = config.GetValueOrDefault("API_Token_TEST") ?? throw new Exception("API_Token_TEST");
             }
 
             var url = $"{apiUrl}/gameboy/order/detail/v2";

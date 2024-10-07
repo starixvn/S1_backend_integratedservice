@@ -8,7 +8,7 @@ using ThirdPartyService.Service.Worker;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var remoteUrls = builder.Configuration.GetSection("ConfigService").Get<string[]>();
+var remoteUrls = GetRemoteUrls();
 remoteUrls = builder.Configuration.CheckLocalConfig(builder.Environment, args, remoteUrls);
 builder.Configuration.AddRemoteJsonConfig(remoteUrls);
 
@@ -28,6 +28,25 @@ builder.Host.UseSerilog((context, Configuration) =>
     OverrideLoggerWriteToLFile(Configuration);
 });
 
+var startup = new Startup(builder.Configuration);
+startup.ConfigureServices(builder.Services);
+
+var serviceType = Environment.GetEnvironmentVariable("ServiceType");
+if (!string.IsNullOrEmpty(serviceType) && serviceType.Equals("worker", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services
+        .AddHostedService<TransferWorkerService>()
+        .AddHostedService<SBSWCreateMemberWorker>()
+        .AddHostedService<HLCreateMemberWorker>()
+        .AddHostedService<CreatePPBonusCodeWorker>();
+}
+
+var app = builder.Build();
+startup.Configure(app, builder.Environment);
+
+app.Run();
+return;
+
 void OverrideLoggerWriteToLFile(LoggerConfiguration configuration)
 {
     const string cashSiteBrand = "Nova";
@@ -46,20 +65,11 @@ void OverrideLoggerWriteToLFile(LoggerConfiguration configuration)
             restrictedToMinimumLevel: LogEventLevel.Information);
 }
 
-var startup = new Startup(builder.Configuration);
-startup.ConfigureServices(builder.Services);
-
-var serviceType = Environment.GetEnvironmentVariable("ServiceType");
-if (!string.IsNullOrEmpty(serviceType) && serviceType.Equals("worker", StringComparison.OrdinalIgnoreCase))
+string[] GetRemoteUrls()
 {
-    builder.Services
-        .AddHostedService<TransferWorkerService>()
-        .AddHostedService<SBSWCreateMemberWorker>()
-        .AddHostedService<HLCreateMemberWorker>()
-        .AddHostedService<CreatePPBonusCodeWorker>();
+    // 如果有 Runtime Environment Variable 優先使用
+    // 沒有則使用預設 AppSetting
+    return Environment.GetEnvironmentVariable("ConfigServiceUrl") is null
+        ? builder.Configuration.GetSection("ConfigService").Get<string[]>()
+        : new List<string>() { Environment.GetEnvironmentVariable("ConfigServiceUrl") }.ToArray();
 }
-
-var app = builder.Build();
-startup.Configure(app, builder.Environment);
-
-app.Run();

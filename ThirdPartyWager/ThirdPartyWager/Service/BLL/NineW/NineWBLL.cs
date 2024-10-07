@@ -63,7 +63,7 @@ namespace ThirdPartyWager.Service.BLL
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "NineW GetWagersAsync Exception.");
+                _logger.LogError(ex, "NineW GetUnsettleWagersAsync Exception.");
                 return false;
             }
         }
@@ -91,7 +91,7 @@ namespace ThirdPartyWager.Service.BLL
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "NineW GetWagersAsync Exception.");
+                _logger.LogError(ex, "NineW GetReSettleWagersAsync Exception.");
                 return false;
             }
         }
@@ -110,8 +110,8 @@ namespace ThirdPartyWager.Service.BLL
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "NineW GetReportAsync Exception.");
-                return false;
+                _logger.LogError(ex, $"NineW CountSummaryTransactionByHourAsync Exception. ({ex.Message})");
+                throw;
             }
         }
 
@@ -126,8 +126,8 @@ namespace ThirdPartyWager.Service.BLL
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "NineW GetReportAsync Exception.");
-                return false;
+                _logger.LogError(ex, $"NineW GetSummaryTransactionReportAsync Exception. ({ex.Message})");
+                throw;
             }
 
         }
@@ -288,6 +288,10 @@ namespace ThirdPartyWager.Service.BLL
         {
             var result = new List<FincanceDailySummary>();
             var apiUrl = $"{_domain}/{config.WebSite}/countSummaryTransactionByHour";
+            if (string.IsNullOrEmpty(_domain) || _domain == "")
+            {
+                throw new Exception($"_domain is {_domain}");
+            }
 
             foreach (var currency in _currencyList)
             {
@@ -361,6 +365,11 @@ namespace ThirdPartyWager.Service.BLL
             var result = new List<SummaryTransaction>();
             var range = date.DateToTimeRange(_timeZone);
             var apiUrl = $"{_domain}/{config.WebSite}/querySummaryTransaction";
+            if (string.IsNullOrEmpty(_domain) || _domain == "")
+            {
+                throw new Exception($"_domain is {_domain}");
+            }
+
             var agents = GetAgents();
 
             foreach (var type in _reportType)
