@@ -23,7 +23,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly IHostEnvironment _environment;
         private readonly Tp _thisTp;
         private readonly int _gameType = 0;
-        private readonly YGGConfig _siteConfig;
+        private readonly Dictionary<int, YGGConfig> _siteConfigDic;
 
         #endregion
 
@@ -40,7 +40,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             _environment = provider.GetRequiredService<IHostEnvironment>();
             _thisTp = Tp.YGG;
             _gameType = (int)GameType.YGG_RNG;
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<YGGConfig>(_thisTp.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<YGGConfig>(_thisTp.ToString());
         }
 
         #endregion
@@ -254,7 +254,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     }
                     else
                     {
-                        var thirdPartySetting = _siteConfig;
+                        var thirdPartySetting = _siteConfigDic[tpCustInfoAuth.SiteId];
                         var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, tpCustInfoAuth.TpUserName, _gameType);
                         var playerInfoData = new PlayerInfoData()
                         {
@@ -723,38 +723,48 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             var sessionKey = Encoding.ASCII.GetString(Convert.FromBase64String(HttpUtility.UrlDecode(balanceReq.sessiontoken)));
             var sessionKeyArr = JsonConvert.DeserializeObject<string[]>(sessionKey);
+            var authToken = sessionKeyArr[0]; /* 1 Time*/
             var sessionToken = sessionKeyArr[1];/* Long Time*/
 
-            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, balanceReq.playerid);
-            if (tpCheck == null)
+            if (_authBLL.Authenticate(authToken, out TpCustInfoAuth tpCustInfoAuth))
             {
-                statusCode = 1008;
-            }
-            else if (tpCheck.Token != sessionToken)
-            {
-                statusCode = 1008;
-            }
-            else if (tpCheck.Locked)
-            {
-                statusCode = 1007;
+
+                var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)_thisTp, balanceReq.playerid);
+                if (tpCheck == null)
+                {
+                    statusCode = 1008;
+                }
+                else if (tpCheck.Token != sessionToken)
+                {
+                    statusCode = 1008;
+                }
+                else if (tpCheck.Locked)
+                {
+                    statusCode = 1007;
+                }
+                else
+                {
+                    var thirdPartySetting = _siteConfigDic[tpCustInfoAuth.SiteId];
+                    var tpCustBalance =
+                        _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, balanceReq.playerid, _gameType);
+
+                    getBalanceData = new GetbalanceData()
+                    {
+                        currency = tpCustBalance.TpCurrencyId,
+                        applicableBonus = 0,
+                        homeCurrency = tpCustBalance.TpCurrencyId,
+                        organization = thirdPartySetting.org,
+                        balance = tpCustBalance.Balance,
+                        playerId = balanceReq.playerid,
+                        bonus = 0
+                    };
+
+                    statusCode = 0;
+                }
             }
             else
             {
-                var thirdPartySetting = _siteConfig;
-                var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache((int)_thisTp, balanceReq.playerid, _gameType);
-
-                getBalanceData = new GetbalanceData()
-                {
-                    currency = tpCustBalance.TpCurrencyId,
-                    applicableBonus = 0,
-                    homeCurrency = tpCustBalance.TpCurrencyId,
-                    organization = thirdPartySetting.org,
-                    balance = tpCustBalance.Balance,
-                    playerId = balanceReq.playerid,
-                    bonus = 0
-                };
-
-                statusCode = 0;
+                getBalanceRep.code = 1000;
             }
 
             getBalanceRep = new GetbalanceRep()

@@ -19,7 +19,6 @@ namespace ThirdPartyWager.Workers
         private readonly string _tpName = Tp.SA.ToString();
         private readonly int _tpType = (int)WagerTimerType.Finance;
         private readonly int _beyond = 2;
-        private readonly SAConfig _siteConfig;
 
         public FinanceSA(IServiceProvider provider)
         {
@@ -27,7 +26,6 @@ namespace ThirdPartyWager.Workers
             _financeSABLL = provider.GetRequiredService<FinanceSABLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _fincanceService = provider.GetRequiredService<FincanceService>();
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SAConfig>(_tpName);
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -67,7 +65,7 @@ namespace ThirdPartyWager.Workers
             try
             {
                 // get setting
-                var setting = _siteConfig;
+                var setting = string.Empty;
 
                 // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);

@@ -15,12 +15,12 @@ namespace ThirdParty.YGG
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly YGGConfig _siteConfig;
+        private readonly Dictionary<int, YGGConfig> _siteConfigDic;
         public readonly string _contentType = "application/x-www-form-urlencoded";
 
         public TpHelper(IServiceProvider provider)
         {
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<YGGConfig>(TpEnum.YGG.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<YGGConfig>(TpEnum.YGG.ToString());
         }
 
         #region Response
@@ -60,7 +60,7 @@ namespace ThirdParty.YGG
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var config = _siteConfig;
+            var config = _siteConfigDic[tpCustInfo.SiteId];
             string fun = inputs.GetValueOrDefault("fun") ?? "0";
             var GameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : string.Empty;
             var HomeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : string.Empty;
