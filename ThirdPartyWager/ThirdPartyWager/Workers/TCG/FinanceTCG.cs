@@ -19,6 +19,7 @@ namespace ThirdPartyWager.Workers
         private readonly int _tpType = (int)WagerTimerType.Finance;
         private readonly int _beyond = 2;
         private Timer timer;
+        private readonly Dictionary<int, Dictionary<string, string>> _siteConfigDic;
 
         public FinanceTCG(IServiceProvider provider)
         {
@@ -26,6 +27,7 @@ namespace ThirdPartyWager.Workers
             _financTCGBLL = provider.GetRequiredService<FinanceTCGBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _fincanceService = provider.GetRequiredService<FincanceService>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(_tpName);
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -72,9 +74,6 @@ namespace ThirdPartyWager.Workers
             var quick = false;
             try
             {
-                // get setting
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
-
                 // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
 
@@ -92,7 +91,23 @@ namespace ThirdPartyWager.Workers
 
                 // report
                 DateTime reportDate = (new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).AddSeconds(reportTime.endUnix);
-                var reportData = await _financTCGBLL.GetReport(_tpId, setting, reportTime);
+
+                // 分Site取回ReportData
+                var reportData = new List<dynamic>();
+                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+                foreach (var site in siteList)
+                {
+                    if (site.TicketKey == 0)
+                    {
+                        continue;
+                    }
+
+                    // 分Site取得TpList
+                    var setting = _siteConfigDic[site.SiteId];
+                    var siteReportData = await _financTCGBLL.GetReport(_tpId, setting, reportTime);
+                    reportData.AddRange(siteReportData);              
+                }
+                   
                 int result;
                 if (reportData.Count > 0)
                 {

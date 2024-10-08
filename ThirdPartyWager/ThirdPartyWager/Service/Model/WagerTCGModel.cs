@@ -4,6 +4,7 @@ namespace ThirdPartyWager.Service.Model
 {
     public class TCGConfig
     {
+        public int SiteId { get; set; }
         public string WagerUrl { get; set; }
         public string WagerAccount { get; set; }
         public string WagerPassword { get; set; }
@@ -13,8 +14,9 @@ namespace ThirdPartyWager.Service.Model
         public string DesKey { get; set; }
         public string SignKey { get; set; }
         public string TpCurrencyId { get; set; }
-        public TCGConfig(Dictionary<string, string> inputs, string tpCurrencyId)
+        public TCGConfig(int siteId, Dictionary<string, string> inputs, string tpCurrencyId)
         {
+            SiteId = siteId;
             TpCurrencyId = tpCurrencyId;
             WagerUrl = inputs.GetValue($"WagerUrl");
             WagerAccount = inputs.GetValue($"WagerAccount_{tpCurrencyId}");
@@ -343,5 +345,13 @@ namespace ThirdPartyWager.Service.Model
     public class TCGRedoObj
     {
         public string TpCurrencyId { get; set; }
+
+        public int SiteId { get; set; }
+
+        public TCGRedoObj(string tpCurrencyId, int siteId)
+        {
+            TpCurrencyId = tpCurrencyId;
+            SiteId = siteId;
+        }
     }
 }
