@@ -173,8 +173,8 @@ namespace ThirdParty.PG2
                 UTCBetTime = detailList.Min(i => (DateTime)i.GetValueOrDefault("timestamp", DateTime.MinValue)),
                 UTCSettledTime = detailList.Max(i => (DateTime)i.GetValueOrDefault("timestamp", DateTime.MinValue)),
                 Stake = detailList.Where(i => new[] { 1, 4, 10 }.Contains((sbyte)i.GetValueOrDefault("TicketType")))
-                    .Sum(i => Math.Abs((decimal)i.GetValueOrDefault("betAmount"))) * tpCurrency.ExchangeRate,
-                WinlostAmount = detailList.Sum(i => (decimal)i.GetValueOrDefault("amount")) * tpCurrency.ExchangeRate,
+                    .Sum(i => Math.Abs((decimal)i.GetValueOrDefault("betAmount"))),
+                WinlostAmount = detailList.Sum(i => (decimal)i.GetValueOrDefault("amount")),
                 GameCode = detailList.FirstOrDefault()?.GetValueOrDefault("GameId")?.ToString(),
                 GameName = detailList.FirstOrDefault()?.GetValueOrDefault("gameName")?.ToString(),
             };
