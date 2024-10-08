@@ -22,7 +22,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly int _gameType = 0;
         private readonly int _thisTp;
         private readonly string _tpName = Tp.DG.ToString();
-        private readonly Dictionary<string, string> _defaultConfig; // SiteConfig的SiteId=0
+        private readonly DGConfig _defaultConfig; // SiteConfig的SiteId=0
         private readonly Dictionary<string, Dictionary<string, string>> _siteNameConfigs;
 
         public DGController(IServiceProvider provider)
@@ -37,7 +37,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             _gameType = (int)GameType.DG_LiveCasino;
             _thisTp = (int)Tp.DG;
             // defaultConfig給原本NOVA、GOAL、BWING的商號使用
-            _defaultConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(_tpName);
+            _defaultConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<DGConfig>(_tpName);
             // 新增商號使用指定siteName
             _siteNameConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<Dictionary<string, string>>(_tpName);
 
@@ -517,21 +517,23 @@ namespace ThirdPartySeamlessWallet.Controllers
         
         #region Private
         
-        private bool CheckToken(string agentName, string reqToken, string sitename)
+        private bool CheckToken(string agentName, string reqToken, string siteName)
         {
-            var config = GetSiteConfig(sitename);
-            var siteApiKey = config["APIkey"];
-            var token =  _tools.ToMD5($"{agentName}{siteApiKey}").ToLower();
+            var siteConfigApiKey = GetSiteConfigApiKey(siteName);
+            var token =  _tools.ToMD5($"{agentName}{siteConfigApiKey}").ToLower();
             return reqToken == token;
         }
 
-        private Dictionary<string, string> GetSiteConfig(string siteName)
+        private string GetSiteConfigApiKey(string siteName)
         {
             if (siteName == "")
             {
-                return _defaultConfig;
+                return _defaultConfig.APIkey;
             }
-            return _siteNameConfigs.TryGetValue(siteName,out var result) ? result : _defaultConfig;
+            return _siteNameConfigs.TryGetValue(siteName, out var siteConfig) 
+                   && siteConfig.TryGetValue("APIkey", out var value)
+                ? value
+                : _defaultConfig.APIkey;
         }
         
         #endregion
