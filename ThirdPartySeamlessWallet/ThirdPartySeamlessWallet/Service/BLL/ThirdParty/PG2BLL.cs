@@ -12,7 +12,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 public class PG2BLL : IPG2BLL
 {
     #region Fields
-    public GameType GameType { get; set; }
+    public GameType _GameType { get; set; }
     private readonly Tp _thisTp;
     private readonly TpCustInfoBLL _tpCustInfoBll;
     private readonly ThirdPartyBLL _thirdPartyBll;
@@ -29,7 +29,7 @@ public class PG2BLL : IPG2BLL
     public PG2BLL(IServiceProvider provider)
     {
         _thisTp = Tp.PG2;
-        GameType = GameType.PG2_RNG;
+        _GameType = GameType.PG2_RNG;
         _tpCustInfoBll = provider.GetService<TpCustInfoBLL>();
         _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
         _bettingService = provider.GetService<BettingService>();
@@ -53,7 +53,7 @@ public class PG2BLL : IPG2BLL
             };
         }
 
-        var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)_thisTp, request.UserName, (int)GameType);
+        var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)_thisTp, request.UserName, (int)_GameType);
         if (tpCustBalance == null)
         {
             _logger.LogError($"GetBalance Fail: balance not found.");
@@ -389,7 +389,7 @@ public class PG2BLL : IPG2BLL
             request.Amount *= tpCurrency.ExchangeRate;
             request.BetAmount *= tpCurrency.ExchangeRate;
         }
-        var tpCustBalance = _tpCustInfoBll.GetBalance((int)_thisTp, request.UserName, (int)GameType);
+        var tpCustBalance = _tpCustInfoBll.GetBalance((int)_thisTp, request.UserName, (int)_GameType);
         var beforeAmount = tpCustBalance.Balance;
         if (beforeAmount < request.BetAmount)
         {
@@ -462,7 +462,7 @@ public class PG2BLL : IPG2BLL
             if (!result)
             {
                 await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
-                _logger.LogError("PlaceBetV2 failed");
+                _logger.LogError("Settlement - PlaceBet failed");
                 return new SettleResponse_PG2()
                 {
                     status = new Status_PG2()
@@ -480,7 +480,7 @@ public class PG2BLL : IPG2BLL
             if (!result)
             {
                 await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
-                _logger.LogError("PayoutV2 failed");
+                _logger.LogError("Settlement - Payout failed");
                 return new SettleResponse_PG2()
                 {
                     status = new Status_PG2()
@@ -511,7 +511,7 @@ public class PG2BLL : IPG2BLL
 
         if (afterAmount == 0)
         {
-            tpCustBalance = _tpCustInfoBll.GetBalance((int)_thisTp, request.UserName, (int)GameType);
+            tpCustBalance = _tpCustInfoBll.GetBalance((int)_thisTp, request.UserName, (int)_GameType);
             afterAmount = tpCustBalance.Balance;
         }
         else
@@ -1286,7 +1286,7 @@ public class PG2BLL : IPG2BLL
         beforeBalance = 0;
         try
         {
-            var result = _tpCustInfoBll.GetBalance((int)_thisTp, username, (int)GameType);
+            var result = _tpCustInfoBll.GetBalance((int)_thisTp, username, (int)_GameType);
 
             if (result == null)
             {
