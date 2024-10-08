@@ -23,7 +23,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly int _thisTp;
         private readonly string _tpName = Tp.DG.ToString();
         private readonly DGConfig _defaultConfig; // SiteConfig的SiteId=0
-        private readonly Dictionary<string, Dictionary<string, string>> _siteNameConfigs;
+        private readonly Dictionary<string, DGConfig> _siteNameConfigs;
 
         public DGController(IServiceProvider provider)
         {
@@ -39,7 +39,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             // defaultConfig給原本NOVA、GOAL、BWING的商號使用
             _defaultConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<DGConfig>(_tpName);
             // 新增商號使用指定siteName
-            _siteNameConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<Dictionary<string, string>>(_tpName);
+            _siteNameConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<DGConfig>(_tpName);
 
         }
 
@@ -519,21 +519,20 @@ namespace ThirdPartySeamlessWallet.Controllers
         
         private bool CheckToken(string agentName, string reqToken, string siteName)
         {
-            var siteConfigApiKey = GetSiteConfigApiKey(siteName);
-            var token =  _tools.ToMD5($"{agentName}{siteConfigApiKey}").ToLower();
+            var config = GetSiteConfig(siteName);
+            var token =  _tools.ToMD5($"{agentName}{config.APIkey}").ToLower();
             return reqToken == token;
         }
 
-        private string GetSiteConfigApiKey(string siteName)
+        private DGConfig GetSiteConfig(string siteName)
         {
             if (siteName == "")
             {
-                return _defaultConfig.APIkey;
+                return _defaultConfig;
             }
-            return _siteNameConfigs.TryGetValue(siteName, out var siteConfig) 
-                   && siteConfig.TryGetValue("APIkey", out var value)
-                ? value
-                : _defaultConfig.APIkey;
+            return _siteNameConfigs.TryGetValue(siteName, out var result)
+                ? result
+                : _defaultConfig;
         }
         
         #endregion
