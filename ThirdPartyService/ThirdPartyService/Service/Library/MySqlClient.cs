@@ -49,6 +49,12 @@ namespace ThirdPartyService.Service.Library
             {
                 try
                 {
+                    // 設定相同連線不用檢查
+                    if (_connectionString == backupConn)
+                    {
+                        return _connectionString;
+                    }
+
                     using var connection = new MySqlConnection(backupConn);
                     var dbSlaveStatus = connection.QueryFirstOrDefault<DBSlaveStatus>("Service_HealthCheck_V2", commandType: CommandType.StoredProcedure);
 

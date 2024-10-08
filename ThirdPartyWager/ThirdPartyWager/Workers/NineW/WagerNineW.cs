@@ -13,7 +13,7 @@ namespace ThirdPartyWager.Workers
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly IWebHostEnvironment _env;
-        private Timer _getDomainTimer;
+
         private Timer _settleTimer;
         private Timer _settleTimerByDate;
         private Timer _reSttleTimer;
@@ -36,16 +36,6 @@ namespace ThirdPartyWager.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            try
-            {
-                DoGetDomain();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, ex.Message);
-            }
-
-            _getDomainTimer = new Timer(DoGetDomain, null, TimeSpan.FromMinutes(1), TimeSpan.Zero);
             _settleTimer = new Timer(DoSettle, null, TimeSpan.FromSeconds(1), TimeSpan.Zero);
             _settleTimerByDate = new Timer(DoSettleByDate, null, TimeSpan.FromSeconds(3), TimeSpan.Zero);
             _reSttleTimer = new Timer(DoReSettle, null, TimeSpan.FromMinutes(2), TimeSpan.Zero);
@@ -55,10 +45,6 @@ namespace ThirdPartyWager.Workers
             return Task.CompletedTask;
         }
 
-        private async void DoGetDomain()
-        {
-            await _nineWService.QueryDomain();
-        }
 
         private async void DoSettle(object state)
         {
@@ -296,32 +282,5 @@ namespace ThirdPartyWager.Workers
             _financeTimer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
-
-        private async void DoGetDomain(object state)
-        {
-            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-            LogContext.PushProperty("Tp", _tpName);
-            var nextTimeSpan = TimeSpan.FromHours(1);
-
-            if (!_env.IsProduction())
-            {
-                return;
-            }
-
-            try
-            {
-                await _nineWService.QueryDomain();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "WagerNineW.DoTpDailySummary.Exception");
-                nextTimeSpan = TimeSpan.FromMinutes(10);
-            }
-            finally
-            {
-                _getDomainTimer.Change(nextTimeSpan, TimeSpan.Zero);
-            }
-        }
-
     }
 }
