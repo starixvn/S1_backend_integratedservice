@@ -30,6 +30,7 @@ namespace ThirdPartyWager.Service.BLL
         public async Task<bool> GetWagersAsync()
         {
             var msg = "FATAL_ERROR";
+            var wagerCount = 0;
             try
             {
                 var siteList = _thirdPartyBLL.GetTpListByTpId((int)_thisTp);
@@ -50,14 +51,14 @@ namespace ThirdPartyWager.Service.BLL
                     if (errorCode != 0)
                     {
                         msg = "THIRD_PARTY_ERROR";
-                        _logger.LogError($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                        _logger.LogError($"{site.SiteId} - {msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                         return false;
                     }
 
                     if (dataWager.list == null || dataWager.list.Count() == 0)
                     {
                         msg = "NO_DATA";
-                        _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                        _logger.LogInformation($"{site.SiteId} - {msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
                         continue;
                     }
                     
@@ -71,7 +72,7 @@ namespace ThirdPartyWager.Service.BLL
                         }
                         catch (Exception ex)
                         {
-                            msg = $"INSERT_WAGER(WAGERID: {bet.id} )";
+                            msg = $"{site.SiteId} - INSERT_WAGER(WAGERID: {bet.id} )";
                             _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
                             continue;
                         }
@@ -80,12 +81,13 @@ namespace ThirdPartyWager.Service.BLL
                         await _apiDGBLL.MarkGotBetList(setting, wagerIds);
                         
                         msg = "FINISH";
-                        _logger.LogInformation($"GetWagersAsync {msg}");
-                        return dataWager.list.Count() == 1000;
+                        _logger.LogInformation($"{site.SiteId} - GetWagersAsync {msg}");
                     }
+                    wagerCount += dataWager.list.Count();
                 }
-                //若超過1000筆上面會直接回true，正常無需再次連續抓單，故返回false。
-                return false;
+                //總單量超過1000代表有大量單，所有商號直接繼續拉下一批。
+                return wagerCount >= 1000;
+                
             }
             catch (Exception ex)
             {
