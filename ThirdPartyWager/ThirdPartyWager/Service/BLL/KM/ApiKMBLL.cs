@@ -24,7 +24,7 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<ApiKMBLL>>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _log2File = provider.GetRequiredService<Log2File>();
-            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<KMConfig>(Tp.AP.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<KMConfig>(Tp.KM.ToString());
         }
         public async Task<List<WagerKMModel>> QueryBetHistoryAsync(string startTime, string endTime, int siteId)
         {
