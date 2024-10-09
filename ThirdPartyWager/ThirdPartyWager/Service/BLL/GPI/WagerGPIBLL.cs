@@ -81,6 +81,7 @@ namespace ThirdPartyWager.Service.BLL
             var msg = "FATAL_ERROR";
             var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
             var wagerData = new List<Items_GPI>();
+            var cp = new CompareParam();
             var workerName = compare ? "GetRedoWagersAsync" : "GetWagersAsync";
 
             try
@@ -95,8 +96,6 @@ namespace ThirdPartyWager.Service.BLL
                     // pagination
                     var page = 1;
                     var totalPage = 1;
-                    var cp = new CompareParam();
-
 
                     while (page <= totalPage)
                     {
