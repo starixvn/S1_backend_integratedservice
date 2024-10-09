@@ -12,14 +12,14 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 public class PG2BLL : IPG2BLL
 {
     #region Fields
-    public GameType _GameType { get; set; }
+
+    public GameType _gameType { get; set; }
     private readonly Tp _thisTp;
     private readonly TpCustInfoBLL _tpCustInfoBll;
     private readonly ThirdPartyBLL _thirdPartyBll;
     private readonly BettingService _bettingService;
     private readonly SettledService _settledService;
     private readonly ILogger<PG2BLL> _logger;
-    private readonly Dictionary<int, PG2Config> _siteConfigDic;
     private readonly MySqlClient _mainDbClient;
 
     #endregion
@@ -29,13 +29,12 @@ public class PG2BLL : IPG2BLL
     public PG2BLL(IServiceProvider provider)
     {
         _thisTp = Tp.PG2;
-        _GameType = GameType.PG2_RNG;
+        _gameType = GameType.PG2_RNG;
         _tpCustInfoBll = provider.GetService<TpCustInfoBLL>();
         _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
         _bettingService = provider.GetService<BettingService>();
         _logger = provider.GetRequiredService<ILogger<PG2BLL>>();
         _settledService = provider.GetRequiredService<SettledService>();
-        _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<PG2Config>(_thisTp.ToString());
         _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
     }
 
@@ -43,39 +42,17 @@ public class PG2BLL : IPG2BLL
 
     public BalanceResponse_PG2 GetBalance(CommonRequest_PG2 request)
     {
-        var message = string.Empty;
-
-        if (!CheckRequestForGetBalance(request, out message))
-        {
-            return new BalanceResponse_PG2()
-            {
-                status = new Status_PG2() { code = PG2ErrorCode.InvalidRequest, message = message }
-            };
-        }
-
-        var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)_thisTp, request.UserName, (int)_GameType);
+        var tpCustBalance = _tpCustInfoBll.GetBalanceByHalfSecCache((int)_thisTp, request.UserName, (int)_gameType);
         if (tpCustBalance == null)
         {
-            _logger.LogError($"GetBalance Fail: balance not found.");
+            string message = "GetBalance Fail: balance not found.";
             return new BalanceResponse_PG2()
             {
-                status = new Status_PG2() { code = PG2ErrorCode.ServiceNotAvailable, message = message }
-            };
-        }
-
-        if (!CheckAgentId(request.Agent, request.UserName))
-        {
-            return new BalanceResponse_PG2()
-            {
-                status = new Status_PG2() { code = PG2ErrorCode.InvalidAgent, message = message }
-            };
-        }
-
-        if (!CheckThirdParty(request.UserName, out message))
-        {
-            return new BalanceResponse_PG2()
-            {
-                status = new Status_PG2() { code = PG2ErrorCode.ServiceNotAvailable, message = message }
+                status = new Status_PG2()
+                {
+                    code = PG2ErrorCode.ServiceNotAvailable,
+                    message = message
+                }
             };
         }
 
@@ -88,24 +65,9 @@ public class PG2BLL : IPG2BLL
 
     public async Task<BetResponse_PG2> Bet(BetRequest_PG2 request)
     {
-        var message = string.Empty;
-        decimal beforeBalance = 0; decimal afterBalance = 0;
-
-        if (!CheckRequestForSlotBet(request, out message))
-        {
-            return new BetResponse_PG2()
-            {
-                status = new Status_PG2() { code = PG2ErrorCode.InvalidRequest, message = message }
-            };
-        }
-
-        if (!CheckThirdParty(request.UserName, out message))
-        {
-            return new BetResponse_PG2()
-            {
-                status = new Status_PG2() { code = PG2ErrorCode.InvalidRequest, message = message }
-            };
-        }
+        decimal afterBalance = 0;
+        string message;
+        decimal beforeBalance;
 
         if (!GetBalance(request.UserName, out beforeBalance, out message))
         {
@@ -115,7 +77,7 @@ public class PG2BLL : IPG2BLL
             };
         }
 
-        if (!CheckBeforeBalanceForBet(request.Amount, beforeBalance, out message))
+        if (!CheckBeforeBalance(request.Amount, beforeBalance, out message))
         {
             return new BetResponse_PG2()
             {
@@ -139,14 +101,6 @@ public class PG2BLL : IPG2BLL
             };
         }
 
-        if (!CheckAgentId(request.Agent, request.UserName))
-        {
-            return new BetResponse_PG2()
-            {
-                status = new Status_PG2() { code = PG2ErrorCode.InvalidAgent, message = message }
-            };
-        }
-
         var partitionTime = DateTimeOffset.Parse(request.Timestamp).DateTime;
 
         var data = new BettingDataRNG_PG2()
@@ -166,23 +120,24 @@ public class PG2BLL : IPG2BLL
             TicketType = BettransType.Bet,
             TicketStatus = TicketStatus.UnSettled
         };
-
-        data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
-
-        await using var conn = _mainDbClient.GetMySqlConnection();
-        await conn.OpenAsync();
-        await using var trans = await conn.BeginTransactionAsync();
-
-        if (!CheckBetForBet(partitionTime, data, out message))
+        if (tpCurrency.ExchangeRate != 0)
         {
-            await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
+            data.amount *= tpCurrency.ExchangeRate;
+        }
+
+        if (!CheckBet(partitionTime, data, out message))
+        {
             return new BetResponse_PG2()
             {
                 status = new Status_PG2() { code = PG2ErrorCode.DuplicateRound, message = message }
             };
         }
 
-        if (!PlaceBetForBet(partitionTime, data, out message, trans))
+        await using var conn = _mainDbClient.GetMySqlConnection();
+        await conn.OpenAsync();
+        await using var trans = await conn.BeginTransactionAsync();
+
+        if (!InsertBettrans(BettransType.Bet, partitionTime, data, out message, trans))
         {
             await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
             return new BetResponse_PG2()
@@ -215,30 +170,14 @@ public class PG2BLL : IPG2BLL
                 balance = new Balancemodel() { before = beforeBalance, after = afterBalance },
                 refId = request.RefId
             }
-
         };
     }
 
     public async Task<PayoutResponse_PG2> Payout(PayoutRequest_PG2 request)
     {
-        var message = string.Empty;
-        decimal beforeBalance = 0; decimal afterBalance = 0;
-
-        if (!CheckRequestForPayout(request, out message))
-        {
-            return new PayoutResponse_PG2()
-            {
-                status = new Status_PG2() { code = PG2ErrorCode.InvalidRequest, message = message }
-            };
-        }
-
-        if (!CheckThirdParty(request.UserName, out message))
-        {
-            return new PayoutResponse_PG2()
-            {
-                status = new Status_PG2() { code = PG2ErrorCode.InvalidRequest, message = message }
-            };
-        }
+        string message;
+        decimal beforeBalance;
+        decimal afterBalance;
 
         if (!GetTpCustInfo(request.UserName, out TpCustInfo tpCustInfo, out message))
         {
@@ -253,14 +192,6 @@ public class PG2BLL : IPG2BLL
             return new PayoutResponse_PG2()
             {
                 status = new Status_PG2() { code = PG2ErrorCode.ServiceNotAvailable, message = message }
-            };
-        }
-
-        if (!CheckAgentId(request.Agent, request.UserName))
-        {
-            return new PayoutResponse_PG2()
-            {
-                status = new Status_PG2() { code = PG2ErrorCode.InvalidAgent, message = message }
             };
         }
 
@@ -285,23 +216,24 @@ public class PG2BLL : IPG2BLL
             TicketType = BettransType.Payout,
             TicketStatus = TicketStatus.UnSettled
         };
-
-        data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
-
-        await using var conn = _mainDbClient.GetMySqlConnection();
-        await conn.OpenAsync();
-        await using var trans = await conn.BeginTransactionAsync();
-
-        if (!CheckPayoutForPayout(partitionTime, data, out message))
+        if (tpCurrency.ExchangeRate != 0)
         {
-            await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
+            data.amount *= tpCurrency.ExchangeRate;
+        }
+
+        if (!CheckPayout(partitionTime, data, out message))
+        {
             return new PayoutResponse_PG2()
             {
                 status = new Status_PG2() { code = PG2ErrorCode.DuplicateRound, message = message }
             };
         }
 
-        if (!PlacePayoutForPayout(partitionTime, data, out message, trans))
+        await using var conn = _mainDbClient.GetMySqlConnection();
+        await conn.OpenAsync();
+        await using var trans = await conn.BeginTransactionAsync();
+
+        if (!InsertBettrans(BettransType.Payout, partitionTime, data, out message, trans))
         {
             await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
             return new PayoutResponse_PG2()
@@ -320,7 +252,7 @@ public class PG2BLL : IPG2BLL
                     status = new Status_PG2() { code = PG2ErrorCode.ServiceNotAvailable, message = message }
                 };
             }
-            //win => 有派彩，beforeBalance用afterBalance反推
+            //win => 有派彩，beforeBalance用afterBalance反推，此afterBalance已由SetBalanceForPayout處理換回匯率
             beforeBalance = afterBalance - request.Amount;
         }
         else
@@ -348,7 +280,6 @@ public class PG2BLL : IPG2BLL
                 balance = new Balancemodel() { before = beforeBalance, after = afterBalance },
                 refId = request.RefId
             }
-
         };
     }
 
@@ -356,54 +287,49 @@ public class PG2BLL : IPG2BLL
     {
         var bonusId = 0;
         var afterAmount = 0m;
-        var tpCheck = _thirdPartyBll.ThirdPartyCheckWithCache((int)_thisTp, request.UserName);
-        if (tpCheck == null || tpCheck.Locked)
+        decimal beforeBalance;
+        string message;
+
+        if (!GetBalance(request.UserName, out beforeBalance, out message))
         {
             return new SettleResponse_PG2()
             {
-                status = new Status_PG2()
-                {
-                    code = PG2ErrorCode.InvalidUsernameOrToken,
-                    message = PG2ErrorCode.InvalidUsernameOrToken.GetEnumDescription()
-                }
+                status = new Status_PG2() { code = PG2ErrorCode.ServiceNotAvailable, message = message }
             };
         }
 
-        var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)_thisTp, request.UserName);
-
-        if (!CheckAgentId(request.Agent, request.UserName))
+        if (!CheckBeforeBalance(request.BetAmount, beforeBalance, out message))
         {
             return new SettleResponse_PG2()
             {
-                status = new Status_PG2()
-                {
-                    code = PG2ErrorCode.InvalidAgent,
-                    message = PG2ErrorCode.InvalidAgent.GetEnumDescription()
-                }
+                status = new Status_PG2() { code = PG2ErrorCode.BalanceInsufficient, message = message }
             };
         }
 
-        var tpCurrency = _thirdPartyBll.GetTpCurrency((int)_thisTp, tpCustInfo.CurrencyId);
-        if (tpCurrency.ExchangeRate > 0)
+        if (!GetTpCustInfo(request.UserName, out TpCustInfo tpCustInfo, out message))
+        {
+            return new SettleResponse_PG2()
+            {
+                status = new Status_PG2() { code = PG2ErrorCode.ServiceNotAvailable, message = message }
+            };
+        }
+
+        if (!GetTpCurrency(tpCustInfo.CurrencyId, out TpCurrency tpCurrency, out message))
+        {
+            return new SettleResponse_PG2()
+            {
+                status = new Status_PG2() { code = PG2ErrorCode.ServiceNotAvailable, message = message }
+            };
+        }
+
+        if (tpCurrency.ExchangeRate != 0)
         {
             request.Amount *= tpCurrency.ExchangeRate;
             request.BetAmount *= tpCurrency.ExchangeRate;
         }
-        var tpCustBalance = _tpCustInfoBll.GetBalance((int)_thisTp, request.UserName, (int)_GameType);
-        var beforeAmount = tpCustBalance.Balance;
-        if (beforeAmount < request.BetAmount)
-        {
-            return new SettleResponse_PG2()
-            {
-                status = new Status_PG2()
-                {
-                    code = PG2ErrorCode.BalanceInsufficient,
-                    message = PG2ErrorCode.BalanceInsufficient.GetEnumDescription()
-                }
-            };
-        }
 
         var partitionTime = DateTimeOffset.Parse(request.Timestamp).DateTime;
+
         var data = new BettingDataRNG_PG2()
         {
             username = request.UserName,
@@ -425,6 +351,7 @@ public class PG2BLL : IPG2BLL
             TicketType = request.IsEndRound ? BettransType.EndRound : BettransType.Payout,
             TicketStatus = TicketStatus.UnSettled
         };
+
         var slotDatas = _bettingService.IsExist_PG2(false, partitionTime, data);
         if (slotDatas.Any())
         {
@@ -441,11 +368,12 @@ public class PG2BLL : IPG2BLL
         await using var conn = _mainDbClient.GetMySqlConnection();
         await conn.OpenAsync();
         await using var trans = await conn.BeginTransactionAsync();
-        var result = _settledService.BetAndPayout_PG2(partitionTime, data, trans);
+
+        var result = _settledService.InsertBettrans_BetAndPayout_PG2(partitionTime, data, trans);
         if (!result)
         {
             await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
-            _logger.LogError($"Service_BettransRng_PG2_Ins_V2 failed :{JsonConvert.SerializeObject(data)}");
+            _logger.LogError($"Settlement BetAndPayout failed :{JsonConvert.SerializeObject(data)}");
             return new SettleResponse_PG2()
             {
                 status = new Status_PG2()
@@ -497,7 +425,7 @@ public class PG2BLL : IPG2BLL
             result = _settledService.InsertUnsettle_PG2(partitionTime, data.parentRoundId, trans);
             if (!result)
             {
-                _logger.LogError($"InsertUnsettle_PG2 failed {data.roundId}");
+                _logger.LogError($"Settlement EndRound failed {data.roundId}");
                 return new SettleResponse_PG2()
                 {
                     status = new Status_PG2()
@@ -511,21 +439,25 @@ public class PG2BLL : IPG2BLL
 
         if (afterAmount == 0)
         {
-            tpCustBalance = _tpCustInfoBll.GetBalance((int)_thisTp, request.UserName, (int)_GameType);
+            var tpCustBalance = _tpCustInfoBll.GetBalance((int)_thisTp, request.UserName, (int)_gameType);
             afterAmount = tpCustBalance.Balance;
         }
         else
         {
-            if (tpCurrency.ExchangeRate > 0)
+            if (tpCurrency.ExchangeRate != 0)
+            {
                 afterAmount /= tpCurrency.ExchangeRate;
+            }
         }
 
         await _mainDbClient.CommitAndDisposeConnectionAsync(conn, trans);
+
         if (bonusId > 0)
         {
             _logger.LogInformation($"user {tpCustInfo.TpUserName} has bonus wallet bonusId:{bonusId} transId:{data.roundId}");
             _settledService.UpdateTpBonusFlag((int)_thisTp, data.roundId, (int)GameType.PG2_RNG, TpCategory.Slots, out var custId, out bonusId);
         }
+
         return new SettleResponse_PG2()
         {
             status = new Status_PG2() { code = PG2ErrorCode.Success, message = "Success" },
@@ -533,7 +465,7 @@ public class PG2BLL : IPG2BLL
             {
                 username = request.UserName,
                 wallet = new Walletmodel() { balance = afterAmount, lastUpdate = GetCurrentGameTime() },
-                balance = new Balancemodel() { before = beforeAmount, after = afterAmount },
+                balance = new Balancemodel() { before = beforeBalance, after = afterAmount },
                 refId = request.RefId
             }
         };
@@ -541,16 +473,8 @@ public class PG2BLL : IPG2BLL
 
     public async Task<CancelResponse_PG2> Cancel(CancelRequest_PG2 request)
     {
-        var message = string.Empty;
-        decimal beforeBalance = 0; decimal afterBalance = 0;
-
-        if (!CheckRequestForCancel(request, out message))
-        {
-            return new CancelResponse_PG2()
-            {
-                status = new Status_PG2() { code = PG2ErrorCode.InvalidRequest, message = message }
-            };
-        }
+        decimal afterBalance = 0;
+        string message;
 
         if (!GetTpCustInfo(request.UserName, out TpCustInfo tpCustInfo, out message))
         {
@@ -565,14 +489,6 @@ public class PG2BLL : IPG2BLL
             return new CancelResponse_PG2()
             {
                 status = new Status_PG2() { code = PG2ErrorCode.ServiceNotAvailable, message = message }
-            };
-        }
-
-        if (!CheckAgentId(request.Agent, request.UserName))
-        {
-            return new CancelResponse_PG2()
-            {
-                status = new Status_PG2() { code = PG2ErrorCode.InvalidAgent, message = "Invalid agent id" }
             };
         }
 
@@ -595,22 +511,24 @@ public class PG2BLL : IPG2BLL
             TicketStatus = TicketStatus.UnSettled
         };
 
-        await using var conn = _mainDbClient.GetMySqlConnection();
-        await conn.OpenAsync();
-        await using var trans = await conn.BeginTransactionAsync();
-
-        data.amount = (tpCurrency.ExchangeRate > 0) ? data.amount * tpCurrency.ExchangeRate : data.amount;
-
-        if (!CheckCancelForCancel(partitionTime, data, out int sq, out message))
+        if (tpCurrency.ExchangeRate != 0)
         {
-            await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
+            data.amount *= tpCurrency.ExchangeRate;
+        }
+
+        if (!CheckCancel(partitionTime, data, out int sq, out message))
+        {
             return new CancelResponse_PG2()
             {
                 status = new Status_PG2() { code = PG2ErrorCode.DuplicateRound, message = message }
             };
         }
 
-        if (!CancelBetForCancel(partitionTime, sq, out message, trans))
+        await using var conn = _mainDbClient.GetMySqlConnection();
+        await conn.OpenAsync();
+        await using var trans = await conn.BeginTransactionAsync();
+
+        if (!UpdateBettrans(partitionTime, sq, out message, trans))
         {
             await _mainDbClient.RollbackAndDisposeConnectionAsync(conn, trans);
             return new CancelResponse_PG2()
@@ -646,127 +564,9 @@ public class PG2BLL : IPG2BLL
         };
     }
 
-    #region private
-    #region getbalance
-    private bool CheckRequestForGetBalance(CommonRequest_PG2 request, out string message)
-    {
-        message = string.Empty;
-
-        if (request == null)
-        {
-            message = "request is null.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Agent))
-        {
-            message = "request.agent is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.UserName))
-        {
-            message = "request.username is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        return true;
-    }
-    #endregion
     #region bet
-    private bool CheckRequestForSlotBet(BetRequest_PG2 request, out string message)
-    {
-        message = string.Empty;
 
-        if (request == null)
-        {
-            message = "request is null.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.UserName))
-        {
-            message = "request.UserName is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Agent))
-        {
-            message = "request.agent is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Type))
-        {
-            message = "request.Type is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Product))
-        {
-            message = "request.Product is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Category))
-        {
-            message = "request.Category is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.GameName))
-        {
-            message = "request.game is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.RoundId))
-        {
-            message = "request.roundId is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.RefId))
-        {
-            message = "request.RefId is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Timestamp))
-        {
-            message = "request.timestamp is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        return true;
-    }
-    private bool CheckBeforeBalanceForBet(decimal betAmount, decimal beforeBalance, out string message)
-    {
-        message = string.Empty;
-
-        if (beforeBalance - betAmount < 0)
-        {
-            message = "Balance insufficient.";
-            _logger.LogError($"CheckBalance Fail:{message}");
-            return false;
-        }
-
-        return true;
-    }
-    private bool CheckBetForBet(DateTime partitionTime, BettingDataRNG_PG2 data, out string message)
+    private bool CheckBet(DateTime partitionTime, BettingDataRNG_PG2 data, out string message)
     {
         message = string.Empty;
         try
@@ -777,7 +577,7 @@ public class PG2BLL : IPG2BLL
             {
                 //已存在指定有效投注
                 message = "already exist valid bet by refId and roundId.";
-                _logger.LogError($"CheckBet Fail:{message}");
+                _logger.LogError($"CheckBetForBet Fail:{message}");
                 return false;
             }
 
@@ -786,32 +586,11 @@ public class PG2BLL : IPG2BLL
         catch (Exception ex)
         {
             message = "exception happen.";
-            _logger.LogError(ex, $"CheckBet Exception:{ex.ToString()}");
+            _logger.LogError(ex, $"CheckBetForBet Exception:{ex.Message}");
             return false;
         }
     }
-    private bool PlaceBetForBet(DateTime partitionTime, BettingDataRNG_PG2 data, out string message, MySqlTransaction trans)
-    {
-        message = string.Empty;
-        try
-        {
-            var result = _bettingService.PlaceBet_PG2(partitionTime, data, trans);
 
-            if (!result)
-            {
-                message = "place bet fail.";
-                _logger.LogError($"PlaceBet Fail:{message}");
-                return false;
-            }
-            return true;
-        }
-        catch (Exception ex)
-        {
-            message = "exception happen.";
-            _logger.LogError(ex, $"PlaceBet Exception:{ex.ToString()}");
-            return false;
-        }
-    }
     private bool SetBalanceForBet(TpCustInfo tpCustInfo, BettingDataRNG_PG2 data, decimal rate,
         out string message, out decimal afterAmount, out int bonusId,
         MySqlConnection conn, MySqlTransaction trans)
@@ -826,7 +605,7 @@ public class PG2BLL : IPG2BLL
             if (!result)
             {
                 message = "set balance fail.";
-                _logger.LogError($"SetBalance Fail:{message}");
+                _logger.LogError($"SetBalanceForBet Fail:{message}");
                 return false;
             }
             afterAmount = (rate > 0) ? afterAmount / rate : afterAmount;
@@ -835,95 +614,21 @@ public class PG2BLL : IPG2BLL
         catch (Exception ex)
         {
             message = "exception happen.";
-            _logger.LogError(ex, $"SetBalance Exception:{ex.ToString()}");
+            _logger.LogError(ex, $"SetBalanceForBet Exception:{ex.Message}");
             return false;
         }
     }
+
     #endregion
+
     #region payout
-    private bool CheckRequestForPayout(PayoutRequest_PG2 request, out string message)
-    {
-        message = string.Empty;
 
-        if (request == null)
-        {
-            message = "request is null.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.UserName))
-        {
-            message = "request.username is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Agent))
-        {
-            message = "request.agent is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Type))
-        {
-            message = "request.Type is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Product))
-        {
-            message = "request.Product is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Category))
-        {
-            message = "request.Category is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.GameName))
-        {
-            message = "request.GameName is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.RoundId))
-        {
-            message = "request.roundId is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.RefId))
-        {
-            message = "request.RefId is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Timestamp))
-        {
-            message = "request.timestamp is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        return true;
-    }
-    private bool CheckPayoutForPayout(DateTime partitionTime, BettingDataRNG_PG2 data, out string message)
+    private bool CheckPayout(DateTime partitionTime, BettingDataRNG_PG2 data, out string message)
     {
         message = string.Empty;
         try
         {
             var slotDatas = _bettingService.IsExist_PG2(false, partitionTime, data);
-
 
             if (slotDatas.Any())
             {
@@ -938,32 +643,11 @@ public class PG2BLL : IPG2BLL
         catch (Exception ex)
         {
             message = "exception happen.";
-            _logger.LogError(ex, $"CheckPayout Exception:{ex.ToString()}");
+            _logger.LogError(ex, $"CheckPayout Exception:{ex.Message}");
             return false;
         }
     }
-    private bool PlacePayoutForPayout(DateTime partitionTime, BettingDataRNG_PG2 data, out string message, MySqlTransaction trans)
-    {
-        message = string.Empty;
-        try
-        {
-            var result = _settledService.Payout_PG2(partitionTime, data, trans);
 
-            if (!result)
-            {
-                message = "place payout fail.";
-                _logger.LogError($"PlacePayout Fail:{message}");
-                return false;
-            }
-            return true;
-        }
-        catch (Exception ex)
-        {
-            message = "exception happen.";
-            _logger.LogError(ex, $"PlacePayout Exception:{ex.ToString()}");
-            return false;
-        }
-    }
     private bool SetBalanceForPayout(TpCustInfo tpCustInfo, BettingDataRNG_PG2 data, decimal rate,
         out string message, out decimal afterAmount, out int bonusId,
         MySqlConnection conn, MySqlTransaction trans)
@@ -973,105 +657,30 @@ public class PG2BLL : IPG2BLL
         bonusId = 0;
         try
         {
-            var result = _settledService.SetBalance_PG2(tpCustInfo, data,
-                TransType.Payout, "Payout",
-                out afterAmount, ref bonusId, conn, trans);
+            var result = _settledService.SetBalance_PG2(tpCustInfo, data, TransType.Payout, "Payout", out afterAmount, ref bonusId, conn, trans);
 
             if (!result)
             {
                 message = "set balance fail.";
-                _logger.LogError($"SetBalance Fail:{message}");
+                _logger.LogError($"SetBalanceForPayout Fail:{message}");
                 return false;
             }
-            afterAmount = (rate > 0) ? afterAmount / rate : afterAmount;
+            afterAmount = (rate != 0) ? afterAmount / rate : afterAmount;
             return true;
         }
         catch (Exception ex)
         {
             message = "exception happen.";
-            _logger.LogError(ex, $"SetBalance Exception:{ex.ToString()}");
+            _logger.LogError(ex, $"SetBalanceForPayout Exception:{ex.Message}");
             return false;
         }
     }
+
     #endregion
+
     #region cancel
-    private bool CheckRequestForCancel(CancelRequest_PG2 request, out string message)
-    {
-        message = string.Empty;
 
-        if (request == null)
-        {
-            message = "request is null.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.UserName))
-        {
-            message = "request.username is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Agent))
-        {
-            message = "request.agent is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Type))
-        {
-            message = "request.Type is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Product))
-        {
-            message = "request.Product is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Category))
-        {
-            message = "request.Category is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.GameName))
-        {
-            message = "request.gameId is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.RoundId))
-        {
-            message = "request.RoundId is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.RefId))
-        {
-            message = "request.RefId is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Timestamp))
-        {
-            message = "request.Timestamp is Invalid.";
-            _logger.LogError($"CheckRequest Fail:{message}");
-            return false;
-        }
-
-        return true;
-    }
-    private bool CheckCancelForCancel(DateTime partitionTime, BettingDataRNG_PG2 data, out int sq, out string message)
+    private bool CheckCancel(DateTime partitionTime, BettingDataRNG_PG2 data, out int sq, out string message)
     {
         message = string.Empty;
         sq = 0;
@@ -1112,33 +721,11 @@ public class PG2BLL : IPG2BLL
         catch (Exception ex)
         {
             message = "exception happen.";
-            _logger.LogError(ex, $"CheckCancel Exception:{ex.ToString()}");
+            _logger.LogError(ex, $"CheckCancel Exception:{ex.Message}");
             return false;
         }
     }
-    private bool CancelBetForCancel(DateTime partitionTime, int sq,
-        out string message, MySqlTransaction trans)
-    {
-        message = string.Empty;
-        try
-        {
-            var result = _settledService.Cancel_PG2(partitionTime, sq, trans);
 
-            if (!result)
-            {
-                message = "cancel fail.";
-                _logger.LogError($"cancel Fail:{message}");
-                return false;
-            }
-            return true;
-        }
-        catch (Exception ex)
-        {
-            message = "exception happen.";
-            _logger.LogError(ex, $"PlaceBet Exception:{ex.ToString()}");
-            return false;
-        }
-    }
     private bool SetBalanceForCancel(TpCustInfo tpCustInfo, BettingDataRNG_PG2 data, decimal rate,
         out string message, out decimal afterAmount, out int bonusId,
         MySqlConnection conn, MySqlTransaction trans)
@@ -1148,14 +735,12 @@ public class PG2BLL : IPG2BLL
         bonusId = 0;
         try
         {
-            var result = _settledService.SetBalance_PG2(tpCustInfo, data,
-                TransType.Refunds, "CancelBet",
-                out afterAmount, ref bonusId, conn, trans);
+            var result = _settledService.SetBalance_PG2(tpCustInfo, data, TransType.Refunds, "CancelBet", out afterAmount, ref bonusId, conn, trans);
 
             if (!result)
             {
                 message = "set balance fail.";
-                _logger.LogError($"SetBalance Fail:{message}");
+                _logger.LogError($"SetBalanceForCancel Fail:{message}");
                 return false;
             }
             afterAmount = (rate > 0) ? afterAmount / rate : afterAmount;
@@ -1164,74 +749,19 @@ public class PG2BLL : IPG2BLL
         catch (Exception ex)
         {
             message = "exception happen.";
-            _logger.LogError(ex, $"SetBalance Exception:{ex.ToString()}");
+            _logger.LogError(ex, $"SetBalanceForCancel Exception:{ex.Message}");
             return false;
         }
     }
+
     #endregion
-    private bool CheckAgentId(string agentId, string username)
-    {
-        try
-        {
-            var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)_thisTp, username);
-            var Agent = _siteConfigDic[tpCustInfo.SiteId].CurrencyData[tpCustInfo.TpCurrencyId].Agent;
 
-            if (string.IsNullOrWhiteSpace(Agent))
-            {
-                _logger.LogError("CheckAgentId Fail: SiteConfig.agent is null.");
-                return false;
-            }
+    #region common
 
-            if (Agent != agentId)
-            {
-                _logger.LogError($"CheckAgentId Fail: {Agent} is not equal {agentId}");
-                return false;
-            }
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"CheckAgentId Exception:{ex.Message}");
-            return false;
-        }
-    }
-
-    private string GetCurrentGameTime()
+    private static string GetCurrentGameTime()
     {
         var currentAt = new DateTimeOffset(DateTime.Now);
         return currentAt.ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyy-MM-dd'T'HH:mm:ss.fffZ");
-    }
-
-    private bool CheckThirdParty(string username, out string message)
-    {
-        message = string.Empty;
-        try
-        {
-            var result = _thirdPartyBll.ThirdPartyCheckWithCache((int)_thisTp, username);
-
-            if (result == null)
-            {
-                message = "player not found.";
-                _logger.LogError($"CheckTpCustInfo Fail:{message}");
-                return false;
-            }
-
-            if (result.Locked)
-            {
-                message = "player is locked.";
-                _logger.LogError($"CheckTpCustInfo Fail:{message}");
-                return false;
-            }
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            message = "exception happen.";
-            _logger.LogError(ex, $"CheckTpCustInfo Exception:{ex.ToString()}");
-            return false;
-        }
     }
 
     private bool GetTpCustInfo(string username, out TpCustInfo tpCustInfo, out string message)
@@ -1252,7 +782,7 @@ public class PG2BLL : IPG2BLL
         catch (Exception ex)
         {
             message = "exception happen.";
-            _logger.LogError(ex, $"GetTpCustInfo Exception:{ex.ToString()}");
+            _logger.LogError(ex, $"GetTpCustInfo Exception:{ex.Message}");
             return false;
         }
     }
@@ -1275,7 +805,7 @@ public class PG2BLL : IPG2BLL
         catch (Exception ex)
         {
             message = "exception happen.";
-            _logger.LogError(ex, $"GetTpCurrency Exception:{ex.ToString()}");
+            _logger.LogError(ex, $"GetTpCurrency Exception:{ex.Message}");
             return false;
         }
     }
@@ -1286,7 +816,7 @@ public class PG2BLL : IPG2BLL
         beforeBalance = 0;
         try
         {
-            var result = _tpCustInfoBll.GetBalance((int)_thisTp, username, (int)_GameType);
+            var result = _tpCustInfoBll.GetBalance((int)_thisTp, username, (int)_gameType);
 
             if (result == null)
             {
@@ -1301,10 +831,80 @@ public class PG2BLL : IPG2BLL
         catch (Exception ex)
         {
             message = "exception happen.";
-            _logger.LogError(ex, $"GetBalance Exception:{ex.ToString()}");
+            _logger.LogError(ex, $"GetBalance Exception:{ex.Message}");
             return false;
         }
     }
+
+    private bool CheckBeforeBalance(decimal betAmount, decimal beforeBalance, out string message)
+    {
+        message = string.Empty;
+
+        if (beforeBalance - betAmount < 0)
+        {
+            message = "Balance insufficient.";
+            _logger.LogError($"CheckBeforeBalance Fail:{message}");
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool InsertBettrans(BettransType bettransType, DateTime partitionTime, BettingDataRNG_PG2 data, out string message, MySqlTransaction trans)
+    {
+        message = string.Empty;
+        var result = false;
+
+        try
+        {
+            if (bettransType == BettransType.Bet)
+            {
+                result = _bettingService.InsertBettransRng_PG2(partitionTime, data, trans);
+            }
+            else if (bettransType == BettransType.Payout)
+            {
+                result = _settledService.InsertBettrans_PG2(partitionTime, data, trans);
+            }
+
+            if (!result)
+            {
+                message = $"insert bettrans fail {bettransType}.";
+                _logger.LogError($"InsertBettrans Fail:{message}");
+                return false;
+            }
+            return true;
+        }
+        catch (Exception ex)
+        {
+            message = "exception happen.";
+            _logger.LogError(ex, $"InsertBettrans Exception:{ex.Message}");
+            return false;
+        }
+    }
+
+    private bool UpdateBettrans(DateTime partitionTime, int sq, out string message, MySqlTransaction trans)
+    {
+        message = string.Empty;
+        try
+        {
+            var result = _settledService.CancelBettrans_PG2(partitionTime, sq, trans);
+
+            if (!result)
+            {
+                message = "cancel fail.";
+                _logger.LogError($"UpdateBettrans Fail:{message}");
+                return false;
+            }
+            return true;
+        }
+        catch (Exception ex)
+        {
+            message = "exception happen.";
+            _logger.LogError(ex, $"UpdateBettrans Exception:{ex.Message}");
+            return false;
+        }
+    }
+
     #endregion
 
 }
