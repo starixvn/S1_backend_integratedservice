@@ -18,7 +18,7 @@ public class BettingDataRNG_PG2
     public string roundId { get; set; }
     public string refId { get; set; }
     public decimal betAmount { get; set; }
-    
+
     public DateTime timestamp { get; set; }
     public bool isFeatureBuy { get; set; }
     public bool isFreeSpin { get; set; }
@@ -42,7 +42,9 @@ public class SettleDataRNG_PG2 : SettleData
     public decimal WinLost { get; set; }
     public decimal Turnover { get; set; }
 }
+
 #region request
+
 public class CommonRequest_PG2
 {
     [JsonProperty("username")]
@@ -80,41 +82,43 @@ public class BetRequest_PG2 : CommonRequest_PG2
     [JsonProperty("isFeatureBuy")]
     public bool IsFeatureBuy { get; set; }
 }
+
 public class PayoutRequest_PG2 : CommonRequest_PG2
 {
     [JsonProperty("type")]
-    public string Type { get; set; } 
+    public string Type { get; set; }
 
     [JsonProperty("amount")]
-    public decimal Amount { get; set; } 
+    public decimal Amount { get; set; }
 
     [JsonProperty("product")]
-    public string Product { get; set; } 
+    public string Product { get; set; }
 
     [JsonProperty("category")]
-    public string Category { get; set; } 
+    public string Category { get; set; }
 
     [JsonProperty("gameName")]
-    public string GameName { get; set; } 
+    public string GameName { get; set; }
 
     [JsonProperty("roundId")]
-    public string RoundId { get; set; } 
+    public string RoundId { get; set; }
 
     [JsonProperty("refId")]
-    public string RefId { get; set; } 
+    public string RefId { get; set; }
 
     [JsonProperty("timestamp")]
-    public string Timestamp { get; set; } 
+    public string Timestamp { get; set; }
 
     [JsonProperty("isFeatureBuy")]
-    public bool IsFeatureBuy { get; set; } 
+    public bool IsFeatureBuy { get; set; }
 
     [JsonProperty("isFreespin")]
-    public bool IsFreespin { get; set; } 
+    public bool IsFreespin { get; set; }
 
     [JsonProperty("isOnlyPayout")]
-    public bool IsOnlyPayout { get; set; } 
+    public bool IsOnlyPayout { get; set; }
 }
+
 public class SettlementRequest_PG2 : CommonRequest_PG2
 {
     [JsonProperty("type")]
@@ -129,7 +133,7 @@ public class SettlementRequest_PG2 : CommonRequest_PG2
     [JsonProperty("gameName")]
     public string GameName { get; set; }
     [JsonProperty("category")]
-    public string Category {  get; set; }
+    public string Category { get; set; }
 
     [JsonProperty("roundId")]
     public string RoundId { get; set; }
@@ -183,9 +187,32 @@ public class CancelRequest_PG2 : CommonRequest_PG2
     public string Timestamp { get; set; }
 }
 
+public class VerifyReq_PG2
+{
+    [JsonProperty("username")]
+    public string UserName { get; set; }
+    [JsonProperty("agent")]
+    public string Agent { get; set; }
+    [JsonProperty("type")]
+    public string Type { get; set; }
+
+    [JsonProperty("product")]
+    public string Product { get; set; }
+    [JsonProperty("category")]
+    public string Category { get; set; }
+    [JsonProperty("gameName")]
+    public string GameName { get; set; }
+    [JsonProperty("roundId")]
+    public string RoundId { get; set; }
+    [JsonProperty("refId")]
+    public string RefId { get; set; }
+    [JsonProperty("timestamp")]
+    public string Timestamp { get; set; }
+}
 #endregion
 
 #region response
+
 public class BalanceResponse_PG2
 {
     public Status_PG2 status { get; set; }
@@ -248,6 +275,7 @@ public class Balancemodel
 
     public decimal after { get; set; }
 }
+
 #endregion
 
 internal class PG2Config : TpSiteConfig

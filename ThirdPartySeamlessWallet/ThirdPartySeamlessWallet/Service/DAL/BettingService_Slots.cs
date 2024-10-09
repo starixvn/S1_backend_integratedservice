@@ -2332,13 +2332,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         #endregion
 
         #region PG2
+
         public IEnumerable<BettingDataRNG_PG2> IsExist_PG2(bool checkEndRound, DateTime partitionTime, BettingDataRNG_PG2 data)
         {
             var query = new { CheckEndRound = checkEndRound, refId = data.refId, roundId = data.roundId, FromAPIType = data.FromAPIType };
             return _partitionService.Query<BettingDataRNG_PG2>(partitionTime, "Service_BettransRng_PG2_Check", query);
         }
 
-        public bool PlaceBet_PG2(DateTime partitionTime, BettingDataRNG_PG2 data, MySqlTransaction trans)
+        public bool InsertBettransRng_PG2(DateTime partitionTime, BettingDataRNG_PG2 data, MySqlTransaction trans)
         {
             var result = _partitionService.Execute(partitionTime, "Service_BettransRng_PG2_Ins", data, trans);
 
@@ -2349,20 +2350,21 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return true;
         }
 
-        public bool SetBalance_PG2(TpCustInfo tpCustInfo, BettingDataRNG_PG2 data,
-            out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
+        public bool SetBalance_PG2(TpCustInfo tpCustInfo, BettingDataRNG_PG2 data, out decimal afterAmount, ref int bonusId, MySqlConnection conn, MySqlTransaction trans)
         {
-            var result = PlaceBet(tpCustInfo,
-                data.betAmount == 0 ? data.amount : data.betAmount *-1,
+            var result = PlaceBet(
+                tpCustInfo,
+                data.betAmount == 0 ? data.amount : data.betAmount * -1,
                 (int)Tp.PG2,
-                data.roundId,  
+                data.roundId,
                 (int)GameType.PG2_RNG,
                 data.refId,  //RefId
                 out afterAmount,
                 ref bonusId,
                 out _,
                 conn,
-                trans);
+                trans
+            );
 
             if (result <= 0)
             {
@@ -2371,6 +2373,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
             return true;
         }
+
         #endregion
     }
 }
