@@ -60,6 +60,11 @@ namespace ThirdPartyWager.Service.BLL
 
             foreach (var site in siteList)
             {
+                if (site.TicketKey == 0)
+                {
+                    continue;
+                }
+
                 foreach (var item in tpCurrencyList)
                 {
                     var currency = item.TpCurrencyId;
