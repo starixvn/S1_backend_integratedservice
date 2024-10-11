@@ -22,7 +22,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly IHostEnvironment environment;
         private readonly int gameType = 0;
         private readonly PGSiteConfig _config;
-
+        private readonly Dictionary<string, PGSiteConfig> _siteNameConfigs;
         public PGController(IServiceProvider provider)
         {
             log2File = provider.GetRequiredService<Log2File>();
@@ -35,6 +35,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             thisTp = Tp.PG;
             gameType = (int)GameType.PG_RNG;
             _config = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<PGSiteConfig>(thisTp.ToString()).FirstOrDefault().Value;
+            _siteNameConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<PGSiteConfig>(thisTp.ToString());
         }
 
         private class PGSiteConfig : TpSiteConfig
@@ -86,8 +87,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/Auth")]
+        [Route("[controller]/{sitename}/Auth")]
         [HttpPost]
-        public VerifySessionResp VerifySession(string trace_id, [FromForm] Dictionary<string, string> reqq)
+        public VerifySessionResp VerifySession(string trace_id, [FromForm] Dictionary<string, string> reqq ,string sitename = "")
         {
             string logName = $"{thisTp}_VerifySession";
             VerifySessionResp resp = new VerifySessionResp();
@@ -99,8 +101,9 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             var verifySessionReq = JsonConvert.DeserializeObject<VerifySessionReq>(JsonConvert.SerializeObject(reqq));
 
-            var secret_key = _config.secret_key;
-            var operator_token = _config.operator_token;
+            var siteConfig = GetSiteConfig(sitename);
+            var secret_key = siteConfig.secret_key;
+            var operator_token = siteConfig.operator_token;
 
             if (string.IsNullOrEmpty(verifySessionReq.OperatorToken) || string.IsNullOrEmpty(verifySessionReq.SecretKey) || string.IsNullOrEmpty(verifySessionReq.OperatorPlayerSession) || !verifySessionReq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !verifySessionReq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase))
             {
@@ -230,8 +233,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/GetUserBalance")]
+        [Route("[controller]/{sitename}/GetUserBalance")]
         [HttpPost]
-        public Resp GetBalance(string trace_id, [FromForm] Dictionary<string, string> reqq)
+        public Resp GetBalance(string trace_id, [FromForm] Dictionary<string, string> reqq,string sitename = "")
         {
             string logName = $"{thisTp}_GetBalance";
             Resp resp = new Resp();
@@ -243,8 +247,9 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             var getBalanceReq = JsonConvert.DeserializeObject<GetBalanceReq>(JsonConvert.SerializeObject(reqq));
 
-            var secret_key = _config.secret_key;
-            var operator_token = _config.operator_token;
+            var siteConfig = GetSiteConfig(sitename);
+            var secret_key = siteConfig.secret_key;
+            var operator_token = siteConfig.operator_token;
 
             if (!getBalanceReq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !getBalanceReq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase))
             {
@@ -358,8 +363,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/PlaceBet")]
+        [Route("[controller]/{sitename}/PlaceBet")]
         [HttpPost]
-        public Resp TransferOut(string trace_id, [FromForm] Dictionary<string, string> reqq)
+        public Resp TransferOut(string trace_id, [FromForm] Dictionary<string, string> reqq,string sitename = "")
         {
             string logName = $"{thisTp}_TransferOut";
             Resp resp = new Resp();
@@ -370,11 +376,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             };
 
             var transferOutReqq = JsonConvert.DeserializeObject<TransferOutReqq>(JsonConvert.SerializeObject(reqq));
-
-            //transferOutReqq = JsonConvert.DeserializeObject<TransferOutReqq>(@"{""operator_token"":""5884cec7905af23c1586a6819ae0b1e1"",""secret_key"":""645b1f5db5c7c6e3d0fb087f11f62e50"",""operator_player_session"":""WyJldW9WN1BqNDFVQ2dTaUhnSzVmQWxRIiwiS2VSbDRhbm5qVXl0eTdFSlBZRmZ3Il0%3D"",""game_id"":""1"",""parent_bet_id"":""6669305"",""bet_id"":""6669305"",""player_name"":""DNova88_156"",""currency_code"":""THB"",""transfer_amount"":""30.00"",""wallet_type"":""C"",""bet_type"":""1"",""transaction_id"":""6669305-6669305-201-0"",""updated_time"":""1592192524927"",""is_feature"":""False"",""is_minus_count"":""False"",""is_wager"":""True"",""platform"":""1"",""create_time"":""1592192524927"",""is_parent_zero_stake"":""False"",""jackpot_rtp_contribution_amount"":""0"",""jackpot_win_amount"":""0""}");
-
-            var secret_key = _config.secret_key;
-            var operator_token = _config.operator_token;
+            
+            var siteConfig = GetSiteConfig(sitename);
+            var secret_key = siteConfig.secret_key;
+            var operator_token = siteConfig.operator_token;
 
             if (string.IsNullOrEmpty(transferOutReqq.PlayerName) || !transferOutReqq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !transferOutReqq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase) || transferOutReqq.TransferAmount < 0)
             {
@@ -583,8 +588,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/Payout")]
+        [Route("[controller]/{sitename}/Payout")]
         [HttpPost]
-        public Resp TransferIn(string trace_id, [FromForm] Dictionary<string, string> reqq)
+        public Resp TransferIn(string trace_id, [FromForm] Dictionary<string, string> reqq,string sitename = "")
         {
             string logName = $"{thisTp}_TransferIn";
             Resp resp = new Resp();
@@ -596,8 +602,9 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             var transferInReqq = JsonConvert.DeserializeObject<TransferInReqq>(JsonConvert.SerializeObject(reqq));
 
-            var secret_key = _config.secret_key;
-            var operator_token = _config.operator_token;
+            var siteConfig = GetSiteConfig(sitename);
+            var secret_key = siteConfig.secret_key;
+            var operator_token = siteConfig.operator_token;
 
             if (string.IsNullOrEmpty(transferInReqq.PlayerName) || !transferInReqq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !transferInReqq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase) || transferInReqq.TransferAmount < 0)
             {
@@ -704,8 +711,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/TransferInOut")]
+        [Route("[controller]/{sitename}/TransferInOut")]
         [HttpPost]
-        public Resp TransferInOut(string trace_id, [FromForm] Dictionary<string, string> reqq)
+        public Resp TransferInOut(string trace_id, [FromForm] Dictionary<string, string> reqq,string sitename = "")
         {
             string logName = $"{thisTp}_TransferInOut";
             Resp resp = new Resp();
@@ -717,8 +725,9 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             var transferInOutReqq = JsonConvert.DeserializeObject<TransferInOutReqq>(JsonConvert.SerializeObject(reqq));
 
-            var secret_key = _config.secret_key;
-            var operator_token = _config.operator_token;
+            var siteConfig = GetSiteConfig(sitename);
+            var secret_key = siteConfig.secret_key;
+            var operator_token = siteConfig.operator_token;
 
             if (string.IsNullOrEmpty(transferInOutReqq.PlayerName) || !transferInOutReqq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !transferInOutReqq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase))
             {
@@ -911,8 +920,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/Adjustment")]
+        [Route("[controller]/{sitename}/Adjustment")]
         [HttpPost]
-        public AdjustmentResp Adjustment(string trace_id, [FromForm] Dictionary<string, string> reqq)
+        public AdjustmentResp Adjustment(string trace_id, [FromForm] Dictionary<string, string> reqq,string sitename = "")
         {
             // api used for future certain PG event only , such as Cash Tournament.
             string logName = $"{thisTp}_Adjustment";
@@ -925,8 +935,9 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             var adjustmentReqq = JsonConvert.DeserializeObject<AdjustmentDataRNG_PG>(JsonConvert.SerializeObject(reqq));
 
-            var secret_key = _config.secret_key;
-            var operator_token = _config.operator_token;
+            var siteConfig = GetSiteConfig(sitename);
+            var secret_key = siteConfig.secret_key;
+            var operator_token = siteConfig.operator_token;
 
             if (string.IsNullOrEmpty(adjustmentReqq.PlayerName) || !adjustmentReqq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !adjustmentReqq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase))
             {
@@ -1053,8 +1064,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/Resettle")]
+        [Route("[controller]/{sitename}/Resettle")]
         [HttpPost]
-        public Resp Resettle([FromForm] Dictionary<string, string> reqq)
+        public Resp Resettle([FromForm] Dictionary<string, string> reqq,string sitename = "")
         {
             string logName = $"{thisTp}_Resettle";
             Resp resp = new Resp();
@@ -1066,9 +1078,10 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             var resettleReqq = JsonConvert.DeserializeObject<ResettleReqq>(JsonConvert.SerializeObject(reqq));
 
-            var secret_key = _config.secret_key;
-            var operator_token = _config.operator_token;
-
+            var siteConfig = GetSiteConfig(sitename);
+            var secret_key = siteConfig.secret_key;
+            var operator_token = siteConfig.operator_token;
+            
             if (string.IsNullOrEmpty(resettleReqq.PlayerName) || !resettleReqq.OperatorToken.Equals(operator_token, StringComparison.OrdinalIgnoreCase) || !resettleReqq.SecretKey.Equals(secret_key, StringComparison.OrdinalIgnoreCase))
             {
                 resp.error = new Error
@@ -1218,5 +1231,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
         }
 
+        private PGSiteConfig GetSiteConfig(string siteName)
+        {
+            if (siteName == "")
+            {
+                return _config;
+            }
+
+            return _siteNameConfigs.TryGetValue(siteName, out var result) ? result : _config;
+        }
     }
 }
