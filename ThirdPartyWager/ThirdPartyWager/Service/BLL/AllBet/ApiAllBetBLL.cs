@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
+using System.Security.Policy;
 using System.Text;
 
 using Newtonsoft.Json;
@@ -21,7 +22,8 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<ApiAllBetBLL> _logger;
         private readonly string _tpName = Tp.Allbet.ToString();
         private readonly IConfiguration _configuration;
-        private readonly AllBetConfig _siteAllBetConfig;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly Dictionary<int, AllBetConfig> _siteConfigDic;
 
         public ApiAllBetBLL(IServiceProvider provider)
         {
@@ -30,11 +32,13 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<ApiAllBetBLL>>();
             _configuration = provider.GetRequiredService<IConfiguration>();
             _seamlessUrl = provider.GetRequiredService<ConfigBLL>().GetConfigValueByEnvironment<ServiceHostConfig>("ServiceHost").SeamlessService;
-            _siteAllBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AllBetConfig>(Tp.Allbet.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<AllBetConfig>(Tp.Allbet.ToString());
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
 
-        public WagerAllBetModel<BetAllBet> GetBetListByTime(string agent, string startDateTime, string endDateTime, int pageNum)
+        public WagerAllBetModel<BetAllBet> GetBetListByTime(string agent, string startDateTime, string endDateTime, int pageNum, int siteId)
         {
+            var _siteAllBetConfig = _siteConfigDic[siteId];
             // param
             var apiUrl = _siteAllBetConfig.ApiUrl;
             var path = "PagingQueryBetRecords";
@@ -49,7 +53,7 @@ namespace ThirdPartyWager.Service.BLL
             var parameters = JsonConvert.SerializeObject(param);
             // log
             _logger.LogInformation(parameters);
-            var header = GetAuthData(path, parameters, out var contentType);
+            var header = GetAuthData(path, parameters, _siteAllBetConfig, out var contentType);
             // request
             var r = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
             if (string.IsNullOrEmpty(r))
@@ -60,8 +64,10 @@ namespace ThirdPartyWager.Service.BLL
             return JsonConvert.DeserializeObject<WagerAllBetModel<BetAllBet>>(r);
         }
 
-        public SettleCheckAllBetModel GetBetByBetNum(string betNum)
+        public SettleCheckAllBetModel GetBetByBetNum(string betNum, string client)
         {
+            TpCustInfo tpCustInfo = _thirdPartyBLL.GetTpCustInfoWithCache((int)Tp.Allbet, client);
+            var _siteAllBetConfig = _siteConfigDic[tpCustInfo.SiteId];
             // param
             var apiUrl = _siteAllBetConfig.ApiUrl;
             var path = "QueryBetRecordByBetNum";
@@ -72,7 +78,7 @@ namespace ThirdPartyWager.Service.BLL
             var parameters = JsonConvert.SerializeObject(param);
             // log
             _logger.LogInformation(parameters);
-            var header = GetAuthData(path, parameters, out var contentType);
+            var header = GetAuthData(path, parameters, _siteAllBetConfig, out var contentType);
             // request
             var r = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
             if (string.IsNullOrEmpty(r))
@@ -83,8 +89,9 @@ namespace ThirdPartyWager.Service.BLL
             return JsonConvert.DeserializeObject<SettleCheckAllBetModel>(r);
         }
 
-        public WagerAllBetModel<BetAllBet> GetModifiedBetListByTime(string agent, string startDateTime, string endDateTime)
+        public WagerAllBetModel<BetAllBet> GetModifiedBetListByTime(string agent, string startDateTime, string endDateTime, int siteId)
         {
+            var _siteAllBetConfig = _siteConfigDic[siteId];
             // param
             var apiUrl = _siteAllBetConfig.ApiUrl;
             var path = "QueryModifiedBetRecords";
@@ -97,7 +104,7 @@ namespace ThirdPartyWager.Service.BLL
             var parameters = JsonConvert.SerializeObject(param);
             // log
             _logger.LogInformation(parameters);
-            var header = GetAuthData(path, parameters, out var contentType);
+            var header = GetAuthData(path, parameters, _siteAllBetConfig, out var contentType);
             // request
             var r = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
             if (string.IsNullOrEmpty(r))
@@ -109,8 +116,9 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public WagerAllBetModel<RewardAllBet> GetRewardByTime(string agent, string startDateTime, string endDateTime, int pageNum)
+        public WagerAllBetModel<RewardAllBet> GetRewardByTime(string agent, string startDateTime, string endDateTime, int pageNum, int siteId)
         {
+            var _siteAllBetConfig = _siteConfigDic[siteId];
             var apiUrl = _siteAllBetConfig.ApiUrl;
             var path = "PagingQueryEventRecords";
             var param = new
@@ -124,7 +132,7 @@ namespace ThirdPartyWager.Service.BLL
             var parameters = JsonConvert.SerializeObject(param);
             // log
             _logger.LogInformation(parameters);
-            var header = GetAuthData(path, parameters, out var contentType);
+            var header = GetAuthData(path, parameters, _siteAllBetConfig, out var contentType);
             // request
             var r = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
             if (string.IsNullOrEmpty(r))
@@ -138,8 +146,9 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        public CurrencyStats_AllBet GetBetSummaryByTime(string agent, string startTime)
+        public CurrencyStats_AllBet GetBetSummaryByTime(string agent, string startTime, int siteId)
         {
+            var _siteAllBetConfig = _siteConfigDic[siteId];
             // param
             var apiUrl = _siteAllBetConfig.ApiUrl;
             var path = "QueryOneDaySumHistories";
@@ -153,7 +162,7 @@ namespace ThirdPartyWager.Service.BLL
             var parameters = JsonConvert.SerializeObject(param);
             // log
             _logger.LogInformation(parameters);
-            var header = GetAuthData(path, parameters, out var contentType);
+            var header = GetAuthData(path, parameters, _siteAllBetConfig, out var contentType);
             // request
             var r = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
             if (string.IsNullOrEmpty(r))
@@ -204,17 +213,17 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        private Dictionary<string, string> GetAuthData(string path, string parameters, out string contentType)
+        private Dictionary<string, string> GetAuthData(string path, string parameters, AllBetConfig config, out string contentType)
         {
             var md5 = Base64Md5(parameters);
             contentType = "application/json";
             var date = DateTime.UtcNow.ToString("dd MMM yyyy HH:mm:ss z", new CultureInfo("en-US"));
             var signString = $"POST\n{md5}\n{contentType}\n{date}\n/{path}";
-            var signature = Sign(signString, _siteAllBetConfig.AllbetKey);
+            var signature = Sign(signString, config.AllbetKey);
             return new Dictionary<string, string>
             {
                 { "Accept", "application/json" },
-                { "Authorization", $"AB {_siteAllBetConfig.OperatorId}:{signature}" },
+                { "Authorization", $"AB {config.OperatorId}:{signature}" },
                 { "Content-MD5", md5 },
                 { "Date", date }
             };

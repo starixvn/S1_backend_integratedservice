@@ -142,6 +142,7 @@
     public class UnsettleCheck
     {
         public string betNum { get; set; }
+        public string client { get; set; }
     }
 
     public class CurrencyStats_AllBet
