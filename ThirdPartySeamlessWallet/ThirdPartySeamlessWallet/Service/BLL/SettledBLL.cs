@@ -261,12 +261,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
-        
+
         public IEnumerable<SettleDataRNG_GPI> GetUnsettledListRNG_GPI(string transId)
         {
             return settledService.GetUnsettledListRNG_GPI(transId);
         }
-        
+
         public int SetSettleFlagRNG_GPI(string roundId, string custId, int SettleFlag)
         {
             return settledService.SetSettleFlagRNG_GPI(roundId, custId, SettleFlag);
@@ -1465,7 +1465,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
             return result;
         }
-        
+
         public SettleDataRNG_CQ9 GetUnsettledListRNG_CQ9(string transId)
         {
             return settledService.GetUnsettledListRNG_CQ9(transId);
@@ -1485,7 +1485,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.SetSettleFlagFish_CQ9(roundid, SettleFlag);
         }
-        
+
         public SettleDataRNG_CQ9 GetUnsettledListWCC_CQ9(string transId)
         {
             return settledService.GetUnsettledListWCC_CQ9(transId);
@@ -1841,7 +1841,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
 
         public int SetSettleFlag_BettransSmartLC_N2Live(string TransId, int SettleFlag)
         {
-            return settledService.SetSettleFlag_BettransSmartLC_N2Live(TransId,SettleFlag);
+            return settledService.SetSettleFlag_BettransSmartLC_N2Live(TransId, SettleFlag);
         }
 
         public int SetSettleFlag_TpSmartWagerLC_N2Live(string TransId)
@@ -2112,7 +2112,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.GetUnsettled_EVO(transId);
         }
-        
+
         public int SetSettleFlag_EVO(string TransId)
         {
             return settledService.SetSettleFlag_EVO(TransId);
@@ -2137,7 +2137,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL
         {
             return settledService.GetUnsettledReward_EVO(transId);
         }
-        
+
         public int SetRewardSettleFlag_EVO(int sq)
         {
             return settledService.SetRewardSettleFlag_EVO(sq);
@@ -2796,6 +2796,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             }
 
             return settledService.EndSessionRNG_Endorphina(tpCustInfo, endSessionData_Endorphina, gameType, out afterAmount);
+        }
+
+        #endregion
+
+        #region DragonGaming
+
+        public int SetSettleFlag_DragonGaming(string transId)
+        {
+            return settledService.SetSettleFlag_DragonGaming(transId);
         }
 
         #endregion

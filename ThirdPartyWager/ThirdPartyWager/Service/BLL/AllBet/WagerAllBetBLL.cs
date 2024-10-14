@@ -113,13 +113,13 @@ namespace ThirdPartyWager.Service.BLL
                                 return false;
                             }
 
-                            var pageRowCntOfModify = modifyWager.data.total;
-                            if (pageRowCntOfModify == 0)
-                            {
-                                msg = "NO_DATA";
-                                _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(modifyWager)}");
-                                break;
-                            }
+                        var pageRowCntOfModify = modifyWager.data.total;
+                        if (pageRowCntOfModify == 0)
+                        {
+                            msg = "NO_DATA";
+                            _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(modifyWager)}");
+                            continue;
+                        }
 
                             // insert wager to db
                             foreach (var bet in modifyWager.data.list)

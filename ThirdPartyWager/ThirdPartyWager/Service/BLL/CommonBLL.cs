@@ -29,6 +29,11 @@ namespace ThirdPartyWager.Service.BLL
             return commonService.GetWagerSummary(spName, beginTime, endTime);
         }
 
+        public Task<IEnumerable<FincanceDailySummary>> GetBettransSummary(string spName, long beginTime, long endTime)
+        {
+            return commonService.GetBettransSummary(spName, beginTime, endTime);
+        }
+
         public int InsertTpWagerRedo(TpWagerRedo redo)
         {
             return commonService.InsertTpWagerRedo(redo);
