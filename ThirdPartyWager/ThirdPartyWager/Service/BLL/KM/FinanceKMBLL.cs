@@ -68,9 +68,9 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
         {
-            var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
             var reportData = new List<dynamic>();
             var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+            var serverList = _commonBLL.GetSiteList();
             foreach (var site in siteList)
             {
                 if (site.TicketKey == 0)
@@ -78,7 +78,8 @@ namespace ThirdPartyWager.Service.BLL
                     continue;
                 }
 
-                foreach (var item in tpCurrencyList)
+                var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(serverList.First(x => x.SiteId == site.SiteId).CurrencyList);
+                foreach (var item in _tpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
                 {
                     var currency = item.TpCurrencyId;
 
