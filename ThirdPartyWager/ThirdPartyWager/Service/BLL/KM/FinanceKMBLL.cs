@@ -10,6 +10,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<FinanceKMBLL> _logger;
         private readonly CommonBLL _commonBLL;
         private readonly ApiKMBLL _apiKMBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly int _timeZone = 0;
         private readonly int _tpId = (int)Tp.KM;
@@ -20,6 +21,7 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<FinanceKMBLL>>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _apiKMBLL = provider.GetRequiredService<ApiKMBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _tpCurrencyList = _commonBLL.GetTpCurrencyList(_tpId);
         }
@@ -66,37 +68,47 @@ namespace ThirdPartyWager.Service.BLL
 
         public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
         {
-            var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
             var reportData = new List<dynamic>();
-
-            foreach (var item in tpCurrencyList)
+            var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+            var serverList = _commonBLL.GetSiteList();
+            foreach (var site in siteList)
             {
-                var currency = item.TpCurrencyId;
-
-                var getWagerSummary = await _apiKMBLL.GetBetSummaryByTime(currency, reportTime.startTime, reportTime.endTime);
-                // 我司将会限制 ** 历史注单 ** 相关的API请求频率 ( 允许商户每五秒请求一次 )
-                Thread.Sleep(8000);
-
-                if (getWagerSummary == null)
+                if (site.TicketKey == 0)
                 {
-                    var msg = "THIRD_PARTY_ERROR";
-                    _logger.LogError($"{msg}\r\nCurrency={currency}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                    SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
-                    throw systemException;
-                }
-
-                if (getWagerSummary.Count() == 0)
-                {
-                    var msg = "NO_DATA";
-                    _logger.LogInformation($"{msg}\r\nCurrency={currency}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
                     continue;
                 }
 
-                foreach (var data in getWagerSummary)
+                var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(serverList.First(x => x.SiteId == site.SiteId).CurrencyList);
+                foreach (var item in _tpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
                 {
-                    reportData.Add(data);
+                    var currency = item.TpCurrencyId;
+
+                    var getWagerSummary = await _apiKMBLL.GetBetSummaryByTime(currency, reportTime.startTime, reportTime.endTime, site.SiteId);
+                    // 我司将会限制 ** 历史注单 ** 相关的API请求频率 ( 允许商户每五秒请求一次 )
+                    Thread.Sleep(8000);
+
+                    if (getWagerSummary == null)
+                    {
+                        var msg = "THIRD_PARTY_ERROR";
+                        _logger.LogError($"{msg}\r\nCurrency={currency}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                        SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
+                        throw systemException;
+                    }
+
+                    if (getWagerSummary.Count() == 0)
+                    {
+                        var msg = "NO_DATA";
+                        _logger.LogInformation($"{msg}\r\nCurrency={currency}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                        continue;
+                    }
+
+                    foreach (var data in getWagerSummary)
+                    {
+                        reportData.Add(data);
+                    }
                 }
             }
+            
             return reportData;
         }
 
