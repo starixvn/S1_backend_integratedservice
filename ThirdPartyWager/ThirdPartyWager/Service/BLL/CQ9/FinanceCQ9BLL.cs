@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -17,8 +18,9 @@ namespace ThirdPartyWager.Service.BLL
         private readonly List<string> _gametype = new List<string>() { "slot", "arcade", "fish", "table","CMCOCKFIGHT01"};
         private readonly List<string> _liveGameType = new List<string>() { "CMCOCKFIGHT01"};
         //後續有新的liveGame在_gametype及_liveGameType加入gameCode即可
+        private readonly Dictionary<int, Dictionary<string, string>> _siteConfigDic;
 
-        
+
         public FinanceCQ9BLL(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceCQ9BLL>>();
@@ -26,6 +28,7 @@ namespace ThirdPartyWager.Service.BLL
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _apiCQ9BLL = provider.GetRequiredService<ApiCQ9BLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(Tp.CQ9.ToString());
         }
 
         public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
@@ -64,46 +67,68 @@ namespace ThirdPartyWager.Service.BLL
         {
             var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
             var reportData = new List<dynamic>();
-            var getWagerSummary = new CurrencyStats_CQ9();
-
-            foreach (var item in tpCurrencyList)
+            var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+            foreach (var site in siteList)
             {
-                var currency = item.TpCurrencyId;
-                var token = setting[$"API_Token_{currency}"];
-
-                foreach (var gametype in _gametype)
+                if (site.TicketKey == 0)
                 {
-                    if (!_liveGameType.Contains(gametype))
-                    {
-                        getWagerSummary = await _apiCQ9BLL.GetBetSummaryByTime(setting, token, gametype, reportTime.startTime, reportTime.endTime);
-                    }
-                    else
-                    {
-                        getWagerSummary = await _apiCQ9BLL.GetLiveBetSummaryByTime(setting, token, gametype, reportTime.startTime, reportTime.endTime);
-                    }
-                    if (getWagerSummary.status.code != "0")
-                    {
-                        var msg = "THIRD_PARTY_ERROR";
-                        _logger.LogError($"{msg}\r\n{currency}\r\n{gametype}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                        SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
-                        throw systemException;
-                    }
+                    continue;
+                }
 
-                    if (getWagerSummary.status.code == "0" && getWagerSummary.data.totalsize == 0)
+                // 分Site取得TpList
+                setting = _siteConfigDic[site.SiteId];
+
+                foreach (var item in tpCurrencyList)
+                {
+                    var currency = item.TpCurrencyId;
+
+                    // 幣別token有設定才會繼續做
+                    var token = default(dynamic);
+                    try
                     {
-                        var msg = "NO_DATA";
-                        _logger.LogInformation($"{msg}\r\n{currency}\r\n{gametype}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                        token = setting[$"API_Token_{currency}"];
+                    }
+                    catch
+                    {
                         continue;
                     }
-                    
-                    foreach (var addType in getWagerSummary.data.data)
+                  
+                    var getWagerSummary = new CurrencyStats_CQ9();
+                    foreach (var gametype in _gametype)
                     {
-                        addType.gameType = gametype;
-                    }
+                        if (!_liveGameType.Contains(gametype))
+                        {
+                            getWagerSummary = await _apiCQ9BLL.GetBetSummaryByTime(setting, token, gametype, reportTime.startTime, reportTime.endTime);
+                        }
+                        else
+                        {
+                            getWagerSummary = await _apiCQ9BLL.GetLiveBetSummaryByTime(setting, token, gametype, reportTime.startTime, reportTime.endTime);
+                        }
+                        if (getWagerSummary.status.code != "0")
+                        {
+                            var msg = "THIRD_PARTY_ERROR";
+                            _logger.LogError($"{msg}\r\n{currency}\r\n{gametype}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                            SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
+                            throw systemException;
+                        }
+
+                        if (getWagerSummary.status.code == "0" && getWagerSummary.data.totalsize == 0)
+                        {
+                            var msg = "NO_DATA";
+                            _logger.LogInformation($"{msg}\r\n{currency}\r\n{gametype}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                            continue;
+                        }
                     
-                    reportData.AddRange(getWagerSummary.data.data);
+                        foreach (var addType in getWagerSummary.data.data)
+                        {
+                            addType.gameType = gametype;
+                        }
+                    
+                        reportData.AddRange(getWagerSummary.data.data);
+                    }
                 }
             }
+
             return reportData;
         }
 

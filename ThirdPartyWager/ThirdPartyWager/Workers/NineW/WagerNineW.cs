@@ -12,6 +12,7 @@ namespace ThirdPartyWager.Workers
         private readonly NineWBLL _nineWService;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly DateTimeHelper _dateTimeHelper;
+        private readonly IWebHostEnvironment _env;
         private Timer _getDomainTimer;
         private Timer _settleTimer;
         private Timer _settleTimerByDate;
@@ -30,6 +31,7 @@ namespace ThirdPartyWager.Workers
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _nineWService = provider.GetRequiredService<NineWBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
+            _env = provider.GetRequiredService<IWebHostEnvironment>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -42,7 +44,7 @@ namespace ThirdPartyWager.Workers
             {
                 _logger.LogError(ex, ex.Message);
             }
-            
+
             _getDomainTimer = new Timer(DoGetDomain, null, TimeSpan.FromMinutes(1), TimeSpan.Zero);
             _settleTimer = new Timer(DoSettle, null, TimeSpan.FromSeconds(1), TimeSpan.Zero);
             _settleTimerByDate = new Timer(DoSettleByDate, null, TimeSpan.FromSeconds(3), TimeSpan.Zero);
@@ -60,6 +62,10 @@ namespace ThirdPartyWager.Workers
 
         private async void DoSettle(object state)
         {
+            if (!_env.IsProduction())
+            {
+                return;
+            }
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var timerType = (int)WagerTimerType.Wager;
@@ -99,6 +105,10 @@ namespace ThirdPartyWager.Workers
 
         private async void DoSettleByDate(object state)
         {
+            if (!_env.IsProduction())
+            {
+                return;
+            }
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var timerType = (int)WagerTimerType.RedoWager;
@@ -140,6 +150,10 @@ namespace ThirdPartyWager.Workers
 
         private async void DoReSettle(object state)
         {
+            if (!_env.IsProduction())
+            {
+                return;
+            }
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var timerType = (int)WagerTimerType.ReSettle;
@@ -181,11 +195,19 @@ namespace ThirdPartyWager.Workers
 
         private async void GetReportByDate(object state)
         {
+            if (!_env.IsProduction())
+            {
+                return;
+            }
+
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var timerType = (int)WagerTimerType.UserReport;
             var intervalDays = 1;
             var nextTimeSpan = TimeSpan.FromHours(4);
+            var exec1 = 0;
+            var exec2 = 0;
+            var exec3 = 0;
             try
             {
                 var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByGameType(tpId, timerType, tpType);
@@ -193,22 +215,26 @@ namespace ThirdPartyWager.Workers
                 var endTime = date.AddDays(1).AddMilliseconds(-1);
                 if (endTime < DateTime.UtcNow)
                 {
+                    exec1 = 1;
                     var summaryTransaction = _nineWService.GetSummaryTransactionReportAsync(date);//querySummaryTransaction
                     if (await summaryTransaction)
                     {
                         _logger.LogInformation($"NineW Get {date:yyyy-MM-dd} Report");
                         _thirdPartyBLL.SetThirdPartyTimerByGameType(tpId, timerType, new DateTimeOffset(date.AddHours(4)).ToUnixTimeSeconds(), tpType);
+                        exec2 = 1;
                     }
                 }
-
-                if ((int)DateTime.UtcNow.AddDays(-1).Subtract(date).TotalDays > intervalDays)
+                var checkDays = DateTime.UtcNow.AddDays(-1).Subtract(date).TotalDays;
+                if (checkDays > intervalDays)
                 {
                     nextTimeSpan = TimeSpan.FromSeconds(1);
+                    exec3 = 1;
                 }
+                _logger.LogError($"GetReportByDate, UtcNow-1={DateTime.UtcNow.AddDays(-1)}, date={date}, checkDays={checkDays}, intervalDays={intervalDays}, exec1={exec1}, exec2={exec2}, exec3={exec3}");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "WagerNineW.GetReportByDate.Exception");
+                _logger.LogError(ex, $"WagerNineW.GetReportByDate.Exception ({ex.Message})");
                 nextTimeSpan = TimeSpan.FromHours(1);
             }
             finally
@@ -219,6 +245,11 @@ namespace ThirdPartyWager.Workers
 
         private async void DoTpDailySummary(object state)
         {
+            if (!_env.IsProduction())
+            {
+                return;
+            }
+
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var timerType = (int)WagerTimerType.Finance;
@@ -239,14 +270,15 @@ namespace ThirdPartyWager.Workers
                     }
                 }
 
-                if ((int)DateTime.UtcNow.AddDays(-1).Subtract(date).TotalDays > intervalDays)
+                var checkDays = (int)DateTime.UtcNow.AddDays(-1).Subtract(date).TotalDays;
+                if (checkDays > intervalDays)
                 {
                     nextTimeSpan = TimeSpan.FromSeconds(3);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "WagerNineW.DoTpDailySummary.Exception");
+                _logger.LogError(ex, $"WagerNineW.DoTpDailySummary.Exception ({ex.Message})");
                 nextTimeSpan = TimeSpan.FromHours(1);
             }
             finally
@@ -270,6 +302,11 @@ namespace ThirdPartyWager.Workers
             LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
             LogContext.PushProperty("Tp", _tpName);
             var nextTimeSpan = TimeSpan.FromHours(1);
+
+            if (!_env.IsProduction())
+            {
+                return;
+            }
 
             try
             {

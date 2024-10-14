@@ -47,6 +47,8 @@ namespace ThirdPartyWager.Service.BLL
                 request.Headers.Add("X-QM-Accept", "json");
                 request.Headers.Add("Accept-Encoding", "gzip");
 
+                _log2File.InsertRequestLog(_tpName, historyBet, JsonConvert.SerializeObject(request.Headers), "1");
+
                 var client = _httpHelper.GetClientWithHandler(CreateHandler());
                 var response = await client.SendAsync(request);
 

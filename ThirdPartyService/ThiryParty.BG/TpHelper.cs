@@ -1,6 +1,8 @@
 ﻿using System.Web;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
@@ -11,6 +13,11 @@ namespace ThirdParty.BG;
 
 public class TpHelper : ThirdPartyHelperBase
 {
+    private readonly Dictionary<int, BGConfig> _siteConfig;
+    public TpHelper(IServiceProvider provider)
+    {
+        _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<BGConfig>(TpEnum.BG.ToString());
+    }
     #region Model
 
     private class CreateMemberResult
@@ -58,17 +65,29 @@ public class TpHelper : ThirdPartyHelperBase
         public string? reason { get; set; }
         public string? action { get; set; }
     }
-
+    public class BGConfig : TpSiteConfig
+    {
+        public Dictionary<string, CurrencyDataBG> CurrencyData { get; set; }
+    }
+    public class CurrencyDataBG
+    {
+        public string Sn { get; set; }
+        public string AgentId { get; set; }
+        public string AgentLoginId { get; set; }
+        public string ApiSecretKey { get; set; }
+        public string AgentPassword { get; set; }
+    }
     #endregion
 
     public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
     {
         string method = "open.user.create";
         string currency = tpCustInfo.TpCurrencyId;
-        string ApiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-        string sn = inputs.ContainsKey($"Sn_{currency}") && !string.IsNullOrEmpty(inputs[$"Sn_{currency}"]) ? inputs[$"Sn_{currency}"] : throw new Exception($"Sn_{currency}");
-        string agnetLoginId = inputs.ContainsKey($"AgentLoginId_{currency}") && !string.IsNullOrEmpty(inputs[$"AgentLoginId_{currency}"]) ? inputs[$"AgentLoginId_{currency}"] : throw new Exception($"AgentLoginId_{currency}");
-        string agnetPassword = inputs.ContainsKey($"AgentPassword_{currency}") && !string.IsNullOrEmpty(inputs[$"AgentPassword_{currency}"]) ? inputs[$"AgentPassword_{currency}"] : throw new Exception($"AgentPassword_{currency}");
+        var config = _siteConfig[tpCustInfo.SiteId];
+        string ApiUrl = config.ApiUrl;
+        string sn = config.CurrencyData[currency].Sn;
+        string agnetLoginId = config.CurrencyData[currency].AgentLoginId;
+        string agnetPassword = config.CurrencyData[currency].AgentPassword;
 
         var id = Guid.NewGuid();
 
@@ -140,9 +159,10 @@ public class TpHelper : ThirdPartyHelperBase
         string url = string.Empty;
         string method = "open.video.game.url";
         string currency = tpCustInfo.TpCurrencyId;
-        string apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-        string sn = inputs.ContainsKey($"Sn_{currency}") && !string.IsNullOrEmpty(inputs[$"Sn_{currency}"]) ? inputs[$"Sn_{currency}"] : throw new Exception($"Sn_{currency}");
-        string agnetPassword = inputs.ContainsKey($"AgentPassword_{currency}") && !string.IsNullOrEmpty(inputs[$"AgentPassword_{currency}"]) ? inputs[$"AgentPassword_{currency}"] : throw new Exception($"AgentPassword_{currency}");
+        var config = _siteConfig[tpCustInfo.SiteId];
+        string apiUrl = config.ApiUrl;
+        string sn = config.CurrencyData[currency].Sn;
+        string agnetPassword = config.CurrencyData[currency].AgentPassword;
         string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
 
         var id = Guid.NewGuid();
@@ -240,9 +260,10 @@ public class TpHelper : ThirdPartyHelperBase
         // 测试环境仅是提供测试调用，仅有正式环境才可正常查看注单详情内容
         string method = "open.sn.video.order.detail.url.get";
         string currency = tpCustInfo.TpCurrencyId;
-        string apiUrl = inputs.ContainsKey("ApiUrl") && !string.IsNullOrEmpty(inputs["ApiUrl"]) ? inputs["ApiUrl"] : throw new Exception("ApiUrl");
-        string sn = inputs.ContainsKey($"Sn_{currency}") && !string.IsNullOrEmpty(inputs[$"Sn_{currency}"]) ? inputs[$"Sn_{currency}"] : throw new Exception($"Sn_{currency}");
-        string apiSecretKey = inputs.ContainsKey($"ApiSecretKey_{currency}") && !string.IsNullOrEmpty(inputs[$"ApiSecretKey_{currency}"]) ? inputs[$"ApiSecretKey_{currency}"] : throw new Exception($"ApiSecretKey_{currency}");
+        var config = _siteConfig[tpCustInfo.SiteId];
+        string apiUrl = config.ApiUrl;
+        string sn = config.CurrencyData[currency].Sn;
+        string apiSecretKey = config.CurrencyData[currency].ApiSecretKey;
 
         var id = Guid.NewGuid();
 

@@ -4,6 +4,7 @@ using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL;
 
@@ -13,6 +14,7 @@ public class WagerBGBLL
     private readonly WagerBGService _wagerBGService;
     private readonly ILogger<WagerBGBLL> _logger;
     private readonly CommonBGBLL _commonBGBLL;
+    private readonly Dictionary<int, BGConfig> _siteConfigDic;
 
     private readonly int _tpId = (int)Tp.BG;
     private readonly int _timeZone = -4;  //BG Default TimeZone=-4
@@ -24,6 +26,7 @@ public class WagerBGBLL
         _wagerBGService = provider.GetRequiredService<WagerBGService>();
         _commonBGBLL = provider.GetRequiredService<CommonBGBLL>();
         _logger = provider.GetRequiredService<ILogger<WagerBGBLL>>();
+        _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<BGConfig>(Tp.BG.ToString());
     }
 
     public async Task<bool> ExecWagerWorker(int siteId, string tpCurrencyId, WagerTimerType type, int timeRange, int needQuickTime)
@@ -37,9 +40,15 @@ public class WagerBGBLL
             result = await GetWagersAsync(siteId, tpCurrencyId, time.startTime, time.endTime, type);
         else if (type == WagerTimerType.RedoWager)
         {
-            var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
+            var cvTime = DateTimeOffset.Now.AddMinutes(-30).ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
+            {
                 result = await GetWagersAsync(siteId, tpCurrencyId, time.startTime, time.endTime, type, true);
+            }
+            else
+            {
+                result = false;
+            }
         }
 
         if (result)
@@ -55,21 +64,17 @@ public class WagerBGBLL
         try
         {
             // get tp info for api
-            var setting = _thirdPartyBLL.GetThirdPartyBySite(_tpId, siteId);
-            if (!_commonBGBLL.GetSnAndSecretKey(setting, tpCurrencyId,
-                out string sn, out string secretKey, out string secretCode, out string agentLoginId, out string message))
-            {
-                msg = prefixMsg + "THIRD_PARTY_SETTING_ERROR";
-                _logger.LogError($"{msg} {message}");
-                return false;
-            }
+            var config = _siteConfigDic[siteId];
+            var sn = config.CurrencyData[tpCurrencyId].Sn;
+            var secretCode = config.CurrencyData[tpCurrencyId].AgentPassword;
+            var agentLoginId = config.CurrencyData[tpCurrencyId].AgentLoginId;
 
             // count interval wagers
             WagerBGTotalModel wagerSummary = null;
             if (isRedo)
                 wagerSummary = _wagerBGService.GetWagerBGTotal(siteId, tpCurrencyId, startTime, endTime);
 
-            var data = await _commonBGBLL.DoOrderQuery(setting["ApiUrl"], sn, secretCode, agentLoginId, startTime, endTime, prefixMsg, wagerSummary);
+            var data = await _commonBGBLL.DoOrderQuery(config.ApiUrl, sn, secretCode, agentLoginId, startTime, endTime, prefixMsg, wagerSummary);
 
             if (data != null && data.Any())
             {

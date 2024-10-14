@@ -57,7 +57,7 @@ namespace ThirdParty.JILI
             string HomeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
-            GameUrl = $"{GameUrl}/Login";
+            GameUrl = $"{GameUrl}/LoginWithoutRedirect";
 
             if (tpCustInfo.MemberType == CustomerMemberTypeEnum.LiveStreaming)
                 AgentId = config.AgentId_Stream;
@@ -92,9 +92,18 @@ namespace ThirdParty.JILI
 
             string md5Param = ToMD5($"{sParam}{g}").ToLower();
             string k = $"{GetRandomString(6)}{md5Param}{GetRandomString(6)}";
+            sParam += $"&HomeUrl={HomeUrl}&Key={k}";
+            
+            var json = HttpPost(GameUrl, sParam, "application/x-www-form-urlencoded");
+            var result = FromJson<LoginWithoutRedirectResponse>(json);
 
+            if (result.ErrorCode == 0)
+            {
+                oApiResult.Message = result.Data;
+            }
+            
             oApiResult.ErrorCode = ErrorCode.Success;
-            oApiResult.Message = $"{GameUrl}?{sParam}&HomeUrl={HomeUrl}&Key={k}";
+           
             return oApiResult;
         }
 
@@ -201,6 +210,14 @@ namespace ThirdParty.JILI
             public string Url { get; set; }
         }
 
+        private class LoginWithoutRedirectResponse
+        {
+            public int ErrorCode { get; set; }
+
+            public string Message { get; set; }
+            public string Data { get; set; }
+        }
+        
         private string GetGameName(string gameCode)
         {
             if (!_gameNameList.TryGetValue(gameCode, out var name))
