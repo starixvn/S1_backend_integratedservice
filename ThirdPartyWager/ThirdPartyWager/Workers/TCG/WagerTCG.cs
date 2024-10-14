@@ -1,14 +1,15 @@
 ﻿using System.Security.Policy;
 
 using Newtonsoft.Json;
-using Org.BouncyCastle.Crypto.Tls;
 
 using Serilog.Context;
+
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+
+using static System.Net.WebRequestMethods;
 
 namespace ThirdPartyWager.Workers
 {
@@ -18,6 +19,7 @@ namespace ThirdPartyWager.Workers
         private readonly TCGBLL _tcgBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly CommonBLL _commonBLL;
+        private readonly IEnumerable<TpCurrency> _tpCurrency;
 
         private Timer _timer;
         private Timer _unSettleTimer;
@@ -34,6 +36,7 @@ namespace ThirdPartyWager.Workers
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tcgBLL = provider.GetRequiredService<TCGBLL>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
+            _tpCurrency = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(tpId);
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -55,18 +58,19 @@ namespace ThirdPartyWager.Workers
             var intervalMins = 2;
             try
             {
-                var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
                 var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+                var serverList = _commonBLL.GetSiteList();
+                
                 foreach (var site in siteList)
                 {
                     if (site.TicketKey == 0)
                     {
                         continue;
-                    }                    
-                
-                    foreach (var item in tpCurrencyList)
+                    }
+                    
+                    var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(serverList.First(x => x.SiteId == site.SiteId).CurrencyList);
+                    foreach (var currency in _tpCurrency.Where(x => currencyList.Contains(x.CurrencyId)).Select(i => i.TpCurrencyId))
                     {
-                        var currency = item.TpCurrencyId;
                         tasks.Add(Task.Run(() =>
                         {
                             try
@@ -142,8 +146,8 @@ namespace ThirdPartyWager.Workers
             var intervalMins = 5;
             try
             {
-                var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
                 var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+                var serverList = _commonBLL.GetSiteList();
 
                 foreach (var site in siteList)
                 {
@@ -152,7 +156,8 @@ namespace ThirdPartyWager.Workers
                         continue;
                     }
 
-                    foreach (var currency in tpCurrencyList.Select(i => i.TpCurrencyId))
+                    var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(serverList.First(x => x.SiteId == site.SiteId).CurrencyList);
+                    foreach (var currency in _tpCurrency.Where(x => currencyList.Contains(x.CurrencyId)).Select(i => i.TpCurrencyId))
                     {
                         tasks.Add(Task.Run(() =>
                         {
