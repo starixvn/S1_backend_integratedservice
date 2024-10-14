@@ -12,11 +12,11 @@ namespace ThirdParty.DG
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly DGConfig _siteConfig;
+        private readonly Dictionary<int, DGConfig> _siteConfigDic;
 
         public TpHelper(IServiceProvider provider)
         {
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<DGConfig>(TpEnum.DG.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<DGConfig>(TpEnum.DG.ToString());
         }
 
         Dictionary<int, string> ErrorMassage = new Dictionary<int, string>()
@@ -143,7 +143,7 @@ namespace ThirdParty.DG
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var config = _siteConfig;
+            var config = _siteConfigDic[tpCustInfo.SiteId];
 
             string ApiUrl = config.ApiUrl;
             string AgentName = config.AgentAccount;
@@ -207,7 +207,7 @@ namespace ThirdParty.DG
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var config = _siteConfig;
+            var config = _siteConfigDic[tpCustInfo.SiteId];
 
             string ApiUrl = config.ApiUrl;
             string AgentName = config.AgentAccount;

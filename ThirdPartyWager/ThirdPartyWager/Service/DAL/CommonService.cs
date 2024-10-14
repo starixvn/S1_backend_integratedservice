@@ -37,6 +37,11 @@ namespace ThirdPartyWager.Service.DAL
             return _wagerDbClient.QueryAsync<FincanceDailySummary>(spName, new DynamicParameters(new { _BeginTime = beginTime, _EndTime = endTime }));
         }
 
+        public Task<IEnumerable<FincanceDailySummary>> GetBettransSummary(string spName, long beginTime, long endTime)
+        {
+            return _mainDbClient.QueryAsync<FincanceDailySummary>(spName, new DynamicParameters(new { _BeginTime = beginTime, _EndTime = endTime }));
+        }
+
         public int InsertTpWagerRedo(TpWagerRedo redo)
         {
             return _wagerDbClient.Execute("Service_TpWagerRedo_Ins", redo);
