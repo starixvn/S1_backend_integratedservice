@@ -68,7 +68,8 @@
         SabaPlay = 66,
         UuSlots = 67,
         Live22 = 68,
-        FastSpin = 69
+        FastSpin = 69,
+        DragonGaming = 70
     }
 
     public enum GameType
@@ -122,7 +123,8 @@
         SabaPlay_Poker = 119,
         UuSlots_RNG = 120,
         Live22_RNG = 121,
-        FastSpin_RNG = 122
+        FastSpin_RNG = 122,
+        DragonGaming_RNG = 123
     }
     public enum SettlementType
     {
@@ -177,7 +179,7 @@
         UnSettle = 8,//未結算注單
         Cancel = 9,//已取消注單
     }
-    
+
     public enum WorkerType
     {
         MainWager = 1,                  //使用TicketKey固定持續拉單

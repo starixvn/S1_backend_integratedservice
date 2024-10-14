@@ -109,6 +109,7 @@
         UuSlots_RNG = 120,
         Live22_RNG = 121,
         FastSpin_RNG = 122,
+        DragonGaming_RNG = 123
     }
 
 }
