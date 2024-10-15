@@ -1,4 +1,6 @@
-﻿using ThirdPartyWager.Extensions;
+﻿using Newtonsoft.Json;
+
+using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -23,6 +25,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Log2File _log2File;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly Dictionary<int, NineWConfig> _siteConfigDic;
+        private readonly IEnumerable<ServerInfo> _serverInfoList;
 
         public NineWBLL(IServiceProvider provider)
         {
@@ -35,6 +38,7 @@ namespace ThirdPartyWager.Service.BLL
             _log2File = provider.GetRequiredService<Log2File>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<NineWConfig>(_tpName);
+            _serverInfoList = provider.GetRequiredService<CommonBLL>().GetSiteList();
         }
 
         public async Task<bool> GetWagersAsync(string startTime, string endTime)
@@ -375,7 +379,8 @@ namespace ThirdPartyWager.Service.BLL
                 throw new Exception($"_domain is {domain}");
             }
 
-            foreach (var currency in _currencyList)
+            var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(_serverInfoList.First(x => x.SiteId == siteId).CurrencyList);                    
+            foreach (var currency in _currencyList.Where(x => currencyList.Contains(x.CurrencyId)))
             {
                 var checkDataList = new List<Checkdata>();
                 foreach (var type in _reportType)
