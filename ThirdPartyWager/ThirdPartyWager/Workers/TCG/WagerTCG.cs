@@ -1,6 +1,4 @@
-﻿using System.Security.Policy;
-
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 using Serilog.Context;
 
@@ -8,8 +6,6 @@ using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
-
-using static System.Net.WebRequestMethods;
 
 namespace ThirdPartyWager.Workers
 {
