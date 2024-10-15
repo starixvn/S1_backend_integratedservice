@@ -19,15 +19,13 @@ namespace ThirdPartyWager.Workers
         private readonly int _tpType = (int)WagerTimerType.Finance;
         private readonly int _beyond = 2;
         private Timer timer;
-        private readonly Dictionary<int, Dictionary<string, string>> _siteConfigDic;
 
         public FinanceTCG(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceTCG>>();
             _financTCGBLL = provider.GetRequiredService<FinanceTCGBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
-            _fincanceService = provider.GetRequiredService<FincanceService>();
-            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(_tpName);
+            _fincanceService = provider.GetRequiredService<FincanceService>();            
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
