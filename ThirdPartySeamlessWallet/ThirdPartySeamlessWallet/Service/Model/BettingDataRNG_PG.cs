@@ -27,6 +27,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         [JsonProperty("transfer_amount")]
         public decimal TransferAmount { get; set; }
+        
+        [JsonProperty("real_transfer_amount")]
+        public decimal RealTransferAmount { get; set; }
 
         [JsonProperty("transaction_id")]
         public string TransactionId { get; set; }
@@ -103,6 +106,9 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
         [JsonProperty("transfer_amount")]
         public decimal TransferAmount { get; set; }
+        
+        [JsonProperty("real_transfer_amount")]
+        public decimal RealTransferAmount { get; set; }
 
         [JsonProperty("transaction_id")]
         public string TransactionId { get; set; }
