@@ -23,7 +23,7 @@ namespace ThirdPartyWager.Workers
         private Timer _timer;
         private readonly int timeZone = 0;
         private readonly int iRangMins = 15;
-        private readonly int intervalMins = 5;
+        private readonly int intervalMins = 60;
         private readonly string timeFormat = "yyyy-MM-dd HH:mm:ss";
 
         public WagerRedoDragonGaming(IServiceProvider provider)
@@ -56,7 +56,7 @@ namespace ThirdPartyWager.Workers
                     {
                         TpId = _tpId,
                         Type = _workerType,
-                        StartTime = nowDateTime.AddHours(-2).AddMinutes(-15),
+                        StartTime = nowDateTime.AddMinutes(-2 * intervalMins),
                     };
                 }
                 else
@@ -64,7 +64,7 @@ namespace ThirdPartyWager.Workers
                     dataTpTimer.StartTime = dataTpTimer.StartTime.AddSeconds(1);
                 }
 
-                if (dataTpTimer.StartTime <= nowDateTime.AddHours(-2).AddMinutes(-15))
+                if (dataTpTimer.StartTime <= nowDateTime.AddMinutes(-2 * intervalMins))
                 {
                     var time = _dateTimeHelper.GetTimeByMinute(iRangMins - 1, timeZone, timeFormat, dataTpTimer.StartTime);
                     var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
