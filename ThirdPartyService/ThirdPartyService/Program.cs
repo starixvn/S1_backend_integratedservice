@@ -8,8 +8,12 @@ using ThirdPartyService.Service.Worker;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
+
 var remoteUrls = GetRemoteUrls();
-remoteUrls = builder.Configuration.CheckLocalConfig(builder.Environment, args, remoteUrls);
+
 builder.Configuration.AddRemoteJsonConfig(remoteUrls);
 
 var excludesMessage = builder.Configuration.GetSection("ExcludesMessage").Get<string[]>();
@@ -67,9 +71,5 @@ void OverrideLoggerWriteToLFile(LoggerConfiguration configuration)
 
 string[] GetRemoteUrls()
 {
-    // 如果有 Runtime Environment Variable 優先使用
-    // 沒有則使用預設 AppSetting
-    return Environment.GetEnvironmentVariable("ConfigServiceUrl") is null
-        ? builder.Configuration.GetSection("ConfigService").Get<string[]>()
-        : new List<string>() { Environment.GetEnvironmentVariable("ConfigServiceUrl") }.ToArray();
+    return builder.Configuration.GetSection("ConfigService").Get<string[]>();
 }
