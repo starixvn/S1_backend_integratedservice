@@ -23,7 +23,7 @@ public class CommonDebitCreditRefundRequest_DragonGaming : BalanceRequest_Dragon
     public string currency { get; set; }
     public int game_id { get; set; }
     public object transaction_id { get; set; }
-    public int round_id { get; set; }
+    public long round_id { get; set; }
     public string game_type { get; set; }
     public string game_name { get; set; }
     public string note { get; set; }
