@@ -225,6 +225,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             public string currency_code { get; set; }
             public decimal balance_amount { get; set; }
+            public decimal real_transfer_amount { get; set; }
             public long updated_time { get; set; }
         }
 
@@ -455,6 +456,18 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                     }
 
+                    var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.PG, tpCustInfo.CurrencyId);
+                    if ( transferOutReqq.TransferAmount * tpCurrency.ExchangeRate != transferOutReqq.RealTransferAmount)
+                    {
+                        resp.error = new Error
+                        {
+                            code = "3107",
+                            message = "Invalid Real Transfer Amount"
+                        };
+                        log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                        return resp;
+                    }
+                    
                     transferOutReqq.type = TransferType.PlaceBet;
                     transferOutReqq.TraceId = trace_id;
                     //transferOutReqq.BetTransactionId = transferOutReqq.BetTransactionId ?? transferOutReqq.TransactionId;
@@ -470,14 +483,14 @@ namespace ThirdPartySeamlessWallet.Controllers
                             tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferOutReqq.PlayerName, gameType);
                             respData.currency_code = tpCustBalance.TpCurrencyId;
                             respData.balance_amount = tpCustBalance.Balance;
-                            resp.error = null;
                         }
                         else
                         {
                             respData.currency_code = tpCustBalance.TpCurrencyId;
                             respData.balance_amount = tpAffterAmount;
-                            resp.error = null;
                         }
+                        respData.real_transfer_amount = transferOutReqq.RealTransferAmount;
+                        resp.error = null;
                     }
                     else if (result == -1)
                     {
@@ -485,6 +498,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                             tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferOutReqq.PlayerName, gameType);
                         respData.currency_code = tpCustBalance.TpCurrencyId;
                         respData.balance_amount = tpCustBalance.Balance;
+                        respData.real_transfer_amount = transferOutReqq.RealTransferAmount;
                         resp.error = null;
                     }
                     else if (tpAffterAmount < 0)
@@ -633,6 +647,18 @@ namespace ThirdPartySeamlessWallet.Controllers
                 return resp;
             }
 
+            var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.PG, tpCustInfo.CurrencyId);
+            if ( transferInReqq.TransferAmount * tpCurrency.ExchangeRate != transferInReqq.RealTransferAmount)
+            {
+                resp.error = new Error
+                {
+                    code = "3107",
+                    message = "Invalid Real Transfer Amount"
+                };
+                log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                return resp;
+            }
+            
             BalanceData respData = new BalanceData();
             resp.data = respData;
             respData.updated_time = transferInReqq.UpdatedTime;
@@ -650,21 +676,22 @@ namespace ThirdPartySeamlessWallet.Controllers
                     {
                         respData.currency_code = tpCustBalance.TpCurrencyId;
                         respData.balance_amount = tpAffterAmount;
-                        resp.error = null;
                     }
                     else if (transferInReqq.TransferAmount == 0)
                     {
                         tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferInReqq.PlayerName, gameType);
                         respData.currency_code = tpCustBalance.TpCurrencyId;
                         respData.balance_amount = tpCustBalance.Balance;
-                        resp.error = null;
                     }
+                    respData.real_transfer_amount = transferInReqq.RealTransferAmount;
+                    resp.error = null;
                 }
                 else if (result == -1)
                 {
                     tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferInReqq.PlayerName, gameType);
                     respData.currency_code = tpCustBalance.TpCurrencyId;
                     respData.balance_amount = tpCustBalance.Balance;
+                    respData.real_transfer_amount = transferInReqq.RealTransferAmount;
                     resp.error = null;
                 }
                 else if (tpAffterAmount < 0)
@@ -802,6 +829,18 @@ namespace ThirdPartySeamlessWallet.Controllers
                         log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
                         return resp;
                     }
+                    
+                    var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.PG, tpCustInfo.CurrencyId);
+                    if ( transferInOutReqq.TransferAmount * tpCurrency.ExchangeRate != transferInOutReqq.RealTransferAmount)
+                    {
+                        resp.error = new Error
+                        {
+                            code = "3107",
+                            message = "Invalid Real Transfer Amount"
+                        };
+                        log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                        return resp;
+                    }
 
                     BalanceData respData = new BalanceData();
                     resp.data = respData;
@@ -817,14 +856,15 @@ namespace ThirdPartySeamlessWallet.Controllers
                             tpCustBalance = tpCustInfoBLL.GetBalance((int)thisTp, transferInOutReqq.PlayerName, gameType);
                             respData.currency_code = tpCustBalance.TpCurrencyId;
                             respData.balance_amount = tpCustBalance.Balance;
-                            resp.error = null;
                         }
                         else
                         {
                             respData.currency_code = tpCustBalance.TpCurrencyId;
                             respData.balance_amount = tpAffterAmount;
-                            resp.error = null;
                         }
+
+                        respData.real_transfer_amount = transferInOutReqq.RealTransferAmount;
+                        resp.error = null;
                     }
                     else if (result == -1)
                     {
@@ -834,6 +874,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         }
                         respData.currency_code = tpCustBalance.TpCurrencyId;
                         respData.balance_amount = tpCustBalance.Balance;
+                        respData.real_transfer_amount = transferInOutReqq.RealTransferAmount;
                         resp.error = null;
                     }
                     else if (tpAffterAmount < 0)
@@ -891,6 +932,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             public decimal adjust_amount { get; set; }
             public decimal balance_before { get; set; }
             public decimal balance_after { get; set; }
+            public decimal real_transfer_amount { get; set; }
             public long updated_time { get; set; }
         }
 
@@ -953,6 +995,18 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
+                var tpCurrency = thirdPartyBLL.GetTpCurrency((int)Tp.PG, tpCustInfo.CurrencyId);
+                if ( adjustmentReqq.TransferAmount * tpCurrency.ExchangeRate != adjustmentReqq.RealTransferAmount)
+                {
+                    resp.error = new Error
+                    {
+                        code = "3107",
+                        message = "Invalid Real Transfer Amount"
+                    };
+                    log2File.Error($"{JsonConvert.SerializeObject(reqq)}\r\n{JsonConvert.SerializeObject(resp)}", logName);
+                    return resp;
+                }
+                
                 var balanceBefore = tpCustBalance.Balance;
                 adjustmentReqq.TraceId = trace_id;
                 int result = settledBLL.RewardRNG_PG(adjustmentReqq, out decimal tpAffterAmount);
@@ -964,6 +1018,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                         respData.adjust_amount = adjustmentReqq.TransferAmount;
                         respData.balance_before = balanceBefore;
                         respData.balance_after = tpAffterAmount;
+                        respData.real_transfer_amount = adjustmentReqq.RealTransferAmount;
                         respData.updated_time = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                         resp.error = null;
                     }
@@ -984,6 +1039,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     respData.adjust_amount = adjustmentReqq.TransferAmount;
                     respData.balance_before = balanceBefore;
                     respData.balance_after = tpCustBalance.Balance;
+                    respData.real_transfer_amount = adjustmentReqq.RealTransferAmount;
                     respData.updated_time = DateTimeOffset.Now.ToUnixTimeMilliseconds();
                     resp.error = null;
                 }
