@@ -17,14 +17,30 @@ namespace ThirdPartySeamlessWallet.Extensions.ActionFilters
             var req = context.HttpContext.Request;
             var clientId = req.Headers["X-QM-ClientId"];
             var clientSecret = req.Headers["X-QM-ClientSecret"];
-            if (!_kmService.CheckCredentials(clientId, clientSecret))
+            if (context.RouteData.Values.TryGetValue("sitename", out var sitename))
             {
-                context.Result = new JsonResult(new
+                if (sitename == null || sitename.ToString() == "invalid" || 
+                    !_kmService.CheckCredentialsBySiteName(clientId, clientSecret, sitename.ToString()))
                 {
-                    err = 30,
-                    errdesc = "Invalid Credentials"
-                });
+                    context.Result = new JsonResult(new
+                    {
+                        err = 30,
+                        errdesc = "Invalid Credentials"
+                    });
+                }
             }
+            else
+            {
+                if (!_kmService.CheckCredentials(clientId, clientSecret))
+                {
+                    context.Result = new JsonResult(new
+                    {
+                        err = 30,
+                        errdesc = "Invalid Credentials"
+                    });
+                }
+            }
+
             base.OnActionExecuting(context);
         }
     }

@@ -22,7 +22,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly int _gameType = 0;
         private readonly int _thisTp;
         private readonly string _tpName = Tp.DG.ToString();
-        private readonly DGConfig _siteConfig;
+        private readonly DGConfig _defaultConfig; // SiteConfig的SiteId=0
+        private readonly Dictionary<string, DGConfig> _siteNameConfigs;
 
         public DGController(IServiceProvider provider)
         {
@@ -35,7 +36,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             _log2File = provider.GetRequiredService<Log2File>();
             _gameType = (int)GameType.DG_LiveCasino;
             _thisTp = (int)Tp.DG;
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<DGConfig>(_tpName);
+            // defaultConfig給原本NOVA、GOAL、BWING的商號使用
+            _defaultConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<DGConfig>(_tpName);
+            // 新增商號使用指定siteName
+            _siteNameConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<DGConfig>(_tpName);
+
         }
 
         public enum Error
@@ -164,18 +169,17 @@ namespace ThirdPartySeamlessWallet.Controllers
         #endregion
 
         [Route("[controller]/user/getBalance/{agentName}")]
+        [Route("[controller]/{siteName}/user/getBalance/{agentName}")]
         [HttpPost]
-        public GetBalanceRep GetBalance(string agentName, [FromBody] GetBalanceReq getBalanceReq)
+        public GetBalanceRep GetBalance(string agentName, [FromBody] GetBalanceReq getBalanceReq,string siteName = "")
         {
-            string token = _tools.ToMD5($"{agentName}{_siteConfig.APIkey}").ToLower();
-
             GetBalanceRep getBalanceRep = new GetBalanceRep();
             getBalanceRep.member = new MemberBalance();
             getBalanceRep.member.username = getBalanceReq.member.username;
-            getBalanceRep.token = token;
+            getBalanceRep.token = getBalanceReq.token;
             getBalanceRep.codeId = (int)Error.SystemError;
-
-            if (getBalanceReq.token != token)
+            
+            if (!CheckToken(agentName,getBalanceReq.token,siteName))
             {
                 getBalanceRep.codeId = (int)Error.TokenVerificationFailed;
                 return getBalanceRep;
@@ -201,8 +205,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/account/transfer/{agentName}")]
+        [Route("[controller]/{siteName}/account/transfer/{agentName}")]
         [HttpPost]
-        public async Task<TransferRep> TransferAsync(string agentName)
+        public async Task<TransferRep> TransferAsync(string agentName,string siteName = "")
         {
             string logName = $"{_tpName}_Transfer";
 
@@ -212,18 +217,16 @@ namespace ThirdPartySeamlessWallet.Controllers
             TransferReq transferReq = JsonConvert.DeserializeObject<TransferReq>(bodyText);
             _logger.LogInformation(JsonConvert.SerializeObject(transferReq));
 
-            string token = _tools.ToMD5($"{agentName}{_siteConfig.APIkey}").ToLower();
-
             TransferRep transferRep = new TransferRep();
             transferRep.member = new MemberTransfer2();
             transferRep.member.username = transferReq.member.username;
             transferRep.member.amount = transferReq.member.amount;
-            transferRep.token = token;
+            transferRep.token = transferReq.token;
             transferRep.codeId = (int)Error.SystemError;
 
             try
             {
-                if (transferReq.token != token)
+                if (!CheckToken(agentName,transferReq.token,siteName))
                 {
                     transferRep.codeId = (int)Error.TokenVerificationFailed;
                     return transferRep;
@@ -256,7 +259,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     if (_bettingBLL.PlaceBetLC_DG(bettingDataLC_DG, out decimal tpAffterAmount) > 0)
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
-                        transferRep.token = token;
+                        transferRep.token = transferReq.token;
                         transferRep.member.balance = tpAffterAmount - transferReq.member.amount;
                     }
                     else if (tpAffterAmount < 0)
@@ -273,7 +276,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     if (transferReq.data != transferReq.ticketId.ToString())/*avoid DG Wrong Settled*/
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
-                        transferRep.token = token;
+                        transferRep.token = transferReq.token;
 
                         var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(_thisTp, transferReq.member.username, _gameType);
                         transferRep.member.balance = tpCustBalance.Balance;
@@ -290,7 +293,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     if (result > 0 || result == -1/*has been Settled*/)
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
-                        transferRep.token = token;
+                        transferRep.token = transferReq.token;
                         transferRep.member.balance = tpAffterAmount - transferReq.member.amount;
                     }
                     else
@@ -303,7 +306,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     if (transferReq.data != transferReq.ticketId.ToString())/*avoid DG Wrong Settled*/
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
-                        transferRep.token = token;
+                        transferRep.token = transferReq.token;
 
                         var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(_thisTp, transferReq.member.username, _gameType);
                         transferRep.member.balance = tpCustBalance.Balance;
@@ -320,7 +323,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     if (result > 0 || result == -1/*has been Settled*/)
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
-                        transferRep.token = token;
+                        transferRep.token = transferReq.token;
 
                         var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(_thisTp, transferReq.member.username, _gameType);
                         transferRep.member.balance = tpCustBalance.Balance;
@@ -343,8 +346,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/account/inform/{agentName}")]
+        [Route("[controller]/{siteName}/account/inform/{agentName}")]
         [HttpPost]
-        public async Task<TransferRep> InformAsync(string agentName)
+        public async Task<TransferRep> InformAsync(string agentName,string siteName = "")
         {
             string logName = $"{_tpName}_Inform";
 
@@ -353,19 +357,17 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             TransferReq transferReq = JsonConvert.DeserializeObject<TransferReq>(bodyText);
             _logger.LogInformation(JsonConvert.SerializeObject(transferReq));
-
-            string token = _tools.ToMD5($"{agentName}{_siteConfig.APIkey}").ToLower();
-
+            
             TransferRep transferRep = new TransferRep();
             transferRep.member = new MemberTransfer2();
             transferRep.member.username = transferReq.member.username;
             transferRep.member.amount = transferReq.member.amount;
-            transferRep.token = token;
+            transferRep.token = transferReq.token;
             transferRep.codeId = (int)Error.SystemError;
 
             try
             {
-                if (transferReq.token != token)
+                if (!CheckToken(agentName,transferReq.token,siteName))
                 {
                     transferRep.codeId = (int)Error.TokenVerificationFailed;
                     return transferRep;
@@ -383,13 +385,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                     if (result > 0)
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
-                        transferRep.token = token;
+                        transferRep.token = transferReq.token;
                         transferRep.member.balance = tpAffterAmount - Math.Abs(transferReq.member.amount);
                     }
                     else if (result == -1)
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
-                        transferRep.token = token;
+                        transferRep.token = transferReq.token;
                         var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(_thisTp, transferReq.member.username, _gameType);
                         transferRep.member.balance = tpCustBalance.Balance - Math.Abs(transferReq.member.amount);
                     }
@@ -403,7 +405,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     if (transferReq.data != transferReq.ticketId.ToString())/*avoid DG Wrong Settled*/
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
-                        transferRep.token = token;
+                        transferRep.token = transferReq.token;
 
                         var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(_thisTp, transferReq.member.username, _gameType);
                         transferRep.member.balance = tpCustBalance.Balance;
@@ -420,7 +422,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     if (result > 0 || result == -1/*has been Settled*/)
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
-                        transferRep.token = token;
+                        transferRep.token = transferReq.token;
                         if (result == -1)
                         {
                             var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(_thisTp, transferReq.member.username, _gameType);
@@ -441,7 +443,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     if (transferReq.data != transferReq.ticketId.ToString())/*avoid DG Wrong Settled*/
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
-                        transferRep.token = token;
+                        transferRep.token = transferReq.token;
 
                         var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(_thisTp, transferReq.member.username, _gameType);
                         transferRep.member.balance = tpCustBalance.Balance;
@@ -458,7 +460,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     if (result > 0 || result == -1/*has been Settled*/)
                     {
                         transferRep.codeId = (int)Error.OperationSuccessful;
-                        transferRep.token = token;
+                        transferRep.token = transferReq.token;
 
                         var tpCustBalance = _tpCustInfoBLL.GetBalanceByHalfSecCache(_thisTp, transferReq.member.username, _gameType);
                         transferRep.member.balance = tpCustBalance.Balance;
@@ -481,8 +483,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [Route("[controller]/account/checkTransfer/{agentName}")]
+        [Route("[controller]/{siteName}/account/checkTransfer/{agentName}")]
         [HttpPost]
-        public async Task<CheckTransferRep> CheckTransferAsync(string agentName)
+        public async Task<CheckTransferRep> CheckTransferAsync(string agentName,string siteName = "")
         {
             string logName = $"{_tpName}_CheckTransfer";
 
@@ -490,14 +493,12 @@ namespace ThirdPartySeamlessWallet.Controllers
             string bodyText = await reader.ReadToEndAsync();
             var checkTransferReq = JsonConvert.DeserializeObject<CheckTransferReq>(bodyText);
 
-            string token = _tools.ToMD5($"{agentName}{_siteConfig.APIkey}").ToLower();
-
             CheckTransferRep checkTransferRep = new CheckTransferRep();
-            checkTransferRep.token = token;
+            checkTransferRep.token = checkTransferReq.token;
             checkTransferRep.codeId = (int)Error.SystemError;
             try
             {
-                if (checkTransferRep.token != token)
+                if (!CheckToken(agentName,checkTransferReq.token,siteName))
                 {
                     checkTransferRep.codeId = (int)Error.TokenVerificationFailed;
                     return checkTransferRep;
@@ -513,5 +514,27 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             return checkTransferRep;
         }
+        
+        #region Private
+        
+        private bool CheckToken(string agentName, string reqToken, string siteName)
+        {
+            var config = GetSiteConfig(siteName);
+            var token =  _tools.ToMD5($"{agentName}{config.APIkey}").ToLower();
+            return reqToken == token;
+        }
+
+        private DGConfig GetSiteConfig(string siteName)
+        {
+            if (siteName == "")
+            {
+                return _defaultConfig;
+            }
+            return _siteNameConfigs.TryGetValue(siteName, out var result)
+                ? result
+                : _defaultConfig;
+        }
+        
+        #endregion
     }
 }
