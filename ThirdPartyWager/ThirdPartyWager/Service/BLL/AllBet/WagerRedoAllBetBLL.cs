@@ -15,6 +15,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly int _tpId = (int)Tp.Allbet;
         private readonly IWebHostEnvironment _env;
         private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly CommonBLL _commonBLL;
         private readonly Dictionary<int, AllBetConfig> _siteConfigDic;
         public WagerRedoAllBetBLL(IServiceProvider provider)
         {
@@ -23,6 +24,8 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<WagerRedoAllBetBLL>>();
             _currencyList = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(_tpId);
             _env = provider.GetRequiredService<IWebHostEnvironment>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _commonBLL = provider.GetRequiredService<CommonBLL>();
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<AllBetConfig>(Tp.Allbet.ToString());
         }
 
@@ -40,6 +43,7 @@ namespace ThirdPartyWager.Service.BLL
                     _currencyList = _currencyList.Take(1);
                 }
                 var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+                var serverList = _commonBLL.GetSiteList();
                 foreach (var site in siteList)
                 {
                     if (site.TicketKey == 0)
@@ -48,8 +52,9 @@ namespace ThirdPartyWager.Service.BLL
                     }
 
                     var _siteAllBetConfig = _siteConfigDic[site.SiteId];
+                    var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(serverList.First(x => x.SiteId == site.SiteId).CurrencyList);
 
-                    foreach (var currency in _currencyList)
+                    foreach (var currency in _currencyList.Where(x => currencyList.Contains(x.CurrencyId)))
                     {
                         try
                         {

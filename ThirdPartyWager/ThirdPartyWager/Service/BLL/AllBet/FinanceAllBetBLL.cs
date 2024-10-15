@@ -60,7 +60,7 @@ namespace ThirdPartyWager.Service.BLL
             //setting 無用
             var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
             var reportData = new List<dynamic>();
-
+            var serverList = _commonBLL.GetSiteList();
             var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
 
             foreach (var site in siteList)
@@ -71,8 +71,9 @@ namespace ThirdPartyWager.Service.BLL
                 }
 
                 var _siteAllBetConfig = _siteConfigDic[site.SiteId];
+                var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(serverList.First(x => x.SiteId == site.SiteId).CurrencyList);
 
-                foreach (var item in tpCurrencyList)
+                foreach (var item in tpCurrencyList.Where(x => currencyList.Contains(x.CurrencyId)))
                 {
                     var currency = item.TpCurrencyId;
                     var agent = _siteAllBetConfig.CurrencyAgents.FirstOrDefault(x => x.CurrencyId == currency)?.Agent;
