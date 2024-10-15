@@ -126,7 +126,7 @@
         Live22_RNG = 121,
         FastSpin_RNG = 122,
         DragonGaming_RNG = 123,
-        PG2_RNG = 124,
+        PG2_RNG = 124
     }
     public enum SettlementType
     {
