@@ -6,7 +6,6 @@ using ThirdPartySeamlessWallet;
 using ThirdPartySeamlessWallet.Core.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
-
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
@@ -17,20 +16,6 @@ builder.Configuration.AddRemoteJsonConfig(remoteUrls);
 var excludesMessage = builder.Configuration.GetSection("ExcludesMessage").Get<string[]>();
 var excludesResponseEmptyMessage = builder.Configuration.GetValue<string>("ExcludesResponseEmptyMessage");
 var excludesApiEndpoints = builder.Configuration.GetSection("ExcludesApiEndpoint").Get<string[]>();
-builder.Host.UseSerilog((context, Configuration) =>
-{
-    Configuration
-        .ReadFrom.Configuration(builder.Configuration)
-        .Enrich.FromLogContext()
-        .Filter.ByExcluding(c =>
-            c.Properties.Any(p =>
-                excludesApiEndpoints.Any(item => p.Value.ToString().Contains(item))
-                || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item)
-                || c.MessageTemplate.ToString().Equals(excludesResponseEmptyMessage))))
-        .Enrich.WithExceptionDetails();
-
-    OverrideLoggerWriteToLFile(Configuration);
-});
 
 var startup = new Startup(builder.Configuration);
 startup.ConfigureServices(builder.Services);
