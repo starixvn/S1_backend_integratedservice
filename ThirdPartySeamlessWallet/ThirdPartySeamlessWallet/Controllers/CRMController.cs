@@ -10,9 +10,11 @@ namespace ThirdPartySeamlessWallet.Controllers
     public class CRMController : ControllerBase
     {
         private readonly CRMConfig _CRMConfig;
+        private readonly CRMBLL _cRMBLL;
         public CRMController(IServiceProvider provider)
         {
             _CRMConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<CRMConfig>("CRM");
+            _cRMBLL = provider.GetRequiredService<CRMBLL>();
         }
         public class CRMConfig 
         {
@@ -89,8 +91,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         public IActionResult ScheduledCampaigns(ScheduledCampaignsEventData req)
         {
             var campaignID = req.CampaignID;
-            var campaignDetail = GetCampaignDetail(campaignID);
+            //var campaignDetail = GetCampaignDetail(campaignID);
             var campaignCustomers = GetCampaignCustomers(campaignID);
+            SetCustPromotion(campaignCustomers);
             return Ok();
         }
 
@@ -116,9 +119,16 @@ namespace ThirdPartySeamlessWallet.Controllers
             return JsonConvert.DeserializeObject<List<CustomerAction>>(response.Content);
         }
 
+        private void SetCustPromotion(List<CustomerAction> customerAction)
+        {
+            _cRMBLL.SetCustPromotionByScheduledCampaigns(customerAction);
+        }
+
+
         [HttpPost]
         public IActionResult TriggeredCampaigns(TriggeredCampaignsEventData req)
         {
+            _cRMBLL.SetCustPromotionByTriggeredCampaigns(req);
             return Ok();
         }
     }
