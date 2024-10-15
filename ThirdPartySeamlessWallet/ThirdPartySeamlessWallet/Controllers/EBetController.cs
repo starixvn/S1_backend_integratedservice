@@ -11,7 +11,6 @@ using ThirdPartySeamlessWallet.Service.Model.enums;
 namespace ThirdPartySeamlessWallet.Controllers
 {
     [ApiController]
-    [Route("[controller]/[action]")]
     public class EBetController : ControllerBase
     {
         private readonly AuthBLL authBLL;
@@ -35,7 +34,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             log2File = provider.GetRequiredService<Log2File>();
             thisTp = Tp.EBet;
             gameType = (int)GameType.EBet_LiveCasino;
-            _siteEBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<EBetConfig>(Tp.EBet.ToString());
+            _siteEBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<EBetConfig>(thisTp.ToString());
             _siteNameConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<EBetConfig>(thisTp.ToString());
         }
 
