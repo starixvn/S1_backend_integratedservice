@@ -1,12 +1,9 @@
-﻿using System.Security.Policy;
-
-using Newtonsoft.Json;
-using Org.BouncyCastle.Crypto.Tls;
+﻿using Newtonsoft.Json;
 
 using Serilog.Context;
+
 using ThirdPartyWager.Extensions;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 
@@ -18,6 +15,9 @@ namespace ThirdPartyWager.Workers
         private readonly TCGBLL _tcgBLL;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly CommonBLL _commonBLL;
+        private readonly IEnumerable<TpCurrency> _tpCurrency;
+        private readonly IEnumerable<ServerInfo> _serverInfoList;
+        private readonly IEnumerable<TpListModel> _siteList;
 
         private Timer _timer;
         private Timer _unSettleTimer;
@@ -34,6 +34,9 @@ namespace ThirdPartyWager.Workers
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _tcgBLL = provider.GetRequiredService<TCGBLL>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
+            _tpCurrency = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(tpId);
+            _serverInfoList = _commonBLL.GetSiteList();
+            _siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -54,19 +57,17 @@ namespace ThirdPartyWager.Workers
             var tasks = new List<Task>();
             var intervalMins = 2;
             try
-            {
-                var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
-                var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
-                foreach (var site in siteList)
+            {               
+                foreach (var site in _siteList)
                 {
                     if (site.TicketKey == 0)
                     {
                         continue;
-                    }                    
-                
-                    foreach (var item in tpCurrencyList)
+                    }
+                    
+                    var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(_serverInfoList.First(x => x.SiteId == site.SiteId).CurrencyList);
+                    foreach (var currency in _tpCurrency.Where(x => currencyList.Contains(x.CurrencyId)).Select(i => i.TpCurrencyId))
                     {
-                        var currency = item.TpCurrencyId;
                         tasks.Add(Task.Run(() =>
                         {
                             try
@@ -142,17 +143,15 @@ namespace ThirdPartyWager.Workers
             var intervalMins = 5;
             try
             {
-                var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
-                var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
-
-                foreach (var site in siteList)
+                foreach (var site in _siteList)
                 {
                     if (site.TicketKey == 0)
                     {
                         continue;
                     }
 
-                    foreach (var currency in tpCurrencyList.Select(i => i.TpCurrencyId))
+                    var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(_serverInfoList.First(x => x.SiteId == site.SiteId).CurrencyList);
+                    foreach (var currency in _tpCurrency.Where(x => currencyList.Contains(x.CurrencyId)).Select(i => i.TpCurrencyId))
                     {
                         tasks.Add(Task.Run(() =>
                         {
@@ -276,18 +275,15 @@ namespace ThirdPartyWager.Workers
             var tasks = new List<Task>();
             var intervalMins = 5;
             try
-            {
-                var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
-                var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
-                
-                foreach (var site in siteList)
+            {           
+                foreach (var site in _siteList)
                 {
                     if (site.TicketKey == 0)
                     {
                         continue;
                     }
 
-                    var currency = tpCurrencyList.FirstOrDefault(x => x.TpCurrencyId == "VNDK")?.TpCurrencyId;
+                    var currency = _tpCurrency.FirstOrDefault(x => x.TpCurrencyId == "VNDK")?.TpCurrencyId;
                     
                     tasks.Add(Task.Run(() =>
                     {
