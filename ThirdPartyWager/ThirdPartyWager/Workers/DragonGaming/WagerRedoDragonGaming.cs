@@ -32,7 +32,7 @@ namespace ThirdPartyWager.Workers
             _wagerDragonGamingBLL = provider.GetRequiredService<WagerDragonGamingBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
-            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<DragonGamingConfig> (_tpName);
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<DragonGamingConfig>(_tpName);
             _logger = provider.GetRequiredService<ILogger<WagerRedoDragonGaming>>();
         }
 
