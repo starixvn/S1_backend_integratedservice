@@ -23,7 +23,7 @@ namespace ThirdPartyWager.Workers
         private Timer _timer;
         private readonly int timeZone = 0;
         private readonly int iRangMins = 15;
-        private readonly int intervalMins = 60;
+        private readonly int intervalMins = 30;
         private readonly string timeFormat = "yyyy-MM-dd HH:mm:ss";
 
         public WagerRedoDragonGaming(IServiceProvider provider)
