@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -14,7 +15,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<ApiKMBLL> _logger;
         private readonly string _tpName = Tp.KM.ToString();
         private readonly Log2File _log2File;
-        private readonly KMConfig _siteConfig;
+        private readonly Dictionary<int, KMConfig> _siteConfigDic;
 
 
         public ApiKMBLL(IServiceProvider provider, IConfiguration configuration)
@@ -23,11 +24,12 @@ namespace ThirdPartyWager.Service.BLL
             _logger = provider.GetRequiredService<ILogger<ApiKMBLL>>();
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _log2File = provider.GetRequiredService<Log2File>();
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<KMConfig>(Tp.KM.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<KMConfig>(Tp.KM.ToString());
         }
-        public async Task<List<WagerKMModel>> QueryBetHistoryAsync(string startTime, string endTime)
+        public async Task<List<WagerKMModel>> QueryBetHistoryAsync(string startTime, string endTime, int siteId)
         {
             var historyBet = string.Empty;
+            var _siteConfig = _siteConfigDic[siteId];
             try
             {
                 var apiUrl = _siteConfig.ApiUrl;
@@ -69,10 +71,11 @@ namespace ThirdPartyWager.Service.BLL
 
         }
 
-        public async Task<List<CurrencyStats_KM>> GetBetSummaryByTime(string currency, string startTime, string endTime)
+        public async Task<List<CurrencyStats_KM>> GetBetSummaryByTime(string currency, string startTime, string endTime, int siteId)
         {
             try
             {
+                var _siteConfig = _siteConfigDic[siteId];
                 var apiUrl = _siteConfig.ApiUrl;
                 var clientId = _siteConfig.X_QM_ClientId;
                 var clientSecret = _siteConfig.X_QM_ClientSecret;

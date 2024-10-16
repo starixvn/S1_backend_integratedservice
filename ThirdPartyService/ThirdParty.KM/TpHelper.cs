@@ -12,11 +12,11 @@ namespace ThirdParty.KM
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly KMConfig _siteConfig;
+        private readonly Dictionary<int, KMConfig> _siteConfig;
 
         public TpHelper(IServiceProvider provider)
         {
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<KMConfig>(TpEnum.KM.ToString());
+            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<KMConfig>(TpEnum.KM.ToString());
         }
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
@@ -29,7 +29,7 @@ namespace ThirdParty.KM
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var config = _siteConfig;
+            var config = _siteConfig[tpCustInfo.SiteId];
 
             var apiUrl = config.ApiUrl;
             var gameUrl = (tpCustInfo.TpCurrencyId == "RMB") ? config.GameUrl_RMB : config.GameUrl;

@@ -20,32 +20,30 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<TCGBLL> _logger;
         private readonly MySqlClient _wagerDbClient;
         private readonly Tp _tp = Tp.TCG;
-        private readonly Dictionary<string, string> _setting;
         private readonly HttpHelper _httpHelper;
         private readonly Common _common;
         private const int ErrorCount = 3; //容許錯誤次數
         private readonly ConcurrentDictionary<string, int> _errorCounter = new();
         private readonly CommonBLL _commonBLL;
+        private readonly Dictionary<int, Dictionary<string, string>> _siteConfigDic;
 
         public TCGBLL(IServiceProvider provider)
         {
             LogContext.PushProperty("Tp", _tp.ToString());
             _logger = provider.GetRequiredService<ILogger<TCGBLL>>();
             _wagerDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Wager);
-
-            //用 SiteId = 0 取回預設Config
-            _setting = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(_tp.ToString());
-
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>(_tp.ToString());
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
         }
 
-        public async Task<bool> GetWagersAsync<T>(DateTimeOffset batchTime, string currency, WagerTimerType timerType)
+        public async Task<bool> GetWagersAsync<T>(DateTimeOffset batchTime, string currency, WagerTimerType timerType, int siteId)
         {
             try
             {
-                var config = new TCGConfig(_setting, currency);
+                var siteConfig = _siteConfigDic[siteId];
+                var config = new TCGConfig(siteId, siteConfig, currency);
                 var result = timerType == WagerTimerType.Cancel ? 
                     await QueryCancelHistoryAsync<T>(config, batchTime) :
                     await QuerySettleBetHistoryAsync<T>(config, batchTime, timerType) ;
@@ -62,11 +60,12 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        public async Task<bool> GetUnsettleAsync<T>(DateTimeOffset batchTime, string currency)
+        public async Task<bool> GetUnsettleAsync<T>(DateTimeOffset batchTime, string currency, int siteId)
         {
             try
             {
-                var config = new TCGConfig(_setting, currency);
+                var siteConfig = _siteConfigDic[siteId];
+                var config = new TCGConfig(siteId, siteConfig, currency);
                 var result = await GetUnsettleData<T>(config, batchTime, currency);
                 var tasks = result.Select(item => Task.Run(() => InsertWager(item))).ToArray();
                 await Task.WhenAll(tasks);
@@ -100,10 +99,7 @@ namespace ThirdPartyWager.Service.BLL
                             {
                                 TpId = (int)_tp,
                                 Time = batchTime.DateTime,
-                                Parameter = JsonConvert.SerializeObject(new TCGRedoObj
-                                {
-                                    TpCurrencyId = config.TpCurrencyId
-                                })
+                                Parameter = JsonConvert.SerializeObject(new TCGRedoObj(config.TpCurrencyId, config.SiteId))
                             });
                         }
                         return Task.FromResult(new List<T>());

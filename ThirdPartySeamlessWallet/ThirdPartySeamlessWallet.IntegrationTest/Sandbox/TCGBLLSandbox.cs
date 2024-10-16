@@ -22,8 +22,6 @@ using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
-using static Org.BouncyCastle.Math.EC.ECCurve;
-
 namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
 {
     public class TCGBLLSandbox
@@ -118,7 +116,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             };
 
             var (merchantCode, @params, sign) = GetRequest(sParam, _merchantCode);
-            Result = _target.SeamlessWallet(merchantCode, @params, sign)
+            Result = _target.SeamlessWallet(merchantCode, @params, sign,"")
                 .ConfigureAwait(false).GetAwaiter().GetResult();
             Balance = (TCGBalanceObj)Result;
             return this;
@@ -168,7 +166,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             };
 
             var (merchantCode, @params, sign) = GetRequest(sParam, _merchantCode);
-            Result = _target.SeamlessWallet(merchantCode, @params, sign)
+            Result = _target.SeamlessWallet(merchantCode, @params, sign, "")
                 .ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
@@ -195,7 +193,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             };
 
             var (merchantCode, @params, sign) = GetRequest(sParam, _merchantCode);
-            Result = _target.SeamlessWallet(merchantCode, @params, sign)
+            Result = _target.SeamlessWallet(merchantCode, @params, sign, "")
                 .ConfigureAwait(false).GetAwaiter().GetResult();
             return this;
         }
@@ -223,7 +221,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             };
 
             var (merchantCode, @params, sign) = GetRequest(sParam, _merchantCode);
-            Result = _target.SeamlessWallet(merchantCode, @params, sign)
+            Result = _target.SeamlessWallet(merchantCode, @params, sign, "")
                 .ConfigureAwait(false).GetAwaiter().GetResult();
             return this;
         }
@@ -247,7 +245,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             };
 
             var (merchantCode, @params, sign) = GetRequest(sParam, _merchantCode);
-            Result = _target.SeamlessWallet(merchantCode, @params, sign)
+            Result = _target.SeamlessWallet(merchantCode, @params, sign, "")
                 .ConfigureAwait(false).GetAwaiter().GetResult();
             Check = (TCGCheckObj)Result;
             return this;
@@ -318,7 +316,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
 
         private (string, string, string) GetRequest(object sParam, string merchantCode)
         {
-            var tcgConfig = new TCGConfig(_target.thirdPartySetting.TpSetting, merchantCode);
+            var tcgConfig = new TCGConfig(_target.DefaultConfig, merchantCode);
             var hashString = ToJson(sParam);
 
             //Act

@@ -18,9 +18,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly BettingService bettingService;
         private readonly SettledService settledService;
         private readonly ILogger<TCGBLL> _logger;
-        public readonly ThirdPartySetting thirdPartySetting;
         private readonly Dictionary<string, Func<TCGRequest, TCGConfig, Task<TCGReturnObj>>> _requestHandler;
-        private readonly Dictionary<string, string> defaultConfig;
+        public readonly Dictionary<string, string> DefaultConfig; // SiteConfig的SiteId=0
+        private readonly Dictionary<string, Dictionary<string, string>> _siteNameConfigs;
 
         private int _processorCount { get; set; }
 
@@ -34,7 +34,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             bettingService = provider.GetRequiredService<BettingService>();
             settledService = provider.GetRequiredService<SettledService>();
-            thirdPartySetting = thirdPartyBLL.GetThirdPartySetting((int)ThirdParty);
             _requestHandler = new Dictionary<string, Func<TCGRequest, TCGConfig, Task<TCGReturnObj>>>()
             {
                 { TCGApiMethod.GetBalance, GetBalance},
@@ -50,14 +49,17 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _processorCount = Environment.ProcessorCount;
 
             //用 SiteId = 0 取回預設Config
-            defaultConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(ThirdParty.ToString());
+            DefaultConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(ThirdParty.ToString());
+            // 新增商號使用指定siteName
+            _siteNameConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<Dictionary<string, string>>(ThirdParty.ToString());
         }
 
-        public async Task<TCGReturnObj> SeamlessWallet(string merchantCode, string @params, string sign)
+        public async Task<TCGReturnObj> SeamlessWallet(string merchantCode, string @params, string sign, string sitename)
         {
             try
             {
-                var tcgConfig = new TCGConfig(defaultConfig, merchantCode);
+                var config = GetSiteConfig(sitename);
+                var tcgConfig = new TCGConfig(config, merchantCode);
                 var jsonString = DesDecrypt(@params, tcgConfig.DesKey);
                 _logger.LogInformation(jsonString);
                 var desEncrypt = DesEncrypt(jsonString, tcgConfig.DesKey);
@@ -89,11 +91,12 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
         }
 
-        public async Task<TCGReturnObj> SeamlessWallet(string merchantCode, TCGRequest request)
+        public async Task<TCGReturnObj> SeamlessWallet(string merchantCode, TCGRequest request, string sitename)
         {
             try
             {
-                var tcgConfig = new TCGConfig(defaultConfig, merchantCode);
+                var config = GetSiteConfig(sitename);
+                var tcgConfig = new TCGConfig(config, merchantCode);
                 return await _requestHandler[request.method].Invoke(request, tcgConfig);
             }
             catch (TCGException ex)
@@ -350,6 +353,16 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 throw new TCGException(TCGReturnCode.UnSupportedCurrency, $"CurrencyId:{tpCustInfo.CurrencyId} not supported.");
             }
             return (tpCustInfo, tpCurrency);
+        }
+
+        private Dictionary<string, string> GetSiteConfig(string siteName)
+        {
+            if (siteName == "")
+            {
+                return DefaultConfig;
+            }
+
+            return _siteNameConfigs.TryGetValue(siteName, out var result) ? result : DefaultConfig;
         }
 
     }
