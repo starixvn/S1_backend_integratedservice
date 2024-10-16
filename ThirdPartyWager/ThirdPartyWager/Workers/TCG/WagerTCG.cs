@@ -54,7 +54,6 @@ namespace ThirdPartyWager.Workers
             LogContext.PushProperty("WagerTimerType", WagerTimerType.Wager.ToString());
             var quick = 0;
             var failed = 0;
-            var tasks = new List<Task>();
             var intervalMins = 2;
             try
             {               
@@ -68,25 +67,20 @@ namespace ThirdPartyWager.Workers
                     var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(_serverInfoList.First(x => x.SiteId == site.SiteId).CurrencyList);
                     foreach (var currency in _tpCurrency.Where(x => currencyList.Contains(x.CurrencyId)).Select(i => i.TpCurrencyId))
                     {
-                        tasks.Add(Task.Run(() =>
+                        try
                         {
-                            try
+                            var res = Main(currency, site.SiteId);
+                            if (res.Result == 1)
                             {
-                                var res = Main(currency, site.SiteId);
-                                if (res.Result == 1)
-                                {
-                                    quick = 1;
-                                }
+                                quick = 1;
                             }
-                            catch (Exception ex)
-                            {
-                                _logger.LogError(ex, $"WagerTCG.DoSettle.{currency}.Exception");
-                                Interlocked.Increment(ref failed);
-                            }
-                        }));
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, $"WagerTCG.DoSettle.{currency}.Exception");
+                            Interlocked.Increment(ref failed);
+                        }
                     }
-                    var t = Task.WhenAll(tasks);
-                    t.Wait();
                 }
 
             }
@@ -139,7 +133,6 @@ namespace ThirdPartyWager.Workers
 
             var quick = 0;
             var failed = 0;
-            var tasks = new List<Task>();
             var intervalMins = 5;
             try
             {
@@ -153,26 +146,20 @@ namespace ThirdPartyWager.Workers
                     var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(_serverInfoList.First(x => x.SiteId == site.SiteId).CurrencyList);
                     foreach (var currency in _tpCurrency.Where(x => currencyList.Contains(x.CurrencyId)).Select(i => i.TpCurrencyId))
                     {
-                        tasks.Add(Task.Run(() =>
+                        try
                         {
-                            try
+                            var res = MainUnsettle(currency, site.SiteId);
+                            if (res.Result == 1)
                             {
-                                var res = MainUnsettle(currency, site.SiteId);
-                                if (res.Result == 1)
-                                {
-                                    quick = 1;
-                                }
+                                quick = 1;
                             }
-                            catch (Exception ex)
-                            {
-                                _logger.LogError(ex, $"WagerTCG.DoUnsettle.{currency}.Exception");
-                                Interlocked.Increment(ref failed);
-                            }
-                        }));
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, $"WagerTCG.DoUnsettle.{currency}.Exception");
+                            Interlocked.Increment(ref failed);
+                        }
                     }
-                    
-                    var t = Task.WhenAll(tasks);
-                    t.Wait();
                 }
             }
             catch (Exception ex)
@@ -272,8 +259,8 @@ namespace ThirdPartyWager.Workers
 
             var quick = 0;
             var failed = 0;
-            var tasks = new List<Task>();
             var intervalMins = 5;
+
             try
             {           
                 foreach (var site in _siteList)
@@ -283,27 +270,20 @@ namespace ThirdPartyWager.Workers
                         continue;
                     }
 
-                    var currency = _tpCurrency.FirstOrDefault(x => x.TpCurrencyId == "VNDK")?.TpCurrencyId;
-                    
-                    tasks.Add(Task.Run(() =>
+                    var currency = _tpCurrency.FirstOrDefault(x => x.TpCurrencyId == "VNDK")?.TpCurrencyId;                  
+                    try
                     {
-                        try
+                        var res = MainCancel(currency, site.SiteId);
+                        if (res.Result == 1)
                         {
-                            var res = MainCancel(currency, site.SiteId);
-                            if (res.Result == 1)
-                            {
-                                quick = 1;
-                            }
+                            quick = 1;
                         }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, $"WagerTCG.DoCancel.{currency}.Exception");
-                            Interlocked.Increment(ref failed);
-                        }
-                    }));
-
-                    var t = Task.WhenAll(tasks);
-                    t.Wait();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"WagerTCG.DoCancel.{currency}.Exception");
+                        Interlocked.Increment(ref failed);
+                    }
                 }
             }
             catch (Exception ex)
