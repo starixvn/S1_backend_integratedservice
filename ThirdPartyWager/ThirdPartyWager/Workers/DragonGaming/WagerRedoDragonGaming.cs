@@ -88,7 +88,7 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
+                var dueTimeSpan = isFast ? TimeSpan.FromSeconds(15) : TimeSpan.FromMinutes(intervalMins);
                 _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
