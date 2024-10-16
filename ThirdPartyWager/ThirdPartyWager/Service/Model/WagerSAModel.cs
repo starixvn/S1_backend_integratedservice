@@ -90,6 +90,16 @@
 
     public class WagerSATotal
     {
-        public int wagerCount { get; set; }
+        public int WagerCount { get; set; }
+        public int SiteId { get; set; }
+        public int MainSiteId { get; set; }
+        public int TpCurrencyId { get; set; }
+    }
+
+    public class CurrencyStatistics_SA
+    {
+        public int MainSiteId { get; set; }
+        public int WagerCount { get; set; }
+
     }
 }
