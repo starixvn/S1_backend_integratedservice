@@ -109,7 +109,7 @@ namespace ThirdPartyWager.Service.BLL
                     if (errorCode != 0)
                     {
                         msg = "THIRD_PARTY_ERROR";
-                        _logger.LogError($"{msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                        _logger.LogError($"GetWagersAsync {msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(dataWager)}");
                         return false;
                     }
 
@@ -118,7 +118,7 @@ namespace ThirdPartyWager.Service.BLL
                     if (totalNum == 0)
                     {
                         msg = "NO_DATA";
-                        _logger.LogInformation($"{msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                        _logger.LogInformation($"GetWagersAsync {msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(dataWager)}");
                         return true;
                     }
 
@@ -131,7 +131,7 @@ namespace ThirdPartyWager.Service.BLL
                         catch (Exception ex)
                         {
                             msg = $"INSERT_WAGER(WAGERID: {bet.billNo} )";
-                            _logger.LogError($"{msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
+                            _logger.LogError($"GetWagersAsync {msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
                             return false;
                         }
                     }
@@ -171,14 +171,14 @@ namespace ThirdPartyWager.Service.BLL
                 if (errorCode != 0)
                 {
                     msg = "THIRD_PARTY_ERROR";
-                    _logger.LogError($"{msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                    _logger.LogError($"RedoWagersAsync {msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
                     return false;
                 }
 
                 if (errorCode == 0 && arrSummary.row == null)
                 {
                     msg = "NO_DATA";
-                    _logger.LogInformation($"{msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                    _logger.LogInformation($"RedoWagersAsync {msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
                     return true;
                 }
 
@@ -191,7 +191,7 @@ namespace ThirdPartyWager.Service.BLL
                 if (totalNum == wagerCount)
                 {
                     msg = "MATCH";
-                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                    _logger.LogInformation($"RedoWagersAsync {msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
                     return true;
                 }
 
@@ -221,7 +221,7 @@ namespace ThirdPartyWager.Service.BLL
                         if (errorCode != 0)
                         {
                             msg = "THIRD_PARTY_ERROR";
-                            _logger.LogError($"{msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                            _logger.LogError($"RedoWagersAsync {msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(dataWager)}");
                             return false;
                         }
 
@@ -232,7 +232,7 @@ namespace ThirdPartyWager.Service.BLL
                         if (totalNo == 0)
                         {
                             msg = "NO_DATA";
-                            _logger.LogInformation($"{msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                            _logger.LogInformation($"RedoWagersAsync {msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(dataWager)}");
                             continue;
                         }
 
@@ -245,7 +245,7 @@ namespace ThirdPartyWager.Service.BLL
                             catch (Exception ex)
                             {
                                 msg = $"INSERT_WAGER(WAGERID: {bet.billNo} )";
-                                _logger.LogError(ex, $"{msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
+                                _logger.LogError(ex, $"RedoWagersAsync {msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(bet)}\r\n{ex.Message}");
                                 return false;
                             }
                         }
@@ -272,7 +272,7 @@ namespace ThirdPartyWager.Service.BLL
                 g => new CurrencyStatistics_AG
                 {
                     MainSiteId = g.Key,
-                    WagerCount = g.Sum(y => y.wagerCount)
+                    WagerCount = g.Sum(y => y.WagerCount)
                 }
             ).ToList();
         }

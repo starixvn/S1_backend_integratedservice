@@ -107,7 +107,7 @@ namespace ThirdPartyWager.Service.Model
 
     public class WagerAGTotal
     {
-        public int wagerCount { get; set; }
+        public int WagerCount { get; set; }
         public int SiteId { get; set; }
         public int MainSiteId { get; set; }
         public int TpCurrencyId { get; set; }
