@@ -1,8 +1,10 @@
 ﻿using Newtonsoft.Json;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model.TpSiteConfig;
+using static ThirdPartyWager.Extensions.MethodExtension;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -109,14 +111,14 @@ namespace ThirdPartyWager.Service.BLL
                 if (errorCode != 0)
                 {
                     msg = "THIRD_PARTY_ERROR";
-                    _logger.LogError($"{msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                    _logger.LogError($"{GetCurrentMethod()} {msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(dataWager)}");
                     return false;
                 }
 
                 if (errorCode == 0 && dataWager.GetAllBetDetailsForTimeIntervalResponse.BetDetailList == null)
                 {
                     msg = "NO_DATA";
-                    _logger.LogInformation($"{msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                    _logger.LogInformation($"{GetCurrentMethod()} {msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(dataWager)}");
                     return true;
                 }
 
@@ -148,7 +150,7 @@ namespace ThirdPartyWager.Service.BLL
                     catch (Exception ex)
                     {
                         msg = $"INSERT_WAGER(WAGERID: {group.Key.GameID}_{group.Key.Username} )";
-                        _logger.LogError(ex, $"{msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(group)}\r\n{ex.Message}");
+                        _logger.LogError(ex, $"{GetCurrentMethod()} {msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(group)}\r\n{ex.Message}");
                         return false;
                     }
 
@@ -157,13 +159,13 @@ namespace ThirdPartyWager.Service.BLL
                 }
 
                 msg = "FINISH";
-                _logger.LogInformation($"GetWagersAsync {msg}\r\n{siteId}\r\n{wagerTime.startTime} ~ {wagerTime.endTime}");
+                _logger.LogInformation($"{GetCurrentMethod()} {msg}\r\n{siteId}\r\n{wagerTime.startTime} ~ {wagerTime.endTime}");
                 return true;
             }
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                _logger.LogError(ex, $"GetWagersAsync {msg}\r\n{siteId}\r\n{ex.Message}");
+                _logger.LogError(ex, $"{GetCurrentMethod()} {msg}\r\n{siteId}\r\n{ex.Message}");
                 return false;
             }
         }
@@ -182,7 +184,7 @@ namespace ThirdPartyWager.Service.BLL
 
                 // count interval wagers
                 var getWagerCount = _wagerSAService.GetWagerTotal(wagerTime.startUnix, wagerTime.endUnix);
-                var wagerCount = getWagerCount.wagerCount;
+                var wagerCount = DealWagerTotalToMainSiteId(getWagerCount).FirstOrDefault(i => i.MainSiteId == siteId).WagerCount;
 
                 var getWagerSummary = await _apiSABLL.GetBetSummaryByTime(setting, wagerTime.startTime, wagerTime.endTime);
 
@@ -191,13 +193,13 @@ namespace ThirdPartyWager.Service.BLL
                 if (errorCode != 0)
                 {
                     msg = "THIRD_PARTY_ERROR";
-                    _logger.LogError($"{msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                    _logger.LogError($"{GetCurrentMethod()} {msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
                     return false;
                 }
                 if (errorCode == 0 && getWagerSummary.GetTransactionDetailsResponse.Details == null)
                 {
                     msg = "NO_DATA";
-                    _logger.LogInformation($"{msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                    _logger.LogInformation($"{GetCurrentMethod()} {msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
                     return true;
                 }
 
@@ -210,7 +212,7 @@ namespace ThirdPartyWager.Service.BLL
                 if (totalNum == wagerCount)
                 {
                     msg = "MATCH";
-                    _logger.LogInformation($"{msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                    _logger.LogInformation($"{GetCurrentMethod()} {msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
                     return true;
                 }
 
@@ -221,13 +223,13 @@ namespace ThirdPartyWager.Service.BLL
                 if (errorCode != 0)
                 {
                     msg = "THIRD_PARTY_ERROR";
-                    _logger.LogError($"{msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                    _logger.LogError($"{GetCurrentMethod()} {msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(dataWager)}");
                     return false;
                 }
                 if (errorCode == 0 && dataWager.GetAllBetDetailsForTimeIntervalResponse.BetDetailList == null)
                 {
                     msg = "NO_DATA";
-                    _logger.LogInformation($"{msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                    _logger.LogInformation($"{GetCurrentMethod()} {msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(dataWager)}");
                     return true;
                 }
 
@@ -258,7 +260,7 @@ namespace ThirdPartyWager.Service.BLL
                     catch (Exception ex)
                     {
                         msg = $"INSERT_WAGER(WAGERID: {group.Key.GameID}_{group.Key.Username} )";
-                        _logger.LogError(ex, $"{msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(group)}\r\n{ex.Message}");
+                        _logger.LogError(ex, $"{GetCurrentMethod()} {msg}\r\n{siteId}\r\n{JsonConvert.SerializeObject(group)}\r\n{ex.Message}");
                         return false;
                     }
 
@@ -267,15 +269,26 @@ namespace ThirdPartyWager.Service.BLL
                 }
 
                 msg = "FINISH";
-                _logger.LogInformation($"RedoWagersAsync {msg}\r\n{siteId}\r\n{wagerTime.startTime} ~ {wagerTime.endTime}");
+                _logger.LogInformation($"{GetCurrentMethod()} {msg}\r\n{siteId}\r\n{wagerTime.startTime} ~ {wagerTime.endTime}");
                 return false;
             }
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                _logger.LogError(ex, $"RedoWagersAsync {msg}\r\n{siteId}\r\n{ex.Message}");
+                _logger.LogError(ex, $"{GetCurrentMethod()} {msg}\r\n{siteId}\r\n{ex.Message}");
                 return false;
             }
+        }
+
+        private static IEnumerable<CurrencyStatistics_SA> DealWagerTotalToMainSiteId(IEnumerable<WagerSATotal> wagerCountData)
+        {
+            return wagerCountData.GroupBy(data => data.MainSiteId).Select(
+                g => new CurrencyStatistics_SA
+                {
+                    MainSiteId = g.Key,
+                    WagerCount = g.Sum(y => y.WagerCount)
+                }
+            ).ToList();
         }
 
         private DateTime GetWorkerTime(int type, int vary, int siteId)
