@@ -19,9 +19,9 @@ namespace ThirdPartyWager.Service.DAL
             return _wagerDbClient.Execute("Service_TpWagerSA_Ins", transaction, bets);
         }
 
-        public WagerSATotal GetWagerTotal(long beginTime, long endTime)
+        public IEnumerable<WagerSATotal> GetWagerTotal(long beginTime, long endTime)
         {
-            return _wagerDbClient.QueryFirst<WagerSATotal>("Service_TpWagerSATotal_Get", new { BeginTime = beginTime, EndTime = endTime });
+            return _wagerDbClient.Query<WagerSATotal>("Service_TpWagerSA_Total_Get_V2", new { BeginTime = beginTime, EndTime = endTime });
         }
     }
 }
