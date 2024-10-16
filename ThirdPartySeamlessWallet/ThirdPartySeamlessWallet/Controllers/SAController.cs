@@ -12,8 +12,8 @@ using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Controllers
 {
-    [Route("[controller]/[action]")]
     [ApiController]
+    [Produces("application/xml")]
     public class SAController : ControllerBase
     {
         private readonly TpCustInfoBLL _tpCustInfoBLL;
@@ -27,6 +27,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly int _gameType = 0;
         private readonly string _tpName = Tp.SA.ToString();
         private readonly SAConfig _siteConfig;
+        private readonly Dictionary<string, SAConfig> _siteConfigDic;
 
         public SAController(IServiceProvider provider)
         {
@@ -40,6 +41,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             _thisTp = (int)Tp.SA;
             _gameType = (int)GameType.SA_LiveCasino;
             _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SAConfig>(_tpName);
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<SAConfig>(_tpName);
         }
 
         public enum Error
@@ -75,18 +77,21 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        [Produces("application/xml")]
-        public async Task<RequestReturn> GetUserBalanceAsync()
+        [Route("[controller]/GetUserBalance")]
+        [Route("[controller]/{sitename}/GetUserBalance")]
+        public async Task<RequestReturn> GetUserBalanceAsync(string sitename = "")
         {
             string Content = "";
             var resp = new RequestReturn();
             try
             {
+                var config = sitename == "" ? _siteConfig : _siteConfigDic[sitename];
+
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 Content = await reader.ReadToEndAsync();
                 var content = HttpUtility.UrlDecode(Content);
 
-                var uriQuery = _tools.DESDecrypt(content, _siteConfig.EncrypKey);
+                var uriQuery = _tools.DESDecrypt(content, config.EncrypKey);
                 var p = QueryHelpers.ParseQuery(uriQuery).ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
 
                 var userBalance = JsonConvert.DeserializeObject<UserBalance>(JsonConvert.SerializeObject(p));
@@ -126,8 +131,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        [Produces("application/xml")]
-        public async Task<RequestReturn> PlaceBetAsync()
+        [Route("[controller]/PlaceBet")]
+        [Route("[controller]/{sitename}/PlaceBet")]
+        public async Task<RequestReturn> PlaceBetAsync(string sitename = "")
         {
             string logName = $"{_tpName}_PlaceBet";
             string Content = "";
@@ -135,11 +141,13 @@ namespace ThirdPartySeamlessWallet.Controllers
             var resp = new RequestReturn();
             try
             {
+                var config = sitename == "" ? _siteConfig : _siteConfigDic[sitename];
+
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 Content = await reader.ReadToEndAsync();
                 var content = HttpUtility.UrlDecode(Content);
 
-                uriQuery = _tools.DESDecrypt(content, _siteConfig.EncrypKey);
+                uriQuery = _tools.DESDecrypt(content, config.EncrypKey);
                 var p = QueryHelpers.ParseQuery(uriQuery).ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
 
                 var bettingDataLC_SA = JsonConvert.DeserializeObject<BettingDataLC_SA>(JsonConvert.SerializeObject(p));
@@ -211,8 +219,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        [Produces("application/xml")]
-        public async Task<RequestReturn> PlayerWinAsync()
+        [Route("[controller]/PlayerWin")]
+        [Route("[controller]/{sitename}/PlayerWin")]
+        public async Task<RequestReturn> PlayerWinAsync(string sitename = "")
         {
             string logName = $"{_tpName}_PlayerWin";
             string Content = "";
@@ -220,12 +229,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             var resp = new RequestReturn();
             try
             {
+                var config = sitename == "" ? _siteConfig : _siteConfigDic[sitename];
+
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 Content = await reader.ReadToEndAsync();
                 _logger.LogInformation(Content);
                 var content = HttpUtility.UrlDecode(Content);
 
-                uriQuery = _tools.DESDecrypt(content, _siteConfig.EncrypKey);
+                uriQuery = _tools.DESDecrypt(content, config.EncrypKey);
                 var p = QueryHelpers.ParseQuery(uriQuery).ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
 
                 var payoutDataLC_SA = JsonConvert.DeserializeObject<PayoutDataLC_SA>(JsonConvert.SerializeObject(p));
@@ -273,8 +284,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        [Produces("application/xml")]
-        public async Task<RequestReturn> PlayerLostAsync()
+        [Route("[controller]/PlayerLost")]
+        [Route("[controller]/{sitename}/PlayerLost")]
+        public async Task<RequestReturn> PlayerLostAsync(string sitename = "")
         {
             string logName = $"{_tpName}_PlayerLost";
             string Content = "";
@@ -282,12 +294,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             var resp = new RequestReturn();
             try
             {
+                var config = sitename == "" ? _siteConfig : _siteConfigDic[sitename];
+
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 Content = await reader.ReadToEndAsync();
                 _logger.LogInformation(Content);
                 var content = HttpUtility.UrlDecode(Content);
 
-                uriQuery = _tools.DESDecrypt(content, _siteConfig.EncrypKey);
+                uriQuery = _tools.DESDecrypt(content, config.EncrypKey);
                 var p = QueryHelpers.ParseQuery(uriQuery).ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
 
                 var payoutDataLC_SA = JsonConvert.DeserializeObject<PayoutDataLC_SA>(JsonConvert.SerializeObject(p));
@@ -326,8 +340,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        [Produces("application/xml")]
-        public async Task<RequestReturn> PlaceBetCancelAsync()
+        [Route("[controller]/PlaceBetCancel")]
+        [Route("[controller]/{sitename}/PlaceBetCancel")]
+        public async Task<RequestReturn> PlaceBetCancelAsync(string sitename = "")
         {
             string logName = $"{_tpName}_PlaceBetCancel";
             string Content = "";
@@ -335,12 +350,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             var resp = new RequestReturn();
             try
             {
+                var config = sitename == "" ? _siteConfig : _siteConfigDic[sitename];
+
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 Content = await reader.ReadToEndAsync();
                 _logger.LogInformation(Content);
                 var content = HttpUtility.UrlDecode(Content);
 
-                uriQuery = _tools.DESDecrypt(content, _siteConfig.EncrypKey);
+                uriQuery = _tools.DESDecrypt(content, config.EncrypKey);
                 var p = QueryHelpers.ParseQuery(uriQuery).ToDictionary(kv => kv.Key, kv => kv.Value.ToString());
 
                 var bettingDataLC_SA = JsonConvert.DeserializeObject<BettingDataLC_SA>(JsonConvert.SerializeObject(p));
@@ -394,8 +411,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        [Produces("application/xml")]
-        public async Task<RequestReturn> PlaceBetCancelFixAsync()
+        [Route("[controller]/PlaceBetCancelFix")]
+        [Route("[controller]/{sitename}/PlaceBetCancelFix")]
+        public async Task<RequestReturn> PlaceBetCancelFixAsync(string sitename = "")
         {
             string logName = $"{_tpName}_PlaceBetCancelFix";
             string Content = "";
