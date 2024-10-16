@@ -47,14 +47,14 @@ namespace ThirdPartyWager.Service.BLL
                 Winlose = g.Sum(s => s.Winlose),
             });
 
-            foreach (var item in reportData)
+            foreach (var item in data)
             {
                 dailyData.Add(new FincanceDailySummary()
                 {
                     SummaryType = SummaryType.TpBetRecord,
                     SummaryDate = reportDate,
                     TpId = tpId,
-                    CurrencyId = _currencyId[item.CurrencyName],
+                    CurrencyId = _currencyId[item.Currency],
                     Stake = item.TotalBet,
                     ValidBet = item.TotalRolling,
                     Payout = item.TotalBet + item.Winlose,
