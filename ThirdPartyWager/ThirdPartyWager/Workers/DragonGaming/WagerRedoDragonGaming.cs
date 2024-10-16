@@ -79,8 +79,8 @@ namespace ThirdPartyWager.Workers
                     }
                     _thirdPartyBLL.SetThirdPartyTimer(_tpId, _workerType, time.endUnix);
 
-                    isFast = CheckQuick(dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now.AddMinutes(-10), 20);
                 }
+                isFast = CheckQuick(dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now.AddMinutes(-10), 20);
             }
             catch (Exception ex)
             {
