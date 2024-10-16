@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
+using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model.TpSiteConfig;
 
@@ -160,7 +161,7 @@ namespace ThirdPartyWager.Service.BLL
 
                 // count interval wagers
                 var getWagerCount = _wagerAGService.GetWagerTotal(wagerTime.startUnix, wagerTime.endUnix);
-                var wagerCount = getWagerCount.wagerCount;
+                var wagerCount = DealWagerTotalToMainSiteId(getWagerCount).FirstOrDefault(i => i.MainSiteId == siteId).WagerCount;
 
                 var getWagerSummary = await _apiAGBLL.GetBetSummaryByTime(wagerUrl, hashKey, data_cagent, wagerTime.startTime, wagerTime.endTime);
                 var arrSummary = getWagerSummary.result;
@@ -263,6 +264,17 @@ namespace ThirdPartyWager.Service.BLL
                 _logger.LogError(ex, $"RedoWagersAsync {msg}\r\n{siteId}\r\n{ex.Message}");
                 return false;
             }
+        }
+
+        private static IEnumerable<CurrencyStatistics_AG> DealWagerTotalToMainSiteId(IEnumerable<WagerAGTotal> wagerCountData)
+        {
+            return wagerCountData.GroupBy(data => data.MainSiteId).Select(
+                g => new CurrencyStatistics_AG
+                {
+                    MainSiteId = g.Key,
+                    WagerCount = g.Sum(y => y.wagerCount)
+                }
+            ).ToList();
         }
 
         private DateTime GetWorkerTime(int type, int vary, int siteId)
