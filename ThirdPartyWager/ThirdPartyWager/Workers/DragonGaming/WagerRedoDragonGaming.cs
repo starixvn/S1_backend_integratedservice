@@ -22,8 +22,9 @@ namespace ThirdPartyWager.Workers
 
         private Timer _timer;
         private readonly int timeZone = 0;
-        private readonly int iRangMins = 15;
-        private readonly int intervalMins = 30;
+        private bool isFast = false;
+        private readonly int iRangMins = 30;
+        private readonly int intervalMins = 15;
         private readonly string timeFormat = "yyyy-MM-dd HH:mm:ss";
 
         public WagerRedoDragonGaming(IServiceProvider provider)
@@ -31,7 +32,7 @@ namespace ThirdPartyWager.Workers
             _wagerDragonGamingBLL = provider.GetRequiredService<WagerDragonGamingBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
-            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<DragonGamingConfig> (_tpName);
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<DragonGamingConfig>(_tpName);
             _logger = provider.GetRequiredService<ILogger<WagerRedoDragonGaming>>();
         }
 
@@ -77,6 +78,8 @@ namespace ThirdPartyWager.Workers
                         await _wagerDragonGamingBLL.GetWagerAsync(_setting, time.startTime.ToString(), time.endTime.ToString(), _workerTypeName.ToString());
                     }
                     _thirdPartyBLL.SetThirdPartyTimer(_tpId, _workerType, time.endUnix);
+
+                    isFast = CheckQuick(dataTpTimer != null ? dataTpTimer.StartTime : DateTime.Now.AddMinutes(-10), 20);
                 }
             }
             catch (Exception ex)
@@ -88,6 +91,12 @@ namespace ThirdPartyWager.Workers
                 var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
                 _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
+        }
+
+        private bool CheckQuick(DateTime workTime, int delayTime)
+        {
+            var diff = DateTime.Now - workTime;
+            return DateTime.Now > workTime && diff.TotalMinutes > delayTime;
         }
     }
 }
