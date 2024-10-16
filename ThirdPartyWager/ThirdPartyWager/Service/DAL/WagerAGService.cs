@@ -22,9 +22,9 @@ namespace ThirdPartyWager.Service.DAL
             return _wagerDbClient.Execute("Service_TpWagerAG_Ins", new DynamicParameters(bet));
         }
 
-        public WagerAGTotal GetWagerTotal(long beginTime, long endTime)
+        public IEnumerable<WagerAGTotal> GetWagerTotal(long beginTime, long endTime)
         {
-            return _wagerDbClient.QueryFirst<WagerAGTotal>("Service_TpWagerAGTotal_Get", new DynamicParameters(new { BeginTime = beginTime, EndTime = endTime }));
+            return _wagerDbClient.Query<WagerAGTotal>("Service_TpWagerAG_Total_Get_V2", new DynamicParameters(new { BeginTime = beginTime, EndTime = endTime }));
         }
 
         public IEnumerable<BettransDataAG> GetPendingList(TimeCast ticketTime)
