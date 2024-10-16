@@ -93,7 +93,6 @@ namespace ThirdPartyWager.Extensions
 
             services.AddSingleton<WagerAGBLL>();
             services.AddSingleton<ApiAGBLL>();
-            //services.AddSingleton<WagerRedoAGBLL>();
             services.AddSingleton<FinanceAGBLL>();
             services.AddSingleton<TicketAGBLL>();
 
