@@ -20,14 +20,14 @@ namespace ThirdPartyService.Controllers
     [ApiController]
     public class APIController : ControllerBase
     {
-        private readonly IHostEnvironment _env;
+        private readonly IWebHostEnvironment _env;
         private readonly TpCustInfoService _tpCustInfoService;
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly ILogger<APIController> _logger;
 
         public APIController(IServiceProvider provider)
         {
-            _env = provider.GetRequiredService<IHostEnvironment>();
+            _env = provider.GetRequiredService<IWebHostEnvironment>();
             _tpCustInfoService = provider.GetRequiredService<TpCustInfoService>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _logger = provider.GetRequiredService<ILogger<APIController>>();
@@ -66,7 +66,6 @@ namespace ThirdPartyService.Controllers
                 {
                     _thirdPartyBLL.AutoTransfer(tpInfo);
                 }
-
             }
             catch (Exception ex)
             {
@@ -103,6 +102,7 @@ namespace ThirdPartyService.Controllers
 
             return apiResult;
         }
+
         [HttpPost]
         public ActionResult<ApiResult<UserBalance>> GetBalance([FromBody] TpInfo tpInfo)
         {
@@ -123,6 +123,7 @@ namespace ThirdPartyService.Controllers
 
             return apiResult;
         }
+
         [HttpPost]
         public ActionResult<ApiResult> Logout([FromBody] TpInfo tpInfo)
         {
@@ -328,9 +329,9 @@ namespace ThirdPartyService.Controllers
                 };
             }
         }
-        
+
         [HttpPost]
-        public ActionResult<ApiResult> AddPrizeToPlayer([FromBody]AddFreeSpin addFreeSpin)
+        public ActionResult<ApiResult> AddPrizeToPlayer([FromBody] AddFreeSpin addFreeSpin)
         {
             var apiResult = new ApiResult();
             try

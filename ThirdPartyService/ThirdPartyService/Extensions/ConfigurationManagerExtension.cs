@@ -30,7 +30,7 @@
             return configuration;
         }
 
-        public static string[] CheckLocalConfig(this ConfigurationManager configuration, IHostEnvironment environment, string[] args, string[] remoteUrls)
+        public static string[] CheckLocalConfig(this ConfigurationManager configuration, IWebHostEnvironment environment, string[] args, string[] remoteUrls)
         {
             if (remoteUrls is null)
             {

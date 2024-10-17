@@ -1,6 +1,5 @@
 using Serilog;
 using Serilog.Events;
-using Serilog.Exceptions;
 using Serilog.Formatting.Json;
 using ThirdPartyService;
 using ThirdPartyService.Extensions;
@@ -12,6 +11,7 @@ builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
 
+builder.Environment.EnvironmentName = builder.Configuration.GetSection("Env").Get<string>();
 var remoteUrls = GetRemoteUrls();
 
 builder.Configuration.AddRemoteJsonConfig(remoteUrls);
@@ -34,7 +34,7 @@ if (!string.IsNullOrEmpty(serviceType) && serviceType.Equals("worker", StringCom
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
-
+SentrySdk.CaptureMessage($"Started {nameof(ThirdPartyService)} api at {DateTime.Now}");
 app.Run();
 return;
 

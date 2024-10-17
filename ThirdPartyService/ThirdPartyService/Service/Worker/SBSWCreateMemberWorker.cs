@@ -12,7 +12,7 @@ namespace ThirdPartyService.Service.Worker
 {
     public class SBSWCreateMemberWorker : BackgroundService
     {
-        private readonly IHostEnvironment _environment;
+        private readonly IWebHostEnvironment _environment;
         private readonly ILogger<SBSWCreateMemberWorker> _logger;
         private readonly TpCustInfoBLL _tpCustInfoBll;
         private readonly ThirdPartyBLL _thirdPartyBll;
@@ -22,7 +22,7 @@ namespace ThirdPartyService.Service.Worker
 
         public SBSWCreateMemberWorker(IServiceProvider provider)
         {
-            _environment = provider.GetRequiredService<IHostEnvironment>();
+            _environment = provider.GetRequiredService<IWebHostEnvironment>();
             _logger = provider.GetRequiredService<ILogger<SBSWCreateMemberWorker>>();
             _tpCustInfoBll = provider.GetRequiredService<TpCustInfoBLL>();
             _thirdPartyBll = provider.GetRequiredService<ThirdPartyBLL>();
@@ -64,7 +64,7 @@ namespace ThirdPartyService.Service.Worker
                                 continue;
                             }
                         }
-                        else if (result.RawErrorCode is "903") //System Is Under Maintenance 
+                        else if (result.RawErrorCode is "903") //System Is Under Maintenance
                         {
                             _logger.LogInformation($"SBSWCreateMemberWorker-SBSW System Is Under Maintenance. ");
                         }
@@ -85,7 +85,6 @@ namespace ThirdPartyService.Service.Worker
 
                 _logger.LogInformation($"SBSWCreateMemberWorker End.\r\n" +
                     $"Finish Time(m: s.ms): {Math.Round(sw.Elapsed.TotalMinutes)}:{Math.Round(sw.Elapsed.TotalMinutes)}.{Math.Round(sw.Elapsed.TotalMilliseconds)}.");
-
             }
             catch (Exception ex)
             {
@@ -107,7 +106,6 @@ namespace ThirdPartyService.Service.Worker
 
                 _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
-
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
@@ -115,6 +113,5 @@ namespace ThirdPartyService.Service.Worker
             _timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
-
     }
 }
