@@ -110,7 +110,7 @@ namespace ThirdPartyWager.Service.Model
         public int WagerCount { get; set; }
         public int SiteId { get; set; }
         public int MainSiteId { get; set; }
-        public int TpCurrencyId { get; set; }
+        public string TpCurrencyId { get; set; }
     }
 
     public class CurrencyStatistics_AG
