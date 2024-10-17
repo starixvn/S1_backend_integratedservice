@@ -31,7 +31,7 @@ namespace ThirdPartyWager.Service.BLL
             _apiAGBLL = provider.GetRequiredService<ApiAGBLL>();
             _wagerAGService = provider.GetRequiredService<WagerAGService>();
             _logger = provider.GetRequiredService<ILogger<TicketAGBLL>>();
-            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<AGConfig>(Tp.AG.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<AGConfig>(_tpName);
             _serverList = provider.GetRequiredService<CommonBLL>().GetSiteList();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
         }
