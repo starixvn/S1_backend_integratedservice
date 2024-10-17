@@ -11,7 +11,6 @@ namespace ThirdPartyWager.Workers
         private readonly TpRefundBLL _tpRefundBLL;
 
         // timer{gameType} 
-        private Timer timer8;
         private Timer timer35;
         private Timer timer36;
         private Timer timer37;
@@ -24,7 +23,6 @@ namespace ThirdPartyWager.Workers
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            timer8 = new Timer(DoTask, GameType.AG_LiveCasino, TimeSpan.Zero, TimeSpan.Zero);
             timer35 = new Timer(DoTask, GameType.One789_Lottery, TimeSpan.Zero, TimeSpan.Zero);
             timer36 = new Timer(DoTask, GameType.One789_Lottery_789, TimeSpan.Zero, TimeSpan.Zero);
             timer37 = new Timer(DoTask, GameType.One789_LiveCasino, TimeSpan.Zero, TimeSpan.Zero);
@@ -35,7 +33,6 @@ namespace ThirdPartyWager.Workers
         {
             var tpName = (GameType)state switch
             {
-                GameType.AG_LiveCasino => Tp.AG.ToString(),
                 GameType.One789_Lottery => Tp.One789.ToString(),
                 GameType.One789_Lottery_789 => Tp.One789.ToString(),
                 GameType.One789_LiveCasino => Tp.One789.ToString(),
@@ -62,9 +59,6 @@ namespace ThirdPartyWager.Workers
                 }
                 switch ((GameType)state)
                 {
-                    case GameType.AG_LiveCasino:
-                        timer8.Change(dueTimeSpan, TimeSpan.Zero);
-                        break;
                     case GameType.One789_Lottery:
                         dueTimeSpan = TimeSpan.FromHours(2);
                         if (!task)
@@ -87,7 +81,6 @@ namespace ThirdPartyWager.Workers
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            timer8?.Change(Timeout.Infinite, 0);
             timer35?.Change(Timeout.Infinite, 0);
             timer36?.Change(Timeout.Infinite, 0);
             timer37?.Change(Timeout.Infinite, 0);
