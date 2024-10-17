@@ -15,21 +15,21 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Log2File _log2File;
         private readonly ILogger<ApiEbetBLL> _logger;
         private readonly string _tpName = Tp.EBet.ToString();
-        private readonly EBetConfig _siteEBetConfig;
-
+        private readonly Dictionary<int, EBetConfig> _siteEBetConfig;
         public ApiEbetBLL(IServiceProvider provider)
         {
             _httpHelper = provider.GetRequiredService<HttpHelper>();
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<ApiEbetBLL>>();
-            _siteEBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<EBetConfig>(_tpName);
+            _siteEBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<EBetConfig>(_tpName);
         }
 
-        public async Task<CurrencyStats_Ebet> GetBetSummaryByTime(string currency, string startTime, string endTime)
+        public async Task<CurrencyStats_Ebet> GetBetSummaryByTime(int siteId ,string currency, string startTime, string endTime)
         {
-            var currencyConfig = _siteEBetConfig.Currency.FirstOrDefault(x => x.CurrencyId == currency);
-            var apiUrl = _siteEBetConfig.ApiUrl;
+            var siteConfig = _siteEBetConfig[siteId];
+            var currencyConfig = siteConfig.Currency.FirstOrDefault(x => x.CurrencyId == currency);
+            var apiUrl = siteConfig.ApiUrl;
             var channelId = currencyConfig.ChannelId;
             var privateKey = currencyConfig.PrivateKey;
             var timestamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds();

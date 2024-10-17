@@ -11,7 +11,6 @@ using ThirdPartySeamlessWallet.Service.Model.enums;
 namespace ThirdPartySeamlessWallet.Controllers
 {
     [ApiController]
-    [Route("[controller]/[action]")]
     public class EBetController : ControllerBase
     {
         private readonly AuthBLL authBLL;
@@ -23,7 +22,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Tp thisTp;
         private readonly int gameType = 0;
         private readonly EBetConfig _siteEBetConfig;
-
+        private readonly Dictionary<string, EBetConfig> _siteNameConfigs;
+        
         public EBetController(IServiceProvider provider)
         {
             authBLL = provider.GetRequiredService<AuthBLL>();
@@ -34,7 +34,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             log2File = provider.GetRequiredService<Log2File>();
             thisTp = Tp.EBet;
             gameType = (int)GameType.EBet_LiveCasino;
-            _siteEBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<EBetConfig>(Tp.EBet.ToString());
+            _siteEBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<EBetConfig>(thisTp.ToString());
+            _siteNameConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<EBetConfig>(thisTp.ToString());
         }
 
         #region Response
@@ -160,8 +161,10 @@ namespace ThirdPartySeamlessWallet.Controllers
         #endregion
 
         [HttpPost]
+        [Route("[controller]/registerOrLogin")]
+        [Route("[controller]/{sitename}/registerOrLogin")]
         //2024-10-28 關閉
-        public GetRegisterLoginResp registerOrLogin(RegisterLoginData_EBet registerLoginReq)
+        public GetRegisterLoginResp registerOrLogin(RegisterLoginData_EBet registerLoginReq, string sitename = "")
         {
             string logName = $"{thisTp}_Register_Login";
 
@@ -176,7 +179,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             
             string sign = $"{registerLoginReq.seqNo}{registerLoginReq.Event}{registerLoginReq.channelId}{registerLoginReq.timestamp}{registerLoginReq.username}{registerLoginReq.accessToken}";
-            string privateKey = _siteEBetConfig.Currency.FirstOrDefault(x => x.CurrencyId == registerLoginReq.currency).PrivateKey;
+            
+            var siteConfig = GetSiteConfig(sitename);
+            string privateKey = siteConfig.Currency.FirstOrDefault(x => x.CurrencyId == registerLoginReq.currency).PrivateKey;
             var check = VerifySignature(sign, registerLoginReq.signature, privateKey);
             if (!check)
             {
@@ -226,7 +231,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        public ValidateResp validate(Validate_EBet validateReq)
+        [Route("[controller]/validate")]
+        [Route("[controller]/{sitename}/validate")]
+        public ValidateResp validate(Validate_EBet validateReq, string sitename = "")
         {
             var logName = $"{thisTp}_Validate";
 
@@ -250,7 +257,8 @@ namespace ThirdPartySeamlessWallet.Controllers
                 if (auth)
                 {
                     var sign = $"{validateReq.timestamp}";
-                    var privateKey = _siteEBetConfig.Currency.FirstOrDefault(x => x.CurrencyId == tpCustInfoAuth.TpCurrencyId)?.PrivateKey;
+                    var siteConfig = GetSiteConfig(sitename);
+                    var privateKey = siteConfig.Currency.FirstOrDefault(x => x.CurrencyId == tpCustInfoAuth.TpCurrencyId)?.PrivateKey;
                     var check = VerifySignature(sign, validateReq.signature, privateKey);
                     if (!check)
                     {
@@ -296,6 +304,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
         
         [HttpPost]
+        [Route("[controller]/syncCredit")]
+        [Route("[controller]/{sitename}/syncCredit")]
         public GetBalanceResp syncCredit(SyncCreditData_EBet syncCreditReq)
         {
             string logName = $"{thisTp}_Sync_Credit";
@@ -326,7 +336,9 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
-        public async Task<GetBetResp> increaseCreditAsync()
+        [Route("[controller]/increaseCredit")]
+        [Route("[controller]/{sitename}/increaseCredit")]
+        public async Task<GetBetResp> increaseCreditAsync(string sitename = "")
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
             var Content = await reader.ReadToEndAsync();
@@ -353,7 +365,8 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             // verify signature
             string sign = $"{getBetReq.seqNo}{getBetReq.Event}{getBetReq.channelId}{getBetReq.timestamp}{getBetReq.username}{getBetReq.money}";
-            string privateKey = _siteEBetConfig.Currency.FirstOrDefault(x => x.CurrencyId == getBetReq.currency).PrivateKey;
+            var siteConfig = GetSiteConfig(sitename);
+            string privateKey = siteConfig.Currency.FirstOrDefault(x => x.CurrencyId == getBetReq.currency).PrivateKey;
             var check = VerifySignature(sign, getBetReq.signature, privateKey);
             if (!check)
             {
@@ -570,6 +583,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
+        [Route("[controller]/queryIncreaseCreditRecord")]
+        [Route("[controller]/{sitename}/queryIncreaseCreditRecord")]
         public async Task<GetCreditRecordResp> queryIncreaseCreditRecordAsync()
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
@@ -599,6 +614,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
+        [Route("[controller]/refundSingleWallet")]
+        [Route("[controller]/{sitename}/refundSingleWallet")]
         public async Task<GetRefundSingleWalletResp> refundSingleWalletAsync()
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
@@ -671,6 +688,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
 
         [HttpPost]
+        [Route("[controller]/autoBatchRefund")]
+        [Route("[controller]/{sitename}/autoBatchRefund")]
         public async Task<GetAutoBatchRefundResp> autoBatchRefundAsync()
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
@@ -737,6 +756,16 @@ namespace ThirdPartySeamlessWallet.Controllers
             rsAalg.FromXmlString(publicKey);
             var plaintext = encoder.GetBytes(dataToSign);
             return rsAalg.VerifyData(plaintext, CryptoConfig.MapNameToOID("MD5"), Convert.FromBase64String(signedData));
+        }
+        
+        private EBetConfig GetSiteConfig(string siteName)
+        {
+            if (siteName == "")
+            {
+                return _siteEBetConfig;
+            }
+
+            return _siteNameConfigs.TryGetValue(siteName,out var result) ? result : _siteEBetConfig;
         }
     }
 }
