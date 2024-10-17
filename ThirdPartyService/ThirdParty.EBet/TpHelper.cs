@@ -13,11 +13,11 @@ namespace ThirdParty.EBet
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly EBetConfig _siteEBetConfig;
+        private readonly Dictionary<int, EBetConfig> _siteEBetConfig;
         
         public TpHelper(IServiceProvider provider)
         {
-            _siteEBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<EBetConfig>(TpEnum.EBet.ToString());
+            _siteEBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<EBetConfig>(TpEnum.EBet.ToString());
         }
         
         #region Model
@@ -79,10 +79,11 @@ namespace ThirdParty.EBet
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             var currency = tpCustInfo.TpCurrencyId;
-            var currencyConfig = GetCurrencyConfig(currency);
+            var currencyConfig = GetCurrencyConfig(tpCustInfo.SiteId, currency);
             if (currencyConfig == null)
                 throw new Exception($"CurrencyId {currency} is not found");
-            var apiUrl = _siteEBetConfig.ApiUrl;
+            var config = _siteEBetConfig[tpCustInfo.SiteId];
+            var apiUrl = config.ApiUrl;
             var channelId = currencyConfig.ChannelId.ToString();
             var privateKey = currencyConfig.PrivateKey;
             var clientIp = inputs["ClientIP"];
@@ -119,11 +120,12 @@ namespace ThirdParty.EBet
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var currencyConfig = GetCurrencyConfig(tpCustInfo.TpCurrencyId);
+            var currencyConfig = GetCurrencyConfig(tpCustInfo.SiteId, tpCustInfo.TpCurrencyId);
             if (currencyConfig == null)
                 throw new Exception($"CurrencyId {tpCustInfo.TpCurrencyId} is not found");
             var currency = tpCustInfo.TpCurrencyId;
-            var apiUrl = _siteEBetConfig.ApiUrl;
+            var config = _siteEBetConfig[tpCustInfo.SiteId];
+            var apiUrl = config.ApiUrl;
             var channelId = currencyConfig.ChannelId.ToString();
             var privateKey = currencyConfig.PrivateKey;
             var detail = TpBetRecordProvider.DbQueryFirst("Service_BettransLC_EBet_Detail_Get", new { getBetDetail.TransId }, DataBase.Report);
@@ -228,9 +230,10 @@ namespace ThirdParty.EBet
             };
         }
 
-        private Currency GetCurrencyConfig(string currencyId)
+        private Currency GetCurrencyConfig(int siteId ,string currencyId)
         {
-            return _siteEBetConfig.Currency.FirstOrDefault(x => x.CurrencyId == currencyId);
+            var config = _siteEBetConfig[siteId];
+            return config.Currency.FirstOrDefault(x => x.CurrencyId == currencyId);
         }
 
         #region Login Step
