@@ -78,10 +78,8 @@ namespace ThirdPartyWager.Service.BLL
                 {
                     continue;
                 }
-                
                 var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(serverList.First(x => x.SiteId == site.SiteId).CurrencyList);
-                foreach (var currency in _tpCurrency.Where(x => currencyList.Contains(x.CurrencyId)))
-                    
+                foreach (var currency in _tpCurrency.Where(x => currencyList.Contains(x.CurrencyId)))   
                 {
                     var getWagerSummary = await _apiEbetBLL.GetBetSummaryByTime(site.SiteId ,currency.TpCurrencyId, reportTime.startTime, reportTime.endTime);
                     if (getWagerSummary.status != 200)

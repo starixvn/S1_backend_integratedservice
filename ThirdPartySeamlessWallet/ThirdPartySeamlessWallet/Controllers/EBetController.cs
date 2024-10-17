@@ -305,6 +305,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         
         [HttpPost]
         [Route("[controller]/syncCredit")]
+        [Route("[controller]/{sitename}/syncCredit")]
         public GetBalanceResp syncCredit(SyncCreditData_EBet syncCreditReq)
         {
             string logName = $"{thisTp}_Sync_Credit";
@@ -583,6 +584,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/queryIncreaseCreditRecord")]
+        [Route("[controller]/{sitename}/queryIncreaseCreditRecord")]
         public async Task<GetCreditRecordResp> queryIncreaseCreditRecordAsync()
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
@@ -613,6 +615,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/refundSingleWallet")]
+        [Route("[controller]/{sitename}/refundSingleWallet")]
         public async Task<GetRefundSingleWalletResp> refundSingleWalletAsync()
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
@@ -686,6 +689,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
         [HttpPost]
         [Route("[controller]/autoBatchRefund")]
+        [Route("[controller]/{sitename}/autoBatchRefund")]
         public async Task<GetAutoBatchRefundResp> autoBatchRefundAsync()
         {
             using var reader = new StreamReader(Request.Body, Encoding.UTF8);
