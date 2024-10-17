@@ -35,8 +35,7 @@ namespace ThirdPartyWager.Service.BLL
             try
             {
                 // count interval wagers
-                var getWagerCount = _wagerAllBetService.GetWagerTotal(startUnix, endUnix);
-                var wagerCount = getWagerCount.wagerCount;
+                var getWagerCount = _wagerAllBetService.GetWagerTotal(startUnix, endUnix).ToList();
 
                 if (_env.IsDevelopment())
                 {
@@ -63,6 +62,7 @@ namespace ThirdPartyWager.Service.BLL
                             var pageRowCnt = 1;
 
                             var agent = _siteAllBetConfig.CurrencyAgents.FirstOrDefault(x => x.CurrencyId == currency.TpCurrencyId)?.Agent;
+                            var wagerCount = getWagerCount.Where(x => x.MainSiteId == site.SiteId && x.TpCurrencyId == currency.TpCurrencyId).Sum(x => x.wagerCount);
                             while (pageRowCnt >= 1)
                             {
                                 // bet 
