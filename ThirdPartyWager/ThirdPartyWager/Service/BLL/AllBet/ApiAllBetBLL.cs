@@ -173,11 +173,11 @@ namespace ThirdPartyWager.Service.BLL
             return JsonConvert.DeserializeObject<CurrencyStats_AllBet>(r);
         }
 
-        public async Task<string> CallEventSettleApi(RewardAllBet reward)
+        public async Task<string> CallEventSettleApi(RewardAllBet reward, string siteName)
         {
             try
             {
-                var url = $"{_seamlessUrl}Allbet/transfer";
+                var url = $"{_seamlessUrl}Allbet/{siteName}/transfer";
 
                 var rewardAllBetRequest = new RewardAllBetRequest()
                 {

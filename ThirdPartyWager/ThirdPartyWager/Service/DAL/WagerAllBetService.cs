@@ -38,9 +38,9 @@ namespace ThirdPartyWager.Service.DAL
             return result;
         }
 
-        public WagerAllBetTotal GetWagerTotal(long beginTime, long endTime)
+        public IEnumerable<WagerAllBetTotal> GetWagerTotal(long beginTime, long endTime)
         {
-            return _wagerDbClient.QueryFirst<WagerAllBetTotal>("Service_TpWagerAllBetTotal_Get", new DynamicParameters(new { BeginTime = beginTime, EndTime = endTime }));
+            return _wagerDbClient.Query<WagerAllBetTotal>("Service_TpWagerAllBetTotal_Get_V2", new DynamicParameters(new { BeginTime = beginTime, EndTime = endTime }));
         }
 
         public Task<RewardAllBetData> GetRewardRecord(long eventRecordNum)

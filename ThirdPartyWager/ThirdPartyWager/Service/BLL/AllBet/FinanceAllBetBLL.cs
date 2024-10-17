@@ -36,7 +36,14 @@ namespace ThirdPartyWager.Service.BLL
                 return dailyData;
             }
 
-            foreach (var item in reportData)
+            var groupData = reportData.GroupBy(i => i.Currency).Select(g => new
+            {
+                CurrencyId = g.Key,
+                totalBetAmount = g.Sum(s => s.totalBetAmount),
+                totalWinOrLoss = g.Sum(s => s.totalWinOrLoss),
+            });
+
+            foreach (var item in groupData)
             {
                 dailyData.Add(new FincanceDailySummary()
                 {
@@ -48,7 +55,6 @@ namespace ThirdPartyWager.Service.BLL
                     ValidBet = item.totalBetAmount,
                     Payout = item.totalBetAmount + item.totalWinOrLoss,
                     WinlostAmount = item.totalWinOrLoss
-
                 });
             }
 

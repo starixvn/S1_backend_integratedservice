@@ -35,7 +35,7 @@ namespace ThirdPartyWager.Service.BLL
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _currencyList = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList(_tpId);
             _env = provider.GetRequiredService<IWebHostEnvironment>();
-            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<AllBetConfig>(Tp.Allbet.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<AllBetConfig>(_tpName);
         }
 
         public async Task<bool> ExecRewardWorker(int type, int timeRange)
@@ -81,6 +81,7 @@ namespace ThirdPartyWager.Service.BLL
 
                     var _siteAllBetConfig = _siteConfigDic[site.SiteId];
                     var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(serverList.First(x => x.SiteId == site.SiteId).CurrencyList);
+                    var siteName = serverList.ToList().Find(x => x.SiteId == site.SiteId).SiteName;
 
                     foreach (var currency in _currencyList.Where(x => currencyList.Contains(x.CurrencyId)))
                     {
@@ -134,7 +135,7 @@ namespace ThirdPartyWager.Service.BLL
                                         if (reward == null)
                                         {
                                             // call sw reward api
-                                            var response = _apiAllBetBLL.CallEventSettleApi(item).Result;
+                                            var response = _apiAllBetBLL.CallEventSettleApi(item, siteName).Result;
                                             var result = JsonConvert.DeserializeObject<AllBetTransferResponse>(response);
                                             if (result.resultCode != 0)
                                             {
