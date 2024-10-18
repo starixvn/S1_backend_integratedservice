@@ -183,7 +183,7 @@ namespace ThirdPartyWager.Service.BLL
 
                 // count interval wagers
                 var getWagerCount = _wagerSAService.GetWagerTotal(wagerTime.startUnix, wagerTime.endUnix);
-                var wagerCount = DealWagerTotalToMainSiteId(getWagerCount).FirstOrDefault(i => i.MainSiteId == siteId).WagerCount;
+                var wagerCount = DealWagerTotalToMainSiteId(getWagerCount, siteId);
 
                 var getWagerSummary = await _apiSABLL.GetBetSummaryByTime(setting, wagerTime.startTime, wagerTime.endTime);
 
@@ -279,15 +279,17 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        private static IEnumerable<CurrencyStatistics_SA> DealWagerTotalToMainSiteId(IEnumerable<WagerSATotal> wagerCountData)
+        private static int DealWagerTotalToMainSiteId(IEnumerable<WagerSATotal> wagerCountData, int siteId)
         {
-            return wagerCountData.GroupBy(data => data.MainSiteId).Select(
+            var data = wagerCountData.GroupBy(data => data.MainSiteId).Select(
                 g => new CurrencyStatistics_SA
                 {
                     MainSiteId = g.Key,
                     WagerCount = g.Sum(y => y.WagerCount)
                 }
             ).ToList();
+            var mainSiteData = data.FirstOrDefault(i => i.MainSiteId == siteId);
+            return (mainSiteData == null) ? 0 : mainSiteData.WagerCount;
         }
 
         private DateTime GetWorkerTime(int type, int vary, int siteId)
