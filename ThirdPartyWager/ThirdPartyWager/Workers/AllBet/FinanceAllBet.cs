@@ -79,9 +79,6 @@ namespace ThirdPartyWager.Workers
             var quick = false;
             try
             {
-                // get setting
-                var setting = _thirdPartyBLL.GetThirdPartySetting(_tpId);
-
                 // get timer
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(_tpId, _tpType);
 

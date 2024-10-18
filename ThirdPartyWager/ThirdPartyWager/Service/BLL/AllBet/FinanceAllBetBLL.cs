@@ -36,7 +36,7 @@ namespace ThirdPartyWager.Service.BLL
                 return dailyData;
             }
 
-            var groupData = reportData.GroupBy(i => i.Currency).Select(g => new
+            var groupData = reportData.GroupBy(i => i.CurrencyId).Select(g => new
             {
                 CurrencyId = g.Key,
                 totalBetAmount = g.Sum(s => s.totalBetAmount),
