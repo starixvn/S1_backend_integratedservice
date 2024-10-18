@@ -13,7 +13,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly CRMBLL _cRMBLL;
         public CRMController(IServiceProvider provider)
         {
-            _CRMConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<CRMConfig>("CRM");
+            _CRMConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<CRMConfig>("CRMConfig");
             _cRMBLL = provider.GetRequiredService<CRMBLL>();
         }
         public class CRMConfig 
@@ -25,8 +25,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         public class ScheduledCampaignsEventData
         {
             public int EventTypeID { get; set; }
-            public DateTime TimeStamp { get; set; }
-            public int CampaignID { get; set; }
+            public string TimeStamp { get; set; }
+            public string CampaignID { get; set; }
             public int ChannelID { get; set; }
         }
         public class Personalization
@@ -97,7 +97,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             return Ok();
         }
 
-        private Campaign GetCampaignDetail(int campaignID)
+        private Campaign GetCampaignDetail(string campaignID)
         {
             var options = new RestClientOptions($"{_CRMConfig.ApiUrlv2}/Actions/GetCampaignDetails?CampaignID={campaignID}");
             var client = new RestClient(options);
@@ -108,7 +108,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             return JsonConvert.DeserializeObject<Campaign>(response.Content);
         }
 
-        private List<CustomerAction> GetCampaignCustomers(int campaignID)
+        private List<CustomerAction> GetCampaignCustomers(string campaignID)
         {
             var options = new RestClientOptions($"{_CRMConfig.ApiUrlv2}/Customers/GetCustomerExecutionDetailsByCampaign?CampaignID={campaignID}");
             var client = new RestClient(options);

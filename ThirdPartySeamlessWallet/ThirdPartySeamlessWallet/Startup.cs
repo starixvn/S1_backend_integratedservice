@@ -81,6 +81,7 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<PartitionService>();
             services.AddSingleton<ConfigService>();
             services.AddSingleton<TpRoundGenService>();
+            services.AddSingleton<CRMService>();           
 
             /*BLL*/
             services.AddSingleton<TpCustInfoBLL>();
@@ -115,6 +116,7 @@ namespace ThirdPartySeamlessWallet
             services.AddSingleton<TpBetRecordExtendBLL>();
             services.AddSingleton<TpRequestFailBLL>();
             services.AddSingleton<TpUnRewardBLL>();
+            services.AddSingleton<CRMBLL>();
             services.AddSingleton<KMHeaderFilter>();
             services.AddSingleton<MGHeaderFilter>();
             services.AddSingleton<MGExceptionFilter>();
