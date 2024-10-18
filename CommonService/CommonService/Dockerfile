@@ -1,18 +1,12 @@
-﻿FROM mcr.microsoft.com/dotnet/sdk:6.0 as builder
-ARG CONFIGURATION=Release
-COPY ./CommonService ./CommonService
-WORKDIR CommonService
-RUN dotnet restore
+﻿FROM hub.lumigame.com/base/dotnet/core/sdk:6.0 AS builder
 
-RUN dotnet build -c $CONFIGURATION -o /app
+COPY . .
+WORKDIR CommonService/CommonService
+RUN dotnet publish "CommonService.csproj" -c Release -o /app
 
-FROM builder AS publish
-ARG CONFIGURATION=Release
-RUN dotnet publish -c $CONFIGURATION -o /app
-
-FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS runtime
+FROM hub.lumigame.com/base/dotnet/core/sdk:6.0
 WORKDIR /app
-COPY --from=publish /app .
-EXPOSE 59359
+COPY --from=builder /app .
+EXPOSE 5000
 
 ENTRYPOINT ["dotnet", "CommonService.dll"]

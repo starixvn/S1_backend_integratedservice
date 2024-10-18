@@ -6,6 +6,8 @@ using Serilog.Formatting.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Environment.EnvironmentName = builder.Configuration.GetSection("env").Get<string>();
+
 var remoteUrls = GetRemoteUrls();
 remoteUrls = builder.Configuration.CheckLocalConfig(builder.Environment, args, remoteUrls);
 builder.Configuration.AddRemoteJsonConfig(remoteUrls);
@@ -54,9 +56,7 @@ void OverrideLoggerWriteToLFile(LoggerConfiguration configuration)
 
 string[] GetRemoteUrls()
 {
-    // 如果有 Runtime Environment Variable 優先使用
-    // 沒有則使用預設 AppSetting
-    return Environment.GetEnvironmentVariable("ConfigServiceUrl") is null
-        ? builder.Configuration.GetSection("ConfigService").Get<string[]>()
-        : new List<string>() { Environment.GetEnvironmentVariable("ConfigServiceUrl") }.ToArray();
+    // 嚙緘嚙瘦嚙踝蕭 Runtime Environment Variable 嚙線嚙踝蕭嚙誕伐蕭
+    // 嚙磅嚙踝蕭嚙篁嚙誕用預嚙稽 AppSetting
+    return builder.Configuration.GetSection("ConfigService").Get<string[]>();
 }
