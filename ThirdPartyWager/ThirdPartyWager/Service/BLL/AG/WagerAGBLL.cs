@@ -161,7 +161,7 @@ namespace ThirdPartyWager.Service.BLL
 
                 // count interval wagers
                 var getWagerCount = _wagerAGService.GetWagerTotal(wagerTime.startUnix, wagerTime.endUnix);
-                var wagerCount = DealWagerTotalToMainSiteId(getWagerCount).FirstOrDefault(i => i.MainSiteId == siteId).WagerCount;
+                var wagerCount = DealWagerTotalToMainSiteId(getWagerCount, siteId);
 
                 var getWagerSummary = await _apiAGBLL.GetBetSummaryByTime(wagerUrl, hashKey, data_cagent, wagerTime.startTime, wagerTime.endTime);
                 var arrSummary = getWagerSummary.result;
@@ -261,20 +261,22 @@ namespace ThirdPartyWager.Service.BLL
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                _logger.LogError(ex, $"RedoWagersAsync {msg}\r\n{siteId}\r\n{ex.Message}");
+                _logger.LogError(ex, $"RedoWagersAsync {msg}\r\n{siteId}\r\n{wagerTime.startTime} ~ {wagerTime.endTime}\r\n{ex.Message}");
                 return false;
             }
         }
 
-        private static IEnumerable<CurrencyStatistics_AG> DealWagerTotalToMainSiteId(IEnumerable<WagerAGTotal> wagerCountData)
+        private static int DealWagerTotalToMainSiteId(IEnumerable<WagerAGTotal> wagerCountData, int siteId)
         {
-            return wagerCountData.GroupBy(data => data.MainSiteId).Select(
+            var data = wagerCountData.GroupBy(data => data.MainSiteId).Select(
                 g => new CurrencyStatistics_AG
                 {
                     MainSiteId = g.Key,
                     WagerCount = g.Sum(y => y.WagerCount)
                 }
             ).ToList();
+            var mainSiteData = data.FirstOrDefault(i => i.MainSiteId == siteId);
+            return (mainSiteData == null) ? 0 : mainSiteData.WagerCount;
         }
 
         private DateTime GetWorkerTime(int type, int vary, int siteId)
