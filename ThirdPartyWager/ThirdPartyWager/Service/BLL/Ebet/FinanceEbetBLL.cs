@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
@@ -11,17 +10,20 @@ namespace ThirdPartyWager.Service.BLL
         private readonly ILogger<FinanceEbetBLL> _logger;
         private readonly CommonBLL _commonBLL;
         private readonly ApiEbetBLL _apiEbetBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly DateTimeHelper _dateTimeHelper;
-        private readonly IHostEnvironment _environment;
+        private readonly IEnumerable<TpCurrency> _tpCurrency;
         private readonly int _timeZone = 8;
+        private readonly Tp _tp = Tp.EBet;
 
         public FinanceEbetBLL(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<FinanceEbetBLL>>();
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _apiEbetBLL = provider.GetRequiredService<ApiEbetBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
-            _environment = provider.GetRequiredService<IHostEnvironment>();
+            _tpCurrency = provider.GetRequiredService<CommonBLL>().GetTpCurrencyList((int)_tp);
         }
 
         public IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, List<dynamic> reportData)
@@ -32,52 +34,73 @@ namespace ThirdPartyWager.Service.BLL
                 return dailyData;
             }
 
-            foreach (var item in reportData)
+            var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
+            var tpCurrencyId = tpCurrencyList.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
+            
+            var getReportData = JsonConvert.DeserializeObject<List<CurrencyStats_Ebet>>(JsonConvert.SerializeObject(reportData));
+            var data = getReportData.GroupBy(i => i.CurrencyId).Select(g => new
+            {
+                Currency = g.Key,
+                TotalBet = g.Sum(s => s.totalBet),
+                TotalWithholding = g.Sum(s => s.totalWithholding),
+                TotalPayout = g.Sum(s => s.totalPayout),
+                TotalBalance = g.Sum(s => s.totalBalance),
+            });
+            
+            foreach (var item in data)
             {
                 dailyData.Add(new FincanceDailySummary()
                 {
                     SummaryType = SummaryType.TpBetRecord,
                     SummaryDate = reportDate,
                     TpId = tpId,
-                    CurrencyId = item.CurrencyId,
-                    Stake = item.totalBet + item.totalWithholding,
-                    ValidBet = item.totalBet,
-                    Payout = item.totalPayout,
-                    WinlostAmount = item.totalBalance
+                    CurrencyId = tpCurrencyId[item.Currency.ToString()],
+                    Stake = item.TotalBet + item.TotalWithholding,
+                    ValidBet = item.TotalBet,
+                    Payout = item.TotalPayout,
+                    WinlostAmount = item.TotalBalance
                 });
             }
+            
             return dailyData;
         }
 
         public async Task<List<dynamic>> GetReport(int tpId, dynamic setting, TimeCast reportTime)
         {
             //setting無用
-            var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
+            var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
+            var serverList = _commonBLL.GetSiteList();
             var reportData = new List<dynamic>();
 
-            foreach (var item in tpCurrencyList)
+            foreach (var site in siteList)
             {
-                var currency = item.TpCurrencyId;
-
-                var getWagerSummary = await _apiEbetBLL.GetBetSummaryByTime(currency, reportTime.startTime, reportTime.endTime);
-                if (getWagerSummary.status != 200)
+                if (site.TicketKey == 0)
                 {
-                    var msg = "THIRD_PARTY_ERROR";
-                    _logger.LogError($"{msg}\r\n{currency}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
-                    SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
-                    throw systemException;
-                }
-
-                if (getWagerSummary.count == 0)
-                {
-                    var msg = "NO_DATA";
-                    _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
                     continue;
                 }
-                getWagerSummary.CurrencyId = item.CurrencyId;
-                reportData.Add(getWagerSummary);
-            }
+                var currencyList = JsonConvert.DeserializeObject<IEnumerable<int>>(serverList.First(x => x.SiteId == site.SiteId).CurrencyList);
+                foreach (var currency in _tpCurrency.Where(x => currencyList.Contains(x.CurrencyId)))   
+                {
+                    var getWagerSummary = await _apiEbetBLL.GetBetSummaryByTime(site.SiteId ,currency.TpCurrencyId, reportTime.startTime, reportTime.endTime);
+                    if (getWagerSummary.status != 200)
+                    {
+                        var msg = "THIRD_PARTY_ERROR";
+                        _logger.LogError($"{msg}\r\n{currency.TpCurrencyId}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                        SystemException systemException = new SystemException($"{msg} - GetReport({tpId})");
+                        throw systemException;
+                    }
 
+                    if (getWagerSummary.count == 0)
+                    {
+                        var msg = "NO_DATA";
+                        _logger.LogInformation($"{msg}\r\n{JsonConvert.SerializeObject(getWagerSummary)}");
+                        continue;
+                    }
+                    getWagerSummary.CurrencyId = currency.CurrencyId;
+                    reportData.Add(getWagerSummary);
+                }
+            }
+            
             return reportData;
         }
 

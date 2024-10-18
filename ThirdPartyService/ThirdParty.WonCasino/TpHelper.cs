@@ -201,7 +201,7 @@ namespace ThirdParty.WonCasino
             Dictionary<string, string> inputs)
         {
             var transId = int.Parse(betRecordInfo.TransId);
-            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_WonCasino_Get", new { id = transId }, DataBase.Wager);
+            var detail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_WonCasino_Get", new { TransId = transId }, DataBase.Wager);
             if (detail == null)
             {
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);

@@ -25,13 +25,13 @@ namespace ThirdPartyWager.Extensions
                 { Tp.OneGaming, AddOneGaming},
                 { Tp.Sexy, AddSexy},
                 { Tp.CQ9, AddCQ9},
-                { Tp.CF, AddCF},
+                //{ Tp.CF, AddCF},
                 { Tp.EBet, AddEBet},
                 { Tp.WM, AddWM},
-                { Tp.Kiss918, AddKiss918},
-                { Tp.Mega, AddMega},
+                //{ Tp.Kiss918, AddKiss918},
+                //{ Tp.Mega, AddMega},
                 { Tp.One789, AddOne789},
-                { Tp.Iconic, AddIconic},
+                //{ Tp.Iconic, AddIconic},
                 { Tp.V8, AddV8},
                 //{ Tp.N2Live, AddN2Live},
                 { Tp.AMB, AddAMB},
@@ -76,7 +76,6 @@ namespace ThirdPartyWager.Extensions
 
             services.AddSingleton<WagerSABLL>();
             services.AddSingleton<ApiSABLL>();
-            //services.AddSingleton<WagerRedoSABLL>();
             services.AddSingleton<FinanceSABLL>();
 
             services.AddHostedService<WagerSA>();
@@ -92,12 +91,13 @@ namespace ThirdPartyWager.Extensions
 
             services.AddSingleton<WagerAGBLL>();
             services.AddSingleton<ApiAGBLL>();
-            services.AddSingleton<WagerRedoAGBLL>();
             services.AddSingleton<FinanceAGBLL>();
+            services.AddSingleton<TicketAGBLL>();
 
             services.AddHostedService<WagerAG>();
             services.AddHostedService<WagerRedoAG>();
             services.AddHostedService<FinanceAG>();
+            services.AddHostedService<TicketAG>();
 
             return services;
         }

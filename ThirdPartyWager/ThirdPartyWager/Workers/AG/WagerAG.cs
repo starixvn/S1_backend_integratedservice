@@ -1,111 +1,96 @@
 using Serilog.Context;
 using ThirdPartyWager.Service.BLL;
-using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model.enums;
 
 namespace ThirdPartyWager.Workers
 {
     public class WagerAG : BackgroundService
     {
-        private readonly ILogger<WagerAG> logger;
-        private readonly WagerAGBLL wagerAGBLL;
-        private readonly ThirdPartyBLL thirdPartyBLL;
-        private readonly DateTimeHelper dateTimeHelper;
-        private readonly IHostEnvironment environment;
-        private Timer timer;
-        private readonly int intervalMins = 3;
-        private readonly int iRangMins = 10;
-        private readonly int tpId = (int)Tp.AG;
+        private readonly ILogger<WagerAG> _logger;
+        private readonly WagerAGBLL _wagerAGBLL;
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly IHostEnvironment _env;
+        private Timer _timer;
+        private readonly int _timeRange = 10; //in minutes 
+        private readonly int _quickTime = 30; // in seconds
+        private readonly int _runTime = 3; // in minutes
+        private readonly int _tpId = (int)Tp.AG;
         private readonly string _tpName = Tp.AG.ToString();
-        private readonly int tpType = (int)WagerTimerType.Wager;
-        private int quick = 0;
-        private readonly int timeZone = -4;
+        private readonly int _tpType = (int)WagerTimerType.Wager;
 
-        public WagerAG(
-            ILogger<WagerAG> logger,
-            WagerAGBLL wagerAGBLL,
-            ThirdPartyBLL thirdPartyBLL,
-            DateTimeHelper dateTimeHelper,
-            IHostEnvironment environment
-        )
+        public WagerAG(IServiceProvider provider)
         {
-            this.logger = logger;
-            this.wagerAGBLL = wagerAGBLL;
-            this.thirdPartyBLL = thirdPartyBLL;
-            this.dateTimeHelper = dateTimeHelper;
-            this.environment = environment;
+            _logger = provider.GetRequiredService<ILogger<WagerAG>>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _wagerAGBLL = provider.GetRequiredService<WagerAGBLL>();
+            _env = provider.GetRequiredService<IWebHostEnvironment>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
+            _timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
-        private async void DoTask(object state)
+        private void DoTask(object state)
         {
-            if (!environment.IsProduction())
+            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
+            LogContext.PushProperty("Tp", _tpName);
+
+            var quick = false;
+            var failed = 0;
+
+            if (!_env.IsProduction())
             {
                 return;
             }
 
-            LogContext.PushProperty("RequestId", Guid.NewGuid().ToString());
-            LogContext.PushProperty("Tp", _tpName);
-
             try
             {
-                quick = 0;
-                var dataTpTimer = thirdPartyBLL.GetThirdPartyTimer(tpId, tpType);
-                DateTime timerTime;
-                int last;
-                if (dataTpTimer == null)
+                var tasks = new List<Task>();
+                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
+                foreach (var site in siteList)
                 {
-                    last = iRangMins - 1;
-                    timerTime = DateTime.Now.AddMinutes(-1 * last);
-                }
-                else
-                {
-                    timerTime = dataTpTimer.StartTime;
-                    last = iRangMins - 1;
-                }
-                if (timerTime < DateTime.Now)
-                {
-                    var time = dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-dd HH:mm:ss", timerTime);
-                    var result = await wagerAGBLL.GetWagersAsync(time.startTime, time.endTime);
-                    if (result)
+                    if (site.TicketKey == 0)
                     {
-                        thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);
+                        continue;
                     }
-                }
 
-                var ts = DateTime.Now - timerTime;
-                var diffMin = (int)ts.TotalMinutes;
-                if (diffMin > 5)
-                {
-                    quick = 1;
+                    var siteId = site.SiteId;
+                    tasks.Add(Task.Run(() =>
+                    {
+                        try
+                        {
+                            var res = _wagerAGBLL.ExecWagerWorker(siteId, _tpType, _timeRange);
+                            if (res.Result == true)
+                            {
+                                quick = true;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, ex.Message);
+                            Interlocked.Increment(ref failed);
+                        }
+                    }));
                 }
+                var t = Task.WhenAll(tasks);
+                t.Wait();
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
             }
             finally
             {
-                if (quick == 1)
-                {
-                    var dueTimeSpan = TimeSpan.FromSeconds(30);
-                    timer.Change(dueTimeSpan, TimeSpan.Zero);
-                }
-                else
-                {
-                    var dueTimeSpan = TimeSpan.FromMinutes(intervalMins);
-                    timer.Change(dueTimeSpan, TimeSpan.Zero);
-                }
+                var dueTimeSpan = (quick) ? TimeSpan.FromSeconds(_quickTime) : TimeSpan.FromMinutes(_runTime);
+                _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
+
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            timer?.Change(Timeout.Infinite, 0);
+            _timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }
