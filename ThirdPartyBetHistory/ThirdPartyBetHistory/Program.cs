@@ -1,12 +1,9 @@
-using Serilog;
-using Serilog.Events;
-using Serilog.Exceptions;
-using Serilog.Formatting.Json;
 using ThirdPartyBetHistory;
 using ThirdPartyBetHistory.Extensions;
 using ThirdPartyBetHistory.Service.Worker;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseSentry();
 
 builder.Environment.EnvironmentName = builder.Configuration.GetSection("env").Get<string>();
 
@@ -31,5 +28,7 @@ startup.Configure(app, builder.Environment);
 var minWorkers = Environment.ProcessorCount * 4;
 var minIOCPs = Environment.ProcessorCount * 4;
 ThreadPool.SetMinThreads(minWorkers, minIOCPs);
+
+SentrySdk.CaptureMessage($"Started result common service at {DateTime.Now.ToString()}");
 
 app.Run();
