@@ -10,7 +10,7 @@ namespace ThirdParty.AMB
         {
             return gameType switch
             {
-                TpGameType.AMB_Poker => new AMBPoker(inputs),
+                TpGameType.AMB_Poker => new AMBPoker(inputs, tpCurrency),
                 TpGameType.AMB_RNG => new AMBSlot(inputs, tpCurrency),
                 _ => throw new ArgumentOutOfRangeException(nameof(gameType), gameType, null)
             };
@@ -30,7 +30,7 @@ namespace ThirdParty.AMB
         public abstract GameReportResponse GetRoundResult(string tpUserName, string roundId, string gameId, string product, string type,
             Func<string, string, string, Dictionary<string, string>, int, string> callback);
 
-        protected string HMACSHA512(string input, string key)
+        protected static string HMACSHA512(string input, string key)
         {
             var salt = Encoding.UTF8.GetBytes(key);
             var HASH_SIZE = 64;
@@ -41,9 +41,15 @@ namespace ThirdParty.AMB
             var data = pbkdf2.GetBytes(HASH_SIZE);
             return Convert.ToBase64String(data);
         }
-        protected SlotCurrencyAgent GetSlotCurrencyConfig(string currencyId)
+
+        protected CurrencyDataAMB GetSlotCurrencyData(string currency)
         {
-            return Config.SlotCurrencyAgent.FirstOrDefault(x => x.CurrencyId == currencyId);
+            return Config.SlotCurrencyData[currency];
+        }
+
+        protected CurrencyDataAMB GetPokerCurrencyData(string currency)
+        {
+            return Config.PokerCurrencyData[currency];
         }
     }
 }

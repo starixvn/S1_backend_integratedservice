@@ -4,9 +4,12 @@ namespace ThirdParty.AMB
 {
     public class AMBPoker : AMB
     {
-        public AMBPoker(AMBConfig inputs)
+        private CurrencyDataAMB PokerCurrencyData { get; set; }
+
+        public AMBPoker(AMBConfig inputs, string tpCurrency)
         {
             Config = inputs;
+            PokerCurrencyData = GetPokerCurrencyData(tpCurrency);
         }
 
         public override GameListResponse GetGameList(Func<string, string, string, Dictionary<string, string>, int, string> callback)
@@ -16,17 +19,17 @@ namespace ThirdParty.AMB
 
         public override CommonResponse CreateMember(string tpUserName, Func<string, string, string, Dictionary<string, string>, int, string> callback)
         {
-            var apiUrl = $"{Config.PokerApiUrl}/seamless/create";
+            var apiUrl = $"{PokerCurrencyData.ApiUrl}/seamless/create";
             var param = new
             {
                 username = tpUserName,
-                agent = Config.PokerAgent,
+                agent = PokerCurrencyData.Agent,
             };
 
             var jsonParam = JsonConvert.SerializeObject(param);
             var header = new Dictionary<string, string>
             {
-                {"x-amb-signature", HMACSHA512(JsonConvert.SerializeObject(param), Config.PokerSecretKey)}
+                {"x-amb-signature", HMACSHA512(JsonConvert.SerializeObject(param), PokerCurrencyData.SecretKey)}
             };
 
             try
@@ -50,18 +53,18 @@ namespace ThirdParty.AMB
         public override CommonResponse LaunchGame(string tpUserName, string gameId, string homeUrl, bool isFun, string tpLangId,
             Func<string, string, string, Dictionary<string, string>, int, string> callback)
         {
-            var apiUrl = $"{Config.PokerApiUrl}/seamless/launch";
+            var apiUrl = $"{PokerCurrencyData.ApiUrl}/seamless/launch";
 
             var param = new
             {
                 username = tpUserName,
-                agent = Config.PokerAgent,
+                agent = PokerCurrencyData.Agent,
             };
 
             var jsonParam = JsonConvert.SerializeObject(param);
             var header = new Dictionary<string, string>
             {
-                {"x-amb-signature", HMACSHA512(jsonParam, Config.PokerSecretKey)}
+                {"x-amb-signature", HMACSHA512(jsonParam, PokerCurrencyData.SecretKey)}
             };
 
             try
@@ -86,12 +89,12 @@ namespace ThirdParty.AMB
 
         public override GameReportResponse GetRoundResult(string tpUserName, string roundId, string gameId, string product, string type, Func<string, string, string, Dictionary<string, string>, int, string> callback)
         {
-            var apiUrl = $"{Config.PokerApiUrl}/seamless/report";
+            var apiUrl = $"{PokerCurrencyData.ApiUrl}/seamless/report";
             var param = new
             {
                 username = tpUserName,
                 roundId,
-                agent = Config.PokerAgent,
+                agent = PokerCurrencyData.Agent,
                 language = "en",
             };
 
@@ -99,7 +102,7 @@ namespace ThirdParty.AMB
 
             var header = new Dictionary<string, string>
             {
-                { "x-amb-signature", HMACSHA512(jsonParam, Config.PokerSecretKey) }
+                { "x-amb-signature", HMACSHA512(jsonParam, PokerCurrencyData.SecretKey) }
             };
             var result = callback(apiUrl, jsonParam, "application/json", header, 0);
 
