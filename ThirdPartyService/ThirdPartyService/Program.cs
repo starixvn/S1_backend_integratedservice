@@ -6,7 +6,7 @@ using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.Worker;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.WebHost.UseSentry();
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);

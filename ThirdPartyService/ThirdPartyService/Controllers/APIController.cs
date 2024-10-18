@@ -47,9 +47,9 @@ namespace ThirdPartyService.Controllers
         }
 
         [HttpGet]
-        public ActionResult<ApiResult<TpCustInfo>> test()
+        public ActionResult<ApiResult<TpCustInfo>> test(int custId, int tpId)
         {
-            return _tpCustInfoService.GetTpCustInfo(4, 1);
+            return _tpCustInfoService.GetTpCustInfo(custId, tpId);
         }
 
         [HttpPost]
