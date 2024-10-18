@@ -5,6 +5,7 @@ using Serilog.Exceptions;
 using Serilog.Formatting.Json;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseSentry();
 
 builder.Environment.EnvironmentName = builder.Configuration.GetSection("env").Get<string>();
 
@@ -34,6 +35,7 @@ startup.ConfigureServices(builder.Services);
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
 
+SentrySdk.CaptureMessage($"Started result common service at {DateTime.Now.ToString()}");
 app.Run();
 return;
 
