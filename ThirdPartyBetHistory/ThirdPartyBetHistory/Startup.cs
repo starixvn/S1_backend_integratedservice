@@ -11,6 +11,7 @@ namespace ThirdPartyBetHistory
     public class Startup
     {
         public IConfiguration Configuration { get; }
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -43,6 +44,14 @@ namespace ThirdPartyBetHistory
             app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapGet("/", async context =>
+                {
+                    await context.Response.WriteAsync($"{env.EnvironmentName}-{DateTime.Now:yyyy/MM/dd HH:mm:ss}");
+                });
+                endpoints.MapGet("/healthcheck", async context =>
+                {
+                    await context.Response.WriteAsync($"{env.EnvironmentName}-{DateTime.Now:yyyy/MM/dd HH:mm:ss}");
+                });
                 endpoints.MapGet("/health", async context =>
                 {
                     await context.Response.WriteAsync($"{env.EnvironmentName}-{DateTime.Now:yyyy/MM/dd HH:mm:ss}");
