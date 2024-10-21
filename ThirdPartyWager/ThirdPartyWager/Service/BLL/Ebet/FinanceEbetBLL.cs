@@ -34,9 +34,6 @@ namespace ThirdPartyWager.Service.BLL
                 return dailyData;
             }
 
-            var tpCurrencyList = _commonBLL.GetTpCurrencyList(tpId);
-            var tpCurrencyId = tpCurrencyList.ToDictionary(i => i.TpCurrencyId, i => i.CurrencyId);
-            
             var getReportData = JsonConvert.DeserializeObject<List<CurrencyStats_Ebet>>(JsonConvert.SerializeObject(reportData));
             var data = getReportData.GroupBy(i => i.CurrencyId).Select(g => new
             {
@@ -54,7 +51,7 @@ namespace ThirdPartyWager.Service.BLL
                     SummaryType = SummaryType.TpBetRecord,
                     SummaryDate = reportDate,
                     TpId = tpId,
-                    CurrencyId = tpCurrencyId[item.Currency.ToString()],
+                    CurrencyId = item.Currency,
                     Stake = item.TotalBet + item.TotalWithholding,
                     ValidBet = item.TotalBet,
                     Payout = item.TotalPayout,
