@@ -118,6 +118,7 @@ namespace ThirdParty.JILI
 
             ApiResult oApiResult = new ApiResult();
 
+
             if (IsJSON(result))
             {
                 var json = JsonConvert.DeserializeObject<LoginResp>(result);
@@ -292,7 +293,6 @@ namespace ThirdParty.JILI
                 _ => gameCode,
             };
         }
-
         private string Encrypt(string req, JILIConfig config)
         {
             var s = req + config.OperatorKey;
