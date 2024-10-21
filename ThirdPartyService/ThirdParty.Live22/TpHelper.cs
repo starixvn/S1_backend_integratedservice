@@ -67,7 +67,7 @@ namespace ThirdParty.Live22
             public string SpecialKey { get; set; }
         }
 
-        #endregion
+        #endregion Request
 
         #region Response
 
@@ -89,7 +89,7 @@ namespace ThirdParty.Live22
         {
         }
 
-        #endregion
+        #endregion Response
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -260,6 +260,11 @@ namespace ThirdParty.Live22
                 { "operator-pwd", config.OperatorPwd},
                 { "operator-sign", Encrypt(postdata, config)},
             };
+
+            SentrySdk.CaptureMessage($"{nameof(TpHelper)} at {DateTime.Now}" +
+                                     $"{Environment.NewLine}--ApiUrl {JsonConvert.SerializeObject(ApiUrl)}" +
+                                     $"{Environment.NewLine}--postdata {postdata}" +
+                                     $"{Environment.NewLine}---header {JsonConvert.SerializeObject(header)}");
 
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
 

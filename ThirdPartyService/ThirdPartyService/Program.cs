@@ -1,6 +1,3 @@
-using Serilog;
-using Serilog.Events;
-using Serilog.Formatting.Json;
 using ThirdPartyService;
 using ThirdPartyService.Extensions;
 using ThirdPartyService.Service.Worker;
@@ -15,9 +12,6 @@ builder.Environment.EnvironmentName = builder.Configuration.GetSection("Env").Ge
 var remoteUrls = GetRemoteUrls();
 
 builder.Configuration.AddRemoteJsonConfig(remoteUrls);
-
-var excludesMessage = builder.Configuration.GetSection("ExcludesMessage").Get<string[]>();
-var excludesApiEndpoints = builder.Configuration.GetSection("ExcludesApiEndpoint").Get<string[]>();
 
 var startup = new Startup(builder.Configuration);
 startup.ConfigureServices(builder.Services);
@@ -37,24 +31,6 @@ startup.Configure(app, builder.Environment);
 SentrySdk.CaptureMessage($"Started {nameof(ThirdPartyService)} api at {DateTime.Now}");
 app.Run();
 return;
-
-void OverrideLoggerWriteToLFile(LoggerConfiguration configuration)
-{
-    const string cashSiteBrand = "Nova";
-
-    var brand = Environment.GetEnvironmentVariable("Brand") ?? string.Empty;
-    if (brand != cashSiteBrand) return;
-
-    var logFilePath = $"/tpservice/tpservice-{DateTime.Now:yyyyMMddHHmmssfff}.log";
-    configuration
-        .WriteTo.File(new JsonFormatter(),
-            logFilePath,
-            rollingInterval: RollingInterval.Day,
-            retainedFileCountLimit: 60,
-            fileSizeLimitBytes: 10485760,
-            rollOnFileSizeLimit: true,
-            restrictedToMinimumLevel: LogEventLevel.Information);
-}
 
 string[] GetRemoteUrls()
 {
