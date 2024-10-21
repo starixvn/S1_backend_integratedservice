@@ -81,6 +81,9 @@
     public class WagerAllBetTotal
     {
         public int wagerCount { get; set; }
+        public int MainSiteId {  get; set; }
+        public int SiteId { get; set; }
+        public string TpCurrencyId { get; set; }
     }
 
     public class RewardAllBet
@@ -142,6 +145,7 @@
     public class UnsettleCheck
     {
         public string betNum { get; set; }
+        public string client { get; set; }
     }
 
     public class CurrencyStats_AllBet

@@ -14,13 +14,13 @@ namespace ThirdParty.Allbet
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly AllBetConfig _siteAllBetConfig;
-        
+        private readonly Dictionary<int, AllBetConfig> _allSiteConfig;
+
         public TpHelper(IServiceProvider provider)
         {
-            _siteAllBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AllBetConfig>(TpEnum.Allbet.ToString());
+            _allSiteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<AllBetConfig>(TpEnum.Allbet.ToString());
         }
-        
+
         #region Model
         private class Result<T>
         {
@@ -64,6 +64,7 @@ namespace ThirdParty.Allbet
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
+            var _siteAllBetConfig = _allSiteConfig[tpCustInfo.SiteId];
             var apiUrl = _siteAllBetConfig.ApiUrl;
             var agent = _siteAllBetConfig.CurrencyAgents.FirstOrDefault(x => x.CurrencyId == tpCustInfo.TpCurrencyId).Agent; 
             var path = "CheckOrCreate";
@@ -73,7 +74,7 @@ namespace ThirdParty.Allbet
                 agent,
                 player = tpCustInfo.TpUserName
             });
-            var header = GetAuthData(inputs, path, parameters, out var contentType);
+            var header = GetAuthData(inputs, path, parameters, _siteAllBetConfig, out var contentType);
 
             var result = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
 
@@ -115,6 +116,7 @@ namespace ThirdParty.Allbet
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string tpLangId, Dictionary<string, string> inputs)
         {
+            var _siteAllBetConfig = _allSiteConfig[tpCustInfo.SiteId];
             var apiUrl = _siteAllBetConfig.ApiUrl;
             var isFun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) && inputs["fun"] == "1";
             var path = isFun ? "LoginTrial" : "Login";
@@ -129,7 +131,7 @@ namespace ThirdParty.Allbet
                 player = isFun ? null : tpCustInfo.TpUserName,
                 language = tpLangId
             });
-            var header = GetAuthData(inputs, path, parameters, out var contentType);
+            var header = GetAuthData(inputs, path, parameters, _siteAllBetConfig, out var contentType);
 
             var result = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
 
@@ -245,17 +247,17 @@ namespace ThirdParty.Allbet
             };
         }
 
-        private Dictionary<string, string> GetAuthData(IReadOnlyDictionary<string, string> inputs, string path, string parameters, out string contentType)
+        private Dictionary<string, string> GetAuthData(IReadOnlyDictionary<string, string> inputs, string path, string parameters, AllBetConfig config, out string contentType)
         {
             var md5 = Base64Md5(parameters);
             contentType = "application/json";
             var date = DateTime.UtcNow.ToString("dd MMM yyyy HH:mm:ss z", new CultureInfo("en-US"));
             var signString = $"POST\n{md5}\n{contentType}\n{date}\n/{path}";
-            var signature = Sign(signString, _siteAllBetConfig.AllbetKey);
+            var signature = Sign(signString, config.AllbetKey);
             return new Dictionary<string, string>
             {
                 { "Accept", "application/json" },
-                { "Authorization", $"AB {_siteAllBetConfig.OperatorId}:{signature}" },
+                { "Authorization", $"AB {config.OperatorId}:{signature}" },
                 { "Content-MD5", md5 },
                 { "Date", date }
             };
