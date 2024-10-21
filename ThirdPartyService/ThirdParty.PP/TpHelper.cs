@@ -22,8 +22,9 @@ namespace ThirdParty.PP
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
-
         public TpHelper(IServiceProvider provider)
+
+
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<PPConfig>(TpEnum.PP.ToString());
             temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
@@ -108,6 +109,7 @@ namespace ThirdParty.PP
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
+
         {
             throw new NotImplementedException();
         }
