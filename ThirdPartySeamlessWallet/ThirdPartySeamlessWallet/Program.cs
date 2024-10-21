@@ -6,6 +6,8 @@ using ThirdPartySeamlessWallet;
 using ThirdPartySeamlessWallet.Core.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseSentry();
+
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
@@ -28,6 +30,8 @@ startup.Configure(app, builder.Environment);
 const int minWorkers = 96;
 const int minIOCPs = 4;
 ThreadPool.SetMinThreads(minWorkers, minIOCPs);
+
+SentrySdk.CaptureMessage($"Started {nameof(ThirdPartySeamlessWallet)} {builder.Environment.EnvironmentName} api at {DateTime.Now}");
 
 app.Run();
 return;
@@ -54,4 +58,3 @@ string[] GetRemoteUrls()
 {
     return builder.Configuration.GetSection("ConfigService").Get<string[]>();
 }
-

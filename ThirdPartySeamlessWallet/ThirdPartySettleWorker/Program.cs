@@ -1,16 +1,14 @@
 using Microsoft.AspNetCore.Builder;
-
+using Microsoft.AspNetCore.Hosting;
 using Serilog;
 using Serilog.Events;
-using Serilog.Exceptions;
 using Serilog.Formatting.Json;
 using ThirdPartySeamlessWallet;
 using ThirdPartySeamlessWallet.Core.Extensions;
-
 using ThirdPartySettleWorker.Workers;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.WebHost.UseSentry();
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
@@ -28,70 +26,71 @@ var startup = new Startup(builder.Configuration);
 startup.ConfigureServices(builder.Services);
 
 builder.Services
-    .AddHostedService<TpReRequestWorker>()
-    .AddHostedService<TpRewardWorker>()
-    .AddHostedService<JokerWorker>()
-    .AddHostedService<MGWorker>()
-    .AddHostedService<APWorker>()
-    .AddHostedService<PPWorker>()
-    .AddHostedService<PGWorker>()
-    .AddHostedService<YGGWorker>()
-    .AddHostedService<TCGWorker>()
-    .AddHostedService<HBWorker>()
-    .AddHostedService<AMBWorker>()
-    .AddHostedService<SAWorker>()
-    .AddHostedService<SimplePlayWorker>()
-    .AddHostedService<SGWorker>()
-    .AddHostedService<AllbetWorker>()
-    .AddHostedService<PlayTechWorker>()
-    .AddHostedService<SBOWorker>()
-    .AddHostedService<JILIWorker>()
+    //.AddHostedService<TpReRequestWorker>()
+    //.AddHostedService<TpRewardWorker>()
+    //.AddHostedService<JokerWorker>()
+    //.AddHostedService<MGWorker>()
+    //.AddHostedService<APWorker>()
+    //.AddHostedService<PPWorker>()
+    //.AddHostedService<PGWorker>()
+    //.AddHostedService<YGGWorker>()
+    //.AddHostedService<TCGWorker>()
+    //.AddHostedService<HBWorker>()
+    //.AddHostedService<AMBWorker>()
+    //.AddHostedService<SAWorker>()
+    //.AddHostedService<SimplePlayWorker>()
+    //.AddHostedService<SGWorker>()
+    //.AddHostedService<AllbetWorker>()
+    //.AddHostedService<PlayTechWorker>()
+    //.AddHostedService<SBOWorker>()
+    //.AddHostedService<JILIWorker>()
     //.AddHostedService<ATWorker>()
-    .AddHostedService<KMWoker>()
+    //.AddHostedService<KMWoker>()
     //.AddHostedService<OneGamingWorker>()
-    .AddHostedService<V8Worker>()
-    .AddHostedService<MPWorker>()
-    .AddHostedService<CQ9Worker>()
-    .AddHostedService<GPIWorker>()
-    .AddHostedService<NetentWorker>()
-    .AddHostedService<RedTigerWorker>()
-    .AddHostedService<NLCWorker>()
-    .AddHostedService<AmigoWorker>()
+    //.AddHostedService<V8Worker>()
+    //.AddHostedService<MPWorker>()
+    //.AddHostedService<CQ9Worker>()
+    //.AddHostedService<GPIWorker>()
+    //.AddHostedService<NetentWorker>()
+    //.AddHostedService<RedTigerWorker>()
+    //.AddHostedService<NLCWorker>()
+    //.AddHostedService<AmigoWorker>()
     //.AddHostedService<YLWorker>()
-    .AddHostedService<Kiss918Worker>()
-    .AddHostedService<SkywindWorker>()
-    .AddHostedService<BTIWorker>()
-    .AddHostedService<NineWWorker>()
-    .AddHostedService<One789Worker>()
-    .AddHostedService<YeebetWorker>()
-    .AddHostedService<BGWorker>()
-    .AddHostedService<TFGWorker>()
-    .AddHostedService<NextspinWorker>()
-    .AddHostedService<ENDWorker>()
-    .AddHostedService<IMWorker>()
-    .AddHostedService<SPRIBEWorker>()
-    .AddHostedService<SBSWWorker>()
-    .AddHostedService<PNGWorker>()
-    .AddHostedService<DGWorker>()
-    .AddHostedService<PegasusWorker>()
-    .AddHostedService<SexyWorker>()
-    .AddHostedService<AGWorker>()
-    .AddHostedService<EBetWorker>()
-    .AddHostedService<WMWorker>()
-    .AddHostedService<FaChaiWorker>()
-    .AddHostedService<EVOWorker>()
+    //.AddHostedService<Kiss918Worker>()
+    //.AddHostedService<SkywindWorker>()
+    //.AddHostedService<BTIWorker>()
+    //.AddHostedService<NineWWorker>()
+    //.AddHostedService<One789Worker>()
+    //.AddHostedService<YeebetWorker>()
+    //.AddHostedService<BGWorker>()
+    //.AddHostedService<TFGWorker>()
+    //.AddHostedService<NextspinWorker>()
+    //.AddHostedService<ENDWorker>()
+    //.AddHostedService<IMWorker>()
+    //.AddHostedService<SPRIBEWorker>()
+    //.AddHostedService<PNGWorker>()
+    //.AddHostedService<DGWorker>()
+    //.AddHostedService<PegasusWorker>()
+    //.AddHostedService<SexyWorker>()
+    //.AddHostedService<AGWorker>()
+    //.AddHostedService<EBetWorker>()
+    //.AddHostedService<WMWorker>()
+    //.AddHostedService<FaChaiWorker>()
+    //.AddHostedService<EVOWorker>()
     //.AddHostedService<N2LiveWorker>()
     //.AddHostedService<N2LiveSmartWorker>()
-    .AddHostedService<BNGWorker>()
-    .AddHostedService<HLWorker>()
-    .AddHostedService<MaxGameWorker>()
-    .AddHostedService<SabaPlayWorker>()
-    .AddHostedService<UuSlotsWorker>()
-    .AddHostedService<Live22Worker>()
-    .AddHostedService<FastSpinWorker>()
-    .AddHostedService<NTConnectWorker>()
-    .AddHostedService<GAWorker>()
-    .AddHostedService<WonCasinoWorker>();
+    //.AddHostedService<BNGWorker>()
+    //.AddHostedService<HLWorker>()
+    //.AddHostedService<SabaPlayWorker>()
+    //.AddHostedService<UuSlotsWorker>()
+    //.AddHostedService<Live22Worker>()
+    //.AddHostedService<FastSpinWorker>()
+    //.AddHostedService<NTConnectWorker>()
+    //.AddHostedService<GAWorker>()
+    //.AddHostedService<WonCasinoWorker>()
+    .AddHostedService<SBSWWorker>()
+    .AddHostedService<MaxGameWorker>();
+
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
@@ -99,6 +98,8 @@ startup.Configure(app, builder.Environment);
 const int minWorkers = 32;
 const int minIOCPs = 4;
 ThreadPool.SetMinThreads(minWorkers, minIOCPs);
+
+SentrySdk.CaptureMessage($"Started {nameof(ThirdPartySettleWorker)} {builder.Environment.EnvironmentName} at {DateTime.Now}");
 
 app.Run();
 return;
