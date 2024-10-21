@@ -11,6 +11,7 @@ namespace ThirdParty.SabaPlay
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly TemporaryLogSentryService temporaryLogSentryService;
         private readonly Dictionary<int, SabaPlayConfig> _siteConfigDic;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
@@ -19,6 +20,7 @@ namespace ThirdParty.SabaPlay
         public TpHelper(IServiceProvider provider)
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SabaPlayConfig>(TpEnum.SabaPlay.ToString());
+            temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
         }
 
         #region Request
@@ -67,7 +69,7 @@ namespace ThirdParty.SabaPlay
             public string SpecialKey { get; set; }
         }
 
-        #endregion
+        #endregion Request
 
         #region Response
 
@@ -89,7 +91,7 @@ namespace ThirdParty.SabaPlay
         {
         }
 
-        #endregion
+        #endregion Response
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -257,6 +259,7 @@ namespace ThirdParty.SabaPlay
             };
 
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
+            temporaryLogSentryService.WriteLogLaunchGame(nameof(SabaPlay), ApiUrl, header, postdata, result);
 
             ApiResult oApiResult = new ApiResult();
 

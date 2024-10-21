@@ -17,10 +17,12 @@ namespace ThirdParty.SBSW
     {
         private const string ContentType = "application/x-www-form-urlencoded";
         private readonly Dictionary<int, SabaConfig> siteSabaConfigs;
+        private readonly TemporaryLogSentryService temporaryLogSentryService;
 
         public TpHelper(IServiceProvider provider)
         {
             siteSabaConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SabaConfig>(TpEnum.SBSW.ToString());
+            temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -46,6 +48,8 @@ namespace ThirdParty.SBSW
             var dicP = FromJson<Dictionary<string, string>>(ToJson(input));
             var postdata = $"{string.Join("&", dicP.Select(kp => $"{kp.Key}={kp.Value}"))}";
             var result = HttpPost(ApiUrl, postdata, "application/x-www-form-urlencoded", timeOutTime: 3);
+
+            temporaryLogSentryService.WriteLogLaunchGame(nameof(SBSW), ApiUrl, null, postdata, result);
 
             var oApiResult = new ApiResult();
             if (IsJSON(result))
@@ -90,7 +94,7 @@ namespace ThirdParty.SBSW
                 platform = 3;
             }
 
-            // 取得進入網址         
+            // 取得進入網址
             var loginResult = GetSabaUrl(config, tpCustInfo.TpUserName, platform);
             if (loginResult.error_code != 0)
             {
@@ -442,6 +446,7 @@ namespace ThirdParty.SBSW
             }
             return jObject.ToString();
         }
+
         private DeviceType GetDeviceType(string device)
         {
             switch (device)
@@ -457,12 +462,14 @@ namespace ThirdParty.SBSW
                 case "7":
                 case "~":
                     return DeviceType.Mobile;
+
                 case "1":
                 case "4":
                 case "[":
                 case "9":
                 case ">":
                     return DeviceType.Desktop;
+
                 default:
                     return DeviceType.None;
             }

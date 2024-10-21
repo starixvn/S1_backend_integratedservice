@@ -1,5 +1,4 @@
-﻿using System.Net;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -18,14 +17,13 @@ namespace ThirdParty.PP
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-
-
         public class UserReq
         {
             public string username { get; set; }
             public string password { get; set; }
             public string providerId { get; set; }
         }
+
         public class gameReq
         {
             public string gameID { get; set; }
@@ -40,6 +38,7 @@ namespace ThirdParty.PP
             public int gameIdNumeric { get; set; }
             public List<string> jurisdictions { get; set; }
         }
+
         public class LoginReq
         {
             public string token { get; set; } //由玩家的运营商生成的安全令牌
@@ -72,6 +71,7 @@ namespace ThirdParty.PP
             //"userId":"421", "currency":"USD", "cash": 99999.99, "bonus": 99.99, "error":0, "description":"Success"
         }
 
+        private readonly TemporaryLogSentryService temporaryLogSentryService;
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
         private readonly Dictionary<int, PPConfig> _siteConfigDic;
 
@@ -79,6 +79,7 @@ namespace ThirdParty.PP
         {
             _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.PP).ToDictionary(d => d.GameId, d => d.Name);
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<PPConfig>(TpEnum.PP.ToString());
+            temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -144,6 +145,8 @@ namespace ThirdParty.PP
             var sParam = string.Join("&", parameters.OrderBy(kp => kp.Key).Select(kp => $"{kp.Key}={kp.Value}"));
             sParam += $"&hash={ToMD5($"{sParam}{SecureKey}")}";
             var result = HttpPost($"{ApiUrl}{Uri}", sParam, "application/x-www-form-urlencoded");
+
+            temporaryLogSentryService.WriteLogLaunchGame(nameof(PP), $"{ApiUrl}{Uri}", null, sParam, result);
 
             ApiResult oApiResult = new ApiResult();
             if (!IsJSON(result))
@@ -360,7 +363,6 @@ namespace ThirdParty.PP
             var sParam = string.Join("&", parameters.OrderBy(kp => kp.Key).Select(kp => $"{kp.Key}={kp.Value}"));
             sParam += $"&hash={ToMD5($"{sParam}{secureKey}")}";
 
-
             var result = HttpPost($"{apiUrl}{Uri}?{sParam}", totalJson, "application/json");
 
             if (!IsJSON(result))
@@ -463,6 +465,5 @@ namespace ThirdParty.PP
 
             return null;
         }
-
     }
 }

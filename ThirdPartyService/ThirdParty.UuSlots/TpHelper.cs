@@ -11,6 +11,7 @@ namespace ThirdParty.UuSlots
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly TemporaryLogSentryService temporaryLogSentryService;
         private readonly Dictionary<int, UuSlotsConfig> _siteConfigDic;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
@@ -19,6 +20,7 @@ namespace ThirdParty.UuSlots
         public TpHelper(IServiceProvider provider)
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<UuSlotsConfig>(TpEnum.UuSlots.ToString());
+            temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
         }
 
         #region Request
@@ -67,7 +69,7 @@ namespace ThirdParty.UuSlots
             public string SpecialKey { get; set; }
         }
 
-        #endregion
+        #endregion Request
 
         #region Response
 
@@ -89,7 +91,7 @@ namespace ThirdParty.UuSlots
         {
         }
 
-        #endregion
+        #endregion Response
 
         public class BettransData_UuSlot
         {
@@ -272,6 +274,7 @@ namespace ThirdParty.UuSlots
             };
 
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
+            temporaryLogSentryService.WriteLogLaunchGame(nameof(UuSlots), ApiUrl, header, postdata, result);
 
             ApiResult oApiResult = new ApiResult();
 

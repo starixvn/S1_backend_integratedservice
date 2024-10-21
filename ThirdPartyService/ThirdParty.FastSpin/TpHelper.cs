@@ -11,6 +11,7 @@ namespace ThirdParty.FastSpin
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly TemporaryLogSentryService temporaryLogSentryService;
         private readonly Dictionary<int, FastSpinConfig> _siteConfigDic;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
@@ -19,6 +20,7 @@ namespace ThirdParty.FastSpin
         public TpHelper(IServiceProvider provider)
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<FastSpinConfig>(TpEnum.FastSpin.ToString());
+            temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
         }
 
         #region Request
@@ -67,7 +69,7 @@ namespace ThirdParty.FastSpin
             public string SpecialKey { get; set; }
         }
 
-        #endregion
+        #endregion Request
 
         #region Response
 
@@ -89,7 +91,7 @@ namespace ThirdParty.FastSpin
         {
         }
 
-        #endregion
+        #endregion Response
 
         public class BettransData_FastSpin
         {
@@ -173,6 +175,8 @@ namespace ThirdParty.FastSpin
             };
 
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
+            temporaryLogSentryService.WriteLogLaunchGame(nameof(FastSpin), ApiUrl, header, postdata, result);
+
             if (IsJSON(result))
             {
                 var json = JsonConvert.DeserializeObject<GetBetHistoryResp>(result);

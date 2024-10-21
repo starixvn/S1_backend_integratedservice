@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Caching.Memory;
-using System.Collections.Concurrent;
 
 using Newtonsoft.Json;
 
@@ -38,6 +37,7 @@ namespace ThirdPartyService.Service.BLL
         private readonly MySqlClient _mainDbClient;
 
 #if DEBUG
+
         /// <summary>
         /// PT異常客戶清單(測試機)，共13筆
         /// </summary>
@@ -49,9 +49,10 @@ namespace ThirdPartyService.Service.BLL
         /// </summary>
         private readonly int[] NineWWrongCustList = new int[]
             {565, 602, 1017, 127559, 249667, 249745, 249814, 249874, 249951, 250066, 249951, 250057};
+
 #endif
 
-        #endregion
+        #endregion Fields
 
         #region Constructors
 
@@ -84,7 +85,7 @@ namespace ThirdPartyService.Service.BLL
             _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
         }
 
-        #endregion
+        #endregion Constructors
 
         public ApiResult GotoGame(TpInfo tpInfo)
         {
@@ -128,6 +129,7 @@ namespace ThirdPartyService.Service.BLL
             {
                 var tpCustInfo = tpCustInfoResult.Data;
                 IThirdPartyHelper tpHelper = thirdPartyHelper.GetThirdPartyHelper(tpInfo.TpId, tpCustInfo.SiteId);
+
                 var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper
                     .GetThirdPartyBySite(tpInfo.TpId, tpCustInfo.SiteId).Setting);
                 if (tpInfo.inputs != null)
@@ -151,6 +153,12 @@ namespace ThirdPartyService.Service.BLL
                 else
                 {
                     apiResult = tpHelper.Login(tpCustInfoResult.Data, (AppType)tpInfo.AppType, tpLangId, inputs);
+
+                    SentrySdk.CaptureMessage($"xxx {nameof(ThirdPartyBLL)} at {DateTime.Now}" +
+                                             $"{Environment.NewLine}-tpCustInfo {JsonConvert.SerializeObject(tpCustInfo)}" +
+                                             $"{Environment.NewLine}-tpInfo {JsonConvert.SerializeObject(tpInfo)}" +
+                                             $"{Environment.NewLine}-inputs {JsonConvert.SerializeObject(inputs)}" +
+                                             $"{Environment.NewLine}-apiResult {JsonConvert.SerializeObject(apiResult)}");
                 }
 
                 /*Use Async to Record Log*/
@@ -183,7 +191,7 @@ namespace ThirdPartyService.Service.BLL
                     return result;
                 }
 
-                var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpTransfer.CustId, tpTransfer.TpId ,tpTransfer.LangId);
+                var tpCustInfoResult = tpCustInfoService.GetTpCustInfo(tpTransfer.CustId, tpTransfer.TpId, tpTransfer.LangId);
 
                 // Test account create 3rd party only for saba
                 // 先讓HL過 後續確定有一家轉帳制 到時候一起處理
@@ -358,10 +366,10 @@ namespace ThirdPartyService.Service.BLL
                     var oThirdPartyModel =
                         thirdPartyHelper.GetThirdPartyBySite(tpInfo.TpId, tpCustInfoResult.Data.SiteId);
                     var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
-                    
+
                     if (!string.IsNullOrEmpty(tpInfo.LangId))
                     {
-                        inputs.Add("langId",tpInfo.LangId);
+                        inputs.Add("langId", tpInfo.LangId);
                     }
 
                     apiResult = tpHelper.GetBalance(tpCustInfoResult.Data, inputs);
@@ -1071,7 +1079,6 @@ namespace ThirdPartyService.Service.BLL
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(oThirdPartyModel.Setting);
 
             return tpHelper.SetBetLimit(tpCustInfoResult.Data, inputs, setBetLimit.BetSetting);
-
         }
 
         /// <summary>
@@ -1190,7 +1197,6 @@ namespace ThirdPartyService.Service.BLL
             }
             tpCustInfoResult.Data.IsoCode = GetCurrencyIsoCode(request.CurrencyId);
 
-
             var tpHelper = (IThirdPartyTpBetRecordDetail)thirdPartyHelper.GetThirdPartyHelper(tpId, tpCustInfoResult.Data.SiteId);
             var inputs = JsonConvert.DeserializeObject<Dictionary<string, string>>(thirdPartyHelper.GetThirdPartyBySite(tpId, tpCustInfoResult.Data.SiteId).Setting);
 
@@ -1219,7 +1225,7 @@ namespace ThirdPartyService.Service.BLL
         {
             return tpCustInfoService.CreateMember(custId, tpId, isNeedSendRequest);
         }
-        
+
         public ApiResult AddPrizeToPlayer(AddFreeSpin addFreeSpin)
         {
             var apiResult = new ApiResult();
@@ -1238,7 +1244,7 @@ namespace ThirdPartyService.Service.BLL
                         inputs.Add(infoI.Key, infoI.Value);
                     }
                 }
-                
+
                 apiResult = tpHelper.AddPrizeToPlayer(tpCustInfoResult.Data, inputs);
             }
             else
@@ -1271,7 +1277,6 @@ namespace ThirdPartyService.Service.BLL
 
             return apiResult;
         }
-
 
         #region Private Methods
 
@@ -1613,6 +1618,6 @@ namespace ThirdPartyService.Service.BLL
             }
         }
 
-        #endregion
+        #endregion Private Methods
     }
 }

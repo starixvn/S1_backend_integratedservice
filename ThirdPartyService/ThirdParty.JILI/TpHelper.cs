@@ -13,6 +13,7 @@ namespace ThirdParty.JILI
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly TemporaryLogSentryService temporaryLogSentryService;
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
         private readonly Dictionary<int, JILIConfig> _siteConfigDic;
 
@@ -20,6 +21,7 @@ namespace ThirdParty.JILI
         {
             _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.JILI).ToDictionary(d => d.AppId, d => d.Name);
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<JILIConfig>(TpEnum.JILI.ToString());
+            temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
@@ -93,17 +95,19 @@ namespace ThirdParty.JILI
             string md5Param = ToMD5($"{sParam}{g}").ToLower();
             string k = $"{GetRandomString(6)}{md5Param}{GetRandomString(6)}";
             sParam += $"&HomeUrl={HomeUrl}&Key={k}";
-            
+
             var json = HttpPost(GameUrl, sParam, "application/x-www-form-urlencoded");
             var result = FromJson<LoginWithoutRedirectResponse>(json);
+
+            temporaryLogSentryService.WriteLogLaunchGame(nameof(JILI), GameUrl, null, sParam, json);
 
             if (result.ErrorCode == 0)
             {
                 oApiResult.Message = result.Data;
             }
-            
+
             oApiResult.ErrorCode = ErrorCode.Success;
-           
+
             return oApiResult;
         }
 
@@ -217,7 +221,7 @@ namespace ThirdParty.JILI
             public string Message { get; set; }
             public string Data { get; set; }
         }
-        
+
         private string GetGameName(string gameCode)
         {
             if (!_gameNameList.TryGetValue(gameCode, out var name))
@@ -244,6 +248,5 @@ namespace ThirdParty.JILI
                 _ => gameCode,
             };
         }
-
     }
 }
