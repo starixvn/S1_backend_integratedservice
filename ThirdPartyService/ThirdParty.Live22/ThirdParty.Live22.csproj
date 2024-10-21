@@ -11,6 +11,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="Sentry" Version="4.12.1" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\ThirdPartyCore\ThirdPartyCore.csproj" />
 	</ItemGroup>
 

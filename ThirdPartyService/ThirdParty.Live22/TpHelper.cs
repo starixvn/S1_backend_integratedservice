@@ -263,6 +263,11 @@ namespace ThirdParty.Live22
                 { "operator-sign", Encrypt(postdata, config)},
             };
 
+            SentrySdk.CaptureMessage($"{nameof(TpHelper)} at {DateTime.Now}" +
+                                     $"{Environment.NewLine}--ApiUrl {JsonConvert.SerializeObject(ApiUrl)}" +
+                                     $"{Environment.NewLine}--postdata {postdata}" +
+                                     $"{Environment.NewLine}---header {JsonConvert.SerializeObject(header)}");
+
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
 
             temporaryLogSentryService.WriteLogLaunchGame(nameof(Live22), ApiUrl, header, postdata, result);
