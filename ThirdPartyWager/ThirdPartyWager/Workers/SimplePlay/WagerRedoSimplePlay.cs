@@ -6,25 +6,27 @@ namespace ThirdPartyWager.Workers
 {
     public class WagerRedoSimplePlay : BackgroundService
     {
+        private Timer _timer;
         private readonly ILogger<WagerRedoSimplePlay> _logger;
         private readonly WagerSimplePlayBLL _wagerSimplePlayBLL;
-
-        private Timer timer;
-        private readonly int tpType = (int)WagerTimerType.RedoWager;
-        private readonly int timeRange = 60; //in minutes 
-        private readonly int quickTime = 300; // in seconds
-        private readonly int runTime = 1; // in hours
+        private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly int _tpType = (int)WagerTimerType.RedoWager;
+        private readonly int _timeRange = 60; //in minutes
+        private readonly int _quickTime = 300; // in seconds
+        private readonly int _runTime = 1; // in hours
+        private readonly int _tpId = (int)Tp.SimplePlay;
         private readonly string _tpName = Tp.SimplePlay.ToString();
 
         public WagerRedoSimplePlay(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<WagerRedoSimplePlay>>();
             _wagerSimplePlayBLL = provider.GetRequiredService<WagerSimplePlayBLL>();
+            _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
+            _timer = new Timer(DoTask, null, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -35,7 +37,16 @@ namespace ThirdPartyWager.Workers
             var quick = false;
             try
             {
-                quick = await _wagerSimplePlayBLL.ExecWagerRedoWorker(tpType, timeRange);
+                var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId).Where(x => x.TicketKey == 1);
+                foreach (var site in siteList)
+                {
+                    var siteId = site.SiteId;
+                    var res = await _wagerSimplePlayBLL.ExecWagerRedoWorker(siteId, _tpType, _timeRange);
+                    if (res == true)
+                    {
+                        quick = true;
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -43,14 +54,14 @@ namespace ThirdPartyWager.Workers
             }
             finally
             {
-                var dueTimeSpan = quick ? TimeSpan.FromSeconds(quickTime) : TimeSpan.FromHours(runTime);
-                timer.Change(dueTimeSpan, TimeSpan.Zero);
+                var dueTimeSpan = quick ? TimeSpan.FromSeconds(_quickTime) : TimeSpan.FromHours(_runTime);
+                _timer.Change(dueTimeSpan, TimeSpan.Zero);
             }
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)
         {
-            timer?.Change(Timeout.Infinite, 0);
+            _timer?.Change(Timeout.Infinite, 0);
             return Task.CompletedTask;
         }
     }

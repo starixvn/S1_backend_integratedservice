@@ -15,7 +15,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly Log2File _log2File;
         private readonly ILogger<ApiSimplePlayBLL> _logger;
         private readonly string _tpName = Tp.SimplePlay.ToString();
-        private readonly SimplePlayConfig _siteConfig;
+        private readonly Dictionary<int, SimplePlayConfig> _siteConfigDic;
 
         public ApiSimplePlayBLL(IServiceProvider provider)
         {
@@ -23,15 +23,16 @@ namespace ThirdPartyWager.Service.BLL
             _common = provider.GetRequiredService<Common>();
             _log2File = provider.GetRequiredService<Log2File>();
             _logger = provider.GetRequiredService<ILogger<ApiSimplePlayBLL>>();
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SimplePlayConfig>(_tpName);
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SimplePlayConfig>(_tpName);
         }
 
-        public async Task<WagerSimplePlayModel> GetBetListByTime(string startTime, string endTime)
+        public async Task<WagerSimplePlayModel> GetBetListByTime(int siteId, string startTime, string endTime)
         {
-            var apiUrl = _siteConfig.ApiUrl;
-            var encrypKey = _siteConfig.EncryptKey;
-            var md5Key = _siteConfig.MD5Key;
-            var secretKey = _siteConfig.SecretKey;
+            var config = _siteConfigDic[siteId];
+            var apiUrl = config.ApiUrl;
+            var encrypKey = config.EncryptKey;
+            var md5Key = config.MD5Key;
+            var secretKey = config.SecretKey;
 
             // param
             var url = $"{apiUrl}";
@@ -53,13 +54,14 @@ namespace ThirdPartyWager.Service.BLL
             return result;
         }
 
-        public async Task<CurrencyStats_SimplePlay> GetBetSummaryByTime(string startTime, string endTime)
+        public async Task<CurrencyStats_SimplePlay> GetBetSummaryByTime(int siteId, string startTime, string endTime)
         {
             // 報表API無法區分幣別
-            var apiUrl = _siteConfig.ApiUrl;
-            var encrypKey = _siteConfig.EncryptKey;
-            var md5Key = _siteConfig.MD5Key;
-            var secretKey = _siteConfig.SecretKey;
+            var config = _siteConfigDic[siteId];
+            var apiUrl = config.ApiUrl;
+            var encrypKey = config.EncryptKey;
+            var md5Key = config.MD5Key;
+            var secretKey = config.SecretKey;
 
             // param
             var url = $"{apiUrl}";
