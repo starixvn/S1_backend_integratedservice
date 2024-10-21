@@ -16,12 +16,12 @@ namespace ThirdParty.SimplePlay
     {
 
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
-        private readonly SimplePlayConfig _siteConfig;
+        private readonly Dictionary<int, SimplePlayConfig> _siteConfigDic;
 
         public TpHelper(IServiceProvider provider)
         {
             _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.SimplePlay).ToDictionary(d => d.AppId, d => d.Name);
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<SimplePlayConfig>(TpEnum.SimplePlay.ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SimplePlayConfig>(TpEnum.SimplePlay.ToString());
         }
 
         #region Response
@@ -95,7 +95,7 @@ namespace ThirdParty.SimplePlay
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
-            var config = _siteConfig;
+            var config = _siteConfigDic[tpCustInfo.SiteId];
             string gameId = inputs.GetValueOrDefault("gameId") ?? throw new Exception("gameId");
             string fun = inputs.GetValueOrDefault("fun") ?? "0";
             string homeUrl = inputs.GetValueOrDefault("homeUrl") ?? "";
@@ -149,7 +149,7 @@ namespace ThirdParty.SimplePlay
 
         public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var config = _siteConfig;
+            var config = _siteConfigDic[tpCustInfo.SiteId];
             var time = Time;
             var method = "GetSlotDetailsURL";
 
