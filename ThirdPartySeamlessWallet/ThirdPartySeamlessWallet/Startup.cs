@@ -1,5 +1,7 @@
 ﻿using System.Net;
 using System.Text.Json.Serialization;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using StackExchange.Redis;
 
 using ThirdPartySeamlessWallet.Extensions;
@@ -121,7 +123,7 @@ namespace ThirdPartySeamlessWallet
             services.AddControllers()
                 .AddJsonOptions(options =>
                     {
-                      options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;   
+                        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
                     });
 
             services.AddOptionListByDB<SabaSportTypeOption>("Service_SabaSportType_Get");
@@ -131,6 +133,20 @@ namespace ThirdPartySeamlessWallet
             services.AddSiteConfig();
             services.AddSingleton<ConfigBLL>();
             services.AddOptionListByDB<TpBetLimit>("Service_TpBetLimit_Get");
+
+            services
+                .AddOpenTelemetry()
+                .ConfigureResource(_ => _.AddService(Configuration.GetValue<string>("Otel:ServiceName") ?? ""))
+                .WithTracing(traceProvider => traceProvider
+                    .AddAspNetCoreInstrumentation(options => options.Filter =
+                        httpContext => !httpContext.Request.Path.HasValue
+                            || !httpContext.Request.Path.StartsWithSegments("/swagger")
+                            && !httpContext.Request.Path.StartsWithSegments("/health")
+                            && !httpContext.Request.Path.StartsWithSegments("/healthcheck"))
+                .AddHttpClientInstrumentation()
+                .AddConnectorNet()
+                .SetSampler(new AlwaysOnSampler())
+                .AddOtlpExporter(options => options.Endpoint = Configuration.GetValue<Uri>("Otel:Collector") ?? new Uri("")));
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
