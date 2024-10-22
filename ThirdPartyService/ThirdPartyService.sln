@@ -146,6 +146,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.Live22", "ThirdP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.FastSpin", "ThirdParty.FastSpin\ThirdParty.FastSpin.csproj", "{75DED446-2113-4EB3-804F-093B8C96E0B0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdParty.Eday", "ThirdParty.Eday\ThirdParty.Eday.csproj", "{5D10D76B-92E4-424E-AEB9-190FF23ABB9B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -424,6 +426,10 @@ Global
 		{75DED446-2113-4EB3-804F-093B8C96E0B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{75DED446-2113-4EB3-804F-093B8C96E0B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{75DED446-2113-4EB3-804F-093B8C96E0B0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D10D76B-92E4-424E-AEB9-190FF23ABB9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D10D76B-92E4-424E-AEB9-190FF23ABB9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D10D76B-92E4-424E-AEB9-190FF23ABB9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D10D76B-92E4-424E-AEB9-190FF23ABB9B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -494,6 +500,7 @@ Global
 		{E9151C24-8D2D-4353-BC7B-FBD6FE1A2093} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{52738DF4-4F56-4EE6-B2BA-CFAD2E586867} = {54887B85-B528-486C-A102-3E5FF55C1282}
 		{75DED446-2113-4EB3-804F-093B8C96E0B0} = {54887B85-B528-486C-A102-3E5FF55C1282}
+		{5D10D76B-92E4-424E-AEB9-190FF23ABB9B} = {54887B85-B528-486C-A102-3E5FF55C1282}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {88130080-DA6F-45D5-BA4E-3A91181A0592}
