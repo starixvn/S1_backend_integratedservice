@@ -52,6 +52,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 _WithdrawlCnt = request.WithdrawlCnt,
                 _EffectiveBetSum = request.EffectiveBetSum,
                 _VipLevel = request.VipLevel == 0 ? 1 : request.VipLevel ,
+                _SabaId = request.SabaId
             });
             p.Add("_CustId", dbType: DbType.Int32, direction: ParameterDirection.Output);
             p.Add("_ResultCode", dbType: DbType.Int32, direction: ParameterDirection.Output);
