@@ -39,6 +39,7 @@ namespace ThirdPartySettleWorker.Workers
             _tpGameTypeConfig = provider.GetRequiredService<IEnumerable<SabaSportTypeOption>>()
                 .GroupBy(c => c.TpGameType).ToDictionary(c => c.Key, c => c.ToList());
         }
+
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             timer = new Timer(SettleSBSW, null, TimeSpan.Zero, TimeSpan.Zero);
@@ -168,15 +169,15 @@ namespace ThirdPartySettleWorker.Workers
                             TransId = tpUnsettle.TransId,
                             GameType = tpUnsettle.GameType,
                             TpUserName = wagerData.vendor_member_id,
-                            SettledTime = new DateTimeOffset(settledTime, new TimeSpan(-4, 0, 0)).ToUnixTimeSeconds(),
-                            TransTime = new DateTimeOffset(transTime, new TimeSpan(-4, 0, 0)).ToUnixTimeSeconds(),
+                            SettledTime = new DateTimeOffset(settledTime).ToUnixTimeSeconds(),
+                            TransTime = new DateTimeOffset(transTime).ToUnixTimeSeconds(),
                             SettlementType = settlementType,
                             TicketStatus = ticketStatus,
                             GameID = sport_type.ToString(),
                             ReferenceNo = betData.FirstOrDefault()?.refId,
                             TicketKey = betData.FirstOrDefault()?.baStatus ?? 0
-
                         };
+
                         lgsw6.Stop();
                         settleFlowLog.AppendLine($"4.Set Default BetRecordInfo: {lgsw6.Elapsed}");
                         settleFlowLog.AppendLine(JsonConvert.SerializeObject(betRecordInfo));
@@ -185,7 +186,6 @@ namespace ThirdPartySettleWorker.Workers
                         // 5.處理沒有收到SettleData的狀況
                         if (!settleData.Any())
                         {
-
                             settleFlowLog.AppendLine($"{tpUnsettle.TransId} Settle Data is empty,");
 
                             // 下注單有被Cancel
@@ -222,11 +222,11 @@ namespace ThirdPartySettleWorker.Workers
                                 lgsw10.Stop();
                                 settleFlowLog.AppendLine($"4B.GetSBSWTpBetRecord : {lgsw10.Elapsed}");
 
-                                // Wager的注單狀態已經更新，但我方API還沒收到做Settle              
+                                // Wager的注單狀態已經更新，但我方API還沒收到做Settle
                                 if (tpBetRecord != null)
                                 {
                                     // 先將此筆留在TpUnsettle，透過Hangfire排程每10分鐘重置結算狀態
-                                    // 等下一次重置後，再次判斷API是否有收到Settle     
+                                    // 等下一次重置後，再次判斷API是否有收到Settle
                                     _tpUnSettledBLL.SetTpUnsettle(Tp, tpUnsettle.GameType, tpUnsettle.TransId, false);
                                     settleFlowLog.AppendLine($"{tpUnsettle.TransId} waiting Settle Data.");
 
@@ -301,7 +301,6 @@ namespace ThirdPartySettleWorker.Workers
                         settleFlowLog.AppendLine($"===================================================");
 
                         settleFlowLog.AppendLine($"6.Settled Result is {(result == 1 ? "Success" : "Fail")}");
-
                     }
                     catch (Exception ex)
                     {
@@ -338,20 +337,27 @@ namespace ThirdPartySettleWorker.Workers
             [Description("比分让球盘(足球)")] FootballScoreHandicap = 468,
             [Description("比分大小盘(足球)")] FootballScoreOverUnder = 469
         }
+
         public enum OddsTypeEnum
         {
             [Description("不属于任何一种市场盘口(仅出现于 sport_type=245，165，200，168，bet_type=468，469)")]
             None = 0,
+
             [Description("马来盘")]
             MalayOdds = 1,
+
             [Description("中国盘")]
             ChinaOdds = 2,
+
             [Description("欧洲盘")]
             DecimalOdds = 3,
+
             [Description("印度尼西亚盘")]
             IndoOdds = 4,
+
             [Description("美国盘")]
             AmericanOdds = 5,
+
             [Description("香港盘")]
             HongKong = 6
         }
@@ -378,7 +384,6 @@ namespace ThirdPartySettleWorker.Workers
                     betRecordInfo.GameType == GameType.SBSW_Lottery ||
                     betRecordInfo.GameType == GameType.SBSW_Vgaming)
                 {
-
                     betRecordInfo.SettlementType = SettlementType.SettledForValidNotRollover;
                     // Saba Club Se Die or Vgaming Se Die gives freebet
                     if ((betDetial.bet_type == 1613 && betDetial.tokenmoney == "freebet") || (betDetial.bet_type == 3803 && betDetial.tokenmoney == "freebet"))
