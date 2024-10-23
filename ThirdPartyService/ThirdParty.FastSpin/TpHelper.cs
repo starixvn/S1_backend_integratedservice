@@ -156,9 +156,9 @@ namespace ThirdParty.FastSpin
                     WinlostAmount = detailList.Sum(i => (decimal)i.GetValueOrDefault("Payout")),
                     Stake = detailList.Sum(i => (decimal)i.GetValueOrDefault("ActualStake")),
                     GameCode = detailList.GetFirstStringValue("GameId"),
-                    GameName = "FastSpin Bonus",
+                    GameName = detailList.GetFirstStringValue("BonusName"),
                     TpUserName = tpCustInfo.TpUserName,
-                    RefTransId = detailList.GetFirstStringValue("GameRoundId"),
+                    RefTransId = detailList.GetFirstStringValue("BonusId"),
                     TransId = getBetDetail.TransId,
                     TpCurrency = tpCurrency,              
                 };
