@@ -51,10 +51,9 @@ namespace ThirdPartyWager.Workers
             try
             {
                 var TpCurrencyList = _commonBLL.GetTpCurrencyList((int)Tp.TFG);
-                var config = _siteConfigDic[0];
                 var dataTpTimer = _thirdPartyBLL.GetThirdPartyTimer(tpId, tpType);
-                var apiurl = config.ApiUrl;
                 var SetTimer = true;
+                var siteList = _thirdPartyBLL.GetTpListByTpId(tpId);
 
                 DateTime timerTime;
                 int last;
@@ -71,17 +70,29 @@ namespace ThirdPartyWager.Workers
                 if (timerTime < DateTime.Now)
                 {
                     var time = _dateTimeHelper.GetTimeByMinute(last, timeZone, "yyyy-MM-ddTHH:mm:ss.fffZ", timerTime);
-                    foreach (var TpCurrency in TpCurrencyList)
+
+                    foreach (var site in siteList)
                     {
-                        if (config.CurrencyData.ContainsKey(TpCurrency.TpCurrencyId))
+                        if (site.TicketKey == 0)
                         {
-                            var result = await _wagerTFGBLL.GetWagersAsync(apiurl, config.CurrencyData[TpCurrency.TpCurrencyId].PrivateToken, time.startTime, time.endTime);
-                            if (!result)
+                            continue;
+                        }
+
+                        var config = _siteConfigDic[site.SiteId];
+
+                        foreach (var TpCurrency in TpCurrencyList)
+                        {
+                            if (config.CurrencyData.ContainsKey(TpCurrency.TpCurrencyId))
                             {
-                                SetTimer = false;
+                                var result = await _wagerTFGBLL.GetWagersAsync(config.ApiUrl, config.CurrencyData[TpCurrency.TpCurrencyId].PrivateToken, time.startTime, time.endTime);
+                                if (!result)
+                                {
+                                    SetTimer = false;
+                                }
                             }
                         }
                     }
+
                     if (SetTimer)
                     {
                         _thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, time.endUnix);

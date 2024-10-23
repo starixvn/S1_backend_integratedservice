@@ -12,12 +12,10 @@ namespace ThirdPartyWager.Workers
         private readonly WagerTFGBLL _wagerTFGBLL;
         private Timer _timer;
         private readonly string _tpName = Tp.TFG.ToString();
-        private readonly Dictionary<int, TFGConfig> _siteConfigDic;
         public WagerUnsettleCheckTFG(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<WagerUnsettleCheckTFG>>();
             _wagerTFGBLL = provider.GetRequiredService<WagerTFGBLL>();
-            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<TFGConfig>(Tp.TFG.ToString());
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -33,8 +31,7 @@ namespace ThirdPartyWager.Workers
             var nextTimeSpan = TimeSpan.FromMinutes(intervalMinutes);
             try
             {
-                var config = _siteConfigDic[0];
-                var (isSuccess, doQuick) = await _wagerTFGBLL.UnsettleCheck(config);
+                var (isSuccess, doQuick) = await _wagerTFGBLL.UnsettleCheck();
 
                 if (doQuick)
                 {
