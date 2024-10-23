@@ -161,6 +161,7 @@ namespace ThirdParty.FastSpin
                     RefTransId = detailList.GetFirstStringValue("BonusId"),
                     TransId = getBetDetail.TransId,
                     TpCurrency = tpCurrency,              
+                    Detail = ToJson(detailList)
                 };
             }
 
