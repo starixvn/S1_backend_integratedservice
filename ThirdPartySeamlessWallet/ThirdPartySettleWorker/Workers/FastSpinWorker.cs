@@ -4,6 +4,8 @@ using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySeamlessWallet.Service.Model.MaxGame;
+
 using ThirdPartySettleWorker.Model.Exceptions;
 using ThirdPartySettleWorker.Model.Interfaces;
 
@@ -74,7 +76,7 @@ namespace ThirdPartySettleWorker.Workers
                     {
                         string TransId = unsettled.TransId;
 
-                        var bettrans = _partitionService.GetUnsettleDataList<SettleData>(bettransGet, unsettled);
+                        var bettrans = _partitionService.GetUnsettleDataList<MaxGameSettleData>(bettransGet, unsettled);
                         if (!bettrans.Any())
                         {
                             LogContext.PushProperty("TP", _tpName);
@@ -90,6 +92,7 @@ namespace ThirdPartySettleWorker.Workers
                         var settledTime = bettrans.Max(x => x.SettleTime);
                         var transTime = bettrans.Min(x => x.TransTime);
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
+                        var bonus = bettrans.Sum(x => x.Bonus);
 
                         var betRecordInfo = new BetRecordInfo
                         {
@@ -102,7 +105,7 @@ namespace ThirdPartySettleWorker.Workers
                             TpUserName = tpUserName,
                             SettledTime = settledTime,
                             TransTime = transTime,
-                            SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, gameId),
+                            SettlementType = bonus > 0 ? SettlementType.SettledForInvalid : _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, gameId),
                             GameID = gameId,
                         };
 

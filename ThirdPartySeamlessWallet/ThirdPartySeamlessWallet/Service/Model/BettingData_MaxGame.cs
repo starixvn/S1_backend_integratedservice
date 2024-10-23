@@ -479,4 +479,9 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
         }
         public List<BetDataSetList_MaxGame> BetDataSet { get; set; }
     }
+
+    public class MaxGameSettleData : SettleData
+    {
+        public decimal Bonus { get; set; }
+    }
 }
