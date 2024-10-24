@@ -5,6 +5,7 @@ using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
+using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.FastSpin
@@ -133,7 +134,7 @@ namespace ThirdParty.FastSpin
             };
 
             var YYYYMM = getBetDetail.SettledTime.GetPartitionKey();
-            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_FastSpin_ResultId_Get", new { YYYYMM, TransId = getBetDetail.TransId }, DataBase.Main);
+            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_FastSpin_Detail_Get", new { YYYYMM, TransId = getBetDetail.TransId }, DataBase.Main);
             if (!detailList.Any() || detailList == null)
             {
                 return new BaseDetail(getBetDetail.TpGameTypeOption)
@@ -142,7 +143,28 @@ namespace ThirdParty.FastSpin
                     TpCurrency = tpCurrency,
                 };
             }
-            var resultId = detailList.FirstOrDefault()?.GetValueOrDefault("ResultId")?.ToString();
+
+            var resultId = detailList.GetFirstStringValue("ResultId");
+            
+            //找不到 resultId 為bonus 
+            if (string.IsNullOrEmpty(resultId))
+            {
+                return new CasinoDetail(getBetDetail.TpGameTypeOption)
+                {
+                    UTCBetTime = getBetDetail.SettledTime,
+                    UTCSettledTime = getBetDetail.SettledTime,
+                    WinlostAmount = detailList.Sum(i => (decimal)i.GetValueOrDefault("Payout")),
+                    Stake = detailList.Sum(i => (decimal)i.GetValueOrDefault("ActualStake")),
+                    GameCode = detailList.GetFirstStringValue("GameId"),
+                    GameName = detailList.GetFirstStringValue("BonusName"),
+                    TpUserName = tpCustInfo.TpUserName,
+                    RefTransId = detailList.GetFirstStringValue("BonusId"),
+                    TransId = getBetDetail.TransId,
+                    TpCurrency = tpCurrency,              
+                    Detail = ToJson(detailList)
+                };
+            }
+
 
             var convert = new DateTimeOffset(getBetDetail.SettledTime);
             var time = convert.ToOffset(new TimeSpan(_utc, 0, 0)).ToString("yyyy/MM/dd HH:mm:ss");
