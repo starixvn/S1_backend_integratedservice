@@ -36,7 +36,8 @@ namespace ThirdPartyWager.Service.BLL
                 return dailyData;
             }
 
-            var groupData = reportData.GroupBy(i => i.CurrencyId).Select(g => new
+            var getReportData = JsonConvert.DeserializeObject<List<CurrencyStatsData_AllBet>>(JsonConvert.SerializeObject(reportData));
+            var groupData = getReportData.GroupBy(i => i.CurrencyId).Select(g => new
             {
                 CurrencyId = g.Key,
                 totalBetAmount = g.Sum(s => s.totalBetAmount),
