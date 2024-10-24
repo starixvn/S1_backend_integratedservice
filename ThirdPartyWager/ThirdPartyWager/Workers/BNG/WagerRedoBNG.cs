@@ -12,7 +12,6 @@ namespace ThirdPartyWager.Workers
         private readonly int _tpType = (int)WagerTimerType.RedoWager;
         private readonly string _tpName = Tp.BNG.ToString();
         private Timer _timer;
-        private readonly Dictionary<string, string> _setting;
         private readonly WagerBNGBLL _wagerBNGBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly ThirdPartyBLL _thirdPartyBLL;
@@ -24,7 +23,6 @@ namespace ThirdPartyWager.Workers
 
         public WagerRedoBNG(IServiceProvider provider)
         {
-            _setting = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(Tp.BNG.ToString());
             _wagerBNGBLL = provider.GetRequiredService<WagerBNGBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
@@ -63,7 +61,7 @@ namespace ThirdPartyWager.Workers
                 if (dataTpTimer.StartTime <= nowDateTime.AddHours(-2).AddMinutes(-15))
                 {
                     var time = _dateTimeHelper.GetTimeByMinute(iRangMins - 1, timeZone, _timeFormat, dataTpTimer.StartTime);
-                    await _wagerBNGBLL.GetWagerAsync(_setting, time.startTime, time.endTime);
+                    await _wagerBNGBLL.GetWagerAsync(time.startTime, time.endTime);
 
                     _thirdPartyBLL.SetThirdPartyTimer(_tpId, _tpType, time.endUnix);
                 }
