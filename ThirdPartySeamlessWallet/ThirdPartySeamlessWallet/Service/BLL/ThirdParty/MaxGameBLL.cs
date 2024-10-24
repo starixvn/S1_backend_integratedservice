@@ -28,6 +28,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { "uuslots", Tp.UuSlots },
             { "live22", Tp.Live22 },
             { "fastspin", Tp.FastSpin },
+            { "jili", Tp.JILI }
         };
         private readonly Dictionary<int, WalletKind> _gameOfWalletKind = new()
         {
@@ -36,6 +37,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.UuSlots_RNG, WalletKind.BonusWallet },
             { (int)GameType.Live22_RNG, WalletKind.BonusWallet },
             { (int)GameType.FastSpin_RNG, WalletKind.BonusWallet },
+            { (int)GameType.JILI_RNG, WalletKind.BalanceWallet }
         };
         private readonly Dictionary<int, TpCategory> _gameOfTpCategory = new()
         {
@@ -44,6 +46,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.UuSlots_RNG, TpCategory.Slots },
             { (int)GameType.Live22_RNG, TpCategory.Slots },
             { (int)GameType.FastSpin_RNG, TpCategory.Slots },
+            { (int)GameType.JILI_RNG, TpCategory.Slots },
         };
 
         public MaxGameBLL(IServiceProvider provider)
@@ -626,6 +629,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     GetTicketNoSpName = "Service_BettransRng_FastSpin_TicketNo_Get";
                     InsertBettransSpName = "Service_BettransRng_FastSpin_Ins";
                     CancelBettransSpName = "Service_BettransRng_FastSpin_CancelBet_Set";
+                    break;
+                case (int)GameType.JILI_RNG:
+                    GetTicketNoSpName = "Service_BettransRng_JILI_TicketNo_Get";
+                    InsertBettransSpName = "Service_BettransRng_JILI_Ins";
+                    CancelBettransSpName = "Service_BettransRng_JILI_CancelBet_Set";
                     break;
                 default:
                     // GameType.MaxGame_Poker
