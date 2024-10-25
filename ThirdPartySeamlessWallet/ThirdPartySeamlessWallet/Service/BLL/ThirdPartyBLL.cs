@@ -169,15 +169,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                         gameType = GameType.CQ9_WCC;
                     }
                     break;
-                case (int)Tp.JILI:
-                    gameType = GameType.JILI_RNG;
-
-                    List<int> fish = new List<int> { 1, 20, 42, 32, 60, 74 };
-                    if (fish.Contains(Convert.ToInt32(gameId)))
-                    {
-                        gameType = GameType.JILI_Fish;
-                    }
-                    break;
                 case (int)Tp.PP:
                     gameType = GameType.PP_RNG;
                     if (int.TryParse(gameId, out int tempGameId))
@@ -315,6 +306,15 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     break;
                 case (int)Tp.FastSpin:
                     gameType = GameType.FastSpin_RNG;
+                    break;
+                case (int)Tp.JILI:
+                    gameType = GameType.JILI_RNG;
+
+                    //List<int> fish = new List<int> { 1, 20, 42, 32, 60, 74 };
+                    //if (fish.Contains(Convert.ToInt32(gameId)))
+                    //{
+                    //    gameType = GameType.JILI_Fish;
+                    //}
                     break;
                 default:
                     break;

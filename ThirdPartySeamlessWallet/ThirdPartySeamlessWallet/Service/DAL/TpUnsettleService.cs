@@ -69,5 +69,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         {
             return _mainDbClient.Execute("Service_TpUnsettle_Ins", parameters: new { TpId = (int)tp, GameType = (int)gameType, TransId = transId });
         }
+
+        public int InsertTpUnsettlePlaceBetAndSettle(Tp tp, GameType gameType, string transId, IDbTransaction transaction, DateTime? partitionTime = null)
+        {
+            return _mainDbClient.Execute("Service_TpUnsettle_Ins_PlaceBetAndSettle",
+                transaction: transaction,
+                parameters: new { TpId = (int)tp, GameType = (int)gameType, TransId = transId, PartitionTime = partitionTime });
+        }
     }
 }

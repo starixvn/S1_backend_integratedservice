@@ -276,6 +276,70 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return _tools.ToJson(new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError));
         }
 
+        public dynamic PlaceBetAndSettle(string request)
+        {
+            string logName = $"{_commonTp}_PlaceBetAndSettle";
+            var getReq = JsonConvert.DeserializeObject<PayoutData_MaxGame>(request);
+
+            if (string.IsNullOrEmpty(getReq.Payload.GameType) || !_gameOfTpId.ContainsKey(getReq.Payload.GameType.ToLower()))
+            {
+                return new BaseResp(ErrorCodeOfMaxGame.OpSideGameNotFound);
+            }
+            var tpId = _gameOfTpId[getReq.Payload.GameType.ToLower()];
+            var gameType = _thirdPartyBLL.GetGameType((int)tpId, getReq.Payload.GameType.ToLower());
+
+            var tpCheck = _thirdPartyBLL.ThirdPartyCheckWithCache((int)tpId, getReq.Payload.OperatorCustId);
+            if (tpCheck == null)
+            {
+                return new BaseResp(ErrorCodeOfMaxGame.OpSideLoginFailed);
+            }
+            if (tpCheck.Locked)
+            {
+                return new BaseResp(ErrorCodeOfMaxGame.OpSideAccountLocked);
+            }
+
+            int result = PlaceBetAndSettle(getReq, (int)tpId, (int)gameType, out decimal tpAffterAmount);
+
+            if (result > 0)
+            {
+                if (tpAffterAmount == 0)
+                {
+                    var tpCustBalance = _tpCustInfoBLL.GetBalance((int)tpId, getReq.Payload.OperatorCustId, (int)gameType);
+                    tpAffterAmount = tpCustBalance.Balance;
+                }
+
+                EndGameResp response = new(ErrorCodeOfMaxGame.Success, getReq.Seq)
+                {
+                    Payload = new Payload_EndGameResp()
+                    {
+                        OperatorCustId = getReq.Payload.OperatorCustId,
+                        Balance = _tools.Floor(tpAffterAmount, 2),
+                    },
+                };
+                return _tools.ToJson(response);
+            }
+            else if (result == -1)
+            {
+                var tpCustBalance = _tpCustInfoBLL.GetBalance((int)tpId, getReq.Payload.OperatorCustId, (int)gameType);
+                EndGameResp response = new(ErrorCodeOfMaxGame.OpSideDuplicateRequest, getReq.Seq)
+                {
+                    Payload = new Payload_EndGameResp()
+                    {
+                        OperatorCustId = getReq.Payload.OperatorCustId,
+                        Balance = _tools.Floor(tpCustBalance.Balance, 2),
+                    },
+                };
+                return _tools.ToJson(response);
+            }
+            else if (result == -2)
+            {
+                return _tools.ToJson(new BaseResp(ErrorCodeOfMaxGame.OpSideTransactionFailed));
+            }
+
+            _log2File.Error($"result={result}", logName);
+            return _tools.ToJson(new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError));
+        }
+
         public dynamic VoidGame(string request)
         {
             string logName = $"{_commonTp}_VoidGame";
@@ -500,6 +564,33 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             return result;
         }
+
+        private int PlaceBetAndSettle(PayoutData_MaxGame payoutData_MaxGame, int tpId, int gameType, out decimal afterAmount)
+        {
+            var walletKind = _gameOfWalletKind[gameType];
+            var tpCategory = _gameOfTpCategory[gameType];
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(tpId, payoutData_MaxGame.Payload.OperatorCustId);
+            var tpCurrency = _thirdPartyBLL.GetTpCurrency(tpId, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                foreach (var betDataSet in payoutData_MaxGame.Payload.BetDataSet)
+                {
+                    betDataSet.ActualStake *= tpCurrency.ExchangeRate;
+                    betDataSet.NetStake *= tpCurrency.ExchangeRate;
+                    betDataSet.Payout *= tpCurrency.ExchangeRate;
+                }
+            }
+
+            var spName = GetSpNameList(gameType);
+            var result = _settledService.PlaceBetAndSettle_MaxGame(tpCustInfo, payoutData_MaxGame, tpId, gameType, walletKind, tpCategory, spName, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
 
         private int PayoutPK_MaxGame(PayoutData_MaxGame payoutData_MaxGame, int tpId, int gameType, out decimal afterAmount)
         {

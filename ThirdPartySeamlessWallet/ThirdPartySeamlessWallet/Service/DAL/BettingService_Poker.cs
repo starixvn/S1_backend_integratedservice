@@ -547,7 +547,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         SettleDateUnix = 0,
                         TicketType = (int)BettransType.Bet,
                         TicketStatus = (int)TicketStatus.UnSettled,
-                        SettleFlag = (int)SettleFlag.Running
+                        SettleFlag = (int)SettleFlag.Running,
                     });
                     p.Add("SQ", dbType: DbType.Int64, direction: ParameterDirection.Output);
                     result = _partitionService.Execute(partitionTime, spName.InsertBettrans, p, trans);

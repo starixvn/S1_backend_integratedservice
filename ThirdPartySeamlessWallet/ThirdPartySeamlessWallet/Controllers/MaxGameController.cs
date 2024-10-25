@@ -143,6 +143,34 @@ namespace ThirdPartySeamlessWallet.Controllers
             return new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
         }
 
+
+        [HttpPost]
+        [Route("[controller]/{sitename}/PlaceBetAndSettle")]
+        public async Task<dynamic> PlaceBetAndSettle(string sitename)
+        {
+            string logName = $"{_thisTp}_EndGame";
+            try
+            {
+                using var reader = new StreamReader(Request.Body, Encoding.UTF8);
+                string content = await reader.ReadToEndAsync();
+
+                var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
+                if (!verifyHeader)
+                {
+                    var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
+                    return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
+                }
+
+                return _maxGameBLL.PlaceBetAndSettle(content);
+            }
+            catch (Exception ex)
+            {
+                _log2File.Error($"{ex.Message}", logName, ex);
+            }
+
+            return new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
+        }
+
         [HttpPost]
         [Route("[controller]/{sitename}/VoidGame")]
         public async Task<dynamic> VoidGame(string sitename)
