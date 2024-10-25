@@ -102,6 +102,44 @@ namespace ThirdParty.Eday
             }
             return oApiResult;
         }
+        
+        public ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var siteConfig = _siteConfigDic[tpCustInfo.SiteId];
+            var apiUrl = siteConfig.ApiUrl;
+            var path = "/apilot/Logout";
+            
+            var parameters = ToJson(new
+            {
+                player = tpCustInfo.TpUserName,
+            });
+            
+            var header = GetAuthData(inputs, path, parameters,siteConfig);
+            var result = HttpPostClient($"{apiUrl}/{path}", parameters, ContentType, header);
+            
+            var oApiResult = new ApiResult();
+            if (IsJSON(result))
+            {
+                var userResult = FromJson<EdayResult>(result);
+                if (userResult.resultCode.Equals("0", StringComparison.OrdinalIgnoreCase))
+                {
+                    oApiResult.ErrorCode = ErrorCode.Success;
+                }
+                else
+                {
+                    oApiResult.ErrorCode = ErrorCode.Fail;
+                    oApiResult.RawErrorCode = userResult.resultCode;
+                    oApiResult.Message = oApiResult.RawMessage = userResult.message;
+                }
+            }
+            else
+            {
+                oApiResult.RawMessage = "No Result";
+                oApiResult.RawErrorCode = "1";
+                oApiResult.ErrorCode = ErrorCode.SystemError;
+            }
+            return oApiResult;
+        }
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
@@ -117,11 +155,6 @@ namespace ThirdParty.Eday
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType,
             TpCustInfo tpCustInfo,
             Dictionary<string, string> inputs)
-        {
-            throw new NotImplementedException();
-        }
-
-        public ApiResult Logout(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
         }
