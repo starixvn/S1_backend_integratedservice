@@ -73,7 +73,8 @@
         UuSlots = 67,
         Live22 = 68,
         FastSpin = 69,
-        DragonGaming = 70
+        DragonGaming = 70,
+        KY = 71
     }
 
     public enum TpGameType
