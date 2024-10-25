@@ -3,6 +3,7 @@ using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
 using ThirdPartyWager.Service.Model.enums;
+using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
 {
@@ -14,11 +15,11 @@ namespace ThirdPartyWager.Service.BLL
         private readonly CommonBLL _commonBLL;
         private readonly WagerSimplePlayService _wagerSimplePlayService;
         private readonly ILogger<WagerSimplePlayBLL> _logger;
-
+        private readonly Dictionary<int, SimplePlayConfig> _siteConfigDic;
         private readonly int _tpId = (int)Tp.SimplePlay;
+        private readonly string _tpName = Tp.SimplePlay.ToString();
         private readonly int _timeZone = 8;
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
-
 
         public WagerSimplePlayBLL(IServiceProvider provider)
         {
@@ -28,82 +29,79 @@ namespace ThirdPartyWager.Service.BLL
             _commonBLL = provider.GetRequiredService<CommonBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _logger = provider.GetRequiredService<ILogger<WagerSimplePlayBLL>>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<SimplePlayConfig>(_tpName);
         }
 
-        public async Task<bool> ExecWagerWorker(int type, int timeRange)
+        public async Task<bool> ExecWagerWorker(int siteId, int type, int timeRange)
         {
-            var wokerTime = GetWorkerTime(type, -180);
+            var wokerTime = GetWorkerTime(type, -180, siteId);
             var quick = CheckQuick(wokerTime, 5);
             TimeCast time = _dateTimeHelper.GetTimeByMinute(timeRange, _timeZone, _timeFormat, wokerTime);
 
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
             {
-                var result = await GetWagersAsync(time);
+                var result = await GetWagersAsync(siteId, time);
                 if (result)
                 {
-                    _thirdPartyBLL.SetThirdPartyTimer(_tpId, type, time.endUnix);
+                    _thirdPartyBLL.SetThirdPartyTimerByReference(_tpId, type, time.endUnix, 0, siteId.ToString());
                 }
             }
 
             return quick;
         }
 
-
-        public async Task<bool> ExecWagerRedoWorker(int type, int timeRange)
+        public async Task<bool> ExecWagerRedoWorker(int siteId, int type, int timeRange)
         {
-            var wokerTime = GetWorkerTime(type, 1);
+            var wokerTime = GetWorkerTime(type, 1, siteId);
             var quick = CheckQuick(wokerTime, 120);
             var time = _dateTimeHelper.GetTimeByHour(timeRange, _timeZone, _timeFormat, wokerTime);
 
             var cvTime = DateTimeOffset.Now.ToOffset(new TimeSpan(_timeZone, 0, 0)).ToUnixTimeSeconds();
             if (time.endUnix < cvTime)
             {
-                var result = await GetWagersAsync(time, true);
+                var result = await GetWagersAsync(siteId, time, true);
                 if (result)
                 {
-                    _thirdPartyBLL.SetThirdPartyTimer(_tpId, type, time.endUnix);
+                    _thirdPartyBLL.SetThirdPartyTimerByReference(_tpId, type, time.endUnix, 0, siteId.ToString());
                 }
             }
 
             return quick;
         }
 
-        public async Task<bool> GetWagersAsync(TimeCast wagerTime, bool compare = false)
+        public async Task<bool> GetWagersAsync(int siteId, TimeCast wagerTime, bool compare = false)
         {
             var msg = "FATAL_ERROR";
             var workerName = compare ? "GetRedoWagersAsync" : "GetWagersAsync";
             try
             {
-                // get api info
-                var setting = string.Empty;
-
                 // get wager
-                var dataWager = await _apiSimplePlayBLL.GetBetListByTime(wagerTime.startTime, wagerTime.endTime);
+                var dataWager = await _apiSimplePlayBLL.GetBetListByTime(siteId, wagerTime.startTime, wagerTime.endTime);
 
                 // error condition
                 var errorCode = dataWager.GetAllBetDetailsForTimeIntervalResponse?.ErrorMsgId ?? dataWager.APIResponse.ErrorMsgId;
                 if (errorCode != 0)
                 {
                     msg = "THIRD_PARTY_ERROR";
-                    _logger.LogError($"{workerName} {msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                    _logger.LogError($"{workerName} {msg},siteId={siteId}\r\n{JsonConvert.SerializeObject(dataWager)}");
                     return false;
                 }
 
                 if (errorCode == 0 && dataWager.GetAllBetDetailsForTimeIntervalResponse.BetDetailList == null)
                 {
                     msg = "NO_DATA";
-                    _logger.LogInformation($"{workerName} {msg}\r\n{JsonConvert.SerializeObject(dataWager)}");
+                    _logger.LogInformation($"{workerName} {msg},siteId={siteId}\r\n{JsonConvert.SerializeObject(dataWager)}");
                     return true;
                 }
 
                 if (compare)
                 {
-                    bool check = await CompareSummaryAsync(wagerTime, dataWager.GetAllBetDetailsForTimeIntervalResponse.BetDetailList.BetDetail);
+                    bool check = await CompareSummaryAsync(siteId, wagerTime, dataWager.GetAllBetDetailsForTimeIntervalResponse.BetDetailList.BetDetail);
                     if (check)
                     {
                         msg = "MATCH";
-                        _logger.LogInformation($"{workerName} {msg}");
+                        _logger.LogInformation($"{workerName} {msg},siteId={siteId}");
                         return true;
                     }
                 }
@@ -122,7 +120,7 @@ namespace ThirdPartyWager.Service.BLL
                         if (!gameTypeList.Contains(gameType.ToLower()))
                         {
                             msg = $"INSERT_WAGER(GameType: {group.Key.GameType} )";
-                            _logger.LogError($"{workerName} {msg}\r\n{JsonConvert.SerializeObject(group)}");
+                            _logger.LogError($"{workerName} {msg},siteId={siteId}\r\n{JsonConvert.SerializeObject(group)}");
                             return false;
                         }
 
@@ -131,13 +129,13 @@ namespace ThirdPartyWager.Service.BLL
                     catch (Exception ex)
                     {
                         msg = $"INSERT_WAGER(WAGERID: {transId} )";
-                        _logger.LogError(ex, $"{workerName} {msg}\r\n{JsonConvert.SerializeObject(group)}\r\n{ex.Message}");
+                        _logger.LogError(ex, $"{workerName} {msg},siteId={siteId}\r\n{JsonConvert.SerializeObject(group)}\r\n{ex.Message}");
                         return false;
                     }
                 }
 
                 msg = "FINISH";
-                _logger.LogInformation($"{workerName} {msg}\r\n{wagerTime.startTime} ~ {wagerTime.endTime}");
+                _logger.LogInformation($"{workerName} {msg},siteId={siteId}\r\n{wagerTime.startTime} ~ {wagerTime.endTime}");
 
                 if (compare)
                 {
@@ -150,15 +148,18 @@ namespace ThirdPartyWager.Service.BLL
             catch (Exception ex)
             {
                 msg = "FATAL_ERROR";
-                _logger.LogError(ex, $"{workerName} {msg}\r\n{ex.Message}");
+                _logger.LogError(ex, $"{workerName} {msg},siteId={siteId}\r\n{ex.Message}");
                 return false;
             }
         }
 
-        private async Task<bool> CompareSummaryAsync(TimeCast wagerTime, IList<Bet_SimplePlay> betDetail)
+        private async Task<bool> CompareSummaryAsync(int siteId, TimeCast wagerTime, IList<Bet_SimplePlay> betDetail)
         {
+            var config = _siteConfigDic[siteId];
+            var siteIds = JsonConvert.SerializeObject(config.CommonSiteIds);
+
             // table summary
-            var summarySlot = await _commonBLL.GetWagerSummary("Finance_TpWagerRng_SimplePlay_Summary_Get", wagerTime.startUnix, wagerTime.endUnix);
+            var summarySlot = await _commonBLL.GetWagerSummaryBySiteIds("Service_TpWagerRng_SimplePlay_Total_Get", wagerTime.startUnix, wagerTime.endUnix, siteIds);
             var summaryStake = summarySlot.Sum(x => x.Stake);
             var summaryWinlose = summarySlot.Sum(x => x.WinlostAmount);
 
@@ -166,13 +167,13 @@ namespace ThirdPartyWager.Service.BLL
             var stake = betDetail.Sum(x => x.BetAmount);
             var winlose = betDetail.Sum(x => x.ResultAmount);
 
-            return (stake == summaryStake && winlose == summaryWinlose) ? true : false;
+            return stake == summaryStake && winlose == summaryWinlose;
         }
 
-        private DateTime GetWorkerTime(int type, int vary)
+        private DateTime GetWorkerTime(int type, int vary, int siteId)
         {
-            var lastTime = _thirdPartyBLL.GetThirdPartyTimer(_tpId, type);
-            return (lastTime == null) ? DateTime.Now.AddHours(-7) : lastTime.StartTime.AddSeconds(vary);
+            var lastTime = _thirdPartyBLL.GetThirdPartyTimerReferenceByReference(_tpId, type, 0, siteId.ToString());
+            return (lastTime == null) ? DateTime.Now.AddHours(-2) : lastTime.StartTime.AddSeconds(vary);
         }
 
         private static bool CheckQuick(DateTime workTime, int excess)

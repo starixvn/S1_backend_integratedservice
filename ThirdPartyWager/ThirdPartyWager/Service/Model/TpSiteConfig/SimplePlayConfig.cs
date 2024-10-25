@@ -6,5 +6,6 @@
         public string MD5Key { get; set; }
         public string EncryptKey { get; set; }
         public string SecretKey { get; set; }
+        public List<int> CommonSiteIds { get; set; }
     }
 }
