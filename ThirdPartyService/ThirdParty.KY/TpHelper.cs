@@ -7,7 +7,7 @@ using ThirdPartyCore.Model.enums;
 
 namespace ThirdParty.KY
 {
-    public class TpHelper : ThirdPartyHelperBase
+    public abstract class TpHelper : ThirdPartyHelperBase
     {
         public class LoginResult
         {
@@ -17,6 +17,8 @@ namespace ThirdParty.KY
         }
 
         private readonly Dictionary<int, KYConfig> _siteConfigDic;
+        private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
+        private const int _utc = -4;
 
         public TpHelper(IServiceProvider provider)
         {
@@ -27,16 +29,9 @@ namespace ThirdParty.KY
         {
             var config = _siteConfigDic[tpCustInfo.SiteId];
 
-            string ApiUrl = config.ApiUrl;
-            string GameUrl = config.GameUrl;
-            string SecureLogin = config.SecureLogin;
-            string SecureKey = config.SecureKey;
-            if (tpCustInfo.MemberType == CustomerMemberTypeEnum.LiveStreaming)
-            {
-                ApiUrl = config.ApiUrl_Stream;
-                SecureLogin = config.SecureLogin_Stream;
-                SecureKey = config.SecureKey_Stream;
-            }
+            string ApiUrl = $"{config.ApiUrl}";
+            string Agent = config.Agent;
+            var key = ApplyToken(tpCustInfo);
 
             string cashierUrl = inputs.ContainsKey("CashierUrl") && !string.IsNullOrEmpty(inputs["CashierUrl"]) ? inputs["CashierUrl"] : "";
             string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
@@ -44,10 +39,9 @@ namespace ThirdParty.KY
             string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
             string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : homeUrl;
 
-            string Uri = "/v3/http/CasinoGameAPI/game/url";
+            string timestamp = GetCurrentTimeFormat();
             var parameters = new Dictionary<string, string>()
             {
-                {"secureLogin", SecureLogin },
                 { "token", ApplyToken(tpCustInfo) },
                 { "symbol", gameId },
                 { "technology", "H5" },
@@ -56,12 +50,11 @@ namespace ThirdParty.KY
                 { "lobbyUrl", lobbyUrl },
                 { "cashierUrl", cashierUrl },
                 { "playMode", (fun.Equals("1", StringComparison.OrdinalIgnoreCase)) ? "DEMO" : "REAL" },
-                { "stylename", SecureLogin },
             };
 
-            var sParam = string.Join("&", parameters.OrderBy(kp => kp.Key).Select(kp => $"{kp.Key}={kp.Value}"));
-            sParam += $"&hash={ToMD5($"{sParam}{SecureKey}")}";
-            var result = HttpPost($"{ApiUrl}{Uri}", sParam, "application/x-www-form-urlencoded");
+            string postParams = $"agent={Agent}&timestamp={timestamp}param={parameters}&key={ToMD5(key).ToLower()}";
+
+            var result = HttpGet($"{ApiUrl}channelHandle", postParams, "application/json");
 
             ApiResult oApiResult = new ApiResult();
             if (!IsJSON(result))
@@ -86,6 +79,12 @@ namespace ThirdParty.KY
             }
 
             return oApiResult;
+        }
+
+        private static string GetCurrentTimeFormat()
+        {
+            var currentAt = new DateTimeOffset(DateTime.UtcNow);
+            return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
         }
     }
 }
