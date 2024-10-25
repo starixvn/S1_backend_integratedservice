@@ -82,6 +82,7 @@
     <ProjectReference Include="..\ThiryParty.BG\ThirdParty.BG.csproj" />
     <ProjectReference Include="..\ThirdParty.NTConnect\ThirdParty.NTConnect.csproj" />
     <ProjectReference Include="..\ThirdParty.WonCasino\ThirdParty.WonCasino.csproj" />
+    <ProjectReference Include="..\ThirdParty.Eday\ThirdParty.Eday.csproj" />
   </ItemGroup>
 
 </Project>

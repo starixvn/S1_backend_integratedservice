@@ -1,0 +1,42 @@
+﻿using System.ComponentModel;
+
+namespace ThirdPartySeamlessWallet.Service.Model.enums
+{
+    public enum EdayResultCode
+    {
+        [Description("Success")] 
+        Success = 0,
+        [Description("Invalid OperatorId")] 
+        InvalidOperatorId = 1000,
+        [Description("Invalid Signature")] 
+        InvalidSignature = 1002,
+        [Description("Player Account Not Exist")] 
+        PlayerAccountNotExist = 1003,
+        [Description("Player Account Not Allowed To Login")] 
+        PlayerAccountNotAllowedToLogin = 1004,
+        [Description("Transaction Not Exist")] 
+        TransactionNotExist = 1005,
+        [Description("Invalid Status")] 
+        InvalidStatus = 1006,
+        [Description("Player Offline")] 
+        PlayerOffline = 1007,
+        [Description("Prohibit Betting")] 
+        ProhibitBetting = 1008,
+        [Description("Insufficient Balance")] 
+        InsufficientBalance = 1009,
+        [Description("System Under Maintenance")] 
+        SystemUnderMaintenance = 1010,
+        [Description("Player Frozen")] 
+        PlayerFrozen = 1011,
+        [Description("Invalid Request Parameter")] 
+        InvalidRequestParameter = 4000,
+        [Description("TxId Information Mismatch")] 
+        TxIdInformationMismatch = 4001,
+        [Description("BillId Information Mismatch")] 
+        BillIdInformationMismatch = 4002,
+        [Description("ServerError")] 
+        ServerError = 5000,
+        [Description("Invalid Parameters")] 
+        InvalidParameters = 5001,
+    }
+}

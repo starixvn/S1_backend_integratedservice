@@ -1030,5 +1030,79 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         
         #endregion
+        
+        #region EdayLT
+        
+        public int BetRequest_Eday(TpCustInfo tpCustInfo, EdayBetRequest bettingDataLT_Eday, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            afterAmount = 0;
+            var result = 10000;
+
+            var tpId = Tp.Eday;
+            var tpGameType = GameType.Eday_Lottery;
+            var tpCategory = TpCategory.Lottery;
+            var InsSpName = "Service_BettransLT_Eday_Ins";
+            var CheckSpName = "Service_BettransLT_Eday_Get";
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            
+            try
+            {
+                // 檢查是否重複
+                var bettrans = _partitionService.Query<BettransLTEday>(bettingDataLT_Eday.UTCBetTime, CheckSpName,
+                    new { billId = bettingDataLT_Eday.billId, player = tpCustInfo.TpUserName });
+                if (bettrans.Any(i => i.TicketType == (int)BettransType.Bet && i.billId == bettingDataLT_Eday.billId))
+                {
+                    return -1;
+                }
+            
+                bettingDataLT_Eday.player = tpCustInfo.TpUserName;
+                bettingDataLT_Eday.amount *= -1;
+                var p = new DynamicParameters(bettingDataLT_Eday);
+                p.Add("SettleFlag", (int)SettleFlag.Running);
+                result = _partitionService.Execute(bettingDataLT_Eday.UTCBetTime, InsSpName, p, trans);
+                if (result > 0 && bettingDataLT_Eday.amount != 0)
+                {
+                    result = PlaceBet(
+                        tpCustInfo,
+                        bettingDataLT_Eday.amount,
+                        (int)tpId,
+                        bettingDataLT_Eday.billId.ToString(),
+                        (int)tpGameType,
+                        bettingDataLT_Eday.billId.ToString(),
+                        out afterAmount,
+                        ref bonusId,
+                        out _,
+                        conn,
+                        trans
+                    );
+                }
+            
+                if (result > 0)
+                {
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+                throw;
+            }
+
+            return result;
+        }
+        
+        #endregion
     }
 }
