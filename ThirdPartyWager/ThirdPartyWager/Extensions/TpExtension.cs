@@ -13,62 +13,67 @@ namespace ThirdPartyWager.Extensions
         {
             TpFuncDictionary = new Dictionary<Tp, Func<IServiceCollection, IServiceCollection>>
             {
-                { Tp.SA, AddSA},
-                { Tp.AG, AddAG},
-                { Tp.DG, AddDG},
-                { Tp.GPI, AddGPI},
-                //{ Tp.YL, AddYL},
-                { Tp.YGG, AddYGG},
-                { Tp.SG, AddSG},
-                { Tp.KM, AddKM},
-                { Tp.Allbet, AddAllbet},
-                { Tp.OneGaming, AddOneGaming},
-                { Tp.Sexy, AddSexy},
-                { Tp.CQ9, AddCQ9},
-                { Tp.CF, AddCF},
-                { Tp.EBet, AddEBet},
-                { Tp.WM, AddWM},
-                { Tp.Kiss918, AddKiss918},
-                { Tp.Mega, AddMega},
-                { Tp.One789, AddOne789},
-                { Tp.Iconic, AddIconic},
-                { Tp.V8, AddV8},
-                //{ Tp.N2Live, AddN2Live},
-                { Tp.AMB, AddAMB},
-                { Tp.NineW, AddNineW},
-                { Tp.JILI, AddJILI},
-                { Tp.TCG, AddTCG},
-                { Tp.MG, AddMG},
-                { Tp.MP, AddMP},
-                { Tp.EVO, AddEVO},
-                { Tp.Netent, AddNetent},
-                { Tp.RedTiger, AddRedTiger},
-                { Tp.AP, AddAP},
-                { Tp.SBO, AddSBO},
-                { Tp.Skywind, AddSkywind},
-                { Tp.SimplePlay, AddSimplePlay},
-                { Tp.Yeebet, AddYeebet},
-                { Tp.BG, AddBG},
-                { Tp.TFG, AddTFG},
-                { Tp.Nextspin, AddNextspin},
-                { Tp.PlayTech, AddPlayTech},
-                { Tp.IM, AddIM},
-                { Tp.SPRIBE, AddSPRIBE},
-                { Tp.FaChai, AddFaChai},
-                { Tp.Pegasus, AddPegasus},
-                { Tp.BNG, AddBNG},
-                { Tp.HaoLong, AddHL},
-                { Tp.NLC, AddNLC},
                 { Tp.MaxGame, AddMaxGame},
                 { Tp.SabaPlay, AddSabaPlay},
                 { Tp.UuSlots, AddUuSlots},
                 { Tp.Live22, AddLive22},
                 { Tp.FastSpin, AddFastSpin},
-                { Tp.NTConnect, AddNTConnect },
-                { Tp.GA, AddGA},
-                { Tp.WonCasino, AddWonCasino},
+
+                //Loki comment:
+                //{ Tp.JILI, AddJILI},
+                //{ Tp.FaChai, AddFaChai},
+                //{ Tp.Pegasus, AddPegasus},
+                //{ Tp.Allbet, AddAllbet},
+
+                //{ Tp.SA, AddSA},
+                //{ Tp.SG, AddSG},
+                //{ Tp.MG, AddMG},
+                //{ Tp.Nextspin, AddNextspin},
+
+                //{ Tp.AG, AddAG},
+                //{ Tp.DG, AddDG},
+                //{ Tp.GPI, AddGPI},
+                ////{ Tp.YL, AddYL},
+                //{ Tp.YGG, AddYGG},
+                //{ Tp.KM, AddKM},
+                //{ Tp.OneGaming, AddOneGaming},
+                //{ Tp.Sexy, AddSexy},
+                //{ Tp.CQ9, AddCQ9},
+                //{ Tp.CF, AddCF},
+                //{ Tp.EBet, AddEBet},
+                //{ Tp.WM, AddWM},
+                //{ Tp.Kiss918, AddKiss918},
+                //{ Tp.Mega, AddMega},
+                //{ Tp.One789, AddOne789},
+                //{ Tp.Iconic, AddIconic},
+                //{ Tp.V8, AddV8},
+                ////{ Tp.N2Live, AddN2Live},
+                //{ Tp.AMB, AddAMB},
+                //{ Tp.NineW, AddNineW},
+                //{ Tp.TCG, AddTCG},
+                //{ Tp.MP, AddMP},
+                //{ Tp.EVO, AddEVO},
+                //{ Tp.Netent, AddNetent},
+                //{ Tp.RedTiger, AddRedTiger},
+                //{ Tp.AP, AddAP},
+                { Tp.SBO, AddSBO},
+                //{ Tp.Skywind, AddSkywind},
+                //{ Tp.SimplePlay, AddSimplePlay},
+                //{ Tp.Yeebet, AddYeebet},
+                //{ Tp.BG, AddBG},
+                //{ Tp.TFG, AddTFG},
+                //{ Tp.PlayTech, AddPlayTech},
+                //{ Tp.IM, AddIM},
+                //{ Tp.SPRIBE, AddSPRIBE},
+                //{ Tp.BNG, AddBNG},
+                //{ Tp.HaoLong, AddHL},
+                //{ Tp.NLC, AddNLC},
+                //{ Tp.NTConnect, AddNTConnect },
+                //{ Tp.GA, AddGA},
+                //{ Tp.WonCasino, AddWonCasino},
             };
         }
+
         private IServiceCollection AddSA(IServiceCollection services)
         {
             services.AddSingleton<WagerSAService>();
@@ -144,7 +149,6 @@ namespace ThirdPartyWager.Extensions
 
         private IServiceCollection AddYGG(IServiceCollection services)
         {
-
             services.AddSingleton<WagerYGGBLL>();
             services.AddSingleton<FinanceYGGBLL>();
 
@@ -370,7 +374,7 @@ namespace ThirdPartyWager.Extensions
             services.AddSingleton<FinanceAMBBLL>();
             services.AddSingleton<WagerAMBBLL>();
             services.AddSingleton<WagerAMBService>();
-            
+
             services.AddHostedService<FinanceAMB>();
             services.AddHostedService<WagerAMB>();
             services.AddHostedService<WagerRedoAMB>();
@@ -533,7 +537,6 @@ namespace ThirdPartyWager.Extensions
 
             return services;
         }
-
 
         private IServiceCollection AddBG(IServiceCollection services)
         {
@@ -702,6 +705,7 @@ namespace ThirdPartyWager.Extensions
 
             return services;
         }
+
         private IServiceCollection AddSabaPlay(IServiceCollection services)
         {
             services.AddSingleton<WagerSabaPlayService>();
@@ -790,7 +794,4 @@ namespace ThirdPartyWager.Extensions
             return services;
         }
     }
-
 }
-
-

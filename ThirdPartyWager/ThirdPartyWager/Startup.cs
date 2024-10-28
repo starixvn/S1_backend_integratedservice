@@ -70,10 +70,13 @@ namespace ThirdPartyWager
             services.AddSingleton<CommonBLL>();
 
             services.AddTpList();
-            services.AddSabaOdds();
+
             services.AddLiveStreaming();
             services.AddLatestHighlightVideo();
-            services.AddTpRefundWorker();
+
+            //Loki comment:
+            //services.AddSabaOdds();
+            //services.AddTpRefundWorker();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
