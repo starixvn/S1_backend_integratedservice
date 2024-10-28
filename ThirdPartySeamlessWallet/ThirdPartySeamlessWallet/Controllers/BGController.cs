@@ -116,7 +116,7 @@ public class BGController : ControllerBase
 
     #region Private Methods
 
-    private bool ConvertToAssignObject<T>(object parameters, out T request, out string message)
+    private static bool ConvertToAssignObject<T>(object parameters, out T request, out string message)
     {
         message = string.Empty;
         request = default(T);
