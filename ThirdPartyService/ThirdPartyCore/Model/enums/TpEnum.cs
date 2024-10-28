@@ -74,7 +74,7 @@
         Live22 = 68,
         FastSpin = 69,
         DragonGaming = 70,
-        KY = 71
+        KY = 73,
     }
 
     public enum TpGameType
