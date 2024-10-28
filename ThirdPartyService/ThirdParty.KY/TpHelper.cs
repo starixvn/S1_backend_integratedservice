@@ -11,7 +11,7 @@ namespace ThirdParty.KY
     public class TpHelper : ThirdPartyHelperBase
     {
         private readonly Dictionary<int, KYConfig> _siteConfigDic;
-        private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
+        private const string _formatOfTime = "yyyyMMddHHmmssfff";
         private const int _utc = -4;
 
         public TpHelper(IServiceProvider provider)
@@ -22,36 +22,42 @@ namespace ThirdParty.KY
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             var config = _siteConfigDic[tpCustInfo.SiteId];
+            var currentAt = new DateTimeOffset(DateTime.UtcNow);
 
-            string ApiUrl = $"{config.ApiUrl}";
+            string ApiUrl = config.ApiUrl;
             string Agent = config.Agent;
-            var key = ApplyToken(tpCustInfo);
+            string OperateSubtype = config.OperateSubtype;
+            string timestamp = currentAt.ToUnixTimeMilliseconds().ToString();
+            var Md5key = config.Md5Key;
+            var DesKey = config.DesKey;
 
-            string cashierUrl = inputs.ContainsKey("CashierUrl") && !string.IsNullOrEmpty(inputs["CashierUrl"]) ? inputs["CashierUrl"] : "";
-            string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
-            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "";
-            string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
-            string lobbyUrl = inputs.ContainsKey("LobbyUrl") && !string.IsNullOrEmpty(inputs["LobbyUrl"]) ? inputs["LobbyUrl"] : homeUrl;
+            string account = inputs.ContainsKey("account") && !string.IsNullOrEmpty(inputs["account"]) ? inputs["account"] : "";
+            string money = inputs.ContainsKey("money") && !string.IsNullOrEmpty(inputs["money"]) ? inputs["money"] : "";
+            // TODO: How to not exceed 100 characters?
+            string orderId = $"{Agent}{currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime)}{account}";
+            string ip = inputs.ContainsKey("ip") && !string.IsNullOrEmpty(inputs["ip"]) ? inputs["ip"] : "";
+            string lineCode = inputs.ContainsKey("lineCode") && !string.IsNullOrEmpty(inputs["lineCode"]) ? inputs["lineCode"] : "";
+            string kindId = inputs.ContainsKey("kindId") && !string.IsNullOrEmpty(inputs["kindId"]) ? inputs["kindId"] : "0";
 
-            string timestamp = GetCurrentTimeFormat();
             var parameters = new Dictionary<string, string>()
             {
-                { "token", ApplyToken(tpCustInfo) },
-                { "symbol", gameId },
-                { "technology", "H5" },
-                { "platform", (appType == AppType.Desktop) ? "WEB" : "MOBILE" },
-                { "language", TpLangId },
-                { "lobbyUrl", lobbyUrl },
-                { "cashierUrl", cashierUrl },
-                { "playMode", (fun.Equals("1", StringComparison.OrdinalIgnoreCase)) ? "DEMO" : "REAL" },
+                { "s", OperateSubtype },
+                { "account", account },
+                { "money", money },
+                { "orderid", orderId },
+                { "ip", ip },
+                { "lineCode", lineCode },
+                { "KindID", kindId }
             };
 
-            string postParams = $"agent={Agent}&timestamp={timestamp}param={parameters}&key={ToMD5(key).ToLower()}";
+            var sParams = string.Join("&", parameters.Select(kp => $"{kp.Key}={kp.Value}"));
+            string eParams = AesEncrypt(sParams, DesKey);
+            string postParams = $"agent={Agent}&timestamp={timestamp}param={sParams}&key={ToMD5($"{Agent}{timestamp}{Md5key}").ToLower()}";
 
             var result = HttpGet($"{ApiUrl}channelHandle", postParams, "application/json");
 
             ApiResult oApiResult = new ApiResult();
-            if (!IsJSON(result))
+            if (string.IsNullOrEmpty(result) || !IsJSON(result))
             {
                 oApiResult.ErrorCode = ErrorCode.Fail;
                 oApiResult.RawMessage = "No Result";
@@ -60,16 +66,18 @@ namespace ThirdParty.KY
             }
 
             var json = JsonConvert.DeserializeObject<LoginResult>(result);
-            if (json.error == 0)
+            ErrorCodeEnum errorMessage = (ErrorCodeEnum)(json.DataResult.Code);
+
+            if (errorMessage == ErrorCodeEnum.Success)
             {
                 oApiResult.ErrorCode = ErrorCode.Success;
-                oApiResult.Message = json.gameURL;
+                oApiResult.Message = json.DataResult.Url;
             }
             else
             {
                 oApiResult.ErrorCode = ErrorCode.Fail;
-                oApiResult.RawMessage = json.description;
-                oApiResult.RawErrorCode = json.error.ToString();
+                oApiResult.RawMessage = errorMessage.ToString();
+                oApiResult.RawErrorCode = ((int)errorMessage).ToString();
             }
 
             return oApiResult;
@@ -108,12 +116,6 @@ namespace ThirdParty.KY
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
-        }
-
-        private static string GetCurrentTimeFormat()
-        {
-            var currentAt = new DateTimeOffset(DateTime.UtcNow);
-            return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
         }
     }
 }
