@@ -113,7 +113,10 @@ namespace ThirdPartySeamlessWallet.Controllers
                           case -10:
                               resp.Message = "Error at table CustTransSummary; ";
                               break;
-                      }
+                          case -11:
+                              resp.Message = "Error at table TpCustInfo; ";
+                              break;
+                    }
                   }
             }
             catch (Exception ex) 
