@@ -32,21 +32,102 @@ namespace CommonService.Service.BLL
 
         public async Task<ApiResult> SendSMS(string PhoneNo, CustInfoProfile custInfo, string userLang, int custId)
         {
+            //var apiResult = new ApiResult();
+            //var dateTime = new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyyMMddHHmmss");
+            //var Config = _config[custInfo.SiteId].SMS;
+            //var sign = MakeSignString(Config.Account, Config.Password, dateTime);
+            //var url = $"https://api.itniotech.com/sms/sendSms/?account=xNGyNJBp&sign={sign}&datetime={dateTime}";
+
+            //var siteName = custInfo.SiteName;
+            //var smsMessage = $"[{siteName}]{_selLangBll.GetResourceValue("lbl_DepositReject", userLang)}  https://direct.lc.chat/11638088/";
+
+            //var AcknowledgeVerifySMS = new Dictionary<string, string>
+            //{
+            //    { "content", smsMessage },
+            //    { "numbers", PhoneNo},
+            //    { "senderid", siteName }
+            //};
+            //var oTPLog = new OTPLog
+            //{
+            //    SiteId = custInfo.SiteId,
+            //    OTPStatus = (int)OTPStatus.Fail,
+            //    OTPType = (int)OtpType.SMS,
+            //    OTPProvider = OTPProvider.SkyLine.ToString(),
+            //    CurrencyId = custInfo.CurrencyId,
+            //    CustId = custId,
+            //    UserName = custInfo.UserName,
+            //    PhoneNo = PhoneNo,
+            //    Content = smsMessage,
+            //    OTPNum = ""
+            //};
+
+            //var parameters = JsonConvert.SerializeObject(AcknowledgeVerifySMS);
+            //var result = await _httpHelper.HttpPost1Async(url, null, parameters, "application/json");
+            //_logger.LogInformation($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_DepositRejectSMS");
+
+            //if (result.StatusCode == HttpStatusCode.OK)
+            //{
+            //    var resultResp = JsonConvert.DeserializeObject<SKYLineSMSResult>(result.Content.ReadAsStringAsync().Result);
+            //    oTPLog.OTPResponse = $"{resultResp.status} || {resultResp.reason}";
+
+            //    if (resultResp.status == 0)
+            //    {
+            //        _logger.LogInformation($"SkyLine - {PhoneNo},{custInfo.UserName},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_DepositRejectSMS");
+            //        apiResult.ErrorCode = ErrorCode.Success;
+            //        oTPLog.OTPStatus = (int)OTPStatus.SendToProvider;
+            //        oTPLog.Request_id = GetRequestid(resultResp);
+            //    }
+            //    else
+            //    {
+            //        _logger.LogInformation($"SkyLine - {PhoneNo},{custInfo.UserName},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_DepositRejectSMS");
+            //        if (resultResp.status is -6 or -7 or -8 or -9)//號碼錯誤傳5002給前端
+            //        {
+            //            apiResult.ErrorCode = ErrorCode.PhoneError;
+            //            oTPLog.OTPResponse = ErrorCode.PhoneError.ToString();
+            //        }
+            //        else
+            //        {
+            //            _logger.LogInformation($"SkyLine - Error HttpStatus = {result.StatusCode}\r\nRespstatus ={resultResp.status}\r\nRespMsg = {resultResp.reason}");
+            //            apiResult.ErrorCode = ErrorCode.SMSProviderFail;
+            //            apiResult.Message = _siteLanguageBLL.GetLanguageValue(custInfo.SiteId, ErrorCode.SMSProviderFail.ToString(), userLang);
+            //        }
+            //    }
+            //}
+            //else
+            //{
+            //    apiResult.ErrorCode = ErrorCode.SMSProviderFail;
+            //    apiResult.Message = _siteLanguageBLL.GetLanguageValue(custInfo.SiteId, ErrorCode.SMSProviderFail.ToString(), userLang);
+            //    _logger.LogInformation($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_DepositRejectSMS");
+            //    oTPLog.OTPResponse = $"SkyLine - Error HttpStatus :{result.StatusCode} || {result.ReasonPhrase}";
+            //}
+
+            //_oTPSMSBLL.InsertOTPLog(oTPLog);
+            //return apiResult;
+
             var apiResult = new ApiResult();
-            var dateTime = new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToString("yyyyMMddHHmmss");
-            var Config = _config[custInfo.SiteId].SMS;
-            var sign = MakeSignString(Config.Account, Config.Password, dateTime);
-            var url = $"{Config.ResourceURL}account={Config.Account}&sign={sign}&datetime={dateTime}";
+            var timestamp = new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
+            var config = _config[custInfo.SiteId].OTP;
+            var sign = MakeSignString(config.ApiKey, config.ApiSecret, timestamp);
 
             var siteName = custInfo.SiteName;
+
             var smsMessage = $"[{siteName}]{_selLangBll.GetResourceValue("lbl_DepositReject", userLang)}  https://direct.lc.chat/11638088/";
 
-            var AcknowledgeVerifySMS = new Dictionary<string, string>
+            var headerParams = new Dictionary<string, string>
             {
+                { "Sign", sign },
+                { "Timestamp", timestamp.ToString() },
+                { "Api-Key", config.ApiKey }
+            };
+
+            var acknowledgeVerifySms = new Dictionary<string, string>
+            {
+                { "appId", config.Account },
                 { "content", smsMessage },
                 { "numbers", PhoneNo},
-                { "senderid", siteName }
+                { "senderId", siteName }
             };
+
             var oTPLog = new OTPLog
             {
                 SiteId = custInfo.SiteId,
@@ -61,13 +142,15 @@ namespace CommonService.Service.BLL
                 OTPNum = ""
             };
 
-            var parameters = JsonConvert.SerializeObject(AcknowledgeVerifySMS);
-            var result = await _httpHelper.HttpPost1Async(url, null, parameters, "application/json");
+            var parameters = JsonConvert.SerializeObject(acknowledgeVerifySms);
+            using var result = await _httpHelper.HttpPost1Async(config.ResourceURL, headerParams, parameters, "application/json");
             _logger.LogInformation($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_DepositRejectSMS");
 
             if (result.StatusCode == HttpStatusCode.OK)
             {
-                var resultResp = JsonConvert.DeserializeObject<SKYLineSMSResult>(result.Content.ReadAsStringAsync().Result);
+                var response = result.Content.ReadAsStringAsync().Result;
+                var resultResp = JsonConvert.DeserializeObject<SKYLineOTPResult>(response);
+                var responseDetail = resultResp.array.FirstOrDefault(x => x.number == PhoneNo);
                 oTPLog.OTPResponse = $"{resultResp.status} || {resultResp.reason}";
 
                 if (resultResp.status == 0)
@@ -75,7 +158,7 @@ namespace CommonService.Service.BLL
                     _logger.LogInformation($"SkyLine - {PhoneNo},{custInfo.UserName},status:{resultResp.status},reason:{resultResp.reason}", $"{siteName}_DepositRejectSMS");
                     apiResult.ErrorCode = ErrorCode.Success;
                     oTPLog.OTPStatus = (int)OTPStatus.SendToProvider;
-                    oTPLog.Request_id = GetRequestid(resultResp);
+                    oTPLog.Request_id = responseDetail.msgId;
                 }
                 else
                 {
@@ -98,7 +181,7 @@ namespace CommonService.Service.BLL
                 apiResult.ErrorCode = ErrorCode.SMSProviderFail;
                 apiResult.Message = _siteLanguageBLL.GetLanguageValue(custInfo.SiteId, ErrorCode.SMSProviderFail.ToString(), userLang);
                 _logger.LogInformation($"SkyLine - {result.Content.ReadAsStringAsync().Result}", $"{siteName}_DepositRejectSMS");
-                oTPLog.OTPResponse = $"SkyLine - Error HttpStatus :{result.StatusCode} || {result.ReasonPhrase}";
+                oTPLog.OTPResponse = $"SkyLine - Error HttpStatusCode : {result.StatusCode} || {result.ReasonPhrase}";
             }
 
             _oTPSMSBLL.InsertOTPLog(oTPLog);
@@ -119,7 +202,7 @@ namespace CommonService.Service.BLL
             var timestamp = new DateTimeOffset(DateTime.Now).ToOffset(new TimeSpan(8, 0, 0)).ToUnixTimeSeconds();
             var config = _config[custInfo.SiteId].OTP;
             var sign = MakeSignString(config.ApiKey, config.ApiSecret, timestamp);
-          
+
             var siteName = custInfo.SiteName;
 
             #region message
@@ -149,7 +232,7 @@ namespace CommonService.Service.BLL
             {
                 { "Sign", sign },
                 { "Timestamp", timestamp.ToString() },
-                { "Api-Key", config.ApiKey },
+                { "Api-Key", config.ApiKey }
             };
             
             var acknowledgeVerifySms = new Dictionary<string, string>
