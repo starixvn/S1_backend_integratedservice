@@ -1,5 +1,4 @@
 ﻿using MySql.Data.MySqlClient;
-using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface;
 using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -32,7 +31,7 @@ public class BGBLL : IBGBLL
     private readonly SettledService _settledService;
 
     private readonly MySqlClient _mainDbClient;
-
+    private readonly Dictionary<int, BGConfig> _siteConfigDic;
 
     public BGBLL(IServiceProvider provider)
     {
@@ -49,6 +48,7 @@ public class BGBLL : IBGBLL
         _settledService = provider.GetRequiredService<SettledService>();
 
         _mainDbClient = provider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+        _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<BGConfig>(ThirdParty.ToString());
     }
 
     public string GetSign(SignParameters_BG signParameters, bool isSignNeedLoginId = true)
@@ -62,10 +62,9 @@ public class BGBLL : IBGBLL
             throw new BGException(BGErrorCode.InternalError, $"CheckRequest Fail: TpCustInfo not found.");
 
         // Get Setting
-        var setting = JsonConvert.DeserializeObject<Dictionary<string, string>>(_thirdPartyBLL.GetThirdPartyBySite((int)ThirdParty, tpCustInfo.SiteId).Setting);
-        var secretKey = setting.ContainsKey($"ApiSecretKey_{tpCustInfo.TpCurrencyId}") && !string.IsNullOrEmpty(setting[$"ApiSecretKey_{tpCustInfo.TpCurrencyId}"])
-            ? setting[$"ApiSecretKey_{tpCustInfo.TpCurrencyId}"]
-            : throw new BGException(BGErrorCode.InternalError, $"ApiSecretKey_{tpCustInfo.TpCurrencyId} is invaild.");
+        var setting = _siteConfigDic[tpCustInfo.SiteId];
+        var currencyData = setting.CurrencyData[tpCustInfo.TpCurrencyId];
+        var secretKey = currencyData.ApiSecretKey;
 
         return _tools.ToMD5(signParameters.random + signParameters.sn + (isSignNeedLoginId ? signParameters.loginId : "") + signParameters.amount + secretKey);
     }
@@ -435,7 +434,7 @@ public class BGBLL : IBGBLL
             return false;
         }
     }
-    private bool CheckRequestForOrderTransfer(OrderTransferParameters_BG parameters, out decimal amount, out string message)
+    private static bool CheckRequestForOrderTransfer(OrderTransferParameters_BG parameters, out decimal amount, out string message)
     {
         message = string.Empty;
         amount = 0;
@@ -493,7 +492,7 @@ public class BGBLL : IBGBLL
 
         return true;
     }
-    private bool CheckRequestForCalcTransfer(CalcTransferParameters_BG parameters, out decimal amount, out int recalc, out string message)
+    private static bool CheckRequestForCalcTransfer(CalcTransferParameters_BG parameters, out decimal amount, out int recalc, out string message)
     {
         message = string.Empty;
         amount = 0;
@@ -791,7 +790,7 @@ public class BGBLL : IBGBLL
         }
     }
 
-    private BettransType ConvertToBettransType(BGOrderStatusEnum orderStatus)
+    private static BettransType ConvertToBettransType(BGOrderStatusEnum orderStatus)
     {
         switch (orderStatus)
         {
@@ -812,7 +811,7 @@ public class BGBLL : IBGBLL
         }
     }
 
-    private TicketStatus ConvertToTicketStatus(BGOrderStatusEnum orderStatus)
+    private static TicketStatus ConvertToTicketStatus(BGOrderStatusEnum orderStatus)
     {
         switch (orderStatus)
         {
