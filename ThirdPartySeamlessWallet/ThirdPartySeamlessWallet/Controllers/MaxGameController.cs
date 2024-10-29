@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using System.Text;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -50,8 +50,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                     var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
                     return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
                 }
+                var result = _maxGameBLL.GetPlayerInfo(content);
 
-                return _maxGameBLL.GetPlayerInfo(content);
+                WriteLogTest($"{sitename}/GetPlayerInfo", content, result);
+
+                return result;
             }
             catch (Exception ex)
             {
@@ -79,7 +82,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
                 }
 
-                return _maxGameBLL.GetBalance(content);
+                var result = _maxGameBLL.GetBalance(content);
+
+                WriteLogTest($"{sitename}/GetBalance", content, result);
+
+                return result;
             }
             catch (Exception ex)
             {
@@ -106,7 +113,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                     var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
                     return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
                 }
-                return _maxGameBLL.PlaceBet(content);
+                var result = _maxGameBLL.PlaceBet(content);
+
+                WriteLogTest($"{sitename}/PlaceBet", content, result);
+
+                return result;
             }
             catch (Exception ex)
             {
@@ -133,7 +144,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
                 }
 
-                return _maxGameBLL.EndGame(content);
+                var result = _maxGameBLL.EndGame(content);
+
+                WriteLogTest($"{sitename}/EndGame", content, result);
+
+                return result;
             }
             catch (Exception ex)
             {
@@ -142,7 +157,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             return new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
         }
-
 
         [HttpPost]
         [Route("[controller]/{sitename}/PlaceBetAndSettle")]
@@ -161,7 +175,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
                 }
 
-                return _maxGameBLL.PlaceBetAndSettle(content);
+                var result = _maxGameBLL.PlaceBetAndSettle(content);
+
+                WriteLogTest($"{sitename}/PlaceBetAndSettle", content, result);
+
+                return result;
             }
             catch (Exception ex)
             {
@@ -188,7 +206,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
                 }
 
-                return _maxGameBLL.VoidGame(content);
+                var result = _maxGameBLL.VoidGame(content);
+
+                WriteLogTest($"{sitename}/VoidGame", content, result);
+
+                return result;
             }
             catch (Exception ex)
             {
@@ -217,7 +239,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
                 }
 
-                return _maxGameBLL.Bonus(content);
+                var result = _maxGameBLL.Bonus(content);
+
+                WriteLogTest($"{sitename}/Bonus", content, result);
+
+                return result;
             }
             catch (Exception ex)
             {
@@ -246,7 +272,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
                 }
 
-                return _maxGameBLL.FreeSpin(content);
+                var result = _maxGameBLL.FreeSpin(content);
+
+                WriteLogTest($"{sitename}/FreeSpin", content, result);
+
+                return result;
             }
             catch (Exception ex)
             {
@@ -283,6 +313,14 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             _log2File.Error($"CheckHeader Error\r\nHeader={oSign}\r\nencrypt={encrypt}", logName);
             return false;
+        }
+
+        private static void WriteLogTest(string action, string requestContent, dynamic result)
+        {
+            SentrySdk.CaptureMessage($"{nameof(MaxGameController)}/{action} at {DateTime.Now}" +
+                                     $"{Environment.NewLine}--requestContent: {requestContent}" +
+                                     $"{Environment.NewLine}---------------------" +
+                                     $"{Environment.NewLine}--result: {Convert.ToString(result)}");
         }
     }
 }

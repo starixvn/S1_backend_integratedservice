@@ -1,12 +1,18 @@
 using Serilog;
 using Serilog.Events;
-using Serilog.Exceptions;
 using Serilog.Formatting.Json;
 using ThirdPartySeamlessWallet;
 using ThirdPartySeamlessWallet.Core.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.WebHost.UseSentry();
+builder.WebHost.UseSentry(option =>
+{
+    option.SetBeforeSend(@event =>
+    {
+        @event.SetFingerprint(Guid.NewGuid().ToString());
+        return @event;
+    });
+});
 
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
