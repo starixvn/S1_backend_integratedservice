@@ -1,61 +1,94 @@
-using System.Globalization;
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
-using ThirdPartyCore.Extensions;
 using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
-using ThirdPartyCore.Model.TpBetRecordDetail.Response;
 using ThirdPartyCore.Model.TpBetRecordExtend;
 
 namespace ThirdParty.Allbet
 {
     public class TpHelper : ThirdPartyHelperBase
     {
-        private readonly AllBetConfig _siteAllBetConfig;
-        
+        private readonly Dictionary<int, AllBetConfig> _siteConfigDic;
+        private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
+        private const int _utc = -4;
+        private const string _testCurrency = "UUS";
+
         public TpHelper(IServiceProvider provider)
         {
-            _siteAllBetConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<AllBetConfig>(TpEnum.Allbet.ToString());
-        }
-        
-        #region Model
-        private class Result<T>
-        {
-            public string resultCode { get; set; }
-            public string message { get; set; }
-            public T data { get; set; }
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<AllBetConfig>(TpEnum.Allbet.ToString());
         }
 
-        private class UserResult
+        #region Request
+
+        public class CommonReq
         {
-            public string player { get; set; }
+            public string Timestamp { get; set; }
+            public string Seq { get; set; }
+            public Payload Payload { get; set; }
         }
 
-        private class LoginResult
+        public class Payload
         {
-            public string gameLoginUrl { get; set; }
+            public ProductInfo ProductInfo { get; set; }
+            public CustInfo CustInfo { get; set; }
+            public AgentInfo AgentInfo { get; set; }
+            public string HomeUrl { get; set; }
+            public Additional Additional { get; set; }
         }
 
-        public class AllBetConfig
+        public class ProductInfo
         {
-            public string ApiUrl { get; set; }
-            public string Suffix { get; set; }
-            public string AllbetKey {  get; set; }
-            public string OperatorId { get; set; }
-            public string PartnerKey { get; set; }
-            public List<CurrencyAgent> CurrencyAgents { get; set; }
+            public string GameType { get; set; }
+            public string GameId { get; set; }
+            public string AppType { get; set; }
         }
-        
-        public class CurrencyAgent
+
+        public class CustInfo
         {
-            public string CurrencyId { get; set; }
-            public string Agent { get; set; }
+            public string OperatorCustomerId { get; set; }
+            public string Language { get; set; }
+            public string Platform { get; set; }
+            public string CurrencyISO { get; set; }
+            public string BrowserUserAgent { get; set; }
+            public string IP { get; set; }
+            public string WalletSideToken { get; set; }
         }
-        
-        #endregion
+
+        public class AgentInfo
+        {
+            public string ExtraInfo { get; set; }
+        }
+
+        public class Additional
+        {
+            public string SpecialKey { get; set; }
+        }
+
+        #endregion Request
+
+        #region Response
+
+        public class LoginResp
+        {
+            public string Seq { get; set; }
+            public DateTime TimeStamp { get; set; }
+            public int ErrorCode { get; set; }
+            public string ErrorMessage { get; set; }
+            public Payload_Login Payload { get; set; }
+        }
+
+        public class Payload_Login
+        {
+            public string ReturnUrl { get; set; }
+        }
+
+        public class GetBetHistoryResp : LoginResp
+        {
+        }
+
+        #endregion Response
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
         {
@@ -64,47 +97,19 @@ namespace ThirdParty.Allbet
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            var apiUrl = _siteAllBetConfig.ApiUrl;
-            var agent = _siteAllBetConfig.CurrencyAgents.FirstOrDefault(x => x.CurrencyId == tpCustInfo.TpCurrencyId).Agent; 
-            var path = "CheckOrCreate";
-            tpCustInfo.TpUserName = $"{tpCustInfo.TpUserName}{_siteAllBetConfig.Suffix}";
-            var parameters = ToJson(new
+            ApiResult oApiResult = new()
             {
-                agent,
-                player = tpCustInfo.TpUserName
-            });
-            var header = GetAuthData(inputs, path, parameters, out var contentType);
-
-            var result = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
-
-            var oApiResult = new ApiResult();
-            if (IsJSON(result))
-            {
-                var userResult = FromJson<Result<UserResult>>(result);
-                if (userResult.resultCode.Equals("OK", StringComparison.OrdinalIgnoreCase))
-                {
-                    oApiResult.ErrorCode = ErrorCode.Success;
-                }
-                else
-                {
-                    oApiResult.ErrorCode = ErrorCode.Fail;
-                    oApiResult.RawErrorCode = userResult.resultCode;
-                    oApiResult.Message = oApiResult.RawMessage = userResult.message;
-                }
-            }
-            else
-            {
-                oApiResult.RawMessage = "No Result";
-                oApiResult.RawErrorCode = "1";
-                oApiResult.ErrorCode = ErrorCode.SystemError;
-            }
+                ErrorCode = ErrorCode.Success
+            };
             return oApiResult;
         }
 
         public override ApiResult<UserBalance> GetBalance(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>();
-            oApiResult.ErrorCode = ErrorCode.Fail;
+            ApiResult<UserBalance> oApiResult = new ApiResult<UserBalance>
+            {
+                ErrorCode = ErrorCode.Fail
+            };
             return oApiResult;
         }
 
@@ -112,172 +117,197 @@ namespace ThirdParty.Allbet
         {
             throw new NotImplementedException();
         }
-
-        public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string tpLangId, Dictionary<string, string> inputs)
+       
+        public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
         {
-            var apiUrl = _siteAllBetConfig.ApiUrl;
-            var isFun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) && inputs["fun"] == "1";
-            var path = isFun ? "LoginTrial" : "Login";
+            throw new NotImplementedException();
+        }
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            var config = _siteConfigDic[tpCustInfo.SiteId];
 
-            if (!tpCustInfo.TpUserName.EndsWith(_siteAllBetConfig.Suffix))
+            var tpCurrency = new TpCurrency()
             {
-                tpCustInfo.TpUserName = $"{tpCustInfo.TpUserName}{_siteAllBetConfig.Suffix}";
-            }
+                ExchangeRate = tpCustInfo.ExchangeRate,
+                TpCurrencyId = tpCustInfo.TpCurrencyId,
+            };
 
-            var parameters = ToJson(new
+            var convert = new DateTimeOffset(getBetDetail.SettledTime);
+            var time = convert.ToOffset(new TimeSpan(_utc, 0, 0)).ToString("yyyy/MM/dd HH:mm:ss");
+            var input = new
             {
-                player = isFun ? null : tpCustInfo.TpUserName,
-                language = tpLangId
-            });
-            var header = GetAuthData(inputs, path, parameters, out var contentType);
+                Timestamp = GetCurrentTimeFormat(),
+                Seq = Guid.NewGuid().ToString(),
+                Payload = new
+                {
+                    config.GameType,
+                    OperatorCustId = tpCustInfo.TpUserName,
+                    TicketNo = getBetDetail.TransId,
+                    SettleDate = time,
+                    Language = "en-US",
+                    AgentInfo = new
+                    {
+                        AgentKey = tpCustInfo.TpCurrencyId
+                    }
+                }
+            };
+            var ApiUrl = $"{config.ApiUrl}/api/CommonWallet/GetBetHistory";
+            var postdata = JsonConvert.SerializeObject(input, Formatting.None);
+            var header = new Dictionary<string, string>()
+            {
+                { "operator-pwd", config.OperatorPwd},
+                { "operator-sign", Encrypt(postdata, config)},
+            };
+            var result = HttpPost(ApiUrl, postdata, "application/json", header);
 
-            var result = HttpPostClient($"{apiUrl}/{path}", parameters, contentType, header);
-
-            var oApiResult = new ApiResult();
             if (IsJSON(result))
             {
-                var userResult = FromJson<Result<LoginResult>>(result);
-                if (userResult.resultCode.Equals("OK", StringComparison.OrdinalIgnoreCase))
+                var json = JsonConvert.DeserializeObject<GetBetHistoryResp>(result);
+                if (json.ErrorCode == 0)
+                {
+                    return new BaseDetail(getBetDetail.TpGameTypeOption)
+                    {
+                        TransId = getBetDetail.TransId,
+                        DetailUrl = json.Payload.ReturnUrl,
+                        TpCurrency = tpCurrency,
+                    };
+                }
+            }
+
+            return new BaseDetail(getBetDetail.TpGameTypeOption)
+            {
+                TransId = getBetDetail.TransId,
+                TpCurrency = tpCurrency,
+            };
+
+            //var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_Allbet_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
+            //var detail = ToJson(wagerDetail);
+            //var gameCode = wagerDetail.GetValueOrDefault("gameType")?.ToString();
+            //return getBetDetail.TpGameTypeOption.CategoryId switch
+            //{
+            //    TpCategory.LiveCasino => new LiveCasinoDetail(getBetDetail.TpGameTypeOption)
+            //    {
+            //        TransId = getBetDetail.TransId,
+            //        Detail = detail,
+            //        TpCurrency = tpCurrency,
+            //        RefTransId = wagerDetail.GetValueOrDefault("gameRoundId")?.ToString(),
+            //        TpUserName = wagerDetail.GetValueOrDefault("client")?.ToString(),
+            //        UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("betTime", DateTime.MinValue),
+            //        UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("gameRoundEndTime", DateTime.MinValue),
+            //        Stake = (decimal)wagerDetail.GetValueOrDefault("betAmount") * tpCurrency.ExchangeRate,
+            //        WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("winOrLoss") * tpCurrency.ExchangeRate,
+            //        GameCode = gameCode,
+            //        GameName = GetGameName(gameCode),
+            //    },
+            //    _ => new BaseDetail(getBetDetail.TpGameTypeOption)
+            //    {
+            //        TransId = getBetDetail.TransId,
+            //        Detail = detail,
+            //        TpCurrency = tpCurrency,
+            //    }
+            //};
+        }
+        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            //var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_Allbet_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
+            //var gameCode = wagerDetail.GetValueOrDefault("gameType")?.ToString();
+            //return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
+            //{
+            //    GameID = gameCode,
+            //    Game = GetGameName(gameCode),
+            //    RefNo = wagerDetail.GetStringValue("betNum"),
+            //    Title = wagerDetail.GetStringValue("tableName"),
+            //    MatchID = wagerDetail.GetStringValue("gameRoundId"),
+            //    BetType = wagerDetail.GetStringValue("betType"),
+            //    BetChoice = string.Empty,
+            //    Result = wagerDetail.GetStringValue("gameResult"),
+            //    DeviceType = GetDeviceType(wagerDetail.GetStringValue("appType")),
+            //    IP = string.Empty,
+            //};
+            return default;
+        }
+        
+        public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
+        {
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+            var ApiUrl = $"{config.ApiUrl}/api/CommonWallet/LaunchGame";
+            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
+            string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
+
+            var key = ApplyToken(tpCustInfo);
+
+            var input = new
+            {
+                Timestamp = GetCurrentTimeFormat(),
+                Seq = Guid.NewGuid().ToString(),
+                Payload = new
+                {
+                    ProductInfo = new
+                    {
+                        config.GameType,
+                        GameId = gameId,
+                        AppType = (appType == AppType.Desktop) ? "D" : "M",
+                    },
+                    CustInfo = new
+                    {
+                        OperatorCustomerId = tpCustInfo.TpUserName,
+                        OperatorCustomerName = tpCustInfo.TpUserName,
+                        Language = TpLangId,
+                        Platform = (appType == AppType.Desktop) ? "D" : "M",
+                        CurrencyISO = tpCustInfo.IsTest ? _testCurrency : tpCustInfo.TpCurrencyId,
+                        IpAddress = inputs["ClientIP"],
+                        WalletSideToken = key,
+                    },
+                    HomeUrl = homeUrl,
+                }
+            };
+            var postdata = JsonConvert.SerializeObject(input, Formatting.None);
+            var header = new Dictionary<string, string>()
+            {
+                { "operator-pwd", config.OperatorPwd},
+                { "operator-sign", Encrypt(postdata, config)},
+            };
+
+            var result = HttpPost(ApiUrl, postdata, "application/json", header);
+
+            ApiResult oApiResult = new ApiResult();
+
+            if (IsJSON(result))
+            {
+                var json = JsonConvert.DeserializeObject<LoginResp>(result);
+                if (json.ErrorCode == 0)
                 {
                     oApiResult.ErrorCode = ErrorCode.Success;
-                    oApiResult.Message = userResult.data.gameLoginUrl;
+                    oApiResult.Message = json.Payload.ReturnUrl;
                 }
                 else
                 {
                     oApiResult.ErrorCode = ErrorCode.Fail;
-                    oApiResult.RawErrorCode = userResult.resultCode;
-                    oApiResult.Message = oApiResult.RawMessage = userResult.message;
+                    oApiResult.RawMessage = json.ErrorMessage;
+                    oApiResult.RawErrorCode = json.ErrorCode.ToString();
                 }
             }
             else
             {
                 oApiResult.RawMessage = "No Result";
                 oApiResult.RawErrorCode = "1";
-                oApiResult.ErrorCode = ErrorCode.SystemError;
+                oApiResult.ErrorCode = ErrorCode.Fail;
             }
+
             return oApiResult;
         }
-        public override ApiResult<TransferResult> Transfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction direction, string TransID, string ThirdPartyTransID)
+
+        private string Encrypt(string req, AllBetConfig config)
         {
-            throw new NotImplementedException();
+            var s = req + config.OperatorKey;
+            var sign = ToMD5(s);
+            return sign;
         }
 
-        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        private static string GetCurrentTimeFormat()
         {
-            var tpCurrency = new TpCurrency()
-            {
-                ExchangeRate = tpCustInfo.ExchangeRate,
-                TpCurrencyId = tpCustInfo.TpCurrencyId,
-            };
-            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_Allbet_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
-            var detail = ToJson(wagerDetail);
-            var gameCode = wagerDetail.GetValueOrDefault("gameType")?.ToString();
-            return getBetDetail.TpGameTypeOption.CategoryId switch
-            {
-                TpCategory.LiveCasino => new LiveCasinoDetail(getBetDetail.TpGameTypeOption)
-                {
-                    TransId = getBetDetail.TransId,
-                    Detail = detail,
-                    TpCurrency = tpCurrency,
-                    RefTransId = wagerDetail.GetValueOrDefault("gameRoundId")?.ToString(),
-                    TpUserName = wagerDetail.GetValueOrDefault("client")?.ToString(),
-                    UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("betTime", DateTime.MinValue),
-                    UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("gameRoundEndTime", DateTime.MinValue),
-                    Stake = (decimal)wagerDetail.GetValueOrDefault("betAmount") * tpCurrency.ExchangeRate,
-                    WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("winOrLoss") * tpCurrency.ExchangeRate,
-                    GameCode = gameCode,
-                    GameName = GetGameName(gameCode),
-                },
-                _ => new BaseDetail(getBetDetail.TpGameTypeOption)
-                {
-                    TransId = getBetDetail.TransId,
-                    Detail = detail,
-                    TpCurrency = tpCurrency,
-                }
-            };
-        }
-
-        public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {
-            var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_Allbet_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
-            var gameCode = wagerDetail.GetValueOrDefault("gameType")?.ToString();
-            return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
-            {
-                GameID = gameCode,
-                Game = GetGameName(gameCode),
-                RefNo = wagerDetail.GetStringValue("betNum"),
-                Title = wagerDetail.GetStringValue("tableName"),
-                MatchID = wagerDetail.GetStringValue("gameRoundId"),
-                BetType = wagerDetail.GetStringValue("betType"),
-                BetChoice = string.Empty,
-                Result = wagerDetail.GetStringValue("gameResult"),
-                DeviceType = GetDeviceType(wagerDetail.GetStringValue("appType")),
-                IP = string.Empty,
-            };
-        }
-        private DeviceType GetDeviceType(string device)
-        {
-            return device switch
-            {
-                "6" => DeviceType.Desktop,
-                "3" => DeviceType.Mobile,
-                _ => DeviceType.None,
-            };
-        }
-
-        private string GetGameName(string gameCode)
-        {
-            return gameCode switch
-            {
-                "101" => "Normal Baccarat",
-                "102" => "VIP Baccarat",
-                "103" => "Quick Baccarat",
-                "104" => "See Card Baccarat",
-                "110" => "Insurance Baccarat",
-                "201" => "Sicbo(HiLo)",
-                "301" => "Dragon Tiger",
-                "401" => "Roulette",
-                "501" => "Pok Deng",
-                "601" => "Rock Paper Scissors",
-                "801" => "Bull Bull",
-                "901" => "Win Three Cards / Three Pictures",
-                _ => gameCode,
-            };
-        }
-
-        private Dictionary<string, string> GetAuthData(IReadOnlyDictionary<string, string> inputs, string path, string parameters, out string contentType)
-        {
-            var md5 = Base64Md5(parameters);
-            contentType = "application/json";
-            var date = DateTime.UtcNow.ToString("dd MMM yyyy HH:mm:ss z", new CultureInfo("en-US"));
-            var signString = $"POST\n{md5}\n{contentType}\n{date}\n/{path}";
-            var signature = Sign(signString, _siteAllBetConfig.AllbetKey);
-            return new Dictionary<string, string>
-            {
-                { "Accept", "application/json" },
-                { "Authorization", $"AB {_siteAllBetConfig.OperatorId}:{signature}" },
-                { "Content-MD5", md5 },
-                { "Date", date }
-            };
-        }
-
-        private string Sign(string encryptText, string encryptKey)
-        {
-            using var hmacsha1 = new HMACSHA1(Convert.FromBase64String(encryptKey));
-            var hash = hmacsha1.ComputeHash(Encoding.UTF8.GetBytes(encryptText));
-
-            return Convert.ToBase64String(hash);
-        }
-
-        private string Base64Md5(string data)
-        {
-            return Convert.ToBase64String(Md5(Encoding.UTF8.GetBytes(data)));
-        }
-
-        private byte[] Md5(byte[] data)
-        {
-            using var md5Crp = new MD5CryptoServiceProvider();
-            return md5Crp.ComputeHash(data);
+            var currentAt = new DateTimeOffset(DateTime.UtcNow);
+            return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
         }
     }
 }
