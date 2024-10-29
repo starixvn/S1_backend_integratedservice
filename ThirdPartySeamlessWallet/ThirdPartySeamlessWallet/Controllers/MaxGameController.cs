@@ -148,7 +148,7 @@ namespace ThirdPartySeamlessWallet.Controllers
         [Route("[controller]/{sitename}/PlaceBetAndSettle")]
         public async Task<dynamic> PlaceBetAndSettle(string sitename)
         {
-            string logName = $"{_thisTp}_EndGame";
+            string logName = $"{_thisTp}_PlaceBetAndSettle";
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
