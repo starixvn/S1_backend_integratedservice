@@ -95,19 +95,31 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     getErrorResponse.message = EdayResultCode.PlayerFrozen.GetEnumDescription();
                     return getErrorResponse;
                 }
+
+                var requestData = new EdayBetRequestData()
+                {
+                    txId = request.txId,
+                    token = request.token,
+                    player = request.player,
+                    amount = request.amount,
+                    billId = request.billId,
+                    roundCode = request.roundCode,
+                    gameCode = request.gameCode,
+                    betType = request.betType,
+                    timestamp = request.timestamp,
+                    TicketType = (int)BettransType.Bet,
+                    TicketStatus = (int)TicketStatus.UnSettled,
+                    UTCBetTime = DateTimeOffset.FromUnixTimeMilliseconds(request.timestamp).DateTime
+                };
                 
-                request.TicketType = (int)BettransType.Bet;
-                request.TicketStatus = (int)TicketStatus.UnSettled;
-                request.UTCBetTime = DateTimeOffset.FromUnixTimeMilliseconds(request.timestamp).DateTime;
-                
-                var result = BetRequest_Eday(request, out decimal tpAffterAmount);
+                var result = BetRequest_Eday(requestData, out decimal tpAfterAmount);
                 
                 if (result > 0 || result == -1)
                 {
-                    if (tpAffterAmount == 0 || result == -1)
+                    if (tpAfterAmount == 0 || result == -1)
                     {
                         var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, request.player, _gameType);
-                        tpAffterAmount = tpCustBalance.Balance;
+                        tpAfterAmount = tpCustBalance.Balance;
                     }
                     
                     return new EdayResponse<EdayBetRequestResponse>()
@@ -116,7 +128,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                         message = EdayResultCode.Success.GetEnumDescription(),
                         data = new EdayBetRequestResponse()
                         {
-                            balance = tpAffterAmount
+                            balance = tpAfterAmount
                         }
                     };
                 }
@@ -135,12 +147,88 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
         public EdayResponse<EdayBetRequestResponse> BetRequestCancel(EdayBetRequest request)
         {
-            throw new NotImplementedException();
+            var logName = $"{_thisTp.ToString()}_BetRequestCancel";
+            var getErrorResponse = new EdayResponse<EdayBetRequestResponse>()
+            {
+                resultCode = (int)EdayResultCode.ServerError,
+                message = EdayResultCode.ServerError.GetEnumDescription(),
+                data = null
+            };
+            try
+            {
+                var requestData = new EdayBetRequestData()
+                {
+                    txId = request.txId,
+                    token = request.token,
+                    player = request.player,
+                    amount = request.amount,
+                    billId = request.billId,
+                    roundCode = request.roundCode,
+                    gameCode = request.gameCode,
+                    betType = request.betType,
+                    timestamp = request.timestamp,
+                    TicketType = (int)BettransType.CancelBet,
+                    TicketStatus = (int)TicketStatus.Refund,
+                    UTCBetTime = DateTimeOffset.FromUnixTimeMilliseconds(request.timestamp).DateTime
+                };
+            
+                var result = BetRequestCancel_Eday(requestData, out decimal tpAfterAmount);
+
+                if (result > 0 || result == -1)
+                {
+                    if (tpAfterAmount == 0 || result == -1)
+                    { 
+                        var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, request.player, _gameType);
+                        tpAfterAmount = tpCustBalance.Balance;
+                    }
+
+                    return new EdayResponse<EdayBetRequestResponse>()
+                    { 
+                        resultCode = (int)EdayResultCode.Success,
+                        message = EdayResultCode.Success.GetEnumDescription(),
+                        data = new EdayBetRequestResponse()
+                        {
+                            balance = tpAfterAmount
+                        }
+                    };
+                }
+            
+                if (result == -2)
+                {
+                    //查無注單 回覆相對應的
+                    return new EdayResponse<EdayBetRequestResponse>()
+                    { 
+                        resultCode = (int)EdayResultCode.TransactionNotExist,
+                        message = EdayResultCode.TransactionNotExist.GetEnumDescription(),
+                    };
+                }
+                
+                if (result == -3)
+                {
+                    //已經取消不給動 若真的有送 直接詢問Eday
+                    _log2File.Info($"Eday BetRequestCancel : {request.billId} , Already CancelBet , Please check with Eday", logName);
+                    return new EdayResponse<EdayBetRequestResponse>()
+                    { 
+                        resultCode = (int)EdayResultCode.InvalidStatus,
+                        message = EdayResultCode.InvalidStatus.GetEnumDescription(),
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                getErrorResponse.resultCode = (int)EdayResultCode.ServerError;
+                getErrorResponse.message = EdayResultCode.ServerError.GetEnumDescription();
+                _log2File.Error($"{request}\r\n{JsonConvert.SerializeObject(getErrorResponse)}", logName, ex);
+                return getErrorResponse;
+            }
+            
+            _log2File.Error($"result={getErrorResponse}", logName);
+            return getErrorResponse;
         }
 
         #region ExChange
         
-        private int BetRequest_Eday(EdayBetRequest bettingDataLT_Eday, out decimal afterAmount)
+        private int BetRequest_Eday(EdayBetRequestData bettingDataLT_Eday, out decimal afterAmount)
         {
             var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, bettingDataLT_Eday.player);
             var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)_thisTp, tpCustInfo.CurrencyId);
@@ -167,6 +255,19 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
             
             var result = _bettingService.BetRequest_Eday(tpCustInfo, bettingDataLT_Eday, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+        
+        private int BetRequestCancel_Eday(EdayBetRequestData bettingDataLT_Eday, out decimal afterAmount)
+        {
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)_thisTp, bettingDataLT_Eday.player);
+            var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)_thisTp, tpCustInfo.CurrencyId);
+            
+            var result = _settledService.BetRequestCancel_Eday(tpCustInfo, bettingDataLT_Eday, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;

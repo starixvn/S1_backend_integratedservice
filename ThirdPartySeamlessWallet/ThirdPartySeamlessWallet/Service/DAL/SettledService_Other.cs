@@ -2087,5 +2087,98 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         }
         
         #endregion
+        
+        #region EdayLT
+        
+        public int BetRequestCancel_Eday(TpCustInfo tpCustInfo, EdayBetRequestData cancelData_Eday, out decimal afterAmount)
+        {
+            int bonusId = 0;
+            afterAmount = 0;
+            var result = 0;
+
+            var tpId = Tp.Eday;
+            var tpGameType = GameType.Eday_Lottery;
+            var tpCategory = TpCategory.Lottery;
+            var CancelSpName = "Service_BettransLT_Eday_CancelBet_Set";
+            var GetSpName = "Service_BettransLT_Eday_Get";
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            
+            try
+            {
+                // 檢查是否有注單
+                var bettrans = _partitionService.Query<BettransLTEday>(cancelData_Eday.UTCBetTime, GetSpName,
+                    new { billId = cancelData_Eday.billId, player = tpCustInfo.TpUserName });
+                
+                if (!bettrans.Any(i => i.billId == cancelData_Eday.billId))
+                {
+                    return -2;
+                }
+                
+                if (bettrans.Any(i => i.TicketType == (int)BettransType.CancelBet))
+                {
+                    return -3;
+                }
+                
+                var cancelData = new BettransLTEdayCancelBet()
+                {
+                    billId = cancelData_Eday.billId,
+                    player = tpCustInfo.TpUserName,
+                    TicketType = cancelData_Eday.TicketType,
+                    TicketStatus = cancelData_Eday.TicketStatus,
+                    SettleFlag = (int)SettleFlag.EndGame
+                };
+                
+                var p = new DynamicParameters(cancelData);
+                result = _partitionService.Execute(cancelData_Eday.UTCBetTime,CancelSpName, p, trans);
+
+                if (result > 0)
+                {
+                    result = PayoutV2(
+                        tpCustInfo,
+                        cancelData_Eday.amount,
+                        (int)tpId,
+                        cancelData_Eday.billId.ToString(),
+                        (int)tpGameType,
+                        tpCategory,
+                        cancelData_Eday.billId.ToString(),
+                        TransType.Payout,
+                        null,
+                        out afterAmount,
+                        "CancelBet",
+                        out bonusId,
+                        conn,
+                        trans,
+                        AllowNegative.Allow
+                    );
+                }
+
+                if (result > 0)
+                {
+                    //CancelBet 
+                    _tpUnsettleService.InsertTpUnsettle(Tp.Eday, GameType.Eday_Lottery, cancelData_Eday.billId.ToString(), trans);
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                }
+                else
+                {
+                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+                throw;
+            }
+
+            return result;
+        }
+        
+        #endregion
     }
 }

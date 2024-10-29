@@ -38,7 +38,8 @@ namespace ThirdParty.Eday
             var oApiResult = new ApiResult();
             if (IsJSON(result))
             {
-                var userResult = FromJson<EdayResult>(result);
+                //CreateMember無 Data
+                var userResult = FromJson<EdayResult<EdayLoginResponse>>(result);
                 if (userResult.resultCode.Equals("0", StringComparison.OrdinalIgnoreCase))
                 {
                     oApiResult.ErrorCode = ErrorCode.Success;
@@ -82,10 +83,12 @@ namespace ThirdParty.Eday
             var oApiResult = new ApiResult();
             if (IsJSON(result))
             {
-                var userResult = FromJson<EdayResult>(result);
+                var userResult = FromJson<EdayResult<EdayLoginResponse>>(result);
                 if (userResult.resultCode.Equals("0", StringComparison.OrdinalIgnoreCase))
                 {
                     oApiResult.ErrorCode = ErrorCode.Success;
+                    oApiResult.RawErrorCode = userResult.resultCode;
+                    oApiResult.Message = oApiResult.RawMessage = userResult.data.gameUrl;
                 }
                 else
                 {
@@ -120,7 +123,8 @@ namespace ThirdParty.Eday
             var oApiResult = new ApiResult();
             if (IsJSON(result))
             {
-                var userResult = FromJson<EdayResult>(result);
+                //LogOut無 給LoginResponse暫時代替
+                var userResult = FromJson<EdayResult<EdayLoginResponse>>(result);
                 if (userResult.resultCode.Equals("0", StringComparison.OrdinalIgnoreCase))
                 {
                     oApiResult.ErrorCode = ErrorCode.Success;

@@ -1033,11 +1033,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
         
         #region EdayLT
         
-        public int BetRequest_Eday(TpCustInfo tpCustInfo, EdayBetRequest bettingDataLT_Eday, out decimal afterAmount)
+        public int BetRequest_Eday(TpCustInfo tpCustInfo, EdayBetRequestData bettingDataLT_Eday, out decimal afterAmount)
         {
             int bonusId = 0;
             afterAmount = 0;
-            var result = 10000;
+            var result = 0;
 
             var tpId = Tp.Eday;
             var tpGameType = GameType.Eday_Lottery;

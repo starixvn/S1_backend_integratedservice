@@ -46,13 +46,19 @@ namespace ThirdPartySeamlessWallet.Service.Model
         public string player { get; set; }
         public decimal amount { get; set; }
         public int billId { get; set; }
+        public long timestamp { get; set; }
         public string roundCode { get; set; }
         public string gameCode { get; set; }
         public int betType { get; set; }
+    }
+
+    public class EdayBetRequestData : EdayBetRequest
+    {
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
-        public long timestamp { get; set; }
+        
         public DateTime UTCBetTime { get; set; }
+        
     }
 
     public class EdayBetRequestResponse
@@ -64,11 +70,20 @@ namespace ThirdPartySeamlessWallet.Service.Model
     
     #region DAL
 
-    public class BettransLTEday : EdayBetRequest
+    public class BettransLTEday : EdayBetRequestData
     {
-        public decimal betTotal { get; set; }
-        public decimal winTotal { get; set; }
+        public decimal bet { get; set; }
+        public decimal win { get; set; }
         public int ticketCount { get; set; }
+        public int SettleFlag { get; set; }
+    }
+    
+    public class BettransLTEdayCancelBet
+    {
+        public int billId { get; set; }
+        public string player { get; set; }
+        public int TicketType { get; set; } 
+        public int TicketStatus { get; set; }
         public int SettleFlag { get; set; }
     }
     
