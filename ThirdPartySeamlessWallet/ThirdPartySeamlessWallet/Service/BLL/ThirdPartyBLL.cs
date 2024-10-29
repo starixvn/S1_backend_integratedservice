@@ -316,6 +316,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     //    gameType = GameType.JILI_Fish;
                     //}
                     break;
+                case (int)Tp.Allbet:
+                    gameType = GameType.Allbet_LiveCasino;
+                    break;
                 default:
                     break;
             }

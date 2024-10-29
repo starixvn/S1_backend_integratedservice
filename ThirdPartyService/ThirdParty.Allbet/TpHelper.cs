@@ -256,7 +256,7 @@ namespace ThirdParty.Allbet
                         Platform = (appType == AppType.Desktop) ? "D" : "M",
                         CurrencyISO = tpCustInfo.IsTest ? _testCurrency : tpCustInfo.TpCurrencyId,
                         IpAddress = inputs["ClientIP"],
-                        WalletSideToken = key,
+                        WalletSideToken = key
                     },
                     HomeUrl = homeUrl,
                 }
@@ -267,7 +267,6 @@ namespace ThirdParty.Allbet
                 { "operator-pwd", config.OperatorPwd},
                 { "operator-sign", Encrypt(postdata, config)},
             };
-
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
 
             ApiResult oApiResult = new ApiResult();
