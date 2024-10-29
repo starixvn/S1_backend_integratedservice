@@ -12,22 +12,22 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
         InvalidSignature = 1002,
         [Description("Player Account Not Exist")] 
         PlayerAccountNotExist = 1003,
-        [Description("Player Account Not Allowed To Login")] 
-        PlayerAccountNotAllowedToLogin = 1004,
         [Description("Transaction Not Exist")] 
-        TransactionNotExist = 1005,
+        TransactionNotExist = 1004,
         [Description("Invalid Status")] 
-        InvalidStatus = 1006,
+        InvalidStatus = 1005,
         [Description("Player Offline")] 
-        PlayerOffline = 1007,
+        PlayerOffline = 1006,
         [Description("Prohibit Betting")] 
-        ProhibitBetting = 1008,
+        ProhibitBetting = 1007,
         [Description("Insufficient Balance")] 
-        InsufficientBalance = 1009,
+        InsufficientBalance = 1008,
         [Description("System Under Maintenance")] 
-        SystemUnderMaintenance = 1010,
+        SystemUnderMaintenance = 1009,
         [Description("Player Frozen")] 
-        PlayerFrozen = 1011,
+        PlayerFrozen = 1010,
+        [Description("Player Account Not Allowed To Login")] 
+        PlayerAccountNotAllowedToLogin = 1011,
         [Description("Invalid Request Parameter")] 
         InvalidRequestParameter = 4000,
         [Description("TxId Information Mismatch")] 
