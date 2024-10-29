@@ -60,7 +60,6 @@ public class WagerBG : BackgroundService
                         continue;
                     }
                     var currencyData = _setting.CurrencyData[item.TpCurrencyId];
-
                     quick = await _wagerBGBLL.ExecWagerWorker(siteInfo.SiteId, item.TpCurrencyId, tpType, timeRange, needQuickTime);
                     if (!isFast && quick) isFast = true;
                 }
