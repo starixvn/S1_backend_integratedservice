@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
+using ThirdPartySeamlessWallet.Service.Model.KY;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 using ThirdPartySeamlessWallet.Service.Model.MaxGame;
 
@@ -625,6 +626,70 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 {
                     /*Duplicate for key 'PRIMARY'*/
                     return -1;
+                }
+                throw;
+            }
+
+            _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+            return result;
+        }
+
+        #endregion
+
+        #region KY
+
+        public int PlaceBetPK_KY(TpCustInfo tpCustInfo, BettingDataPK_KY bettingDataPK_KY, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            var result = 0;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                var p = new DynamicParameters(bettingDataPK_KY);
+                p.Add("TicketType", (int)BettransType.Bet);
+                p.Add("TicketStatus", (int)TicketStatus.UnSettled);
+                p.Add("SettleFlag", (int)SettleFlag.Running);
+
+                var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataPK_KY.timestamp).DateTime;
+                // TODO: Need to create sp for Service_BettransPK_KY_Ins
+                result = _partitionService.Execute(partitionTime, "Service_BettransPK_KY_Ins", p, trans);
+
+                if (result > 0 && bettingDataPK_KY.money != 0)
+                {
+                    result = _walletService.SetBalance(
+                        tpCustInfo.CustId,
+                        tpCustInfo.SiteId,
+                        tpCustInfo.UserName,
+                        Math.Abs(bettingDataPK_KY.money) * -1,
+                        (int)Tp.V8,
+                        TransType.Wagers,
+                        $"Stake: {bettingDataPK_KY.money:#,##0.##} {bettingDataPK_KY.orderId}",
+                        bettingDataPK_KY.gameNo,
+                        out afterAmount,
+                        conn,
+                        trans
+                    );
+                }
+
+                if (result > 0)
+                {
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    return result;
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                result = 0;
+                _logger.LogError(mySqlEx.Message);
+                _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                if (mySqlEx.Number == 1062)
+                {
+                    /* Duplicate for key 'PRIMARY' */
+                    result = -1;
                 }
                 throw;
             }
