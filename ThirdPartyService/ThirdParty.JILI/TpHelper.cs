@@ -11,6 +11,7 @@ namespace ThirdParty.JILI
 {
     public class TpHelper : ThirdPartyHelperBase
     {
+        private readonly TemporaryLogSentryService temporaryLogSentryService;
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
         private readonly Dictionary<int, JILIConfig> _siteConfigDic;
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
@@ -21,6 +22,7 @@ namespace ThirdParty.JILI
         {
             _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.JILI).ToDictionary(d => d.AppId, d => d.Name);
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<JILIConfig>(TpEnum.JILI.ToString());
+            temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
         }
 
         #region Response
@@ -111,6 +113,8 @@ namespace ThirdParty.JILI
             };
 
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
+
+            temporaryLogSentryService.WriteLogLaunchGame(nameof(JILI), ApiUrl, header, postdata, result);
 
             ApiResult oApiResult = new ApiResult();
 
