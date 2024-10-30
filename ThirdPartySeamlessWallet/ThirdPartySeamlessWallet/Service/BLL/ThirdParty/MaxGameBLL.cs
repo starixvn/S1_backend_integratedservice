@@ -42,7 +42,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.FastSpin_RNG, WalletKind.BonusWallet },
             { (int)GameType.JILI_RNG, WalletKind.BalanceWallet },
             { (int)GameType.Allbet_LiveCasino, WalletKind.BonusWallet },
-            { (int)GameType.PP_LiveCasino, WalletKind.BalanceWallet }
+            { (int)GameType.PP_LiveCasino, WalletKind.BalanceWallet },
+            { (int)GameType.PP_RNG, WalletKind.BalanceWallet }
         };
         private readonly Dictionary<int, TpCategory> _gameOfTpCategory = new()
         {
@@ -53,7 +54,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.FastSpin_RNG, TpCategory.Slots },
             { (int)GameType.JILI_RNG, TpCategory.Slots },
             { (int)GameType.Allbet_LiveCasino, TpCategory.LiveCasino },
-            { (int)GameType.PP_LiveCasino, TpCategory.LiveCasino }
+            { (int)GameType.PP_LiveCasino, TpCategory.LiveCasino },
+            { (int)GameType.PP_RNG, TpCategory.Slots }
         };
 
         public MaxGameBLL(IServiceProvider provider)
