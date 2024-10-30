@@ -283,7 +283,7 @@ namespace ThirdParty.PP
 
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
             ApiResult oApiResult = new ApiResult();
-            SentrySdk.CaptureMessage($"PAYLOAD: {postdata} RESULT: {result}");
+            temporaryLogSentryService.WriteLogLaunchGame(nameof(PP), ApiUrl, header, postdata, result);
 
             if (IsJSON(result))
             {
