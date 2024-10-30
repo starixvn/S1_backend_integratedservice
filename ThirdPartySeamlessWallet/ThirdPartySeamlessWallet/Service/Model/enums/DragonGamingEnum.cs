@@ -7,6 +7,8 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
     //ErrorCode >=0 Success. ErrorCode < 0 Error.
     public enum ErrorCodeOfDragonGaming
     {
+        [Description("Success,Fix Issue Request.")]
+        IssueSuccess = 2,
         [Description("Success,Duplicate Request.")]
         DuplicateSuccess = 1,
         [Description("Success")]
