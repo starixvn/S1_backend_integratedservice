@@ -257,10 +257,10 @@ public class DragonGamingBLL : IDragonGamingBLL
             return 0;
         }
 
-        var checkBalance = custBalance.Balance - Math.Abs(request.amount);
+        var checkBalance = custBalance.Balance - Math.Abs(request.amount / 100m);
         if (checkBalance < 0)
         {
-            afterAmount = checkBalance / tpCurrency.ExchangeRate;
+            afterAmount = custBalance.Balance / tpCurrency.ExchangeRate;
             return 0;
         }
 
