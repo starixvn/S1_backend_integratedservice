@@ -158,8 +158,8 @@ namespace ThirdPartySeamlessWallet
             app.UseForwardedHeaders();
             app.UseRouting();
             app.UseCors("BTIPolicy");
-            app.UseRequestLogMiddleware();
-            app.UseResponseLogMiddleware();
+            //app.UseRequestLogMiddleware();
+            //app.UseResponseLogMiddleware();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapGet("/health", async context =>
