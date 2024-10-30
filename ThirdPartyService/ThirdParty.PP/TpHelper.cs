@@ -141,7 +141,8 @@ namespace ThirdParty.PP
             };
 
             var YYYYMM = getBetDetail.SettledTime.GetPartitionKey();
-            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_UuSlots_ResultId_Get", new { YYYYMM, TransId = getBetDetail.TransId }, DataBase.Main);
+            // NEED TO UPDATE SP
+            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_PP_ResultId_Get", new { YYYYMM, TransId = getBetDetail.TransId }, DataBase.Main);
             if (!detailList.Any() || detailList == null)
             {
                 return new BaseDetail(getBetDetail.TpGameTypeOption)
@@ -265,7 +266,7 @@ namespace ThirdParty.PP
                     {
                         OperatorCustomerId = tpCustInfo.TpUserName,
                         OperatorCustomerName = tpCustInfo.TpUserName,
-                        Language = TpLangId,
+                        Language = "en-US",
                         Platform = (appType == AppType.Desktop) ? "D" : "M",
                         CurrencyISO = tpCustInfo.IsTest ? _testCurrency : tpCustInfo.TpCurrencyId,
                         IpAddress = inputs["ClientIP"],
