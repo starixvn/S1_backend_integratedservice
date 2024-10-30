@@ -30,6 +30,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { "fastspin", Tp.FastSpin },
             { "jili", Tp.JILI },
             { "allbet", Tp.Allbet },
+            {"pragmaticplay",Tp.PP }
+
         };
         private readonly Dictionary<int, WalletKind> _gameOfWalletKind = new()
         {
@@ -39,7 +41,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.Live22_RNG, WalletKind.BonusWallet },
             { (int)GameType.FastSpin_RNG, WalletKind.BonusWallet },
             { (int)GameType.JILI_RNG, WalletKind.BalanceWallet },
-            { (int)GameType.Allbet_LiveCasino, WalletKind.BonusWallet }
+            { (int)GameType.Allbet_LiveCasino, WalletKind.BonusWallet },
+            { (int)GameType.PP_LiveCasino, WalletKind.BalanceWallet }
         };
         private readonly Dictionary<int, TpCategory> _gameOfTpCategory = new()
         {
@@ -49,7 +52,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.Live22_RNG, TpCategory.Slots },
             { (int)GameType.FastSpin_RNG, TpCategory.Slots },
             { (int)GameType.JILI_RNG, TpCategory.Slots },
-            { (int)GameType.Allbet_LiveCasino, TpCategory.LiveCasino }
+            { (int)GameType.Allbet_LiveCasino, TpCategory.LiveCasino },
+            { (int)GameType.PP_LiveCasino, TpCategory.LiveCasino }
         };
 
         public MaxGameBLL(IServiceProvider provider)
@@ -735,6 +739,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     InsertBettransSpName = "Service_BettransLC_Allbet_Ins";
                     CancelBettransSpName = "Service_BettransLC_Allbet_CancelBet_Set";
                     break;
+                //case (int)GameType.PP_LiveCasino:
+                //    GetTicketNoSpName = "Service_BettransRng_JILI_TicketNo_Get";
+                //    InsertBettransSpName = "Service_BettransRng_JILI_Ins";
+                //    CancelBettransSpName = "Service_BettransRng_JILI_CancelBet_Set";
+                //    break;
                 default:
                     // GameType.MaxGame_Poker
                     break;
