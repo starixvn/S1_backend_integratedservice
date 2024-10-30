@@ -62,6 +62,7 @@ namespace ThirdPartyService.Controllers
                 apiResult = _thirdPartyBLL.GotoGame(tpInfo);
 
                 _logger.LogInformation(apiResult.Message);
+                SentrySdk.CaptureMessage(JsonConvert.SerializeObject(apiResult));
                 if (apiResult.ErrorCode == ErrorCode.Success && tpInfo.CustId != 0)
                 {
                     _thirdPartyBLL.AutoTransfer(tpInfo);
