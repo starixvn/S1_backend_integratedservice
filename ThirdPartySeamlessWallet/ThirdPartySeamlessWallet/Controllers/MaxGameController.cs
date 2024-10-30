@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
@@ -60,6 +61,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogInformation(ex.Message);
                 _log2File.Error($"{ex.Message}", logName, ex);
             }
 
@@ -76,8 +78,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 string content = await reader.ReadToEndAsync();
-
-                var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
+                _logger.LogInformation("get balance ");
+                _logger.LogInformation(content);
+               var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
                     var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
@@ -92,6 +95,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
+                SentrySdk.CaptureException(ex);
+                _logger.LogInformation(ex.Message);
                 _log2File.Error($"{ex.Message}", logName, ex);
             }
 
