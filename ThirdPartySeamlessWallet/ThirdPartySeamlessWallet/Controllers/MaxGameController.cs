@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Build.Framework;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
@@ -38,7 +39,6 @@ namespace ThirdPartySeamlessWallet.Controllers
         public async Task<dynamic> GetPlayerInfo(string sitename)
         {
             string logName = $"{_thisTp}_GetPlayerInfo";
-
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
@@ -48,7 +48,9 @@ namespace ThirdPartySeamlessWallet.Controllers
                 if (!verifyHeader)
                 {
                     var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
-                    return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
+                    var response = new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
+                    WriteLogTest($"{sitename}/GetPlayerInfo", content, response, Request.Headers["operator-sign"]);
+                    return response;
                 }
                 var result = _maxGameBLL.GetPlayerInfo(content);
 
@@ -58,6 +60,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             catch (Exception ex)
             {
+                SentrySdk.CaptureException(ex);
                 _log2File.Error($"{ex.Message}", logName, ex);
             }
 
@@ -289,11 +292,11 @@ namespace ThirdPartySeamlessWallet.Controllers
         private bool CheckHeader(IHeaderDictionary header, string param, string siteName, string logName)
         {
             string oSign = header["operator-sign"];
-            if (string.IsNullOrEmpty(oSign))
-            {
-                _log2File.Error($"operator-sign Empty\r\noperator-sign={oSign}", logName);
-                return false;
-            }
+            //if (string.IsNullOrEmpty(oSign))
+            //{
+            //    _log2File.Error($"operator-sign Empty\r\noperator-sign={oSign}", logName);
+            //    return false;
+            //}
 
             var serverInfo = _thirdPartyBLL.GetServerInfoBySiteName(siteName);
             if (serverInfo is not { SiteId: > 0 })
@@ -315,10 +318,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             return false;
         }
 
-        private static void WriteLogTest(string action, string requestContent, dynamic result)
+        private static void WriteLogTest(string action, string requestContent, dynamic result, string oSign = "")
         {
             SentrySdk.CaptureMessage($"{nameof(MaxGameController)}/{action} at {DateTime.Now}" +
                                      $"{Environment.NewLine}--requestContent: {requestContent}" +
+                                     $"{Environment.NewLine}--header operator-sign: {oSign}" +
                                      $"{Environment.NewLine}---------------------" +
                                      $"{Environment.NewLine}--result: {Convert.ToString(result)}");
         }
