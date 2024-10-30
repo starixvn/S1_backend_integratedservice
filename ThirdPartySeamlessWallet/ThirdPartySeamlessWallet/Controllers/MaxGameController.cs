@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Build.Framework;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
@@ -44,7 +45,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 string content = await reader.ReadToEndAsync();
-                _logger.LogInformation(content);
+                _logger.LogInformation("GetPlayerInfo 1 =" + content);
                 var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
@@ -56,12 +57,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var result = _maxGameBLL.GetPlayerInfo(content);
 
                 WriteLogTest($"{sitename}/GetPlayerInfo", content, result);
-
+                _logger.LogInformation("GetPlayerInfo 2 =" + content);
                 return result;
             }
             catch (Exception ex)
             {
-                _logger.LogInformation(ex.Message);
+                _logger.LogInformation("GetPlayerInfo 3 =" + ex.Message);
                 _log2File.Error($"{ex.Message}", logName, ex);
             }
 
@@ -78,9 +79,9 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 string content = await reader.ReadToEndAsync();
-                _logger.LogInformation("get balance ");
                 _logger.LogInformation(content);
-               var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
+                _logger.LogInformation("Get Balance 1 =" + content);
+                var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
                     var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
@@ -90,13 +91,13 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var result = _maxGameBLL.GetBalance(content);
 
                 WriteLogTest($"{sitename}/GetBalance", content, result);
-
+                _logger.LogInformation("Get Balance 2=" + content);
                 return result;
             }
             catch (Exception ex)
             {
                 SentrySdk.CaptureException(ex);
-                _logger.LogInformation(ex.Message);
+                _logger.LogInformation("Get Balance 3=" + ex.Message);
                 _log2File.Error($"{ex.Message}", logName, ex);
             }
 
