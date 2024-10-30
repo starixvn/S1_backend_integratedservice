@@ -1,6 +1,5 @@
 ﻿namespace ThirdPartySeamlessWallet.Service.Model.KY
 {
-    // TODO: 文件中 gameId, currency 是 V8 沒有的，文件中的 param 沒有 timestamp
     public class BettingDataPK_KY
     {
         public int s { get; set; }

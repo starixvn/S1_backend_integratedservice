@@ -32,7 +32,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly Log2File _log2File;
         private readonly Tools _tools;
         private readonly Tp _thisTp;
-        private readonly Dictionary<string, KYConfig> _siteConfig;
+        private readonly Dictionary<string, string> _defaultConfig;
+        private readonly Dictionary<string, Dictionary<string, string>> _siteNameConfigs;
 
         public KYController(IServiceProvider provider)
         {
@@ -40,7 +41,11 @@ namespace ThirdPartySeamlessWallet.Controllers
             _log2File = provider.GetRequiredService<Log2File>();
             _tools = provider.GetRequiredService<Tools>();
             _thisTp = Tp.KY;
-            _siteConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<KYConfig>((Tp.KY).ToString());
+
+            // defaultConfig給原本NOVA、GOAL、BWING的商號使用
+            _defaultConfig = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(_thisTp.ToString());
+            // 新增商號使用指定siteName
+            _siteNameConfigs = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteName<Dictionary<string, string>>(_thisTp.ToString());
         }
         
         [HttpGet]
@@ -60,14 +65,6 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
-                // TODO: How to verify site name?
-                if (!Enum.TryParse(sitename, true, out Tp parsedSite) || parsedSite != Tp.KY)
-                {
-                    getApiResponse.d.code = (int)ErrorCodeOfKY.Agent;
-                    _log2File.Error($"Agent Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
-                    return getApiResponse;
-                }
-
                 if (string.IsNullOrEmpty(getReq.agent))
                 {
                     getApiResponse.d.code = (int)ErrorCodeOfKY.Agent;
@@ -82,7 +79,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     return getApiResponse;
                 }
 
-                var param = DecryptParam(getReq.param, getReq.agent);
+                var param = DecryptParam(getReq.param, getReq.agent, sitename);
 
                 if (string.IsNullOrEmpty(param))
                 {
@@ -108,7 +105,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var verifyKey = false;
                 if (!string.IsNullOrEmpty(getReq.key))
                 {
-                    verifyKey = CheckKey(getReq.key, getReq.timestamp, getReq.agent);
+                    verifyKey = CheckKey(getReq.key, getReq.timestamp, getReq.agent, sitename);
                 }
                 if (!verifyKey)
                 {
@@ -134,13 +131,14 @@ namespace ThirdPartySeamlessWallet.Controllers
             return getApiResponse;
         }
 
-        private string DecryptParam(string getReq, string agent)
+        private string DecryptParam(string getReq, string agent, string sitename)
         {
             var param = getReq;
 
             try
             {
-                var deskey = _siteConfig.Select(x => x.Value).SelectMany(y => y.CurrencyData.Values).ToList().Find(x => x.Agent == agent).Deskey;
+                var config = GetSiteConfig(sitename);
+                var deskey = config["Deskey"];
                 param = _tools.AesDecrypt(HttpUtility.UrlEncode(getReq), deskey);
 
                 _logger.LogInformation(param);
@@ -153,9 +151,10 @@ namespace ThirdPartySeamlessWallet.Controllers
             return param;
         }
 
-        private bool CheckKey(string key, long timestamp, string agent)
+        private bool CheckKey(string key, long timestamp, string agent, string sitename)
         {
-            var md5key = _siteConfig.Select(x => x.Value).SelectMany(y => y.CurrencyData.Values).ToList().Find(x => x.Agent == agent).Md5key;
+            var config = GetSiteConfig(sitename);
+            var md5key = config["Md5key"];
             
             var encryptKey = _tools.ToMD5($"{agent}{timestamp}{md5key}").ToLower();
             if (key.ToLower() == encryptKey)
@@ -165,6 +164,16 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             _logger.LogError($"ChecKey Error\r\nkey{key}\r\nencryptKey={encryptKey}");
             return false;
+        }
+
+        private Dictionary<string, string> GetSiteConfig(string siteName)
+        {
+            if (siteName == "")
+            {
+                return _defaultConfig;
+            }
+
+            return _siteNameConfigs.TryGetValue(siteName, out var result) ? result : _defaultConfig;
         }
     }
 }

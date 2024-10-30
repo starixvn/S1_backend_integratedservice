@@ -655,7 +655,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 p.Add("SettleFlag", (int)SettleFlag.Running);
 
                 var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataPK_KY.timestamp).DateTime;
-                // TODO: Need to create sp for Service_BettransPK_KY_Ins
                 result = _partitionService.Execute(partitionTime, "Service_BettransPK_KY_Ins", p, trans);
 
                 if (result > 0 && bettingDataPK_KY.money != 0)
