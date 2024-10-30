@@ -2,6 +2,7 @@
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using ThirdParty.FaChai.Models;
 using ThirdPartyCore;
 using ThirdPartyCore.BLL;
 using ThirdPartyCore.Extensions;
@@ -14,12 +15,15 @@ namespace ThirdParty.FaChai
     public class TpHelper : ThirdPartyHelperBase
     {
         private readonly TemporaryLogSentryService temporaryLogSentryService;
-        private readonly Dictionary<int, Dictionary<string, string>> siteConfigDic;
+        private readonly Dictionary<int, FaChaiConfig> _siteConfigDic;
         private readonly IReadOnlyDictionary<string, string> _gameNameList;
+        private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
+        private const int _utc = -4;
+        private const string _testCurrency = "UUS";
 
         public TpHelper(IServiceProvider provider)
         {
-            siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<Dictionary<string, string>>((TpEnum.FaChai).ToString());
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<FaChaiConfig>(TpEnum.FaChai.ToString());
             _gameNameList = TpBetRecordProvider.GetGameCasinoList((int)TpEnum.FaChai).ToDictionary(d => d.GameId, d => d.Name);
             temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
         }
@@ -70,46 +74,10 @@ namespace ThirdParty.FaChai
 
         public override ApiResult CreateMember(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            ApiResult oApiResult = new ApiResult();
-
-            var siteInputs = siteConfigDic[tpCustInfo.SiteId];
-
-            var request = new CreateMemberRequest()
+            ApiResult oApiResult = new()
             {
-                MemberAccount = tpCustInfo.TpUserName
+                ErrorCode = ErrorCode.Success
             };
-            var key = siteInputs["Key"];
-            var para = JsonConvert.SerializeObject(request);
-            var Params = AesEncrypt(para, key);
-            var Sign = ToMD5(para).ToLower();
-
-            var dicP = new Dictionary<string, string>();
-            dicP.Add("AgentCode", siteInputs["AgentCode"]);
-            dicP.Add("Currency", tpCustInfo.TpCurrencyId);
-            dicP.Add("Params", Params);
-            dicP.Add("Sign", Sign);
-
-            var result = HttpPostWithX509(
-                $"{siteInputs["ApiUrl"]}/AddMember",
-                dicP,
-                "application/x-www-form-urlencoded"
-            );
-
-            var tpData = JsonConvert.DeserializeObject<FCResponse>(result);
-
-            if (tpData.Result == "0")
-            {
-                oApiResult.ErrorCode = ErrorCode.Success;
-                oApiResult.Message = "";
-            }
-            else
-            {
-                oApiResult.RawMessage = ((FCErrorMessage)Int32.Parse(tpData.Result)).ToString();
-                oApiResult.RawErrorCode = tpData.Result;
-                oApiResult.Message = $"{tpData.Result}-{((FCErrorMessage)Int32.Parse(tpData.Result)).ToString()}";
-                oApiResult.ErrorCode = ErrorCode.Fail;
-            }
-
             return oApiResult;
         }
 
@@ -118,47 +86,52 @@ namespace ThirdParty.FaChai
             throw new NotImplementedException();
         }
 
-        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
-        {
-            var siteInputs = siteConfigDic[tpCustInfo.SiteId];
-            var request = new GetBetDetailRequest()
-            {
-                MemberAccount = tpCustInfo.TpUserName,
-                RecordID = getBetDetail.TransId
-            };
+        //public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        //{
+        //    var siteInputs = _siteConfigDic[tpCustInfo.SiteId];
+        //    var request = new GetBetDetailRequest()
+        //    {
+        //        MemberAccount = tpCustInfo.TpUserName,
+        //        RecordID = getBetDetail.TransId
+        //    };
 
-            var key = siteInputs["Key"];
-            var para = JsonConvert.SerializeObject(request);
-            var Params = AesEncrypt(para, key);
-            var Sign = ToMD5(para).ToLower();
+        //    var key = siteInputs.OperatorKey];
+        //    var para = JsonConvert.SerializeObject(request);
+        //    var Params = AesEncrypt(para, key);
+        //    var Sign = ToMD5(para).ToLower();
 
-            var dicP = new Dictionary<string, string>();
-            dicP.Add("AgentCode", siteInputs["AgentCode"]);
-            dicP.Add("Currency", tpCustInfo.TpCurrencyId);
-            dicP.Add("Params", Params);
-            dicP.Add("Sign", Sign);
+        //    var dicP = new Dictionary<string, string>();
+        //    dicP.Add("AgentCode", siteInputs["AgentCode"]);
+        //    dicP.Add("Currency", tpCustInfo.TpCurrencyId);
+        //    dicP.Add("Params", Params);
+        //    dicP.Add("Sign", Sign);
 
-            var result = HttpPostWithX509(
-                $"{siteInputs["ApiUrl"]}/GetPlayerReport",
-                dicP,
-                "application/x-www-form-urlencoded"
-            );
+        //    var result = HttpPostWithX509(
+        //        $"{siteInputs["ApiUrl"]}/GetPlayerReport",
+        //        dicP,
+        //        "application/x-www-form-urlencoded"
+        //    );
 
-            var tpData = JsonConvert.DeserializeObject<GetBetDetailResponse>(result);
+        //    var tpData = JsonConvert.DeserializeObject<GetBetDetailResponse>(result);
 
-            return new BaseDetail(getBetDetail.TpGameTypeOption)
-            {
-                TransId = getBetDetail.TransId,
-                DetailUrl = tpData.Url,
-                TpCurrency = new TpCurrency()
-                {
-                    ExchangeRate = tpCustInfo.ExchangeRate,
-                    TpCurrencyId = tpCustInfo.TpCurrencyId,
-                },
-            };
-        }
+        //    return new BaseDetail(getBetDetail.TpGameTypeOption)
+        //    {
+        //        TransId = getBetDetail.TransId,
+        //        DetailUrl = tpData.Url,
+        //        TpCurrency = new TpCurrency()
+        //        {
+        //            ExchangeRate = tpCustInfo.ExchangeRate,
+        //            TpCurrencyId = tpCustInfo.TpCurrencyId,
+        //        },
+        //    };
+        //}
 
         public override TransIdModel GetThirdId(TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override BaseDetail GetBetDetail(GetBetDetail getBetDetail, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             throw new NotImplementedException();
         }
@@ -188,67 +161,70 @@ namespace ThirdParty.FaChai
 
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
+            var config = _siteConfigDic[tpCustInfo.SiteId];
+            var ApiUrl = $"{config.ApiUrl}/api/CommonWallet/LaunchGame";
+            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
+            string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
+
+            var key = ApplyToken(tpCustInfo);
+
+            var input = new
+            {
+                Timestamp = GetCurrentTimeFormat(),
+                Seq = Guid.NewGuid().ToString(),
+                Payload = new
+                {
+                    ProductInfo = new
+                    {
+                        config.GameType,
+                        GameId = gameId,
+                        AppType = (appType == AppType.Desktop) ? "D" : "M",
+                    },
+                    CustInfo = new
+                    {
+                        OperatorCustomerId = tpCustInfo.TpUserName,
+                        OperatorCustomerName = tpCustInfo.TpUserName,
+                        Language = TpLangId,
+                        Platform = (appType == AppType.Desktop) ? "D" : "M",
+                        CurrencyISO = tpCustInfo.IsTest ? _testCurrency : tpCustInfo.TpCurrencyId,
+                        IpAddress = inputs["ClientIP"],
+                        WalletSideToken = key
+                    },
+                    HomeUrl = homeUrl,
+                }
+            };
+            var postdata = JsonConvert.SerializeObject(input, Formatting.None);
+            var header = new Dictionary<string, string>()
+            {
+                { "operator-pwd", config.OperatorPwd},
+                { "operator-sign", Encrypt(postdata, config)},
+            };
+
+            var result = HttpPost(ApiUrl, postdata, "application/json", header);
+
+            temporaryLogSentryService.WriteLogLaunchGame(nameof(FaChai), ApiUrl, header, postdata, result);
+
             ApiResult oApiResult = new ApiResult();
 
-            var siteInputs = siteConfigDic[tpCustInfo.SiteId];
-            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception();
-            string fun = inputs.ContainsKey("fun") && !string.IsNullOrEmpty(inputs["fun"]) ? inputs["fun"] : "0";
-            bool FunPlay = fun == "1" ? true : false;
-            string para = string.Empty;
-
-            if (FunPlay)
+            if (IsJSON(result))
             {
-                var request = new GetDemoUrlRequest()
+                var json = JsonConvert.DeserializeObject<LoginResp>(result);
+                if (json.ErrorCode == 0)
                 {
-                    GameID = Convert.ToInt32(gameId),
-                    LanguageID = Convert.ToInt32(TpLangId)
-                };
-                para = JsonConvert.SerializeObject(request);
+                    oApiResult.ErrorCode = ErrorCode.Success;
+                    oApiResult.Message = json.Payload.ReturnUrl;
+                }
+                else
+                {
+                    oApiResult.ErrorCode = ErrorCode.Fail;
+                    oApiResult.RawMessage = json.ErrorMessage;
+                    oApiResult.RawErrorCode = json.ErrorCode.ToString();
+                }
             }
             else
             {
-                var request = new LoginRequest()
-                {
-                    MemberAccount = tpCustInfo.TpUserName,
-                    GameID = Convert.ToInt32(gameId),
-                    LanguageID = Convert.ToInt32(TpLangId)
-                };
-                para = JsonConvert.SerializeObject(request);
-            }
-
-            var key = siteInputs["Key"];
-            var Params = AesEncrypt(para, key);
-            var Sign = ToMD5(para).ToLower();
-
-            var dicP = new Dictionary<string, string>();
-            dicP.Add("AgentCode", siteInputs["AgentCode"]);
-            //試玩隨便寫死一個currency
-            dicP.Add("Currency", FunPlay ? "MYR" : tpCustInfo.TpCurrencyId);
-            dicP.Add("Params", Params);
-            dicP.Add("Sign", Sign);
-
-            string action = FunPlay ? "GetDemoUrl" : "Login";
-
-            var result = HttpPostWithX509(
-                $"{siteInputs["ApiUrl"]}/{action}",
-                dicP,
-                "application/x-www-form-urlencoded"
-            );
-
-            var tpData = JsonConvert.DeserializeObject<LoginResponse>(result);
-
-            temporaryLogSentryService.WriteLogLaunchGame(nameof(FaChai), $"{siteInputs["ApiUrl"]}/{action}", dicP, string.Empty, result);
-
-            if (tpData.Result == "0")
-            {
-                oApiResult.ErrorCode = ErrorCode.Success;
-                oApiResult.Message = tpData.Url;
-            }
-            else
-            {
-                oApiResult.RawMessage = ((FCErrorMessage)Int32.Parse(tpData.Result)).ToString();
-                oApiResult.RawErrorCode = tpData.Result;
-                oApiResult.Message = $"{tpData.Result}-{((FCErrorMessage)Int32.Parse(tpData.Result)).ToString()}";
+                oApiResult.RawMessage = "No Result";
+                oApiResult.RawErrorCode = "1";
                 oApiResult.ErrorCode = ErrorCode.Fail;
             }
 
@@ -386,6 +362,19 @@ namespace ThirdParty.FaChai
             }
             var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(name);
             return (dic != null) ? dic.TryGetValue("en", out var result) ? result : string.Empty : string.Empty;
+        }
+
+        private string Encrypt(string req, FaChaiConfig config)
+        {
+            var s = req + config.OperatorKey;
+            var sign = ToMD5(s);
+            return sign;
+        }
+
+        private static string GetCurrentTimeFormat()
+        {
+            var currentAt = new DateTimeOffset(DateTime.UtcNow);
+            return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
         }
     }
 }

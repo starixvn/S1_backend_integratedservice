@@ -70,7 +70,6 @@ namespace ThirdPartyService.Controllers
             }
             catch (Exception ex)
             {
-                //Debug.WriteLine($"xxx {nameof(ThirdPartyService)} {JsonConvert.SerializeObject(ex)}");
                 SentrySdk.CaptureException(ex);
                 _logger.LogError(ex, ex.Message);
                 apiResult.ErrorCode = ErrorCode.SystemError;
