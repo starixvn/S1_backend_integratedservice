@@ -38,11 +38,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         public async Task<dynamic> GetPlayerInfo(string sitename)
         {
             string logName = $"{_thisTp}_GetPlayerInfo";
+            
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 string content = await reader.ReadToEndAsync();
-
+                _logger.LogInformation(content);
                 var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
