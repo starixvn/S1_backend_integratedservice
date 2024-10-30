@@ -8,7 +8,7 @@ namespace ThirdPartyWager.Service.BLL
 {
     public interface INextspinFinancBLL
     {
-        Task<int> ExecReportAsync(int tpId, TimeCast reportTime);
+        Task ExecReportAsync(int tpId, int tpType, TimeCast reportTime);
     }
 
     public class NextspinFinancBLL : INextspinFinancBLL
@@ -20,6 +20,7 @@ namespace ThirdPartyWager.Service.BLL
         private readonly IEnumerable<TpCurrency> _tpCurrencyList;
         private readonly ILogger<NextspinFinancBLL> _logger;
         private readonly Dictionary<int, NextspinConfig> _siteConfigDic;
+        private readonly int _tpId = (int)Tp.Netent;
 
         public NextspinFinancBLL(IServiceProvider provider)
         {
@@ -32,23 +33,34 @@ namespace ThirdPartyWager.Service.BLL
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<NextspinConfig>(Tp.Nextspin.ToString());
         }
 
-        public async Task<int> ExecReportAsync(int tpId, TimeCast reportTime)
+        public async Task ExecReportAsync(int tpId, int tpType, TimeCast reportTime)
         {
-            var config = _siteConfigDic[1];
-            var profitLoss = await _apiNextspinBll.RetrieveProfitLoss(reportTime.startTime, reportTime.endTime, 1, config);
-            if (profitLoss == null)
-                return -1;
+            var siteList = _thirdPartyBLL.GetTpListByTpId(_tpId);
 
-            if (profitLoss.List != null && profitLoss.List.Count > 0)
+            foreach (var site in siteList)
             {
-                var reportDate = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(reportTime.startUnix);
-                // process
-                var dailySummary = DealReport(tpId, reportDate, profitLoss.List);
+                if (site.TicketKey == 0)
+                {
+                    continue;
+                }
 
-                // write
-                return _fincanceService.SetFinanceTpDailySummary(dailySummary);
+                var config = _siteConfigDic[site.SiteId];
+                var profitLoss = await _apiNextspinBll.RetrieveProfitLoss(reportTime.startTime, reportTime.endTime, 1, config);
+                if (profitLoss != null && profitLoss.List != null && profitLoss.List.Count > 0)
+                {
+                    var reportDate = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(reportTime.startUnix);
+                    // process
+                    var dailySummary = DealReport(tpId, reportDate, profitLoss.List);
+
+                    // write
+                    var result = _fincanceService.SetFinanceTpDailySummary(dailySummary);
+
+                    if (result > 0)
+                    {
+                        _thirdPartyBLL.SetThirdPartyTimer(tpId, tpType, reportTime.endUnix);
+                    }
+                }
             }
-            return 1;
         }
 
         private IEnumerable<FincanceDailySummary> DealReport(int tpId, DateTime reportDate, IList<NextspinProfitLossInfo> reportData)
