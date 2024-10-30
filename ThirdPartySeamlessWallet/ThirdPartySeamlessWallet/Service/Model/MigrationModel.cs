@@ -118,9 +118,18 @@ namespace ThirdPartySeamlessWallet.Service.Model
         /// ex : 1.Black Tortois  2.Phoenix  3.Tiger
         /// </summary>
         public int VipLevel { get; set; }
-        
+
         #endregion
-        
+
+        #region TpCustInfo
+
+        /// <summary>
+        /// 建立在Saba的用戶名稱
+        /// </summary>
+        public string SabaId { get; set; }
+
+        #endregion
+
     }
 
     public class MigrationCustomerResponse

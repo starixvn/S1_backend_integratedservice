@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Library;
 using ThirdPartyWager.Service.Model;
@@ -86,7 +85,7 @@ public class WagerBGBLL
                 catch (Exception ex)
                 {
                     msg = prefixMsg + $"INSERT_WAGER";
-                    _logger.LogError(ex, $"{msg}\r\n{JsonConvert.SerializeObject(data)}\r\n{ex.Message}");
+                    _logger.LogError(ex, $"{msg} SiteId={siteId}. CurrencyId={tpCurrencyId}.\r\n{JsonConvert.SerializeObject(data)}\r\n{ex.Message}");
                     return false;
                 }
             }
