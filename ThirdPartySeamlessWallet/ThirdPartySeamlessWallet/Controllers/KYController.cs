@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.Library;
-using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySeamlessWallet.Service.Model.KY;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 
 namespace ThirdPartySeamlessWallet.Controllers
@@ -44,8 +44,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         }
         
         [HttpGet]
-        [Route("[controller]/seamlesswallet")]
-        public dynamic SeamlessWalletAsync([FromQuery] KYApiReq getReq)
+        [Route("[controller]/{sitename}/seamlesswallet")]
+        public dynamic SeamlessWalletAsync([FromQuery] ApiReq getReq, string sitename = "")
         {
             string logName = $"{_thisTp}";
             GetApiResp getApiResponse = new GetApiResp
@@ -60,6 +60,14 @@ namespace ThirdPartySeamlessWallet.Controllers
 
             try
             {
+                // TODO: How to verify site name?
+                if (!Enum.TryParse(sitename, true, out Tp parsedSite) || parsedSite != Tp.KY)
+                {
+                    getApiResponse.d.code = (int)ErrorCodeOfKY.Agent;
+                    _log2File.Error($"Agent Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+
                 if (string.IsNullOrEmpty(getReq.agent))
                 {
                     getApiResponse.d.code = (int)ErrorCodeOfKY.Agent;
@@ -87,7 +95,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 var json = JsonConvert.SerializeObject(query.AllKeys.ToDictionary(y => y, y => query[y]));
                 _log2File.Info($"{json}", logName);
 
-                var req = JsonConvert.DeserializeObject<KYCommonP>(json);
+                var req = JsonConvert.DeserializeObject<CommonP>(json);
                 getApiResponse.s = req.s;
 
                 if (!Enum.IsDefined(typeof(SubTypeOfKY), req.s))

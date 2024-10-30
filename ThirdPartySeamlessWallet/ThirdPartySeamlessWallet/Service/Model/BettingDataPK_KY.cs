@@ -1,6 +1,6 @@
-﻿namespace ThirdPartySeamlessWallet.Service.Model
+﻿namespace ThirdPartySeamlessWallet.Service.Model.KY
 {
-    public class BettingData_KY
+    public class BettingDataPK_KY
     {
         public int s { get; set; }
         public string account { get; set; }
@@ -12,14 +12,14 @@
         public string currency { get; set; }
     }
 
-    public class KYCurrencyData
+    public class CurrencyData
     {
         public string Deskey { get; set; }
         public string Agent { get; set; }
         public string Md5key { get; set; }
     }
 
-    public class KYApiReq
+    public class ApiReq
     {
         public string agent { get; set; }
         public long timestamp { get; set; }
@@ -27,13 +27,13 @@
         public string key { get; set; }
     }
 
-    public class KYCommonP
+    public class CommonP
     {
         public int s { get; set; }
     }
 
     public class KYConfig
     {
-        public Dictionary<string, KYCurrencyData> CurrencyData { get; set; }
+        public Dictionary<string, CurrencyData> CurrencyData { get; set; }
     }
 }
