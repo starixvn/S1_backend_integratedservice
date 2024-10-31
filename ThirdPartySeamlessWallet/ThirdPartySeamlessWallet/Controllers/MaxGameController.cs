@@ -50,7 +50,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 string content = await reader.ReadToEndAsync();
                 _logger.LogInformation("GetPlayerInfo 1 =" + content);
-                _payloadLogService.LogDetailedPayload(content, $"{nameof(GetPlayerInfo)}_Request");
+                _payloadLogService.LogDetailedPayload(content, $"{nameof(GetPlayerInfo)}");
                 var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
@@ -66,7 +66,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 WriteLogTest($"{sitename}/GetPlayerInfo", content, result);
                 _logger.LogInformation("GetPlayerInfo 2 =" + content);
-                _payloadLogService.UpdateDetailedPayLoadWithResponse(content, result);
+                _payloadLogService.UpdateDetailedPayLoadWithResponse(content, JsonConvert.DeserializeObject(result));
 
                 return result;
             }
