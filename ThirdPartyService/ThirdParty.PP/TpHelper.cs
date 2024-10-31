@@ -264,7 +264,7 @@ namespace ThirdParty.PP
                     {
                         OperatorCustomerId = tpCustInfo.TpUserName,
                         OperatorCustomerName = tpCustInfo.TpUserName,
-                        Language = "en-US",
+                        Language = TpLangId,
                         Platform = (appType == AppType.Desktop) ? "D" : "M",
                         CurrencyISO = tpCustInfo.IsTest ? _testCurrency : tpCustInfo.TpCurrencyId,
                         IpAddress = inputs["ClientIP"],
