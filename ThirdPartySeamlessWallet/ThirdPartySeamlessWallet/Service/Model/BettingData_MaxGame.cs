@@ -418,6 +418,11 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
         }
     }
 
+    public class Payload_PlaceBetAndSettleResp : Payload_EndGameResp
+    {
+        public List<BetDataSetList_MaxGame> BetDataSet { get; set; }
+    }
+
     public class VoidGameResp : EndGameResp
     {
         public VoidGameResp(ErrorCodeOfMaxGame errorCode, string seq) : base(errorCode, seq)

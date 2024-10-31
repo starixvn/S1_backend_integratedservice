@@ -298,7 +298,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 return new BaseResp(ErrorCodeOfMaxGame.OpSideAccountLocked);
             }
 
-            int result = PlaceBetAndSettle(getReq, (int)tpId, (int)gameType, out decimal tpAffterAmount);
+            int result = PlaceBetAndSettle(getReq, (int)tpId, (int)gameType, out decimal tpAffterAmount, out List<BetDataSetList_MaxGame> refData);
 
             if (result > 0)
             {
@@ -310,10 +310,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
 
                 EndGameResp response = new(ErrorCodeOfMaxGame.Success, getReq.Seq)
                 {
-                    Payload = new Payload_EndGameResp()
+                    Payload = new Payload_PlaceBetAndSettleResp()
                     {
                         OperatorCustId = getReq.Payload.OperatorCustId,
                         Balance = _tools.Floor(tpAffterAmount, 2),
+                        BetDataSet = refData
                     },
                 };
                 return _tools.ToJson(response);
@@ -565,7 +566,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return result;
         }
 
-        private int PlaceBetAndSettle(PayoutData_MaxGame payoutData_MaxGame, int tpId, int gameType, out decimal afterAmount)
+        private int PlaceBetAndSettle(PayoutData_MaxGame payoutData_MaxGame, int tpId, int gameType, out decimal afterAmount, out List<BetDataSetList_MaxGame> refData)
         {
             var walletKind = _gameOfWalletKind[gameType];
             var tpCategory = _gameOfTpCategory[gameType];
@@ -583,7 +584,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             var spName = GetSpNameList(gameType);
-            var result = _settledService.PlaceBetAndSettle_MaxGame(tpCustInfo, payoutData_MaxGame, tpId, gameType, walletKind, tpCategory, spName, out afterAmount);
+            var result = _settledService.PlaceBetAndSettle_MaxGame(tpCustInfo, payoutData_MaxGame, tpId, gameType, walletKind, tpCategory, spName, out afterAmount, out refData);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;

@@ -1397,11 +1397,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
            
-        public int PlaceBetAndSettle_MaxGame(TpCustInfo tpCustInfo, PayoutData_MaxGame payoutData_MaxGame, int tpId, int gameType, WalletKind walletKind, TpCategory tpCategory, SpNameListOfMaxGame spName, out decimal afterAmount)
+        public int PlaceBetAndSettle_MaxGame(TpCustInfo tpCustInfo, PayoutData_MaxGame payoutData_MaxGame, int tpId, int gameType, WalletKind walletKind, TpCategory tpCategory, SpNameListOfMaxGame spName, out decimal afterAmount, out List<BetDataSetList_MaxGame> refData)
         {
             afterAmount = 0;
             var result = 0;
             var cnt = 0;
+            refData = new List<BetDataSetList_MaxGame>();
+
 
             using var conn = _mainDbClient.GetMySqlConnection();
             conn.Open();
@@ -1599,6 +1601,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     if (result > 0)
                     {
+                        var refNo = p.Get<long>("SQ").ToString();
+                        refData.Add(new BetDataSetList_MaxGame
+                        {
+                            TicketNo = betDataSet.TicketNo,
+                            RefNo = refNo,
+                        });
+
                         cnt++;
                     }
                 }
