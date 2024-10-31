@@ -7510,7 +7510,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         $"Payout",
                         out bonusId,
                         conn,
-                        trans
+                        trans,
+                        AllowNegative.Allow
                         );
                     }
 
