@@ -60,15 +60,7 @@ namespace ThirdPartySeamlessWallet.Service.Model.MaxGame
         public decimal Odds { get; set; }
         public string BetChoice { get; set; }
         public string TableCode { get; set; }
-        public OtherBetInfo_PlaceBetReq_MaxGame OtherBetInfo { get; set; }
-    }
-
-    public class OtherBetInfo_PlaceBetReq_MaxGame
-    {
-        public bool FreeBet { get; set; }
-        public bool FreeSpin { get; set; }
-        public decimal ContributionAmount { get; set; }
-        public decimal ContributionRate { get; set; }
+        public Dictionary<string,string> OtherBetInfo { get; set; }
     }
 
     public class PayoutData_MaxGame

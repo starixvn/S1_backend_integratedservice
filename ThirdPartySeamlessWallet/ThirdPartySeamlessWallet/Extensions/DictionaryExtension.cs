@@ -11,5 +11,10 @@
         {
             return dic.FirstOrDefault(x => x.Value == value).Key;
         }
+
+        public static decimal GetValueDecimal(this IDictionary<string, string> dic, string key)
+        {
+            return dic.TryGetValue(key, out string value) ? decimal.Parse(value) : 0;
+        }
     }
 }

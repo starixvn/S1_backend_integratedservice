@@ -233,6 +233,7 @@ namespace ThirdParty.Allbet
         {
             var config = _siteConfigDic[tpCustInfo.SiteId];
             var ApiUrl = $"{config.ApiUrl}/api/CommonWallet/LaunchGame";
+            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : "0";
             string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
 
             var key = ApplyToken(tpCustInfo);
@@ -246,7 +247,7 @@ namespace ThirdParty.Allbet
                     ProductInfo = new
                     {
                         config.GameType,
-                        GameId = "0",
+                        GameId = gameId,
                         AppType = (appType == AppType.Desktop) ? "D" : "M",
                     },
                     CustInfo = new

@@ -5,11 +5,13 @@ using Dapper;
 using MySql.Data.MySqlClient;
 
 using Newtonsoft.Json;
-
+using NuGet.Protocol;
+using ThirdPartySeamlessWallet.Extensions;
 using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 using ThirdPartySeamlessWallet.Service.Model.MaxGame;
+using ThirdPartySeamlessWallet.Service.Model.SBSW;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -540,10 +542,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         PrizeName = "",
                         ResultId = "",
                         OtherBetInfo = otherBetInfo,
-                        FreeBet = betDataSet.OtherBetInfo == null ? false : betDataSet.OtherBetInfo.FreeBet,
-                        FreeSpin = betDataSet.OtherBetInfo == null ? false : betDataSet.OtherBetInfo.FreeSpin,
-                        ContributionAmount = betDataSet.OtherBetInfo == null ? 0 : betDataSet.OtherBetInfo.ContributionAmount,
-                        ContributionRate = betDataSet.OtherBetInfo == null ? 0 : betDataSet.OtherBetInfo.ContributionRate,
+                        FreeBet = betDataSet.OtherBetInfo == null ? false : betDataSet.OtherBetInfo.ContainsKey("FreeBet") 
+                                                                                && betDataSet.OtherBetInfo["FreeBet"].ToLowerInvariant() == "true",
+                        FreeSpin = betDataSet.OtherBetInfo == null ? false : betDataSet.OtherBetInfo.ContainsKey("FreeSpin")
+                                                                                && betDataSet.OtherBetInfo["FreeSpin"].ToLowerInvariant() == "true",
+                        ContributionAmount = betDataSet.OtherBetInfo == null ? 0 : betDataSet.OtherBetInfo.GetValueDecimal("ContributionAmount"),
+                        ContributionRate = betDataSet.OtherBetInfo == null ? 0 : betDataSet.OtherBetInfo.GetValueDecimal("ContributionRate"),
                         SettleDateUnix = 0,
                         TicketType = (int)BettransType.Bet,
                         TicketStatus = (int)TicketStatus.UnSettled,
