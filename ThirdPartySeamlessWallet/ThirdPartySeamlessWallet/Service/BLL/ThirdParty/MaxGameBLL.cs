@@ -741,11 +741,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     InsertBettransSpName = "Service_BettransLC_Allbet_Ins";
                     CancelBettransSpName = "Service_BettransLC_Allbet_CancelBet_Set";
                     break;
-                //case (int)GameType.PP_LiveCasino:
-                //    GetTicketNoSpName = "Service_BettransRng_JILI_TicketNo_Get";
-                //    InsertBettransSpName = "Service_BettransRng_JILI_Ins";
-                //    CancelBettransSpName = "Service_BettransRng_JILI_CancelBet_Set";
-                //    break;
+                case (int)GameType.PP_RNG:
+                    GetTicketNoSpName = "Service_BettransRng_PP_TicketNo_Get";
+                    InsertBettransSpName = "Service_BettransRng_PP_Ins";
+                    CancelBettransSpName = "Service_BettransRng_PP_CancelBet_Set";
+                    break;
                 default:
                     // GameType.MaxGame_Poker
                     break;
