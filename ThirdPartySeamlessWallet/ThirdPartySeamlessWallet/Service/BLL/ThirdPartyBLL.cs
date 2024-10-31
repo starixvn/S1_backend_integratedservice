@@ -129,6 +129,9 @@ namespace ThirdPartySeamlessWallet.Service.BLL
             GameType gameType = 0;
             switch (tpId)
             {
+                case (int)Tp.FaChai:
+                    gameType = GameType.FaChai_RNG;
+                    break;
                 case (int)Tp.One789:
                     if (gameId.StartsWith("0_", StringComparison.OrdinalIgnoreCase))
                     {

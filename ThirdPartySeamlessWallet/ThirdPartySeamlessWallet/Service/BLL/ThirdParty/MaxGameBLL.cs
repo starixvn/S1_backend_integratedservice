@@ -30,8 +30,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { "fastspin", Tp.FastSpin },
             { "jili", Tp.JILI },
             { "allbet", Tp.Allbet },
-            {"pragmaticplay",Tp.PP }
-
+            {"pragmaticplay",Tp.PP },
+            {"fachai", Tp.FaChai}
         };
         private readonly Dictionary<int, WalletKind> _gameOfWalletKind = new()
         {
@@ -43,7 +43,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.JILI_RNG, WalletKind.BalanceWallet },
             { (int)GameType.Allbet_LiveCasino, WalletKind.BonusWallet },
             { (int)GameType.PP_LiveCasino, WalletKind.BalanceWallet },
-            { (int)GameType.PP_RNG, WalletKind.BalanceWallet }
+            { (int)GameType.PP_RNG, WalletKind.BalanceWallet },
+            { (int)GameType.FaChai_RNG, WalletKind.BalanceWallet }
         };
         private readonly Dictionary<int, TpCategory> _gameOfTpCategory = new()
         {
@@ -55,7 +56,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.JILI_RNG, TpCategory.Slots },
             { (int)GameType.Allbet_LiveCasino, TpCategory.LiveCasino },
             { (int)GameType.PP_LiveCasino, TpCategory.LiveCasino },
-            { (int)GameType.PP_RNG, TpCategory.Slots }
+            { (int)GameType.PP_RNG, TpCategory.Slots },
+            { (int)GameType.FaChai_RNG, TpCategory.Slots }
         };
 
         public MaxGameBLL(IServiceProvider provider)
@@ -735,6 +737,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     GetTicketNoSpName = "Service_BettransRng_JILI_TicketNo_Get";
                     InsertBettransSpName = "Service_BettransRng_JILI_Ins";
                     CancelBettransSpName = "Service_BettransRng_JILI_CancelBet_Set";
+                    break;
+                case (int)GameType.FaChai_RNG:
+                    GetTicketNoSpName = "Service_BettransRng_FaChai_TicketNo_Get";
+                    InsertBettransSpName = "Service_BettransRng_FaChai_Ins";
+                    CancelBettransSpName = "Service_BettransRng_FaChai_CancelBet_Set";
                     break;
                 case (int)GameType.Allbet_LiveCasino:
                     GetTicketNoSpName = "Service_BettransLC_Allbet_TicketNo_Get";
