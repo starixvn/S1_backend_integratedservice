@@ -103,7 +103,7 @@ public class DragonGamingBLL : IDragonGamingBLL
             }
 
             var gameType = GetGameType(request.game_type);
-            if(gameType is GameType.None) 
+            if (gameType is GameType.None)
                 return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.GameTypeInvalid, request.token);
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)_thisTp, request.account_id);
             int result = PlaceBet(request, tpCustInfo, gameType, out decimal tpAffterAmount);
@@ -325,13 +325,6 @@ public class DragonGamingBLL : IDragonGamingBLL
         }
 
         if (custBalance.Balance < 0)
-        {
-            afterAmount = custBalance.Balance / tpCurrency.ExchangeRate;
-            return 0;
-        }
-
-        var checkBalance = custBalance.Balance - Math.Abs(request.amount / 100m);
-        if (checkBalance < 0)
         {
             afterAmount = custBalance.Balance / tpCurrency.ExchangeRate;
             return 0;
