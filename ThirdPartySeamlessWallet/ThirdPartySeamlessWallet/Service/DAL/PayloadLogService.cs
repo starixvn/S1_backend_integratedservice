@@ -72,13 +72,13 @@ public class PayloadLogService
 
     }
 
-    public virtual void UpdateDetailedPayLoadWithResponse(string requestContent, dynamic responseContent) {
+    public virtual void UpdateDetailedPayLoadWithResponse(string requestContent, object responseContent) {
         var getReq = JsonConvert.DeserializeObject<DetailedRequestBody>(requestContent);
         DateTime.TryParse(getReq.TimeStamp, out DateTime ts);
-
+        var response = JsonConvert.SerializeObject(responseContent,Formatting.Indented);
         var logParams = new DynamicParameters(new {
             getReq.Seq,
-            Response = JsonConvert.SerializeObject(responseContent),
+            Response = response
         });
 
         try {
