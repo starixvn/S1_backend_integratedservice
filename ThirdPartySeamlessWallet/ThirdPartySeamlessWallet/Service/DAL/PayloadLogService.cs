@@ -27,6 +27,8 @@ public class PayloadLogService
 {
     const string InsertDetailedPayloadSpName = "Service_BettransPK_MaxGame_Payload_Ins_v2"; 
 
+    const string UpdateDetailedResponseSpName = "Service_BettransPK_MaxGame_Payload_Set_v2";
+
     private readonly PartitionService _partitionService;
     private readonly IWebHostEnvironment _environment;
 
@@ -70,4 +72,24 @@ public class PayloadLogService
 
     }
 
+    public virtual void UpdateDetailedPayLoadWithResponse(string requestContent, dynamic responseContent) {
+        var getReq = JsonConvert.DeserializeObject<DetailedRequestBody>(requestContent);
+        DateTime.TryParse(getReq.TimeStamp, out DateTime ts);
+
+        var logParams = new DynamicParameters(new {
+            getReq.Seq,
+            Response = JsonConvert.SerializeObject(responseContent),
+        });
+
+        try {
+            _partitionService.Execute(
+                ts,
+                UpdateDetailedResponseSpName,
+                logParams
+            );
+
+        } catch (Exception ex) {
+            SentrySdk.CaptureException(ex);
+        }
+    }
 }
