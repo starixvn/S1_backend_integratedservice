@@ -324,12 +324,6 @@ public class DragonGamingBLL : IDragonGamingBLL
             bettingData.amount *= tpCurrency.ExchangeRate;
         }
 
-        if (custBalance.Balance < 0)
-        {
-            afterAmount = custBalance.Balance / tpCurrency.ExchangeRate;
-            return 0;
-        }
-
         var result = _bettingService.PlaceBetRNG_DragonGaming_Postman(tpCustInfo, bettingData, out afterAmount);
         if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
         {
