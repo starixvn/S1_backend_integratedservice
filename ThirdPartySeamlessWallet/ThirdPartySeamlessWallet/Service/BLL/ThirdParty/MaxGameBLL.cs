@@ -756,10 +756,18 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                 GetTicketNo = GetTicketNoSpName,
                 InsertBettrans = InsertBettransSpName,
                 InsertPayload = InsertPayloadSpName,
-                SetCancelBet = CancelBettransSpName,
+                SetCancelBet = CancelBettransSpName
             };
         }
 
+        #endregion
+    
+        #region Shared Utils
+        public GameType GetGameType(string gameType) {
+            var normalizedGameType = gameType.ToLower();
+            var tpId = _gameOfTpId[normalizedGameType];
+            return _thirdPartyBLL.GetGameType((int)tpId, normalizedGameType);
+        }
         #endregion
     }
 }

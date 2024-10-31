@@ -45,6 +45,12 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return _mainDbClient.QueryFirst<int>(spName, transaction, p);
         }
 
+        public int Execute(DateTime partitionTime, string spName, object parameters) {
+            var p = new DynamicParameters(parameters);
+            p.Add("YYYYMM", partitionTime.GetPartitionKey());
+            return _mainDbClient.QueryFirst<int>(spName, p);
+        }
+
         public IEnumerable<T> GetUnsettleDataList<T>(string spName, TpUnsettle tpUnsettle, int partitionCheckDay = 3)
         {
             var tasks = new List<Task<IEnumerable<T>>>();

@@ -134,7 +134,6 @@ namespace ThirdPartySeamlessWallet
             services.AddSiteConfig();
             services.AddSingleton<ConfigBLL>();
             services.AddOptionListByDB<TpBetLimit>("Service_TpBetLimit_Get");
-
             services
                 .AddOpenTelemetry()
                 .ConfigureResource(_ => _.AddService(Configuration.GetValue<string>("Otel:ServiceName") ?? ""))
@@ -147,6 +146,9 @@ namespace ThirdPartySeamlessWallet
                     .AddHttpClientInstrumentation()
                     .AddConnectorNet().ConfigureResource(_ => _.AddService(Configuration.GetValue<string>("Otel:ServiceName") ?? ""))
                     .AddOtlpExporter(options => options.Endpoint = Configuration.GetValue<Uri>("Otel:Collector") ?? new Uri("")));
+
+            services.AddSingleton<PayloadLogService>();
+
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

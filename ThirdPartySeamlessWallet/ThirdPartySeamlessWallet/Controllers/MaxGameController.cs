@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
+using ThirdPartySeamlessWallet.Service.DAL;
 using ThirdPartySeamlessWallet.Service.Library;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.MaxGame;
@@ -23,6 +24,8 @@ namespace ThirdPartySeamlessWallet.Controllers
         private readonly string _tpName = Tp.MaxGame.ToString();
         private readonly Dictionary<int, MaxGameConfig> _siteConfigDic;
 
+        private readonly PayloadLogService _payloadLogService;
+
         public MaxGameController(IServiceProvider provider)
         {
             _logger = provider.GetRequiredService<ILogger<MaxGameController>>();
@@ -33,6 +36,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             _thisTp = Tp.MaxGame;
             // 取共用，設定依機器分為(nova、aiking)
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<MaxGameConfig>(_tpName);
+            _payloadLogService = provider.GetRequiredService<PayloadLogService>();
         }
 
         [HttpPost]
@@ -46,6 +50,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 string content = await reader.ReadToEndAsync();
                 _logger.LogInformation("GetPlayerInfo 1 =" + content);
+                _payloadLogService.LogDetailedPayload(content, nameof(GetPlayerInfo));
                 var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
@@ -54,6 +59,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                     WriteLogTest($"{sitename}/GetPlayerInfo", content, response, Request.Headers["operator-sign"]);
                     return response;
                 }
+
                 var result = _maxGameBLL.GetPlayerInfo(content);
 
                 WriteLogTest($"{sitename}/GetPlayerInfo", content, result);
@@ -79,6 +85,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 string content = await reader.ReadToEndAsync();
+                _payloadLogService.LogDetailedPayload(content, nameof(GetBalance));
                 _logger.LogInformation(content);
                 _logger.LogInformation("Get Balance 1 =" + content);
                 var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
