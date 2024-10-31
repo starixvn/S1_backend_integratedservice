@@ -292,11 +292,11 @@ namespace ThirdPartySeamlessWallet.Controllers
         private bool CheckHeader(IHeaderDictionary header, string param, string siteName, string logName)
         {
             string oSign = header["operator-sign"];
-            //if (string.IsNullOrEmpty(oSign))
-            //{
-            //    _log2File.Error($"operator-sign Empty\r\noperator-sign={oSign}", logName);
-            //    return false;
-            //}
+            if (string.IsNullOrEmpty(oSign))
+            {
+                _log2File.Error($"operator-sign Empty\r\noperator-sign={oSign}", logName);
+                return false;
+            }
 
             var serverInfo = _thirdPartyBLL.GetServerInfoBySiteName(siteName);
             if (serverInfo is not { SiteId: > 0 })
