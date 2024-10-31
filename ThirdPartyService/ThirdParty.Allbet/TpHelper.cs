@@ -245,7 +245,7 @@ namespace ThirdParty.Allbet
                     ProductInfo = new
                     {
                         config.GameType,
-                        GameId = "2401",
+                        GameId = gameId,
                         AppType = (appType == AppType.Desktop) ? "D" : "M",
                     },
                     CustInfo = new
