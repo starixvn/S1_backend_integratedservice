@@ -75,6 +75,7 @@ namespace ThirdPartyService
             services.AddOptionListByDB<SiteLanguageObject>("SiteLanguage_Get", new { LanguageGroup = "TP" });
             services.AddSiteLanguage();
             services.AddSingleton<SiteLanguageBLL>();
+            services.AddSingleton<IPayloadLogger, PayloadLogService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
