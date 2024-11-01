@@ -63,7 +63,7 @@ public class PayloadLogService: IPayloadLogger
         var getReq = JsonConvert.DeserializeObject<DetailedRequestBody>(requestContent);
         
         if (responseContent is not null && responseContent is string) {
-            responseContent = JsonConvert.DeserializeObject(requestContent);
+            responseContent = JsonConvert.DeserializeObject((string) responseContent);
         }
         var response = JsonConvert.SerializeObject(responseContent,Formatting.Indented);
         var logParams = new DynamicParameters(new {
