@@ -66,7 +66,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 WriteLogTest($"{sitename}/GetPlayerInfo", content, result);
                 _logger.LogInformation("GetPlayerInfo 2 =" + content);
-                _payloadLogService.UpdateDetailedPayLoadWithResponse(content, JsonConvert.DeserializeObject(result));
+                _payloadLogService.UpdateDetailedPayLoadWithResponse(content, result);
 
                 return result;
             }
@@ -103,6 +103,7 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 WriteLogTest($"{sitename}/GetBalance", content, result);
                 _logger.LogInformation("Get Balance 2=" + content);
+                _payloadLogService.UpdateDetailedPayLoadWithResponse(content, result);
                 return result;
             }
             catch (Exception ex)

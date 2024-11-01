@@ -30,13 +30,13 @@ public class PayloadLogService
     const string UpdateDetailedResponseSpName = "Service_BettransPK_MaxGame_Payload_Set_v2";
 
     private readonly PartitionService _partitionService;
-    private readonly IWebHostEnvironment _environment;
+    private readonly string _environmentName = "";
 
     private readonly MaxGameBLL _maxGameBLL;
 
     public PayloadLogService(IServiceProvider provider)
     {
-        _environment = provider.GetRequiredService<IWebHostEnvironment>();
+        _environmentName = provider.GetRequiredService<IWebHostEnvironment>()?.EnvironmentName ?? "Unspecified";
         _partitionService = provider.GetRequiredService<PartitionService>();
         _maxGameBLL = _maxGameBLL = new MaxGameBLL(provider);
     }
@@ -46,7 +46,7 @@ public class PayloadLogService
         var payload = getReq.Payload.ToString();
         var gameName = JsonConvert.DeserializeObject<DetailedRequestBodyPayload>(payload)?.GameType;
         var gameType = (int)_maxGameBLL.GetGameType(gameName);
-        var environment = _environment.EnvironmentName;
+        var environment = _environmentName;
 
         var logParams = new DynamicParameters(new {
             getReq.Seq,
@@ -74,7 +74,11 @@ public class PayloadLogService
 
     public virtual void UpdateDetailedPayLoadWithResponse(string requestContent, object responseContent) {
         var getReq = JsonConvert.DeserializeObject<DetailedRequestBody>(requestContent);
-        DateTime.TryParse(getReq.TimeStamp, out DateTime ts);
+        _ = DateTime.TryParse(getReq.TimeStamp, out DateTime ts);
+        
+        if (responseContent is not null && responseContent is string) {
+            responseContent = JsonConvert.DeserializeObject(requestContent);
+        }
         var response = JsonConvert.SerializeObject(responseContent,Formatting.Indented);
         var logParams = new DynamicParameters(new {
             getReq.Seq,
