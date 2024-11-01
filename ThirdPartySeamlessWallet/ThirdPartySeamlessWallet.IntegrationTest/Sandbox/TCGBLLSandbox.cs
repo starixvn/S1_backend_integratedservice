@@ -94,15 +94,15 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
             {
                 {
                     TCGTransType.Debit, new Lazy<string>(() =>
-                        @$"SELECT * FROM Siebog.BettransLottery_TCG WHERE ref_no='{inputs["DebitID"]}'")
+                        @$"SELECT * FROM TSDB.BettransLottery_TCG WHERE ref_no='{inputs["DebitID"]}'")
                 },
                 {
                     TCGTransType.Credit, new Lazy<string>(() =>
-                        @$"SELECT * FROM Siebog.BettransLottery_TCG WHERE ref_no='{inputs["CreditID"]}'")
+                        @$"SELECT * FROM TSDB.BettransLottery_TCG WHERE ref_no='{inputs["CreditID"]}'")
                 },
                 {
                     TCGTransType.Reserve, new Lazy<string>(() =>
-                        @$"SELECT * FROM Siebog.BettransLottery_TCG WHERE ref_no='{inputs["ReserveID"]}'")
+                        @$"SELECT * FROM TSDB.BettransLottery_TCG WHERE ref_no='{inputs["ReserveID"]}'")
                 },
             };
         }

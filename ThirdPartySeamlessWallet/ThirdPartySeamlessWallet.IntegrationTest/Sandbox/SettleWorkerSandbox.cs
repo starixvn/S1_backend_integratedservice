@@ -84,7 +84,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         public SettleWorkerSandbox ShouldBeHaveUnsettleRecord(SettleFlag settleFlag, string transId)
         {
             var expected = CreateUnsettleRecord(settleFlag, transId);
-            var sqlScript = @$"SELECT * FROM Siebog.TpUnsettle WHERE TransId=""{transId}""";
+            var sqlScript = @$"SELECT * FROM TSDB.TpUnsettle WHERE TransId=""{transId}""";
             var actual = _mySqlClient.Query<TpUnsettle>(sqlScript, CommandType.Text).First();
             actual.PartitionTime = default;
             actual.Should().BeEquivalentTo(expected);
@@ -117,7 +117,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         public SettleWorkerSandbox ShouldBeHaveTpBetRecord(Tp tp, string transId, string TpUserName, decimal Stake, decimal WinlostAmount)
         {
             var expected = CreateTpBetRecord(tp, transId, TpUserName, Stake, WinlostAmount);
-            var sqlScript = @$"SELECT * FROM Siebog.TpBetRecord WHERE tpid='{(int)tp}' and TransId='{transId}'";
+            var sqlScript = @$"SELECT * FROM TSDB.TpBetRecord WHERE tpid='{(int)tp}' and TransId='{transId}'";
             var actual = _mySqlClient.Query<TpBetRecord>(sqlScript, CommandType.Text).First();
             actual.Should().BeEquivalentTo(expected);
             ActualWinlostAmount = actual.WinlostAmount;
@@ -127,7 +127,7 @@ namespace ThirdPartySeamlessWallet.IntegrationTest.SandBox
         public SettleWorkerSandbox ShouldBeHaveUnsettleTpBetRecord(Tp tp, string transId, string TpUserName, decimal Stake, decimal WinlostAmount)
         {
             var expected = CreateUnsettleTpBetRecord(tp, transId, TpUserName, Stake, WinlostAmount);
-            var sqlScript = @$"SELECT * FROM Siebog.TpBetRecord WHERE tpid='{(int)tp}' and TransId='{transId}'";
+            var sqlScript = @$"SELECT * FROM TSDB.TpBetRecord WHERE tpid='{(int)tp}' and TransId='{transId}'";
             var actual = _mySqlClient.Query<TpBetRecord>(sqlScript, CommandType.Text).First();
             actual.Should().BeEquivalentTo(expected);
             ActualWinlostAmount = actual.WinlostAmount;

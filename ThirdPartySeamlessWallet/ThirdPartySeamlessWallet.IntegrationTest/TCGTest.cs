@@ -234,8 +234,8 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
 
             //Check SettleFlag and TpBetRecord
             settle.SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM BetDetail.TpWagerTCG_SEA WHERE betOrderNo='{_inputs["WagerID"]}'")
-            .SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM Siebog.BettransLottery_TCG WHERE ref_no='{_inputs["ReserveID"]}'")
-            .SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM Siebog.BettransLottery_TCG WHERE ref_no='{_inputs["CreditID"]}'")
+            .SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM TSDB.BettransLottery_TCG WHERE ref_no='{_inputs["ReserveID"]}'")
+            .SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM TSDB.BettransLottery_TCG WHERE ref_no='{_inputs["CreditID"]}'")
             .ShouldBeHaveTpBetRecord(Tp.TCG, _inputs["WagerID"], _inputs["TpUserName"], reserveAmount, creditAmount - reserveAmount);
 
             return settle.ActualWinlostAmount;
@@ -286,8 +286,8 @@ namespace ThirdPartySeamlessWallet.IntegrationTest
 
             //Check SettleFlag and TpBetRecord
             settle.SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM BetDetail.TpWagerTCG_VN WHERE orderMasterId='{_inputs["WagerID"]}'")
-            .SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM Siebog.BettransLottery_TCG WHERE ref_no='{_inputs["ReserveID"]}'")
-            .SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM Siebog.BettransLottery_TCG WHERE ref_no='{_inputs["CreditID"]}'")
+            .SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM TSDB.BettransLottery_TCG WHERE ref_no='{_inputs["ReserveID"]}'")
+            .SettleFlagShouldBeSettled(@$"SELECT SettleFlag FROM TSDB.BettransLottery_TCG WHERE ref_no='{_inputs["CreditID"]}'")
             .ShouldBeHaveTpBetRecord(Tp.TCG, _inputs["WagerID"], _inputs["TpUserName"], reserveAmount * exchangeRate, (creditAmount - reserveAmount) * exchangeRate);
 
             return settle.ActualWinlostAmount / exchangeRate;
