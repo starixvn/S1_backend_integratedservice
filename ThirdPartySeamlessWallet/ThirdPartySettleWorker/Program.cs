@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Serilog;
 using Serilog.Events;
+using Serilog.Exceptions;
 using Serilog.Formatting.Json;
 using ThirdPartySeamlessWallet;
 using ThirdPartySeamlessWallet.Core.Extensions;
@@ -28,6 +29,25 @@ builder.Configuration.AddRemoteJsonConfig(remoteUrls);
 
 var excludesMessage = builder.Configuration.GetSection("ExcludesMessage").Get<string[]>();
 var excludesApiEndpoints = builder.Configuration.GetSection("ExcludesApiEndpoint").Get<string[]>();
+
+builder.Host.UseSerilog((context, Configuration) =>
+{
+    Configuration
+        .ReadFrom.Configuration(builder.Configuration)
+        .Enrich.FromLogContext()
+        .Filter.ByExcluding(c =>
+            c.Properties.Any(p =>
+                excludesApiEndpoints.Any(item => p.Value.ToString().Contains(item))
+                || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item))))
+        .Enrich.WithExceptionDetails()
+        .WriteTo.Sentry(o =>
+        {
+            // Debug and higher are stored as breadcrumbs (default is Information)
+            o.MinimumBreadcrumbLevel = LogEventLevel.Debug;
+            // Warning and higher is sent as event (default is Error)
+            o.MinimumEventLevel = LogEventLevel.Warning;
+        });
+});
 
 var startup = new Startup(builder.Configuration);
 startup.ConfigureServices(builder.Services);
@@ -97,7 +117,6 @@ builder.Services
     .AddHostedService<FastSpinWorker>()  
     .AddHostedService<SBSWWorker>()
     .AddHostedService<MaxGameWorker>();
-
 
 var app = builder.Build();
 startup.Configure(app, builder.Environment);
