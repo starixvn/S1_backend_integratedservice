@@ -18,6 +18,7 @@ namespace ThirdPartyWager.Extensions
                 { Tp.UuSlots, AddUuSlots},
                 { Tp.Live22, AddLive22},
                 { Tp.FastSpin, AddFastSpin},
+                { Tp.Allbet, AddAllbet},
 
                 //Loki comment:
                 //{ Tp.JILI, AddJILI},
@@ -190,18 +191,9 @@ namespace ThirdPartyWager.Extensions
         {
             services.AddSingleton<WagerAllBetService>();
 
-            services.AddSingleton<WagerAllBetBLL>();
-            services.AddSingleton<ApiAllBetBLL>();
-            services.AddSingleton<WagerRedoAllBetBLL>();
-            services.AddSingleton<RewardAllBetBLL>();
-            services.AddSingleton<FinanceAllBetBLL>();
+            services.AddSingleton<TicketAllBetBLL>();
 
-            services.AddHostedService<WagerAllBet>();
-            services.AddHostedService<WagerRedoAllBet>();
-            services.AddHostedService<FinanceAllBet>();
-            services.AddHostedService<CheckRewardAllBet>();
-            services.AddHostedService<WagerUnsettleCheckAllBet>();
-
+            services.AddHostedService<BetResultCheckAllBet>();
             return services;
         }
 
