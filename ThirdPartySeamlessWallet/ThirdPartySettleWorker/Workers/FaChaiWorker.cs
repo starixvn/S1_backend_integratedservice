@@ -45,7 +45,7 @@ namespace ThirdPartySettleWorker.Workers
 
             var forContinue = false;
             const string getBettransSp = "Service_BettransRng_FaChai_Get"; // 取得下注紀錄
-            const string getWagerSp = "Service_TpWager_FaChai_Get"; // 取得Wager資料
+            //const string getWagerSp = "Service_TpWager_FaChai_Get"; // 取得Wager資料
 
             try
             {
@@ -62,30 +62,30 @@ namespace ThirdPartySettleWorker.Workers
                     try
                     {
                         var betData = _partitionService.GetUnsettleDataList<BettransRng_FaChai>(getBettransSp, tpUnsettle).FirstOrDefault();
-                        var wagerData = _tpUnSettledBLL.GetTpUnsettleData<FCWager>(getWagerSp, new { recordID = tpUnsettle.TransId }, DataBase.Wager).FirstOrDefault();
+                        //var wagerData = _tpUnSettledBLL.GetTpUnsettleData<FCWager>(getWagerSp, new { recordID = tpUnsettle.TransId }, DataBase.Wager).FirstOrDefault();
 
-                        if (wagerData == null)
-                            continue;
+                        //if (wagerData == null)
+                        //    continue;
 
 
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, betData.MemberAccount);
-                        var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
+                        //var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
 
-                        #region 匯率轉換
-                        wagerData.bet *= tpCurrency.ExchangeRate;
-                        wagerData.winlose *= tpCurrency.ExchangeRate;
-                        #endregion
+                        //#region 匯率轉換
+                        //wagerData.bet *= tpCurrency.ExchangeRate;
+                        //wagerData.winlose *= tpCurrency.ExchangeRate;
+                        //#endregion
 
-                        if (betData.Bet != wagerData.bet || betData.NetWin != wagerData.winlose)
-                        {
-                            LogContext.PushProperty("TP", _tpName);
-                            _logger.LogWarning($"betData=\r\n{JsonConvert.SerializeObject(betData)}\r\nwagerData=\r\n{JsonConvert.SerializeObject(wagerData)}");
-                            Task.Run(() =>
-                            {
-                                _tpUnSettledBLL.SetTpUnsettle(Tp, GameType.FaChai_RNG, tpUnsettle.TransId, false);
-                            });
-                            continue;
-                        }
+                        //if (betData.Bet != wagerData.bet || betData.NetWin != wagerData.winlose)
+                        //{
+                        //    LogContext.PushProperty("TP", _tpName);
+                        //    _logger.LogWarning($"betData=\r\n{JsonConvert.SerializeObject(betData)}\r\nwagerData=\r\n{JsonConvert.SerializeObject(wagerData)}");
+                        //    Task.Run(() =>
+                        //    {
+                        //        _tpUnSettledBLL.SetTpUnsettle(Tp, GameType.FaChai_RNG, tpUnsettle.TransId, false);
+                        //    });
+                        //    continue;
+                        //}
 
                         var betRecordInfo = new BetRecordInfo
                         {
@@ -96,8 +96,8 @@ namespace ThirdPartySettleWorker.Workers
                             TransId = tpUnsettle.TransId,
                             GameType = GameType.FaChai_RNG,
                             TpUserName = betData.MemberAccount,
-                            SettledTime = wagerData.SettleTime,
-                            TransTime = betData.Ts/1000,
+                            SettledTime = betData.Ts,
+                            TransTime = betData.Ts,
                             SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, betData.GameID.ToString()),
                             TicketStatus = betData.NetWin > 0 ? TicketStatus.Win : betData.NetWin == 0 ? TicketStatus.Draw : TicketStatus.Lost,
                         };
