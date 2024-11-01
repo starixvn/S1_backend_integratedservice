@@ -9,5 +9,4 @@ public interface IDragonGamingBLL
     Task<DebitCreditRefundResponse_DragonGaming> Debit(DebitRequest_DragonGaming request);
     Task<DebitCreditRefundResponse_DragonGaming> Credit(CreditRequest_DragonGaming request);
     Task<DebitCreditRefundResponse_DragonGaming> Refund(RefundRequest_DragonGaming request);
-    Task<DebitCreditRefundResponse_DragonGaming> DebitPostman(DebitRequest_DragonGaming request);
 }

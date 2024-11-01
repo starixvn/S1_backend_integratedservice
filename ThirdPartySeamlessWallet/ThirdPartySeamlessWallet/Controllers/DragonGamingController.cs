@@ -87,16 +87,5 @@ public class DragonGamingController : ControllerBase
         return await _dragonGamingBll.Refund(request);
     }
 
-    /// <summary>
-    /// Debit Postman
-    /// </summary>
-    /// <returns></returns>
-    [HttpPost]
-    [Route("[controller]/debit/postman")]
-    public async Task<DebitCreditRefundResponse_DragonGaming> DebitPostmanAsync(DebitRequest_DragonGaming request)
-    {
-        return await _dragonGamingBll.DebitPostman(request);
-    }
-
     #endregion
 }
