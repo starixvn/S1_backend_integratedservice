@@ -2330,68 +2330,6 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
-        public int PlaceBetRNG_DragonGaming_Postman(TpCustInfo tpCustInfo, BettingData_DragonGaming bettingData, out decimal afterAmount)
-        {
-            int bonusId = 0;
-            afterAmount = 0;
-            var result = 0;
-
-            var tpId = Tp.DragonGaming;
-            var tpGameType = GameType.DragonGaming_RNG;
-            var InsSpName = "Service_BettransRng_DragonGaming_Ins";
-
-            using var conn = _mainDbClient.GetMySqlConnection();
-            conn.Open();
-            using var trans = conn.BeginTransaction();
-
-            try
-            {
-                var p = new DynamicParameters(bettingData);
-                p.Add("SettleFlag", (int)SettleFlag.Running);
-
-                result = _mainDbClient.Execute(InsSpName, p, conn, trans);
-                if (result > 0 && bettingData.amount != 0)
-                {
-                    // bonuscode bet 無須異動額度
-                    result = PlaceBetAllowNegative(
-                        tpCustInfo,
-                        bettingData.amount,
-                        (int)tpId,
-                        bettingData.round_id,
-                        (int)tpGameType,
-                        bettingData.round_id,
-                        out afterAmount,
-                        ref bonusId,
-                        out _,
-                        conn,
-                        trans,
-                        "",
-                        AllowNegative.Allow
-                    );
-                }
-
-                if (result > 0)
-                {
-                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
-                }
-                else
-                {
-                    _mainDbClient.RollbackAndDisposeConnection(conn, trans);
-                }
-            }
-            catch (MySqlException mySqlEx)
-            {
-                if (mySqlEx.Number == 1062)
-                {
-                    /*Duplicate for key 'PRIMARY'*/
-                    return -1;
-                }
-                throw;
-            }
-
-            return result;
-        }
-
         #endregion
     }
 }
