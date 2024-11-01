@@ -22,12 +22,14 @@ namespace ThirdParty.PP
         private const string _formatOfTime = "yyyy-MM-dd'T'HH:mm:ss.fffffffK";
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
+
+        private readonly IPayloadLogger _temporaryLogPayloadService;
+
         public TpHelper(IServiceProvider provider)
-
-
         {
             _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<PPConfig>(TpEnum.PP.ToString());
             temporaryLogSentryService = provider.GetRequiredService<TemporaryLogSentryService>();
+            _temporaryLogPayloadService = provider.GetRequiredService<IPayloadLogger>();
         }
 
         #region Request
@@ -109,7 +111,6 @@ namespace ThirdParty.PP
         }
 
         public override ApiResult<TransferResult> CheckTransfer(TpCustInfo tpCustInfo, Dictionary<string, string> inputs, decimal Amount, Direction Direction, string TransID, string ThirdPartyTransID)
-
         {
             throw new NotImplementedException();
         }
@@ -281,10 +282,11 @@ namespace ThirdParty.PP
                 { "operator-pwd", config.OperatorPwd},
                 { "operator-sign", Encrypt(postdata, config)},
             };
-
+            _temporaryLogPayloadService.LogDetailedPayload(postdata, nameof(Login), config.GameType);
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
+            _temporaryLogPayloadService.UpdateDetailedPayLoadWithResponse(postdata, result);
+
             ApiResult oApiResult = new ApiResult();
-            temporaryLogSentryService.WriteLogLaunchGame(nameof(PP), ApiUrl, header, postdata, result);
 
             if (IsJSON(result))
             {
