@@ -9,7 +9,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL;
 
 internal class DetailedRequestBody {
     public string Seq { get; set; }
-    public string TimeStamp { get; set; }
+    public DateTime TimeStamp { get; set; }
 
     public object Payload { get; set; }
 }
@@ -32,20 +32,16 @@ public class PayloadLogService
     private readonly PartitionService _partitionService;
     private readonly string _environmentName = "";
 
-    private readonly MaxGameBLL _maxGameBLL;
-
     public PayloadLogService(IServiceProvider provider)
     {
         _environmentName = provider.GetRequiredService<IWebHostEnvironment>()?.EnvironmentName ?? "Unspecified";
         _partitionService = provider.GetRequiredService<PartitionService>();
-        _maxGameBLL = _maxGameBLL = new MaxGameBLL(provider);
     }
 
     public virtual void LogDetailedPayload(string content, string action) {
         var getReq = JsonConvert.DeserializeObject<DetailedRequestBody>(content);
         var payload = getReq.Payload.ToString();
-        var gameName = JsonConvert.DeserializeObject<DetailedRequestBodyPayload>(payload)?.GameType;
-        var gameType = (int)_maxGameBLL.GetGameType(gameName);
+        var gameType = JsonConvert.DeserializeObject<DetailedRequestBodyPayload>(payload)?.GameType ?? "Unknown";
         var environment = _environmentName;
 
         var logParams = new DynamicParameters(new {
@@ -56,12 +52,11 @@ public class PayloadLogService
             GameType = gameType,
             Environment = environment,
         });
-        DateTime.TryParse(getReq.TimeStamp, out DateTime ts);
 
         try {
 
             _partitionService.Execute(
-                ts,
+                getReq.TimeStamp,
                 InsertDetailedPayloadSpName,
                 logParams
             );
@@ -74,7 +69,6 @@ public class PayloadLogService
 
     public virtual void UpdateDetailedPayLoadWithResponse(string requestContent, object responseContent) {
         var getReq = JsonConvert.DeserializeObject<DetailedRequestBody>(requestContent);
-        _ = DateTime.TryParse(getReq.TimeStamp, out DateTime ts);
         
         if (responseContent is not null && responseContent is string) {
             responseContent = JsonConvert.DeserializeObject(requestContent);
@@ -87,7 +81,7 @@ public class PayloadLogService
 
         try {
             _partitionService.Execute(
-                ts,
+                getReq.TimeStamp,
                 UpdateDetailedResponseSpName,
                 logParams
             );

@@ -49,7 +49,6 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 string content = await reader.ReadToEndAsync();
-                _logger.LogInformation("GetPlayerInfo 1 =" + content);
                 _payloadLogService.LogDetailedPayload(content, $"{nameof(GetPlayerInfo)}");
                 var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
@@ -58,22 +57,18 @@ namespace ThirdPartySeamlessWallet.Controllers
                     var response = new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
                     _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
 
-                    WriteLogTest($"{sitename}/GetPlayerInfo", content, response, Request.Headers["operator-sign"]);
                     return response;
                 }
 
                 var result = _maxGameBLL.GetPlayerInfo(content);
 
-                WriteLogTest($"{sitename}/GetPlayerInfo", content, result);
-                _logger.LogInformation("GetPlayerInfo 2 =" + content);
                 _payloadLogService.UpdateDetailedPayLoadWithResponse(content, result);
 
                 return result;
             }
             catch (Exception ex)
             {
-                _logger.LogInformation("GetPlayerInfo 3 =" + ex.Message);
-                _log2File.Error($"{ex.Message}", logName, ex);
+                SentrySdk.CaptureException(ex);
             }
 
             return new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
@@ -90,8 +85,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 string content = await reader.ReadToEndAsync();
                 _payloadLogService.LogDetailedPayload(content, nameof(GetBalance));
-                _logger.LogInformation(content);
-                _logger.LogInformation("Get Balance 1 =" + content);
                 var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
@@ -101,16 +94,12 @@ namespace ThirdPartySeamlessWallet.Controllers
 
                 var result = _maxGameBLL.GetBalance(content);
 
-                WriteLogTest($"{sitename}/GetBalance", content, result);
-                _logger.LogInformation("Get Balance 2=" + content);
                 _payloadLogService.UpdateDetailedPayLoadWithResponse(content, result);
                 return result;
             }
             catch (Exception ex)
             {
                 SentrySdk.CaptureException(ex);
-                _logger.LogInformation("Get Balance 3=" + ex.Message);
-                _log2File.Error($"{ex.Message}", logName, ex);
             }
 
             return new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
