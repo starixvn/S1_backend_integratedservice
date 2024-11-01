@@ -45,7 +45,9 @@ builder.Host.UseSerilog((context, Configuration) =>
             // Debug and higher are stored as breadcrumbs (default is Information)
             o.MinimumBreadcrumbLevel = LogEventLevel.Debug;
             // Warning and higher is sent as event (default is Error)
-            o.MinimumEventLevel = LogEventLevel.Warning;
+            o.MinimumEventLevel = LogEventLevel.Error;
+            o.Dsn = builder.Configuration.GetValue<string>("Sentry:Dsn");
+            o.Environment = builder.Configuration.GetValue<string>("Sentry:Environment");
         });
 });
 
@@ -112,9 +114,9 @@ builder.Services
     .AddHostedService<JILIWorker>()
     .AddHostedService<FaChaiWorker>()
     .AddHostedService<SabaPlayWorker>()
-    .AddHostedService<UuSlotsWorker>() 
-    .AddHostedService<Live22Worker>() 
-    .AddHostedService<FastSpinWorker>()  
+    .AddHostedService<UuSlotsWorker>()
+    .AddHostedService<Live22Worker>()
+    .AddHostedService<FastSpinWorker>()
     .AddHostedService<SBSWWorker>()
     .AddHostedService<MaxGameWorker>();
 
