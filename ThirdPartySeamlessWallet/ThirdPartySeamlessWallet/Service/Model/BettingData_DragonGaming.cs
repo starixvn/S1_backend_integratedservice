@@ -80,7 +80,7 @@ public class CommonSuccessResponse_DragonGaming : CommonResponse_DragonGaming
     {
         status = (int)StatusOfDragonGaming.Success;
         this.token = token;
-        this.message = this.status.GetEnumDescription();
+        this.message = StatusOfDragonGaming.Success.GetEnumDescription();
     }
 }
 
