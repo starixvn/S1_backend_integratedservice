@@ -117,6 +117,7 @@ namespace ThirdPartySettleWorker.Workers
                         {
                             _tpUnSettledBLL.SetTpUnsettle(Tp, GameType.FaChai_RNG, tpUnsettle.TransId, false);
                         });
+                        SentrySdk.CaptureMessage($"FaChai Settle exception. {ex.Message} || TransId : {tpUnsettle.TransId}");
                         LogContext.PushProperty("TP", _tpName);
                         _logger.LogError(ex, $"FaChai Settle exception. {ex.Message} || TransId : {tpUnsettle.TransId}");
                     }

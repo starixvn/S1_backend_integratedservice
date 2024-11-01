@@ -8,7 +8,14 @@ using ThirdPartySeamlessWallet.Core.Extensions;
 using ThirdPartySettleWorker.Workers;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.WebHost.UseSentry();
+builder.WebHost.UseSentry(option =>
+{
+    option.SetBeforeSend(@event =>
+    {
+        @event.SetFingerprint(Guid.NewGuid().ToString());
+        return @event;
+    });
+});
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);

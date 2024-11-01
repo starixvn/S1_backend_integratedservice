@@ -9,6 +9,7 @@ using ThirdPartySeamlessWallet.Service.Model;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 using ThirdPartySeamlessWallet.Service.Model.MaxGame;
+using ThirdPartySeamlessWallet.Service.Model.SBSW;
 
 namespace ThirdPartySeamlessWallet.Service.DAL
 {
@@ -1594,11 +1595,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     }
 
+                    SentrySdk.CaptureMessage($"[MaxGame] Insert unsettle start, result={result}");
+                    logger.LogInformation("[MaxGame] Insert unsettle start");
                     if (result > 0)
                     {
+                        SentrySdk.CaptureMessage($"[MaxGame] Insert unsettle execute: {tpId}-{gameType}-{betDataSet.TicketNo}-{partitionTime}");
                         result = _tpUnsettleService.InsertTpUnsettlePlaceBetAndSettle((Tp)tpId, (GameType)gameType, betDataSet.TicketNo, trans, partitionTime);
                     }
-
+                    SentrySdk.CaptureMessage("[MaxGame] Insert unsettle end");
                     if (result > 0)
                     {
                         var refNo = p.Get<long>("SQ").ToString();
