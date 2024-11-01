@@ -6,6 +6,7 @@ using Dapper;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.Model;
+using ThirdPartySeamlessWallet.Service.Model.KY;
 using ThirdPartySeamlessWallet.Service.Model.enums;
 using ThirdPartySeamlessWallet.Service.Model.Exceptions;
 using ThirdPartySeamlessWallet.Service.Model.MaxGame;
@@ -1841,6 +1842,70 @@ namespace ThirdPartySeamlessWallet.Service.DAL
             return result;
         }
 
+        #endregion
+
+        #region KY
+
+        public int CancelBetPK_KY(TpCustInfo tpCustInfo, BettingDataPK_KY bettingDataPK_KY, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            int result = 0;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                var p = new DynamicParameters(bettingDataPK_KY);
+                p.Add("TicketType", (int)BettransType.CancelBet);
+                p.Add("TicketStatus", (int)TicketStatus.Refund);
+                p.Add("SettleFlag", (int)SettleFlag.Settled);
+
+                var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataPK_KY.timestamp).DateTime;
+                result = _partitionService.Execute(partitionTime, "Service_BettransPK_KY_CancelBet_Set", p, trans);
+
+                if (result > 0)
+                {
+                    // cancel update
+                    result = walletService.SetBalance(
+                        tpCustInfo.CustId,
+                        tpCustInfo.SiteId,
+                        tpCustInfo.UserName,
+                        bettingDataPK_KY.money,
+                        (int)Tp.KY,
+                        TransType.Refunds,
+                        $"Cancel: {bettingDataPK_KY.money:#,##0.##} {bettingDataPK_KY.orderId}",
+                        bettingDataPK_KY.gameNo,
+                        out afterAmount,
+                        conn,
+                        trans
+                    );
+
+                    if (result > 0)
+                    {
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                        return result;
+                    }
+                }
+                else
+                {
+                    /* TODO: 已处理取消下注成功的订单与查无此订单请皆视为成功，将不再做发送 */
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                result = 0;
+                logger.LogError(mySqlEx.Message);
+                _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+                throw;
+            }
+        }
         #endregion
     }
 }

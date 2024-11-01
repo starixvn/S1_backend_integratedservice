@@ -9,6 +9,21 @@
         CancelBet = 1005,
     }
 
+    // TODO: 已处理取消下注成功的订单与查无此订单请皆视为成功，将不再做发送
+    public enum StatusTypeOfKY
+    {
+        // 成功
+        Success = 1,
+        // 失敗
+        Failure = 2,
+        // 處理中
+        Process = 3,
+        // 查無訂單
+        NoResult = 4,
+        // 其他錯誤
+        OtherError = 5,
+    }
+
     #region ErrorCode
 
     public enum ErrorCodeOfKY

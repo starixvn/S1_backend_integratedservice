@@ -33,11 +33,28 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
         }
 
+        public class GetOrderStatusResp
+        {
+            public int s { get; set; }
+            public string m { get; set; }
+            public GetOrderStatusD d { get; set; }
+        }
+
+        public class CancelBetResp : GetOrderStatusResp
+        {
+        }
+
         public class GetBalanceD
         {
             public int code { get; set; }
             public string account { get; set; }
             public decimal money { get; set; }
+        }
+
+        public class GetOrderStatusD
+        {
+            public int code { get; set; }
+            public int status { get; set; }
         }
 
         #endregion
@@ -46,6 +63,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         private readonly ThirdPartyBLL _thirdPartyBLL;
         private readonly TpCustInfoBLL _tpCustInfoBLL;
         private readonly BettingService _bettingService;
+        private readonly SettledService _settledService;
         private readonly Log2File _log2File;
         private readonly int _gameType = (int)GameType.KY_Poker;
 
@@ -55,6 +73,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             _tpCustInfoBLL = provider.GetRequiredService<TpCustInfoBLL>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
             _bettingService = provider.GetRequiredService<BettingService>();
+            _settledService = provider.GetRequiredService<SettledService>();
             _log2File = provider.GetRequiredService<Log2File>();
         }
 
@@ -147,6 +166,59 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return getApiResponse;
         }
 
+        public dynamic CancelBet(ApiReq getReq, string reqParam)
+        {
+            var result = 0;
+            string logName = $"{_thisTp}_CancelBet";
+            var subType = SubTypeOfKY.CancelBet;
+            CancelBetResp getApiResponse = new()
+            {
+                s = (int)subType,
+                m = "/channelHandle",
+                d = new GetOrderStatusD
+                {
+                    code = 999,
+                    status = (int)StatusTypeOfKY.Failure
+                }
+            };
+
+            try
+            {
+                var req = JsonConvert.DeserializeObject<BettingDataPK_KY>(reqParam);
+                _log2File.Info($"{JsonConvert.SerializeObject(req)}", logName);
+
+                req.timestamp = getReq.timestamp;
+
+                if (req.s != (int)subType)
+                {
+                    getApiResponse.d.code = (int)ErrorCodeOfKY.Subtype;
+                    _log2File.Error($"Subtype Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+                if (req.account == null)
+                {
+                    getApiResponse.d.code = (int)ErrorCodeOfKY.Account;
+                    _log2File.Error($"Account Empty {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+
+                result = CancelBetPK_KY(req, out decimal tpAfterAmount);
+                if (result > 0 || result == -1)
+                {
+                    getApiResponse.d.code = (int)ErrorCodeOfKY.Success;
+                    getApiResponse.d.status = (int)StatusTypeOfKY.Success;
+                    return getApiResponse;
+                }
+            }
+            catch (Exception ex)
+            {
+                _log2File.Error($"{ex.Message}", logName, ex);
+            }
+
+            _log2File.Error($"Unknow Error result={result} {JsonConvert.SerializeObject(getApiResponse)}", logName);
+            return getApiResponse;
+        }
+
         #endregion
 
         #region ExchangeRate & Service
@@ -162,6 +234,24 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             var result = _bettingService.PlaceBetPK_KY(tpCustInfo, bettingDataPK_KY, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        private int CancelBetPK_KY(BettingDataPK_KY bettingDataPK_KY, out decimal afterAmount)
+        {
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(_thisTp, bettingDataPK_KY.account);
+            var tpCurrency = _thirdPartyBLL.GetTpCurrency(_thisTp, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                bettingDataPK_KY.money *= tpCurrency.ExchangeRate;
+            }
+
+            var result = _settledService.CancelBetPK_KY(tpCustInfo, bettingDataPK_KY, out afterAmount );
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
