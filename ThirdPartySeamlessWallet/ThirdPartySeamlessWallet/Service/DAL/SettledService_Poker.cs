@@ -1589,14 +1589,13 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                     }
 
-                    SentrySdk.CaptureMessage($"[MaxGame] Insert unsettle start, result={result}");
                     logger.LogInformation("[MaxGame] Insert unsettle start");
                     if (result > 0)
                     {
-                        SentrySdk.CaptureMessage($"[MaxGame] Insert unsettle execute: {tpId}-{gameType}-{betDataSet.TicketNo}-{partitionTime}");
+                        logger.LogInformation($"[MaxGame] Insert unsettle execute: {tpId}-{gameType}-{betDataSet.TicketNo}-{partitionTime}");
                         result = _tpUnsettleService.InsertTpUnsettlePlaceBetAndSettle((Tp)tpId, (GameType)gameType, betDataSet.TicketNo, trans, partitionTime);
                     }
-                    SentrySdk.CaptureMessage("[MaxGame] Insert unsettle end");
+                    logger.LogInformation("[MaxGame] Insert unsettle end");
                     if (result > 0)
                     {
                         var refNo = p.Get<long>("SQ").ToString();
