@@ -78,7 +78,7 @@ builder.Services
     //.AddHostedService<GAWorker>()
     //.AddHostedService<WonCasinoWorker>()
     .AddHostedService<SGWorker>()
-    //.AddHostedService<PPWorker>()
+    .AddHostedService<PPWorker>()
     .AddHostedService<AllbetWorker>()
     //.AddHostedService<SexyWorker>()
     .AddHostedService<SBOWorker>()
