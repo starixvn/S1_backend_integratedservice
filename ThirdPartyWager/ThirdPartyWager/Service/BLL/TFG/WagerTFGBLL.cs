@@ -2,6 +2,7 @@
 
 using ThirdPartyWager.Service.DAL;
 using ThirdPartyWager.Service.Model;
+using ThirdPartyWager.Service.Model.enums;
 using ThirdPartyWager.Service.Model.TpSiteConfig;
 
 namespace ThirdPartyWager.Service.BLL
@@ -12,12 +13,15 @@ namespace ThirdPartyWager.Service.BLL
         private readonly WagerTFGService _wagerTFGService;
         private readonly ILogger<ApiTFGBLL> _logger;
         private readonly ThirdPartyBLL _thirdPartyBLL;
+        private readonly int _tpId = (int)Tp.TFG;
+        private readonly Dictionary<int, TFGConfig> _siteConfigDic;
         public WagerTFGBLL(IServiceProvider provider)
         {
             _apiTFGBLL = provider.GetRequiredService<ApiTFGBLL>();
             _wagerTFGService = provider.GetRequiredService<WagerTFGService>();
             _logger = provider.GetRequiredService<ILogger<ApiTFGBLL>>();
             _thirdPartyBLL = provider.GetRequiredService<ThirdPartyBLL>();
+            _siteConfigDic = provider.GetRequiredService<ConfigBLL>().GetConfigValuesBySiteId<TFGConfig>(Tp.TFG.ToString());
         }
 
         public async Task<bool> GetWagersAsync(string apiUrl, string privateToken, string startTime, string endTime)
@@ -84,12 +88,11 @@ namespace ThirdPartyWager.Service.BLL
             }
         }
 
-        public async Task<(bool Success, bool DoQuick)> UnsettleCheck(TFGConfig config)
+        public async Task<(bool Success, bool DoQuick)> UnsettleCheck()
         {
             try
             {
                 string msg;
-                var apiUrl = config.ApiUrl;
                 var checkList = await _wagerTFGService.GetUnsettleCheckList();
                 _logger.LogInformation($"TFG Unsettle Count:{checkList.Count()}");
                 var doQuick = checkList.Count() == 1000;
@@ -99,12 +102,13 @@ namespace ThirdPartyWager.Service.BLL
                     try
                     {
                         var bettrans = await _wagerTFGService.GetBettrans(chcek.TransId);
-
+                        TpCustInfo tpCustInfo = _thirdPartyBLL.GetTpCustInfoWithCache(_tpId, bettrans.loginName);
+                        var config = _siteConfigDic[tpCustInfo.SiteId];
                         //當初config檔的人民幣跟三方取名不同，這邊做轉換
                         var currency = bettrans.currency == "RMB" ? "CNY" : bettrans.currency;
                         if (bettrans != null && config.CurrencyData.ContainsKey(currency))
                         {
-                            var dataWager = await _apiTFGBLL.GetBetTransactionById(apiUrl, config.CurrencyData[currency].PrivateToken, chcek.TransId);
+                            var dataWager = await _apiTFGBLL.GetBetTransactionById(config.ApiUrl, config.CurrencyData[currency].PrivateToken, chcek.TransId);
                             if (dataWager != null)
                             {
                                 foreach (var wager in dataWager.results)
