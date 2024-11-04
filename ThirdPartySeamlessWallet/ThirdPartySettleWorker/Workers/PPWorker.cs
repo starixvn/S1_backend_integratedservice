@@ -42,7 +42,7 @@ namespace ThirdPartySettleWorker.Workers
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             timerRNG = new Timer(DoSettle, GameType.PP_RNG, TimeSpan.Zero, TimeSpan.Zero);
-           // timerLC = new Timer(DoSettle, GameType.PP_LiveCasino, TimeSpan.Zero, TimeSpan.Zero);
+            timerLC = new Timer(DoSettle, GameType.PP_LiveCasino, TimeSpan.Zero, TimeSpan.Zero);
             return Task.CompletedTask;
         }
 
@@ -80,34 +80,35 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var bettrans = _partitionService.GetUnsettleDataList<SettleData>(getSP, unsettled);
-                        var bettran = bettrans.FirstOrDefault();
-                        if (!bettrans.Any())
+                        var bettranList = _partitionService.GetUnsettleDataList<SettleData>(getSP, unsettled);
+                      
+                        if (!bettranList.Any())
                         {
                             LogContext.PushProperty("TP", _tpName);
                             _logger.LogWarning($"{logName}:bettrans not found ({gametype})\r\n{JsonConvert.SerializeObject(unsettled)}");
                             continue;
                         }
+                        var bettran = bettranList.FirstOrDefault();
                         var tpUserName = bettran?.Account;
-                        var stake = bettrans.Sum(x => x.Stake);
-                        var validBet = bettrans.Sum(x => x.ValidBet);
-                        var winLostAmount = bettrans.Sum(x => x.WinLostAmount);
+                        var stake = bettranList.Sum(x => x.Stake);
+                        var validBet = bettranList.Sum(x => x.ValidBet);
+                        var winLostAmount = bettranList.Sum(x => x.WinLostAmount);
                         var gameId = bettran?.GameId;
-                        var settledTime = bettrans.Max(x => x.SettleTime);
-                        var transTime = bettrans.Min(x => x.TransTime);
+                        var settledTime = bettranList.Max(x => x.SettleTime);
+                        var transTime = bettranList.Min(x => x.TransTime);
                         var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, tpUserName);
 
-                        if (gametype == GameType.PP_LiveCasino)
-                        {
-                            if (winLostAmount >= 0 && winLostAmount < stake)
-                            {
-                                validBet = winLostAmount;
-                            }
-                            else if (winLostAmount < 0)
-                            {
-                                validBet = Math.Abs(winLostAmount);
-                            }
-                        }
+                        //if (gametype == GameType.PP_LiveCasino)
+                        //{
+                        //    if (winLostAmount >= 0 && winLostAmount < stake)
+                        //    {
+                        //        validBet = winLostAmount;
+                        //    }
+                        //    else if (winLostAmount < 0)
+                        //    {
+                        //        validBet = Math.Abs(winLostAmount);
+                        //    }
+                        //}
 
       
                         var betRecordInfo = new BetRecordInfo
