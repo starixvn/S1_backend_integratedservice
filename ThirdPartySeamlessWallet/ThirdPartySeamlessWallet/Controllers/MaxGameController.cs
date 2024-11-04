@@ -161,7 +161,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 content = await reader.ReadToEndAsync();
-                _payloadLogService.LogDetailedPayload(content, nameof(PlaceBet));
+                _payloadLogService.LogDetailedPayload(content, nameof(EndGame));
 
                 var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
@@ -172,7 +172,6 @@ namespace ThirdPartySeamlessWallet.Controllers
                     _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
                     return response;
                 }
-                _payloadLogService.LogDetailedPayload(content, nameof(PlaceBet));
                 response = response = _maxGameBLL.EndGame(content);
                 _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
 
