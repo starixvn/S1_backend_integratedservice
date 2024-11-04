@@ -31,6 +31,7 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { "jili", Tp.JILI },
             { "allbet", Tp.Allbet },
             {"pragmaticplay",Tp.PP },
+            {"pragmaticplaycasino",Tp.PP },
             {"fachai", Tp.FaChai}
         };
         private readonly Dictionary<int, WalletKind> _gameOfWalletKind = new()
@@ -42,8 +43,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             { (int)GameType.FastSpin_RNG, WalletKind.BonusWallet },
             { (int)GameType.JILI_RNG, WalletKind.BalanceWallet },
             { (int)GameType.Allbet_LiveCasino, WalletKind.BonusWallet },
-            { (int)GameType.PP_LiveCasino, WalletKind.BalanceWallet },
-            { (int)GameType.PP_RNG, WalletKind.BalanceWallet },
+            { (int)GameType.PP_LiveCasino, WalletKind.BonusWallet },
+            { (int)GameType.PP_RNG, WalletKind.BonusWallet },
             { (int)GameType.FaChai_RNG, WalletKind.BalanceWallet }
         };
         private readonly Dictionary<int, TpCategory> _gameOfTpCategory = new()
@@ -752,6 +753,11 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
                     GetTicketNoSpName = "Service_BettransRng_PP_TicketNo_Get";
                     InsertBettransSpName = "Service_BettransRng_PP_Ins";
                     CancelBettransSpName = "Service_BettransRng_PP_CancelBet_Set";
+                    break;
+                case (int)GameType.PP_LiveCasino:
+                    GetTicketNoSpName = "Service_BettransLC_PP_TicketNo_Get";
+                    InsertBettransSpName = "Service_BettransLC_PP_Ins";
+                    CancelBettransSpName = "Service_BettransLC_PP_CancelBet_Set";
                     break;
                 default:
                     // GameType.MaxGame_Poker
