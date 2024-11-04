@@ -601,15 +601,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
 
                 DateTime.TryParse(bettingData_MaxGame.Timestamp, out DateTime ts);
-                var payload = new DynamicParameters(new
-                {
-                    Timestamp = bettingData_MaxGame.Timestamp,
-                    Seq = bettingData_MaxGame.Seq,
-                    Payload = JsonConvert.SerializeObject(bettingData_MaxGame.Payload)
-                });
-                var req = _partitionService.Execute(ts, spName.InsertPayload, payload, trans);
 
-                if (req > 0 && result > 0 && cnt != 0 && cnt == bettingData_MaxGame.Payload.BetDataSet.Count)
+                if (result > 0 && cnt != 0 && cnt == bettingData_MaxGame.Payload.BetDataSet.Count)
                 {
                     _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     return result;
