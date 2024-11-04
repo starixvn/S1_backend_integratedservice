@@ -245,10 +245,12 @@ namespace ThirdParty.PP
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             var config = _siteConfigDic[tpCustInfo.SiteId];
-            var ApiUrl = $"{config.ApiUrl}/api/CommonWallet/LaunchGame";
             string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
             string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
-
+            string tpGameType = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["tpGameType"]) ? inputs["tpGameType"] : "0";
+            var gameTypeSpecificApiUrl = GetEndpointBasedOnTpGameType(tpGameType, config);
+            var ApiUrl = $"{gameTypeSpecificApiUrl}/api/CommonWallet/LaunchGame";
+            var gameType = GetGameTypeBasedOnTpGameType(tpGameType, config);
             var key = ApplyToken(tpCustInfo);
 
             var input = new
@@ -259,7 +261,7 @@ namespace ThirdParty.PP
                 {
                     ProductInfo = new
                     {
-                        config.GameType,
+                        GameType = gameType,
                         GameId = gameId,
                         AppType = (appType == AppType.Desktop) ? "D" : "M",
                     },
@@ -329,6 +331,24 @@ namespace ThirdParty.PP
         {
             var currentAt = new DateTimeOffset(DateTime.UtcNow);
             return currentAt.ToOffset(new TimeSpan(_utc, 0, 0)).ToString(_formatOfTime);
+        }
+
+        private static string GetEndpointBasedOnTpGameType(string gameType, PPConfig config) {
+            if (gameType == "16") // THIS IS PP LIVE CASINO
+            {
+                return config.LiveCasinoApiUrl;
+            }
+
+            return config.ApiUrl;
+        }
+
+        private static string GetGameTypeBasedOnTpGameType(string gameType, PPConfig config) {
+            if (gameType == "16") // THIS IS PP LIVE CASINO
+            {
+                return config.LiveCasinoGameType;
+            }
+
+            return config.GameType;
         }
     }
 }
