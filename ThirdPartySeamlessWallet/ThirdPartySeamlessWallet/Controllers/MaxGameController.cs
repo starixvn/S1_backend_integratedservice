@@ -44,11 +44,12 @@ namespace ThirdPartySeamlessWallet.Controllers
         public async Task<dynamic> GetPlayerInfo(string sitename)
         {
             string logName = $"{_thisTp}_GetPlayerInfo";
+            string content = "";
             
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-                string content = await reader.ReadToEndAsync();
+                content = await reader.ReadToEndAsync();
                 _payloadLogService.LogDetailedPayload(content, $"{nameof(GetPlayerInfo)}");
                 var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
@@ -71,6 +72,7 @@ namespace ThirdPartySeamlessWallet.Controllers
                 SentrySdk.CaptureException(ex);
             }
 
+            _payloadLogService.UpdateDetailedPayLoadWithResponse(content, new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError));
             return new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
         }
 
@@ -79,17 +81,20 @@ namespace ThirdPartySeamlessWallet.Controllers
         public async Task<dynamic> GetBalance(string sitename)
         {
             string logName = $"{_thisTp}_GetBalance";
-
+            string content = "";
+            dynamic response = null;
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-                string content = await reader.ReadToEndAsync();
+                content = await reader.ReadToEndAsync();
                 _payloadLogService.LogDetailedPayload(content, nameof(GetBalance));
                 var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
                     var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
-                    return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
+                    response = new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
+                    _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+                    return response;
                 }
 
                 var result = _maxGameBLL.GetBalance(content);
@@ -102,38 +107,46 @@ namespace ThirdPartySeamlessWallet.Controllers
                 SentrySdk.CaptureException(ex);
             }
 
-            return new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
+            response = new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
+            _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+            return response;
         }
 
         [HttpPost]
         [Route("[controller]/{sitename}/PlaceBet")]
         public async Task<dynamic> PlaceBet(string sitename)
         {
+            string content = "";
             string logName = $"{_thisTp}_PlaceBet";
+            dynamic response = null;
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-                string content = await reader.ReadToEndAsync();
+                content = await reader.ReadToEndAsync();
+                _payloadLogService.LogDetailedPayload(content, nameof(PlaceBet));
 
                 var verifyHeader = false;
                 verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
                     var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
-                    return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
+                    response = new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
+                    _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+                    return response;
                 }
-                var result = _maxGameBLL.PlaceBet(content);
+                response = _maxGameBLL.PlaceBet(content);
+                _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
 
-                WriteLogTest($"{sitename}/PlaceBet", content, result);
-
-                return result;
+                return response;
             }
             catch (Exception ex)
             {
                 _log2File.Error($"{ex.Message}", logName, ex);
             }
-
-            return new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
+            response = new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
+            
+            _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+            return response;
         }
 
         [HttpPost]
@@ -141,30 +154,38 @@ namespace ThirdPartySeamlessWallet.Controllers
         public async Task<dynamic> EndGame(string sitename)
         {
             string logName = $"{_thisTp}_EndGame";
+            string content = "";
+            dynamic response = null;
+
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-                string content = await reader.ReadToEndAsync();
+                content = await reader.ReadToEndAsync();
+                _payloadLogService.LogDetailedPayload(content, nameof(PlaceBet));
 
                 var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
                     var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
-                    return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
+                    response = new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
+                    
+                    _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+                    return response;
                 }
+                _payloadLogService.LogDetailedPayload(content, nameof(PlaceBet));
+                response = response = _maxGameBLL.EndGame(content);
+                _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
 
-                var result = _maxGameBLL.EndGame(content);
-
-                WriteLogTest($"{sitename}/EndGame", content, result);
-
-                return result;
+                return response;
             }
             catch (Exception ex)
             {
                 _log2File.Error($"{ex.Message}", logName, ex);
             }
 
-            return new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
+            response = new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
+            _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+            return response;
         }
 
         [HttpPost]
