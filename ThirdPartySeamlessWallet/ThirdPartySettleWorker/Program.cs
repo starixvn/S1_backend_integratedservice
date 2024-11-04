@@ -9,6 +9,7 @@ using ThirdPartySeamlessWallet.Core.Extensions;
 using ThirdPartySettleWorker.Workers;
 
 var builder = WebApplication.CreateBuilder(args);
+
 builder.WebHost.UseSentry(option =>
 {
     option.SetBeforeSend(@event =>
@@ -17,6 +18,7 @@ builder.WebHost.UseSentry(option =>
         return @event;
     });
 });
+
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
@@ -106,11 +108,11 @@ builder.Services
     //.AddHostedService<NTConnectWorker>()
     //.AddHostedService<GAWorker>()
     //.AddHostedService<WonCasinoWorker>()
-    .AddHostedService<SGWorker>()
+    //.AddHostedService<SGWorker>()
    // .AddHostedService<PPWorker>()
     .AddHostedService<AllbetWorker>()
     //.AddHostedService<SexyWorker>()
-    .AddHostedService<SBOWorker>()
+    //.AddHostedService<SBOWorker>()
     .AddHostedService<JILIWorker>()
     .AddHostedService<FaChaiWorker>()
     .AddHostedService<SabaPlayWorker>()
