@@ -87,14 +87,14 @@ public class CommonSuccessResponse_DragonGaming : CommonResponse_DragonGaming
 public class CommonErrorResponse_DragonGaming : CommonResponse_DragonGaming
 {
     public int error_id { get; set; }
-    public int error_code { get; set; }
+    public string error_code { get; set; }
     public string error_message { get; set; }
 
     public CommonErrorResponse_DragonGaming(ErrorIdOfDragonGaming errorId)
     {
         status = (int)StatusOfDragonGaming.Fail;
         this.error_id = (int)errorId;
-        this.error_code = (int)errorId;
+        this.error_code = ((int)errorId).ToString();
         this.error_message = errorId.GetEnumDescription();
     }
 }
