@@ -1367,15 +1367,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
 
                 DateTime.TryParse(payoutData_MaxGame.Timestamp, out DateTime ts);
-                var payload = new DynamicParameters(new
-                {
-                    Timestamp = payoutData_MaxGame.Timestamp,
-                    Seq = payoutData_MaxGame.Seq,
-                    Payload = JsonConvert.SerializeObject(payoutData_MaxGame.Payload)
-                });
-                var req = _partitionService.Execute(ts, spName.InsertPayload, payload, trans);
 
-                if (req > 0 && result > 0 && cnt != 0 && cnt == payoutData_MaxGame.Payload.BetDataSet.Count)
+
+                if (result > 0 && cnt != 0 && cnt == payoutData_MaxGame.Payload.BetDataSet.Count)
                 {
                     _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     return result;
@@ -1617,15 +1611,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
 
                 DateTime.TryParse(payoutData_MaxGame.Timestamp, out DateTime ts);
-                var payload = new DynamicParameters(new
-                {
-                    Timestamp = payoutData_MaxGame.Timestamp,
-                    Seq = payoutData_MaxGame.Seq,
-                    Payload = JsonConvert.SerializeObject(payoutData_MaxGame.Payload)
-                });
-                var req = _partitionService.Execute(ts, spName.InsertPayload, payload, trans);
 
-                if (req > 0 && result > 0 && cnt != 0 && cnt == payoutData_MaxGame.Payload.BetDataSet.Count)
+                if (result > 0 && cnt != 0 && cnt == payoutData_MaxGame.Payload.BetDataSet.Count)
                 {
                     _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     return result;
@@ -1761,15 +1748,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         cnt++;
                     }
                 }
-                var payload = new DynamicParameters(new
-                {
-                    Timestamp = cancelBetData_MaxGame.Timestamp,
-                    Seq = cancelBetData_MaxGame.Seq,
-                    Payload = JsonConvert.SerializeObject(cancelBetData_MaxGame.Payload)
-                });
-                var req = _partitionService.Execute(partitionTime, spName.InsertPayload, payload, trans);
 
-                if (req > 0 && result > 0 && cnt != 0 && cnt == cancelBetData_MaxGame.Payload.BetDataSet.Count)
+                if (result > 0 && cnt != 0 && cnt == cancelBetData_MaxGame.Payload.BetDataSet.Count)
                 {
                     _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     return result;
@@ -1906,15 +1886,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
 
                 DateTime.TryParse(bonusData_MaxGame.Timestamp, out DateTime ts);
-                var payload = new DynamicParameters(new
-                {
-                    Timestamp = bonusData_MaxGame.Timestamp,
-                    Seq = bonusData_MaxGame.Seq,
-                    Payload = JsonConvert.SerializeObject(bonusData_MaxGame.Payload)
-                });
-                var req = _partitionService.Execute(ts, spName.InsertPayload, payload, trans);
 
-                if (req > 0 && result > 0 && cnt != 0 && cnt == bonusData_MaxGame.Payload.BetDataSet.Count)
+
+                if (result > 0 && cnt != 0 && cnt == bonusData_MaxGame.Payload.BetDataSet.Count)
                 {
                     _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     return result;
@@ -2061,15 +2035,8 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
 
                 DateTime.TryParse(freeSpinData_MaxGame.Timestamp, out DateTime ts);
-                var payload = new DynamicParameters(new
-                {
-                    Timestamp = freeSpinData_MaxGame.Timestamp,
-                    Seq = freeSpinData_MaxGame.Seq,
-                    Payload = JsonConvert.SerializeObject(freeSpinData_MaxGame.Payload)
-                });
-                var req = _partitionService.Execute(ts, spName.InsertPayload, payload, trans);
 
-                if (req > 0 && result > 0 && cnt != 0 && cnt == freeSpinData_MaxGame.Payload.BetDataSet.Count)
+                if (result > 0 && cnt != 0 && cnt == freeSpinData_MaxGame.Payload.BetDataSet.Count)
                 {
                     _mainDbClient.CommitAndDisposeConnection(conn, trans);
                     return result;
