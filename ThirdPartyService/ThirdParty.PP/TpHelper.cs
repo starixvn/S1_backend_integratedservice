@@ -284,7 +284,7 @@ namespace ThirdParty.PP
                 { "operator-pwd", config.OperatorPwd},
                 { "operator-sign", Encrypt(postdata, config)},
             };
-            _temporaryLogPayloadService.LogDetailedPayload(postdata, nameof(Login), config.GameType);
+            _temporaryLogPayloadService.LogDetailedPayload(postdata, nameof(Login), gameType);
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
             _temporaryLogPayloadService.UpdateDetailedPayLoadWithResponse(postdata, result);
 
