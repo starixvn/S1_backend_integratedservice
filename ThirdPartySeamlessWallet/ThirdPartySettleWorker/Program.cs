@@ -42,6 +42,7 @@ builder.Host.UseSerilog((context, Configuration) =>
                 excludesApiEndpoints.Any(item => p.Value.ToString().Contains(item))
                 || excludesMessage.Any(item => c.MessageTemplate.ToString().Contains(item))))
         .Enrich.WithExceptionDetails()
+        .WriteTo.MySQL(builder.Configuration.GetValue<string>("connectionStrings:worker_LogDB"), "LogInfo")
         .WriteTo.Sentry(o =>
         {
             // Debug and higher are stored as breadcrumbs (default is Information)
