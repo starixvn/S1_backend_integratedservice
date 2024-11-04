@@ -1062,6 +1062,10 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 bettingDataLT_Eday.player = tpCustInfo.TpUserName;
                 bettingDataLT_Eday.amount *= -1;
                 var p = new DynamicParameters(bettingDataLT_Eday);
+                p.Add("eventId", 0);
+                p.Add("betTotal", 0.00m);
+                p.Add("winTotal", 0.00m);
+                p.Add("UTCSettleTime", bettingDataLT_Eday.UTCBetTime);
                 p.Add("SettleFlag", (int)SettleFlag.Running);
                 result = _partitionService.Execute(bettingDataLT_Eday.UTCBetTime, InsSpName, p, trans);
                 if (result > 0 && bettingDataLT_Eday.amount != 0)

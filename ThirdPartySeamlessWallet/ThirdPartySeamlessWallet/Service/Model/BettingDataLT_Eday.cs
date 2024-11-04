@@ -54,6 +54,7 @@ namespace ThirdPartySeamlessWallet.Service.Model
 
     public class EdayBetRequestData : EdayBetRequest
     {
+        public new string billId { get; set; }
         public int TicketType { get; set; }
         public int TicketStatus { get; set; }
         
@@ -62,6 +63,38 @@ namespace ThirdPartySeamlessWallet.Service.Model
     }
 
     public class EdayBetRequestResponse
+    {
+        public decimal balance { get; set; }
+    }
+    
+    #endregion
+    
+    #region RoundUpdate
+    
+    public class EdayRoundUpdateRequest
+    {
+        public string txId { get; set; }
+        public long timestamp { get; set; }
+        public int eventId { get; set; }
+        public string roundCode { get; set; }
+        public string gameCode { get; set; }
+        public int totalPage { get; set; }
+        public int txPage { get; set; }
+        public int itemCount { get; set; }
+        public int txType { get; set; }
+        public List<EdayRoundUpdateData> items { get; set; }
+    }
+    public class EdayRoundUpdateData
+    {
+        public string player { get; set; }
+        public decimal bet { get; set; }
+        public decimal win { get; set; }
+        public int TicketType { get; set; }
+        public int TicketStatus { get; set; }
+        public int SettleFlag { get; set; }
+    }
+    
+    public class EdayRoundUpdateResponse
     {
         public decimal balance { get; set; }
     }
@@ -80,9 +113,39 @@ namespace ThirdPartySeamlessWallet.Service.Model
     
     public class BettransLTEdayCancelBet
     {
-        public int billId { get; set; }
+        public string billId { get; set; }
         public string player { get; set; }
         public int TicketType { get; set; } 
+        public int TicketStatus { get; set; }
+        public int SettleFlag { get; set; }
+    }
+
+    public class BettransLTEdayRoundUpdateDAL
+    {
+        public string txId { get; set; }
+        public string player { get; set; }
+        public decimal bet { get; set; }
+        public decimal win { get; set; }
+        public int eventId { get; set; }
+        public string roundCode { get; set; }
+        public string gameCode { get; set; }
+        public long timestamp { get; set; }
+        public int txType { get; set; }
+        public int TicketType { get; set; }
+        public int TicketStatus { get; set; }
+        public int SettleFlag { get; set; }
+        public DateTime UTCSettleBetTime { get; set; }
+    }
+
+    public class BettransLTEdayPayoutRequest : EdayBetRequest
+    {
+        public new string billId { get; set; }
+        public decimal betTotal { get; set; }
+        public decimal winTotal { get; set; }
+        public int eventId { get; set; }
+        public DateTime UTCBetTime { get; set; }
+        public DateTime UTCSettleBetTime { get; set; }
+        public int TicketType { get; set; }
         public int TicketStatus { get; set; }
         public int SettleFlag { get; set; }
     }
