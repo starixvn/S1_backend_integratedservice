@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
@@ -123,46 +123,30 @@ namespace ThirdPartySeamlessWallet.Controllers
         [HttpPost]
         [Route("[controller]/edApi/RoundUpdate")]
         [Route("[controller]/{siteName}/edApi/RoundUpdate")]
-        public IActionResult RoundUpdate(EdayBetRequest request,string siteName = "")
+        public IActionResult RoundUpdate(EdayRoundUpdateRequest request,string siteName = "")
         {
             var baseResult = BaseResult();
             try
             {
-                baseResult = new EdayResponse<EdayErrorResponse>()
-                {
-                    resultCode = (int)EdayResultCode.Success,
-                    message = EdayResultCode.Success.GetEnumDescription()
-                };
-                return Ok(baseResult);
+                Request.Headers.TryGetValue("Authorization", out var authorization);
+                Request.Headers.TryGetValue("Content-MD5", out var md5);
+                Request.Headers.TryGetValue("Content-Type", out var contentType);
                 
-                // Request.Headers.TryGetValue("Authorization", out var authorization);
-                // Request.Headers.TryGetValue("Content-MD5", out var md5);
-                // Request.Headers.TryGetValue("Content-Type", out var contentType);
-                //
-                // var signString = $"POST\n{md5}\n{contentType}\n/edApi/BetRequest";
-                // var parameters = JsonConvert.SerializeObject(request);
-                // if (!CheckSign(signString, authorization, siteName,parameters))
-                // {
-                //     baseResult = new EdayResponse<EdayErrorResponse>()
-                //     {
-                //         resultCode = (int)EdayResultCode.InvalidSignature,
-                //         message = EdayResultCode.InvalidSignature.GetEnumDescription()
-                //     };
-                //     return Ok(baseResult);
-                // }
-                //
-                // //下注以及取消下注都走同一支，用BetType判斷， 1 = Bet , 2 = Cancel
-                // switch (request.betType)
-                // {
-                //     //Bet
-                //     case 1:
-                //         var betRequestResult = _EdayBLL.BetRequest(request);
-                //         return Ok(betRequestResult);
-                //     //Cancel Bet
-                //     case 2:
-                //         var betRequestCancelResult = _EdayBLL.BetRequestCancel(request);
-                //         return Ok(betRequestCancelResult);
-                // }
+                var signString = $"POST\n{md5}\n{contentType}\n/edApi/RoundUpdate";
+                 var parameters = JsonConvert.SerializeObject(request);
+                if (!CheckSign(signString, authorization, siteName,parameters))
+                {
+                    baseResult = new EdayResponse<EdayErrorResponse>()
+                    {
+                        resultCode = (int)EdayResultCode.InvalidSignature,
+                        message = EdayResultCode.InvalidSignature.GetEnumDescription()
+                    };
+                    return Ok(baseResult);
+                }
+                
+                var roundUpdateRequestResult = _EdayBLL.RoundUpdate(request);
+                
+                return Ok(roundUpdateRequestResult);
             }
             catch (Exception ex)
             {
@@ -192,7 +176,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             var signature = GetSign(signString, config.ApiKey);
             return authorization == $"ED {config.Operator.ToLower()}:{signature}";
         }
-
+        
         private EdayConfig GetSiteConfig(string siteName)
         {
             if (siteName == "")

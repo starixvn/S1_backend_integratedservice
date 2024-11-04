@@ -2124,7 +2124,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 
                 var cancelData = new BettransLTEdayCancelBet()
                 {
-                    billId = cancelData_Eday.billId,
+                    billId = cancelData_Eday.billId.ToString(),
                     player = tpCustInfo.TpUserName,
                     TicketType = cancelData_Eday.TicketType,
                     TicketStatus = cancelData_Eday.TicketStatus,
@@ -2144,7 +2144,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         (int)tpGameType,
                         tpCategory,
                         cancelData_Eday.billId.ToString(),
-                        TransType.Payout,
+                        TransType.Refunds,
                         null,
                         out afterAmount,
                         "CancelBet",
@@ -2157,8 +2157,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 if (result > 0)
                 {
-                    //CancelBet 
-                    _tpUnsettleService.InsertTpUnsettle(Tp.Eday, GameType.Eday_Lottery, cancelData_Eday.billId.ToString(), trans);
+                    //CancelBet 不送TpUnSettle 等Wager抓單回來一起處理即可
                     _mainDbClient.CommitAndDisposeConnection(conn, trans);
                 }
                 else
@@ -2174,6 +2173,120 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                     return -1;
                 }
                 throw;
+            }
+
+            return result;
+        }
+        
+        public int RoundUpdate_Eday(TpCustInfo tpCustInfo, BettransLTEdayRoundUpdateDAL settleData_Eday, out decimal afterAmount)
+        {
+            var bonusId = 0;
+            var tpId = Tp.Eday;
+            var tpGameType = GameType.Eday_Lottery;
+            var category = TpCategory.Lottery;
+            var InsSpName = "Service_BettransLT_Eday_Ins";
+            var GetSpName = "Service_BettransLT_Eday_Round_Get";
+            afterAmount = 0;
+
+            var result = 0;
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var partitionTime = DateTime.Now;
+                var bettransLTEday = _partitionService.Query<BettransLTEday>(partitionTime, GetSpName, 
+                    new { roundCode = settleData_Eday.roundCode , player = tpCustInfo.TpUserName });
+
+                if (bettransLTEday.Any())
+                {
+                    return -2;
+                }
+                
+                //RoundCode整局沒有全取消 就繼續
+                if (bettransLTEday.All(i => i.TicketType == (int)BettransType.CancelBet))
+                {
+                    return -3;
+                }
+
+                var settleEdayData = new BettransLTEdayPayoutRequest
+                {
+                    txId = settleData_Eday.txId,
+                    //RoundUpdate沒有token拿第一筆的token當做Settle Token
+                    token = bettransLTEday.FirstOrDefault().token,
+                    //結算時沒有billId,目前想法是RoundCode + playerId 當作結算billId.
+                    billId = $"{settleData_Eday.roundCode}_{settleData_Eday.player}",
+                    player = settleData_Eday.player,
+                    //amount 為 RoundUpdate 的 betTotal
+                    amount = settleData_Eday.bet,
+                    timestamp = settleData_Eday.timestamp,
+                    roundCode = settleData_Eday.roundCode,
+                    gameCode = settleData_Eday.gameCode,
+                    // 官方文件上無3，創一個3當作Settle標記
+                    betType = 3,
+                    eventId = settleData_Eday.eventId,
+                    betTotal = settleData_Eday.bet,
+                    winTotal = settleData_Eday.win,
+                    //UTCBetTime 拿第一筆的UTCBetTime 當作下注時間
+                    UTCBetTime = bettransLTEday.FirstOrDefault().UTCBetTime,
+                    UTCSettleBetTime = settleData_Eday.UTCSettleBetTime,
+                    TicketStatus = settleData_Eday.TicketStatus,
+                    TicketType = settleData_Eday.TicketType,
+                    SettleFlag = settleData_Eday.SettleFlag
+                };
+                
+                var p = new DynamicParameters(settleEdayData);
+                result = _partitionService.Execute(partitionTime,InsSpName, p, trans);
+
+                if (result > 0)
+                {
+                    var payoutAmount = 0.00m;
+                    //Win = 總贏額，代表此次Round結算後要派給用戶的金額，用這個數字派發給用戶即可。
+                    if (settleData_Eday.win >= 0.00m)
+                    {
+                        payoutAmount = settleData_Eday.win;
+                    }
+                    
+                    result = PayoutV2(
+                        tpCustInfo,
+                        payoutAmount,
+                        (int)tpId,
+                        settleData_Eday.roundCode,
+                        (int)tpGameType,
+                        category,
+                        settleData_Eday.roundCode,
+                        TransType.Payout,
+                        null,
+                        out afterAmount,
+                        $"Payout",
+                        out bonusId,
+                        conn,
+                        trans,
+                        AllowNegative.Allow
+                    );
+
+
+                    if (result > 0)
+                    {
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    }
+                    else
+                    {
+                        _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                    }
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    result = -1;
+                }
+                else
+                {
+                    throw mySqlEx;
+                }
             }
 
             return result;

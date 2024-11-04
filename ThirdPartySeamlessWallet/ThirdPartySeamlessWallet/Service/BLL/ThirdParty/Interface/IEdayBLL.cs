@@ -7,5 +7,6 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty.Interface
         EdayResponse<EdayGetBalanceResponse> GetBalance(string accountName);
         EdayResponse<EdayBetRequestResponse> BetRequest(EdayBetRequest request);
         EdayResponse<EdayBetRequestResponse> BetRequestCancel(EdayBetRequest request);
+        EdayResponse<EdayRoundUpdateResponse> RoundUpdate(EdayRoundUpdateRequest request);
     }
 }
