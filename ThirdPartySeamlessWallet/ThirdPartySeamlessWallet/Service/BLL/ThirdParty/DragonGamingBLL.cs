@@ -104,7 +104,7 @@ public class DragonGamingBLL : IDragonGamingBLL
 
             var gameType = GetGameType(request.game_type);
             if (gameType is GameType.None)
-                return new CommonErrorResponse_DragonGaming(ErrorIdOfDragonGaming.GameTypeInvalid);
+                return new DebitCreditRefundResponse_DragonGaming(ErrorCodeOfDragonGaming.GameTypeInvalid, request.token);
             var tpCustInfo = _tpCustInfoBll.GetTpCustInfoWithCache((int)_thisTp, request.account_id);
             int result = PlaceBet(request, tpCustInfo, gameType, out decimal tpAffterAmount);
             if (result > 0)

@@ -7,8 +7,10 @@ namespace ThirdPartySeamlessWallet.Service.Model.enums
     //1 Indicates FAIL, 0 indicates SUCCESS,
     public enum StatusOfDragonGaming
     {
-        [Description("Fail")]
-        Fail = 1,
+        [Description("Success,Fix Issue Request.")]
+        IssueSuccess = 2,
+        [Description("Success,Duplicate Request.")]
+        DuplicateSuccess = 1,
         [Description("Success")]
         Success = 0,
     }
