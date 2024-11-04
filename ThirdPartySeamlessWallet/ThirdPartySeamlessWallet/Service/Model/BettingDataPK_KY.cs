@@ -1,4 +1,6 @@
-﻿namespace ThirdPartySeamlessWallet.Service.Model.KY
+﻿using ThirdPartySeamlessWallet.Service.Model.enums;
+
+namespace ThirdPartySeamlessWallet.Service.Model.KY
 {
     public class BettingDataPK_KY
     {
@@ -11,6 +13,14 @@
         public decimal money { get; set; }
         public string currency { get; set; }
         public long timestamp { get; set; }
+    }
+
+
+    public class BettransData_KY : BettingDataPK_KY
+    {
+        public BettransType TicketType { get; set; }
+        public TicketStatus TicketStatus { get; set; }
+        public SettleFlag SettleFlag { get; set; }
     }
 
     public class CurrencyData

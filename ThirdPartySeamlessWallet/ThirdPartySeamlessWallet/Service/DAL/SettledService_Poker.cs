@@ -1846,6 +1846,83 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
         #region KY
 
+        public int PayoutPK_KY(TpCustInfo tpCustInfo, BettingDataPK_KY bettingDataPK_KY, out decimal afterAmount)
+        {
+            afterAmount = 0;
+            var result = 0;
+
+            using var conn = _mainDbClient.GetMySqlConnection();
+            conn.Open();
+            using var trans = conn.BeginTransaction();
+
+            try
+            {
+                var p = new DynamicParameters(bettingDataPK_KY);
+                p.Add("TicketType", (int)BettransType.Payout);
+                p.Add("TicketStatus", (int)TicketStatus.UnSettled);
+                p.Add("SettleFlag", (int)SettleFlag.Running);
+
+                var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataPK_KY.timestamp).DateTime;
+
+                var bettrans = _partitionService.Query<BettransData_KY>(partitionTime, "Service_BettransPK_KY_gameNo_Get", new { gameNo = bettingDataPK_KY.gameNo });
+
+                // 檢查是否有下注該round
+                if (!bettrans.Any(i => i.TicketType == BettransType.Bet))
+                {
+                    // TODO: 我方游戏目前只有财神到有免费游戏机制，进行免费游戏是无需进行下注的，此部分再劳烦贵司进行调整哦
+                    if (bettingDataPK_KY.kindId != "8910")
+                    {
+                        return -2;
+                    }
+                }
+                if (bettrans.Any(i => i.TicketType == BettransType.Payout))
+                {
+                    // TODO: 一局游戏结算后是返回一笔S1003的哦
+                    return -3;
+                }
+
+                result = _partitionService.Execute(partitionTime, "Service_BettransPK_KY_Ins", p, trans);
+
+                if (result > 0 && bettingDataPK_KY.money != 0)
+                {
+                    result = walletService.SetBalance(
+                        tpCustInfo.CustId,
+                        tpCustInfo.SiteId,
+                        tpCustInfo.UserName,
+                        bettingDataPK_KY.money,
+                        (int)Tp.V8,
+                        TransType.Payout,
+                        $"Payout: {bettingDataPK_KY.money:#,##0.##} {bettingDataPK_KY.orderId}",
+                        bettingDataPK_KY.gameNo,
+                        out afterAmount,
+                        conn,
+                        trans
+                    );
+                }
+
+                if (result > 0)
+                {
+                    _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                    return result;
+                }
+            }
+            catch (MySqlException mySqlEx)
+            {
+                result = 0;
+                logger.LogError(mySqlEx.Message);
+                _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+                if (mySqlEx.Number == 1062)
+                {
+                    /*Duplicate for key 'PRIMARY'*/
+                    return -1;
+                }
+                throw;
+            }
+
+            _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+            return result;
+        }
+
         public int CancelBetPK_KY(TpCustInfo tpCustInfo, BettingDataPK_KY bettingDataPK_KY, out decimal afterAmount)
         {
             afterAmount = 0;

@@ -33,6 +33,10 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
         {
         }
 
+        public class PayoutResp : GetBalanceRespOfSeamless
+        {
+        }
+
         public class GetOrderStatusResp
         {
             public int s { get; set; }
@@ -166,6 +170,80 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             return getApiResponse;
         }
 
+        public dynamic Payout(ApiReq getReq, string reqParam)
+        {
+            var result = 0;
+            string logName = $"{_thisTp}_Payout";
+            var subType = SubTypeOfKY.ReturnBalance;
+            GetApiResp getApiResponse = new GetApiResp
+            {
+                s = (int)subType,
+                m = "/channelHandle",
+                d = new info
+                {
+                    code = 999
+                }
+            };
+
+            try
+            {
+                var req = JsonConvert.DeserializeObject<BettingDataPK_KY>(reqParam);
+                _log2File.Info($"{JsonConvert.SerializeObject(req)}", logName);
+
+                req.timestamp = getReq.timestamp;
+
+                if (req.s != (int)subType)
+                {
+                    getApiResponse.d.code = (int)ErrorCodeOfKY.Subtype;
+                    _log2File.Error($"Subtype Error {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+                if (req.account == null)
+                {
+                    getApiResponse.d.code = (int)ErrorCodeOfKY.Account;
+                    _log2File.Error($"Account Empty {JsonConvert.SerializeObject(getApiResponse)}", logName);
+                    return getApiResponse;
+                }
+
+                result = PayoutPK_KY(req, out decimal tpAffterAmount);
+                if (result > 0 || result == -1)
+                {
+                    if (tpAffterAmount == 0 || result == -1)
+                    {
+                        var tpCustBalance = _tpCustInfoBLL.GetBalance((int)_thisTp, req.account, _gameType);
+                        tpAffterAmount = tpCustBalance.Balance;
+                    }
+                    PayoutResp getPayoutResponse = new()
+                    {
+                        s = (int)subType,
+                        m = "/channelHandle",
+                        d = new GetBalanceD
+                        {
+                            code = (int)ErrorCodeOfKY.Success,
+                            account = req.account,
+                            money = tpAffterAmount
+                        }
+                    };
+                    return getPayoutResponse;
+                }
+                else if (result == -2)
+                {
+                    _log2File.Error("no bet", logName);
+                }
+                else if (result == -3)
+                {
+                    _log2File.Error("duplicate payout", logName);
+                }
+            }
+            catch (Exception ex)
+            {
+                _log2File.Error($"{ex.Message}", logName, ex);
+            }
+
+            _log2File.Error($"Unknow Error result={result} {JsonConvert.SerializeObject(getApiResponse)}", logName);
+            return getApiResponse;
+        }
+
         public dynamic CancelBet(ApiReq getReq, string reqParam)
         {
             var result = 0;
@@ -234,6 +312,24 @@ namespace ThirdPartySeamlessWallet.Service.BLL.ThirdParty
             }
 
             var result = _bettingService.PlaceBetPK_KY(tpCustInfo, bettingDataPK_KY, out afterAmount);
+            if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
+            {
+                afterAmount /= tpCurrency.ExchangeRate;
+            }
+            return result;
+        }
+
+        private int PayoutPK_KY(BettingDataPK_KY bettingDataPK_KY, out decimal afterAmount)
+        {
+            var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache(_thisTp, bettingDataPK_KY.account);
+            var tpCurrency = _thirdPartyBLL.GetTpCurrency(_thisTp, tpCustInfo.CurrencyId);
+
+            if (tpCurrency.ExchangeRate != 0)
+            {
+                bettingDataPK_KY.money *= tpCurrency.ExchangeRate;
+            }
+
+            var result = _settledService.PayoutPK_KY(tpCustInfo, bettingDataPK_KY, out afterAmount);
             if (result > 0 && afterAmount > 0 && tpCurrency.ExchangeRate != 0)
             {
                 afterAmount /= tpCurrency.ExchangeRate;
