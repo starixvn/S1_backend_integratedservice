@@ -192,30 +192,37 @@ namespace ThirdPartySeamlessWallet.Controllers
         public async Task<dynamic> PlaceBetAndSettle(string sitename)
         {
             string logName = $"{_thisTp}_PlaceBetAndSettle";
+            string content = "";
+            dynamic response = null;
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-                string content = await reader.ReadToEndAsync();
+                content = await reader.ReadToEndAsync();
+                _payloadLogService.LogDetailedPayload(content, nameof(PlaceBetAndSettle));
 
                 var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
                     var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
-                    return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
+                    response = new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
+                    
+                    _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+                    return response;
                 }
 
-                var result = _maxGameBLL.PlaceBetAndSettle(content);
+                response = response = _maxGameBLL.PlaceBetAndSettle(content);
+                _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
 
-                WriteLogTest($"{sitename}/PlaceBetAndSettle", content, result);
-
-                return result;
+                return response;
             }
             catch (Exception ex)
             {
                 _log2File.Error($"{ex.Message}", logName, ex);
             }
 
-            return new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
+            response = new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
+            _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+            return response;
         }
 
         [HttpPost]
@@ -223,30 +230,36 @@ namespace ThirdPartySeamlessWallet.Controllers
         public async Task<dynamic> VoidGame(string sitename)
         {
             string logName = $"{_thisTp}_VoidGame";
+            string content = "";
+            dynamic response = null;
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
-                string content = await reader.ReadToEndAsync();
+                content = await reader.ReadToEndAsync();
+                _payloadLogService.LogDetailedPayload(content, nameof(VoidGame));
 
                 var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
                     var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
-                    return new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
+                    response = new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
+                    _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+                    return response;
                 }
 
-                var result = _maxGameBLL.VoidGame(content);
+                response = _maxGameBLL.VoidGame(content);
+                _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
 
-                WriteLogTest($"{sitename}/VoidGame", content, result);
-
-                return result;
+                return response;
             }
             catch (Exception ex)
             {
                 _log2File.Error($"{ex.Message}", logName, ex);
             }
 
-            return new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
+            response = new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
+            _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+            return response;
         }
 
         [HttpPost]
