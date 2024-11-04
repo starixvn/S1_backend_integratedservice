@@ -173,10 +173,8 @@ namespace ThirdPartySeamlessWallet.Service.BLL
                     }
                     break;
                 case (int)Tp.PP:
-                    if (gameId.Equals("pragmaticplay", StringComparison.OrdinalIgnoreCase))
-                    {
-                        gameType = GameType.PP_RNG;
-                    }
+                    gameType = GameType.PP_RNG;
+                    
                     if (gameId.Equals("pragmaticplaycasino", StringComparison.OrdinalIgnoreCase))
                     {
                         gameType = GameType.PP_LiveCasino;
