@@ -260,7 +260,7 @@ namespace ThirdParty.PP
                     ProductInfo = new
                     {
                         config.GameType,
-                        GameId = "4246",
+                        GameId = gameId,
                         AppType = (appType == AppType.Desktop) ? "D" : "M",
                     },
                     CustInfo = new
