@@ -61,14 +61,22 @@ namespace ThirdPartySettleWorker.Workers
                 {
                     try
                     {
-                        var betData = _partitionService.GetUnsettleDataList<BettransRng_FaChai>(getBettransSp, tpUnsettle).FirstOrDefault();
+                        var betData = _partitionService.GetUnsettleDataList<BettransRng_FaChai>(getBettransSp, tpUnsettle);
+
+                        if (!betData.Any())
+                        {
+                            LogContext.PushProperty("TP", _tpName);
+                            _logger.LogWarning($"Settle_FaChai:bettrans not found ({(GameType)state})\r\n{JsonConvert.SerializeObject(tpUnsettle)}");
+                            continue;
+                        }
+
                         //var wagerData = _tpUnSettledBLL.GetTpUnsettleData<FCWager>(getWagerSp, new { recordID = tpUnsettle.TransId }, DataBase.Wager).FirstOrDefault();
 
                         //if (wagerData == null)
                         //    continue;
 
 
-                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, betData.MemberAccount);
+                        var tpCustInfo = _tpCustInfoBLL.GetTpCustInfoWithCache((int)Tp, betData.FirstOrDefault()?.MemberAccount);
                         //var tpCurrency = _thirdPartyBLL.GetTpCurrency((int)Tp, tpCustInfo.CurrencyId);
 
                         //#region 匯率轉換
@@ -87,19 +95,20 @@ namespace ThirdPartySettleWorker.Workers
                         //    continue;
                         //}
 
+                        var winlostAmount = betData.Sum(x => x.NetWin);
                         var betRecordInfo = new BetRecordInfo
                         {
                             TpId = (int)Tp,
-                            Stake = betData.Bet,
-                            ValidBet = betData.Bet,
-                            WinlostAmount = betData.NetWin,
+                            Stake = betData.Sum(x => x.Bet),
+                            ValidBet = betData.Sum(x => x.Bet),
+                            WinlostAmount = winlostAmount,
                             TransId = tpUnsettle.TransId,
                             GameType = GameType.FaChai_RNG,
-                            TpUserName = betData.MemberAccount,
-                            SettledTime = betData.Ts,
-                            TransTime = betData.Ts,
-                            SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, betData.GameID.ToString()),
-                            TicketStatus = betData.NetWin > 0 ? TicketStatus.Win : betData.NetWin == 0 ? TicketStatus.Draw : TicketStatus.Lost,
+                            TpUserName = betData.FirstOrDefault()?.MemberAccount,
+                            SettledTime = betData.Max(x=>x.Ts),
+                            TransTime = betData.Min(x => x.Ts),
+                            SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, betData.FirstOrDefault()?.GameID.ToString()),
+                            TicketStatus = winlostAmount > 0 ? TicketStatus.Win : winlostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost,
                         };
 
                         var result = _settledBLL.Settled(tpCustInfo, betRecordInfo, TpCategory.Slots);
