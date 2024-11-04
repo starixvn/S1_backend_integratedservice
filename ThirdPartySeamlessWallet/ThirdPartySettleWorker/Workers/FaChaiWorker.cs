@@ -107,6 +107,7 @@ namespace ThirdPartySettleWorker.Workers
                             TpUserName = betData.FirstOrDefault()?.MemberAccount,
                             SettledTime = betData.Max(x=>x.Ts),
                             TransTime = betData.Min(x => x.Ts),
+                            GameID = betData.FirstOrDefault()?.GameID.ToString(),
                             SettlementType = _thirdPartyBLL.GetGameCasinoSettlementType((int)Tp, betData.FirstOrDefault()?.GameID.ToString()),
                             TicketStatus = winlostAmount > 0 ? TicketStatus.Win : winlostAmount == 0 ? TicketStatus.Draw : TicketStatus.Lost,
                         };
