@@ -1177,7 +1177,7 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                         return -2;
                     }
                     // 檢查是否有派彩過
-                    if (bettrans.Any(i => i.TicketType == BettransType.Payout))
+                    if (bettrans.Any(i => i.TicketType == BettransType.Payout && i.Seq == payoutData_MaxGame.Seq))
                     {
                         return -1;
                     }

@@ -10,7 +10,6 @@ namespace ThirdPartyWager.Workers
         private readonly int _tpId = (int)Tp.BNG;
         private readonly string _tpName = Tp.BNG.ToString();
         private Timer _timer;
-        private readonly Dictionary<string, string> _setting;
         private readonly WagerBNGBLL _wagerBNGBLL;
         private readonly DateTimeHelper _dateTimeHelper;
         private readonly ILogger<WagerBNG> _logger;
@@ -19,7 +18,6 @@ namespace ThirdPartyWager.Workers
         private readonly string _timeFormat = "yyyy-MM-dd HH:mm:ss";
         public WagerBNG(IServiceProvider provider)
         {
-            _setting = provider.GetRequiredService<ConfigBLL>().GetConfigValue<Dictionary<string, string>>(Tp.BNG.ToString());
             _wagerBNGBLL = provider.GetRequiredService<WagerBNGBLL>();
             _dateTimeHelper = provider.GetRequiredService<DateTimeHelper>();
             _logger = provider.GetRequiredService<ILogger<WagerBNG>>();
@@ -39,7 +37,7 @@ namespace ThirdPartyWager.Workers
             {
                 var time = _dateTimeHelper.GetTimeByMinuteRevert(iRangMins, timeZone, _timeFormat, DateTime.UtcNow);
 
-                await _wagerBNGBLL.GetWagerAsync(_setting, time.startTime, time.endTime);
+                await _wagerBNGBLL.GetWagerAsync(time.startTime, time.endTime);
             }
             catch (Exception ex)
             {
