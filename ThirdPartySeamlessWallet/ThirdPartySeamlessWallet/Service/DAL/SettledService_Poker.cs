@@ -1864,7 +1864,11 @@ namespace ThirdPartySeamlessWallet.Service.DAL
 
                 var partitionTime = DateTimeOffset.FromUnixTimeMilliseconds(bettingDataPK_KY.timestamp).DateTime;
                 result = _partitionService.Execute(partitionTime, "Service_BettransPK_KY_CancelBet_Set", p, trans);
-
+                /*
+                 贵方收到通知后需先判断原始订单状态是否成功
+                 若原始订单为成功状态时，方能取消下注並修改訂單狀態
+                 若订单不存在，请先塞入资料库并记录为取消订单，此订单状态将不可再修改。
+                */
                 if (result > 0)
                 {
                     // cancel update
@@ -1890,7 +1894,14 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 else
                 {
-                    /* TODO: 已处理取消下注成功的订单与查无此订单请皆视为成功，将不再做发送 */
+                    // insert cancel
+                    var cancelInsert = _partitionService.Execute(partitionTime, "Service_BettransPK_KY_Ins", p, trans);
+                    if (cancelInsert > 0)
+                    {
+                        // insert cancel record
+                        _mainDbClient.CommitAndDisposeConnection(conn, trans);
+                        return -1;
+                    }
                 }
             }
             catch (MySqlException mySqlEx)
@@ -1905,6 +1916,9 @@ namespace ThirdPartySeamlessWallet.Service.DAL
                 }
                 throw;
             }
+
+            _mainDbClient.RollbackAndDisposeConnection(conn, trans);
+            return result;
         }
         #endregion
     }
