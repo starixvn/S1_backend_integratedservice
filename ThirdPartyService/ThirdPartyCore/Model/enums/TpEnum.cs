@@ -73,7 +73,10 @@
         UuSlots = 67,
         Live22 = 68,
         FastSpin = 69,
-        DragonGaming = 70
+        DragonGaming = 70,
+        SBPKeno = 71,
+        SBPLottery = 72,
+        SBPTableGame = 73
     }
 
     public enum TpGameType
@@ -175,6 +178,9 @@
         UuSlots_RNG = 120,
         Live22_RNG = 121,
         FastSpin_RNG = 122,
-        DragonGaming_RNG = 123
+        DragonGaming_RNG = 123,
+        SBP_Keno = 124,
+        SBP_Lottery = 125,
+        SBP_TableGame = 126
     }
 }

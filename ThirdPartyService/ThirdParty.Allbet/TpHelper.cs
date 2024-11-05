@@ -181,51 +181,10 @@ namespace ThirdParty.Allbet
                 TransId = getBetDetail.TransId,
                 TpCurrency = tpCurrency,
             };
-
-            //var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_Allbet_Detail_Get", new { getBetDetail.TransId }, DataBase.Wager);
-            //var detail = ToJson(wagerDetail);
-            //var gameCode = wagerDetail.GetValueOrDefault("gameType")?.ToString();
-            //return getBetDetail.TpGameTypeOption.CategoryId switch
-            //{
-            //    TpCategory.LiveCasino => new LiveCasinoDetail(getBetDetail.TpGameTypeOption)
-            //    {
-            //        TransId = getBetDetail.TransId,
-            //        Detail = detail,
-            //        TpCurrency = tpCurrency,
-            //        RefTransId = wagerDetail.GetValueOrDefault("gameRoundId")?.ToString(),
-            //        TpUserName = wagerDetail.GetValueOrDefault("client")?.ToString(),
-            //        UTCBetTime = (DateTime)wagerDetail.GetValueOrDefault("betTime", DateTime.MinValue),
-            //        UTCSettledTime = (DateTime)wagerDetail.GetValueOrDefault("gameRoundEndTime", DateTime.MinValue),
-            //        Stake = (decimal)wagerDetail.GetValueOrDefault("betAmount") * tpCurrency.ExchangeRate,
-            //        WinlostAmount = (decimal)wagerDetail.GetValueOrDefault("winOrLoss") * tpCurrency.ExchangeRate,
-            //        GameCode = gameCode,
-            //        GameName = GetGameName(gameCode),
-            //    },
-            //    _ => new BaseDetail(getBetDetail.TpGameTypeOption)
-            //    {
-            //        TransId = getBetDetail.TransId,
-            //        Detail = detail,
-            //        TpCurrency = tpCurrency,
-            //    }
-            //};
         }
+
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
-            //var wagerDetail = TpBetRecordProvider.DbQueryFirst("Service_TpWager_Allbet_Detail_Get", new { betRecordInfo.TransId }, DataBase.Wager);
-            //var gameCode = wagerDetail.GetValueOrDefault("gameType")?.ToString();
-            //return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
-            //{
-            //    GameID = gameCode,
-            //    Game = GetGameName(gameCode),
-            //    RefNo = wagerDetail.GetStringValue("betNum"),
-            //    Title = wagerDetail.GetStringValue("tableName"),
-            //    MatchID = wagerDetail.GetStringValue("gameRoundId"),
-            //    BetType = wagerDetail.GetStringValue("betType"),
-            //    BetChoice = string.Empty,
-            //    Result = wagerDetail.GetStringValue("gameResult"),
-            //    DeviceType = GetDeviceType(wagerDetail.GetStringValue("appType")),
-            //    IP = string.Empty,
-            //};
             return default;
         }
         

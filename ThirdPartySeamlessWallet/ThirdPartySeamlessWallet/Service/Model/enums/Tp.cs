@@ -70,7 +70,10 @@
         UuSlots = 67,
         Live22 = 68,
         FastSpin = 69,
-        DragonGaming = 70
+        DragonGaming = 70,
+        SBPKeno = 71,
+        SBPLottery = 72,
+        SBPTableGame = 73
     }
 
 }
