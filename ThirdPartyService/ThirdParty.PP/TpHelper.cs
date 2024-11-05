@@ -23,6 +23,8 @@ namespace ThirdParty.PP
         private const int _utc = -4;
         private const string _testCurrency = "UUS";
 
+        private const string PPLiveCasinoGameTypeId = "16";
+
         private readonly IPayloadLogger _temporaryLogPayloadService;
 
         public TpHelper(IServiceProvider provider)
@@ -102,7 +104,7 @@ namespace ThirdParty.PP
 
         #endregion Response
 
-        public class BettransData_UuSlot
+        public class BettransData_PP
         {
             public string TicketNo { get; set; }
             public string GameRoundId { get; set; }
@@ -215,7 +217,7 @@ namespace ThirdParty.PP
         public override TpBetRecordExtend GetTpBetRecordExtend(BetRecordInfo betRecordInfo, TpGameTypeOption tpGameType, TpCustInfo tpCustInfo, Dictionary<string, string> inputs)
         {
             var YYYYMM = DateTimeOffset.FromUnixTimeSeconds(betRecordInfo.SettledTime).DateTime.GetPartitionKey();
-            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_UuSlots_Detail_Get", new { YYYYMM, TransId = betRecordInfo.TransId }, DataBase.Main);
+            var detailList = TpBetRecordProvider.DbQuery("Service_BettransRng_PP_Detail_Get", new { YYYYMM, TransId = betRecordInfo.TransId }, DataBase.Main);
             if (!detailList.Any())
             {
                 return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo);
@@ -224,7 +226,7 @@ namespace ThirdParty.PP
             var GameId = detailList.GetFirstStringValue("GameId");
             var GameRoundId = detailList.GetFirstStringValue("GameRoundId");
             var IpAddress = detailList.GetFirstStringValue("IpAddress");
-            var details = JsonConvert.DeserializeObject<IList<BettransData_UuSlot>>(JsonConvert.SerializeObject(detailList));
+            var details = JsonConvert.DeserializeObject<IList<BettransData_PP>>(JsonConvert.SerializeObject(detailList));
             var resultId = details.Where(i => i.TicketType == 4).FirstOrDefault()?.ResultId;
 
             return new TpBetRecordExtend(betRecordInfo, tpGameType, tpCustInfo)
@@ -245,9 +247,12 @@ namespace ThirdParty.PP
         public override ApiResult Login(TpCustInfo tpCustInfo, AppType appType, string TpLangId, Dictionary<string, string> inputs)
         {
             var config = _siteConfigDic[tpCustInfo.SiteId];
-            string gameId = inputs.ContainsKey("gameId") && !string.IsNullOrEmpty(inputs["gameId"]) ? inputs["gameId"] : throw new Exception("gameId");
-            string homeUrl = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["homeUrl"]) ? inputs["homeUrl"] : "";
-            string tpGameType = inputs.ContainsKey("homeUrl") && !string.IsNullOrEmpty(inputs["tpGameType"]) ? inputs["tpGameType"] : "0";
+            string gameId = 
+                inputs.GetValueOrDefault("gameId", "");
+            string homeUrl =
+                inputs.GetValueOrDefault("homeUrl", ""); 
+            string tpGameType = 
+                inputs.GetValueOrDefault("tpGameType", "0");
             var gameTypeSpecificApiUrl = GetEndpointBasedOnTpGameType(tpGameType, config);
             var ApiUrl = $"{gameTypeSpecificApiUrl}/api/CommonWallet/LaunchGame";
             var gameType = GetGameTypeBasedOnTpGameType(tpGameType, config);
@@ -272,7 +277,7 @@ namespace ThirdParty.PP
                         Language = TpLangId,
                         Platform = (appType == AppType.Desktop) ? "D" : "M",
                         CurrencyISO = tpCustInfo.IsTest ? _testCurrency : tpCustInfo.TpCurrencyId,
-                        IpAddress = inputs["ClientIP"],
+                        IpAddress = inputs.GetValueOrDefault("ClientIP", ""),
                         WalletSideToken = key,
                     },
                     HomeUrl = homeUrl,
@@ -284,7 +289,9 @@ namespace ThirdParty.PP
                 { "operator-pwd", config.OperatorPwd},
                 { "operator-sign", Encrypt(postdata, config)},
             };
-            _temporaryLogPayloadService.LogDetailedPayload(postdata, nameof(Login), gameType);
+            _temporaryLogPayloadService.LogDetailedPayload(postdata, new PayloadLogMeta() {
+                GameType = gameType
+            });
             var result = HttpPost(ApiUrl, postdata, "application/json", header);
             _temporaryLogPayloadService.UpdateDetailedPayLoadWithResponse(postdata, result);
 
@@ -334,8 +341,7 @@ namespace ThirdParty.PP
         }
 
         private static string GetEndpointBasedOnTpGameType(string gameType, PPConfig config) {
-            if (gameType == "16") // THIS IS PP LIVE CASINO
-            {
+            if (gameType == PPLiveCasinoGameTypeId) {
                 return config.LiveCasinoApiUrl;
             }
 
@@ -343,7 +349,7 @@ namespace ThirdParty.PP
         }
 
         private static string GetGameTypeBasedOnTpGameType(string gameType, PPConfig config) {
-            if (gameType == "16") // THIS IS PP LIVE CASINO
+            if (gameType == PPLiveCasinoGameTypeId)
             {
                 return config.LiveCasinoGameType;
             }

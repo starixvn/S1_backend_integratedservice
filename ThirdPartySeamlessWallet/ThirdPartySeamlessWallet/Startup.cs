@@ -147,7 +147,7 @@ namespace ThirdPartySeamlessWallet
                     .AddConnectorNet().ConfigureResource(_ => _.AddService(Configuration.GetValue<string>("Otel:ServiceName") ?? ""))
                     .AddOtlpExporter(options => options.Endpoint = Configuration.GetValue<Uri>("Otel:Collector") ?? new Uri("")));
 
-            services.AddSingleton<PayloadLogService>();
+            services.AddPayloadLog(Configuration);
 
         }
 

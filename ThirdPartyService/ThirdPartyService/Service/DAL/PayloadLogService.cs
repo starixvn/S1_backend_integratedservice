@@ -1,7 +1,11 @@
 using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Dapper;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using ThirdPartyCore;
+using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 using ThirdPartyService.Service.Library;
 
@@ -19,6 +23,7 @@ internal class DetailedRequestBodyPayload {
     public string GameType { get; set; }
 }
 
+
 public class PayloadLogService: IPayloadLogger
 {
     const string InsertDetailedPayloadSpName = "Service_BettransPK_MaxGame_Payload_Ins_v2"; 
@@ -29,12 +34,25 @@ public class PayloadLogService: IPayloadLogger
 
     private readonly string _environmentName = "";
 
+    private readonly PayloadLogConfig _config = default;
+
     public PayloadLogService(IServiceProvider serviceProvider) {
             _environmentName = serviceProvider.GetRequiredService<IWebHostEnvironment>()?.EnvironmentName ?? "Unspecified";
             _mainDbClient = serviceProvider.GetServices<MySqlClient>().First(p => p.DataBase == DataBase.Main);
+            _config = serviceProvider.GetService<IOptions<PayloadLogConfig>>().Value;
+
     }
 
-    public void LogDetailedPayload(string content, string action, string gameType) {
+    public void LogDetailedPayload(string content, PayloadLogMeta meta) {
+        if (!_config.Enabled) return;
+        
+        var action = meta?.Action 
+            ?? (new StackTrace().GetFrame(1).GetMethod().Name)
+            ?? "Unknown";
+         if (_config.ExcludedActions.Contains(action)) return;
+
+        var gameType = meta?.GameType
+            ?? "Unknown"; 
         var getReq = JsonConvert.DeserializeObject<DetailedRequestBody>(content);
         var payload = getReq.Payload.ToString();
         var environment = _environmentName;
@@ -59,12 +77,21 @@ public class PayloadLogService: IPayloadLogger
         }
     }
 
-    public void UpdateDetailedPayLoadWithResponse(string requestContent, object responseContent) {
+    public void UpdateDetailedPayLoadWithResponse(string requestContent, object responseContent, PayloadLogMeta meta) {
+        if (!_config.Enabled) return;
+
+        var action = meta?.Action 
+            ?? (new StackTrace().GetFrame(1).GetMethod().Name)
+            ?? "Unknown";
+
+        if (_config.ExcludedActions.Contains(action)) return;
+
         var getReq = JsonConvert.DeserializeObject<DetailedRequestBody>(requestContent);
         
         if (responseContent is not null && responseContent is string) {
             responseContent = JsonConvert.DeserializeObject((string) responseContent);
         }
+
         var response = JsonConvert.SerializeObject(responseContent,Formatting.Indented);
         var logParams = new DynamicParameters(new {
             getReq.Seq,

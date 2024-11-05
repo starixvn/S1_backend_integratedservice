@@ -1,5 +1,7 @@
 using System;
+using System.Diagnostics;
 using Dapper;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using ThirdPartySeamlessWallet.Service.BLL.ThirdParty;
 using ThirdPartySeamlessWallet.Service.Library;
@@ -23,6 +25,16 @@ internal class DetailedRequestBodyPayload {
     public object Additional { get; set; }  
 }
 
+public class PayloadLogConfig {
+    public bool Enabled { get; set; } = false;
+    public HashSet<string> ExcludedActions  { get; set; } = new HashSet<string>();
+}
+
+public class PayloadLogMeta {
+    public string Action { get; set; }
+    public string GameType { get; set; }
+}
+
 public class PayloadLogService
 {
     const string InsertDetailedPayloadSpName = "Service_BettransPK_MaxGame_Payload_Ins_v2"; 
@@ -32,16 +44,31 @@ public class PayloadLogService
     private readonly PartitionService _partitionService;
     private readonly string _environmentName = "";
 
+    private readonly PayloadLogConfig _config = default;
+
     public PayloadLogService(IServiceProvider provider)
     {
         _environmentName = provider.GetRequiredService<IWebHostEnvironment>()?.EnvironmentName ?? "Unspecified";
         _partitionService = provider.GetRequiredService<PartitionService>();
+        _config = provider.GetService<IOptions<PayloadLogConfig>>().Value;
     }
 
-    public virtual void LogDetailedPayload(string content, string action) {
+    public virtual void LogDetailedPayload(string content, PayloadLogMeta meta = null) {
+        if (!_config.Enabled) return;
+        
+        var action = meta?.Action 
+            ?? (new StackTrace().GetFrame(1).GetMethod().Name)
+            ?? "Unknown";
+
+        if (_config.ExcludedActions.Contains(action)) return;
+
         var getReq = JsonConvert.DeserializeObject<DetailedRequestBody>(content);
         var payload = getReq.Payload.ToString();
-        var gameType = JsonConvert.DeserializeObject<DetailedRequestBodyPayload>(payload)?.GameType ?? "Unknown";
+        
+        var gameType = meta?.GameType
+            ?? JsonConvert.DeserializeObject<DetailedRequestBodyPayload>(payload)?.GameType
+            ?? "Unknown"; 
+
         var environment = _environmentName;
 
         var logParams = new DynamicParameters(new {
@@ -67,7 +94,14 @@ public class PayloadLogService
 
     }
 
-    public virtual void UpdateDetailedPayLoadWithResponse(string requestContent, object responseContent) {
+    public virtual void UpdateDetailedPayLoadWithResponse(string requestContent, object responseContent, PayloadLogMeta meta = null) {
+        if (!_config.Enabled) return;
+
+        var action = meta?.Action 
+            ?? (new StackTrace().GetFrame(1).GetMethod().Name)
+            ?? "Unknown";
+        if (_config.ExcludedActions.Contains(action)) return;
+        
         var getReq = JsonConvert.DeserializeObject<DetailedRequestBody>(requestContent);
         
         if (responseContent is not null && responseContent is string) {

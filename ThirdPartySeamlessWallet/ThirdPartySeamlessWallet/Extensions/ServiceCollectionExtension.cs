@@ -54,5 +54,12 @@ namespace ThirdPartySeamlessWallet.Extensions
 
             return services;
         }
+
+        public static IServiceCollection AddPayloadLog(this IServiceCollection services, IConfiguration configuration) {
+            const string PayloadLogConfigPath = "PayloadLog";
+            return services
+                .Configure<PayloadLogConfig>(configuration.GetSection(PayloadLogConfigPath))
+                .AddSingleton<PayloadLogService>();
+        }
     }
 }

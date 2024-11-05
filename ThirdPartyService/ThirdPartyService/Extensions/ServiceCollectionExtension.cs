@@ -1,4 +1,5 @@
-﻿using ThirdPartyCore.Model;
+﻿using ThirdPartyCore;
+using ThirdPartyCore.Model;
 using ThirdPartyCore.Model.enums;
 
 using ThirdPartyService.Service.DAL;
@@ -95,6 +96,11 @@ namespace ThirdPartyService.Extensions
             return services;
         }
 
-
+        public static IServiceCollection AddDbApiLog(this IServiceCollection services, IConfiguration configuration) {
+            const string PayloadLogConfigPath = "PayloadLog";
+            return services
+                .Configure<PayloadLogConfig>(configuration.GetSection(PayloadLogConfigPath))
+                .AddSingleton<IPayloadLogger, PayloadLogService>();
+        }
     }
 }

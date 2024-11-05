@@ -45,25 +45,28 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             string logName = $"{_thisTp}_GetPlayerInfo";
             string content = "";
+            var logMeta = new PayloadLogMeta() {
+               Action = nameof(GetPlayerInfo)   
+            };
             
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 content = await reader.ReadToEndAsync();
-                _payloadLogService.LogDetailedPayload(content, $"{nameof(GetPlayerInfo)}");
+                _payloadLogService.LogDetailedPayload(content, logMeta);
                 var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
                     var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
                     var response = new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
-                    _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+                    _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response, logMeta);
 
                     return response;
                 }
 
                 var result = _maxGameBLL.GetPlayerInfo(content);
 
-                _payloadLogService.UpdateDetailedPayLoadWithResponse(content, result);
+                _payloadLogService.UpdateDetailedPayLoadWithResponse(content, result, logMeta);
 
                 return result;
             }
@@ -71,8 +74,8 @@ namespace ThirdPartySeamlessWallet.Controllers
             {
                 SentrySdk.CaptureException(ex);
             }
-
-            _payloadLogService.UpdateDetailedPayLoadWithResponse(content, new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError));
+            
+            _payloadLogService.UpdateDetailedPayLoadWithResponse(content, new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError), logMeta);
             return new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
         }
 
@@ -82,24 +85,27 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             string logName = $"{_thisTp}_GetBalance";
             string content = "";
-            dynamic response = null;
+            dynamic response;
+            var logMeta = new PayloadLogMeta() {
+                    Action = nameof(GetBalance),
+            };
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 content = await reader.ReadToEndAsync();
-                _payloadLogService.LogDetailedPayload(content, nameof(GetBalance));
+                _payloadLogService.LogDetailedPayload(content, logMeta);
                 var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
                     var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
                     response = new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
-                    _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+                    _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response, logMeta);
                     return response;
                 }
 
                 var result = _maxGameBLL.GetBalance(content);
 
-                _payloadLogService.UpdateDetailedPayLoadWithResponse(content, result);
+                _payloadLogService.UpdateDetailedPayLoadWithResponse(content, result, logMeta);
                 return result;
             }
             catch (Exception ex)
@@ -108,7 +114,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             response = new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
-            _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+            _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response, logMeta);
             return response;
         }
 
@@ -118,12 +124,15 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             string content = "";
             string logName = $"{_thisTp}_PlaceBet";
-            dynamic response = null;
+            dynamic response;
+            var logMeta = new PayloadLogMeta() {
+                Action = nameof(PlaceBet),
+            };
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 content = await reader.ReadToEndAsync();
-                _payloadLogService.LogDetailedPayload(content, nameof(PlaceBet));
+                _payloadLogService.LogDetailedPayload(content, logMeta);
 
                 var verifyHeader = false;
                 verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
@@ -131,11 +140,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                 {
                     var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
                     response = new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
-                    _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+                    _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response, logMeta);
                     return response;
                 }
                 response = _maxGameBLL.PlaceBet(content);
-                _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+                _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response, logMeta);
 
                 return response;
             }
@@ -145,7 +154,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
             response = new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
             
-            _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+            _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response, logMeta);
             return response;
         }
 
@@ -155,13 +164,16 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             string logName = $"{_thisTp}_EndGame";
             string content = "";
-            dynamic response = null;
+            dynamic response;
+            var logMeta = new PayloadLogMeta {
+                Action = nameof(EndGame)
+            };
 
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 content = await reader.ReadToEndAsync();
-                _payloadLogService.LogDetailedPayload(content, nameof(EndGame));
+                _payloadLogService.LogDetailedPayload(content, logMeta);
 
                 var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
@@ -169,11 +181,11 @@ namespace ThirdPartySeamlessWallet.Controllers
                     var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
                     response = new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
                     
-                    _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+                    _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response, logMeta);
                     return response;
                 }
                 response = response = _maxGameBLL.EndGame(content);
-                _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+                _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response, logMeta);
 
                 return response;
             }
@@ -183,7 +195,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             response = new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
-            _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+            _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response, logMeta);
             return response;
         }
 
@@ -193,12 +205,15 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             string logName = $"{_thisTp}_PlaceBetAndSettle";
             string content = "";
-            dynamic response = null;
+            dynamic response;
+            var logMeta = new PayloadLogMeta {
+                Action = nameof(PlaceBetAndSettle)
+            };
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 content = await reader.ReadToEndAsync();
-                _payloadLogService.LogDetailedPayload(content, nameof(PlaceBetAndSettle));
+                _payloadLogService.LogDetailedPayload(content, logMeta);
 
                 var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
@@ -206,12 +221,12 @@ namespace ThirdPartySeamlessWallet.Controllers
                     var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
                     response = new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
                     
-                    _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+                    _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response, logMeta);
                     return response;
                 }
 
                 response = response = _maxGameBLL.PlaceBetAndSettle(content);
-                _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+                _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response, logMeta);
 
                 return response;
             }
@@ -221,7 +236,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             response = new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
-            _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+            _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response, logMeta);
             return response;
         }
 
@@ -231,24 +246,27 @@ namespace ThirdPartySeamlessWallet.Controllers
         {
             string logName = $"{_thisTp}_VoidGame";
             string content = "";
-            dynamic response = null;
+            dynamic response;
+            var logMeta = new PayloadLogMeta {
+                Action = nameof(VoidGame)
+            };
             try
             {
                 using var reader = new StreamReader(Request.Body, Encoding.UTF8);
                 content = await reader.ReadToEndAsync();
-                _payloadLogService.LogDetailedPayload(content, nameof(VoidGame));
+                _payloadLogService.LogDetailedPayload(content, logMeta);
 
                 var verifyHeader = CheckHeader(Request.Headers, content, sitename, logName);
                 if (!verifyHeader)
                 {
                     var getReq = JsonConvert.DeserializeObject<CommonReq>(content);
                     response = new BaseResp(ErrorCodeOfMaxGame.OpSideSignInvalid, getReq.Seq);
-                    _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+                    _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response, logMeta);
                     return response;
                 }
 
                 response = _maxGameBLL.VoidGame(content);
-                _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+                _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response, logMeta);
 
                 return response;
             }
@@ -258,7 +276,7 @@ namespace ThirdPartySeamlessWallet.Controllers
             }
 
             response = new BaseResp(ErrorCodeOfMaxGame.OpSideUnspecifiedError);
-            _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response);
+            _payloadLogService.UpdateDetailedPayLoadWithResponse(content, response, logMeta);
             return response;
         }
 
